@@ -44,21 +44,21 @@ sub source_stream_url {
 $openprint::log->debug($_[0]->Server()->to_string() );
 	#$return ($_[0]{type} eq 'Remote' and $_[0]{protocol} eq 'http' ) ? 
 		#$'http://'.$_[0]{host}.$_[0]{path} :
-		sprintf('http://%2$s/cgi-bin/zms?mode=jpeg&amp;monitor=%1$d&amp;maxfps=%3$d&amp;user=all&pass=p1GraPHic',
-				$_[0]{id}, $_[0]->Server()->Hostname(), int($_[0]{max_fps}) ? $_[0]{max_fps} : 1 );
+		sprintf('https://%2$s:%3$d/cgi-bin/zms?mode=jpeg&amp;monitor=%1$d&amp;user=all&pass=p1GraPHic',
+				$_[0]{id}, $_[0]->Server()->Hostname(), 30000+$_[0]{id});
 } # end sub source_stream_url
 
 sub source_snapshot_url {
-	return $_[0]{type} eq 'Remote' ? 'http://'.$_[0]{host}.($_[0]{jpg_path}?
-		$_[0]{jpg_path}:$_[0]{path}) :
-			sprintf('http://%2$s/cgi-bin/zms?mode=single&amp;monitor=%1$d&amp;maxfps=%3$d&amp;user=all&pass=p1GraPHic',
-					$_[0]{id}, $_[0]->Server()->Hostname(), $_[0]{max_fps} );
+	#return $_[0]{type} eq 'Remote' ? 'http://'.$_[0]{host}.($_[0]{jpg_path}?
+		#$_[0]{jpg_path}:$_[0]{path}) :
+			return sprintf('https://%2$s:%3$d/cgi-bin/zms?mode=single&amp;monitor=%1$d&amp;user=all&pass=p1GraPHic',
+					$_[0]{id}, $_[0]->Server()->Hostname(), 30000+$_[0]{id} );
 } # end sub source_snapshot_url
 
 sub can_view {
 	if ( $_[0]{public} ) {
 		$openprint::log->debug("Public") if $debug;
-		return 1 ;
+		return 1;
 	}
 	if ( $openprint::session{user_type} eq 'A' ) {
 		$openprint::log->debug("Admin") if $debug;

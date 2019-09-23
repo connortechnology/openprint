@@ -189,17 +189,6 @@ sub insert_service_spec {
 	$specs_cache{$service_index}{$name} = $value;
 } # end sub
 
-sub insert_service_specs {
-	my ( $log, $dbh, $project_index, $service_index, @specs ) = @_;
-
-# make this fast by doing it in one transaction
-	my $ac = sql::start_transaction( $openprint::dbh );
-	while ( @specs ) {
-		insert_service_spec( $log, $dbh, $project_index, $service_index, shift @specs, shift @specs );
-	} # end while
-	sql::end_transaction( $openprint::dbh, $ac );
-} # end sub
-
 sub auto_calculate {
 	my ( $Project, $exclude ) = @_;
 
@@ -263,6 +252,18 @@ sub auto_calculate {
 			openprint::print_project::delete_service( $Project, $si );
 		} # end while
 		delete $$services{PerfectBound};
+	} # end if
+
+	require openprint::Estimating::SpinePaste;
+	if ( openprint::Estimating::SpinePaste::neccessary( $Project ) ) {
+		if ( ! $$services{SpinePaste} ) {
+			push @{$$services{SpinePaste}}, $Project->add_service( 'SpinePaste' );
+		} # end if
+	} elsif ( $$services{SpinePaste} ) {
+		while ( my $si = shift @{$$services{SpinePaste}} ) {
+			openprint::print_project::delete_service( $Project, $si );
+		} # end while
+		delete $$services{SpinePaste};
 	} # end if
 			
 	require openprint::Estimating::Stitching;
@@ -369,7 +370,6 @@ sub auto_calculate {
 		}; # end if eval
 	$openprint::log->error("Error in requiring $service_name $@") if $@;
 	} # end foreach service_name;
-
 
 	# Order for these is important.  Stitching must be calc'd before Folding
 	foreach my $type ( 'Folding','SaddleStitching','LoopStitching' ) {
@@ -507,6 +507,7 @@ sub internal_calc {
 		if ( $Service->status() ne 'uncalculated' ) {
 			$_ = $Service->save({status=>'uncalculated'});
 			if ( $_ ) {
+				$Project->unlock();
 				$log->error("Unable to update Service status for $project_index, $service_index, $service_type, $qty_index ");
 				return;
 			}
@@ -517,6 +518,15 @@ sub internal_calc {
 
 	if ( ! $service_type ) {
 		$service_type = $Service->service_type();
+		if ( ! $service_type ) {
+			if ( $$specs{ProjectType} ) {
+				$log->debug("No service_type for service " . $Service->to_string());
+			} else {
+				$log->error("No service_type for service " . $Service->to_string());
+			}
+			$Project->unlock();
+			return;
+		}
 	} # end if
 
 	my $status;

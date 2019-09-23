@@ -21,6 +21,6 @@
 	} # end foreach 
   return if ! @options;
 
-  return 'Payment can be made by ' . join(', ', @options) . ' or other pre-arrangement';
+  return 'Payment can be made by:<br/>' . join('<br/>', @options) . ' or other pre-arrangement';
 ) ?>
 </div>

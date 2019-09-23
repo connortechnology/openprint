@@ -20,7 +20,6 @@ use vars qw( $r $log $dbh %param %variable );
 *variable = \%openprint::variable;
 
 sub edit {
-
 	my $Service = $variable{Service} = new openprint::Service( $param{service_id} );
 
   if ( $param{btnFunction} ) {
@@ -165,7 +164,7 @@ sub edit {
       $$NewService{name} = 'Copy of '.$$Service{name};
 
       $variable{error} = $NewService->save();
-      (new openprint::Log())->save({object_id=>$$NewService{id},object_type=>ref$NewService, action=>'Copy Service', note=>'From ' . $Service->name()} ) if ! $variable{error};
+      (new openprint::Log())->save({Object=>$NewService, action=>'Copy Service', note=>'From ' . $Service->name()} ) if ! $variable{error};
       if ( ! $variable{error} ) {
         foreach my $price ( $Service->prices() ) {
           $$price{service_id} = $$NewService{id};
@@ -176,6 +175,7 @@ sub edit {
       $Service = $NewService;
     } # end if
   } # end if
+	ssi::save_params($r->uri(), 'service_id', 'equipment_id', 'ddmSearchCategory');
 
 	$variable{Service} = $Service;
 } # end sub edit

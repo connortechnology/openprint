@@ -51,7 +51,7 @@ sub Company {
 } # end sub Company
 
 sub Action {
-	$_[0]{Action} = new openprint::Log_Action( $_[0]{action_id} ) if ! $_[0]{Action};
+	$_[0]{Action} = new openprint::Log_Action($_[0]{action_id}) if ! $_[0]{Action};
 	return $_[0]{Action};
 } # end sub Action
 
@@ -69,32 +69,41 @@ sub ip_address {
 	my $Host = $_[0]->Host();
 
 	if ( @_ > 1 ) {
-		if ( ! defined $_[1] ) {
+		if ( !defined $_[1] ) {
 			$_[1] = $ENV{REMOTE_ADDR};
 		} # end if
-		my $Interface = openprint::Host_Interface->find_one( ip=>$_[1] );
-		if ( ! $Interface ) {
-			$Host = new openprint::Host();
-			$Host->save();
+		if ( (! $_[1]) and $openprint::config{REMOTE_ADDR} ) {
+			$_[1] = $openprint::config{REMOTE_ADDR};
+		}
+		return if ! $_[1];
+
+$openprint::log->debug("Getting HI for $_[1] for " . $_[0]->to_string());
+		my $Interface = openprint::Host_Interface->find_one(ip=>$_[1]);
+		if ( !$Interface ) {
+			$Host = openprint::Host->find_one(hostname=>$_[1]);
+			if ( ! $Host ) {
+				$Host = new openprint::Host();
+				$Host->save();
+			}
 			$Interface = new openprint::Host_Interface();
-			$Interface->save({host_id=>$$Host{id}, ip=>$_[1] });
+			$Interface->save({host_id=>$$Host{id}, ip=>$_[1]});
 		} else {
 			$Host = $Interface->Host();
 		} # end if
 		$_[0]{host_id} = $Host->id();
 	} # end if
-	return join('<br/>', map { $_->ip() ? $_->ip() : () } $Host->Interfaces() );
+	return join('<br/>', map { $_->ip() ? $_->ip() : () } $Host->Interfaces());
 } # end sub ip_address
 
 sub Host {
 	if ( ( ! $_[0]{host_id} ) and ( $_[0]{ip_address} ) ) {
 		my $Interface = openprint::Host_Interface->find_one( ip=>$_[0]{ip_address} );
 		my $Host;
-		if ( ! $Interface ) {
+		if ( !$Interface ) {
 			$Host = new openprint::Host();
 			$Host->save();
 			$Interface = new openprint::Host_Interface();
-			$Interface->save({host_id=>$$Host{id}, ip=>$_[0]{ip_address} });
+			$Interface->save({ host_id=>$$Host{id}, ip=>$_[0]{ip_address} });
 		} else {
 			$Host = $Interface->Host();
 		} 
@@ -108,7 +117,7 @@ sub Host {
 
 sub action {
 	if ( @_ > 1 ) {
-		my $Action = openprint::Log_Action->find_one( name=>$_[1] );
+		my $Action = openprint::Log_Action->find_one(name=>$_[1]);
 		if ( $_[1] and ! $Action ) {
 			$Action = new openprint::Log_Action();
 			$Action->save({name=>$_[1], description=>$_[1]});
@@ -119,6 +128,16 @@ sub action {
 	} # end if
 	return $_[0]->Action()->name();
 } # end sub action
+
+sub note_html {
+	if ( !$_[0]{note_html} ) {
+		if ( $_[0]{note} ) {
+			$_[0]{note_html} = ssi::htmlize($_[0]{note});
+			$_[0]{note_html} =~ s/&lt;a href=&quot;([^"]+)&quot;&gt;(.+)&lt;\/a&gt;/<a href=&quot;$1&quot;>$2<\/a>/ig;
+		}
+	}
+	return defined $_[0]{note_html} ? $_[0]{note_html} : '';
+}
 
 1;
 __END__

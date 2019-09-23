@@ -6,29 +6,32 @@ package openprint::Product_Category;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $serial $table %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $serial = 'product_categories_id_seq';
 $table = 'Product_Categories';
 
 %fields = (
-	id				=>	'id',
-	name			=>	'name',
-	description		=>	'description',
-	projecttype_id	=>	'projecttype_id',
-	parent_ids		=>	'parent_ids',
-	sorting			=>	'sorting',
-	deleted			=>	'deleted',
+		id							=>	'id',
+		name						=>	'name',
+		description			=>	'description',
+		projecttype_id	=>	'projecttype_id',
+		parent_ids			=>	'parent_ids',
+		sorting					=>	'sorting',
+		deleted					=>	'deleted',
+		album_id        =>  'album_id',
 );
 
 %transforms = (
-    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+  id								=>	[ 's/\D//g', '<2147483647' ],
+		name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+		description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	deleted			=>	0,
-	parent_ids	=>	[],
-	projecttype_id	=>	undef,
-	sorting			=>	undef,
+		deleted					=>	0,
+		parent_ids			=>	undef,
+		projecttype_id	=>	undef,
+		sorting					=>	undef,
+		album_id				=>	undef,
 );
 
 sub destroy {
@@ -51,7 +54,7 @@ sub destroy {
 } # end sub destroy
 
 sub products {
-Carp::cluck("Deprecated call openprint::Product_Category::products");
+	Carp::cluck("Deprecated call openprint::Product_Category::products");
 	return $_[0]->Products();
 } # end sub products
 
@@ -87,9 +90,22 @@ sub url_to {
 sub link_to {
 	return sprintf('<a href="/product/category_view.html?category_id=%d">%s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]{name} );
 }
+
+sub parent_ids {
+  my $self = shift;
+  if ( @_ ) {
+    if ( ref $_[0] eq 'ARRAY' ) {
+      $$self{parent_ids} = [ map { $_ =~ /(\d+)/ } @{$_[0]} ];
+    } else {
+      $$self{parent_ids} = [ map { $_ =~ /(\d+)/ } @_ ];
+    }
+  }
+  return $$self{parent_ids};
+}
+
 sub Parents {
 	if ( ! $_[0]{Parents} ) {
-		$_[0]{Parents} = [ openprint::Product_Category->find( 'parent_ids @>'=>$_[0]{parent_ids} ) ];
+		$_[0]{Parents} = ($_[0]{parent_ids} and @{$_[0]{parent_ids}}) ? [ openprint::Product_Category->find('id <@'=>$_[0]{parent_ids}) ] : [];
 	}
 	return @{$_[0]{Parents}};
 }
@@ -100,6 +116,17 @@ sub Categories {
 	}
 	return @{$_[0]{Categories}};
 } # end sub Categories
+
+sub upload {
+	my $self = shift;
+	my $Album = $self->Album();
+	if ( ! $Album->id() ) {
+		$Album->save();
+		$$self{album_id} = $Album->id();
+		$self->save();
+	}
+	return $Album->upload(@_);
+} # end sub upload
 
 1;
 __END__

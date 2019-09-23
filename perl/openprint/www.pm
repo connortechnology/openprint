@@ -98,7 +98,7 @@ sub handler {
 			#$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = $values[0];
-utf8::decode($param{$key});
+			utf8::decode($param{$key});
 #utf8::encode($values[0]);
 			#$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
 		} # end if
@@ -107,7 +107,7 @@ utf8::decode($param{$key});
 		if ( ref $param{$key} eq 'ARRAY' ) {
 			$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
-			$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
+			$log->debug("Parameter $key is (" . $param{$key} . ')' . (utf8::is_utf8($param{$key})||0) );
 			#$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
 		} # end if
 	}	# end foreach
@@ -140,6 +140,7 @@ utf8::decode($param{$key});
 
 # if not logged in, determine if they are allowed to see this page or not.
 			if ( ! $PageSetting->can_view() ) {
+        openprint::login::save_destination();
 				$log->debug("No good, need login");
 				if ( $page =~ /^.*\/_/ ) {
 					$r->content_type(q{text/javascript; charset=utf-8});
@@ -162,18 +163,15 @@ utf8::decode($param{$key});
 			('openprint::'.$o)->init_cache();
 		} # end foreach
 
-		#$openprint::log->debug("Page: $page");
-
 		# Just does timeout
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable );
 		$page = $variable{Redirect} if $variable{Redirect};	
-
 
 		while ( $page and $lastpage ne $page ) {
 			# This is for loop detection
 			$lastpage = $page;
 			$variable{uri} = $page;
-			parse_page( $page );
+			parse_page($page);
 			if ( (exists $variable{Redirect}) and $variable{Redirect} ) {
 				$openprint::log->debug("Reirect: $variable{Redirect}");
 				$page = $variable{Redirect};
@@ -350,7 +348,7 @@ sub parse_page {
 					my $rowclass = '';
 					foreach my $Project ( @Projects ) {
 						$variable{error} .= qq`<div$rowclass><a href="$variable{uri}?project_id=$$Project{id}">$$Project{id}</a> $$Project{reference}</div>`; 
-						$rowclass= $rowclass ? '' : ' class="colRow"';
+						$rowclass = $rowclass ? '' : ' class="colRow"';
 					}
 					return;
 				}
@@ -363,7 +361,6 @@ sub parse_page {
 			require openprint::print_project;
 			require openprint::employee_production;
 
-			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $param{ServiceIndex} and $filename ne 'multipage_signatures.html';
 			@variable{'ProjectIndex','ServiceIndex','OrderID'} = @param{'ProjectIndex','ServiceIndex','OrderID'};
 			
 			my $Project = $variable{Project} = new openprint::Project($variable{ProjectIndex});
@@ -386,24 +383,9 @@ sub parse_page {
 						return;
 					}
 				}
-				foreach my $signature_service_index ( $Project->signatures() ) {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-					push @{$variable{Signatures}}, @$sig_specs{'SignatureIndex','txtServiceDescription'};
-					if ( ! $$sig_specs{UsePress} ) {
-						openprint::service::insert_service_spec(
-								$log, $dbh, $$Project{id}, $signature_service_index,
-								'UsePress', $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
-					} # end if
-					$variable{"UsePress-$signature_service_index"} = $$sig_specs{UsePress};
-				} # end foreach signature_service_index
-
-				if ( ! $variable{ddmDueDate} ) {
-					$variable{ddmDueDate} = $variable{Project}->get_due_date();
-				} # end if
-				$variable{duedate} = $variable{ddmDueDate};
-				@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{ddmDueDate});
-
-			} elsif ( $third eq 'prin' ) {	
+			}
+			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $param{ServiceIndex} and $filename ne 'multipage_signatures.html';
+			if ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{ProjectIndex} );
 				if ( $filename eq '_production_feedback.html' ) {
 					openprint::employee_project::_production_feedback( );

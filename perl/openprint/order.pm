@@ -626,78 +626,13 @@ sub display_order {
 	$variable{Order} = $Order;
 } # end sub display_order
 
-# duplicates the given order.	returns the id of the newly created order
-sub make_order_from_order {
-	my ( $src_order_id ) = @_;
-
-	my $SRC_Order = new openprint::Order( $src_order_id );
-	return 0 if check_credit( $SRC_Order->total() );
-
-	if ( $SRC_Order->status() eq '' ) {
-		misc::error( $log, $dbh, \%variable, 'Can\'t re-order.', 'Order does not exist.' );
-		return 0;
-	} elsif ( ! sets::isin( $SRC_Order->status(), 'Complete', 'Paid',	'Shipped', 'Waiting For Pickup', 'Picked Up' ) ) {
-		misc::error( $log, $dbh, \%variable, 'Can\'t re-order.', 'The given order is not complete.' );
-		return 0;
-	} else {
-
-		my $ac = sql::start_transaction( $openprint::dbh );
-		# this goes before get_order_id so that we re-use orderids
-		delete_unfinished_orders( );
-
-		# get the contents
-		my @contents = sql::execute( $log, $dbh, q{SELECT lngProjectIndex, intQuantityIndex FROM Order_Contents WHERE OrderIndex=?}, $src_order_id );
-
-		my $order_id = make_order( $log, $dbh, $session{_session_id}, \%variable );
-		while ( my ( $p_id, $qty ) = splice( @contents, 0, 2 ) ) {
-			my $Project = new openprint::Project( $p_id );
-			my $New = $Project->copy();
-			$New->save({reference=>'ReOrder of ' . $New->reference() });
-			add_to_order( $log, $dbh, $order_id, \%variable, ( $New->id(), $qty ) );
-		} # end while
-		if ( $order_id ) {
-			foreach my $Product ( $SRC_Order->Products() ) {
-				my $NewProduct = $Product->copy();
-				$NewProduct->order_id( $order_id );
-				$NewProduct->save();
-			} # end foreach
-		} # end if
-		if ( $openprint::dbh->errstr() ) {
-			$openprint::dbh->rollback();
-			sql::end_transaction( $openprint::dbh, $ac );
-			return;
-		} # end if
-		sql::end_transaction( $openprint::dbh, $ac );
-		return $order_id;
-	} # end if
-	return 0;
-} # end sub make_order_from_order
 
 sub cancel_order {
 	my ( $order_id ) = @_;
-
+	my ( $caller, undef, $line ) = caller;
+	$log->error("Use of deprecated cancel_order from $caller:$line");
 	my $Order = new openprint::Order( $order_id );
-	$variable{error} .= $Order->save({ status=>'Cancelled' });
-	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?';
-	foreach my $project_index ( sql::execute( $log, $dbh, $_, $order_id ) ) {
-		my $Project = new openprint::Project( $project_index );
-		$Project->status('Unordered');
-		$Project->order_id( undef );
-		$Project->docket( undef );
-		$Project->save();
-		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus!=?', $project_index, 'Complete'], 'strStatus', 'calculated' );
-		openprint::press_schedule::remove( $Project->id() );
-
-		# Free up any stock allocated to this project
-		foreach my $PA ( openprint::PaperAllocation->find( docket=>$Order->docket() ) ) {
-			my @skid_ids = $PA->skid_ids() ? @{$PA->skid_ids()} : ();
-			$Order->add_log( qq`De-allocated $$PA{quantity}$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$PA{paper_id}">` . $PA->Paper()->to_string() . '</a>'.
-					( @skid_ids ? ' on skid: ' .  join(',', map { $_->url_to() } openprint::Skid->find(id=>\@skid_ids) ) : '' ) );
-			$PA->delete();
-		} # end foreach PA
-	} # end foreach
-	$Order->add_log( 'Cancelled' );
-	$Order->send_cancellation_notice();
+	return $Order->cancel();
 } # end sub cancel_order
 
 

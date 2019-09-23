@@ -8,9 +8,12 @@ require Encode;
 require openprint::Company_Credit;
 require openprint::order;
 require openprint::Order;
+require openprint::Order_Invoice;
 require openprint::Ledger;
 require openprint::Expenditure;
 require openprint::Expense;
+require openprint::Expense_Rule;
+require openprint::Expense_Rule_Category;
 require openprint::Payment;
 require misc;
 require sql;
@@ -154,7 +157,7 @@ sub details {
 		$variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Order->id();
 #openprint::order::send_invoice( $r, $log, $dbh, $order_id );
 	} elsif ( $param{btnFunction} eq 'Cancel' ) {
-		openprint::order::cancel_order( $log, $dbh, $order_id );
+		$variable{error} .= $Order->cancel();
 	} # end if
 
 	openprint::order::get_invoice_to( \%variable, $Order );
@@ -184,6 +187,25 @@ sub credit {
 				$variable{error} = 'No company found with account # ' . $param{txtSearchAccountNum}.'<br/>';	
 			} # end if
 		} # end if
+
+ } elsif ( $param{btnFunction} eq 'Cancel' ) {
+    if ( ! $param{PAID} ) {
+      $variable{error} = 'Please select an order to cancel.<br/>';
+    } else {
+      my @errors;
+      foreach my $order_id ( ref $param{PAID} eq 'ARRAY' ? @{$param{PAID}} : $param{PAID} ) {
+        my $Order = new openprint::Order( $order_id );
+        if ( $Order->company_id() != $company_id ) {
+          push @errors, 'Order ' . $Order->id() . ' does not belong to ' . new openprint::Company($company_id)->name().'.';
+          next;
+        } # end if
+				$_ = $Order->cancel();
+        push @errors, $_ if $_;
+      } # end foreach
+      if ( @errors ) {
+        $variable{error} = join('<br/>', @errors );
+      } # end if
+    } # end if
 
 	} elsif ( $param{btnFunction} eq 'Pay' ) {
 		if ( ! $param{PAID} ) {
@@ -241,16 +263,16 @@ sub credit {
 				} # end if
 			} # end foreach Supplier
 			my %updates;
-			foreach my $p ( 'discount', 'salesrep_id', 'notes' ) {
-				$updates{$p} = $param{$p} if exists $param{$p} and $$Company{$p} ne $param{$p};
+			foreach my $p ( 'csr_commission','credit_card_fee', 'discount', 'salesrep_id', 'notes' ) {
+				$updates{$p} = $param{$p} if exists($param{$p}) and ($$Company{$p} ne $param{$p});
 			}
 			if ( %updates ) {
-				my $note = note=>join('<br/>', map { $_ . ' changed from ' . $$Company{$_} . ' to ' . $updates{$_} } sort keys %updates );
+				my $note = join('<br/>', map { $_ . ' changed from ' . $$Company{$_} . ' to ' . $updates{$_} } sort keys %updates );
 				if ( ! ( $_ = $Company->save(\%updates) ) ) {
-					(new openprint::Log())->save({action=>'Edit Company', Object=>$Company, note=>$note });
+					(new openprint::Log())->save({ action=>'Edit Company', Object=>$Company, note=>$note });
 				} else {
 					$variable{error} .= $_ . '<br/>';
-				} # en dif
+				} # end if
 			} 
 			sql::end_transaction( $dbh, $ac );
 		} # end if
@@ -430,6 +452,7 @@ sub expenses {
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'entered_on_end', '' );
 	} # end if
 } # end sub expenses
+
 sub _expenses {
 	ssi::save_params( '/employee/accounting/expenses.html', ( 
 				'entered_on_start_year','entered_on_start_month','entered_on_start_day',
@@ -446,13 +469,19 @@ sub _expenses {
 } # end sub _expenses
 
 sub expense {
-	my $Expense = $variable{Expense} = new openprint::Expense( $param{expense_id} );
+	my $Expense = $variable{Expense} = new openprint::Expense($param{expense_id});
 	if ( $param{btnFunction} eq 'Copy' ) {
 		$variable{information} .= $Expense->id() . ' has been copied';
 		$variable{Expense} = $Expense = $Expense->copy();
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		if ( ! ( $variable{error} .= $Expense->delete() ) ) {
 			$variable{information} .= 'Expense ' . $Expense->id() . ' deleted successfully.';
+			$variable{ExternalRedirect} = '/employee/accounting/expenses.html';
+			return;	
+		} # end if
+	} elsif ( $param{btnFunction} eq 'Undelete' ) {
+		if ( ! ( $variable{error} .= $Expense->undelete() ) ) {
+			$variable{information} .= 'Expense ' . $Expense->id() . ' undeleted.';
 			$variable{ExternalRedirect} = '/employee/accounting/expenses.html';
 			return;	
 		} # end if
@@ -552,13 +581,16 @@ sub stock {
 	require openprint::ManifestContent;
 
 	if ( $param{btnFunction} eq 'Save' ) {
-		foreach my $Type ( openprint::Manifest_Content_Type->find('cost'=>undef) ) {
+		foreach my $Type ( openprint::Manifest_Content_Type->find(cost=>undef) ) {
 			$param{'cost-'.$Type->id()} =~ s/[^\d\.]//g;
 			if ( $param{'units-'.$Type->id()} eq '/lb' ) {
 				$param{'cost-'.$Type->id()} *= 100;
 			} # end if
 			if ( ( $param{'supplier_invoice-'.$Type->id()} ne $Type->supplier_invoice() ) or ( $param{'cost-'.$Type->id()} != $Type->cost() ) ) {
-				$variable{error} .= $Type->save({'supplier_invoice'=>$param{'supplier_invoice-'.$Type->id()}, 'cost'=>$param{'cost-'.$Type->id()} });
+				$variable{error} .= $Type->save({
+						supplier_invoice=>$param{'supplier_invoice-'.$Type->id()},
+						cost=>$param{'cost-'.$Type->id()} 
+						});
 			} # end if
 		} # end foreach
 	} else {
@@ -569,10 +601,41 @@ sub stock {
 } # end sub stock
 
 sub _stock {
-	ssi::save_params( '/employee/accounting/stock.html',
-			( map { 'received_on_start_'.$_ } ( 'year', 'month','day' ) ),
-			( map { 'received_on_end_'.$_ } ( 'year', 'month','day' ) ),
-			);
+	if ( $param{action} ) {
+		if ( $param{action} eq 'confirm_po_content' ) {
+			my $Manifest_Content_Type = openprint::Manifest_Content_Type->find_one(id=>$param{manifest_content_type_id});
+			if ( $Manifest_Content_Type ) {
+				$variable{error} .= $Manifest_Content_Type->save({po_content_id=>$param{po_content_id}});
+				my $POC = $Manifest_Content_Type->PurchaseOrder_Content();
+				(new openprint::Log())->save({
+						Object=>$Manifest_Content_Type->Manifest(),
+						action=>'Edit',
+						note=>'Confirm PO Content '.$POC->item(),
+						});
+
+			} else {
+				$variable{error} .= "Manifest Content Type not found for id=.$param{manifest_content_type_id}<br/>";
+			}
+		} elsif ( $param{action} eq 'unconfirm_po_content' ) {
+			my $Manifest_Content_Type = openprint::Manifest_Content_Type->find_one(id=>$param{manifest_content_type_id});
+			if ( $Manifest_Content_Type ) {
+				my $POC = $Manifest_Content_Type->PurchaseOrder_Content();
+				$variable{error} .= $Manifest_Content_Type->save({po_content_id=>undef});
+				(new openprint::Log())->save({
+						Object=>$Manifest_Content_Type->Manifest(),
+						action=>'Edit',
+						note=>'Unconfirm PO Content '.$POC->item(),
+						});
+			} else {
+				$variable{error} .= "Manifest Content Type not found for id=.$param{manifest_content_type_id}<br/>";
+			}
+		} # end if
+	} else {
+		ssi::save_params( '/employee/accounting/stock.html',
+				( map { 'received_on_start_'.$_ } ( 'year', 'month','day' ) ),
+				( map { 'received_on_end_'.$_ } ( 'year', 'month','day' ) ),
+				);
+	}
 } # end sub _stock
 
 sub credit_applications {
@@ -687,6 +750,26 @@ sub _delete_order_invoice {
 } # end sub _delete_order_invoice
 
 sub _select_category {
+}
+
+sub expense_rules {
+    
+}
+sub _expense_rules {
+}
+
+sub expense_rule {
+    my $Rule = $variable{Rule} = new openprint::Expense_Rule($param{expense_rule_id});
+    return if ! $param{action};
+
+    if ( $param{action} eq 'Save' ) {
+      $variable{error} .= $Rule->save(\%param);
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/employee/accounting/expense_rules.html';
+      }
+    } elsif ( $param{action} eq 'Copy' ) {
+      $Rule = $variable{Rule} = $Rule->copy();
+    }
 }
 
 1;

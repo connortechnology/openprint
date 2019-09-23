@@ -502,9 +502,16 @@ sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
 	@$New{keys %fields} = @$self{keys %fields};
-	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled', 'manifest_id' ) {
+	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled', 'manifest_id', 'Taxes' ) {
 		delete $$New{$_};
 	} # end foreach
+	my @Taxes;
+	foreach my $Tax ( $self->Taxes() ) {
+		my $NewTax = $Tax->copy();
+		$NewTax->PurchaseOrder($New);
+		push @Taxes, $NewTax;
+	} # end foreach
+	$$New{Taxes} = \@Taxes;
 	$$New{created_by} = $session{user_id};
 	return $New;
 } # end sub copy
@@ -515,10 +522,8 @@ sub Manifest {
 
 # We don't make any db changes here.  That only happens on PO saving
 sub Taxes {
-	my ( $self ) = @_;
-	if ( @_ > 1 ) {
-		$$self{Taxes} = $_[1];
-	}
+	my $self = shift;
+	$$self{Taxes} = shift if @_;
 	@{$$self{Taxes}} = openprint::PurchaseOrder_Tax->find(purchaseorder_id=>$$self{id}) if $$self{id} and ! $$self{Taxes};
 
 if ( 0 ) {
@@ -686,6 +691,7 @@ sub num {
 sub can_send {
 	my $User = @_ > 1 ? $_[1] : $openprint::User;
 	return 1 if $$User{id} == $_[0]{created_by};
+	return 1 if $$User{type} eq 'A';
 	return $_[0]->can_authorize();
 } # end sub can_send
 

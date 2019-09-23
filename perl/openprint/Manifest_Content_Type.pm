@@ -9,7 +9,7 @@ use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 require openprint::Manifest;
 require Math::Round;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'manifest_content_types';
 $serial = 'manifest_content_types_id_seq';
@@ -77,25 +77,39 @@ sub PurchaseOrder_Content {
 		if ( $_[0]{po_content_id} ) {
 			$_[0]{PurchaseOrder_Content} = new openprint::PurchaseOrder_Content($_[0]{po_content_id});
 		} elsif ( $_[0]{po_id} ) {
-			my $PO = new openprint::PurchaseOrder( $_[0]{po_id} );
+			my $PO = new openprint::PurchaseOrder($_[0]{po_id});
 			my $Paper = $_[0]->Paper();
+			$openprint::log->debug('Paper desc: ' . $Paper->to_string()) if $debug;
 			foreach my $POC ( $PO->Contents() ) {
 				$openprint::log->debug('POC desc: ' . $POC->item()) if $debug;
 				if ( $POC->type() ne $Paper->type().' Stock' ) {
 					$openprint::log->debug("not the right type POC: $$POC{type} != $$Paper{type} Stock") if $debug;
 					next;
-				} # en dif
+				} # end if
 				if ( ! $$options{ignore_docket} ) {
 					if ( $POC->docket() and $_[0]{docket} ) {
-						$openprint::log->debug("not the right docet POC: $$POC{docket} != $_[0]{docket}") if $debug;
-						next if $POC->docket() ne $_[0]{docket};
+						if ( $POC->transform(docket=>$POC->docket()) ne $_[0]{docket} ) {
+							$openprint::log->debug("Not the right docket POC? ($$POC{docket}) !=? ($_[0]{docket})") if $debug;
+							next;
+						}
+					}
+				}
+				if ( $POC->item() =~ /Cover/i ) {
+					if ( !$Paper->is_cover() ) {
+						$openprint::log->debug("PO is cover, paper is not" ) if $debug;
+						next;
+					}
+				} else {
+					if ( $Paper->is_cover() ) {
+						$openprint::log->debug("PO is not cover, paper is" ) if $debug;
+						next;
 					}
 				}
 				my ( $weight ) = $POC->item() =~ /(\d+)\w*lb/i;
 				if ( $weight ) {
 					$weight = Math::Round::nearest(1,$weight*2);
 					#$openprint::log->debug("Looking for $weight basis_weight") if $debug;
-					if( $Paper->basis_mweight() ) {
+					if ( $Paper->basis_mweight() ) {
 						my $basis_weight = Math::Round::nearest(1,$Paper->basis_mweight());
 						if ( $weight != $basis_weight ) {
 							$openprint::log->debug("Wrong weight: 2*$weight != " . $basis_weight ) if $debug;
@@ -116,6 +130,20 @@ sub PurchaseOrder_Content {
 						$openprint::log->debug("Indeterminate weight: $weight == " . $paper_weight ) if $debug;
 					}
 				} # end if
+
+				my ( $caliper ) = $POC->item() =~ /(\d+)PT/i;
+				if ( $caliper ) {
+					if ( $Paper->weight() =~ /(\d+PT)/i ) {
+						if ( $1 != $caliper ) {
+							$openprint::log->debug("Caliper doesn't match $caliper != $1") if $debug;
+							next;
+						} # end if
+					} elsif ( $Paper->calliper() and ( int($Paper->calliper()*1000) != $caliper ) ) {
+						$openprint::log->debug("Caliper doesn't match $caliper != $$Paper{calliper}") if $debug;
+						next;
+					}
+				}
+
 				my ( $width ) = $POC->item() =~ /([\.\d]+)in/i;
 				if ( $width ) {
 					if ( $Paper->width() and ( $Paper->width() != $width ) ) {
@@ -125,7 +153,7 @@ sub PurchaseOrder_Content {
 						$openprint::log->debug("Right width: $width == " . $Paper->width() ) if $debug;
 					} # end if
 				} else {
-					my ( $width, $height ) = $POC->item() =~ /(\d+)x(\d+)/i;
+					my ( $width, $height ) = $POC->item() =~ /([\d\.]+)x([\d\.]+)/i;
 					if ( $width ) {
 						if ( $Paper->width() and ( $Paper->width() != $width ) ) {
 							$openprint::log->debug("Wrong width: $width != " . $Paper->width() ) if $debug;
@@ -144,6 +172,7 @@ sub PurchaseOrder_Content {
 						next;
 					} # end if
 				} # end if
+				$openprint::log->debug("Matched $$POC{item} => " . $Paper->to_string()) if $debug;
 				$_[0]{PurchaseOrder_Content} = $POC;
 				last;
 			} # end foreach POC
@@ -152,6 +181,74 @@ sub PurchaseOrder_Content {
 	} # end if ! exists $_[0]{PurchaseOrder_Content}
 	return $_[0]{PurchaseOrder_Content}; 
 } # end sub PurchaseOrder_Content
+
+sub match_Stock {
+	my ( $self, $Stock ) = @_;
+
+	my $TypeStock = $self->Paper();
+$openprint::log->debug("Comparing " . $Stock->to_string());
+$openprint::log->debug("to " . $TypeStock->to_string());
+
+	if ( $$self{paper_id} == $$Stock{id} ) {
+		$openprint::log->debug("Matched paper_id $$self{paper_id} == $$Stock{id}");
+		return 1;
+	}
+	if ( $$self{type} ne $$Stock{type} ) {
+		$openprint::log->debug("not the right type POC: $$self{type} != $$Stock{type} Stock") if $debug;
+		return 0;
+	} # end if
+
+	if ( $TypeStock->width() != $Stock->width() ) {
+		$openprint::log->debug("not the right width  $$TypeStock{width} != $$Stock{width} Stock") if $debug;
+		return 0;
+	}
+	if ( $$Stock{type} eq 'Sheet' and ( $TypeStock->height() != $Stock->height() ) ) {
+		$openprint::log->debug("not the right height  $$TypeStock{height} != $$Stock{height} Stock") if $debug;
+		return 0;
+	}
+
+	my ( $weight ) = $TypeStock->weight() =~ /(\d+)\w*lb/i;
+	if ( $weight ) {
+		$weight = Math::Round::nearest(1,$weight*2);
+#$openprint::log->debug("Looking for $weight basis_weight") if $debug;
+		if ( $Stock->basis_mweight() ) {
+			my $basis_weight = Math::Round::nearest(1,$Stock->basis_mweight());
+			if ( $weight != $basis_weight ) {
+				$openprint::log->debug("Wrong weight: 2*$weight != " . $basis_weight ) if $debug;
+				return 0;
+			} else {
+				$openprint::log->debug("Right weight: $weight == " . $basis_weight ) if $debug;
+			}
+		} else {
+			my $paper_weight;
+			if ( ( $paper_weight ) = $Stock->weight() =~ /(\d+)lb/i ) {
+				if ( $weight != $paper_weight ) {
+					$openprint::log->debug("Wrong weight: 2*$weight != " . $paper_weight ) if $debug;
+					return 0;
+				} else {
+					$openprint::log->debug("Right weight: $weight == " . $paper_weight ) if $debug;
+				}
+			}
+			$openprint::log->debug("Indeterminate weight: $weight == " . $paper_weight ) if $debug;
+		}
+	} # end if weight
+
+	my ( $caliper ) = $TypeStock->weight() =~ /(\d+)PT/i;
+	if ( $caliper ) {
+		if ( $Stock->weight() =~ /(\d+PT)/i ) {
+			if ( $1 != $caliper ) {
+				$openprint::log->debug("Caliper doesn't match $caliper != $1") if $debug;
+				return 0;
+			} # end if
+		} elsif ( $Stock->calliper() and ( $Stock->calliper() != $caliper ) ) {
+			$openprint::log->debug("Caliper doesn't match $caliper != $$Stock{calliper}") if $debug;
+			return 0;
+		}
+	} # end if caliper
+
+	return 1;
+
+} # end sub match_Stock
 
 sub type {
 	if ( @_ > 1 ) {
@@ -222,6 +319,51 @@ sub Currency {
 	}
 	return $_[0]{Currency};
 } # end sub Currency
+
+sub quantity {
+	if ( ! $_[0]{quantity} ) {
+		$_[0]{quantity} = 0;
+		foreach my $C ( $_[0]->Contents() ) {
+			$_[0]{quantity} += $$C{quantity};
+		}
+	}
+	return $_[0]{quantity};
+} # end sub quantity
+
+sub units {
+	my @Contents = $_[0]->Contents();
+	if ( @Contents ) {
+		return $Contents[0]->units();
+	}
+	return 'unknown';
+}
+
+sub value {
+	if ( ! $_[0]{value} ) {
+		$_[0]{value} = 0;
+		foreach my $C ( $_[0]->Contents() ) {
+			$_[0]{value} += $C->value();
+		}
+	}
+	return $_[0]{value};
+}
+
+sub cost_units {
+	my $self = shift;
+	$$self{cost_units} = shift if @_;
+	if ( ! $$self{cost_units} ) {
+		$$self{cost_units} = '/100lb';
+	}
+	return $$self{cost_units};
+}
+
+sub delete {
+	my $self = shift;
+	foreach my $C ( $self->Contents() ) {
+		$C->delete();
+	}
+	$self->SUPER::delete();
+}
 
 1;
 __END__

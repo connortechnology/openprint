@@ -6,6 +6,7 @@ CREATE TABLE EmailCampaigns (
 	Query	TEXT NOT NULL,
 	Interval	INTERVAL NOT NULL,
 	Active	CHAR(1) default 'Y',
+runnable	boolean not null default false,
 	TimesToSend	INTEGER,
 	email_subject	TEXT,
 	email_text	TEXT,
@@ -14,5 +15,7 @@ CREATE TABLE EmailCampaigns (
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default now(),
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default now(),
 	nextrun		TIMESTAMP WITH TIME ZONE,
+	user_id		integer, FOREIGN KEY (user_id) REFERENCES Users (id),
+	recipients_per_run	integer,
 	PRIMARY KEY (id)
 );

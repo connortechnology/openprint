@@ -299,7 +299,7 @@ $log->error("PReventing customer change");
 		$User->save({});
 		$user_id = $User->id();
     } elsif ( $param{btnFunction} eq 'merge' ) {
-		if ( $$User{id} == $openprint::param{merge_user_id} ) {
+		if ( $$User{id} == $param{merge_user_id} ) {
 			$variable{error} .= 'Choose a different user to merge into.';
 		} else {
 			my $ac = sql::start_transaction( $dbh );
@@ -386,25 +386,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		} # end if
 
 		if ( $config{mail_db_name} ) {
-			my @domains = email::domains();
-			my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
-			if ( sets::isin( $domain, \@domains ) ) {
-				if ( $param{VacationState} ) {
-					email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage','VacationSystemEmails'} );
-				} else {
-					email::stop_vacation( $User->email() );
-				} # end if
-				if ( $param{EmailPassword} and $param{EmailPassword} eq $param{VerifyEmailPassword} ) {
-					email::set_password( @param{'email','EmailPassword'} );
-				} # end if
-				my @aliases = ();
-				foreach my $alias ( split "\r\n", $param{aliases} ) {
-					next if ! $alias;
-					push @aliases, $alias;
-				} # end foreach
-				push @aliases, $User->email() if ! @aliases;
-				email::aliases( $User->email(), @aliases );
-			} # end if
+			email::save($User->email(), \%param);
 		} # end if
 
 		my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
@@ -475,7 +457,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		} elsif ( ! sets::isin( $User->id(), [ map { $_->id() } @Users ] ) ) {
 			unshift @Users, $User;
 		} # end if
-    } # end if
+	} # end if
 
 	# load user fields
 
@@ -496,13 +478,10 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 	} # end if
 
 	if ( $config{mail_db_name} ) {
-		my @domains = email::domains();
-		my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
-		if ( sets::isin( $domain, \@domains ) ) {
-			$variable{DoEmail} = 1;
-			@variable{'VacationState','VacationSubject','VacationMessage','VacationSystemEmails'} = email::get_vacation( $User->email() );
-			@{$variable{Aliases}} = email::aliases( $User->email() );
-		} # end if
+		email::load($User->email(), \%variable);
+		my $mail_dbh = email::db_connect();
+		$openprint::Email_Account::dbh = $mail_dbh;
+		$variable{Email} = openprint::Email_Account->find_one(username=>$User->email());
 	} # end if
 
 	$variable{Users} = \@Users;
@@ -519,7 +498,6 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 
 	$session{$r->uri().'?company_id'} = $param{ddmCustomer};
 
-
 	ssi::setup_date_select( $r->uri, 'log_created_on_start', -31 );
 	ssi::setup_date_select( $r->uri, 'log_created_on_end', '' );
 
@@ -528,6 +506,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 
 sub company_profiles {
 
+	ssi::save_params( '/administrator/managerial/company_profiles.html', ( 'search_salesrep_id','deleted' ) );
 # form field to db field mappings
 	my %shipping_fields = (
 			'txtShippingCompanyName'	=>	'CompanyName',
@@ -561,11 +540,11 @@ sub company_profiles {
 			( $index ) = sql::execute( $log, $dbh, 'SELECT id from Company WHERE strAccountNum=?',$param{txtSearchAccountNum});
 		} # end if
 	} elsif ( $param{btnFunction} eq 'merge' ) {
-		if ( ! $openprint::param{company_id} ) {
+		if ( ! $param{company_id} ) {
 			$variable{error} .= 'There must be a selected company to merge to.';
-		} elsif ( ! $openprint::param{merge_company_id} ) {
+		} elsif ( ! $param{merge_company_id} ) {
 			$variable{error} .= 'There must be a selected company to merge from.';
-		} elsif ( $openprint::param{company_id} == $openprint::param{merge_company_id} ) {
+		} elsif ( $param{company_id} == $param{merge_company_id} ) {
 			$variable{error} .= 'Choose a different company to merge into.';
 		} else {
 			my $ac = sql::start_transaction( $dbh );
@@ -578,18 +557,18 @@ sub company_profiles {
 			foreach my $Timetrack ( openprint::Timetrack->find('owner_id'=>$param{merge_company_id}) ) {
 				$Timetrack->save({'owner_id'=>$Company->id()});
 			} # end foreach Timetrack
-			foreach ( openprint::Invoice->find('invoicer_id'=>$param{merge_company_id}) ) {
-				$_->save({'invoicer_id'=>$Company->id()});
+			foreach ( openprint::Invoice->find(invoicer_id=>$param{merge_company_id}) ) {
+				$_->save({invoicer_id=>$Company->id()});
 			} # end foreach
-			foreach ( openprint::Invoice->find('invoicee_id'=>$param{merge_company_id}) ) {
-				$_->save({'invoicee_id'=>$Company->id()});
+			foreach ( openprint::Invoice->find(invoicee_id=>$param{merge_company_id}) ) {
+				$_->save({invoicee_id=>$Company->id()});
 			} # end foreach
-			foreach my $Payment ( openprint::Payment->find('payor_id'=>$param{merge_company_id}) ) {
-				$Payment->save({'payor_id'=>$Company->id()});
+			foreach my $Payment ( openprint::Payment->find(payor_id=>$param{merge_company_id}) ) {
+				$Payment->save({payor_id=>$Company->id()});
  #if $Payment->payor_id() == $Company->id();
 			} # end foreach  Payment
-			foreach my $Payment ( openprint::Payment->find('recipient_id'=>$param{merge_company_id}) ) {
-				$Payment->save({'recipient_id'=>$Company->id()});
+			foreach my $Payment ( openprint::Payment->find(recipient_id=>$param{merge_company_id}) ) {
+				$Payment->save({recipient_id=>$Company->id()});
 # if $Payment->recipient_id() == $Company->id();
 			} # end foreach  Payment
 			foreach my $Stock ( openprint::Paper->find(supplier_id=>$param{merge_company_id}) ) {
@@ -626,21 +605,23 @@ sub company_profiles {
 				my @customercategories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
 
 				sql::execute( $log, $dbh, q{DELETE FROM Companies_in_Marketing_Categories WHERE company_Id =?}, $index );
-# add them back in
-				my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
-				foreach my $cat ( $param{selectCustomerCategories} ) {
-					if ( $cat and sets::isin( $cat, \@customercategories ) ) {
-						$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
-					} # end if
-				} # end foreach
+				if ( $param{selectCustomerCategories} ) {
+					my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
+					foreach my $cat ( $param{selectCustomerCategories} ) {
+						if ( $cat and sets::isin( $cat, \@customercategories ) ) {
+							$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
+						} # end if
+					} # end foreach
+					$sth->finish();
+				}
 
 				my %params;
 				foreach my $field ( keys %shipping_fields ) {
 					$params{$shipping_fields{$field}} = $param{$field} if defined $param{$field};
 				} # end foreach
-				$Company->save_shipping( \%params );
+				$Company->save_shipping(\%params);
 
-				$Company->save_tradereferences( \%param );
+				$Company->save_tradereferences(\%param);
 
 				$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
@@ -773,32 +754,14 @@ sub email {
 						name=>$param{name},
 						active=>$param{active},
 						maildir=>($param{maildir} ? $param{maildir} : join('/', $domain, $account,'')),
-} );
+						} );
 
-				my @domains = email::domains();
-				my ( $user, $domain ) = $Email->username() =~ /^([^\@]+)\@(.+)$/;
-				if ( sets::isin( $domain, \@domains ) ) {
-					if ( $param{VacationState} ) {
-						email::start_vacation( $Email->username(), @param{'VacationSubject','VacationMessage','VacationSystemEmails'} );
-					} else {
-						email::stop_vacation( $Email->username() );
-					} # end if
-					if ( $param{EmailPassword} and $param{EmailPassword} eq $param{VerifyEmailPassword} ) {
-						email::set_password( @param{'username','EmailPassword'} );
-					} # end if
-					my @aliases = ();
-					foreach my $alias ( split "\r\n", $param{aliases} ) {
-						next if ! $alias;
-						push @aliases, $alias;
-					} # end foreach
-					push @aliases, $Email->username() if ! @aliases;
-					email::aliases( $Email->username(), @aliases );
-				} # end if
+				my ($error, @c ) = email::save($Email->username(), \%param);
+				$variable{error} .= $error;
 			} # end if
-			$variable{ExternalRedirect} = '/administrator/managerial/emails.html' if ! $variable{error};
+			$variable{ExternalRedirect} = '/administrator/managerial/emails.html' if !$variable{error};
 		} # end if action
-		@variable{'VacationState','VacationSubject','VacationMessage','VacationSystemEmails'} = email::get_vacation( $Email->username() );
-		$variable{Aliases} = [email::aliases( $Email->username() )];
+		email::load( $Email->username(), \%variable);
 	} else {
 		$variable{error} .= "No connection to mail db.<br/>";
 	} # end if have maildb connection
@@ -1059,6 +1022,7 @@ sub _logs {
 	ssi::save_params( '/administrator/managerial/logs.html', (
         'log_actions', 'user_id', 'company_id',
 				( map { 'date_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'date_end_' . $_ } ( 'year','month','day' ) ),
 				) );
 	if ( $param{action} eq 'delete' ) {
 		my $Log = new openprint::Log( $param{log_id} );
@@ -1183,14 +1147,26 @@ sub users {
 
 }
 sub _users {
-	ssi::save_params('/administrator/managerial/users.html', (
+	my $uri = '/administrator/managerial/users.html';
+	ssi::save_params($uri,(
 				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email','type','administrator',
 				'notification_type_id',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );
-	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+	$session{$uri.'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
 }
+
+sub mailqueue {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'Delete' ) {
+			foreach my $queue_id ( ref $param{queue_id} eq 'ARRAY' ? @{$param{queue_id}} : ( $param{queue_id} ) ) {
+$log->debug("sudo /usr/sbin/postsuper -d $queue_id");
+				$variable{information} .= `sudo /usr/sbin/postsuper -d $queue_id 2>&1`.'<br/>';
+			}
+		}
+	}
+} # end sub mailqueue
 
 1;
 __END__

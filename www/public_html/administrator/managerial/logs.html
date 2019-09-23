@@ -1,4 +1,4 @@
-<form name="searchLog" action="logs.html" method="post">
+<form id="searchLog" name="searchLog" action="logs.html" method="post">
 	<fieldset class="filters"><legend>Search</legend>
 		<div class="content">
 			<ul>
@@ -41,9 +41,16 @@
 				</li>			
 				<li>
 					<label>Date</label>
-					<? echo ( date_select_session( $r->uri(), 'date_start', { with_today=>1, with_clear=>1 } ); ) ?>
-					to
-					<? echo ( date_select_session( $r->uri(), 'date_end', { with_today=>1, with_clear=>1 } ); ) ?>
+					<? echo ( join(' to ',
+								date_select_session($r->uri(), 'date_start', {
+									with_today=>1, with_clear=>1,
+									onchange	=>	q`check_time_starting($('searchLog'),'date_start','date_end');`,
+								}),
+								date_select_session($r->uri(), 'date_end', {
+									with_today=>1, with_clear=>1,
+									onchange	=>	q`check_time_starting($('searchLog'),'date_start','date_end');`,
+									} ),
+					); ) ?>
 				</li>
 			</ul>
 		</div>
@@ -52,61 +59,4 @@
 		</p>
 	</fieldset>
 </form>
-<fieldset>
-	<legend>Last Events</legend>
-		<table class="List sortable">
-		<tr>
-			<th class="Action">Action</th>
-			<th class="DateTime">When</th>
-			<th class="ip">IP Address</th>
-			<th class="Note">Note</th>
-			<th class="Email">Email</th>
-			<th class="Name">Name</th>
-			<th class="Company">Company</th>
-			<th class="Object">Object</th>
-			<th class="buttons"></th>
-		</tr>
-			<? echo (
-				my $html = '';
-				$$variable{Results} = [ openprint::Log->find(
-					date_filter( $r->uri(). '?date_end', 'date_time <=' ),
-					date_filter( $r->uri(). '?date_start', 'date_time >=' ),
-					( $param{company_id} ? ( company_id	=>	$param{company_id} ) : () ),
-					( $param{user_id} ? ( user_id		=>	$param{user_id} ) : () ),
-					( $param{object_type_id} ? ( object_type_id		=>	$param{object_type_id} ) : () ),
-					action_id	=>	$param{log_actions},
-          order => 'date_time',
-					) ];
-
-				foreach my $Log ( @{$$variable{Results}} ) {
-					my $Object = $Log->Object();
-
-					$html .= sprintf('<tr id="log_%d">
-							<td class="Action">%s</td>
-							<td class="DateTime">%s</td>
-							<td class="ip" title="%s">%s</td>
-							<td class="Note">%s</td>
-							<td class="Email">%s</td>
-							<td class="Name">%s</td>
-							<td class="Company">%s</td>
-							<td class="Object">%s</td>
-							<td class="buttons">%s</td>
-						</tr>',
-						$Log->id(),
-						$Log->Action()->name(),
-						format_datetime( $Log->date_time() ),
-						$Log->ip_address(), ( $Log->hostname() ? $Log->hostname() : $Log->ip_address() ),
-						$Log->note(),
-						$Log->User()->link_to( $Log->User()->email() ),
-						$Log->User()->name(),
-						$Log->Company()->name(),
-						( $Object ? $Object->link_to( $Log->Object_Type()->human() . ' : ' . $Object->name() ) : '' ),
-						join("\n",
-							button( 'X'.$Log->id(), { onclick=>qq`jQuery.ajax('_logs.json', { data: { action: 'delete', log_id: $$Log{id} } } ).done( function(){ jQuery('#log_$$Log{id}').remove() } );`, text=>'X' } ),
-						),
-						);
-				} # end foreach
-				return $html;
-			) ?>
-		</table>
-</fieldset>
+<?include(/administrator/managerial/_logs.html)?>

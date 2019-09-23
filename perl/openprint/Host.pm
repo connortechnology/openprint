@@ -99,7 +99,25 @@ $serial = 'hosts_id_seq';
 );
 
 sub name {
-  return $_[0]->hostname();
+	if ( ! $_[0]{name} ) {
+		$_[0]{name} = $_[0]->hostname();
+		if ( ! $_[0]{name} ) {
+			foreach my $HI ( $_[0]->Interfaces() ) {
+				if ( $$HI{ip} ) {
+					$_[0]{name} = $$HI{ip};
+					return $_[0]{name};
+				}
+			}
+			foreach my $HI ( $_[0]->Interfaces() ) {
+				if ( $$HI{mac} ) {
+					$_[0]{name} = $$HI{mac};
+					return $_[0]{name};
+				}
+			}
+			return 'unknown';			
+		}
+	}
+	return $_[0]{name};
 }
 
 sub destroy {
@@ -230,7 +248,7 @@ sub reboot {
 		my $url;
 		my $initial_url; # in case we need to hit a different url first.
 		my $method = 'get';
-		my $args = {};
+		my $args = undef;
 		my $expect;
 		my $do_not_expect;
 		my $port = 80;
@@ -265,6 +283,11 @@ sub reboot {
 			};
 			$expect = 'Device has been rebooted';
 
+		} elsif( $_[0]->type() eq 'DLink DCS-2310L' ) {
+      $initial_url = $HI->ip();
+			$url = $HI->ip().'/vb.htm?setallreboot=1';
+			$method = 'get';
+			$expect = 'OK setallreboot';
 		} elsif ( $_[0]->type() eq 'TP-Link Archer C7' ) {
 			require JSON;
 
@@ -338,23 +361,22 @@ sub reboot {
 		}
 
 		my $response = $browser->get($protocol.'://'.($initial_url ? $initial_url : $url));
-		$openprint::log->debug("Sending initial url: " . $protocol.'://'.($initial_url ? $initial_url : $url) );
+		$openprint::log->debug("Sending initial url: " . $protocol.'://'.($initial_url ? $initial_url : $url) . ' status: ' . $response->is_success . ' ' . $response->status_line() . $response->content);
 		my $headers = $response->headers();
 		if ( $$headers{'client-ssl-cipher'} ) {
 $openprint::log->debug("Switching to https");
 			$protocol = 'https';
 			$port = 443;
 		}
-		$response = $HI->authenticate(
-				$browser, $response, $method, $port, $protocol.'://'.$url, $args);
+		$response = $HI->authenticate($browser, $response, $method, $port, $protocol.'://'.($initial_url ? $initial_url : $url), $args);
 
 		if ( !$response->is_success ) {
-			$openprint::log->error( "No success: content:".$response->content."\nstatus:".$response->status_line() );
+			$openprint::log->error("No success: content:".$response->content."\nstatus:".$response->status_line());
 			if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
-				$openprint::log->error("Couldn't get content from $url unauthorized trying again:". $response->status_line );
+				$openprint::log->error("Couldn't get content from $url unauthorized trying again:". $response->status_line);
 				$response = $browser->get($protocol.'://'.$url);
 				if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
-					$openprint::log->error("Couldn't get content from $url unauthorized:". $response->status_line );
+					$openprint::log->error("Couldn't get content from $url unauthorized:". $response->status_line);
 					my $headers = $response->headers();
 					foreach my $k ( keys %$headers ) {
 						$openprint::log->error("Header $k => $$headers{$k}");
@@ -375,9 +397,14 @@ $openprint::log->debug("Switching to https");
 			} # end if
 		} else {
 			$success = 1;
-			$openprint::log->debug("Success Content: " . $response->content );
+			$openprint::log->debug("Success Content: " . $response->content);
 		} # end if
+
 		if ( $success ) {
+      if ( $url ne $initial_url ) {
+        $response = $browser->get($protocol.'://'.$url);
+        $openprint::log->debug("Success Content: " . $response->content);
+      }
 			if ( $expect and ! ( $response->content =~ /$expect/ ) ) {
 				$success = 0;
 				$openprint::log->error("Did not find expected content $expect in " . $response->content );
@@ -423,7 +450,7 @@ sub url_to {
 sub link_to {
 	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>',
       ( $_[0]{id} ? $_[0]{id} : 0 ),
-      ( ( @_ > 1 and $_[1] ) ? $_[1] : ( $_[0]->hostname() ? $_[0]->hostname() : '' ) )
+      ( ( @_ > 1 and $_[1] ) ? $_[1] : ( $_[0]->name() ? $_[0]->name() : '' ) )
       );
 }
 
@@ -449,7 +476,10 @@ sub Owner {
 }
 
 sub can_reboot {
-  if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W','M8640','TL-WPA4220','D-Link DAP1522','DGS-1224T','DLink DCS-910','TP-Link Archer C7',
+  if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W','M8640','TL-WPA4220','D-Link DAP1522','DGS-1224T',
+        'DLink DCS-910',
+        'DLink DCS-2310L',
+        'TP-Link Archer C7',
         'DCS932L','DCS-933L','DCS-942L', 'WG602v3' ] ) ) {
     return !undef;
   }

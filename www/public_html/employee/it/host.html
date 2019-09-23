@@ -161,7 +161,14 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 <fieldset class="Where"><legend>Where</legend>
 <? echo ( 
     $$variable{Location} = $$variable{Host}->Location();
+
     return include('/location/_location_fields.html');
+) ?>
+<?echo (
+return ssi::select(
+	openprint::Location->dropdown(company_id=>$openprint::Owner->id),
+	$$variable{Host}->location_id(),
+	{ name=>'location_id' } );
 ) ?>
 </fieldset>
 <? endif ( $$variable{Host}->id() ) ?>

@@ -72,7 +72,23 @@ sub _hosts {
       }
 		} # end foreach host_id
 		%param = ();
-	} # end if
+	} elsif ( $param{action} eq 'wake' ) {
+		my @host_ids;
+		if ( exists $param{host_id} ) {
+			@host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+		} elsif ( exists $param{'host_id[]'} ) {
+			@host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
+		}
+		foreach my $Host ( openprint::Host->find(id=>\@host_ids, deleted=>[0,1])) {
+			foreach my $I ( $Host->Interfaces() ) {
+				next if ! $I->mac();
+				my ( $error, $info ) = $I->wake();
+				$variable{error} .= $error;
+				$variable{information} .= $info;
+			} # end foreach Host_Interface
+		} # end foreach Host
+	} # end if action
+
 	ssi::save_params( '/employee/it/hosts.html', 
 			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month', 'created_on_end_day', 
@@ -82,6 +98,7 @@ sub _hosts {
 			'ip','hostname','mac','type_id','network_id',
 			'radius_auth', 'order', 'deleted', 'owner_id',
 			);
+
 	if ( $config{'RADIUS_Support'} eq 'Y' ) {
 		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				database  => $config{RADIUS_DB_Name},
@@ -93,7 +110,7 @@ sub _hosts {
 		if ( ! $openprint::RADIUS_Check::dbh ) {
 			$variable{error} .= 'Unable to connect to RADIUS DB server.';
 		} # end if
-	} # end if
+	} # end if RADIUS
 } # end sub _hosts
 
 sub networks {
@@ -140,7 +157,18 @@ sub _networks {
 } # end sub _networks
 
 sub host {
+  if ( $param{host_id} ) {
+    $param{host_id} = openprint::Host->transform( id=>$param{host_id} );
+    if ( ! $param{host_id} ) {
+      $variable{error} .= 'Invalid host_id specified<br/>';
+      return;
+    }
+  }
 	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
+  if ( $param{host_id} and ! $$Host{id} ) {
+    $variable{error} .= 'Host not found for id ' . $param{host_id}.'<br/>';
+    return;
+  }
   if ( $param{action} ) {
     if ( $param{action} eq 'Resolve' ) {
       foreach my $I ( $Host->Interfaces() ) {
@@ -184,7 +212,7 @@ sub host {
       %param = ();
     } elsif ( $param{action} eq 'Destroy' ) {
       $variable{error} .= $Host->destroy();
-      if ( ! $variable{error} ) {
+      if ( !$variable{error} ) {
         $variable{ExternalRedirect} = '/employee/it/hosts.html';
         return;
       } # end if
@@ -195,7 +223,7 @@ sub host {
       } else {
         $variable{error} .= 'Host failed to reboot. Check logs';
       }
-      $variable{ExternalRedirect} = $Host->url();
+      $variable{ExternalRedirect} = $Host->url_to();
     } elsif ( $param{action} eq 'get_config' ) {
 			my $content = $Host->get_config();
       if ( $content ) {
@@ -209,21 +237,11 @@ sub host {
     } elsif ( $param{action} eq 'Wake' ) {
       foreach my $I ( $Host->Interfaces() ) {
         next if ! $I->mac();
-        if ( $I->ip() ) {
-          $_ = `wakeonlan -i $$I{ip} $$I{mac} 2>&1`;
-          if ( defined $_ ) {
-            $variable{information} .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
-          } else {
-            $variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
-          }
-        } # end if ip
-        $_ = `wakeonlan $$I{mac} 2>&1`;
-        if ( defined $_ ) {
-          $variable{information} .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
-        } else {
-          $variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
-        }
-      } # end foraech
+		my ( $error, $info ) = $I->wake();
+		$variable{error} .= $error;
+		$variable{information} .= $info;
+      } # end foreach
+      $variable{ExternalRedirect} = $Host->url();
     } elsif ( $param{action} eq 'GEOLookup' ) {
       foreach my $I ( $Host->Interfaces() ) {
         if ( ! $I->ip() ) {
@@ -290,6 +308,7 @@ sub host {
       } else {
         $variable{information} .= 'Host did not respond to ping.';
       } # end if	
+      $variable{ExternalRedirect} = $Host->url();
     } elsif ( $param{action} eq 'Upload' ) {
       $param{mac} = [ map { split( ',', $_ ) } split("\n", $param{mac}) ];
       if ( $param{type_id} ) {
@@ -878,7 +897,7 @@ sub _syslog {
 }
 
 sub is_ipv4 {
-  $_[0] =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\.$/;
+  $_[0] =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 }
 sub is_ipv6 {
   $_[0] =~ /:/;
@@ -924,7 +943,7 @@ sub _interface {
             } );
           $Interface->save({ip=>$param{ip}});
         } else {
-          $log->debug("Not updating HI from $$Interface{ip} to $param{ip}");
+          $log->debug("Not updating HI from $$Interface{ip} to $param{ip} because is_ipv($$Interface{ip})=".is_ipv4($Interface->ip())." is_ipv4($param{ip})=".is_ipv4($param{ip}));
         }
         if ( $param{hostname} and is_mac($Host->hostname()) ) {
           (new openprint::Log())->save( { Object => $Host, note=>"Name changed from $$Host{hostname} to $param{hostname}", action=>'Changed' } );

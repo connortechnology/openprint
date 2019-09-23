@@ -1,5 +1,6 @@
 require openprint::Object;
 require openprint::Expense_Tax;
+require openprint::Expense_Account;
 require Math::Round;
 use strict;
 
@@ -11,27 +12,11 @@ $debug = 0;
 $table = 'expense_categories';
 $serial = 'expense_categories_id_seq';
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
+	id	  =>	'id',
+	name	=>	'name',
 );
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-);
-%defaults = (
-);
-package openprint::Expense_Account;
-our @ISA = qw(openprint::Object);
-
-use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 0;
-$table = 'expense_accounts';
-$serial = 'expense_accounts_id_seq';
-%fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
-);
-%transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+  name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );
@@ -39,63 +24,69 @@ $serial = 'expense_accounts_id_seq';
 package openprint::Expense;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'expenses';
 $serial = 'expenses_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'owner_id'			=>	'owner_id',
-	'recipient_id'		=>	'recipient_id',
-	'category_id'		=>	'category_id',
-	'category'			=>	undef,
-	'account_id'		=>	'account_id',
-	'account'			=>	undef,
-	'description'		=>	'description',
-	'amount'			=>	'amount',
-	'amount_locked'		=>	'amount_locked',
-	'total'				=>	'total',
-	'total_locked'		=>	'total_locked',
-	'created_on'		=>	'created_on',
-	'due_on'			=>	'due_on',
-	'paid_on'			=>	'paid_on',
-	'invoiced_on'		=>	'invoiced_on',
-	'currency_id'		=>	'currency_id',
-	'business_use'		=>	'business_use',
-	'business_use_amount'		=>	'business_use_amount',
-	'attention'			=>	'attention',
-	deleted				=>	'deleted',
-	transaction_id		=>	'transaction_id',
+	id			      	=>	'id',
+	owner_id		  	=>	'owner_id',
+	recipient_id  	=>	'recipient_id',
+  recipient       =>  undef,
+	category_id	  	=>	'category_id',
+	category		  	=>	undef,
+	account_id	  	=>	'account_id',
+	account		    	=>	undef,
+	description	  	=>	'description',
+	amount		    	=>	'amount',
+	amount_locked		=>	'amount_locked',
+	total			    	=>	'total',
+	total_locked		=>	'total_locked',
+	created_on	  	=>	'created_on',
+	due_on		    	=>	'due_on',
+	paid_on		    	=>	'paid_on',
+	invoiced_on	  	=>	'invoiced_on',
+	currency_id	  	=>	'currency_id',
+	business_use		=>	'business_use',
+	business_use_amount		=>	'business_use_amount',
+	attention	  		=>	'attention',
+	deleted		  		=>	'deleted',
+	transaction_id	=>	'transaction_id',
+);
+
+%find_fields  = (
+  recipient =>  '(SELECT name FROM companies WHERE companies.id=recipient_id)',
+  category =>  '(SELECT name FROM Expense_Categories WHERE expense_categories.id=category_id)',
 );
 
 %transforms = (
-	'id'				=>	[ 's/\D//g' ],
-	'owner_id'			=>	[ 's/\D//g' ],
-	'currency_id'		=>	[ 's/\D//g' ],
-	'recipient_id'		=>	[ 's/\D//g' ],
-	'amount'			=>	[ 's/[^\d\.\-]//g' ],
-	'total'				=>	[ 's/[^\d\.\-]//g' ],
-	'business_use'		=>	[ 's/[^\d\.\-]//g' ],
-    'description'		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	id			      	=>	[ 's/\D//g' ],
+	owner_id		  	=>	[ 's/\D//g' ],
+	currency_id	  	=>	[ 's/\D//g' ],
+	recipient_id		=>	[ 's/\D//g' ],
+	amount			    =>	[ 's/[^\d\.\-]//g' ],
+	total			    	=>	[ 's/[^\d\.\-]//g' ],
+	business_use		=>	[ 's/[^\d\.\-]//g' ],
+  description	  	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (
-	'due_on'		=>	q`'NOW()'`,
-	'invoiced_on'	=>	q`'NOW()'`,
-	'created_on'	=>	q`'NOW()'`,
-	'recipient_id'	=>	undef,
-	'business_use'	=>	undef,
-	'paid_on'		=>	undef,
-	'amount_locked'	=>	0,
-	'total_locked'	=>	0,
-	'account_id'	=>	undef,
-	'category_id'	=>	undef,
-	'attention'		=>	0,
-	deleted			=>	0,
-	amount			=>	undef,
-	total			=>	undef,
+	due_on	    	=>	q`'NOW()'`,
+	invoiced_on 	=>	q`'NOW()'`,
+	created_on  	=>	q`'NOW()'`,
+	recipient_id	=>	undef,
+	business_use	=>	undef,
+	paid_on	    	=>	undef,
+	amount_locked	=>	0,
+	total_locked	=>	0,
+	account_id  	=>	undef,
+	category_id 	=>	undef,
+	attention	  	=>	0,
+	deleted		  	=>	0,
+	amount		  	=>	undef,
+	total		    	=>	undef,
 );
 
 
@@ -110,6 +101,31 @@ sub Currency {
 	return new openprint::Currency( $_[0]{currency_id} );
 } # end sub Currency
 
+sub recipient {
+  my $self = shift;
+  if ( @_ ) {
+    $$self{recipient} = openprint::Company->transform(name=>shift);
+    if ( $$self{recipient} ) {
+      my @Companies = openprint::Company->find('name lc'=> lc $$self{recipient});
+      if ( ! @Companies ) {
+        my $Company = new openprint::Company();
+        $Company->save({name=>$$self{recipient}});
+        $$self{recipient_id} = $$Company{id};
+      } elsif ( @Companies == 1 ) {
+        $$self{recipient_id} = $Companies[0]{id};
+      } else {
+        $openprint::log->error("Error setting recipient due to many companies matching");
+      }
+    }
+  } # end if setting
+
+  if ( (!$$self{recipient}) and $$self{recipient_id} ) {
+    my $Company = new openprint::Company($$self{recipient_id});
+    $$self{recipient} = $$Company{name};
+  }
+  return $$self{recipient};
+}
+
 sub category_id {
 	if ( @_ > 1 and defined $_[1] ) {
 		$_[0]{category_id} = $_[1];
@@ -118,20 +134,29 @@ sub category_id {
 } # end sub category_id
 
 sub category {
-	if ( @_ > 1 ) {
-		my $Category = openprint::Expense_Category->find_one('name lc'=>lc $_[1]);
-		if ( ! $Category ) {
-			$Category = new openprint::Expense_Category();
-			$Category->save({'name'=>$_[1]})
-		} # end if	
-		$_[0]{category_id} = $Category->id();
-		return $Category->name();
+  my $self = shift;
+	if ( @_ ) {
+    $$self{category} = openprint::Expense_Category->transform(name=>shift);
+    if ( $$self{category} ) {
+      my $Category = openprint::Expense_Category->find_one('name lc'=>lc $$self{category});
+      if ( ! $Category ) {
+        $Category = new openprint::Expense_Category();
+        $Category->save({name=>$$self{category}})
+      } # end if	
+      $$self{category_id} = $Category->id();
+      return $Category->name();
+    }
 	} # end if
-	return new openprint::Expense_Category( $_[0]{category_id} )->name();
+  return $self->Category()->name();
 } # end sub category
 
 sub Category {
-	return new openprint::Expense_Category( $_[0]{category_id} );
+  my $self = shift;
+  $$self{Category} = shift if @_;
+  if ( ! $$self{Category} ) {
+    $$self{Category} = new openprint::Expense_Category($$self{category_id});
+  }
+  return $$self{Category};
 } # end sub Category
 
 sub account {
@@ -163,34 +188,34 @@ sub delete {
 } # end sub delete
 
 sub Taxes {
-    my ( $self ) = @_;
+  my ( $self ) = @_;
 
-    if ( $$self{id} ) {
-		if ( ! $$self{Taxes} ) {
-			@{$$self{Taxes}} = openprint::Expense_Tax->find('expense_id'=>$$self{id});
-		} # end if
-	} else { 
-		@{$$self{Taxes}} = ();
+  if ( $$self{id} ) {
+    if ( ! $$self{Taxes} ) {
+      @{$$self{Taxes}} = openprint::Expense_Tax->find(expense_id=>$$self{id});
     } # end if
-    if ( $self->Company()->country() and $self->Company()->state() and $$self{invoiced_on} and ! @{$$self{Taxes}} ) {
-        foreach my $Tax ( openprint::Tax->find(
-                    'period_start null_or_<='   =>  $$self{invoiced_on},
-                    'period_end null_or_>='     =>  $$self{invoiced_on},
-                    'country'   =>  $self->Company()->country(),
-                    'state'     =>  $self->Company()->state()),
-                ) {
-            my $T = new openprint::Expense_Tax();
-            $T->set({
-				'expense_id'	=>	$$self{id},
-                'tax_id'    =>  $$Tax{id},
-                'rate'      =>  $$Tax{rate},
-            });
-			# SHould not save.  Saving will be done in the save function This is okay, because in the html, we id our field by the tax_id
-			#$T->save({ 'expense_id'=>  $$self{id}}) if $$self{id};
-            push @{$$self{Taxes}}, $T;
-        } # end foreach Tax
-    } # end if
-    return @{$$self{Taxes}};
+  } else { 
+    @{$$self{Taxes}} = ();
+  } # end if
+  if ( $self->Company()->country() and $self->Company()->state() and $$self{invoiced_on} and ! @{$$self{Taxes}} ) {
+    foreach my $Tax ( openprint::Tax->find(
+        'period_start null_or_<='   =>  $$self{invoiced_on},
+        'period_end null_or_>='     =>  $$self{invoiced_on},
+        country   =>  $self->Company()->country(),
+        state     =>  $self->Company()->state()),
+    ) {
+      my $T = new openprint::Expense_Tax();
+      $T->set({
+          expense_id	=>	$$self{id},
+          tax_id    =>  $$Tax{id},
+          rate      =>  $$Tax{rate},
+        });
+      # SHould not save.  Saving will be done in the save function This is okay, because in the html, we id our field by the tax_id
+      #$T->save({ 'expense_id'=>  $$self{id}}) if $$self{id};
+      push @{$$self{Taxes}}, $T;
+    } # end foreach Tax
+  } # end if
+  return @{$$self{Taxes}};
 } # end sub Taxes
 
 sub save {
@@ -243,11 +268,13 @@ sub total {
 		$_[0]{total} = $_[1];
 	} # end if
 	if ( ! $_[0]{total} ) {
-		$_[0]{total} = $_[0]->amount();
-        foreach my $Tax ( $_[0]->Taxes() ) {
-            $_[0]{total} += $Tax->amount();
-        } # end foreach Tax
-		$_[0]{total} = Math::Round::nearest( 0.01, $_[0]{total} );
+    $_[0]{total} = $_[0]->amount();
+    if ( defined($_[0]{total}) ) {
+      foreach my $Tax ( $_[0]->Taxes() ) {
+        $_[0]{total} += $Tax->amount();
+      } # end foreach Tax
+      $_[0]{total} = Math::Round::nearest( 0.01, $_[0]{total} );
+    }
 	} # end if
 	return $_[0]{total};
 } # end sub total
@@ -256,16 +283,16 @@ sub Tax {
 	foreach my $T ( $_[0]->Taxes() ) {
 		return $T if $$T{tax_id} == $_[1]->id();
 	} # end foreach
-    my $result = openprint::Expense_Tax->find_one(expense_id=>$_[0]{id}, tax_id=>$_[1]->id() ) if $_[0]{id};
-    if ( ! $result ) {
-        $result = new openprint::Expense_Tax();
-		$result->set({
-			'expense_id'=>$_[0]{id},
-			'tax_id'=>$_[1]->id(),
-			'rate'=>$_[1]->rate(),
-			});
-    } # end if
-    return $result;
+  my $result = openprint::Expense_Tax->find_one(expense_id=>$_[0]{id}, tax_id=>$_[1]->id() ) if $_[0]{id};
+  if ( ! $result ) {
+    $result = new openprint::Expense_Tax();
+    $result->set({
+        expense_id  => $_[0]{id},
+        tax_id      => $_[1]->id(),
+        rate        => $_[1]->rate(),
+      });
+  } # end if
+  return $result;
 } # end sub Tax
 
 sub business_use_amount {
@@ -277,5 +304,6 @@ sub business_use_amount {
 	} # end if
 	return $_[0]{business_use_amount};
 } # end sub business_use_amount
+
 1;
 __END__

@@ -44,11 +44,15 @@
 		</li>
 		<li class="spine_direction">
 			<label>Spine Direction</label>
-			<select id="fold-<? echo ( $$variable{Fold}->id() ) ?>-spine_direction" name="spine_direction" onchange="$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');">
-				<option value="" <? echo ( $$variable{Fold}->spine_direction() eq '' ? 'selected="selected"' : '' ) ?>>Either</option>
-				<option value="Vertical" <? echo ( $$variable{Fold}->spine_direction() eq 'Vertical' ? 'selected="selected"' : '' ) ?>>Vertical</option>
-				<option value="Horizontal" <? echo ( $$variable{Fold}->spine_direction() eq 'Horizontal' ? 'selected="selected"' : '' ) ?>>Horizontal</option>
-			</select>
+<?echo(ssi::select(
+			['','Either','Vertical','Vertical','Horizontal','Horizontal','With Grain', 'With Grain'], 
+			$$variable{Fold}->spine_direction(),
+			{
+				name => 'spine_direction',
+				id=>join('-', 'fold', $$variable{Fold}->id(), 'spine_direction'),
+				onchange=>q`$('Fold`.$$variable{Fold}->id().q`').addClassName('changed')`,
+			}
+);)?>
 		</li>
 		<li class="imposition">
 			<label>Imposition</label>

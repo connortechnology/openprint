@@ -212,7 +212,15 @@ function howdidyouhearaboutus_onchange(e) {
 				</li>
 			</ul>
 <? if ( (!$session{user_id}) and ($config{UseCaptchaOnRegistration} eq 'Y') ) ?>
-			<div id="Captcha"><?include('/includes/_captcha.html')?></div>
+  <? if ( $config{reCAPTCHA_site_key} ) ?>
+    <?echo(
+         require Captcha::reCAPTCHA;
+         my $c = Captcha::reCAPTCHA->new;
+         return $c->get_html_v2($config{reCAPTCHA_site_key});
+         ) ?>
+  <? else ( $config{reCAPTCHA_site_key} ) ?>
+        <div id="Captcha"><?include('/includes/_captcha.html')?></div>
+  <? endif ( $config{reCAPTCHA_site_key} ) ?>
 <? endif ( (!$session{user_id}) and ($config{UseCaptchaOnRegistration} eq 'Y') ) ?>
 			</div>
 <? if ( $config{RegistrationDisclaimer} ) ?>

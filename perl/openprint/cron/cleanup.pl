@@ -19,6 +19,7 @@ require openprint::Host;
 require openprint::Log;
 require openprint::Asset;
 require openprint::Claim_Content;
+require openprint::ScheduledJob;
 use Date::Calc;
 use Apache::Session::Postgres;
 use File::Basename qw(basename);
@@ -50,18 +51,18 @@ foreach my $default ( keys %defaults ) {
     $$opts{$default} = $defaults{$default} if ! $$opts{$default};
 } # end foreach default
 
-$log = new logger(level=>'debug',program=>$program);
+$log = new logger(level=>'debug', program=>$program);
+
 # Get our configuration information
-if ( $$opts{config} ) {
-	if (my $err = configuration::from_file($$opts{config})) {
-		die $err;
-	}
+$$opts{config} = "/etc/openprint/$program.conf" if !$$opts{config};
+if (my $err = configuration::from_file($$opts{config})) {
+	$log->error($err);
 }
-configuration::merge( $opts );
+configuration::merge($opts);
 foreach my $param ( 'db_name','db_user','db_pass' ) {
-    if ( ! $config{$param} ) {
-        die "$program: missing required --$param parameter";
-    }
+	if ( ! $config{$param} ) {
+		die "$program: missing required --$param parameter";
+	}
 } # end foreach required-param
 
 my $r;
@@ -77,6 +78,8 @@ $openprint::dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 
 configuration::init( \%config );
+configuration::from_file($$opts{config});
+configuration::merge($opts);
 
 # Clear out old sessions
 my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
@@ -195,11 +198,27 @@ $openprint::log->debug("Updating wpsi (old: $old_wpsi, new: $$Paper{wpsi}) for "
 
 if ( 1 ) {
 my $log_count = 0;
-foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -2*365 ) ) ) ) {
+# Delete all logs more than 2 years
+foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d 00:00:00',
+				Date::Calc::Add_Delta_Days( Date::Calc::Today(), -2*365 ) ) )
+		) {
 	$Log->delete();
 	$log_count += 1;
 } # end foreach Log
 $log->debug("Deleted $log_count log entries");
+
+$log_count = 0;
+# Delete all WAP connections logs more than 7days
+foreach my $Log (
+		openprint::Log->find(
+			'date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -7)),
+			action	=>	'Update',
+			'note like'	=> 'Connection to %', )
+		) {
+	$Log->delete();
+	$log_count += 1;
+} # end foreach Log
+$log->debug("Deleted $log_count log entries for connection updates");
 }
 
 #if ( $config{AssetPath} ) {
@@ -259,6 +278,11 @@ if ( 1 ) {
 			}
 			$Host->save({ resolved_on	=> 'NOW()' });
 	} # end foreach Host
+}
+foreach my $Job ( openprint::ScheduledJob->find(
+			'starttime <' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -3 ) ),
+) ) {
+	$Job->delete();
 }
 
 $dbh->disconnect();

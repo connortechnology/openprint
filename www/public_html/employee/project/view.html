@@ -117,32 +117,127 @@ function send_notifications( form, project_id ) {
 			<div id="StockCheckout"><?include(/employee/project/_stock_checkout.html)?></div>
 		</fieldset>
 	</div>
-	<div class="leftColumn">
-	<? eval (
-		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder_Content->find( docket=>$$variable{Order}->docket() ) ];
-	) ?>
-	<? if ( @{$$variable{PurchaseOrders}} ) ?>
-	<fieldset><legend>Purchase Orders:</legend>
-		<table class="List">
-			<tr><th class="po_id">PO</th><th class="description">Description</th><th class="quantity">Quantity</th></tr>
+	<div class="leftColumn PurchaseOrders">
+	<fieldset><legend>Purchase Orders</legend>
 	<? echo (
+		my @POCs = openprint::PurchaseOrder_Content->find(docket=>$$variable{Order}->docket());
 		my $html = '';
-		foreach my $PO_Content ( @{$$variable{PurchaseOrders}} ) {
-			my $description = $PO_Content->item() ? $PO_Content->item() : $PO_Content->description();
+	
+	  if ( @POCs ) {
+			my $total = 0;
+  	 	my @PurchaseOrders = map { $_->PurchaseOrder() } @POCs;
+		  my @can_see_pricing = map { $_->can_see_pricing() ? 1 : () } @PurchaseOrders;
+		  $html .= '
+<table class="List">
+	<tr><th class="po_id">PO</th><th class="description">Description</th><th class="quantity">Quantity</th>
+';
+		  if ( @can_see_pricing ) {
+				$html .= '<th class="Price Cost">Cost</th><th class="Price">Total</th>';
+			}
+			$html .= '</tr>';
 
-			$description =~ s/<\/?p>//g;
-			$html .= sprintf('<tr><td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td><td class="description">%2$s</td><td class="quantity">%3$d%4$s</td></tr>', 
-				$PO_Content->po_id(),
-				$description,
-				$PO_Content->qty(),
-				$PO_Content->units(),
-				);
-		} # end foreach
+		  foreach my $PO_Content ( @POCs ) {
+				my $PO = $PO_Content->PurchaseOrder();
+		  	my $description = $PO_Content->item() ? $PO_Content->item() : $PO_Content->description();
+
+			  $description =~ s/<\/?p>//g;
+			  $html .= sprintf('<tr%5$s><td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td><td class="description">%2$s</td><td class="quantity">%3$d%4$s</td>', 
+						$PO_Content->po_id(),
+						$description,
+						$PO_Content->qty(),
+						$PO_Content->units(),
+						( $PO->cancelled() ? ' class="cancelled" title="cancelled"' : '' ),
+						);
+				if ( $PO->can_see_pricing() ) {
+					$html .= sprintf('<td class="Price Cost">%s%s</td><td class="Price">%s</td>',
+							$PO->Currency()->format($PO_Content->price()),
+							$PO_Content->price_units(),
+							$PO->Currency()->format($PO_Content->total()),
+							);
+					$total += $PO_Content->total();
+				} elsif ( @can_see_pricing ) {
+					$html .= '<td class="Price Cost"></td><td class="Price"></td>';
+				}
+				$html .= '</tr>';
+			} # end foreach
+			if ( @can_see_pricing ) {
+				$html .= '<tr class="totals"><td colspan="4">Totals</td><td class="Price">'.$openprint::Currency->format($total).'</td></tr>';
+			}
+			$html .= '</table>';
+		} # end if poCS
 		return $html;
 	) ?>
-		</table>
 	</fieldset>
-	<? endif ( @{$$variable{PurchaseOrders}} ) ?>
+
+  <fieldset><legend><a href="/employee/inventory/manifests.html?docket=<?echo($$variable{Order}->docket())?>">Manifests</a></legend>
+  <? echo (
+		my $html;
+		my $total = 0;
+		my $can_see_pricing = openprint::Manifest->can_see_pricing();
+    my @MCTs = openprint::Manifest_Content_Type->find( docket=>$$variable{Order}->docket(), order=>'manifest_id' );
+		if ( @MCTs ) {
+			$html = '
+    <table class="List">
+      <tr>
+				<th class="manifest_id">ID</th>
+				<th class="description">Description</th>
+				<th class="Quantity">Quantity</th>
+';
+				if ( $can_see_pricing ) {
+					$html .= '<th class="Price Cost">Cost</th><th class="Price">Total</th>';
+				}
+  		my %manifests = misc::make_hash_from_array( 'manifest_id', @MCTs );
+
+      foreach my $manifest_id ( sort { $a <=> $b } keys %manifests ) {
+				my @Types = @{$manifests{$manifest_id}};
+   			my $Manifest = $Types[0]->Manifest();
+				my $ManifestCurrency = $Manifest->Currency();
+
+        $html .= sprintf('
+<tr>
+  <td class="manifest_id"><a href="/employee/inventory/manifest_view.html?manifest_id=%1$d">%1$d</a></td>
+	<td class="description">%2$s</td>
+	<td class="Quantity">&nbsp;</td>
+',
+					$Manifest->id(),
+					$Manifest->Vendor()->name(),
+				);
+				if ( $can_see_pricing ) {
+					$html .= '<td></td><td></td>';
+				}
+				$html .= '</tr>';
+				foreach my $Type ( @Types ) {
+					$html .= sprintf('
+<tr>
+  <td class="manifest_id">&nbsp;</td>
+	<td class="description">%1$s</td>
+	<td class="Quantity">%2$s</td>
+',
+					$Type->Paper()->to_string(),
+					$Type->quantity() . $Type->units(),
+					);
+				if ( $can_see_pricing ) {
+					$html .= sprintf('<td class="Price Cost">%s%s</td><td class="Price">%s</td>',
+						$openprint::Currency->format( $ManifestCurrency->convert_from($Type->cost()) ),
+						$Type->cost_units(),
+						$openprint::Currency->format( $ManifestCurrency->convert_from($Type->value()) ),
+						);
+					$total += $ManifestCurrency->convert_from($Type->value());
+				}
+				$html .= '</tr>';
+				} # end foreach Type
+	
+			} # end foreach manifest
+			if ( $can_see_pricing ) {
+				$html .= '<tr><td colspan="4">Total</td><td class="Price">'.$openprint::Currency->format($total).'</td></tr>';
+			}
+      $html .= '
+    </table>
+';
+		} # end if MCTs
+    return $html;
+  ) ?>
+  </fieldset>
 	<?include(/employee/project/_files.html)?>
 	</div>
 	<div class="rightColumn">

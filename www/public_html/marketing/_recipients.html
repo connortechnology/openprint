@@ -1,17 +1,53 @@
-<table id="recipients" class="List sortable">
-	<tr><th class="Company">Company</th><th class="User">Name</th><th class="Email">Email</th><th>Password?</th><th class="DateTime">Last Login</th></tr>
 <? echo (
 my @Recipients = $variable{Campaign}->Recipients();
-my $html .= 'There are ' . @Recipients . ' recipients.<br/><br/>';
-$html .= join("\n", map { 
-	sprintf('<tr><td class="Company">%s</td><td class="User">%s</td><td class="Email">%s</td><td>%s</td><td class="DateTime">%s</td></tr>', 
-			$_->Company()->link_to(), $_->link_to( $_->name() ), $_->link_to( $_->email() ),
-			( $_->password() ? 'yes' : 'no' ),
-			$_->last_logged_in(),
- )
+my %Sent_Info = misc::make_hash_from_array('user_id', openprint::EmailCampaign_Sent->find(campaign_id=>$$variable{Campaign}->id()));
 
-	} $variable{Campaign}->Recipients() );
-return $html;
+my $html;
+if ( ! @Recipients ) {
+  $$variable{error} = $dbh->errstr();
+  $html = include('/includes/error_reporting.html');
+}
+$html .= 'There are ' . @Recipients . ' recipients.<br/><br/>';
+$html .= '
+<table id="recipients" class="List sortable">
+	<tr>
+		<th class="Company">Company</th>
+		<th class="User">Name</th>
+		<th class="Email">Email</th>
+		<th>Password?</th>
+		<th class="DateTime">Last Login</th>
+		<th class="">Times Sent</th>
+		<th class="DateTime">Last Sent</th>
+		<th class="DateTime">Viewed</th>
+	</tr>
+';
+foreach my $User ( $variable{Campaign}->Recipients() ) {
+$html .= 
+	sprintf('
+<tr>
+	<td class="Company">%s</td>
+	<td class="User">%s</td>
+	<td class="Email">%s</td>
+	<td>%s</td>
+	<td class="DateTime">%s</td>
+	<td class="TimesSent">%s</td>
+	<td class="DateTime">%s</td>
+	<td class="DateTime">%s</td>
+</tr>
+', 
+			$User->Company()->link_to(),
+			$User->link_to($User->name()),
+			$User->link_to($User->email()),
+			( $User->password() ? 'yes' : 'no' ),
+			$User->last_logged_in(),
+			join('<br/>', map { $$_{NumEmailSent} } ( $Sent_Info{$$User{id}} ? @{$Sent_Info{$$User{id}}} : () ) ),
+			join('<br/>', map { format_datetime($$_{EmailSentOn}) } ( $Sent_Info{$$User{id}} ? @{$Sent_Info{$$User{id}}} : () ) ),
+			join('<br/>', map { format_datetime($$_{last_read}) } ( $Sent_Info{$$User{id}} ? @{$Sent_Info{$$User{id}}} : () ) ),
+ );
+
+	} # end foreach Recipient
+
+	return $html;
 ) ?>
 </table>
 <?

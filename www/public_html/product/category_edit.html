@@ -8,7 +8,7 @@
 		</legend>
 		<div class="leftColumn">
 		<ul>
-			<li><label>Id</label><?echo( $$variable{Category}->id() ) ?></li>
+      <li><label>Id</label><?echo( $$variable{Category}->id() . ( $$variable{Category}->deleted() ? ' deleted' : '' )) ?></li>
 			<li>
 				<label>Name</label>
 				<input type="text" id="name" name="name" value="<? hecho ( $$variable{Category}->name(); ) ?>"  />

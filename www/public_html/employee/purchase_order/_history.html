@@ -19,11 +19,6 @@
 			manifest_id	=>	$param{manifest_id}, 
 			company_id	=>	$openprint::User->company_id(),
 			order		=>	'id desc') ];
-	} elsif ( $param{docket} ) {
-		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
-			'docket any'		=>	$param{docket},
-			company_id	=>	$openprint::User->company_id(),
-			order		=>	'id desc') ];
 	} else {
 		my %search = (
 			company_id	=>	$openprint::User->company_id(),
@@ -193,6 +188,7 @@
 		<th class="User CreatedBy">Created By</th>
 		<th class="User AuthorizedBy">Authorized / Declined By</th>
 		<th class="Manifest">Manifest</th>
+		<th class="Status">Status</th>
 		<th class="Docket">Docket</th>
 		<th class="Quantity">Quantity</th>
 		<th class="Price">Total</th>
@@ -220,7 +216,7 @@
 				} # end if
 			} # end if
 
-			my $qty = misc::sum( map { $$variable{types}{$_->type_id()} ? $_->qty() : 0 } $PO->Contents() );
+			my $qty = misc::sum( map { ( (!($$variable{types} and %{$$variable{types}})) or $$variable{types}{$_->type_id()} ) ? $_->qty() : 0 } $PO->Contents() );
 
 			$html .= sprintf( q`
 				<td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td>
@@ -229,13 +225,15 @@
 				<td class="User CreatedBy"><a href="/employee/purchase_order/view.html?po_id=%1$d">%4$s</a></td>
 				<td class="User AuthorizedBy"><a href="/employee/purchase_order/view.html?po_id=%1$d">%6$s</a></td>
 				<td class="Manifest"><a href="/employee/purchase_order/view.html?po_id=%1$d">%7$s</a></td>
-				<td class="Docket"><a href="/employee/purchase_order/view.html?po_id=%1$d">%8$s</a></td>
-				<td class="Quantity"><a href="/employee/purchase_order/view.html?po_id=%1$d">%9$s</a></td>
+				<td class="Status"><a href="/employee/purchase_order/view.html?po_id=%1$d">%8$s</a></td>
+				<td class="Docket"><a href="/employee/purchase_order/view.html?po_id=%1$d">%9$s</a></td>
+				<td class="Quantity"><a href="/employee/purchase_order/view.html?po_id=%1$d">%10$s</a></td>
 				<td class="Price">%5$s</td>
 			</tr>`, $PO->id(), format_datetime($PO->created_on()), $PO->Supplier()->name(), $PO->Creator()->name(), 
 				$PO->cancelled() ? 'CANCELLED' : ( $PO->can_see_pricing() ? openprint::Currency::format($total) : '' ), 
 				( ( $PO->authorized() and ! $PO->authorized_by() ) ? 'Authorized' : $PO->Authorized_By()->name() ),
 				$PO->Manifest()->name(),
+				join(' ', map { $PO->$_() ? $_ : () } ( 'cancelled','do_not_pay' ) ),
 				join('<br/>', sets::exclude( [''], [ sets::union( map { $_->docket() } $PO->Contents() ) ] ) ),
 				Number::Format::format_number( $qty ),
 				);
@@ -244,7 +242,7 @@
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 		$html .= '<tr class="totals">
-								<td colspan="'.( $session{user_type} eq 'A' ? 8 : 7 ) . '">Total (' . $Currency->name().') :</td>
+								<td colspan="'.( $session{user_type} eq 'A' ? 9 : 8 ) . '">Total (' . $Currency->name().') :</td>
 								<td class="Quantity">'.Number::Format::format_number($qty_total).'</td>
 								<td class="Price">'. openprint::Currency::format( $report_total ) . '</td></tr>';
 		return $html;

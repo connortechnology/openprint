@@ -17,15 +17,15 @@ $default_sort	=	'lower(name)';
 );
 %transforms = (
 		name  => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-		human => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+		human => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/^openprint:://' ],
 );
 
 sub Object {
 	if ( $_[0]{name} ) {
-	return $_[0]{name}->new( $_[1] );
+  	return $_[0]{name}->new($_[1]);
 	}
-	my ( $caller, undef, $line ) = caller;
-	$openprint::log->error( "Unknown object from $caller:$line" );
+	my ($caller, undef, $line) = caller;
+	$openprint::log->error("Unknown object from $caller:$line");
 	return new openprint::Object();
 } # end sub Object
 
@@ -39,5 +39,6 @@ sub human {
 	}
 	return $_[0]{human};
 }
+
 1;
 __END__

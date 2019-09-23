@@ -35,6 +35,7 @@
 			) ?>
 	</fieldset>
 		</div>
+    <div class="Services">
 	<? echo (
 		my @Timetracks = openprint::Timetrack->find(invoice_id=>$$variable{Invoice}->id(), order=>'starting');
 		return '' if ! @Timetracks;
@@ -119,6 +120,7 @@ $html .= '
 	</fieldset>';
 				return $html;
 			) ?>
+    </div>
 	<?include(/invoice/_products_view.html)?>
 <div class="Notes">
 	<fieldset><legend>Notes</legend>

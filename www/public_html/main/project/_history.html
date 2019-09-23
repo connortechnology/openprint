@@ -1,19 +1,19 @@
 <? eval (
 	my $uri = $$variable{uri} = '/main/project/history.html';
-	if ( $param{ProjectID} ) {
-		if ( $param{ProjectID} =~ /\%/ ) {
+	if ( $param{project_id} ) {
+		if ( $param{project_id} =~ /\%/ ) {
 			$$variable{Projects} = [ openprint::Project->find(
 				company_id	  => $session{company_id},
-				'id like'	   => $param{ProjectID},
+				'id like'	   => $param{project_id},
 				order		   => 'id DESC',
 			) ];
 		} else {
-			$param{ProjectID} = openprint::Project->transform( 'id', $param{ProjectID} );
+			$param{project_id} = openprint::Project->transform('id'=>$param{project_id});
 			$$variable{Projects} = [ openprint::Project->find( 
 				company_id		=> $session{company_id},
-				id						=> $param{ProjectID},
+				id						=> $param{project_id},
 				order					=> 'id DESC',
-			) ] if $param{ProjectID};
+			) ] if $param{project_id};
 		}
 	} else {
 		my %sql = (
@@ -44,17 +44,17 @@
 ) ?>
 
 <? if ( @{$$variable{Projects}} == 0 ) ?>
-	<? if ( sets::isin( $session{user_type}, ['A','E'] ) and $param{ProjectID} ) ?>
+	<? if ( sets::isin( $session{user_type}, ['A','E'] ) and $param{project_id} ) ?>
 		<? eval (
 
-			if ( $param{ProjectID} =~ /\%/ ) {
+			if ( $param{project_id} =~ /\%/ ) {
 				$$variable{Projects} = [ openprint::Project->find(
-					'id like'     => $param{ProjectID},
+					'id like'     => $param{project_id},
 					order         => 'id DESC',
 				) ];
 			} else {
 
-				$$variable{Projects} = [ openprint::Project->find( id=>$param{ProjectID}, order=>'id DESC' ) ];
+				$$variable{Projects} = [ openprint::Project->find( id=>$param{project_id}, order=>'id DESC' ) ];
 			}
 		) ?>
 		There were no projects matching your search criteria for your currently selected Company.<br/>
@@ -106,12 +106,12 @@
 			return $html;
 		) ?>
 	</table>
-	<span class="Currency">All prices listed in <? echo ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
+	<span class="Currency">All prices listed in <? echo ( $openprint::Currency->name(); ) ?></span>
 	<br class="spacer"/>
 		<? endif ( @{$$variable{Projects}} > 0 ) ?>
-	<? else ( sets::isin( $session{user_type}, ['A','E'] ) and $param{ProjectID} ) ?>
+	<? else ( sets::isin( $session{user_type}, ['A','E'] ) and $param{project_id} ) ?>
 	There are no projects which match your search criteria. 
-	<? endif ( sets::isin( $session{user_type}, ['A','E'] ) and $param{ProjectID} ) ?>
+	<? endif ( sets::isin( $session{user_type}, ['A','E'] ) and $param{project_id} ) ?>
 <? else ( @{$$variable{Projects}} == 0 ) ?>
 	<div class="unprintable">
 		Please click on a <b>Project ID #</b> to view project details.<br/>
@@ -151,20 +151,22 @@ if ( $Project->can_view() ) {
 	<td class="Price">%5$s</td>
 	<td class="Price">%6$s</td>
 	<td class="status">%7$s</td>
-	<td class="Date">%8$s</td>
+	<td class="Date" title="%9$s">%8$s</td>
 	<td class="checkbox"><input type="checkbox" name="project_id" value="%2$d" /></td>
 </tr>
 <tr%1$s> 
-	<td colspan="%9$d">&nbsp;</td>
-	<td colspan="5"><a href="/main/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
-  <td class="User">%11$s</td>
+	<td colspan="%10$d">&nbsp;</td>
+	<td colspan="5"><a href="/main/project/view.html?ProjectIndex=%2$d">%11$s</a></td>
+  <td class="User">%12$s</td>
   <td class="checkbox"></td>
 </tr>`,
 					$rowclass, $Project->id(), $Project->reference(), 
 					( $Project->quantity(1) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(1) ) ) : '' ),
 					( $Project->quantity(2) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(2) ) ) : '' ),
 					( $Project->quantity(3) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(3) ) ) : '' ),
-					$Project->status(), format_date($Project->created_on() ),
+					$Project->status(),
+					format_date($Project->created_on() ),
+					format_datetime($Project->created_on() ),
 					( ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '2' : '1' ),
 					$Project->summary(), 
 					$Project->User()->name(),
@@ -181,17 +183,19 @@ if ( $Project->can_view() ) {
     <td class="description">%3$s</td>
     <td class="Price" colspan="3">You are not allowed to view this project.</td>
     <td class="status">%4$s</td>
-    <td class="Date">%5$s</td>
+    <td class="Date" title="%6$s">%5$s</td>
     <td class="checkbox"></td>
 </tr>
 <tr%1$s>
-    <td colspan="%6$d">&nbsp;</td>
-    <td colspan="5">%7$s</td>
-    <td class="User">%8$s</td>
+    <td colspan="%7$d">&nbsp;</td>
+    <td colspan="5">%8$s</td>
+    <td class="User">%9$s</td>
     <td class="checkbox"></td>
 </tr>`,
                     $rowclass, $Project->id(), $Project->reference(),
-                    $Project->status(), format_date($Project->created_on() ),
+                    $Project->status(),
+					format_date($Project->created_on() ),
+					format_date_time($Project->created_on() ),
                     ( ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '2' : '1' ),
                     $Project->summary(),
 										$Project->User()->name(),

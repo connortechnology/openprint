@@ -173,6 +173,7 @@ sub Fold {
 		} else {
 			$openprint::log->debug("Found fold: " . $Fold->name() . ' ... examining') if DEBUG_FOLDING;
 		} # end if
+
 		if ( $$params{gsm} and ( ( $Fold->min_gsm() and ($$params{gsm} < $Fold->min_gsm()) ) or ( $Fold->max_gsm() and ($$params{gsm} > $Fold->max_gsm()) ) ) ) {
 			$openprint::log->debug("Wanted gsm: $$params{gsm}, have ($$Fold{min_gsm}) ($$Fold{max_gsm})") if DEBUG_FOLDING;
 			next;
@@ -272,19 +273,50 @@ sub Fold {
 			$openprint::log->debug("Wanted imposition: $$params{rows}, have $$Fold{min_imposition_rows} x $$Fold{max_imposition_rows}") if DEBUG_FOLDING;
 			next;
 		} # end if
-		if ( $$Fold{spine_direction} and $$params{spine_direction} and ($$Fold{spine_direction} ne $$params{spine_direction} ) ) {
-			$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}") if DEBUG_FOLDING;
-			next;
-		} # end if
+
+		if ( $$Fold{spine_direction} and $$params{spine_direction} ) {
+#$openprint::log->debug("spine direction:: $$Fold{spine_direction} $$params{spine_direction} $$params{grain_direction} width_folds: $$Fold{width_folds} $$Fold{height_folds}");
+			if ( $$Fold{spine_direction} eq 'With Grain' ) {
+				if ( $$Fold{folds} ) {
+					if ( ($$params{spine_direction} eq 'Vertical') and ($$params{grain_direction} eq 'width') ) {
+						$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction} grain: $$params{grain_direction}") if DEBUG_FOLDING;
+						next;
+					} elsif ( ($$params{spine_direction} eq 'Horizontal') and ($$params{grain_direction} eq 'height') ) {
+						$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction} grain: $$params{grain_direction}") if DEBUG_FOLDING;
+						next;
+					} 
+				} elsif ( $$Fold{anglea} ) {
+					if ( ($$params{spine_direction} eq 'Vertical') and ($$params{grain_direction} eq 'height') ) {
+						$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction} grain: $$params{grain_direction}") if DEBUG_FOLDING;
+						next;
+					} elsif ( ($$params{spine_direction} eq 'Horizontal') and ($$params{grain_direction} eq 'width') ) {
+						$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction} grain: $$params{grain_direction}") if DEBUG_FOLDING;
+						next;
+					} 
+				} # end fold direction
+			} elsif ( $$Fold{spine_direction} ne $$params{spine_direction} ) {
+				$openprint::log->debug("Wanted spinedirection: Impo $$params{spine_direction}, have Fold $$Fold{spine_direction}") if DEBUG_FOLDING;
+				next;
+			} # end if with_grain or vertical or horizontal
+		} # end if spine_direction
 
 		if ( $$Fold{orientation} ) {
 			my %orientations = map { $_, $_ } split(',', $$Fold{orientation});
-			if ( ! $$params{page_width} < $$params{page_height} ) { 
-				next if ! $orientations{portrait};
-			} elsif ( ! $$params{page_width} > $$params{page_height} ) { 
-				next if ! $orientations{landscape};
+			if ( $$params{page_width} < $$params{page_height} ) { 
+				if ( ! $orientations{Portrait} ) {
+					$openprint::log->debug("Wanted orientation portrait $$params{page_width} <=> $$params{page_height} $$Fold{orientation} $orientations{portrait}") if DEBUG_FOLDING;
+					next ;
+				}
+			} elsif ( $$params{page_width} > $$params{page_height} ) { 
+				if ( ! $orientations{Landscape} ) {
+					$openprint::log->debug("Wanted orientation landscape $$params{page_width} <=> $$params{page_height}") if DEBUG_FOLDING;
+					next;
+				}
 			} else {
-				next if ! $orientations{square};
+				if ( ! $orientations{Square} ) {
+					$openprint::log->debug("Wanted orientation square") if DEBUG_FOLDING;
+					next;
+				}
 			}
 		}
 
@@ -325,8 +357,8 @@ sub specification {
 sub Specification {
 	my ( $self, $name, $range, $s_debug ) = @_;
 
-	my $key = join('',$$self{id},$name,$range);
-	if ( $Specification_cache{$key} ) {
+	my $key = join(',', $$self{id}, $name, $range);
+	if ( exists $Specification_cache{$key} ) {
 		return $Specification_cache{$key};
 	} # end if
 
@@ -342,8 +374,8 @@ sub Specification {
 		} # end if
 	} # end if
 
-	if ( ! $$self{Specifications}{$name} ) {
-		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $s_debug;
+	if ( ! exists $$self{Specifications}{$name} ) {
+		$openprint::log->warn("No specifications for ($name) " . $self->name() ) if $s_debug;
 		return;
 	} # end if
 	my $Spec = misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );

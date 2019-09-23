@@ -170,3 +170,13 @@ function add_item() {
 		alert('Please select a type for the new line.');
 	}
 }
+
+function del_poc(id) {
+	new Ajax.Request('/employee/purchase_order/_po_content_line.html?action=delete&amp;id='+id, {
+		onSuccess: function(){
+			var tr = $('line-'+id);
+			tr.remove();
+			update_totals($('f1'));
+		}
+	});
+}

@@ -118,6 +118,11 @@ sub from_db {
 		} # end foreach
 	} # end if
 }
+sub dump {
+	foreach ( sort { $a cmp $b } keys %config ) {
+		print "$_ => $config{$_}\n";
+	}
+}
 
 1;
 __END__

@@ -330,11 +330,15 @@ $log->debug("Project complete: $complete " . $Service->to_string());
 				$Project->add_to_log( @session{'company_id','user_id'}, 'Taken Over by '. $openprint::User->name() . ' as ' . $$Role{name} );
 
 				$Operator->save({ service_id=>$service_index, user_id=>$$openprint::User{id}, role_id=>$$Role{id} });
-			} elsif ( ( exists $$specs{SignatureIndex} ) and ( exists $param{"operator_id-$$specs{SignatureIndex}-$$Role{id}"} ) ) {
+			} elsif ( ( exists $$specs{SignatureIndex} ) and ( exists $param{"operator_id-$$specs{SignatureIndex}-$$Role{id}"} )
+					and ( $param{"operator_id-$$specs{SignatureIndex}-$$Role{id}"} != $Operator->id() )
+					) {
 				$Operator->save({ service_id=>$service_index, user_id=>$param{"operator_id-$$specs{SignatureIndex}-$$Role{id}"}, role_id=>$$Role{id} });
 				$Project->add_to_log( @session{'company_id','user_id'}, 'Operator changed to '. $Operator->User()->name() . ' by ' . $openprint::User->name() . ' as ' . $$Role{name} );
 			
-			} elsif ( exists $param{"operator_id-$$Role{id}"} ) {
+			} elsif ( exists $param{"operator_id-$$Role{id}"} 
+					and ( $param{"operator_id-$$Role{id}"} != $Operator->id() )
+					) {
 				$Operator->save({ service_id=>$service_index, user_id=>$param{"operator_id-$$Role{id}"}, role_id=>$$Role{id} });
 				$Project->add_to_log( @session{'company_id','user_id'}, 'Operator changed to '. $Operator->User()->name() . ' by ' . $openprint::User->name() . ' as ' . $$Role{name} );
 			
@@ -1151,6 +1155,9 @@ sub _change {
 		$log->error("No action in project _change");
 	} # end if action
 } # end sub _change
+
+sub _related_projects {
+}
 
 1;
 __END__

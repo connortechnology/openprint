@@ -90,7 +90,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (Connection closed by|Disconnected from) (invalid user [.@[:alnum:]]+ )?(?<IP>[.[:digit:]]+)( port [[:digit:]]+ \[preauth\])?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting invalid user [[:alnum:]]* (?<IP>[.[:digit:]]+) port [[:digit:]]+: Change of username or service not allowed:',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: maximum authentication attempts exceeded for (invalid user )?[[:alnum:]]+ from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user [.\?|@[:alnum:]-]* from (?<IP>[0-9.]+)',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \S* from (?<IP>[.[:digit:]]+)',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Connection closed by (?<IP>[0-9.]+):? \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) (port [[:digit:]]+:)?[[:digit:]]+:[ \.,/:[:alnum:]]+\[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Protocol major versions differ for (?<IP>[0-9.]+) ',
@@ -107,6 +107,7 @@ my @re = (
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/(submission\/)?smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL (CRAM\-MD5|Login|LOGIN|PLAIN) authentication fail`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: Connection rate limimt exceeded: [[:digit:]]+ from unknown \[(?<IP>[0-9.]+)\] for service smtp$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns\[[0-9]+\]: Received a malformed qdomain from (?<IP>[0-9.]+), '[^']+': sending servfail$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns_server\[[0-9]+\]: TCP Connection Thread died because of network error: Error reading DNS data from TCP client (?<IP>[.[:digit:]]{7,15}): Timeout reading data$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ ovpn\-server\[[0-9]+\]: (?<IP>[0-9.]+):[0-9]+ WARNING Bad encapsulated packet length from peer \([[:digit:]]+\), which must be > 0 and <= 1547 \-\- please ensure that \-\-tun\-mtu or \-\-link\-mtu is equal on both peers \-\- this condition could also indicate a possible active attack on the TCP link \-\- \[Attempting restart\.\.\.\]$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ ovpn\-server\[[0-9]+\]: (?<IP>[0-9.]+):[0-9]+ Expected Remote Options String`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ ovpn\-server\[[0-9]+\]: (?<IP>[0-9.]+):[0-9]+ TLS Error: TLS handshake failed$`,
@@ -268,8 +269,8 @@ while(1) {
 					$log->debug("$ip not in host_counts, adding it");
 					my $Host;
           # May return a subnet
-					my $HI = openprint::Host_Interface->find_one('ip >>'=>$ip);
-					if ( ! $HI ) {
+					my $HI = openprint::Host_Interface->find_one('ip >>='=>$ip);
+					if ( !$HI ) {
 						$HI = new openprint::Host_Interface();
 						$Host = new openprint::Host();
 						$Host->save({hostname=>$hostname});

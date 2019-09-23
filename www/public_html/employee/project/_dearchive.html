@@ -10,8 +10,13 @@
 	my $stdout;
 
 	if ( $$File{filename} =~ /.bkf.tar.bz2$/ ) {
+		if ( ! -e $$File{archive} ) {
+			return '<span class="error">Dearchived dir does not exist.</span>';
+		}
 		if ( ! -e $$File{archive}.'/dearchived' ) {
-			mkdir $$File{archive}.'/dearchived';
+			if ( !mkdir $$File{archive}.'/dearchived' ) {
+				return '<span class="error">Unable to make dearchived dir.</span>';
+			}
 		}
 		run3( qq`cd "$$File{archive}/dearchived" && bunzip2 < "../$$File{filename}" |/usr/local/bin/mtftar | tar x --transform=\'s/\\\\//g\'`, undef, \$stdout, \$stderr );
 		$log->debug(qq`mtftar Error code: $?: cd "$$File{archive} && /usr/local/bin/mtftar < "$$File{filename}" | tar x" : $stderr $stdout`);
@@ -40,6 +45,9 @@
 		return 'Successfully dearchived to dearchived area.';
 	} elsif ( $$File{filename} =~ /_(\w).tar.bz2$/ ) {
 		my $drive = $1;
+		if ( ! -e "/media/$drive/Jobs" ) {
+			return qq`<span class="error">/media/$drive/Jobs doesn't exist.</span>`;
+		}
 		run3( qq`cd "/media/$drive/Jobs" && bunzip2 < "$$File{archive}/$$File{filename}" | tar x `, undef, \$stdout, \$stderr );
 		$log->debug(qq`bunzip2 Error code: $?: cd "/media/$drive/Jobs && bunzip2 < "$$File{filename}" | tar x" : $stderr $stdout`);
 

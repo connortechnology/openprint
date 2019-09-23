@@ -193,6 +193,8 @@ sub view {
 	} # end if
 	$variable{PurchaseOrder} = $PO;
 
+	return if ! $param{btnFunction};
+
 	if ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $PO->delete();
 		if ( ! $variable{error} ) {
@@ -436,6 +438,14 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		if ( ! $param{po_id} ) {
 			$variable{error} .= $PO->save( { created_by	=> $session{user_id}, company_id => $openprint::User->company_id() } );
+		} elsif ( ($PO->Creator()->type() eq 'E') and ($openprint::User->type() eq 'A') ) {
+			$variable{error} .= $PO->save( { created_by => $session{user_id} });
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					user_id	=>	$session{user_id},
+					po_id		=>	$PO->id(),
+					reason	=>	'Taking ownership',
+					});
 		} # end if
 
 		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{supplier_id} ) and $param{vendor_name};
@@ -455,11 +465,11 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			} # end if
 		} # end if
 		
- if ( $param{supplier_id} and ( ! $param{contact_id} ) and $param{vendor_contact} ) {
-		$param{contact_id} = save_contact( \%param );
-} else {
-$log->debug("Not saving contact ");
-}
+		if ( $param{supplier_id} and ( ! $param{contact_id} ) and $param{vendor_contact} ) {
+			$param{contact_id} = save_contact( \%param );
+		} else {
+			$log->debug("Not saving contact ");
+		}
 		my %types = save_contents( $PO, \%param );
 
 		if ( $param{delivered_on_switch} eq 'DATE' ) {
@@ -788,8 +798,6 @@ push @data, '','Totals', '', '', '', '', '', $total_quantity, '', '', $total_val
 		sql::end_transaction( $dbh, $ac );
 
 		misc::export_csv( $r, $log, \%variable, 'purchase_order_history_report.csv', \@header,\@data );	
-
-
 	} # end if
 	} # end if btnFunction
 	_history();
@@ -800,7 +808,7 @@ push @data, '','Totals', '', '', '', '', '', $total_quantity, '', '', $total_val
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/employee/purchase_order/history.html', ( 
+	ssi::save_params('/employee/purchase_order/history.html', ( 
 				( map { 'starting_start_'.$_ } ( 'year', 'month','day' ) ),
 				( map { 'starting_end_'.$_ } ( 'year', 'month','day' ) ),
 				'authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled', 'vendor_category_id', 'department_id', 'docket',

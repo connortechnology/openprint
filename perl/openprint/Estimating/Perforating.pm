@@ -565,7 +565,7 @@ sub signature_calc {
 				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$form"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . 'inches = ' . $vertical_length . 'inches of rule.<br/>';
 			} # end if
 
-			if ( $Horizontal_Material and ( $Horizontal_Material->id() == $Vertical_Material->id() ) ) {
+			if ( $Horizontal_Material and ( $$Horizontal_Material{id} == $$Vertical_Material{id} ) ) {
 				$Results{Breakdown} .= 'Rule: ' . $Horizontal_Material->to_string().'<br/>' if DEBUG;
 				my $length = $vertical_length + $horizontal_length;
 				my $rules = $vertical_rules + $horizontal_rules;
@@ -574,15 +574,15 @@ sub signature_calc {
 					$Results{Breakdown} .= 'Package Quantity: ' . $$Package_Qty{value}.$$Package_Qty{units}.'<br/>';
 				} # end if
 				%horizontal_price = $Horizontal_Material->get_price( $rules, $Equipment );
-				if ( sets::isin( $horizontal_price{units}, ['per rule','each'] ) ) {
+				if ( $horizontal_price{units} eq 'per rule' or $horizontal_price{units} eq 'each' ) {
 					$horizontal_price{Total} = $horizontal_price{Price} * $rules;
-					$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$d rules=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $rules );
+					$Results{Breakdown} .= $$Horizontal_Material{name}.sprintf(': $%1$.2f%2$s * %4$d rules=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $rules );
 				} elsif ( $horizontal_price{units} eq 'per inch' ) {
 					$horizontal_price{Total} = $horizontal_price{Price} * $length;
-					$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $length );
+					$Results{Breakdown} .= $$Horizontal_Material{name}.sprintf(': $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $length );
 				} elsif ( $horizontal_price{units} eq 'per foot' ) {
 					$horizontal_price{Total} = $horizontal_price{Price} * ($length/12);
-					$Results{Breakdown} .= $Horizontal_Material->name().sprintf('Rule: $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $length/12 );
+					$Results{Breakdown} .= $$Horizontal_Material{name}.sprintf('Rule: $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $length/12 );
 					if ( $Package_Qty ) {
 						if ( $$Package_Qty{units} eq 'feet' ) {
 							$Results{Breakdown} .= POSIX::ceil(($length/12) / $$Package_Qty{value} ) . 'packages<br/>';
@@ -605,7 +605,7 @@ sub signature_calc {
 					} # end if
 
 					$horizontal_price{Total} = Math::Round::nearest( 0.01, $horizontal_price{Price} * $package_qty );
-					$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$d packages = $%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $package_qty );
+					$Results{Breakdown} .= $$Horizontal_Material{name}.sprintf(': $%1$.2f%2$s * %4$d packages = $%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $package_qty );
 				} else {
 					$Results{Breakdown} .= "Unknown units set on rule price ($horizontal_price{units})<br/>";
 				} # end if
@@ -620,7 +620,7 @@ sub signature_calc {
 							$Results{Breakdown} .= 'Package Quantity: ' . $$Package_Qty{value}.$$Package_Qty{units}.'<br/>';
 						} # end if
 						%horizontal_price = $Horizontal_Material->get_price( $horizontal_rules, $Equipment );
-						if ( sets::isin( $horizontal_price{units}, ['per rule','each'] ) ) {
+						if ( $horizontal_price{units} eq 'per rule' or $horizontal_price{units} eq 'each' ) {
 							$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_rules;
 							$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$d rules=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_rules );
 						} elsif ( $horizontal_price{units} eq 'per inch' ) {
@@ -670,12 +670,12 @@ sub signature_calc {
 							$Results{Breakdown} .= 'Package Quantity: ' . $$Package_Qty{value}.$$Package_Qty{units}.' per package<br/>';
 						} # end if
 						%vertical_price = $Vertical_Material->get_price( $vertical_rules, $Equipment );
-						if ( sets::isin( $vertical_price{units},['per rule','each'] ) ) {
+						if ($vertical_price{units} eq 'per rule' or $vertical_price{units} eq 'each' ) {
 							$vertical_price{Total} = $vertical_price{Price} * $vertical_rules;
 							$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$d wheels=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_rules );
 						} elsif ( $vertical_price{units} eq 'per inch' ) {
 							$vertical_price{Total} = Math::Round::nearest( $vertical_price{Price} * $vertical_length );
-							$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length );
+							$Results{Breakdown} .= $$Vertical_Material{name}.sprintf(': $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length );
 							if ( $Package_Qty ) {
 								if ( $$Package_Qty{units} eq 'feet' ) {
 									$Results{Breakdown} .= POSIX::ceil(($vertical_length/12) / $$Package_Qty{value} ) . 'packages<br/>';
@@ -688,7 +688,7 @@ sub signature_calc {
 							} # end if
 						} elsif ( $vertical_price{units} eq 'per foot' ) {
 							$vertical_price{Total} = Math::Round::nearest( 0.01, $vertical_price{Price} * ( $vertical_length/12 ) );
-							$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
+							$Results{Breakdown} .= $$Vertical_Material{name}.sprintf(': $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
 							if ( $Package_Qty ) {
 								if ( $$Package_Qty{units} eq 'feet' ) {
 									$Results{Breakdown} .= POSIX::ceil(($vertical_length/12) / $$Package_Qty{value} ) . 'packages<br/>';

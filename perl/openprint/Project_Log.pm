@@ -58,7 +58,7 @@ sub User {
 } # end sub USer;
 
 sub Host {
-  if ( ( ! $_[0]{host_id} ) and ( $_[0]{ip_address} ) ) {
+  if ( ( ! $_[0]{host_id} ) and $_[0]{ip_address} ) {
     my $Interface = openprint::Host_Interface->find_one( ip=>$_[0]{ip_address} );
     my $Host;
     if ( ! $Interface ) {
@@ -84,16 +84,18 @@ sub ip_address {
     if ( ! defined $_[1] ) {
       $_[1] = $ENV{REMOTE_ADDR};
     } # end if
-    my $Interface = openprint::Host_Interface->find_one( ip=>$_[1] );
-    if ( ! $Interface ) {
-      $Host = new openprint::Host();
-      $Host->save();
-      $Interface = new openprint::Host_Interface();
-      $Interface->save({host_id=>$$Host{id}, ip=>$_[1] });
-    } else {
-      $Host = $Interface->Host();
-    } # end if
-    $_[0]{host_id} = $Host->id();
+    if ( $_[1] ) {
+	    my $Interface = openprint::Host_Interface->find_one( ip=>$_[1] );
+	    if ( ! $Interface ) {
+	      $Host = new openprint::Host();
+	      $Host->save();
+	      $Interface = new openprint::Host_Interface();
+	      $Interface->save({host_id=>$$Host{id}, ip=>$_[1] });
+	    } else {
+	      $Host = $Interface->Host();
+	    } # end if
+	    $_[0]{host_id} = $Host->id();
+    }
   } # end if
   return join('<br/>', map { $_->ip() ? $_->ip() : () } $Host->Interfaces() );
 } # end sub ip_address

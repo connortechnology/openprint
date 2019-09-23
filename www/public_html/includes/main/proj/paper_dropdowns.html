@@ -7,11 +7,11 @@
 		<ul>
 		<li>
 			<label>Customer supplied</label>
-      <?echo(radio('SuppliedStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ], $$variable{'rdbSuppliedStock'.$$variable{Signature}}, { onclick=>"Stock_onchange(this,'$$variable{Signature}');" } ); )?>
+      <?echo(radio('rdbSuppliedStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ], $$variable{'rdbSuppliedStock'.$$variable{Signature}}, { onclick=>"Stock_onchange(this,'$$variable{Signature}');" } ); )?>
 		</li>
 		<li>
 			<label>Unlisted stock</label>
-      <?echo(radio('SpecificStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ],
+      <?echo(radio('rdbSpecificStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ],
       $$variable{'rdbSpecificStock'.$$variable{Signature}}, {
      onclick=>"if(this.value=='Y'){$('HouseStock$$variable{Signature}').hide();$('SpecificStock$$variable{Signature}').show();if(this.form.ddmStockSheetSize1){clear_ddm(this.form.ddmStockSheetSize1);};if(this.form.ddmStockSheetSize2){clear_ddm(this.form.ddmStockSheetSize2);};if(this.form.ddmStockSheetSize3){clear_ddm(this.form.ddmStockSheetSize3);};calc(this.form.name);}else{$('SpecificStock$$variable{Signature}').hide();$('HouseStock$$variable{Signature}').show();Stock_onchange(this,'$$variable{Signature}');}" } );)?>
 		</li>
@@ -68,7 +68,7 @@
 				<span id="PaperAlert<?Signature?>"></span>
 			</li>
 			<li class="GSM"><label>GSM</label>
-				<? echo ( input( type=>'float', name=>'txtStockGSM'.$$variable{Signature}, value=>$$variable{'txtStockGSM'.$$variable{Signature}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
+				<? echo ( input( type=>'float', name=>'txtStockGSM'.$$variable{Signature}, value=>$$variable{'txtStockGSM'.$$variable{Signature}}, oninput=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);"); ) ?>
 			</li>
 			<li><label>Double sided?</label>
 				<input id="CustomSheetDoubleSided<?Signature?>Y" name="CustomSheetDoubleSided<?Signature?>" type="radio" value="Y" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'CustomSheetDoubleSided'.$$variable{Signature}} ne 'N' ); ) ?> />

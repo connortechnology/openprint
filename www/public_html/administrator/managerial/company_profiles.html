@@ -27,7 +27,7 @@ function load_customers( ) {
 		<li>
 			<label>Account #</label>
 			<input type="text" name="txtSearchAccountNum" />
-			<? echo ( button( 'Go', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);" } ); ) ?>
+			<? echo ( button( 'Go', { onclick=>q`f1.btnFunction.value='Go';fmCheck(f1);` } ); ) ?>
 		</li>
 		<li>
 			<label>Type</label>
@@ -43,11 +43,12 @@ function load_customers( ) {
 			<label>Sales Rep</label>
 			<select name="search_salesrep_id" onchange="load_customers();">
 				<option value=""> All </option>
-				<? echo ( make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{SalesReps}} ], $param{search_salesrep_id} ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{SalesReps}} ], $session{'/administrator/managerial/company_profiles.html?search_salesrep_id'} ); ) ?>
 			</select>
 		</li>
 <? endif ( @{$$variable{SalesReps}} = openprint::User->find( id=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')], deleted=>[0,1]) ) ?>
-		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{deleted}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;load_customers();"} ); ) ?></li>
+		<li><label>Deleted?</label>
+		<? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{deleted}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;load_customers();"} ); ) ?></li>
 		<li> 
 			<label>Company</label>
 			<input type="text" name="search_company_filter" id="search_company_filter" oninput="load_customers();" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" class="filter" />
@@ -56,9 +57,9 @@ function load_customers( ) {
 				<? echo ( 
 if ( 0 ) {
 					my %params = (
-							( $param{search_salesrep_id} ? ( 'salesrep_id'=>$param{search_salesrep_id} ) : () ),
-							( $param{deleted} ne '' ? ( 'deleted'=>$param{deleted} ) : () ),
-							'order'=>'lower(name)',
+							( $session{'/administrator/managerial/company_profiles.html?search_salesrep_id'} ? ( salesrep_id=>$session{'/administrator/managerial/company_profiles.html?search_salesrep_id'} ) : () ),
+							( $session{'/administrator/managerial/company_profiles.html?deleted'} ne '' ? ( 'deleted'=>$session{'/administrator/managerial/company_profiles.html?deleted'} ) : () ),
+							order=>'lower(name)',
 					);
 					if ( $param{search_type} eq 'Suppliers' ) {
 						$params{supplier} ='Y';
@@ -83,24 +84,24 @@ if ( 0 ) {
 		</li>
 		</ul>
 	</fieldset>
-	<input type="hidden" name="company_id" id="company_id" value="<?CustomerIndex?>" />
+
 	<fieldset id="ButtonsTop">
 		<p> 
 			<label><? echo ( $$variable{CustomerIndex} ? button( 'Users', { href=>'user_profiles.html?ddmCustomer='.$$variable{CustomerIndex} } ) : '' ) ?></label>
 		
 			<? echo (
 				my $html = '';
-				$html .= button( 'Prev1', { onclick=>q`f1.btnFunction.value='&lt;&lt;';fmCheck(f1);`,text=>'&lt;&lt;' } );
-				$html .= button( 'Next1', { onclick=>q`f1.btnFunction.value='&gt;&gt;';fmCheck(f1);`,text=>'&gt;&gt;' } );
-				$html .= button( 'New1', { onclick=>'addCheck(f1);',text=>'New' } );
+				$html .= button( 'Prev1', { onclick=>q`f1.btnFunction.value='&lt;&lt;';fmCheck(f2);`,text=>'&lt;&lt;' } );
+				$html .= button( 'Next1', { onclick=>q`f1.btnFunction.value='&gt;&gt;';fmCheck(f2);`,text=>'&gt;&gt;' } );
+				$html .= button( 'New1', { onclick=>'addCheck(f2);',text=>'New' } );
 				if ( $$variable{Company}->deleted() ) {
 					$html .= button( 'Undelete1', { onclick=>"f1.btnFunction.value='Undelete';fmCheck(f1);",text=>'Undelete' } );
 					$html .= button( 'Destroy1',{ onclick=>"f1.btnFunction.value='Destroy';fmCheck(f1);",text=>'Destroy' } );
 				} else {
 					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",text=>'Delete' } );
 				} # end if
-				$html .= button( 'Save1',{ onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",text => 'Save' } );
-				$html .= button( 'Reset1', { onclick=>'f1.reset();',text=>'Reset' } );
+				$html .= button( 'Save1',{ onclick=>"f2.btnFunction.value='Save';fmChange=3;fmCheck(f2);",text => 'Save' } );
+				$html .= button( 'Reset1', { onclick=>'f2.reset();',text=>'Reset' } );
 				$html .= button( 'Merge', { onclick=>qq`popup_window('_merge_popup.html','company_id=$$variable{CustomerIndex}');` } );
 				return $html;
 			) ?>
@@ -118,7 +119,7 @@ scalar openprint::User->find( company_id=>$C->id()),
 scalar openprint::Project->find( company_id=>$C->id()),
 scalar openprint::Quote->find( company_id=>$C->id()),
 scalar openprint::Order->find( company_id=>$C->id()),
-button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.html?ddmCustomer='.$$variable{Company}->id().'&amp;merge_company_id='.$C->id().'&amp;btnFunction=merge', text=>'Merge' } ) );
+button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.html?company_id='.$$variable{Company}->id().'&amp;merge_company_id='.$C->id().'&amp;btnFunction=merge', text=>'Merge' } ) );
 					} # end foreach C
 					$html .= '</div>';
 					return $html;
@@ -127,6 +128,10 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			return '';
 		) ?>
 	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" action="/administrator/managerial/company_profiles.html">
+	<input type="hidden" name="btnFunction"/>
+	<input type="hidden" name="company_id" id="company_id" value="<?CustomerIndex?>" />
 	<div class="SalesInformation">
 		<fieldset><legend>Sales Information</legend>
 		<? if ( $$variable{Company}->deleted() ) ?>
@@ -179,12 +184,12 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<label>Sales Person</label>
 				<select name="salesrep_id">
 					<option value="">select</option>
-					<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)', web_active=>'Y'), $$variable{Company}->salesrep_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::User->dropdown(type=>['E','A']), $$variable{Company}->salesrep_id() ); ) ?>
 				</select>
 			</li>
 		</ul>
 	</div>
-	<div class="rightColumn">
+	<div class="leftColumn">
 		<ul>
 		<? if ( $$variable{Company}->id() ) ?>
 		<li>
@@ -428,11 +433,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 	</fieldset>
 </div>
 <div class="Locations">
-<fieldset><legend>Locations</legend>
-	<?echo(
-return join('<br/>', map { $_->to_string() } openprint::Location->find( company_id=>$$variable{Company}->id() ) );
-	)?>
-</fieldset>
+<?include(/location/_locations_container.html)?>
 </div>
 <div class="CreditInformation">
 <?include(/includes/_credit_edit.html)?>

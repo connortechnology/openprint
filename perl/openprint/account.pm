@@ -26,6 +26,7 @@ require openprint::Event;
 require openprint::User_Relationship;
 require openprint::Wall;
 require openprint::Blocklist;
+require openprint::Email_Account;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -60,10 +61,7 @@ sub select_user {
 
 sub registration {
 	if ( $param{btnFunction} ne 'Register' ) {
-		$log->debug("Not registering");
 		return;
-	} else {
-		$log->debug("Registering");
 	} # end if
 
 	$param{business_name} = $param{company_name} if ! $param{business_name};
@@ -100,49 +98,73 @@ sub registration {
 		} # end if
 	} # end if
 	if ( $required_fields{email} ) {
-	$error .= 'Missing E-mail Address.<br/>' if ! $param{email};
-	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{email} );
+    $error .= 'Missing E-mail Address.<br/>' if ! $param{email};
+    $error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{email} );
 	}
 	if ( $required_fields{password} ) {
-	$error .= 'Empty Password.<br/>' if $param{password} eq '';
-	$error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verifypassword};
-	if ( my $reason = openprint::login::check_password( $param{password} ) ) {
-		$error .= "Password not good enough.  $reason<br/>";
-	} # end if
-	} # end if
-	if ( ( ! $session{company_id} ) and ( $config{UseCaptchaOnRegistration} eq 'Y' ) ) {
-		if ( ! -e $config{SkinPath}.'/images/captcha' ) {
-			$log->error("Needtocreatecaptcha directory!");
-		} elsif ( ! $param{MD5SUM} ) {
-			$log->error("No MD5SUM, there must have been a problem creating the png!");
-		} else {
-			require Authen::Captcha;
-			my $Captcha = new Authen::Captcha( data_folder => '/tmp/'.$config{db_name}, output_folder => $config{SkinPath}.'/images/captcha');
-			# Remove spaces, because some people want to put spaces between the characters, etc.
-			$param{Captcha} =~ s/\s//g;
-			my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
-			if ( $rc == 1 ) {
-				# Passed
-			} elsif ( $rc == 0 ) {
-				# File error, log and carry on
-				$log->error("Captcha file error");
-			} elsif ( $rc == -1 ) {
-				$log->debug("Failed: code expired");
-				$error .= 'Captcha validation code has expired.  Please try again.';
-			} elsif ( $rc == -2 ) {
-				$log->debug("Failed: invalid code (not in db)");
-				$error .= 'Captcha validation code incorrect.  Please try again.';
-			} elsif ( $rc == -3 ) {
-				$log->debug("Failed: invalid code (does not match token)");
-				$error .= 'Captcha validation code incorrect.  Please try again.';
-			} else {
-				$log->error("unknown return code $rc from Authen::Captcha");
-			}
-		} # end if
-	} # end if
+    $error .= 'Empty Password.<br/>' if $param{password} eq '';
+    $error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verifypassword};
+    if ( my $reason = openprint::login::check_password( $param{password} ) ) {
+      $error .= "Password not good enough. $reason<br/>";
+    } # end if
+  } # end if
+  if ( ( ! $session{company_id} ) and ( $config{UseCaptchaOnRegistration} eq 'Y' ) ) {
+    if ( $config{reCAPTCHA_site_key} ) {
+      if ( ! $param{'g-recaptcha-response'} ) {
+        $error .= "You must check the I'm not a rebot box";
+      } else {
+        eval {
+          # Using Google recaptcha
+          require Captcha::reCAPTCHA;
+          my $c = Captcha::reCAPTCHA->new;
+          my $result = $c->check_answer_v2($config{reCAPTCHA_secret_key}, $param{'g-recaptcha-response'}, $ENV{REMOTE_ADDR});
+          if ( ! $result->{is_valid} ) {
+            $error .= 'Failed reCAPTCHA.';
+          }
+        };
+        if ( $@ ) {
+          $error .= "Failed reCAPTCHA: $@";
+          $log->error($error);
+        }
+      }
+
+    } else {
+      if ( ! -e $config{SkinPath}.'/images/captcha' ) {
+        $log->error('Needtocreatecaptcha directory!');
+      } elsif ( ! $param{MD5SUM} ) {
+        $log->error('No MD5SUM, there must have been a problem creating the png!');
+      } else {
+        require Authen::Captcha;
+        my $Captcha = new Authen::Captcha(
+          data_folder => '/tmp/'.$config{db_name},
+          output_folder => $config{SkinPath}.'/images/captcha'
+        );
+        # Remove spaces, because some people want to put spaces between the characters, etc.
+        $param{Captcha} =~ s/\s//g;
+        my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
+        if ( $rc == 1 ) {
+          # Passed
+        } elsif ( $rc == 0 ) {
+          # File error, log and carry on
+          $log->error('Captcha file error');
+        } elsif ( $rc == -1 ) {
+          $log->debug('Failed: code expired');
+          $error .= 'Captcha validation code has expired.  Please try again.';
+        } elsif ( $rc == -2 ) {
+          $log->debug('Failed: invalid code (not in db)');
+          $error .= 'Captcha validation code incorrect.  Please try again.';
+        } elsif ( $rc == -3 ) {
+          $log->debug('Failed: invalid code (does not match token)');
+          $error .= 'Captcha validation code incorrect.  Please try again.';
+        } else {
+          $log->error("unknown return code $rc from Authen::Captcha");
+        }
+      } # end if captcha setup is ok
+    } # end if google recaptcha or not
+  } # end if using captcha
 
 	if ( $error ne '' ) {
-$log->warn("registration errors $error");
+    $log->warn("registration errors $error");
 		$variable{error} = $error;
 		return;
 	} # end if
@@ -151,7 +173,7 @@ $log->warn("registration errors $error");
 	if ( $param{email} ) {
 		# enforce unique email addresses.
 		$param{email} =~ tr/[A-Z]/[a-z]/;
-		if ( openprint::User->find_one(email=>$param{email},'company_id is null'=>0 ) ) {
+		if ( openprint::User->find_one(email=>$param{email},'company_id is null'=>0) ) {
 			$variable{error} = $param{email} .' is already a user!';
 			return;
 		} # end if
@@ -159,7 +181,7 @@ $log->warn("registration errors $error");
 			$variable{error} = $param{email} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 			return;
 		} # end if
-		$User = openprint::User->find_one(email=>$param{email},'company_id is null'=>1 );
+		$User = openprint::User->find_one(email=>$param{email},'company_id is null'=>1);
 	} # end if
 
 	my @agents = split(',', $config{UserRegistrationEmail} );
@@ -190,14 +212,14 @@ $log->warn("registration errors $error");
 			$Company = new openprint::Company();
 			$Company->set( \%param );
 			$Company->activation( $config{NewCustomerAccountActivation} );
-			if ( sets::isin( $session{user_type}, ['E','A'] ) and ! $Company->salesrep_id() ) {
+			if ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) and ! $Company->salesrep_id() ) {
 				$Company->salesrep_id( $session{user_id} );
 			} # end if
 			if ( my $error = $Company->save() ) {
 				$variable{error} .= $error;
 				return;
 			} # end if
-			my @Suppliers = openprint::Company->find('offers_credit'=>1,'order'=>'id');
+			my @Suppliers = openprint::Company->find(offers_credit=>1, order=>'id');
 			foreach my $Supplier ( @Suppliers ) {
 # Setup default Credit
 				my $Credit = new openprint::Company_Credit();
@@ -283,7 +305,7 @@ $log->warn("registration errors $error");
 						);
 			} # end if
 
-			if ( ! sets::isin( $session{user_type}, ['E','A'] ) ) {
+			if ( ! ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) ) {
 # send notification
 				$info{ReplacementText} = ssi::include( '/email_content/first_user_login_app_notification.html', \%info );
 				foreach my $to ( split(',', $config{UserRegistrationEmail} ) ) {
@@ -360,7 +382,7 @@ $log->warn("registration errors $error");
 		} # end if Company has users or not
 	} # end if has email first or last name
 
-	if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
+	if ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) {
 		# If I'm a salesrep, then only change my company, not the user.
 		$session{company_id} = $Company->id();
 		$variable{information} .= 'You are now representing '.$Company->name().'<br/>';
@@ -509,28 +531,14 @@ sub user_profile {
 				$param{password_changed_on} = 'NOW()';
 			} # end if
 
-			$variable{error} .= $User->save( \%param );
-			$User->Profile()->save( \%param );
+			my @changes = $User->changes(\%param);
+
+			$variable{error} .= $User->save(\%param);
+			$User->Profile()->save(\%param);
 			if ( $config{mail_db_name} ) {
-				my @domains = email::domains();
-				my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
-				if ( sets::isin( $domain, \@domains ) ) {
-					if ( $param{VacationState} ) {
-						email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage','VacationSystemEmails'} );
-					} else {
-						email::stop_vacation( $User->email() );
-					} # end if
-					if ( $param{EmailPassword} and $param{EmailPassword} eq $param{VerifyEmailPassword} ) {
-						email::set_password( @param{'email','EmailPassword'} );
-					} # end if
-					my @aliases = ();
-					foreach my $alias ( split "\r\n", $param{aliases} ) {
-						next if ! $alias;
-						push @aliases, $alias;
-					} # end foreach
-					push @aliases, $User->email() if ! @aliases;
-					email::aliases( $User->email(), @aliases );
-				} # end if
+				my ( $error, @c ) = email::save($User->email(), \%param);
+				$variable{error} .= $error;
+				push @changes, @c;
 			} # end if
 
 			$variable{ExternalRedirect} = '/account/user_profile.html?ddmUser='.$User->id();
@@ -539,18 +547,15 @@ sub user_profile {
 $log->debug("Sending password change");
 # Send password change email
 				if ( my $email_template = misc::load_file( $log, $config{SkinPath} . '/email_template.html' ) ) {
-					my %info = (
-							'User' =>$User,
-						   );
+					my %info = ( User =>$User );
 
-					$info{ReplacementText} = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . '/email_content/changed_password.html' );
-					$info{ReplacementText} = ssi::variable_substitution( \$info{ReplacementText}, \%info );
+					$info{ReplacementText} = ssi::include('/email_content/changed_password.html', \%info);
 
 					(new openprint::Email())->send(
 							FROM    => $config{AdministratorEmail},
 							TO      => $User,
 							SUBJECT => 'Password Changed',
-							ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
+							ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution(\$email_template, \%info) ), 'text/html', 'quoted-printable' ],
 							);
 					$variable{information} = 'The user has been notified by email of the password change.';
 				} else {
@@ -569,15 +574,12 @@ $log->debug("Sending password change");
 		} # end if
 	} # end if 
 	$variable{User} = $User;
-    if ( $config{mail_db_name} ) {
-        my @domains = email::domains();
-        my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
-        if ( sets::isin( $domain, \@domains ) ) {
-            $variable{DoEmail} = 1;
-            @variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
-            @{$variable{Aliases}} = email::aliases( $User->email() );
-        } # end if
-    } # end if
+	if ( $config{mail_db_name} ) {
+		email::load($User->email(), \%variable);
+		my $mail_dbh = email::db_connect();
+		$openprint::Email_Account::dbh = $mail_dbh;
+		$variable{Email} = openprint::Email_Account->find_one(username=>$User->email());
+	}
 } # end sub user_profile
 
 sub change_password {

@@ -116,6 +116,13 @@
           $$variable{index} = $ss_id;
           $$variable{status} = $statuses{$ss_id};
           $html .= variable_substitution( \$status_html, $variable );
+
+					my $Service = $Project->Service($ss_id);
+					my $runtime = $Service->runtime();
+					if ( $runtime ) {
+						$html .= misc::seconds2hm($runtime);
+						$category_totals{$$ServiceCategory{name}}{runtime} += $runtime;
+					};
           $html .= "</td></tr>\n";
           $rowclass = $rowclass ? '' : ' class="colRow"';
         } # end while sigs
@@ -173,8 +180,11 @@
 					$html .= '</td><td class="status" id="status'.$service_id.'">';
 					@$variable{'status','index'} = ( $statuses{$service_id}, $service_id );
           $html .= variable_substitution( \$status_html, $variable );
-					$html .= misc::seconds2hm($Service->runtime());
-					$category_totals{$$ServiceCategory{name}}{runtime} += $Service->runtime();
+					my $runtime = $Service->runtime();
+					if ( $runtime ) {
+						$html .= misc::seconds2hm($runtime);
+						$category_totals{$$ServiceCategory{name}}{runtime} += $runtime;
+					};
 					$html .= "</td></tr>\n";
 					$rowclass = $rowclass ? '' : ' class="colRow"';
 				} # end foreach service_id
@@ -193,14 +203,13 @@
 
     my $stock_specs = openprint::service::get_specs_ref( $Project, $$services{Paper}[0] );
     my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $$services{Paper}[0], $stock_specs, $qty_index );
-    my $stock_index = 1;
     foreach my $SQ ( @stocks_and_quantities ) {
-      my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
+      my ( $Stock, $qty, $stock_index ) = @$SQ{'Stock','quantity','index'};
       next if ! $qty;
       my $string = $Stock->id_string();
       
       if ( $Stock->type() eq 'Sheet' ) {
-        $totals{$string} = Math::Round::nearest(0.1,$qty * $Stock->sheet_weight() );
+        $totals{$string} = Math::Round::nearest(0.1, $qty * $Stock->sheet_weight());
         $sheets{$string} = $qty;
       } else {
         $totals{$string} = $qty;
@@ -208,12 +217,12 @@
       $Stocks{$string} = $Stock;
 
       if ( ! (1*$$stock_specs{"cost-$stock_index-$qty_index"}) ) {
-$log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stock_index-$qty_index");
         my $price = $Stock->get_price( weight=>$totals{$string}, service=>'Material' );
         $prices{$string} = sprintf('$%.2f/100lb = $%.2f', 
           $ProjectCurrency->convert_from( $$price{'100lb Price'} ),
           $ProjectCurrency->convert_from( $$price{'100lb Total'} ),
           );
+$log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stock_index-$qty_index $$price{'100lb Price'} for $string");
       } else {
 $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string() . " : $totals{$string} * " . $$stock_specs{"cost-$stock_index-$qty_index"} );
         $$stock_specs{"price-$stock_index-$qty_index"} = int( $totals{$string} * $$stock_specs{"cost-$stock_index-$qty_index"} / 100 ) if ! $$stock_specs{"price-$stock_index-$qty_index"};
@@ -221,12 +230,10 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
           $ProjectCurrency->convert_from( $$stock_specs{"cost-$stock_index-$qty_index"} ),
           $ProjectCurrency->convert_from( $$stock_specs{"price-$stock_index-$qty_index"} ),
           );
-      } # en dif
-      $stock_index += 1;
+      } # end if
     } # end while
 
   } else {
-
 
 		foreach my $ss_id ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
@@ -286,7 +293,7 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
       my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 
       $html .= "<tr$rowclass>\n";
-      $html .= sprintf(q`<td class="checkbox"><input type="checkbox" name="chkDelete-%1$d" /></td>`, $service_id ) if $$variable{checkboxes};
+      $html .= sprintf(q`<td class="checkbox"><input type="checkbox" name="chkDelete-%1$d"/></td>`, $service_id ) if $$variable{checkboxes};
 
       my @summaries;
       my $summary = openprint::service::summary( $Project->id(),$service_id );
@@ -561,10 +568,11 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
   <span style="float: left;">
     <? echo ( join("\n",
     button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{ProjectIndex}');", text=>'Docket' } ),
-    button( 'Summary'.$$variable{Project}{id}, { href=> "summary.html?ProjectIndex=$$variable{ProjectIndex}", text=>'Summary' } ),
+    button( 'Summary'.$$variable{Project}{id}, { href=> "/main/project/summary.html?ProjectIndex=$$variable{ProjectIndex}", text=>'Summary' } ),
     button( 'UploadPDFs'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
     #button( 'ExportJDF', { onclick=>qq`form_submit('$$variable{formname}','Export JDF');`, text=>'JDF' } ),
     #button( 'ExportMXML', { onclick=>qq`form_submit('$$variable{formname}','Export MXML');`, text=>'MXML' } ),
+    button( 'RelatedDockets'.$$variable{Project}{id}, { onclick=>"popup_window('/employee/project/_related_projects.html','project_id=$$variable{ProjectIndex}', { width: 800, height: 600 } );", text=>'Related Dockets' } ),
     ); ) ?>
   </span>
   

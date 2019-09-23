@@ -455,7 +455,7 @@ sub find_entry {
 $openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
 		return if ( $$x{max} and ( $$x{max} < $range ) and ! $$x{interpolate} );
 	} else {
-$openprint::log->debug("Couldn't find monimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
+$openprint::log->debug("Couldn't find minimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
 		return;	
 	}
 	for ( ; $i < @{$array}; $i += 1 ) {
@@ -468,23 +468,23 @@ $openprint::log->debug("Couldn't find monimum for $name : $range on " . ( $$arra
 	} # end foreach
 	if ( $i and $i < @{$array} ) {
 		$y = $$array[$i];
-$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
-    } else {
-$openprint::log->debug("Couldn't find maximum for $name") if $debug;
-        return;
-    } # end if
+		$openprint::log->debug('Found spec max '.$y->min().' '.$y->max().' : '.$y->value()) if $debug;
+	} else {
+		$openprint::log->debug("Couldn't find maximum for $name") if $debug;
+		return;
+	} # end if
 
-    if ( $x == $y ) {
-        return $x;
-    } elsif ( $$x{interpolate} ) {
-        my $Object = $x->copy();
-        $$Object{min} = $$Object{max} = $range;
-        $$Object{value} = $$x{value} + ($range - $$x{min})*($$y{value}-$$x{value})/($$y{min}-$$x{min});
-$openprint::log->debug("Returning " . $$Object{value}) if $debug;
-        return $Object;
-    } # end if
-$openprint::log->debug("Returning nothing") if $debug;
-    return;
+	if ( $x == $y ) {
+		return $x;
+	} elsif ( $$x{interpolate} ) {
+		my $Object = $x->copy();
+		$$Object{min} = $$Object{max} = $range;
+		$$Object{value} = $$x{value} + ($range - $$x{min})*($$y{value}-$$x{value})/($$y{min}-$$x{min});
+		$openprint::log->debug("Returning " . $$Object{value}) if $debug;
+		return $Object;
+	} # end if
+	$openprint::log->debug("Returning nothing") if $debug;
+	return;
 } # end sub find_entry
 
 sub add_delta_business_days {
@@ -555,7 +555,7 @@ sub make_hash_from_array {
 		$results{$$object{$key}} = [] if ! $results{$$object{$key}};
 		push @{$results{$$object{$key}}}, $object;
 	}
-	return \%results;
+	return wantarray ? %results : \%results;
 }
 
 1;

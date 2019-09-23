@@ -1,4 +1,5 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script type="text/javascript">
 	function check_inputs(form ) {
 		if ( form.btnFunction && form.btnFunction.value=='Allocate' ) {
@@ -14,33 +15,10 @@
 		return true;
 	}
 
-function calc_from_basis_weight( form ) {
-	var basis_weight = parseFloat(1*form.elements['basis_weight'].value);
-	var width = parseFloat(1*form.elements['basis_width'].value);
-	var height = parseFloat(1*form.elements['basis_height'].value);
-	var gsm = parseInt((basis_weight/1000)/(width*height)*7030645.0)/10;
-	form.elements['gsm'].value = gsm;
-	form.elements['mweight'].value = '';
-}
-function calc_from_mweight( form ) {
-	var mweight = parseFloat(1*form.elements['mweight'].value);
-	var width = parseFloat(1*form.elements['width'].value);
-	var height = parseFloat(1*form.elements['height'].value);
-	var gsm = parseInt((mweight/1000)/(width*height)*7030645.0)/10;
-	form.elements['gsm'].value = gsm;
-}
-function calc_from_gsm( form ) {
-	var gsm = parseFloat(1*form.elements['gsm'].value);
-	var width = parseFloat(1*form.elements['width'].value);
-	var height = parseFloat(1*form.elements['height'].value);
-	var basis_width = parseFloat(1*form.elements['basis_width'].value);
-	var basis_height = parseFloat(1*form.elements['basis_height'].value);
-	form.elements['mweight'].value = parseInt((gsm/703064.5)*(width*height)*10000)/10;
-	form.elements['basis_weight'].value = parseInt((gsm/703064.5)*(basis_width*basis_height)*10000)/10;
-}
 </script>
 
 <?include('/includes/error_reporting.html')?>
+<div class="warning"><?echo($$variable{Paper}->check())?></div>
 <form id="f1" name="f1" action="paper_details.html?paper_id=<?paper_id?>" method="post">
 	<input type="hidden" name="btnFunction" />
 	<fieldset>
@@ -172,7 +150,14 @@ x
 			</p>
 			<p>
 				<label>Calliper</label>
-				<? echo ( input( type=>'float', id=>'txtCalliper', name=>'txtCalliper', value=>$$variable{Paper}->calliper() ); )?>inches
+ <? echo ( input(type=>'float', id=>'calliper', name=>'calliper',
+                value=> $$variable{Paper}->calliper(),
+                oninput=>q`$('calliper_mm').value=do_decimals(this.value*25.4,3);`,
+                ); ) ?> inches
+          <? echo ( input(type=>'float', id=>'calliper_mm', name=>'calliper_mm',
+                  value => Math::Round::nearest( .001, $$variable{Paper}->calliper()*25.4),
+                  oninput =>q`$('calliper').value=do_decimals( this.value*0.0393701, 4 );`,
+                ); ) ?> mm
 			</p>
 			<p>
 				<label>FSC Code</label>
@@ -229,20 +214,29 @@ x
 		<div class="rightColumn">
 			<p>
 				<label>Entered</label>
-				<? echo ( format_date( $$variable{Paper}->created_on() ); ) ?>
+				<span title="<?echo($$variable{Paper}->created_on())?>"><? echo ( format_date( $$variable{Paper}->created_on() ); ) ?></span>
 			</p>
 			<p>
 				<label>In Stock</label>
-				<? echo ( Number::Format::format_number($$variable{Paper}->in_stock()) . $$variable{Paper}->units() ) ?>
+				<? echo ( join(' ',
+							Number::Format::format_number($$variable{Paper}->in_stock()) . $$variable{Paper}->units(),
+							( ($$variable{Paper}->type() eq 'Sheet') ? Number::Format::format_number($$variable{Paper}->in_stock() * $$variable{Paper}->sheet_weight()).'lbs' : () ),
+				); ) ?>
 			</p>
 			<p>
 				<label>Allocated</label><span id="Allocated">
-				<? echo ( Number::Format::format_number($$variable{Paper}->allocated()) . $$variable{Paper}->units() ) ?>
+				<? echo ( join(' ',
+							Number::Format::format_number($$variable{Paper}->allocated()) . $$variable{Paper}->units(),
+							( ($$variable{Paper}->type() eq 'Sheet') ? Number::Format::format_number($$variable{Paper}->allocated() * $$variable{Paper}->sheet_weight()).'lbs' : () ),
+							); ) ?>
 				</span>
 			</p>
 			<p>
 				<label>Available</label><span id="Available">
-				<? echo ( Number::Format::format_number($$variable{Paper}->available()). $$variable{Paper}->units() ) ?>
+				<? echo ( join(' ',
+							Number::Format::format_number($$variable{Paper}->available()). $$variable{Paper}->units(),
+							( ($$variable{Paper}->type() eq 'Sheet') ? Number::Format::format_number($$variable{Paper}->available() * $$variable{Paper}->sheet_weight()).'lbs' : () ),
+); ) ?>
 				</span>
 			</p>
 			<p>
@@ -309,4 +303,5 @@ x
 	<fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log<span class="unprintable"> - click to hide/show</span></legend>
 		<div id="Log"><?include('/employee/inventory/_paper_log.html') ?></div>
 	</fieldset>
+	<? echo ( include_logs( $$variable{Paper} ); ) ?>
 <? endif ( $$variable{paper_id} ) ?>

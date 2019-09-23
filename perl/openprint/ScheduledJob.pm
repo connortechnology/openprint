@@ -356,8 +356,8 @@ sub get_li {
 		;
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
 		$html .= sprintf( q`<div class="Comment" onclick="job_popup('%1$d');">%2$s</div>`, $$self{id}, $self->comment() );
-		if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
-		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{id}, $self->stock() );
+		if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+		  $html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{id}, $self->stock() );
 		}
 		if ( $$self{project_id} ) {
 			$html .= sprintf(q`
@@ -380,10 +380,10 @@ sub get_li {
 
 		$html .= sprintf( q`<span class="RunTime" onclick="job_popup('%1$d');">Total Hr: %2$.2d:%3$.2d</span>`, $$self{id}, split(':',$self->runtime()) );
 
-		if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
-		if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
-			$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
-		} # end if
+		if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+			if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
+				$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
+			} # end if
 		} # end if
 
 		$html .= '<span class="Buttons">';
@@ -397,7 +397,7 @@ sub get_li {
 		$html .= ssi::button( 'Bump'.$$self{id}, { onclick=>"popup_window('/employee/production/_bump_job.html','schedule_id=$$self{id}');", text=> 'B', title=>'Bump to next shift' } );
 		if ( $$self{project_id} ) {
 			$html .= ssi::button( 'Complete'.$$self{id}, { onclick=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{id}', { width: '400px', height: '300px', center: 'false' } );", text=>'C',title=>'Complete Job' } );
-			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+			if ( (!$self->ServiceType()->name()) or $self->ServiceType()->name() eq 'Signature' ) {
 				$html .= ssi::button( 'House'.$$self{id}, { onclick=>"new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{id}, action: 'House Stock' } } );", text=>'H', title=>'House Stock' } );
 				$html .= ssi::button( 'PO'.$$self{id}, { target=>'_blank', href=>"/employee/purchase_order/edit.html?project_id=$$self{project_id}", text=>'PO', title=>'Create PO' } );
 			} # end if
@@ -442,7 +442,7 @@ sub get_li {
 		$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{id}, split(':',$self->runtime()) );
 		$html .= '<span class="Buttons">';
 		if ( $$self{project_id} ) {
-			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+			if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
 				$html .= ssi::button( 'Paper'.$$self{id}, { onclick=> "popup_window('/employee/production/_stock_details.html','project_id=$$self{project_id}' );", text=> 'P', title=>'Paper' } );
 			} # end if
 			if ( $i_am_the_operator ) {
