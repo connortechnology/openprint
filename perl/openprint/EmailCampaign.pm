@@ -240,7 +240,7 @@ sub send {
 			} # if $num_email_sent > num_times to send
 		}
 
-		if ( $User->mailinglist() eq 'N' ) {
+		if ( $User->mailinglist() and ($User->mailinglist() eq 'N') ) {
 			$results .= sprintf(
 					'<span class="error">NOT Sending Email to: %s at %s : they have chosen to not receive email.</span><br/>',
 					$replacements{User}->link_to(),$replacements{User}->email()
