@@ -42,14 +42,13 @@
 			$Currency = $openprint::Currency if ! $Currency->id();
 			
 			foreach my $Type ( $$variable{Manifest}->Types() ) {
-$log->debug("Type " . $Type->to_string() );
 				my $Paper = $Type->Paper();
 				my $columns = 9;
 				$columns += 1 if $Type->type() eq 'Sheets';
 				$columns += 1 if $$variable{Manifest}->can_see_pricing();
 				my $POC = $Type->PurchaseOrder_Content();
 				$POC = $Type->PurchaseOrder_Content({ignore_fsc=>1}) if !$POC;
-				my $poc_check = $POC->check($Type->Paper()) if $POC;
+				my $check = $Type->check();
 
 				$html .= sprintf(q`
 					<fieldset>
@@ -63,8 +62,7 @@ $log->debug("Type " . $Type->to_string() );
 								<li><label>Purchase Order</label>%5$s</li>
 						`, $Paper->id(), $Paper->to_string(), $Type->supplier_invoice(), $Type->docket(),
 						( $Type->po_id() ? $Type->PurchaseOrder()->link_to() : '' ),
-						( $Paper->check() ? '<span class="warning">'.$Paper->check().'</span><br/>' : '' ),
-						( $poc_check ? '<span class="warning">'.$poc_check.'</span><br/>' : '' ),
+						( $check ? '<span class="warning">'.$check.'</span><br/>' : '' ),
 					);
 
 					if ( $$variable{Manifest}->can_see_pricing() ) {
