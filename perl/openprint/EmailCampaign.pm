@@ -114,8 +114,8 @@ sub send_email {
 	# - The seconds substitution replaces the any tags that were
 	#   inserted by the first replacement
 	# NB. Only encode_qp ONCE
-	my $html_body;
-	my $text_body;
+	my $html_body = '';
+	my $text_body = '';
 
 	if ( $$self{email_html} ) {
 		# Load the email template
@@ -126,8 +126,8 @@ sub send_email {
 		} else {
 			$email_template = ssi::slurp_content( '/email_template.html' );
 		} # end if
-		$$replacements{ReplacementText} = ssi::variable_substitution( \$$self{email_html}, $replacements );
-		$html_body = ssi::variable_substitution( \$email_template, $replacements );
+		$$replacements{ReplacementText} = ssi::variable_substitution(\$$self{email_html}, $replacements);
+		$html_body = ssi::variable_substitution( \$email_template, $replacements ) if $$replacements{ReplacementText};
 	}
 	$text_body = ssi::variable_substitution( \$$self{email_text}, $replacements ) if $$self{email_text};
 
