@@ -126,11 +126,11 @@ sub send_email {
 		} else {
 			$email_template = ssi::slurp_content( '/email_template.html' );
 		} # end if
+
 		$$replacements{ReplacementText} = ssi::variable_substitution(\$$self{email_html}, $replacements);
 		$html_body = ssi::variable_substitution( \$email_template, $replacements ) if $$replacements{ReplacementText};
 	}
 	$text_body = ssi::variable_substitution( \$$self{email_text}, $replacements ) if $$self{email_text};
-
 
 	my @attachments = eval $self->{attachments};
 	$openprint::log->warn( "Eval error Reason: " . $@ ) if $@;
@@ -229,7 +229,7 @@ sub send {
 # Check if the duration has elapsed 
 			if ( !$interval_expired ) {
 				$results .= sprintf('Not Sending Email to: %s %s at %s, already sent on %s<br/>',
-						$replacements{User}->get('firstname','lastname','email'), $last_sent_on );
+						$replacements{User}->get('firstname','lastname','email'), $last_sent_on);
 				next;
 			}
 # Check if we have sent this too many times
@@ -264,13 +264,15 @@ sub send {
 		if ( ! ( $$self{email_text} or $$self{email_html} ) ) {
 			$results .= sprintf(
 					'<span class="error">NOT Sending Email to: %s %s at %s : No body.</span><br/>%s<br/>',
-					$replacements{User}->get('firstname','lastname','email'), ($@ ? $@ : '')
+					$User->get('firstname','lastname','email'), ($@ ? $@ : '')
 					);
 			next;
 		} # end if
 		$results .= sprintf('Sending Email to: %s at %s<br/>', $replacements{User}->get('link_to','email'));
 		$self->send_email(\%replacements);
 	} # for all mail user ids
+
+  #Restore values
 	$$self{email_text} = $email_text;
 	$$self{email_html} = $email_html;
 
@@ -282,6 +284,7 @@ sub send {
 			note		=>	$results,
 			action	=>	'Email Campaign Run',
 			});
+
 
 	if ( $$self{user_id} ) {
 # Load the email template
@@ -307,7 +310,6 @@ sub send {
 				HTML_BODY => $email_template,
 				);
 	}
-
 	return $results;
 } # end sub send
 
