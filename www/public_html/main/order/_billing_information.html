@@ -14,7 +14,6 @@
 	} # end if
 	my @Users = @{$$variable{Users}} = openprint::User->find( 
 		 company_id	=> $param{company_id} ? $param{company_id} : $session{company_id}, 
-		 order	=>'lower(firstname),lower(lastname)'
 	);
 	if ( scalar @Users == 1 ) {
 		$param{ddmUsers} = $Users[0]->id();

@@ -223,7 +223,10 @@ sub save {
 	if ( $debug or DEBUG_ALL ) {
 		if ( $data ) {
 			foreach my $k ( keys %$data ) {
-				$log->debug("Object::save after set $k => $$data{$k} $$self{$k}");
+				$log->debug('Object::save after set '.join(' ', $k, '=>',
+							(defined($$data{$k})?$$data{$k}:'undef'),
+							(defined($$self{$k})?$$self{$k}:'undef')
+							) );
 			}
 		} else {
 			$log->debug("No data after set");
@@ -506,7 +509,7 @@ sub set {
 	}
 
 	foreach my $field ( keys %fields ) {
-$log->debug("field: $field, param: ".$$params{$field}) if $debug;
+$log->debug("field: $field, param: ".(defined $$params{$field} ? $$params{$field} : 'undef')) if $debug;
 		if ( exists $$params{$field} ) {
 $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$field}) if $debug;
 			if ( ( ! defined $$self{$field} ) or (!defined($$params{$field})) or ($$self{$field} ne $params->{$field}) ) {
@@ -524,7 +527,7 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 
 		if ( defined $fields{$field} ) {
 			if ( $$self{$field} ) {
-				$$self{$field} = transform( $type, $field, $$self{$field} );
+				$$self{$field} = transform($type, $field, $$self{$field});
 			} # end if $$self{field}
 		}
 	} # end foreach field

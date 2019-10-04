@@ -4,7 +4,7 @@ function isin( array, value ) {
 			if ( array[i] == value ) 
 				return true;
 		} // end for
-	} else {
+	//} else {
 		//alert("Array has no properties. " + array + ": value: " + value );
 	} // end if
 	return false;
@@ -43,6 +43,7 @@ function get_value( obj ) {
 
 function set_value( obj, value ) {
 	if ( ! obj ) {
+		console.log("No object passed to set_value");
 		return;
 	} // end if
 	if ( obj.type == 'select-one' ) {
@@ -51,6 +52,12 @@ function set_value( obj, value ) {
 		set_rdb_value( obj, value );
 	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'tel' ) {
 		obj.value = value;
+	} else if ( obj.length ) {
+		for ( var x = 0, len=obj.length; x < len; x += 1 ) {
+			if ( obj[x].value == value ) {
+				obj[x].checked = 'checked';
+			} // end if
+		}
 	} else {
 		obj.innerHTML = value;
 	} // end if
