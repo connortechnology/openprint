@@ -113,7 +113,7 @@ sub units {
 	} elsif ( $self->Type()->name() eq 'Sheet Stock' ) {
 		return 'sheets';
 	} # end if
-	return;
+	return '';
 } # end sub units
 
 sub Item {
