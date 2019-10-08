@@ -323,10 +323,10 @@ sub signature_calc {
 			$price{Total} = $price{Price} * $quantity;
 			$Results{Breakdown} .= sprintf('MR: %.2f + %d*$%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, @price{'Price','units','Total'} );
 		} # end if
-		$$specs{"txtProofUnitPrice-$form-$proof_index-$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price{Total} );
+		$$specs{"txtProofUnitPrice-$form-$proof_index-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $price{Total});
 		$Results{Total} += $price{Total} + $MakeReady{Price};
 	} # end foreach my $proof_index
-	$Results{Total} = Math::Round::nearest(0.01,$Results{Total});
+	$Results{Total} = Math::Round::nearest(0.01, $Results{Total});
 	return %Results;
 } # end sub signature_calc
 
