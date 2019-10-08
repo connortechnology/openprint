@@ -117,6 +117,8 @@ $serial	= 'paper_id_seq';
 	id			=>	[ 's/\D//g', '<2147483647' ],
 	manufacturers_name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
 	gsm				=>	 [ 's/[^\d\.]//g' ],
+	wpsi				=>	 [ 's/[^\d\.]//g' ],
+	calliper		=>	 [ 's/[^\d\.]//g' ],
 	basis_mweight	=>	 [ 's/[^\d\.]//g' ],
 	mweight			=>	 [ 's/[^\d\.]//g' ],
 	fsc_code		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
@@ -719,9 +721,7 @@ sub mweight {
 sub calliper {
 	my $self = shift;
 	if ( @_ ) {
-		my $c = shift;
-		$c =~ s/[^\d\.]//g;
-		$$self{calliper} = $c;
+		$$self{calliper} = $self->transform('calliper'=>shift);
 	} # end if
 	if ( ! $$self{calliper} ) {
 		if ( $self->finish() =~ /offset/i ) {
@@ -740,6 +740,7 @@ sub calliper {
 	}
 	return $$self{calliper};
 } # end sub calliper
+
 sub sheetsize {
 	my $self = shift;
 
@@ -1250,7 +1251,7 @@ sub wpsi {
 	my $self = shift;
 	if ( @_ ) {
 #$log->debug("Setting wpsi was $$self{wpsi}") if 1;
-		$$self{wpsi} = shift;
+		$$self{wpsi} = $self->transform(wpsi=>shift);
 #$log->debug("Setting wpsi to $$self{wpsi}") if 1;
 	} # end if
 	if ( ! $$self{wpsi} ) {
