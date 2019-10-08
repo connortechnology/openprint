@@ -691,8 +691,8 @@ $log->error("$key deleted");
     $search{cancelled} = $session{$uri.'?cancelled'} if $session{$uri.'?cancelled'} ne '';
     $search{'item_id any'} = $session{$uri.'?item_id'} if $session{$uri.'?item_id'};
 
-	my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'Docket', 'Printed Start','Printed End' );
-	my @data;
+		my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Manifest', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'Docket', 'Printed Start','Printed End' );
+		my @data;
 
     my $ac = sql::start_transaction( $dbh );
     my @POs = openprint::PurchaseOrder->find( %search );
@@ -710,9 +710,9 @@ $log->error("$key deleted");
       }
     } # end if POs
 
-		my %types = map { $_, $_ } split(',',$session{$uri.'?types'} );
-my $total_quantity = 0;
-my $total_value = 0;
+		my %types = map { $_, $_ } split(',', $session{$uri.'?types'});
+		my $total_quantity = 0;
+		my $total_value = 0;
 
     foreach my $PO ( @POs ) {
       if ( $session{$uri.'?authorized'} eq 'Y' and $PO->authorized() ne '1' ) {
@@ -728,9 +728,9 @@ my $total_value = 0;
         next;
       }
 
-      next if $session{$uri.'?vendor_category_id'} and $PO->Supplier()->category_id() != $session{$uri.'?vendor_category_id'};
-      if ( ! $PO->can_view() ) {
-        $log->debug("! can_view");
+      next if $session{$uri.'?vendor_category_id'} and ($PO->Supplier()->category_id() != $session{$uri.'?vendor_category_id'});
+      if ( !$PO->can_view() ) {
+        $log->debug('! can_view');
         next;
       }
 
@@ -768,11 +768,16 @@ my $total_value = 0;
         next if ! sets::isin( $session{$uri.'?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
       } # end if
 
+
 		#my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Item','Quantity','Unit Price', 'Item Total' );
 			foreach my $C ( $PO->Contents() ) {
 				next if %types and ! $types{$$C{type_id}};
-				push @data, @$PO{'id','vendor_name','subtotal','total'}, ssi::format_csv_date($$PO{created_on}), $PO->Created_By()->name();
-				push @data, $C->item(), $C->qty(), $C->price(), $C->units(), $C->total(), $C->docket();
+		#my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Manifest', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'Docket', 'Printed Start','Printed End' );
+				push @data, (
+						@$PO{'id','vendor_name','subtotal','total'},
+						ssi::format_csv_date($$PO{created_on}), $PO->Created_By()->name(),
+						$PO->Manifest()->name(),
+						$C->item(), $C->qty(), $C->price(), $C->units(), $C->total(), $C->docket());
 
 				$total_quantity += $C->qty();
 				$total_value += $C->total();
@@ -789,12 +794,11 @@ my $total_value = 0;
 							$printed_end = $_ if (!$printed_end) or $printed_end lt $_;
 						}
 					} # end if
-				}
+				} # end if docket
 				push @data, ssi::format_csv_date($printed_start), ssi::format_csv_date($printed_end);
-			}
+			} # end foreach C
     } # end foreach PO
-	my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'Docket', 'Printed Start','Printed End' );
-push @data, '','Totals', '', '', '', '', '', $total_quantity, '', '', $total_value, '', '', '';
+		push @data, '','Totals', '', '', '', '', '', '', $total_quantity, '', '', $total_value, '', '', '';
 		sql::end_transaction( $dbh, $ac );
 
 		misc::export_csv( $r, $log, \%variable, 'purchase_order_history_report.csv', \@header,\@data );	

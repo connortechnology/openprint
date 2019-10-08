@@ -131,11 +131,18 @@ sub variable_substitution {
 				} # end if
 			} elsif ( $command =~ /^eval\s*\(\s*(.*)\s*\)/ms ) {
 				$_ = eval $1;
-				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
+				$log->error("Eval error of ($1), Reason: ".$@) if $@;
 			} elsif ( $command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
-				$_ = eval $1;
-				$result .= $_ if $_;
-				$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
+				if ( !$1 ) {	
+					Warning("No content in echo command $command");
+				} else {
+					$_ = eval $1;
+					if ( $@ ) {
+						$log->error("Eval error ($@) of ($1)")
+					} else {
+						$result .= $_ if $_;
+					}
+				}
 			} elsif ( $command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
 				$result .= translate($1);
 			} elsif ( $command =~ /^hash_link\s*\(\s*'?([^\s']+)'?\s*\)/ms ) {

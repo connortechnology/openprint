@@ -177,7 +177,8 @@
 	<div class="warning">There are a large # of results being returned.  It may take a moment to display them.  You may wish to adjust your filters to return fewer results.	</div>
 	<? endif ( @{$$variable{PurchaseOrders}} > 1000 ) ?>
 	<p>Please click on a <b>Purchase Order #</b> to view details.</p>
-<table id="ResultsTable" class="List sortable">
+<table id="ResultsTable" class="List">
+<thead>
 	<tr>
 <? if ( $session{user_type} eq 'A' ) ?>
 		<th class="checkbox"><input type="checkbox" onclick="select_all( $('f1'), 'po_id', this.checked );"/></th>
@@ -193,6 +194,8 @@
 		<th class="Quantity">Quantity</th>
 		<th class="Price">Total</th>
 	</tr>
+</thead>
+<tbody class="sortable"
 	<? echo ( 
 		my $html = '';
 		my $report_total = 0;
@@ -241,13 +244,13 @@
 			$report_total += $total;
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
-		$html .= '<tr class="totals">
+		$html .= '</tbody><tfoot><tr class="totals">
 								<td colspan="'.( $session{user_type} eq 'A' ? 9 : 8 ) . '">Total (' . $Currency->name().') :</td>
 								<td class="Quantity">'.Number::Format::format_number($qty_total).'</td>
 								<td class="Price">'. openprint::Currency::format( $report_total ) . '</td></tr>';
 		return $html;
 	) ?>
-		
+	</tfoot>	
 	</table>
 	<p class="buttons">
 		<? echo (
@@ -260,5 +263,5 @@
 			return $html;
 		) ?>
 	</p>
-<script type="text/javascript"> TableKit.reloadTable('ResultsTable'); </script>
+<script> TableKit.reloadTable('ResultsTable'); </script>
 <? endif ( @{$$variable{PurchaseOrders}} == 0 ) ?>

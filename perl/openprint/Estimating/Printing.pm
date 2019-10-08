@@ -3331,10 +3331,10 @@ sub breakdown {
 
 	if ( $stock_qty ) {
 		my $RunOvers = $$price{'Run Overs'};
-		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run: %.2f %s = %s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d',
+		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run: %dimpressions @ %f %s = %s FM:%s Additional Plate:%d * %d changes (minimum %d) = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d',
 					@$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs'},
-					@$RunOvers{'value','units','total'},
-					@$stock_qty{'FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
+					@$RunOvers{'impressions','value','units','total'},
+					@$stock_qty{'FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs Minimum','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
 #foreach ( 'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs Rate', 'Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers' ) {
 #$log->debug("$_ $$stock_qty{$_}");
 #}
@@ -5516,7 +5516,6 @@ sub calc_price {
 	$net_sheets = ceil($net_sheets / $imposition);
 	$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted, not sure this is valid anymore
 	$net_sheets *= $$Paper{parts} if $$Paper{parts};
-$log->error("Net_sheets $net_sheets from qty $qty $imposition versions:$$Imposition{versions} parts: $$Paper{parts}");
 
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $num_colours = scalar @colours;
@@ -5569,9 +5568,9 @@ $log->error("Net_sheets $net_sheets from qty $qty $imposition versions:$$Imposit
 				#Percentage
 				$$PressRunOvers{total} = int($$PressRunOvers{value} * $net_sheets);
 			}
-			$price{'Run Overs'} = { value=>$$PressRunOvers{value}, units=>$$PressRunOvers{units}, total=>$$PressRunOvers{total} };
+			$price{'Run Overs'} = { impressions=>$net_sheets, value=>$$PressRunOvers{value}, units=>$$PressRunOvers{units}, total=>$$PressRunOvers{total} };
 		} else {
-			$price{'Run Overs'} = { value=>0, units=>'', total=>0};
+			$price{'Run Overs'} = { impressions=>$net_sheets, value=>0, units=>'', total=>0};
 		}
 	} # end if
 	my $run_overs = $price{'Run Overs'}{total};
@@ -5595,6 +5594,7 @@ $log->error("Net_sheets $net_sheets from qty $qty $imposition versions:$$Imposit
 
 		$additional_overs += ( $plate_changes * $additional_overs_rate );
 		my $minimum = $Press->specification('Additional Plate Overs Minimum');
+		$price{'Additional Plate Overs Minimum'} = $minimum;
 		$additional_overs = $minimum if $minimum > $additional_overs;
 	} # end if
 	$overs = $additional_overs;
@@ -6137,6 +6137,7 @@ if ( 1 ) {
 			'Additional Setup Count'	=> $additional_setup_count,
 			'Additional Setup Rate'		=> $additional_setup_rate,
 			'Additional Setup Overs'	=> $additional_setup_overs,
+'Additional Plate Overs Minimum'	=> $price{'Additional Plate Overs Minimum'},
 			'Run Overs'					=>	$price{'Run Overs'},
 			'Additional Plate Overs'	=>	$additional_overs,
 			'Additional Plate Overs Rate'	=>	$additional_overs_rate,

@@ -236,10 +236,8 @@ sub signature_calc {
 	}
 
 	foreach my $I ( @$Impositions ) {
-		$I->display('In Stitching:') if DEBUG and 0;
 		my $sig_specs = $$I{specs};
-	#next if $$sig_specs{txtSignatureType} eq 'Cover Pages';
-		if ( ! $sig_specs ) {
+		if ( DEBUG and ! $sig_specs ) {
 			my ( $caller, undef, $line ) = caller;
 			$openprint::log->error("No specs from imposition $caller line $line @$Impositions");
 
