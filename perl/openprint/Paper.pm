@@ -135,6 +135,7 @@ $serial	= 'paper_id_seq';
 	colour_id			=>	undef,
 	weight_id			=>	undef,
 	quality_id			=>	undef,
+	material_id			=>	undef,
 	calliper	=>	undef,
 	taxexempt1		=>	q`'0'`,
 	taxexempt2		=>	q`'0'`,
