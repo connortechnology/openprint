@@ -43,37 +43,38 @@
 			
 			foreach my $Type ( $$variable{Manifest}->Types() ) {
 				my $Paper = $Type->Paper();
-my $columns = 9;
-$columns += 1 if $Type->type() eq 'Sheets';
-$columns += 1 if $$variable{Manifest}->can_see_pricing();
-my $poc_check = $Type->PurchaseOrder_Content()->check($Type->Paper()) if $Type->po_content_id();
+				my $columns = 9;
+				$columns += 1 if $Type->type() eq 'Sheets';
+				$columns += 1 if $$variable{Manifest}->can_see_pricing();
+				my $POC = $Type->PurchaseOrder_Content();
+				$POC = $Type->PurchaseOrder_Content({ignore_fsc=>1}) if !$POC;
+				my $check = $Type->check();
 
 				$html .= sprintf(q`
-			<fieldset>
-				<div class="leftColumn"><ul><li><label>Stock</label><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a><br/>%6$s%7$s</li></ul>
-				</div>
-				<div class="rightColumn">
-					<ul>
-						<li><label>Supplier Invoice#</label>%3$s</li>
-						<li><label>Docket</label><a href="/employee/project/view.html?docket=%4$d">%4$s</a></li>
-						<li><label>Purchase Order</label>%5$s</li>
-			`, $Paper->id(), $Paper->to_string(), $Type->supplier_invoice(), $Type->docket(),
-			( $Type->po_id() ? $Type->PurchaseOrder()->link_to() : '' ),
-			( $Paper->check() ? '<span class="warning">'.$Paper->check().'</span><br/>' : '' ),
-			( $poc_check ? '<span class="warning">'.$poc_check.'</span><br/>' : '' ),
-			);
+					<fieldset>
+						<div class="leftColumn">
+							<ul><li><label>Stock</label><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a><br/>%6$s%7$s</li></ul>
+						</div>
+						<div class="rightColumn">
+							<ul>
+								<li><label>Supplier Invoice#</label>%3$s</li>
+								<li><label>Docket</label><a href="/employee/project/view.html?docket=%4$d">%4$s</a></li>
+								<li><label>Purchase Order</label>%5$s</li>
+						`, $Paper->id(), $Paper->to_string(), $Type->supplier_invoice(), $Type->docket(),
+						( $Type->po_id() ? $Type->PurchaseOrder()->link_to() : '' ),
+						( $check ? '<span class="warning">'.$check.'</span><br/>' : '' ),
+					);
 
-			if ( $$variable{Manifest}->can_see_pricing() ) {
-				$html .= '<li><label>Cost (/CWT)</label>'.$Currency->format($Type->cost());
-				my $POC = $Type->PurchaseOrder_Content();
-				if ( $POC ) {
-					my $PO_Cost = $POC->Cost();
-					$html .= '<br/>' if $Type->cost();
-					$html .= 'From PO: ' . $POC->PurchaseOrder()->Currency()->format( $$PO_Cost{cost} ) . $$PO_Cost{units} . ' = ' . $POC->PurchaseOrder()->Currency()->format($POC->total()) . ' '.$POC->item();
-				}
-				$html .= '</li>';
-			} # end if
-			$html .= sprintf(q`
+					if ( $$variable{Manifest}->can_see_pricing() ) {
+						$html .= '<li><label>Cost (/CWT)</label>'.$Currency->format($Type->cost());
+						if ( $POC ) {
+							my $PO_Cost = $POC->Cost();
+							$html .= '<br/>' if $Type->cost();
+							$html .= 'From PO: ' . $POC->PurchaseOrder()->Currency()->format( $$PO_Cost{cost} ) . $$PO_Cost{units} . ' = ' . $POC->PurchaseOrder()->Currency()->format($POC->total()) . ' '.$POC->item();
+						}
+						$html .= '</li>';
+					} # end if
+					$html .= sprintf(q`
 						<li><label>Manufacturers Name</label>%s</li>
 						<li><label>Item Count</label>%s</li>
 					</ul>
@@ -107,6 +108,7 @@ my $poc_check = $Type->PurchaseOrder_Content()->check($Type->Paper()) if $Type->
 				my $total = 0;
 				my $value_total = 0;
 				my @Contents = $Type->Contents();
+$log->error("No contents") if ! @Contents;
 				my %SkidContents = ();
 				my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @Contents;
 				if ( @skid_ids ) {
@@ -204,7 +206,7 @@ my $poc_check = $Type->PurchaseOrder_Content()->check($Type->Paper()) if $Type->
 					$html .= '<tr><td colspan="'.$columns.'" class="warning">Contents and expected content count do not match!</td></tr>';
 				} # end if
 				$html .= '</table>';
-			} # end foreach Tpe
+			} # end foreach Type
 			return $html;
 		) ?>
 		</div><!--Type-->

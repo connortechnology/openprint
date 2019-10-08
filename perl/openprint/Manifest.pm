@@ -139,6 +139,9 @@ sub check {
 		push @{$manufacturer_ids{$$_{manufacturers_id}}}, $_ if $$_{manufacturers_id};
 	} # end foreach
 	my $error;
+	if ( ! $$Manifest{supplier_id} ) {
+		$error .= 'No vendor supplied.<br/>';
+	}
 	if ( keys %skid_ids != @Contents ) {
 		foreach my $id ( keys %skid_ids ) {
 			if ( @{$skid_ids{$id}} > 1 ) {
@@ -159,15 +162,7 @@ sub check {
 		$error .= $C->check();
 	} # end foreach C
 	foreach my $T ( $Manifest->Types() ) {
-		$error .= $T->Paper()->check();
-		$error .= $T->PurchaseOrder_Content()->check($T->Paper()) if $$T{po_content_id};
-		if ( $$T{po_id} ) {
-			if ( ! openprint::PurchaseOrder->find_one(id=>$$T{po_id}) ) {
-				$error .= "No purchase order found for $$T{po_id}<br/>";
-			} else {
-				$openprint::log->debug("found po for $$T{po_id}");
-			}
-		}
+		$error .= $T->check();
 	}
 	return $error;
 } # end sub check

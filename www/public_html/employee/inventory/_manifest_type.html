@@ -112,7 +112,7 @@ $log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id
 ) ?>
 		<p class="weight">
 			<label for="weight-<?type_id?>">Weight</label>
-			<input type="text" id="weight-<?type_id?>" name="weight-<?type_id?>" value="<? echo ( my $weight = $param{'weight-'.$$variable{type_id}}; $weight =~ s/lb//; return $weight; ) ?>" onkeyup="floatize(this);"/>lb
+			<input type="float" id="weight-<?type_id?>" name="weight-<?type_id?>" value="<? echo ( my $weight = $param{'weight-'.$$variable{type_id}}; $weight =~ s/lb//; return $weight; ) ?>" oninput="calc_from_weight(this.form,'-<?type_id?>');"/>lb
 		</p>
 		<p><label>Type</label>
 			<? echo ( radio( 'type-'.$$variable{type_id}, [ map { $_, $_ } ( 'Sheet','Roll' ) ],
@@ -130,17 +130,16 @@ $log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id
 			<p>
 				<label>Condition</label>
 				<? echo (
-						ssi::select( openprint::InventoryCondition->dropdown( order=>'lower(name)'), $param{'condition_id-'.$$variable{type_id}}, { name=>'condition_id-'.$$variable{type_id}, prepend=>['','select'] } );
+						ssi::select( openprint::InventoryCondition->dropdown( order=>'lower(name)'),
+							$param{'condition_id-'.$$variable{type_id}},
+							{ name=>'condition_id-'.$$variable{type_id}, prepend=>['','select'] }
+							);
 					) ?>
 			</p>
 		<? if ( $$variable{Type}->paper_id() ) ?>
 		<p><label>Link to stock</label><a href="/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{Type}->paper_id() ) ?>"><? echo ( $$variable{Type}->Paper()->to_string() ) ?></a><br/>
 		<?echo (
-				my $html = $_.'<br/>' if ( $_ = $$variable{Type}->Paper()->check() );
-				if ( $$variable{Type}->po_content_id() ) {
-					$html .= $_.'<br/>' if ( $_ = $$variable{Type}->PurchaseOrder_Content()->check( $$variable{Type}->Paper() ) );
-				}
-				
+				my $html = $$variable{Type}->check();
 				return  $html ? '<span class="warning">'.$html.'</span>' : '';
 				) ?>
 		</p>
@@ -159,7 +158,7 @@ $log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id
                 ); ) ?> mm
 
 		</p>
-		<p>
+		<p class="gsm">
 			<label>GSM</label>
 			<? echo ( input( type=>'float', id=>'gsm-'.$$variable{type_id}, name=>'gsm-'.$$variable{type_id}, value=>$param{'gsm-'.$$variable{type_id}}, onkeyup=>"calc_from_gsm(this.form,'-$$variable{type_id}');" ); ) ?>
 		</p>

@@ -22,6 +22,11 @@ $default_sort	=	'lower(name)';
 
 sub Object {
 	if ( $_[0]{name} ) {
+    eval {
+      my $name = $_[0]{name};
+      $name =~ s/::/\//g;
+      require $name.'.pm';
+    };
   	return $_[0]{name}->new($_[1]);
 	}
 	my ($caller, undef, $line) = caller;
