@@ -102,13 +102,14 @@ $log->debug("Removing group $param{group_id}");
 				$variable{$k.$variable{Group}} = $$sig_specs{$k};
 			} # end foreach k
 		} # end if
-    } # end if
+  } # end if
 
 } # end sub _signature
 
 sub Signature {
 	my $Project = $variable{Project} = new openprint::Project( $param{ProjectIndex} );
 	$variable{ProjectType} = $Project->Type();
+	$variable{Signature} = '' if ! exists $variable{Signature};
 } # end sub Signature
 
 sub _stock_popup {
