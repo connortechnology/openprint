@@ -189,17 +189,6 @@ sub insert_service_spec {
 	$specs_cache{$service_index}{$name} = $value;
 } # end sub
 
-sub insert_service_specs {
-	my ( $log, $dbh, $project_index, $service_index, @specs ) = @_;
-
-# make this fast by doing it in one transaction
-	my $ac = sql::start_transaction( $openprint::dbh );
-	while ( @specs ) {
-		insert_service_spec( $log, $dbh, $project_index, $service_index, shift @specs, shift @specs );
-	} # end while
-	sql::end_transaction( $openprint::dbh, $ac );
-} # end sub
-
 sub auto_calculate {
 	my ( $Project, $exclude ) = @_;
 
@@ -316,10 +305,10 @@ sub auto_calculate {
 
 	foreach my $service_type ( 'Collating', 'Aqueous', 'UVCoating', 'Grommeting', 'Sewing' ) {
 		my $module = 'openprint::Estimating::'.$service_type;
-		eval ( 'require '.$module.';' );
+		eval 'require '.$module.';';
 		$openprint::log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
 		if ( my $function = $module->can('neccessary') ) {
-			if ( $function->( $Project ) ) {
+			if ( $function->($Project) ) {
 				$openprint::log->debug("$service_type is neccessary");
 				if ( ! $$services{$service_type} ) {
 					$_ = $Project->add_service( $service_type );
@@ -382,10 +371,9 @@ sub auto_calculate {
 	$openprint::log->error("Error in requiring $service_name $@") if $@;
 	} # end foreach service_name;
 
-
 	# Order for these is important.  Stitching must be calc'd before Folding
 	foreach my $type ( 'Folding','SaddleStitching','LoopStitching' ) {
-		next if ! $$services{$type};
+		next if !$$services{$type};
 		foreach my $service_index ( @{$$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
 			my $service_type = $ServiceType->type();
@@ -400,8 +388,8 @@ sub auto_calculate {
 			$openprint::log->error("Have $type but no actual service");
 			next;
 		} # end if
-		next if sets::isin( $type, [ 'SaddleStitching','LoopStitching','Folding','Signature' ] );
-		next if $exclude and sets::isin( $type, $exclude );
+		next if sets::isin($type, [ 'SaddleStitching','LoopStitching','Folding','Signature' ]);
+		next if $exclude and sets::isin($type, $exclude);
 
 		foreach my $service_index ( @{$$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
@@ -412,8 +400,14 @@ sub auto_calculate {
 			}
 			next if $ServiceType->category() eq 'Shipping';
 			my $service_type = $ServiceType->type();
-			next if sets::isin( $service_type, ['','Signature'] );
-			my $specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{id}, $service_index, $service_type );
+			if ( sets::isin($service_type, ['', 'Signature']) ) {
+				$openprint::log->debug("Next because it's a printing service: $type " . join(',', @{$$services{$type}}));
+				next;
+			}
+			my $specs = internal_calc(
+					$openprint::log, $openprint::dbh, \%openprint::variable,
+					$$Project{id}, $service_index, $service_type
+					);
 			$alert .= $$specs{alert};
 		} # end foreach service_index
 	} # end while service_type
@@ -519,6 +513,7 @@ sub internal_calc {
 		if ( $Service->status() ne 'uncalculated' ) {
 			$_ = $Service->save({status=>'uncalculated'});
 			if ( $_ ) {
+				$Project->unlock();
 				$log->error("Unable to update Service status for $project_index, $service_index, $service_type, $qty_index ");
 				return;
 			}
@@ -529,6 +524,15 @@ sub internal_calc {
 
 	if ( ! $service_type ) {
 		$service_type = $Service->service_type();
+		if ( ! $service_type ) {
+			if ( $$specs{ProjectType} ) {
+				$log->debug("No service_type for service " . $Service->to_string());
+			} else {
+				$log->error("No service_type for service " . $Service->to_string());
+			}
+			$Project->unlock();
+			return;
+		}
 	} # end if
 
 	my $status;

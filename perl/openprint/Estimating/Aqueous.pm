@@ -34,7 +34,6 @@ use vars qw( %ServicePrices );
 );
 #use warnings;
 
-require sql;
 require openprint::service;
 require openprint::Material;
 require openprint::imposition;
@@ -60,10 +59,10 @@ my @variables = (
 sub variables {
 	my $p_id = shift;
 
-	my $Project = new openprint::Project( $p_id );
+	my $Project = new openprint::Project($p_id);
 	my @v = @variables;
 	foreach my $s_s_id ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		my $specs = openprint::service::get_specs_ref($Project, $s_s_id);
 		my $form = $$specs{SignatureIndex};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 	
@@ -110,7 +109,7 @@ sub neccessary {
 	foreach my $sig_id ( $Project->signatures() ) {
 		my $Service = $Project->Service( $sig_id );
 
-		if ( signature_needs( $Project, $Service->specs() ) ) {
+		if ( signature_needs($Project, $Service->specs()) ) {
 			return 1;
 		}
 	} # end foreach sig_id
@@ -417,15 +416,17 @@ sub signature_calc {
 
 			my $width = $Imposition->sheet_width() / ( $$Imposition{columns}/$$imp{columns} );
 			my $height = $Imposition->sheet_height() / ( $$Imposition{rows}/$$imp{rows} );
-			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->sheet_width().'x'.$Imposition->sheet_height().'=>'.$width.'x'.$height.'<br/>';
+			if ( $width != $Imposition->sheet_width() or $height != $Imposition->sheet_height() ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->sheet_width().'x'.$Imposition->sheet_height().'=>'.$width.'x'.$height.'<br/>';
+			}
 
-			if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{txtSpecificStockCalliper} ) ) {
+			if ( $_ = $Equipment->fits($width, $height, $$sig_specs{txtSpecificStockCalliper}) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit. $_<br/>";
 				next;
 			} # end if
 
 # Make Readies is a hash of array refs, need to copy the arrays as well.
-			my $MakeReadies_clone = $MakeReadies ? dclone( $MakeReadies ) : {};
+			my $MakeReadies_clone = $MakeReadies ? dclone($MakeReadies) : {};
 #map { $_ => [ @{$$MakeReadies{$_}} ] } keys %{$MakeReadies} if $MakeReadies;
 			my %Price = (
 				BlanketCut	=>	0,
@@ -454,9 +455,11 @@ sub signature_calc {
 				@types = (@front_aq, @back_aq);
 			} # end if
 
+			$$MakeReadies_clone{$$Equipment{id}} = {} if ! $$MakeReadies_clone{$$Equipment{id}};
 			my $mrs = $$MakeReadies_clone{$$Equipment{id}};
 
 			$Price{types} = [ map { $$_{name} } @types ];
+			$openprint::log->debug("Types: @{$Price{types}}") if DEBUG;
 
 			my $area = $imp->layout_area();
 			foreach my $type ( @types ) {
@@ -466,10 +469,10 @@ sub signature_calc {
 				my %SetupPrice;
 				my $colour_total = 0;
 				$openprint::log->debug("Makereadies: $$Equipment{id} $$Equipment{strid} this area: ".($area * .90) . " < $area < " . ($area * 1.10) . "$type_name ? " .
-						( ($mrs and $$mrs{$type_name} ) ? join(',', @{$$mrs{$type_name}}) : 'none' ) ) if DEBUG;
+						( ($$mrs{$type_name} ) ? join(',', @{$$mrs{$type_name}}) : 'none' ) ) if DEBUG;
 
 				if (
-						$mrs and $$mrs{$type_name} and
+						$$mrs{$type_name} and
 						( map { ( (($area * 1.10) > $_) and (($area * .90) < $_) ) ? $_ : () } @{$$mrs{$type_name}} )
 					 ) {
 					$openprint::log->debug("In Makereadies: $$Equipment{id} $area") if DEBUG;
@@ -481,16 +484,15 @@ sub signature_calc {
 					if ( ! $MRService ) {
 						$$specs{'hdnBreakdown'.$qty_index} .= 'No Make Ready Service for ' . $type_name . '<br/>';
 					} else {
-						%SetupPrice = $MRService->get_price( $run_qty, $Equipment );
+						%SetupPrice = $MRService->get_price($run_qty, $Equipment);
 					} # end if
 					$Price{MakeReady} += $SetupPrice{Price};
-					if ( ! $$MakeReadies_clone{$$Equipment{id}}{$type_name} ) {
+					if ( ! $$mrs{$type_name} ) {
 						$openprint::log->debug("Adding a washup for $$Equipment{id} $type_name") if DEBUG;
 						$Price{washups} += 1;
 					}
-					$$MakeReadies_clone{$$Equipment{id}} = {} if ! $$MakeReadies_clone{$$Equipment{id}};
-					$$MakeReadies_clone{$$Equipment{id}}{$type_name} = [] if ! $$MakeReadies_clone{$$Equipment{id}}{$type_name};
-					push @{$$MakeReadies_clone{$$Equipment{id}}{$type_name}}, $area;
+					$$mrs{$type_name} = [] if ! $$mrs{$type_name};
+					push @{$$mrs{$type_name}}, $area;
 					$colour_total += $SetupPrice{Price};
 				} # end if
 				push @{$Price{SetupPrices}}, \%SetupPrice;
@@ -687,7 +689,7 @@ sub breakdown {
 	my $breakdown = $$Price{Imposition}{imposition} . 'out on ' . ($$Price{Equipment} ? $$Price{Equipment}->name() : 'unknown' ).'<br/>';
 	for ( my $i = 0; $i < ( $$Price{types} ? scalar @{$$Price{types}} : 0); $i ++ ) {
 		my $type = $$Price{types}[$i];
-		my $SetupPrice = $$Price{setupPrices}[$i];
+		my $SetupPrice = $$Price{SetupPrices}[$i];
 		my $BlanketCutPrice = $$Price{BlanketCutPrices}[$i];
 		my $ServicePrice = $$Price{ServicePrices}[$i];
 		my $MaterialPrice = $$Price{MaterialPrices}[$i];

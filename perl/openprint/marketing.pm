@@ -18,6 +18,7 @@ use strict;
 package openprint::marketing;
 
 require openprint::EmailCampaign;
+require openprint::EmailCampaign_Sent;
 require openprint::MarketingCategory;
 require openprint::Company;
 require openprint::Company_in_Marketing_Category;
@@ -42,7 +43,7 @@ sub email_campaigns {
 		(new openprint::Log())->save({Object=>$Campaign, action=>'Delete'});
 	} elsif ( $param{btnFunction} eq 'Run' ) {
 		$variable{information} = $Campaign->send();
-		(new openprint::Log())->save({Object=>$Campaign, action=>'Run', note=>$variable{information} });
+		#(new openprint::Log())->save({Object=>$Campaign, action=>'Run', note=>$variable{information} });
 	} elsif ( $param{btnFunction} eq 'Trial' ) {
 		$variable{information} = $Campaign->trial( $openprint::User->email() );
 	} # end if
@@ -122,12 +123,12 @@ sub email_campaign {
 	if ( $param{btnFunction} eq 'Save' ) {
 		$param{nextrun} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d',
 				@param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 ) if $param{nextrun_year};
-		my @changes = $Campaign->changes( \%param );
+		my @changes = $Campaign->changes(\%param);
 		if ( @changes ) {
-			$variable{error} .= $Campaign->save( \%param );
+			$variable{error} .= $Campaign->save(\%param);
 			(new openprint::Log())->save({Object=>$Campaign, action=>'Save', note=>'Changes: ' .join(', ', @changes) });
 		}
-		$variable{ExternalRedirect} = '/marketing/email_campaigns.html' if ! $variable{error};
+		$variable{ExternalRedirect} = '/marketing/email_campaign.html?campaign_id='.$Campaign->id() if ! $variable{error};
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $Campaign->delete();
 		(new openprint::Log())->save({Object=>$Campaign, action=>'Delete' });
@@ -349,8 +350,9 @@ sub get_clients {
 		$variable{ExternalRedirect} .= '/marketing/get_clients.html';
 	} # end if
 } # end sub get_clients
+
 sub _recipients {
-	$variable{Campaign} = new openprint::EmailCampaign( $param{campaign_id} );
+	$variable{Campaign} = new openprint::EmailCampaign($param{campaign_id});
 }
 
 1;

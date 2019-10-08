@@ -1395,7 +1395,7 @@ sub load_from_signature {
 		$Paper->cuttable( exists $$specs{cuttable} ? $$specs{cuttable} : 1 );
 		$Paper->digital(1);
 		if ( $$specs{perfecting} eq '' ) {
-			$$Paper{perfecting} = sets::isin( $$specs{StockGrade},[4,5] ) ? 1 : 0;
+			$$Paper{perfecting} = ( $$specs{StockGrade} == 4 or $$specs{StockGrade} == 5 ) ? 1 : 0;
 		} elsif ( $$specs{perfecting} eq 'Y' ) { 
 			$$Paper{perfecting} = 1;
 		} elsif ( $$specs{perfecting} eq 'N' ) {
@@ -1678,7 +1678,7 @@ sub basis_width {
 		$$self{basis_width} = $width;
 	} # end if
 	if ( ! $$self{basis_width} ) {
-		if ( $self->brand() =~ /cover/i ) {
+		if ( $self->is_cover() ) {
 			$$self{basis_width} = 20;
 		} else {
 			$$self{basis_width} = 25;
@@ -1694,7 +1694,7 @@ sub basis_height {
 		$$self{basis_height} = $height;
 	} # end if
 	if ( ! $$self{basis_height} ) {
-		if ( $self->brand() =~ /cover/i ) {
+		if ( $self->is_cover() ) {
 			$$self{basis_height} = 26;
 		} else {
 			$$self{basis_height} = 38;
@@ -1769,7 +1769,7 @@ sub init_cache {
 }
 
 sub link_to {
-	if ( $openprint::variable{uri} =~ /administrator/ ) {
+	if ( $openprint::variable{uri} and ( $openprint::variable{uri} =~ /administrator/ ) ) {
 
 	return sprintf('<a href="/administrator/stock/stock.html?stock_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
 	} else {
@@ -1877,6 +1877,11 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
     push @results, 'appears to be C1S, but is marked double sided.';
   }
+	if ( $Paper->weight() =~ /(\d+) *lb/i ) {
+		if ( $Paper->basis_mweight() != 2*$1 ) {
+			push @results, 'may have wrong basis mweight.  Should probably be '.2*$1;
+		}
+	}
 
 	return join('<br/>', @results);
 } # end sub check

@@ -21,7 +21,7 @@
 				</li>
 				<li>
 					<label>Forwards<br/>(One per line)</label>
-					<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( @{$$variable{Aliases}} ? scalar @{$$variable{Aliases}} + 1 : 2 ) ?>"><? echo ( join("\n", @{$$variable{Aliases}})) ?></textarea>
+					<textarea id="vacation_aliases" name="vacation_aliases" onkeyup="textarea_resize(this);" rows="<? echo ( @{$$variable{vacation_aliases}} ? scalar @{$$variable{vacation_aliases}} + 1 : 2 ) ?>"><? echo ( join("\n", @{$$variable{vacation_aliases}})) ?></textarea>
 				</li>
 			</ul>
 			</div>
@@ -33,19 +33,19 @@
 			<ul>
 				<li>
 					<label>Subject</label>
-					<input type="text" name="VacationSubject" value="<?VacationSubject?>" />
+					<input type="text" name="vacation_subject" value="<?vacation_subject?>" />
 				</li>
 				<li>
 					<label>Message</label>
-					<textarea name="VacationMessage" onkeyup="textarea_resize(this);" rows="<? echo ( count_lines($$variable{VacationMessage}); ) ?>"><?VacationMessage?></textarea>
+					<textarea name="vacation_body" onkeyup="textarea_resize(this);" rows="<? echo ( count_lines($$variable{vacation_body}); ) ?>"><?vacation_body?></textarea>
 				</li>
 				<li>
 					<label>Vacation Status</label>
-					<? echo ( radio( 'VacationState', [ 1, 'Enabled', '0', 'Disabled' ], $$variable{VacationState}, { default=>'0' } ); ) ?> 
+					<? echo ( radio( 'vacation_state', [ '1', 'Enabled', '0', 'Disabled' ], $$variable{vacation_state}, { default=>'0' } ); ) ?> 
 				</li>
 				<li>
 					<label>Receive System Emails</label>
-					<? echo ( radio( 'VacationSystemEmails', [ 1, 'Yes', '0', 'No' ], $$variable{VacationSystemEmails}, { default=>'1' } ); ) ?> 
+					<? echo ( radio( 'vacation_system_emails', [ '1', 'Yes', '0', 'No' ], $$variable{vacation_system_emails}, { default=>'1' } ); ) ?> 
 				</li>
 			</ul>
 			</div>

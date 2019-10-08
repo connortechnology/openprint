@@ -41,7 +41,7 @@ my $program = basename($0);
 my $opts = {};
 Getopt::Long::GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
 	'log_file=s', 'log_level=s',
-	'recipient=s', 'sleep=s', 'smtp-server=s', 'subject=s',
+	'recipient=s', 'sleep=s', 'smtp_server=s', 'subject=s',
 	'watch-users=s','pid_file=s', 'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'skin_path=s', 'document_root=s', 'file_path=s','site_title=s', 'site_url=s',
 	'scoreboard=s','max_files=s', 'config=s',
@@ -76,14 +76,14 @@ foreach my $default ( keys %defaults ) {
     $$opts{$default} = $defaults{$default} if ! $$opts{$default};
 } # end foreach default
 
-$log = new logger(level=>'debug',program=>$program);
+$log = new logger(level=>'debug', program=>$program);
 # Get our configuration information
 if (my $err = configuration::from_file($$opts{config})) {
     die $err;
 }
 configuration::merge( $opts );
-foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp-server' ) {
-	if ( ! $config{$param} ) {
+foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp_server' ) {
+	if ( ! $openprint::config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
@@ -108,7 +108,7 @@ if ( $config{pid_file} ) {
 	} # end if
 } # end if
 
-$log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
+$openprint::log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
 $log->info("Opening SQL connection $config{db_host} $config{db_name}");
 $openprint::dbh = sql::open_sql( $log,
 	port		=> $config{db_port},
@@ -784,7 +784,7 @@ sub usage {
 	print <<EOH;
 
 usage: $program [--help] [--fifo \$path] [--from \$addr] [--log \$path] [--pid_file \$pid]
-	[--recipient \$addr] [--subject \$string] [--smtp-server \$addr]
+	[--recipient \$addr] [--subject \$string] [--smtp_server \$addr]
 	[--attach-file] [--ignore-users \$regex | --watch-users \$regex]
 
 The purpose of this script is to monitor the TransferLog written by proftpd
@@ -827,7 +827,7 @@ Command-line options:
 			used multiple times to specify multiple recipients.
 			AT LEAST ONE recipient is REQUIRED.
 
-	--smtp-server \$addr	Specifies the SMTP server to which to send the email.
+	--smtp_server \$addr	Specifies the SMTP server to which to send the email.
 												This parameter is REQUIRED.
 
 	--subject \$string	Specify a custom Subject header for the email sent.

@@ -682,7 +682,7 @@ sub quantity {
 		delete $$self{quantity_indexes};
 	} # end if
 	return $$self{'quantity'.$index};
-} # end sub quanitty
+} # end sub quantity
 
 sub quantity1 {
 	my $self = shift;
@@ -1600,24 +1600,26 @@ sub recalculate {
 	if ( $$services{''} ) {
 		my $Type = $self->Type();
 		$openprint::log->debug("Project::recalculate $$Type{type}");
-		my $specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{id}, $$services{''}[0], $$Type{type} );
+		my $specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable,
+				$$self{id}, $$services{''}[0], $$Type{type} );
 		my $status = $$specs{Status};
 		$openprint::log->debug("Project::recalculate $$Type{type} $status");
 		# Why is this ne calculated... if the project service can't calc... then neither can the signatures
 		if ( $status eq 'calculated' ) {
 			# Recalc signatures
 			my $module = 'openprint::Estimating::'.$$Type{type};
-			if ( my $function = $module->can( 'calculate_signatures' ) ) {
-				$status = $function->( $self );
+			if ( my $function = $module->can('calculate_signatures') ) {
+				$status = $function->($self);
 				$openprint::log->debug("$$Type{type}::Calculate_Sigs: status: $status");
-				openprint::service::status( $$self{id}, $$services{''}[0], $status );
+				openprint::service::status($$self{id}, $$services{''}[0], $status);
 			} # end if
-			openprint::service::auto_calculate( $self, $$services{''}[0] ) if $status eq 'calculated';
+			openprint::service::auto_calculate($self, $$services{''}[0]) if $status eq 'calculated';
 		} # end if
 	} # end if
-	$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Recalculated. Prices: '.join(',', $self->prices() ) );
 	$self->update_status();
 	$self->summary(undef);
+	foreach ( $self->quantity_indexes() ) { $self->price($_,undef); }
+	$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Recalculated. Prices: '.join(',', map { $openprint::Currency->format($_) } $self->prices() ) );
 	return $self->save({calculated_on=>'NOW()'});
 } # end sub recalculate
 
@@ -1752,11 +1754,11 @@ sub Currency {
 
 sub change_ProjectType {
 	my $error;
-	my $Project = $_[0];
+	my ( $Project, $ProjectType ) = @_;
    # This will likely never happen, because the act of cilcking on the different project type changes it.
 	my $services = $Project->services();
-    my $ProjectType = $_[1];
-    my $OldProjectType = $Project->Type();
+	my $OldProjectType = $Project->Type();
+
 # Handle ProjectType
 	if ( $$Project{type_id} ) {
 		if ( $OldProjectType->id() != $ProjectType->id() ) {
@@ -1765,7 +1767,7 @@ sub change_ProjectType {
 			} # end if
 			delete $$services{''};
 			if ( $OldProjectType->type() ne $ProjectType->type() ) {
-				$log->debug("Removing sigs because project type is different");
+				$log->debug('Removing sigs because project type is different');
 				# Brochure to multipage or nice versa.  Have to remove sigs.
 				foreach ( $Project->signatures() ) { openprint::print_project::delete_service( $Project, $_ ); }
 				delete $$services{Signature};
@@ -1775,7 +1777,8 @@ sub change_ProjectType {
 		} else {
 			$openprint::log->debug("Not Removing sigs because project type is same $$OldProjectType{id} == $$ProjectType{id}");
 		} # end if
-    } # end if
+	} # end if $$project{type_id}
+
 	if ( $$Project{id} ) {
 		if ( ! $$services{''} ) {
 			my $printing_service_index = openprint::print_project::insert_project_type( $openprint::r, $openprint::log, $openprint::dbh, $$Project{id}, $ProjectType->name() );
@@ -1786,9 +1789,10 @@ sub change_ProjectType {
 
 	# Remove no longer needed services
 		foreach my $ServiceType ( @oldRequiredServiceTypes ) {
+#FIXME I don't think we should use sets on Objects
 			if ( ! sets::isin( $ServiceType, \@newRequiredServiceTypes ) ) {
 				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
-					openprint::print_project::delete_service( $Project, $s_id );
+					openprint::print_project::delete_service($Project, $s_id);
 				} # end foreach
 				delete $$services{$ServiceType->name()};
 			} # end if
@@ -1804,8 +1808,10 @@ sub change_ProjectType {
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity3', $Project->quantity3() );
 			} # endif
 		} # end foreach
+$log->debug("Saving project type_id $$ProjectType{id}");
 		$error .= $Project->save( { type_id => $ProjectType->id() } );
 	} else {
+		$log->debug("Do not have project id, just setting type_id");
 		$$Project{type_id} = $ProjectType->id();
 	} # end if
 	return $error;

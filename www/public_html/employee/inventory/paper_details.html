@@ -18,7 +18,7 @@
 </script>
 
 <?include('/includes/error_reporting.html')?>
-<?echo($$variable{Paper}->check())?>
+<div class="warning"><?echo($$variable{Paper}->check())?></div>
 <form id="f1" name="f1" action="paper_details.html?paper_id=<?paper_id?>" method="post">
 	<input type="hidden" name="btnFunction" />
 	<fieldset>
@@ -150,7 +150,14 @@ x
 			</p>
 			<p>
 				<label>Calliper</label>
-				<? echo ( input( type=>'float', id=>'txtCalliper', name=>'txtCalliper', value=>$$variable{Paper}->calliper() ); )?>inches
+ <? echo ( input(type=>'float', id=>'calliper', name=>'calliper',
+                value=> $$variable{Paper}->calliper(),
+                oninput=>q`$('calliper_mm').value=do_decimals(this.value*25.4,3);`,
+                ); ) ?> inches
+          <? echo ( input(type=>'float', id=>'calliper_mm', name=>'calliper_mm',
+                  value => Math::Round::nearest( .001, $$variable{Paper}->calliper()*25.4),
+                  oninput =>q`$('calliper').value=do_decimals( this.value*0.0393701, 4 );`,
+                ); ) ?> mm
 			</p>
 			<p>
 				<label>FSC Code</label>
@@ -207,7 +214,7 @@ x
 		<div class="rightColumn">
 			<p>
 				<label>Entered</label>
-				<? echo ( format_date( $$variable{Paper}->created_on() ); ) ?>
+				<span title="<?echo($$variable{Paper}->created_on())?>"><? echo ( format_date( $$variable{Paper}->created_on() ); ) ?></span>
 			</p>
 			<p>
 				<label>In Stock</label>

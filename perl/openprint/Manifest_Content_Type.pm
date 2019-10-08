@@ -79,17 +79,26 @@ sub PurchaseOrder_Content {
 		} elsif ( $_[0]{po_id} ) {
 			my $PO = new openprint::PurchaseOrder($_[0]{po_id});
 			my $Paper = $_[0]->Paper();
-				$openprint::log->debug('Paper desc: ' . $Paper->to_string()) if $debug;
+			$openprint::log->debug('Paper desc: ' . $Paper->to_string()) if $debug;
 			foreach my $POC ( $PO->Contents() ) {
 				$openprint::log->debug('POC desc: ' . $POC->item()) if $debug;
 				if ( $POC->type() ne $Paper->type().' Stock' ) {
 					$openprint::log->debug("not the right type POC: $$POC{type} != $$Paper{type} Stock") if $debug;
 					next;
 				} # end if
-				if ( ! $$options{ignore_docket} ) {
+				if ( !$$options{ignore_docket} ) {
 					if ( $POC->docket() and $_[0]{docket} ) {
-						if ( $POC->docket() ne $_[0]{docket} ) {
-							$openprint::log->debug("Not the right docket POC? $$POC{docket} !=? $_[0]{docket}") if $debug;
+						my $found = 0;
+						foreach my $po_docket ( split(/[\/,]/, $POC->transform(docket=>$POC->docket()) ) ) {
+							$openprint::log->debug("Not the right docket POC? ($po_docket) !=? ($_[0]{docket})") if $debug;
+							if ( $po_docket eq $_[0]{docket} ) {
+							  $openprint::log->debug("found POC? ($po_docket) !=? ($_[0]{docket})") if $debug;
+								$found = 1;
+								last;
+							}
+						} # end foreach po docket
+						if ( !$found ) {
+							$openprint::log->debug("No docket POC found? ($$POC{docket}) !=? ($_[0]{docket})") if $debug;
 							next;
 						}
 					}
@@ -138,7 +147,7 @@ sub PurchaseOrder_Content {
 							$openprint::log->debug("Caliper doesn't match $caliper != $1") if $debug;
 							next;
 						} # end if
-					} elsif ( $Paper->calliper() and ( $Paper->calliper() != $caliper ) ) {
+					} elsif ( $Paper->calliper() and ( int($Paper->calliper()*1000) != $caliper ) ) {
 						$openprint::log->debug("Caliper doesn't match $caliper != $$Paper{calliper}") if $debug;
 						next;
 					}
@@ -153,7 +162,7 @@ sub PurchaseOrder_Content {
 						$openprint::log->debug("Right width: $width == " . $Paper->width() ) if $debug;
 					} # end if
 				} else {
-					my ( $width, $height ) = $POC->item() =~ /(\d+)x(\d+)/i;
+					my ( $width, $height ) = $POC->item() =~ /([\d\.]+)x([\d\.]+)/i;
 					if ( $width ) {
 						if ( $Paper->width() and ( $Paper->width() != $width ) ) {
 							$openprint::log->debug("Wrong width: $width != " . $Paper->width() ) if $debug;
@@ -363,6 +372,33 @@ sub delete {
 		$C->delete();
 	}
 	$self->SUPER::delete();
+}
+sub check {
+	my ( $T ) = @_;
+
+	my $error = '';
+	$error .= $T->Paper()->check();
+	$error .= $T->PurchaseOrder_Content()->check($T->Paper()) if $$T{po_content_id};
+	if ( $$T{po_id} ) {
+		my $PO = openprint::PurchaseOrder->find_one(id=>$$T{po_id});
+		if ( !$PO ) {
+			$error .= "No purchase order found for $$T{po_id}<br/>";
+		} else {
+			if ( $$T{docket} and !$T->PurchaseOrder_Content() ) {
+				my $docket_found = 0;
+				foreach my $POC ( $PO->Contents() ) {
+					if ( $POC->docket() eq $$T{docket} ) {
+						$docket_found = 1;
+						last;
+					}
+				}
+				if ( !$docket_found ) {
+					$error .= 'No line found in po ' . $PO->link_to().' for docket ' . $$T{docket}.'<br/>';
+				}
+			} # end if docket and no POC
+		} # end if found po
+	}
+	return $error;
 }
 
 1;

@@ -119,8 +119,14 @@ sub value {
 		if ( $Type->cost() ) {
 			$_[0]{value} = Math::Round::nearest( .01, $Type->cost() * $lbs/100 );
 $openprint::log->debug("Setting MC value from Type->cost $$Type{cost} * $lbs/100 = $_[0]{value}"); 
-		} elsif ( my $POC = $Type->PurchaseOrder_Content() ) {
-			$_[0]{'value'} = Math::Round::nearest( .01, $POC->price() * $lbs/100 );
+			return $_[0]{value};
+
+		}
+
+		my $POC = $Type->PurchaseOrder_Content();
+		$POC = $Type->PurchaseOrder_Content({ignore_fsc=>1}) if ! $POC;
+		if ( $POC ) {
+			$_[0]{value} = Math::Round::nearest( .01, $POC->price() * $lbs/100 );
 		} else {
 			$_[0]{value} = 0;
 		} # end if	

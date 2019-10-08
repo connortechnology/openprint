@@ -386,25 +386,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		} # end if
 
 		if ( $config{mail_db_name} ) {
-			my @domains = email::domains();
-			my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
-			if ( sets::isin( $domain, \@domains ) ) {
-				if ( $param{VacationState} ) {
-					email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage','VacationSystemEmails'} );
-				} else {
-					email::stop_vacation( $User->email() );
-				} # end if
-				if ( $param{EmailPassword} and $param{EmailPassword} eq $param{VerifyEmailPassword} ) {
-					email::set_password( @param{'email','EmailPassword'} );
-				} # end if
-				my @aliases = ();
-				foreach my $alias ( split "\r\n", $param{aliases} ) {
-					next if ! $alias;
-					push @aliases, $alias;
-				} # end foreach
-				push @aliases, $User->email() if ! @aliases;
-				email::aliases( $User->email(), @aliases );
-			} # end if
+			email::save($User->email(), \%param);
 		} # end if
 
 		my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
@@ -475,7 +457,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		} elsif ( ! sets::isin( $User->id(), [ map { $_->id() } @Users ] ) ) {
 			unshift @Users, $User;
 		} # end if
-    } # end if
+	} # end if
 
 	# load user fields
 
@@ -496,13 +478,10 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 	} # end if
 
 	if ( $config{mail_db_name} ) {
-		my @domains = email::domains();
-		my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
-		if ( sets::isin( $domain, \@domains ) ) {
-			$variable{DoEmail} = 1;
-			@variable{'VacationState','VacationSubject','VacationMessage','VacationSystemEmails'} = email::get_vacation( $User->email() );
-			@{$variable{Aliases}} = email::aliases( $User->email() );
-		} # end if
+		email::load($User->email(), \%variable);
+		my $mail_dbh = email::db_connect();
+		$openprint::Email_Account::dbh = $mail_dbh;
+		$variable{Email} = openprint::Email_Account->find_one(username=>$User->email());
 	} # end if
 
 	$variable{Users} = \@Users;
@@ -518,7 +497,6 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 	$variable{selectUserCategories} = ssi::make_drop_down( \@available_categories, \@users_categories );
 
 	$session{$r->uri().'?company_id'} = $param{ddmCustomer};
-
 
 	ssi::setup_date_select( $r->uri, 'log_created_on_start', -31 );
 	ssi::setup_date_select( $r->uri, 'log_created_on_end', '' );
@@ -782,32 +760,14 @@ sub email {
 						name=>$param{name},
 						active=>$param{active},
 						maildir=>($param{maildir} ? $param{maildir} : join('/', $domain, $account,'')),
-} );
+						} );
 
-				my @domains = email::domains();
-				my ( $user, $domain ) = $Email->username() =~ /^([^\@]+)\@(.+)$/;
-				if ( sets::isin( $domain, \@domains ) ) {
-					if ( $param{VacationState} ) {
-						email::start_vacation( $Email->username(), @param{'VacationSubject','VacationMessage','VacationSystemEmails'} );
-					} else {
-						email::stop_vacation( $Email->username() );
-					} # end if
-					if ( $param{EmailPassword} and $param{EmailPassword} eq $param{VerifyEmailPassword} ) {
-						email::set_password( @param{'username','EmailPassword'} );
-					} # end if
-					my @aliases = ();
-					foreach my $alias ( split "\r\n", $param{aliases} ) {
-						next if ! $alias;
-						push @aliases, $alias;
-					} # end foreach
-					push @aliases, $Email->username() if ! @aliases;
-					email::aliases( $Email->username(), @aliases );
-				} # end if
+				my ($error, @c ) = email::save($Email->username(), \%param);
+				$variable{error} .= $error;
 			} # end if
-			$variable{ExternalRedirect} = '/administrator/managerial/emails.html' if ! $variable{error};
+			$variable{ExternalRedirect} = '/administrator/managerial/emails.html' if !$variable{error};
 		} # end if action
-		@variable{'VacationState','VacationSubject','VacationMessage','VacationSystemEmails'} = email::get_vacation( $Email->username() );
-		$variable{Aliases} = [email::aliases( $Email->username() )];
+		email::load( $Email->username(), \%variable);
 	} else {
 		$variable{error} .= "No connection to mail db.<br/>";
 	} # end if have maildb connection

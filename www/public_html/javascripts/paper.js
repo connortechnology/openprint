@@ -136,7 +136,8 @@ function calc_from_mweight( form, id='' ) {
 	form.elements['gsm'+id].value = gsm;
 	var basis_width = parseFloat(1*form.elements['basis_width'+id].value);
 	var basis_height = parseFloat(1*form.elements['basis_height'+id].value);
-	form.elements['basis_weight'+id].value = parseInt((gsm/703064.5)*(basis_width*basis_height)*10000)/10;
+	if ( basis_width && basis_height )
+		form.elements['basis_weight'+id].value = parseInt((gsm/703064.5)*(basis_width*basis_height)*10000)/10;
 }
 function calc_from_gsm( form, id='' ) {
 	var gsm = parseFloat(1*form.elements['gsm'+id].value);
@@ -147,6 +148,13 @@ function calc_from_gsm( form, id='' ) {
 	form.elements['mweight'+id].value = parseInt((gsm/703064.5)*(width*height)*10000)/10;
 	form.elements['basis_weight'+id].value = parseInt((gsm/703064.5)*(basis_width*basis_height)*10000)/10;
 }
+function calc_from_weight(form, id='') {
+	var weight = parseFloat(1*form.elements['weight'+id].value);
+	var basis_weight = weight*2;
+	form.elements['basis_weight'+id].value = basis_weight;
+	calc_from_basis_weight(form,id);
+}
+
 function set_basis_dimensions(width, height) {
 var basis_width = $('basis_width');
 if ( basis_width )
