@@ -14,6 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 use strict;
+use warnings;
 
 package openprint::Estimating::Proofs;
 use POSIX qw( ceil );
@@ -26,7 +27,7 @@ require sql;
 require openprint::service;
 require openprint::Estimating::Printing;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -117,10 +118,10 @@ sub calc {
 	my $status = 'calculated';
 
 	$log->debug("START PROOFS!!!!!!!!!!!!!!!!!! ($project_index) ($service_index)") if DEBUG;
-	my $Project = new openprint::Project( $project_index );
+	my $Project = new openprint::Project($project_index);
 
 	my @signature_service_indices = $Project->signatures();
-	my $minCharge = openprint::service::get_price( 'ProofsMinimumCharge', undef, undef );
+	my $minCharge = openprint::service::get_price('ProofsMinimumCharge', undef, undef);
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} = '';
@@ -130,8 +131,8 @@ sub calc {
 		my %proof_indexes;
 		my %proof_types;
 		my %proof_totals;
-		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty_index<br/>";
-		get_indexes( $specs, $qty_index, \%proof_indexes, \%proof_types );
+		$$specs{'hdnBreakdown'.$qty_index} = '';
+		get_indexes($specs, $qty_index, \%proof_indexes, \%proof_types);
 
 		# First, build a hash containing the quantities of each proof.  The reason for this is to honour quantity discounts.
 		foreach my $signature_service_index ( @signature_service_indices ) {
@@ -146,7 +147,7 @@ sub calc {
 				next;
 			} # end if
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index, $Project );
+			$Imposition->load($sig_specs, $qty_index, $Project);
 			my $Equipment = $Imposition->Press();
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string().'</br>';
 
@@ -229,10 +230,10 @@ sub signature_calc {
 
 	my $form = $$sig_specs{SignatureIndex};
 	if ( ! $Equipment ) {
-		$openprint::log->error("Looking up equipment in Proofs: signature_calc");
-		$Equipment = openprint::Equipment->find_one( strid => $$sig_specs{'ddmPress'.$qty_index} );
+		$openprint::log->error('Looking up equipment in Proofs: signature_calc');
+		$Equipment = openprint::Equipment->find_one(strid => $$sig_specs{'ddmPress'.$qty_index});
 		if ( ! $Equipment ) {
-			$openprint::log->warn("Proofs: signature_calc: No equipment for " . $$sig_specs{'ddmPress'.$qty_index} );
+			$openprint::log->warn('Proofs: signature_calc: No equipment for ' . $$sig_specs{'ddmPress'.$qty_index});
 			return %Results;
 		}
 	}
@@ -258,22 +259,27 @@ sub signature_calc {
 		push @{$$indexes{$form}}, 3;
 	} # end if
 
-	%ProofServices = map { $_->name(), $_ } openprint::Service->find( category=>'Proofs' ) if ! %ProofServices;
+	%ProofServices = map { $_->name(), $_ } openprint::Service->find(category=>'Proofs') if !%ProofServices;
 
-$log->debug("Proof indexes " . join(',', @{$$indexes{$form}}  ) ) if DEBUG;
+	$log->debug('Proof indexes '.join(',', @{$$indexes{$form}})) if DEBUG;
 	foreach my $proof_index ( @{$$indexes{$form}} ) {
 		if ( $$specs{"chkOverride-$form-$proof_index-$qty_index"} ne 'Y' ) {
 			if ( $proof_index == 1 ) {
-				insert_layout_proof( $sig_specs, 1, $qty_index, $specs, $Imposition );
+				insert_layout_proof($sig_specs, 1, $qty_index, $specs, $Imposition);
 			} elsif ( $proof_index == 2 ) {
-				insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $specs, $Imposition );
+				insert_colour_proof($Project, $sig_specs, 2, $qty_index, $specs, $Imposition);
 			} elsif ( $proof_index == 3 ) {
-				insert_press_proof( $Project, $sig_specs, 3, $qty_index, $specs, $Imposition );
+				insert_press_proof($Project, $sig_specs, 3, $qty_index, $specs, $Imposition);
 			} # end if
 		} else {
-			if ( ($proof_index == 1) and ($$specs{"ddmProofType-$form-$proof_index-$qty_index"} eq 'DigitalDylux') and ( $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"} < $openprint::config{ForceDigitalDyluxQuantity} ) ) {
+			if ( ($proof_index == 1)
+					and
+					($$specs{"ddmProofType-$form-$proof_index-$qty_index"} eq 'DigitalDylux')
+					and
+					($$specs{"txtProofQuantity-$form-$proof_index-$qty_index"} < $openprint::config{ForceDigitalDyluxQuantity})
+				 ) {
 				$$specs{alert} .= 'We require Dylux Proofs<br/>';
-				insert_layout_proof( $sig_specs, 1, $qty_index, $specs, $Imposition );
+				insert_layout_proof($sig_specs, 1, $qty_index, $specs, $Imposition);
 			} # end if
 		} # end if
 
@@ -281,23 +287,23 @@ $log->debug("Proof indexes " . join(',', @{$$indexes{$form}}  ) ) if DEBUG;
 			"txtProofQuantity-$form-$proof_index-$qty_index",
 				"ddmProofType-$form-$proof_index-$qty_index",
 		};
-		if ( ! ( $type and $quantity ) ) {
+		if ( !($type and $quantity) ) {
 			if ( DEBUG ) {
-				$log->debug("Next because to type or quantity for sig $form proof $proof_index qty $qty_index ty[pe: $type qty: $quantity");
+				$log->debug("Next because no type or quantity for sig $form proof $proof_index qty_index $qty_index type $type qty $quantity");
 			} # end if
 			next;
 		} # end if
 		
 		my $ProofService = $ProofServices{$type};
 
-		my %MakeReady = openprint::service::get_price_object( $type.'MakeReady', $$totals{$type}{Quantity}, undef );
+		my %MakeReady = openprint::service::get_price_object($type.'MakeReady', $$totals{$type}{Quantity}, undef);
 		$$specs{join('-','MRPrice',$form,$proof_index,$qty_index)} = $MakeReady{Price};
 		my %price;
 		if ( $ProofService ) {
 			if ( $type eq 'PressProof' ) {
-				%price = $ProofService->get_price( $$totals{$type}{Quantity}, $Equipment );
+				%price = $ProofService->get_price($$totals{$type}{Quantity}, $Equipment);
 			} else {
-				%price = $ProofService->get_price( $$totals{$type}{Quantity} );
+				%price = $ProofService->get_price($$totals{$type}{Quantity});
 			} # end if
 		} # end if
 		$$specs{join('-','ServicePrice',$form,$proof_index,$qty_index)} = $price{Price};
@@ -317,10 +323,10 @@ $log->debug("Proof indexes " . join(',', @{$$indexes{$form}}  ) ) if DEBUG;
 			$price{Total} = $price{Price} * $quantity;
 			$Results{Breakdown} .= sprintf('MR: %.2f + %d*$%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, @price{'Price','units','Total'} );
 		} # end if
-		$$specs{"txtProofUnitPrice-$form-$proof_index-$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price{Total} );
+		$$specs{"txtProofUnitPrice-$form-$proof_index-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $price{Total});
 		$Results{Total} += $price{Total} + $MakeReady{Price};
 	} # end foreach my $proof_index
-	$Results{Total} = Math::Round::nearest(0.01,$Results{Total});
+	$Results{Total} = Math::Round::nearest(0.01, $Results{Total});
 	return %Results;
 } # end sub signature_calc
 

@@ -96,23 +96,26 @@
 <?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{Manifests}} ) ?>
 <form id="ManifestResults" name="ManifestResults" action="manifests.html" method="post">
-	<table id="ResultsTable" class="List sortable">
-		<tr>
-			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'manifests', this.checked );"/></th>
-			<th class="manifest_num">Manifest #</th>
-			<th class="po_id">PO ID</th>
-			<th class="Docket">Docket</th>
-			<th class="Company">Vendor</th>
-			<th class="Date">Received On</th>
-			<th class="contents">Contents</th>
-			<? if ( $$variable{canseepricing} ) ?>
-			<th class="Price">Value</th>
-			<? endif ( $$variable{canseepricing} ) ?>
-		</tr>
+	<table id="ResultsTable" class="List">
+    <thead class="sortable">
+			<tr>
+				<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'manifests', this.checked );"/></th>
+				<th class="manifest_num">Manifest #</th>
+				<th class="po_id">PO ID</th>
+				<th class="Docket">Docket</th>
+				<th class="Company">Vendor</th>
+				<th class="Date">Received On</th>
+				<th class="contents">Contents</th>
+				<? if ( $$variable{canseepricing} ) ?>
+				<th class="Price">Value</th>
+				<? endif ( $$variable{canseepricing} ) ?>
+			</tr>
+		</thead>
+		<tbody>
 		<? echo (
 			my $html;
 			my $rowclass;
-			my $value_total;
+			my $value_total = 0;
 			my $ac = sql::start_transaction( $dbh );
 
 			my @manifest_ids = map { $$_{id} } @{$$variable{Manifests}};
@@ -216,6 +219,7 @@
 						$real_weight{$C->paper_id} += $MC->quantity();
 					} # end foreach paper on skid
 					$value += $MC->value();	
+$log->debug("Value from $$MC{manifest_id} $value");
 				} # end foreach MC
 
 				my $error = $Manifest->check();
@@ -271,26 +275,28 @@ $rowclass,
 				
 				$html .= '</td>';	
 				if ( $$variable{canseepricing} ) {
-					$html .= '<td class="Price">'.openprint::Currency::format( $value ).'</td>';
+$log->debug("Value from $$Manifest{id} $value");
+					$html .= '<td class="Price">'.openprint::Currency::format($value).'</td>';
 					$value_total += $value;
 				} # end if
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
+$log->debug("$value_total");
 			} # end foreach Manifest
 			sql::end_transaction( $dbh, $ac );
+			$html .= '</tbody>';
 			if ( $$variable{canseepricing} ) {
-				$html .= '<tr class="totals"><td colspan="7">Total</td><td class="Price">'.openprint::Currency::format( $value_total ).'</td></tr>';
+$log->debug("$value_total");
+				$html .= '<tfoot><tr class="totals"><td colspan="7">Total</td><td class="Price">'.openprint::Currency::format( $value_total ).'</td></tr></tfoot>';
 			} # end if
 			
 			return $html;
 		) ?>
 	</table>
-<script>
-TableKit.Sortable.init('ResultsTable');
-</script>
+<script> TableKit.reloadTable('ResultsTable'); </script>
 	<input type="hidden" name="btnFunction"/>
 	<p class="buttons">
-		<? echo ( join('',
+		<? echo ( join("\n",
 					button( 'Delete', { onclick=>q`ManifestResults.btnFunction.value='Delete';ManifestResults.submit();`, text=>'Delete Checked' } ),
 			); ) ?>
 	</p>

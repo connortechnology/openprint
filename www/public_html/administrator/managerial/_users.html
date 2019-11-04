@@ -77,7 +77,7 @@
 	$User->type(),
 	join(', ', 
 		( $User->ftp_active() ? 'FTP' : () ),
-		( $User->web_active() ? 'Web' : () ),
+		( ($User->web_active() eq 'Y') ? 'Web' : () ),
 		),
 	join(', ', map { $$_{name} } $User->Groups() ),
  );

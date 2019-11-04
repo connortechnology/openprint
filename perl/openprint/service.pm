@@ -305,10 +305,10 @@ sub auto_calculate {
 
 	foreach my $service_type ( 'Collating', 'Aqueous', 'UVCoating', 'Grommeting', 'Sewing' ) {
 		my $module = 'openprint::Estimating::'.$service_type;
-		eval ( 'require '.$module.';' );
+		eval 'require '.$module.';';
 		$openprint::log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
 		if ( my $function = $module->can('neccessary') ) {
-			if ( $function->( $Project ) ) {
+			if ( $function->($Project) ) {
 				$openprint::log->debug("$service_type is neccessary");
 				if ( ! $$services{$service_type} ) {
 					$_ = $Project->add_service( $service_type );
@@ -373,7 +373,7 @@ sub auto_calculate {
 
 	# Order for these is important.  Stitching must be calc'd before Folding
 	foreach my $type ( 'Folding','SaddleStitching','LoopStitching' ) {
-		next if ! $$services{$type};
+		next if !$$services{$type};
 		foreach my $service_index ( @{$$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
 			my $service_type = $ServiceType->type();
@@ -388,8 +388,8 @@ sub auto_calculate {
 			$openprint::log->error("Have $type but no actual service");
 			next;
 		} # end if
-		next if sets::isin( $type, [ 'SaddleStitching','LoopStitching','Folding','Signature' ] );
-		next if $exclude and sets::isin( $type, $exclude );
+		next if sets::isin($type, [ 'SaddleStitching','LoopStitching','Folding','Signature' ]);
+		next if $exclude and sets::isin($type, $exclude);
 
 		foreach my $service_index ( @{$$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
@@ -400,8 +400,14 @@ sub auto_calculate {
 			}
 			next if $ServiceType->category() eq 'Shipping';
 			my $service_type = $ServiceType->type();
-			next if sets::isin( $service_type, ['','Signature'] );
-			my $specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{id}, $service_index, $service_type );
+			if ( sets::isin($service_type, ['', 'Signature']) ) {
+				$openprint::log->debug("Next because it's a printing service: $type " . join(',', @{$$services{$type}}));
+				next;
+			}
+			my $specs = internal_calc(
+					$openprint::log, $openprint::dbh, \%openprint::variable,
+					$$Project{id}, $service_index, $service_type
+					);
 			$alert .= $$specs{alert};
 		} # end foreach service_index
 	} # end while service_type

@@ -152,7 +152,7 @@ if ( $Project->can_view() ) {
 	<td class="Price">%6$s</td>
 	<td class="status">%7$s</td>
 	<td class="Date" title="%9$s">%8$s</td>
-	<td class="checkbox"><input type="checkbox" name="project_id" value="%2$d" /></td>
+	<td class="checkbox"><input type="checkbox" name="project_id" value="%2$d"/></td>
 </tr>
 <tr%1$s> 
 	<td colspan="%10$d">&nbsp;</td>
@@ -211,9 +211,9 @@ if ( $Project->can_view() ) {
 	<br class="spacer"/>
 <p class="buttons">
 <? echo ( 
-	my $html = button( 'Delete', { onclick=>'delete_confirm(document.f1);' } );
+	my $html = button( 'Delete', { onclick=>'delete_confirm(document.f2);' } );
 	if ( sets::isin( $session{user_type}, [ 'E','A' ] ) ) {
-		$html .= button( 'Copy', { onclick=>"popup_window('_copy_popup.html',f1.serialize() );" } );
+		$html .= button('Copy', { onclick=>q`popup_window('_copy_popup.html',f2.serialize());` });
 	} # end if
 	return $html;
 ) ?>

@@ -59,6 +59,8 @@ sub history {
 			foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
 				openprint::print_project::reuse_project( $project_id );
 			} # end if
+			$variable{ExternalRedirect} = '/main/project/history.html';
+			return;
 		} elsif ( $param{btnFunction} eq 'Reset' ) {
 			foreach my $k ( keys %session ) {
 				if ( $k =~ /^\/main\/project\/history.html/ ) {
