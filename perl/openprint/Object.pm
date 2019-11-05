@@ -1188,7 +1188,7 @@ sub transform {
 		if ( @transforms ) {
 			foreach my $transform ( @transforms ) {
 				if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
-					eval '$value =~ ' . $transform;
+					eval '$value =~ '.$transform;
 				} elsif ( $transform =~ /^<(\d+)/ ) {
 					if ( $value > $1 ) {
 						$value = undef;
