@@ -104,10 +104,10 @@ sub calc {
 
 	my $status = 'calculated';
 
-	$log->debug( " ********************** START OF CALC SKIDS type:($$specs{ServiceType})**********************");
-	my $Project = new openprint::Project( $project_index );
+	$log->debug("********************** START OF CALC SKIDS type:($$specs{ServiceType})**********************");
+	my $Project = new openprint::Project($project_index);
 	my $services = $Project->services();
-	my $ServiceType = $Project->ServiceType( $service_index );
+	my $ServiceType = $Project->ServiceType($service_index);
 
 	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
 	my $serviceCharge = openprint::service::get_price( $ServiceType->name(), undef, undef );
@@ -115,10 +115,11 @@ sub calc {
 
 	my $printing_specs;
 	if ( $Project->signatures() == 1 ) {
-		$printing_specs = openprint::service::get_specs_ref( $Project, $$services{Signature}[0] );
+		$printing_specs = openprint::service::get_specs_ref($Project, $$services{Signature}[0]);
 	} else {
-		$printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+		$printing_specs = openprint::service::get_specs_ref($Project, $$services{''}[0]);
 	} # end if
+
 	@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	if ( ! ( $$specs{txtFinalWidth} and $$specs{txtFinalHeight} ) ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtWidth','txtHeight'};
@@ -140,13 +141,13 @@ sub calc {
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 	
-    foreach my $qty_index ( $Project->quantity_indexes() ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
         if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
-			$log->error("EMpty txtQuantity for QTY $qty_index");
+			$log->error("Empty txtQuantity for QTY $qty_index");
 			$$specs{alert} .= "Please enter the # of items to pack for quantity $qty_index.<br/>";
             next;
         } # end if
@@ -162,12 +163,12 @@ sub calc {
 			my $Material = new openprint::Material( $$specs{'ddmPackageType'.$qty_index} );
 			@Materials = ( $Material );
 		} else {
-			@Materials = openprint::Material->find('category'=>$ServiceType->name() );
+			@Materials = openprint::Material->find(category=>$ServiceType->name() );
 			$$specs{'ddmPackageType'.$qty_index} = '';
 		} # end if
-$log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
+$log->debug('Materials: ' . map { $_->name() } @Materials ) if DEBUG;
 		if ( ! @Materials ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= "There are no materials for " . $ServiceType->name();
+			$$specs{'hdnBreakdown'.$qty_index} .= 'There are no materials for '.$ServiceType->name().'<br/>';
 		} # end if
 		if ( $$specs{'OverrideItemsPerPackage'.$qty_index} ne 'Y'  ) {
 			$$specs{'txtItemsPerPackage'.$qty_index} = '';
