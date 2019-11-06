@@ -331,8 +331,7 @@ sub csr_ids {
 
 sub in_Group {
 	my $self = shift;
-	my @Results;
-	return sets::intersection( @_, map { $$_{name} } $self->Groups() );
+	return sets::intersection(@_, map { $$_{name} } $self->Groups());
 }
 
 sub Groups {
