@@ -732,16 +732,25 @@ sub can_authorize {
 # Can we assume that we can view it?
 sub can_see_pricing {
 	if ( ! $_[0]{id} ) {
-		$log->debug("Ccan see because new PO") if $debug;
+		$log->debug('Can see because new PO') if $debug;
 		return 1;
 	} # end if
 
 	my $User = $openprint::User;
 	
-	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','InventoryManager'], $$User{id} ) ) {
+	if (
+			( $$User{id} == $_[0]->created_by() )
+			or
+			( $$User{type} eq 'A' )
+			or
+			$User->in_Group('Accounting','SalesAdmin','InventoryManager')
+		 ) {
 		$log->debug('can see pricing') if $debug;
 		return 1;
 	} # end if
+
+# Now Ahmed wants everything to not show pricing
+	return 0;
 
 	if ( $_[1] ) {
 		if ( $_[1]->Type()->type() eq 'Sheet Stock' or $_[1]->Type()->type() eq 'Roll Stock' ) {
@@ -767,6 +776,7 @@ sub can_see_pricing {
 			} # end if
 		} # end foreach C
 	} # end if
+
 	if ( my @notifications = $_[0]->notifications() ) {
 		if ( sets::isin( $$User{id}, \@notifications ) ) {
 			$log->debug($$User{firstname} . ' can see because in notifications.' ) if $debug;
