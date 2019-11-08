@@ -398,6 +398,10 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 	if ( ! exists $$data{deleted} ) {
 		$dbh->do('ALTER TABLE Assets ADD deleted BOOLEAN NOT NULL DEFAULT FALSE');
 	} # end if
+	if ( ! exists $$data{public} ) {
+    $log->debug("Adding public to Assets");
+		$dbh->do('ALTER TABLE Assets ADD public BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end if
 	if ( ! exists $$data{license} ) {
 		$dbh->do('ALTER TABLE Assets ADD license TEXT');
 	} # end if
