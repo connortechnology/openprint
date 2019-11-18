@@ -246,6 +246,7 @@ sub signature_calc {
 	if ( ( ! sets::isin( 2, $$indexes{$form} ) ) and $openprint::config{Add_Default_Colour_Proof} eq 'Y' ) {
 		push @{$$indexes{$form}}, 2;
 	} # end if
+	$$specs{RequirePressProofs} = '' if ! defined $$specs{RequirePressProofs};
 	if ( ( ! sets::isin( 3, $$indexes{$form} ) ) and  
 			( $$specs{RequirePressProofs} ne 'N' ) and (
 				( $$specs{RequirePressProofs} eq 'Y' ) 
@@ -263,7 +264,11 @@ sub signature_calc {
 
 	$log->debug('Proof indexes '.join(',', @{$$indexes{$form}})) if DEBUG;
 	foreach my $proof_index ( @{$$indexes{$form}} ) {
-		if ( $$specs{"chkOverride-$form-$proof_index-$qty_index"} ne 'Y' ) {
+		if (
+				(!$$specs{"chkOverride-$form-$proof_index-$qty_index"})
+				or
+				( $$specs{"chkOverride-$form-$proof_index-$qty_index"} ne 'Y')
+			 ) {
 			if ( $proof_index == 1 ) {
 				insert_layout_proof($sig_specs, 1, $qty_index, $specs, $Imposition);
 			} elsif ( $proof_index == 2 ) {
@@ -297,6 +302,9 @@ sub signature_calc {
 		my $ProofService = $ProofServices{$type};
 
 		my %MakeReady = openprint::service::get_price_object($type.'MakeReady', $$totals{$type}{Quantity}, undef);
+		if ( !%MakeReady ) {
+			$MakeReady{Price} = 0;
+		}
 		$$specs{join('-','MRPrice',$form,$proof_index,$qty_index)} = $MakeReady{Price};
 		my %price;
 		if ( $ProofService ) {
@@ -320,6 +328,7 @@ sub signature_calc {
 			$price{Total} = $price{Price} * $$specs{"txtProofWidth-$form-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$form-$proof_index-$qty_index"} / 144 * $quantity;
 			$Results{Breakdown} .= sprintf('MR: %.2f + %d * %sx%s * $%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, $$specs{"txtProofWidth-$form-$proof_index-$qty_index"},$$specs{"txtProofHeight-$form-$proof_index-$qty_index"}, @price{'Price','units','Total'} );
 		} else {
+			$price{Price} = 0 if !$price{Price};
 			$price{Total} = $price{Price} * $quantity;
 			$Results{Breakdown} .= sprintf('MR: %.2f + %d*$%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, @price{'Price','units','Total'} );
 		} # end if
@@ -691,7 +700,7 @@ sub summary {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex\-$form\-(\d+)\-$qty_index$/ ) {
 					next if ! $$specs{"ddmProofType-$form-$proof_index-$qty_index"};
 
-					if ( my $Service = openprint::Service->find_one( name=>$$specs{"ddmProofType-$form-$proof_index-$qty_index"}) ) {
+					if ( my $Service = openprint::Service->find_one(name=>$$specs{"ddmProofType-$form-$proof_index-$qty_index"}) ) {
 						if ( sets::isin( $$specs{"ddmProofType-$form-$proof_index-$qty_index"}, [ 'PressProof', 'PDFProof' ] ) ) {
 							my $desc = sprintf('</td><td class="type">%s', $Service->description() );
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
@@ -699,7 +708,7 @@ sub summary {
 							my $desc = sprintf('%s&quot;x%s&quot;</td><td class="type">%s', @$specs{
 									"txtProofWidth-$form-$proof_index-$qty_index",
 									"txtProofHeight-$form-$proof_index-$qty_index"}, $Service->description() );
-							$proof_totals{$desc} += $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
+							$proof_totals{$desc} += $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"} if $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
 						} # end if
 					} # end if
 				} # end if
@@ -848,7 +857,11 @@ sub get_next_proof_index {
 
 sub has_overrides {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
-	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+	# None of our overrides are quantity independent
+	return if ! $qty_index;
+
+	$specs = openprint::service::get_specs_ref($Project, $service_id) if ! $specs;
 
 	my @v;
 
@@ -859,7 +872,7 @@ sub has_overrides {
 			if ( $key =~ /^txtProofIndex-$form-(\d+)-$qty_index$/ ) {
 				my ( $proof_index ) = ( $1 );
 				if ( $$specs{"chkOverride-$form-$proof_index-$qty_index"} ) {
-					push @v,    "chkOverride-$form-$proof_index-$qty_index";
+					push @v, "chkOverride-$form-$proof_index-$qty_index";
 				} # end if
 			} # end if
 		} # end foreach key
