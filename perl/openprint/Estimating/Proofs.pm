@@ -27,7 +27,7 @@ require sql;
 require openprint::service;
 require openprint::Estimating::Printing;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -106,7 +106,7 @@ sub get_indexes {
 	my ( $specs, $qty_index, $indexes, $types ) = @_;
 	foreach my $key ( keys %{$specs} ) {
 		if ( $key =~ /^txtProofIndex-(\d+)-(\d+)-$qty_index$/ ) {
-			push @{$$indexes{$1}}, $$specs{$key};
+			$$indexes{$1}[$$specs{$key}] = $$specs{$key};
 			push @{$$types{$1}}, $$specs{"ddmProofType-$1-$2-$qty_index"};
 		} # end if
 	} # end foreach
@@ -151,24 +151,26 @@ sub calc {
 			my $Equipment = $Imposition->Press();
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string().'</br>';
 
-			if ( ( ! sets::isin( 1, $proof_indexes{$form} ) ) and $openprint::config{Add_Default_Layout_Proof} eq 'Y' ) {
-				push @{$proof_indexes{$form}}, 1;
+			if ( ( !$proof_indexes{$form}[1] ) and ($openprint::config{Add_Default_Layout_Proof} eq 'Y') ) {
+				$proof_indexes{$form}[1] = 1;
 			} # end if
-			if ( ( ! sets::isin( 2, $proof_indexes{$form} ) ) and $openprint::config{Add_Default_Colour_Proof} eq 'Y' ) {
-				push @{$proof_indexes{$form}}, 2;
+			if ( ( !$proof_indexes{$form}[2] ) and ($openprint::config{Add_Default_Colour_Proof} eq 'Y') ) {
+				$proof_indexes{$form}[2] = 2;
 			} # end if
-			if ( ( ! sets::isin( 3, $proof_indexes{$form} ) ) and ( 
-				( $openprint::config{Add_Default_Press_Proof} eq 'Y' )
+			if ( ( !$proof_indexes{$form}[3] ) and ( 
+				( $openprint::config{Add_Default_Press_Proof} and ($openprint::config{Add_Default_Press_Proof} eq 'Y') )
 				or 
-				( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) 
+				( $Equipment and ($_ = $Equipment->specification('Require Press Proof')) and ( $_ eq 'Y') ) 
 				or 
-				($_ = $Project->Company()->add_press_proofs() and $_->value() eq 'Y' ) 
+				($_ = $Project->Company()->add_press_proofs() and $_->value() and ($_->value() eq 'Y') ) 
 				) ) {
-				push @{$proof_indexes{$form}}, 3;
+				$proof_indexes{$form}[3] = 3;
 			} # end if
 				
 			foreach my $proof_index ( @{$proof_indexes{$form}} ) {
-				if ( $$specs{"chkOverride-$form-$proof_index-$qty_index"} ne 'Y' ) {
+				next if !($proof_index and $proof_indexes{$form}[$proof_index]);
+
+				if ( (!$$specs{"chkOverride-$form-$proof_index-$qty_index"}) or ($$specs{"chkOverride-$form-$proof_index-$qty_index"} ne 'Y') ) {
 					if ( $proof_index == 1 ) {
 						insert_layout_proof( $sig_specs, 1, $qty_index, $specs, $Imposition );
 					} elsif ( $proof_index == 2 ) {
@@ -215,10 +217,11 @@ sub calc {
 			$totalPrice = $minCharge;
 		} # end if
 
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $totalPrice * (1+$Project->markup()/100) );
+		$totalPrice *= (1+$Project->markup()/100) if $Project->markup();
+		$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $totalPrice);
 	} # end foreach qty_index
 
-	$log->debug("PROOFS!!!!!!!!!!!!!!!!!!") if DEBUG;
+	$log->debug('PROOFS!!!!!!!!!!!!!!!!!!') if DEBUG;
 	return $$specs{Status} = $status;
 } # end sub calc
 
@@ -229,41 +232,43 @@ sub signature_calc {
 	#return %Results if ! $$sig_specs{'txtImposition'.$qty_index};
 
 	my $form = $$sig_specs{SignatureIndex};
-	if ( ! $Equipment ) {
+	if ( !$Equipment ) {
 		$openprint::log->error('Looking up equipment in Proofs: signature_calc');
 		$Equipment = openprint::Equipment->find_one(strid => $$sig_specs{'ddmPress'.$qty_index});
-		if ( ! $Equipment ) {
+		if ( !$Equipment ) {
 			$openprint::log->warn('Proofs: signature_calc: No equipment for ' . $$sig_specs{'ddmPress'.$qty_index});
 			return %Results;
 		}
 	}
 
 	$$indexes{$form} = [] if ! $$indexes{$form};
+	$log->debug('Proof indexes '.join(',', map { $_ ? $_ : () } @{$$indexes{$form}})) if DEBUG;
 
-	if ( ( ! sets::isin( 1, $$indexes{$form} ) ) and $openprint::config{Add_Default_Layout_Proof} eq 'Y' ) {
-		push @{$$indexes{$form}}, 1;
+	if ( ( ! $$indexes{$form}[1] ) and ($openprint::config{Add_Default_Layout_Proof} eq 'Y') ) {
+		$$indexes{$form}[1] = 1;
 	} # end if
-	if ( ( ! sets::isin( 2, $$indexes{$form} ) ) and $openprint::config{Add_Default_Colour_Proof} eq 'Y' ) {
-		push @{$$indexes{$form}}, 2;
+	if ( ( ! $$indexes{$form}[2] ) and ($openprint::config{Add_Default_Colour_Proof} eq 'Y') ) {
+		$$indexes{$form}[2] = 2;
 	} # end if
 	$$specs{RequirePressProofs} = '' if ! defined $$specs{RequirePressProofs};
-	if ( ( ! sets::isin( 3, $$indexes{$form} ) ) and  
-			( $$specs{RequirePressProofs} ne 'N' ) and (
-				( $$specs{RequirePressProofs} eq 'Y' ) 
+	if ( ( ! $$indexes{$form}[3] ) and  
+			( (!$$specs{RequirePressProofs}) or ($$specs{RequirePressProofs} ne 'N') ) and (
+				( $$specs{RequirePressProofs} and ($$specs{RequirePressProofs} eq 'Y') ) 
 				or
-				( $openprint::config{Add_Default_Press_Proof} eq 'Y' ) 
+				( $openprint::config{Add_Default_Press_Proof} and ($openprint::config{Add_Default_Press_Proof} eq 'Y') ) 
 				or 
-				( $$sig_specs{rdbPressProof} eq 'Y' )
+				( $$sig_specs{rdbPressProof} and ($$sig_specs{rdbPressProof} eq 'Y') )
 				or
-				($_ = $Project->Company()->add_press_proofs() and $_->value() eq 'Y' ) 
+				($_ = $Project->Company()->add_press_proofs() and $_->value() and ($_->value() eq 'Y') ) 
 	   ) ) {
-		push @{$$indexes{$form}}, 3;
+		$$indexes{$form}[3] = 3;
 	} # end if
 
 	%ProofServices = map { $_->name(), $_ } openprint::Service->find(category=>'Proofs') if !%ProofServices;
 
-	$log->debug('Proof indexes '.join(',', @{$$indexes{$form}})) if DEBUG;
+	$log->debug('Proof indexes '.join(',', map { $_ ? $_ : () } @{$$indexes{$form}})) if DEBUG;
 	foreach my $proof_index ( @{$$indexes{$form}} ) {
+		next if ! ($proof_index and $$indexes{$form}[$proof_index]);
 		if (
 				(!$$specs{"chkOverride-$form-$proof_index-$qty_index"})
 				or
@@ -445,10 +450,10 @@ sub insert_colour_proof {
 		} # end if
 
 		# we need extra proofs for business cards.
-		if ( $$sig_specs{txtNameQuantity} > 1 ) {
+		if ( $$sig_specs{txtNameQuantity} and ( $$sig_specs{txtNameQuantity} > 1) ) {
 			$quantity *= $$sig_specs{txtNameQuantity};
 		} # end if
-		if ( $$sig_specs{'PageQuantity'.$qty_index} ) {
+		if ( $$sig_specs{'PageQuantity'.$qty_index} and ( $$sig_specs{'PageQuantity'.$qty_index} > 1) ) {
 			$quantity *= $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize} if $$sig_specs{txtSpreadSize};
 		} # end if
 
