@@ -502,7 +502,7 @@ sub insert_layout_proof {
 } # end sub insert_layout_proof
 
 sub insert_new_proof {
-    my ( $specs, $proof_index, $form, $qty, $width, $height, $type, $qty_index ) = @_;
+	my ( $specs, $proof_index, $form, $qty, $width, $height, $type, $qty_index ) = @_;
 	$$specs{"txtProofQuantity-$form-$proof_index-$qty_index"} = $qty;
 	$$specs{"txtProofWidth-$form-$proof_index-$qty_index"} = 1*$width;
 	$$specs{"txtProofHeight-$form-$proof_index-$qty_index"} = 1*$height;
@@ -511,9 +511,9 @@ sub insert_new_proof {
 } # end sub insert_new_proof
 
 sub load_proof_info {
-    my ( $Project, $service_index, $form, $qty_index, $specs ) = @_;
+	my ( $Project, $service_index, $form, $qty_index, $specs ) = @_;
 
-    my @proof_info = ();
+	my @proof_info = ();
 
 	$specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
 
@@ -524,30 +524,31 @@ sub load_proof_info {
 		} # end if
 	} # end foreach
 	foreach my $proof_index ( sort @proofs ) {
-        my ( $quantity, $width, $height, $type ) = @$specs{
-                "txtProofQuantity-$form-$proof_index-$qty_index",
-                "txtProofWidth-$form-$proof_index-$qty_index",
-                "txtProofHeight-$form-$proof_index-$qty_index",
-                "ddmProofType-$form-$proof_index-$qty_index"
-                };
+		my ( $quantity, $width, $height, $type ) = @$specs{
+			"txtProofQuantity-$form-$proof_index-$qty_index",
+				"txtProofWidth-$form-$proof_index-$qty_index",
+				"txtProofHeight-$form-$proof_index-$qty_index",
+				"ddmProofType-$form-$proof_index-$qty_index"
+		};
 		push @proof_info, $proof_index, $quantity, 1*$width, 1*$height, $type, ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service->find('category'=>'Proofs') ], $type );
-    } # end foreach
-    return @proof_info;
+	} # end foreach
+	return @proof_info;
 } # end sub load_proof_info
 
 sub get_proof_specs {
-    my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
+	my $Project = new openprint::Project($project_index);
 	my $services = $Project->services();
+	my @service_dropdown = map { $_->name(), $_->description() } openprint::Service->find(category=>'Proofs');
 
-	my $specs = openprint::service::get_specs_ref( $Project, $service_index );
+	my $specs = openprint::service::get_specs_ref($Project, $service_index);
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my %proof_indexes;
 		foreach my $key ( keys %$specs ) {
 #$openprint::log->debug("key $key");
 			if ( $key =~ /^txtProofIndex-(\d+)-(\d+)-$qty_index$/ ) {
-				push @{$proof_indexes{$1}}, $$specs{$key};
+				$proof_indexes{$1}[$$specs{$key}] = $$specs{$key};
 			} # end if
 		} # end foreach
 
@@ -559,38 +560,45 @@ sub get_proof_specs {
 				next;
 			} # end if
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index, $Project );
+			$Imposition->load($sig_specs, $qty_index, $Project);
 			my $Equipment = $Imposition->Press();
 			$Imposition->display( "For sig $form") if DEBUG;
 
-			if ( ( ! sets::isin( 1, $proof_indexes{$form} ) ) and $openprint::config{Add_Default_Layout_Proof} eq 'Y') {
-				push @{$proof_indexes{$form}}, 1;
+			if ( (!$proof_indexes{$form}[1]) and $openprint::config{Add_Default_Layout_Proof} and ($openprint::config{Add_Default_Layout_Proof} eq 'Y') ) {
+				$proof_indexes{$form}[1] = 1;
 				$openprint::log->debug("ADDING Layout Proof to $form") if DEBUG;
-				insert_layout_proof( $sig_specs, 1, $qty_index, $specs, $Imposition );
+				insert_layout_proof($sig_specs, 1, $qty_index, $specs, $Imposition);
 			} # end if
-			if ( ( ! sets::isin( 2, $proof_indexes{$form} ) ) and $openprint::config{Add_Default_Colour_Proof} eq 'Y') {
-				push @{$proof_indexes{$form}}, 2;
+			if ( (!$proof_indexes{$form}[2]) and $openprint::config{Add_Default_Colour_Proof} and ($openprint::config{Add_Default_Colour_Proof} eq 'Y') ) {
+				$proof_indexes{$form}[2] = 2;
 				$openprint::log->debug("ADDING Colour Proof to $form") if DEBUG;
-				insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $specs, $Imposition );
+				insert_colour_proof($Project, $sig_specs, 2, $qty_index, $specs, $Imposition);
 			} # end if
-			if ( ( ! sets::isin( 3, $proof_indexes{$form} )  ) and ( $$specs{RequirePressProofs} ne 'N' )  ) {
-				if ( ( $openprint::config{Add_Default_Press_Proof} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) 
-				or 
-				($_ = $Project->Company()->add_press_proofs() and $_->value() eq 'Y' ) 
-				) {
-					push @{$proof_indexes{$form}}, 3;
-					$log->debug("Adding Press Proof");
-					insert_press_proof( $Project, $sig_specs, 3, $qty_index, $specs, $Imposition );
+			if (
+					( !$proof_indexes{$form}[3] )
+					and
+					( (!$$specs{RequirePressProofs}) or ($$specs{RequirePressProofs} ne 'N') )
+				 ) {
+				if ( 
+						( $openprint::config{Add_Default_Press_Proof} and ($openprint::config{Add_Default_Press_Proof} eq 'Y') )
+						or
+						( $Equipment and ($_ = $Equipment->specification('Require Press Proof')) and ( $_ eq 'Y') ) 
+						or 
+						( ($_ = $Project->Company()->add_press_proofs()) and $_->value() and ($_->value() eq 'Y') ) 
+					 ) {
+					$proof_indexes{$form}[3] = 3;
+					$log->debug('Adding Press Proof');
+					insert_press_proof($Project, $sig_specs, 3, $qty_index, $specs, $Imposition);
 				} elsif ( DEBUG ) {
-$log->debug("Press proof not needed");
+					$log->debug('Press proof not needed');
 				} # end if
 			} elsif ( DEBUG ) {
-$log->debug("Already had press proof");
+				$log->debug('Already had press proof');
 			} # end if
 
 			@{$$variable{'Proofs-'.$form.'-'.$qty_index}} = ();
 			next if ! $proof_indexes{$form};
-			foreach my $proof_index ( sort @{$proof_indexes{$form}} ) {
+			foreach my $proof_index ( sort map { $_ ? $_ : () } @{$proof_indexes{$form}} ) {
 				my ( $quantity, $width, $height, $type ) = @$specs{
 					"txtProofQuantity-$form-$proof_index-$qty_index",
 						"txtProofWidth-$form-$proof_index-$qty_index",
@@ -598,21 +606,23 @@ $log->debug("Already had press proof");
 						"ddmProofType-$form-$proof_index-$qty_index"
 				};
 				push @{$$variable{'Proofs-'.$form.'-'.$qty_index}},
-					 $proof_index, $quantity, 1*$width, 1*$height, $type, ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service->find('category'=>'Proofs') ], $type );
-			} # end foreach
+						 $proof_index, $quantity, 1*$width, 1*$height, $type,
+						 ssi::make_drop_down(\@service_dropdown, $type);
+			} # end foreach proof
 
 		} # end foreach signature
 	} # end foreach qty_index
-    @{$$variable{SignatureGroups}} = ();
-    foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+
+	@{$$variable{SignatureGroups}} = ();
+	foreach my $signature_service_index ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref($Project, $signature_service_index);
 		push @{$$variable{SignatureGroups}}, @$sig_specs{'SignatureIndex', 'txtServiceDescription'};
 	} # end foreach signature
 
 # Now do scanning
 	if ( $$services{Scanning} ) {
 		foreach my $index ( @{$$services{Scanning}} ) {
-			my $scanning_specs = openprint::service::get_specs_ref( $Project, $index );
+			my $scanning_specs = openprint::service::get_specs_ref($Project, $index);
 			if ( $$scanning_specs{rdbRandomProof} eq 'Yes' ) {
 # add a scanning proof
 				push @{$$variable{SignatureGroups}}, $$scanning_specs{SignatureIndex}, 'Scanning Proof';
@@ -623,57 +633,47 @@ $log->debug("Already had press proof");
 
 } # end sub get_proof_specs
 
-sub save_proof_specs {
-    my ( $r, $log, $dbh, $variable, $project_index, $service_index ) = @_;
+sub save {
+	my ( $project_index, $service_index, $new_specs ) = @_;
 
-    $log->debug("In Save Proof Specs" );
+	$log->debug('In Save Proof Specs');
 
-	my $Project = new openprint::Project( $project_index );
-# First off, slap everything in, just like every other service
-	#openprint::service::save_service( $r, $log, $dbh, $project_index, $service_index );
-	my @v = variables( $project_index, $service_index, \%openprint::param );
-	my $ac = sql::start_transaction( $dbh );
-	foreach my $key (@v) {
-		if ( ! exists $openprint::param{$key} ) {
-			openprint::service::delete_service_spec( $project_index, $service_index, $key );
-		} else {
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $openprint::param{$key}, 0 );
-		} # end if
-	} # end foreach
-	sql::end_transaction( $dbh, $ac );
+	my $Project = new openprint::Project($project_index);
+	my $Service = $Project->Service($service_index);
 
-	if ( $openprint::param{RequirePressProofs} eq 'N' ) {
+	if ( $$new_specs{RequirePressProofs} and ($$new_specs{RequirePressProofs} eq 'N') ) {
 		foreach my $sig_id ( $Project->signatures() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $sig_id, 'rdbPressProof', '' );
+			openprint::service::insert_service_spec($openprint::log, $openprint::dbh, $project_index, $sig_id, 'rdbPressProof', '');
 		}
 	}
 
 	my $redirect = 0;
 
 # Now check to see if we need to add more proofs, and redirect back
-	foreach my $key ( keys %openprint::param ) {
+	foreach my $key ( keys %{$new_specs} ) {
 		if ( $key =~ /rdbAdditional-(\d*)-(\d*)/ ) {
-			if ( $openprint::param{$key} eq 'Yes' ) {
+			if ( $$new_specs{$key} eq 'Yes' ) {
 				my $form = $1;
 
-				my $ac = sql::start_transaction( $dbh );
+				my $ac = sql::start_transaction($openprint::dbh);
 				$_ = 'SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=? AND strValue=?';
-				my ( $signature_service_index ) = sql::execute( $log, $dbh, $_, $project_index, 'SignatureIndex',$form );
+				my ( $signature_service_index ) = sql::execute(undef, undef, $_, $project_index, 'SignatureIndex', $form);
 
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
-					$_ = 'SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName LIKE ?';
-					my ( $proof_index ) = sql::execute( $log, $dbh, $_, $project_index, $service_index, "txtProofIndex-$form-%-$qty_index" );
+					my ( $proof_index ) = sql::execute(undef, undef,
+							'SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName LIKE ?',
+							$project_index, $service_index, "txtProofIndex-$form-%-$qty_index");
 					$proof_index += 1;
 					$proof_index = 4 if $proof_index < 4;
 
-					openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, "txtProofQuantity-$form-$proof_index-$qty_index", 1 );
-					openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, "txtProofWidth-$form-$proof_index-$qty_index", '' );
-					openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, "txtProofHeight-$form-$proof_index-$qty_index", '' );
-					openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, "ddmProofType-$form-$proof_index-$qty_index", '' );
-					openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, "txtProofIndex-$form-$proof_index-$qty_index", $proof_index );
+					openprint::service::insert_service_spec($openprint::log, $openprint::dbh, $project_index, $service_index, "txtProofQuantity-$form-$proof_index-$qty_index", 1 );
+					openprint::service::insert_service_spec($openprint::log, $openprint::dbh, $project_index, $service_index, "txtProofWidth-$form-$proof_index-$qty_index", '' );
+					openprint::service::insert_service_spec($openprint::log, $openprint::dbh, $project_index, $service_index, "txtProofHeight-$form-$proof_index-$qty_index", '' );
+					openprint::service::insert_service_spec($openprint::log, $openprint::dbh, $project_index, $service_index, "ddmProofType-$form-$proof_index-$qty_index", '' );
+					openprint::service::insert_service_spec($openprint::log, $openprint::dbh, $project_index, $service_index, "txtProofIndex-$form-$proof_index-$qty_index", $proof_index );
 				} # end foreach
 
-				sql::end_transaction( $dbh, $ac );
+				sql::end_transaction($openprint::dbh, $ac);
 
 				$redirect = 1;
 			} # end if
@@ -681,14 +681,13 @@ sub save_proof_specs {
 	} # end foreach
 
 	if ( $redirect ) {
-		( $_ ) = sql::execute( $log,  $dbh, 'SELECT strDetailedURL FROM Service_Types WHERE name=?', 'Proofs');
-		$$variable{Redirect} = '/main/project/'.$_;
+		$openprint::variable{Redirect} = '/main/project/'.$Service->ServiceType()->url();
 	} else {
-		if ($r->param('txtPrice1') > 0 || $r->param('txtPrice2') > 0 || $r->param('txtPrice3') > 0 ) {
-			sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index ], 'strStatus', 'calculated');
+		if ( $$new_specs{'txtPrice1'} > 0 || $$new_specs{'txtPrice2'} > 0 || $$new_specs{'txtPrice3'} > 0 ) {
+			$Service->save({status=>'calculated'});
 		} # end if
 	} # end if
-} # end sub save_proof_specs
+} # end sub save
 
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
@@ -818,7 +817,6 @@ sub breakupsummary {
 	return '';
 } # end sub breakupsummary
 
-
 sub project_summary {
 	my ( $Project, $service_id, $specs ) = @_;
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
@@ -840,25 +838,6 @@ sub project_summary {
 	} # end foreach signature
 	return ' ' . join(',', keys %types) . '<br/>';
 } # end sub project_summary
-
-sub get_next_proof_index {
-	my ( $sig_specs ) = @_;
-
-	my @proof_indexes;
-	my $form = $$sig_specs{SignatureIndex};
-	if ( ( ! sets::isin( 1, \@proof_indexes ) ) and $openprint::config{Add_Default_Layout_Proof} eq 'Y' ) {
-		push @proof_indexes, 1;
-	} # end if
-	if ( ( ! sets::isin( 2, \@proof_indexes ) ) and $openprint::config{Add_Default_Colour_Proof} eq 'Y' ) {
-		push @proof_indexes, 2;
-	} # end if
-	if ( ( ! sets::isin( 3, \@proof_indexes ) ) and 
-				( $openprint::config{Add_Default_Press_Proof} eq 'Y' ) 
-	   ) {
-		push @proof_indexes, 3;
-	} # end if
-	return sets::max( \@proof_indexes ) + 1;
-}
 
 sub has_overrides {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
