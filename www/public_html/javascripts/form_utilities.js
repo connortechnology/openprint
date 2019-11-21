@@ -329,6 +329,7 @@ function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
 
 function filterDDM( filter, ddm ) {
 	if ( ! filter.value.length ) {
+		// If no filter content, restore default selected
 		if ( ! ddm.defaultSelected ) {
 			for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
 				if ( ddm.options[index].defaultSelected ) {
@@ -340,6 +341,7 @@ function filterDDM( filter, ddm ) {
 		ddm.selectedIndex = ddm.defaultSelected;
 		return;
 	} // end if
+
 	var old_selected_index = ddm.selectedIndex;
 	if ( old_selected_index <= 0 )
 		old_selected_index = 1;

@@ -36,6 +36,7 @@ use constant DEBUG_NEEDS => 0;
 
 my @equipment;
 my @stitchers;
+my %Services;
 
 my @variables = (
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
@@ -411,6 +412,12 @@ sub has_overrides {
 	return @v;
 
 } # end sub has_overrides
+
+sub init {
+	my ( $Project, $calc_hash ) = @_;
+	$Services{FoldingFoldMakeReady} = openprint::Service->find_one(name=>'FoldingFoldMakeReady');
+	$Services{FoldingAngleMakeReady} = openprint::Service->find_one(name=>'FoldingAngleMakeReady');
+}
 
 # Finds the different ways to run the job, and returns different impositions
 sub impositions {
@@ -870,8 +877,8 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 	$$SignatureImposition{cut_impositions} = \@All_Impositions;
 
 #FIXME
-	my $FoldingFoldMakeReadyService = openprint::Service->find_one(name=>'FoldingFoldMakeReady');
-	my $FoldingAngleMakeReadyService = openprint::Service->find_one(name=>'FoldingAngleMakeReady');
+	my $FoldingFoldMakeReadyService = $Services{FoldingFoldMakeReady};
+	my $FoldingAngleMakeReadyService = $Services{FoldingAngleMakeReady};
 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
@@ -1865,6 +1872,7 @@ sub calc {
 		$$calc_hash{PerforatingSpecs} = openprint::service::get_specs_ref( $Project, $$services{Perforating}[0] );
 	} # end if
 
+	init($Project, $calc_hash);
 	load_equipment( $Project );
 	$openprint::log->debug("Have Equipment " . join(',', map { $_->strid() } @equipment ) ) if DEBUG;
 

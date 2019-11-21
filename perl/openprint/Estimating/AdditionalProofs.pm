@@ -779,23 +779,6 @@ sub project_summary {
 	return ' ' . join(',', keys %types) . '<br/>';
 } # end sub project_summary
 
-sub get_next_proof_index {
-	my ( $sig_specs ) = @_;
-
-	my @proof_indexes;
-	my $signature_index = $$sig_specs{'SignatureIndex'};
-	if ( ( ! sets::isin( 1, \@proof_indexes ) ) and $openprint::config{'Add_Default_Layout_Proof'} eq 'Y' ) {
-		push @proof_indexes, 1;
-	} # end if
-	if ( ( ! sets::isin( 2, \@proof_indexes ) ) and $openprint::config{'Add_Default_Colour_Proof'} eq 'Y' ) {
-		push @proof_indexes, 2;
-	} # end if
-	if ( ( ! sets::isin( 3, \@proof_indexes ) ) and $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) {
-		push @proof_indexes, 3;
-	} # end if
-	return sets::max( \@proof_indexes ) + 1;
-}
-
 sub has_overrides {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;

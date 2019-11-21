@@ -43,11 +43,11 @@ my @variables = (
     'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
     'txtFinishedCalliper',
     );
+
 my $CuttingService;
 my $CuttingMakeReady;
 my $PileHandling;
 my $BladeCleaning;
-
 
 sub variables {
   my @v = @variables;
@@ -246,9 +246,12 @@ sub load_equipment {
 
 sub init {
   my ( $Project, $calc_hash ) = @_;
-
+	# These could be reduced to 1 db call
   $CuttingService = openprint::Service->find_one(name=>'Cutting');
   $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady');
+  $PileHandling = openprint::Service->find_one(name=>'CuttingPileHandling');
+  $BladeCleaning = openprint::Service->find_one(name=>'Blade Cleaning');
+  load_equipment($Project);
 }
 
 sub signature_calc_stock_cutting {
@@ -269,22 +272,16 @@ sub signature_calc_stock_cutting {
     $openprint::log->debug("Overriding Equipment! " . $$specs{"ddmStockCutEquipment-$qty_index"}) if DEBUG;
     @my_equipment = ( new openprint::Equipment( $$specs{"ddmStockCutEquipment-$qty_index"} ) );
   } else {
-    load_equipment( $Project ) if ! @equipment;
     @my_equipment = @equipment;
   } # end if
 
-  if ( ! @my_equipment ) {
+  if ( !@my_equipment ) {
     $results{alert} = 'We have no cutting equipment.<br/>';
     $results{Status} = 'uncalculated';
     return %results;
   } # end if
 
   my $services = $Project->services();
-
-  $CuttingService = openprint::Service->find_one(name=>'Cutting') if ! $CuttingService;
-  $PileHandling = openprint::Service->find_one(name=>'CuttingPileHandling') if ! $PileHandling;
-  $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady') if ! $CuttingMakeReady;
-  $BladeCleaning = openprint::Service->find_one(name=>'Blade Cleaning') if ! $BladeCleaning;
 
   my $total = 0;
   my $total_mprice = 0;
@@ -563,11 +560,6 @@ sub signature_calc {
 
   my $Press = $Imposition->Press();
   my $output_format = $Press->specification('OutputFormat');
-
-  $CuttingService = openprint::Service->find_one(name=>'Cutting') if ! $CuttingService;
-  $PileHandling = openprint::Service->find_one(name=>'CuttingPileHandling') if ! $PileHandling;
-  $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady') if ! $CuttingMakeReady;
-  $BladeCleaning = openprint::Service->find_one(name=>'Blade Cleaning') if ! $BladeCleaning;
 
   my $I = $Imposition->copy();
   my $trim_before_folding = 0;
@@ -980,7 +972,7 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
     my $mprice = 0;
     my $price;
 
-		my %ServicePrice = $CuttingService->get_price( undef, $Equipment );
+		my %ServicePrice = $CuttingService->get_price(undef, $Equipment);
 		if ( $cuts ) {
 			if ( %ServicePrice ) {
 				if ( $ServicePrice{units} eq 'per cut' ) {
@@ -1247,6 +1239,7 @@ sub calc {
 
   my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] ) if $$services{Folding} and @{$$services{Folding}};
   my $calc_hash = {};
+	init($Project);
 
   my @signatures = $Project->signatures({sort=>1});
   if ( ! @signatures ) {
