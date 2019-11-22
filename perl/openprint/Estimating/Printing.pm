@@ -1062,11 +1062,12 @@ sub get_Stocks {
 	} else {
 		$$v{txtStockGSM} = [ sets::union( 'output', @{$$v{txtStockGSM}} ) ];
 
-		my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} )) if $openprint::config{$Project->Type()->name().'StockOptions'};;
+		my $project_type_name = $Project->Type()->name();
+		my @StockOptions = misc::trim(split(',', $openprint::config{$project_type_name.'StockOptions'} )) if $openprint::config{$project_type_name.'StockOptions'};
 		@StockOptions = misc::trim(split (',', $openprint::config{StockOptions} )) if ( ! @StockOptions ) and $openprint::config{StockOptions};
 		@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
-		my @RequiredStockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'RequiredStockOptions'} )) if $openprint::config{$Project->Type()->name().'RequiredStockOptions'};
+		my @RequiredStockOptions = misc::trim(split (',', $openprint::config{$project_type_name.'RequiredStockOptions'} )) if $openprint::config{$project_type_name.'RequiredStockOptions'};
 		@RequiredStockOptions = misc::trim(split (',', $openprint::config{RequiredStockOptions} )) if ( ! @RequiredStockOptions ) and $openprint::config{RequiredStockOptions};
 		@RequiredStockOptions = @StockOptions if ! @RequiredStockOptions;
 
@@ -1091,8 +1092,8 @@ sub get_Stocks {
 				( exists $$specs{ddmStockWidth} ? ( width=>$$specs{ddmStockWidth} ) : () ),
 				( exists $$specs{ddmStockHeight} ? ( height=>$$specs{ddmStockHeight} ) : () ),
 				'project_type_id any'=>$Project->type_id(),
+				( ( $openprint::usergroup::groups_cache{'Roll Estimating'} and ! $openprint::User->in_Group('Roll Estimating') ) ? ( type=>'Sheet' ) : () ),
 				);
-
 		if ( !@Papers ) {
 			$log->warn('no papers');
 			$$specs{alert} .= 'Unable to find any stocks matching your specifications.<br/>';
