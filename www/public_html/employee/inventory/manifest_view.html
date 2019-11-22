@@ -40,6 +40,8 @@
 			my $html = '';
 			my $Currency = $$variable{Manifest}->Currency();
 			$Currency = $openprint::Currency if ! $Currency->id();
+
+			my $grand_value_total = 0;
 			
 			foreach my $Type ( $$variable{Manifest}->Types() ) {
 				my $Paper = $Type->Paper();
@@ -97,14 +99,15 @@
 			if ( $Type->type() ne 'Sheet' ) {
 				$table_header .= '<th class="qty_feet">Feet</th>';
 			} # end if
-			if ( $$variable{Manifest}->can_see_pricing() ) {
-				$table_header .= '<th class="Price">Value</th>';
-			}
 			$table_header .= '
 				<th class="in_stock">In Stock</th>
 				<th class="last_seen">Last Seen</th>
 				<th class="Location">Location</th>
-			</tr>';
+';
+			if ( $$variable{Manifest}->can_see_pricing() ) {
+				$table_header .= '<th class="Price">Value</th>';
+			}
+$html .= '</tr>';
 				my $total = 0;
 				my $value_total = 0;
 				my @Contents = $Type->Contents();
@@ -164,11 +167,6 @@ $log->error("No contents") if ! @Contents;
 								( ( $Paper->width() and $Paper->wpsi() ) ? ( Number::Format::format_number( Math::Round::nearest( 1, (($lbs/$Paper->wpsi())/$Paper->width())/12 ) ) ) : () )
 								. '</td>';
 					} # end if
-					if ( $$variable{Manifest}->can_see_pricing() ) {
-						my $value = $lbs*$Type->cost()/100;
-						$html .= '<td class="Price">'.$Currency->format($value).'</td>';
-						$value_total += $value;
-					}
 					if ( $SkidContents and @{$SkidContents} ) {
 						$html .= '<td class="in_stock">'. Number::Format::format_number( Math::Round::nearest( 1, $$SkidContents[0]->quantity() ) ) . ' '.$Paper->units().'</td>';
 						$html .= '<td class="last_seen">'. $$SkidContents[0]->Skid()->last_seen_days().' days</td>';
@@ -176,6 +174,11 @@ $log->error("No contents") if ! @Contents;
 						$html .= '<td colspan="2">&nbsp;</a>';
 					} # end if
 					$html .= '<td class="Location">'.$C->Location()->name().'</td>';
+					if ( $$variable{Manifest}->can_see_pricing() ) {
+						my $value = $lbs*$Type->cost()/100;
+						$html .= '<td class="Price">'.$Currency->format($value).'</td>';
+						$value_total += $value;
+					}
 					$html .= '</tr>';
 					if ( $error ) {
 						$html .= '<tr id="tr-'.$$C{id}.'-error" class="error"><td colspan="'.$columns.'">'.$error.'</td></tr>';
@@ -198,15 +201,24 @@ $log->error("No contents") if ! @Contents;
 						( ( $Paper->wpsi() and $Paper->width() ) ? Number::Format::format_number( (($total/$Paper->wpsi())/$Paper->width())/12 ) : 0 ),
 						);
 				} #end if
+				$html .= '<td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '3' : '2' ). '">&nbsp;</td>';
 				if ( $$variable{Manifest}->can_see_pricing() ) {
 					$html .= '<td class="Price">'.$Currency->format($value_total).'</td>';
+					$grand_value_total += $value_total;
 				}
-				$html .= '<td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '3' : '2' ). '">&nbsp;</td></tr>';
+				$html .= '</tr>';
 				if ( scalar @Contents != $$Type{item_count} ) {
 					$html .= '<tr><td colspan="'.$columns.'" class="warning">Contents and expected content count do not match!</td></tr>';
 				} # end if
 				$html .= '</table>';
 			} # end foreach Type
+			if ( $$variable{Manifest}->can_see_pricing() ) {
+				$html .= '<br/><table>
+<tr class="totals"><td>Manifest total</td><td class="Price">'.$Currency->format($grand_value_total).'</td>
+</tr>
+</table>';
+			}
+
 			return $html;
 		) ?>
 		</div><!--Type-->
