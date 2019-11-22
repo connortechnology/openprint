@@ -546,7 +546,7 @@ sub internal_calc {
 	# We are doing this in an eval because we don't actually want to die.
 	eval 'require openprint::Estimating::'.$service_type;
 	$log->error("Error in requiring $package $@") if $@;
-	my @variables = eval('openprint::Estimating::'.$service_type.'::variables($project_index, $service_index, \%specs)');
+	my @variables = eval('openprint::Estimating::'.$service_type.'::variables($project_index, $service_index, $specs, \%specs)');
 $log->debug("Variables: @variables");
 
 	if ( Debug ) {

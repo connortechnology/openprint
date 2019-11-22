@@ -35,7 +35,7 @@ my @variables = (
 		);
 
 sub variables {
-	my ( $p_id, $s_id, $specs ) = @_;
+	my ( $p_id, $s_id, $old_specs, $specs ) = @_;
 
 	my $Project = new openprint::Project( $p_id );
 	my @v = @variables;
@@ -575,7 +575,7 @@ sub save_proof_specs {
 
 # First off, slap everything in, just like every other service
 	#openprint::service::save_service( $r, $log, $dbh, $project_index, $service_index );
-	my @v = variables( $project_index, $service_index, \%openprint::param );
+	my @v = variables( $project_index, $service_index, openprint::service::get_specs_ref($Project, $service_idex), \%openprint::param );
 	my $ac = sql::start_transaction( $dbh );
 	foreach my $key (@v) {
 		if ( ! exists $openprint::param{$key} ) {

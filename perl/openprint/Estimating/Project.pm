@@ -567,7 +567,7 @@ sub calc {
   } else { # ChannelLetters
     eval 'require openprint::Estimating::'.$ProjectType->type();
     $log->error("Error in requiring $$ProjectType{type} $@") if $@;
-    my @variables = eval('openprint::Estimating::'.$ProjectType->type().'::variables( $project_index, $service_index, $specs )');
+    my @variables = eval('openprint::Estimating::'.$ProjectType->type().'::variables($project_index, $service_index, $project_specs, $specs)');
     $log->error("Error in requiring $$ProjectType{type} $@") if $@;
     $log->debug("Vars for $$ProjectType{type} : @variables");
 

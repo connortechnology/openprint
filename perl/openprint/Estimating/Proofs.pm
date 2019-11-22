@@ -38,7 +38,7 @@ my @variables = (
 my %ProofServices;
 
 sub variables {
-	my ( $p_id, $s_id, $specs ) = @_;
+	my ( $p_id, $s_id, $old_specs, $specs ) = @_;
 
 	my $Project = new openprint::Project( $p_id );
 	my @v = @variables;
@@ -50,18 +50,19 @@ sub variables {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $form = $$sig_specs{SignatureIndex};
 		foreach my $key ( keys %{$specs} ) {
-			if ( $key =~ /^txtProofIndex-$form-(\d+)-(\d+)$/ ) {
+			if ( $key =~ /^txtProofIndex\-$form\-(\d+)\-(\d+)$/ ) {
 				my ( $proof_index, $qty_index ) = ( $1, $2 );
 
-				push @v,	(
-						"txtProofWidth-$form-$proof_index-$qty_index",
-						"txtProofHeight-$form-$proof_index-$qty_index", 
-						"txtProofQuantity-$form-$proof_index-$qty_index",
-						"ddmProofType-$form-$proof_index-$qty_index",
-						"txtProofUnitPrice-$form-$proof_index-$qty_index",
-						"txtProofIndex-$form-$proof_index-$qty_index",
-						"chkOverride-$form-$proof_index-$qty_index",
-						);
+				push @v, map { join('-', $_, $form, $proof_index, $qty_index) }
+				(
+				 'txtProofWidth',
+				 'txtProofHeight',
+				 'txtProofQuantity',
+				 'ddmProofType',
+				 'txtProofUnitPrice',
+				 'txtProofIndex',
+				 'chkOverride',
+				);
 			} # end if
 		} # end foreach key
 	} # end foreach signature
@@ -323,6 +324,7 @@ sub signature_calc {
 		$$specs{join('-','ServiceUnits',$form,$proof_index,$qty_index)} = $price{units};
 
 		$Results{Breakdown} .= "Proof: $proof_index: Quantity: $quantity, Type: $type ";
+		$price{units} = 'each' if ! $price{units};
 		if ( $price{units} eq 'per square inch' ) {
 			$Results{status} = 'uncalculated' if ! $$specs{"txtProofWidth-$form-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$form-$proof_index-$qty_index"};
 			$price{Total} = Math::Round::nearest( 0.01,
@@ -407,7 +409,7 @@ sub insert_press_proof {
 	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
 	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
 	my $quantity = 0;
-	if ( $$specs{RequirePressProofs} ne 'N' ) {
+	if ( $$specs{RequirePressProofs} and ($$specs{RequirePressProofs} ne 'N') ) {
 		if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Web','Sheet Work','Perfecting'] ) ) {
 			$quantity += 1 if @{$$sig_specs{SideOneColours}};
 			$quantity += 1 if @{$$sig_specs{SideTwoColours}};

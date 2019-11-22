@@ -80,7 +80,7 @@ my %font_sizes = (
 );
 
 sub variables {
-	my ( $p_id, $s_id, $specs ) = @_;
+	my ( $p_id, $s_id, $old_specs, $specs ) = @_;
 	my @v = @variables;
 	#my $Project = new openprint::Project( $p_id );
 	#foreach my $ss_id ( $Project->signatures() ) {
