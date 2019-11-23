@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 use strict;
-#use warnings;
+use warnings;
 
 package openprint::Estimating::Proofs;
 use POSIX qw( ceil );
@@ -26,8 +26,10 @@ use vars qw( $log $dbh );
 require sql;
 require openprint::service;
 require openprint::Estimating::Printing;
+use Data::Dumper;
 
-use constant DEBUG => 0;
+
+use constant DEBUG => 1;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -111,6 +113,9 @@ sub get_indexes {
 			push @{$$types{$1}}, $$specs{"ddmProofType-$1-$2-$qty_index"};
 		} # end if
 	} # end foreach
+if ( DEBUG ) {
+$openprint::log->debug(Data::Dumper::Dumper($indexes));
+}
 } # end sub get_indexes
 
 sub calc {
@@ -229,7 +234,7 @@ sub calc {
 sub signature_calc {
 	my ( $Project, $specs, $sig_specs, $qty_index, $indexes, $totals, $Equipment, $Imposition ) = @_;
 
-	my %Results;
+	my %Results = ( Breakdown => '' );
 	#return %Results if ! $$sig_specs{'txtImposition'.$qty_index};
 
 	my $form = $$sig_specs{SignatureIndex};
@@ -409,7 +414,7 @@ sub insert_press_proof {
 	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
 	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
 	my $quantity = 0;
-	if ( $$specs{RequirePressProofs} and ($$specs{RequirePressProofs} ne 'N') ) {
+	if ( (!$$specs{RequirePressProofs}) or ($$specs{RequirePressProofs} ne 'N') ) {
 		if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Web','Sheet Work','Perfecting'] ) ) {
 			$quantity += 1 if @{$$sig_specs{SideOneColours}};
 			$quantity += 1 if @{$$sig_specs{SideTwoColours}};
@@ -484,12 +489,12 @@ sub insert_layout_proof {
 	} # end if
 
 	my $quantity = 0;
-	my ( $default_proof_type ) = $Equipment->specification( 'Default Layout Proof' ) if $Equipment;
+	my ( $default_proof_type ) = $Equipment->specification('Default Layout Proof') if $Equipment;
 	if ( ! $default_proof_type ) {
-		$openprint::log->debug("No Default Layout Proof for " . $Equipment->strid() ) if DEBUG and $Equipment;
+		$openprint::log->debug('No Default Layout Proof for ' . $Equipment->strid() ) if DEBUG and $Equipment;
 	} else {
-		$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
-		$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+		$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideOne')] if ! $$sig_specs{SideOneColours};
+		$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideTwo')] if ! $$sig_specs{SideTwoColours};
 
 		if ( sets::isin( $$Imposition{runstyle}, ['Web','Sheet Work', 'Perfecting'] ) ) {
 			$quantity += 1 if @{$$sig_specs{SideOneColours}};
@@ -601,12 +606,10 @@ sub get_proof_specs {
 			@{$$variable{'Proofs-'.$form.'-'.$qty_index}} = ();
 			next if ! $proof_indexes{$form};
 			foreach my $proof_index ( sort map { $_ ? $_ : () } @{$proof_indexes{$form}} ) {
-				my ( $quantity, $width, $height, $type ) = @$specs{
-					"txtProofQuantity-$form-$proof_index-$qty_index",
-						"txtProofWidth-$form-$proof_index-$qty_index",
-						"txtProofHeight-$form-$proof_index-$qty_index",
-						"ddmProofType-$form-$proof_index-$qty_index"
+				my ( $quantity, $width, $height, $type ) = @$specs{map{join('-',$_,$form,$proof_index,$qty_index)}
+					('txtProofQuantity', 'txtProofWidth', 'txtProofHeight', 'ddmProofType')
 				};
+#$openprint::log->debug("Have $quantity $width x $height $type for form $form qty $qty_index");
 				push @{$$variable{'Proofs-'.$form.'-'.$qty_index}},
 						 $proof_index, $quantity, 1*$width, 1*$height, $type,
 						 ssi::make_drop_down(\@service_dropdown, $type);
