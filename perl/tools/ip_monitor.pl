@@ -47,9 +47,9 @@ foreach my $default ( keys %defaults ) {
 	$$opts{$default} = $defaults{$default} if ! $$opts{$default};
 } # end foreach
 
-configuration::init( );
-configuration::from_file( $$opts{config} );
-configuration::merge( $opts );
+configuration::init();
+configuration::from_file($$opts{config});
+configuration::merge($opts);
 
 foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp_server' ) {
 	if ( ! $openprint::config{$param} ) {
@@ -100,6 +100,11 @@ if ( ! $dbh ) {
 	$log->error( 'Error opening db. Sleeping for 5.' );
 	die;
 } # end if ! dbh
+
+configuration::init();
+configuration::from_file($$opts{config});
+configuration::merge($opts);
+
 if ( $config{user_id} ) {
 	$openprint::session{user_id} = $config{user_id};
 	$openprint::User = new openprint::User($openprint::session{user_id});
