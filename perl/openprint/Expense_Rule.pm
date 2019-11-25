@@ -25,6 +25,10 @@ $serial = 'expense_rules_id_seq';
   category_id =>  undef,
 );
 
+sub deleted {
+  return 0;
+}
+
 sub action { 
   my $self = shift;
 
