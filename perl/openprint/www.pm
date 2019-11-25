@@ -435,7 +435,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 				}
 			} # end if
 		} # end if
-	} elsif ( $first and sets::isin( $first, [ 'content', 'account' ] ) ) { # main
+	} elsif ( $first and sets::isin($first, ['content', 'account']) ) {
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		if ( $proc ) {
 			my $module = join('_',@path);
@@ -451,7 +451,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 		if ( $second eq 'project' ) {
 			require openprint::print;
 			require openprint::print_project;
-			if ( ( defined $third ) or sets::isin( $filename , ['Paper.html' ,'Bundling.html','HStands.html' ] ) ) {
+			if ( ( defined $third ) or sets::isin($filename, ['Paper.html','Bundling.html','HStands.html']) ) {
 				if ( $param{ServiceIndex} and ! $variable{ServiceIndex} ) {
 					my @service_ids = split(',', $param{ServiceIndex} );
 					$variable{ServiceIndex} = $service_ids[0];
@@ -465,49 +465,42 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 				my $project_index = $variable{ProjectIndex};
 				my $service_index = $variable{ServiceIndex};
 
-				# Things like UPS SHipping might not actually have a service
+				# Things like UPS Shipping might not actually have a service
 				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
 					my $Service = $variable{Service} = $variable{Project}->Service( $service_index );
-$log->debug("Service: " . $Service->to_string() );
-					if ( ! $Service->service_id() ) {
-						$variable{error} .= "Unable to load data for service. Perhaps it was removed.<br/>";
+					if ( !$Service->service_id() ) {
+						$variable{error} .= 'Unable to load data for service. Perhaps it was removed.<br/>';
 						$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 					} else {
-
 						my $specs = $Service->specs();
 						@variable{keys %$specs} = values %$specs;
 						$variable{ServiceType} = $Service->ServiceType();
 						@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
-						$log->debug("ServiceType: $variable{ServiceTypeType}");
 					} # end if
-				} # end if
+				} # end if project_id and service_id
 				$variable{ProjectType} = $variable{Project}->Type();
-				# THis couud happen if the ServiceSpecs clobbered it
+				# This could happen if the ServiceSpecs clobbered it
 				if ( ! $variable{ServiceIndex} ) {
 					$variable{ServiceIndex} = $service_index;
 				} # end if
 
 				if ( $third eq 'prin' ) {
 					$log->debug("** START OF MAIN:PROJ:PRIN * ($project_index) ($service_index)");
-					if ( $filename eq 'paper.html' ) {
-						require openprint::Paper;
-						my $paperService = new openprint::Paper( );
-						$paperService->display( $log, $dbh, \%variable, $project_index, $service_index );
-					} elsif ( $filename eq 'multipage_signatures.html' ) {
+					if ( $filename eq 'multipage_signatures.html' ) {
 						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
 					} elsif ( $filename eq 'prin_multi.html' ) {
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
 					} elsif ( $filename eq 'ScratchPads.html' ) {
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
-					} elsif ( $filename =~ /^(_.*)\.(html|json)$/ ) {
+					} elsif ( $filename =~ /^(.*)\.(html|json)$/ ) {
 						my $proc = $1;
-						my $module = join('_',@path);
+						my $module = join('_', @path);
 						require 'openprint/'.$module.'.pm';
 						if ( my $function = ('openprint::'.$module)->can($proc) ) {
 							$function->($r, $log, $dbh, \%variable );
 						} else {
-							$log->error( "Eval error of require $module :: $proc, Reason: " );
+							$log->error("Eval error of require $module :: $proc, Reason: ");
 						}
 						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
 					} else {

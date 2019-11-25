@@ -1,7 +1,7 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/printing.js) ?>"></script>
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js) ?>"></script>
-<script type="text/javascript" src="<?hash_link(/javascripts/proj/paper.js) ?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link(/javascripts/printing.js) ?>"></script>
+<script src="<?hash_link(/javascripts/service.js) ?>"></script>
+<script src="<?hash_link(/javascripts/proj/paper.js) ?>"></script>
+<script>
 
 var quantities=new Array();
 <?QUANTITIES?>
@@ -23,7 +23,7 @@ function calc( formName, force ) {
 <? if ( $$variable{Group} == 1 ) ?>
 			<div class="leftColumn">
 <? endif ( $$variable{Group} == 1 ) ?>
-				<p><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
+				<p><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>"/></p>
 				<p class="dimensions">
 					<label>Spread dimensions</label>
 					<? echo (

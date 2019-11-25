@@ -234,9 +234,9 @@ sub save {
 	}
 #$debug = 0;
 
-	my $table = eval '$'.$type.'::table';
-	my $fields = eval '\%'.$type.'::fields';
-	my $debug = eval '$'.$type.'::debug';
+	my $table = eval('$'.$type.'::table');
+	my $fields = eval('\%'.$type.'::fields');
+	my $debug = eval('$'.$type.'::debug');
 	$debug = DEBUG_ALL if ! $debug;
 
   # copy all the sql backed fields, as there might be other things in the object.
@@ -258,7 +258,7 @@ sub save {
 	my $ac = sql::start_transaction( $local_dbh );
 	if ( ! $serial ) {
 		my $insert = $force_insert;
-		my %serial = eval '%'.$type.'::serial';
+		my %serial = eval('%'.$type.'::serial');
 		if ( ! %serial ) {
 $log->debug("No serial") if $debug;
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
@@ -373,7 +373,7 @@ $log->debug("No serial") if $debug;
 				$command =~ s/\?/\%s/g;
 				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, @sql{@$fields{@identified_by}} ) ).'):' . $error) if $log;
 				$local_dbh->rollback();
-				sql::end_transaction( $local_dbh, $ac );
+				sql::end_transaction($local_dbh, $ac);
 				return $error;
 			} # end if
 			if ( $debug or DEBUG_ALL ) {
@@ -384,17 +384,14 @@ $log->debug("No serial") if $debug;
 	} # end if
 	sql::end_transaction( $local_dbh, $ac );
 	$self->load();
-#$log->debug("Got here");
 	if ( $$fields{id} ) {
 		if ( ! $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} ) {
-$log->debug("Setting cached object to $self : " . $self->to_string());
+$log->debug("Setting cached object to $self : " . $self->to_string()) if $debug or DEBUG_ALL;
 			$openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} = $self;
 		} # end if
 	#delete $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}};
 	} # end if
-#$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
-#$log->debug("after clear cache");
 	return '';
 } # end sub save
 
@@ -498,7 +495,7 @@ sub set {
 		my ( $caller, undef, $line ) = caller;
 		$log->error("No type in Object::set. self:$self from  $caller:$line");
 	}
-	my %fields = eval ('%'.$type.'::fields');
+	my %fields = eval('%'.$type.'::fields');
 	if ( ! %fields ) {
 		$log->warn('Object::set called on an object with no fields');
 	} # end if

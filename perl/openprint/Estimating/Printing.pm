@@ -299,6 +299,7 @@ my %variables = (
 	txtPlateQuantity1 => ['save','output'], txtPlateQuantity2 => ['save','output'], txtPlateQuantity3 => ['save','output'], 
 	BlankPlateQuantity1 => ['save','output'], BlankPlateQuantity2 => ['save','output'], BlankPlateQuantity3 => ['save','output'], 
 	txtPlateChangeQuantity1 => ['save'], txtPlateChangeQuantity2 => ['save'], txtPlateChangeQuantity3 => ['save'], 
+	txtPlateChangeType1 => ['save'], txtPlateChangeType2 => ['save'], txtPlateChangeType3 => ['save'], 
 #
 	PerPlateCost1 => ['save','output'], PerPlateCost2 => ['save','output'], PerPlateCost3 => ['save','output'],
 	PlateTotalCost1 => ['save','output'], PlateTotalCost2	=> ['save','output'], PlateTotalCost3 => ['save','output'],
@@ -720,7 +721,8 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 		$project{NeedScoring} = 0;
 		$project{NeedFolding} = 0;
 	} # end if
-	openprint::Estimating::Cutting::init( $Project, \%project );
+	openprint::Estimating::Cutting::init($Project, \%project);
+	openprint::Estimating::Folding::init($Project, \%project) if $project{NeedFolding};
 	$project{NeedUVCoating} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
 	$project{NeedAqueous} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
 	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
@@ -1064,11 +1066,12 @@ sub get_Stocks {
 	} else {
 		$$v{txtStockGSM} = [ sets::union( 'output', @{$$v{txtStockGSM}} ) ];
 
-		my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} )) if $openprint::config{$Project->Type()->name().'StockOptions'};;
+		my $project_type_name = $Project->Type()->name();
+		my @StockOptions = misc::trim(split(',', $openprint::config{$project_type_name.'StockOptions'} )) if $openprint::config{$project_type_name.'StockOptions'};
 		@StockOptions = misc::trim(split (',', $openprint::config{StockOptions} )) if ( ! @StockOptions ) and $openprint::config{StockOptions};
 		@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
-		my @RequiredStockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'RequiredStockOptions'} )) if $openprint::config{$Project->Type()->name().'RequiredStockOptions'};
+		my @RequiredStockOptions = misc::trim(split (',', $openprint::config{$project_type_name.'RequiredStockOptions'} )) if $openprint::config{$project_type_name.'RequiredStockOptions'};
 		@RequiredStockOptions = misc::trim(split (',', $openprint::config{RequiredStockOptions} )) if ( ! @RequiredStockOptions ) and $openprint::config{RequiredStockOptions};
 		@RequiredStockOptions = @StockOptions if ! @RequiredStockOptions;
 
@@ -1093,8 +1096,8 @@ sub get_Stocks {
 				( exists $$specs{ddmStockWidth} ? ( width=>$$specs{ddmStockWidth} ) : () ),
 				( exists $$specs{ddmStockHeight} ? ( height=>$$specs{ddmStockHeight} ) : () ),
 				'project_type_id any'=>$Project->type_id(),
+				( ( $openprint::usergroup::groups_cache{'Roll Estimating'} and ! $openprint::User->in_Group('Roll Estimating') ) ? ( type=>'Sheet' ) : () ),
 				);
-
 		if ( !@Papers ) {
 			$log->warn('no papers');
 			$$specs{alert} .= 'Unable to find any stocks matching your specifications.<br/>';
@@ -4570,7 +4573,10 @@ $log->debug("$k => $washed_colours");
 							}
 
 							if ( ( int($$sig_price{'Comparison Cost'}) == $last_sig_price ) and ( 
-		 ( ! $sig_specs{'txtPlateChangeQuantity'.$qty_index} and ! $$new_specs{'txtPlateChangeQuantity'.$qty_index} ) or ( $sig_specs{'txtPlateChangeQuantity'.$qty_index} and $$new_specs{'txtPlateChangeQuantity'.$qty_index} and $sig_specs{'txtPlateChangeQuantity'.$qty_index} == $$new_specs{'txtPlateChangeQuantity'.$qty_index}) ) ) {
+										( ! $sig_specs{'txtPlateChangeQuantity'.$qty_index} and ! $$new_specs{'txtPlateChangeQuantity'.$qty_index} )
+										or
+										( $sig_specs{'txtPlateChangeQuantity'.$qty_index} and $$new_specs{'txtPlateChangeQuantity'.$qty_index} and $sig_specs{'txtPlateChangeQuantity'.$qty_index} == $$new_specs{'txtPlateChangeQuantity'.$qty_index} )
+										) ) {
 								my $sigs = int($$price{upq}/$$imp{pages});
 #$log->debug("Sigs: $sigs: signatures( @signatures )");
 								#$PaperCounts{$$Paper{id_string}} = 0 if ! defined $PaperCounts{$Paper->id_string()};
@@ -5587,7 +5593,18 @@ sub calc_price {
 	} # end if
 
 	my $plate_changes = 0;
-	$plate_changes += $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"} if $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
+	if ( $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"} ) {
+		if ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} ) {
+			if ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '1/0' ) {
+			} elsif ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '1/1' ) {
+			} elsif ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '1/1' ) {
+			} elsif ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '1/1' ) {
+			}
+		} else {
+			$plate_changes += $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
+		}
+	} # end if project platechanges
+
 	$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
 	
 	my $additional_overs = 0;
