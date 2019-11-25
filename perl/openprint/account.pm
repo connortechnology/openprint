@@ -60,11 +60,8 @@ sub select_user {
 } # end sub select_user
 
 sub registration {
-	if ( $param{btnFunction} ne 'Register' ) {
-		$log->debug("Not registering");
+	if ( (!$param{btnFunction}) or ($param{btnFunction} ne 'Register') ) {
 		return;
-	} else {
-		$log->debug("Registering");
 	} # end if
 
 	$param{business_name} = $param{company_name} if ! $param{business_name};
@@ -92,7 +89,7 @@ sub registration {
 		if ( $required_fields{postalcode} ) {
 			$error .= 'Missing Postal Code.<br/>' if ! $param{postalcode};
 			$error .= 'Postal Code too long.<br/>' if length $param{postalcode} > 12;
-		} # en dif
+		} # end if
 		$error .= 'Missing Phone Number.<br/>' if $required_fields{phone} and ! $param{phone};
 		if ( $required_fields{howdidyouhearaboutus} and exists $param{howdidyouhearaboutus} ) {
 			$error .= 'Please tell us how you heard about us.<br/>' if ! $param{howdidyouhearaboutus};
@@ -101,24 +98,26 @@ sub registration {
 		} # end if
 	} # end if
 	if ( $required_fields{email} ) {
-	$error .= 'Missing E-mail Address.<br/>' if ! $param{email};
-	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{email} );
+		$error .= 'Missing E-mail Address.<br/>' if ! $param{email};
+		$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{email} );
 	}
 	if ( $required_fields{password} ) {
-	$error .= 'Empty Password.<br/>' if $param{password} eq '';
-	$error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verifypassword};
-	if ( my $reason = openprint::login::check_password( $param{password} ) ) {
-		$error .= "Password not good enough.  $reason<br/>";
-	} # end if
+		$error .= 'Empty Password.<br/>' if $param{password} eq '';
+		$error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verifypassword};
+		if ( my $reason = openprint::login::check_password($param{password}) ) {
+			$error .= "Password not good enough. $reason<br/>";
+		} # end if
 	} # end if
 	if ( ( ! $session{company_id} ) and ( $config{UseCaptchaOnRegistration} eq 'Y' ) ) {
 		if ( ! -e $config{SkinPath}.'/images/captcha' ) {
-			$log->error("Needtocreatecaptcha directory!");
+			$log->error('Needtocreatecaptcha directory!');
 		} elsif ( ! $param{MD5SUM} ) {
-			$log->error("No MD5SUM, there must have been a problem creating the png!");
+			$log->error('No MD5SUM, there must have been a problem creating the png!');
 		} else {
 			require Authen::Captcha;
-			my $Captcha = new Authen::Captcha( data_folder => '/tmp/'.$config{db_name}, output_folder => $config{SkinPath}.'/images/captcha');
+			my $Captcha = new Authen::Captcha(
+					data_folder => $config{SkinPath}.'/tmp/',
+					output_folder => $config{SkinPath}.'/images/captcha');
 			# Remove spaces, because some people want to put spaces between the characters, etc.
 			$param{Captcha} =~ s/\s//g;
 			my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
@@ -126,15 +125,15 @@ sub registration {
 				# Passed
 			} elsif ( $rc == 0 ) {
 				# File error, log and carry on
-				$log->error("Captcha file error");
+				$log->error('Captcha file error');
 			} elsif ( $rc == -1 ) {
-				$log->debug("Failed: code expired");
+				$log->debug('Failed: code expired');
 				$error .= 'Captcha validation code has expired.  Please try again.';
 			} elsif ( $rc == -2 ) {
-				$log->debug("Failed: invalid code (not in db)");
+				$log->debug('Failed: invalid code (not in db)');
 				$error .= 'Captcha validation code incorrect.  Please try again.';
 			} elsif ( $rc == -3 ) {
-				$log->debug("Failed: invalid code (does not match token)");
+				$log->debug('Failed: invalid code (does not match token)');
 				$error .= 'Captcha validation code incorrect.  Please try again.';
 			} else {
 				$log->error("unknown return code $rc from Authen::Captcha");
@@ -143,7 +142,7 @@ sub registration {
 	} # end if
 
 	if ( $error ne '' ) {
-$log->warn("registration errors $error");
+		$log->debug("registration errors $error");
 		$variable{error} = $error;
 		return;
 	} # end if
@@ -160,10 +159,10 @@ $log->warn("registration errors $error");
 			$variable{error} = $param{email} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 			return;
 		} # end if
-		$User = openprint::User->find_one(email=>$param{email},'company_id is null'=>1 );
+		$User = openprint::User->find_one(email=>$param{email}, 'company_id is null'=>1 );
 	} # end if
 
-	my @agents = split(',', $config{UserRegistrationEmail} );
+	my @agents = split(',', $config{UserRegistrationEmail});
 	my $agent = $agents[0] if @agents;
 	
 	# No errors, We are in go status
@@ -171,7 +170,7 @@ $log->warn("registration errors $error");
 	$info{date} = localtime;
 	$info{CustomerServiceEmail} = $config{CustomerServiceEmail};
 
-	# CLean up the postal code
+	# Clean up the postal code
 	if ( exists $param{postalcode} ) {
 		$param{postalcode} =~ s/[^[[:alnum:]]]//g;
 		$param{postalcode} = uc $param{postalcode};
@@ -198,19 +197,19 @@ $log->warn("registration errors $error");
 				$variable{error} .= $error;
 				return;
 			} # end if
-			my @Suppliers = openprint::Company->find('offers_credit'=>1,'order'=>'id');
+			my @Suppliers = openprint::Company->find(offers_credit=>1, order=>'id');
 			foreach my $Supplier ( @Suppliers ) {
 # Setup default Credit
 				my $Credit = new openprint::Company_Credit();
 				$Credit->save({
-						'company_id'    =>  $Company->id(),
-						'supplier_id'   =>  $Supplier->id(),
-						'warndays'      =>  $openprint::config{DefaultWarnDays},
-						'denydays'      =>  $openprint::config{DefaultDenyDays},
-						'limit'         =>  $openprint::config{DefaultCreditLimit},
-						'hold'          =>  $openprint::config{DefaultCreditHold},
-						'downpayment'   =>  $openprint::config{DefaultDownpayment},
-						'cod'           =>  $openprint::config{DefaultCOD},
+						company_id    =>  $Company->id(),
+						supplier_id   =>  $Supplier->id(),
+						warndays      =>  $openprint::config{DefaultWarnDays},
+						denydays      =>  $openprint::config{DefaultDenyDays},
+						limit         =>  $openprint::config{DefaultCreditLimit},
+						hold          =>  $openprint::config{DefaultCreditHold},
+						downpayment   =>  $openprint::config{DefaultDownpayment},
+						cod           =>  $openprint::config{DefaultCOD},
 						});
 			} # end foreach Supplier
 
@@ -222,7 +221,7 @@ $log->warn("registration errors $error");
 		} # end if
 	} elsif ( $session{company_id} ) {
 		$Company = new openprint::Company( $session{company_id} );
-		@Users = openprint::User->find('company_id'=>$Company->id());
+		@Users = openprint::User->find(company_id=>$Company->id());
 
 	} else {
 		# Don't know what company to assign
