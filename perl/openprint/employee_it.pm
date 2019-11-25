@@ -922,8 +922,16 @@ sub _interface {
       $$I{host_id} = $param{host_id};
     } elsif ($param{action} eq 'dhcp' ) {
       if ( ! $param{mac} ) {
+        $openprint::log->error("Need mac when doing dhcp update");
+        return;
       }
       my @HIs = openprint::Host_Interface->find(mac=>$param{mac});
+      if ( ! @HIs ) {
+        my $Host = new openprint::Host();
+        $Host->save({ hostname=>($param{hostname} ? $param{hostname} : $param{mac} ) } );
+        my $Interface = new openprint::Host_Interface();
+        $Interface->save({ ip=>$param{ip}, mac => $param{mac}, host_id=>$$Host{id}, dhcp=>1 });
+      }
       foreach my $Interface (@HIs) {
         my $Host = $Interface->Host();
         if ( 

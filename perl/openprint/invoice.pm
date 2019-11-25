@@ -71,39 +71,42 @@ sub history {
 			misc::export_csv( $r, $log, \%variable, 'invoices.csv', \@Header, \@Data );
 		} elsif ( $param{btnFunction} eq 'Account Statement' ) {
 			_history();
-			my %data;
 
       my $Invoicer = openprint::Company->find_one(id=>$session{'/invoice/history.html?invoicer_id'});
       if ( !$Invoicer ) {
         $variable{error} .= "Invoicer not found.";
         return;
       }
+
+      my $Email = new openprint::Email();
+
       my $skin_path = '';
-      if ( -e ($openprint::config{SkinPath}.'/'.$Invoicer->name() ) ) {
+      if ( -e ($openprint::config{SkinPath}.'/'.$Invoicer->name()) ) {
         $skin_path = '/'.$Invoicer->name();
         $openprint::log->debug("Have skinpath at $skin_path");
       } elsif ( -e ($ENV{DOCUMENT_ROOT}.'/'.$Invoicer->name()) ) {
         $skin_path = $ENV{DOCUMENT_ROOT}.'/'.$Invoicer->name();
         $openprint::log->debug("Have skinpath at $skin_path");
       } else {
-        $openprint::log->debug("Have no skinpath at " . $openprint::config{SkinPath}.'/'.$Invoicer->name() );
+        $openprint::log->debug('Have no skinpath at '.$openprint::config{SkinPath}.'/'.$Invoicer->name());
       }
 
-      my $email_template = ssi::slurp_content($skin_path.'/email_template.html');
-      $email_template = ssi::slurp_content('/email_template.html') if ! $email_template;
 
       my $invoice_template = ssi::slurp_content($skin_path.'/invoice_template.html');
       $invoice_template = ssi::slurp_content('/invoice_template.html') if ! $invoice_template;
 
-			my @attachments;
-			$data{ReplacementText} = ssi::include( '/email_content/account_statement.html', \%data );
-			push @attachments, '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
+			my %data;
+      $data{uri} = 'invoice';
+      $data{Invoicer} = $Invoicer;
+
+      my @Sent_Invoices;
 
 			my @Invoices = openprint::Invoice->find(
 					ssi::date_filter($uri.'?created_on_start', 'created_on >=' ),
 					ssi::date_filter($uri.'?created_on_end', 'created_on >=' ),
 					invoicee_id => $session{$uri.'?invoicee_id'},
 					invoicer_id => $session{$uri.'?invoicer_id'},
+          posted      => 1,
 					order       => 'id',
 					);
 			foreach my $Invoice ( @Invoices ) {
@@ -112,27 +115,37 @@ sub history {
 				next if ! $Invoice->posted();
 				next if ! $Invoice->can_send();
 
-				$data{uri} = 'invoice';
 				$data{Invoice} = $Invoice;
+
 				$data{ReplacementText} = ssi::include('/email_content/invoice.html', \%data);
-				push @attachments, 'Invoice '.$$Invoice{id}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$invoice_template, \%data ) ) ), 'text/html', 'quoted-printable';
+        $Email->add_pdf_attachment_from_html(
+          'Invoice '.$$Invoice{id}, 
+          ssi::variable_substitution(\$invoice_template, \%data)
+        );
+        push @Sent_Invoices, $Invoice;
 			} # end foreach Invoice
-			if ( @attachments <= 4 ) {
-				$variable{error} .= "There were no invoices to include in this statement.";
+
+			if ( !@Sent_Invoices ) {
+				$variable{error} .= 'There were no invoices to include in this statement.';
 				if ( @Invoices ) {
 					$variable{error} .= 'You may not be authorized to send them.';
 				}
 				return;
 			}
+      $data{Invoices} = \@Sent_Invoices;
+
+      my $email_template = ssi::slurp_content($skin_path.'/email_template.html');
+      $email_template = ssi::slurp_content('/email_template.html') if ! $email_template;
+			$data{ReplacementText} = ssi::include('/email_content/account_statement.html', \%data);
+      $Email->html_body(ssi::variable_substitution(\$email_template, \%data));
 
 			my @Recipients = new openprint::Company($param{invoicee_id})->AccountingContacts();
-			(new openprint::Email())->send(
+			$Email->send(
 						FROM    => $config{AccountingEmail},
             #TO      =>  \@Recipients,
             TO      => $openprint::User,
 						BCC     => $openprint::User,
 						SUBJECT => 'Account Statement from ' . ( $Invoicer->name() ),
-						ATTACHMENTS	=>	\@attachments,
 						);
 			$variable{information} .= 'Account statement sent to ' . join('<br/>',
 					map { sprintf('&quot;%s %s&quot; &lt;%s&gt;',$_->get('firstname','lastname','email')) } @Recipients);
@@ -426,6 +439,7 @@ sub view {
 		return;
 	} # end if
 } # end sub view
+
 sub _timetracks {
 	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
 	if ( $param{timetrack_id} ) {
