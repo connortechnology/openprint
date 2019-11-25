@@ -71,8 +71,19 @@ configuration::merge($opts);
 
 openprint::session_init();
 
-foreach my $opt ( 'account', 'format' ) {
-  die "No $opt given" if !$$opts{$opt};
+while ( !($$opts{account} and openprint::Expense_Account->find_one(name=>$$opts{account})) ) {
+  my %accounts = map { $$_{id} => $_ } openprint::Expense_Account->find(order=>'lower(name)');
+  print "Please select the account:\n";
+  foreach ( keys %accounts ) {
+    print '['.$_.'] '.$accounts{$_}{name}."\n";
+  }
+  my $response = <STDIN>;
+  chomp $response;
+  if ( $response and $accounts{$response} ) {
+    $$opts{account} = $accounts{$response}{name};
+  } else {
+    print "Invalid entry\n";
+  }
 }
 
 my $Account = openprint::Expense_Account->find_one(name=>$$opts{account});
@@ -82,6 +93,28 @@ if ( ! $Account ) {
 if ( ! $openprint::Owner->id() ) {
   die "Need an owner\n";
 }
+
+my $guessed_format='';
+if ( $$opts{file} =~ /^Transactions(.*)\.csv$/ ) {
+  $guessed_format = 'CDNTire';
+}
+
+my @formats = ('CDNTire', 'CIBC', 'PC', 'TD');
+while ( !( $$opts{format} and sets::isin($$opts{format}, \@formats) ) ) {
+  print "Please select the format:\n";
+  for ( my $i = 0; $i < @formats; $i += 1 ) {
+    print '['.$i.'] '.$formats[$i].($formats[$i] eq $guessed_format ? ' < ':'')."\n";
+  }
+  my $response = <STDIN>;
+  chomp $response;
+  if ( ($response ne '') and $formats[$response] ) {
+    $$opts{format} = $formats[$response];
+  } elsif ( (! $response) and $guessed_format ) {
+     $$opts{format} =  $guessed_format;
+   } else {
+    print "Invalid entry\n";
+  }
+} # end while ! format
 
 my $from_id=2;
 my $to_id=1;
@@ -216,7 +249,7 @@ while ( <FH> ) {
       delete $expense_find{paid_on};
     }
     if ( $expense_find{description} ) {
-      $expense_find{'description ilike'} => $expense_find{description}.'%';
+      $expense_find{'description ilike'} = $expense_find{description}.'%';
       delete $expense_find{description};
     }
     my @Expenses = openprint::Expense->find(\%expense_find);
