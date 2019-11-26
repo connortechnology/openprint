@@ -299,7 +299,7 @@ my %variables = (
 	txtPlateQuantity1 => ['save','output'], txtPlateQuantity2 => ['save','output'], txtPlateQuantity3 => ['save','output'], 
 	BlankPlateQuantity1 => ['save','output'], BlankPlateQuantity2 => ['save','output'], BlankPlateQuantity3 => ['save','output'], 
 	txtPlateChangeQuantity1 => ['save'], txtPlateChangeQuantity2 => ['save'], txtPlateChangeQuantity3 => ['save'], 
-	txtPlateChangeType1 => ['save'], txtPlateChangeType2 => ['save'], txtPlateChangeType3 => ['save'], 
+	PlateChangeType1 => ['save'], PlateChangeType2 => ['save'], PlateChangeType3 => ['save'], 
 #
 	PerPlateCost1 => ['save','output'], PerPlateCost2 => ['save','output'], PerPlateCost3 => ['save','output'],
 	PlateTotalCost1 => ['save','output'], PlateTotalCost2	=> ['save','output'], PlateTotalCost3 => ['save','output'],
@@ -5592,16 +5592,36 @@ sub calc_price {
 	if ( $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"} ) {
 		if ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} ) {
 			if ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '1/0' ) {
+				$plate_changes += $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
 			} elsif ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '1/1' ) {
-			} elsif ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '1/1' ) {
-			} elsif ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '1/1' ) {
+				$plate_changes += 2 * $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
+			} elsif ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '4/0' ) {
+				$plate_changes += 4 * $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
+			} elsif ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '4/4' ) {
+				$plate_changes += 8 * $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
 			}
 		} else {
 			$plate_changes += $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
+			$price{alert} .= 'Please select the type of plate change.<br/>';
 		}
 	} # end if project platechanges
 
-	$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
+	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
+		if ( my $type = $$specs{'PlateChangeType'.$qty_index} ) {
+			if ( $type eq '1/0' ) {
+				$plate_changes += 1 * $$specs{'txtPlateChangeQuantity'.$qty_index};
+			} elsif ( $type eq '1/1' ) {
+				$plate_changes += 2 * $$specs{'txtPlateChangeQuantity'.$qty_index};
+			} elsif ( $type eq '4/0' ) {
+				$plate_changes += 4 * $$specs{'txtPlateChangeQuantity'.$qty_index};
+			} elsif ( $type eq '4/4' ) {
+				$plate_changes += 8 * $$specs{'txtPlateChangeQuantity'.$qty_index};
+			}
+		} else {
+			$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index};
+			$price{alert} .= 'Please select the type of plate change.<br/>';
+		}
+	}
 	
 	my $additional_overs = 0;
 	my $additional_overs_rate = 0;
@@ -7377,9 +7397,23 @@ sub summary {
 		$html .= sprintf(qq{ on %s\n}, $$specs{'ddmPress'.$qty_index} ) if ( ! $$services{NoPrinting} ) and $openprint::User->email() =~ /^iconnor/;
 
 		my $plate_changes = 0;
-		$plate_changes += $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"} if $$specs{Group} and $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"};
-		$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
-		$html .= sprintf(' with %d plate changes = %d plates', $plate_changes, $$specs{'txtPlateQuantity'.$qty_index} ) if $plate_changes;
+		if ( $$specs{Group} and $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"} ) {
+			$plate_changes += $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"};
+			$html .= sprintf(' with %d %s plate change%s',
+					@$printing_specs{"txtPlateChangeQuantity-$$specs{Group}","PlateChangeType-$$specs{Group}"},
+					( $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"} == 1 ? '' : 's')
+					);
+		}
+		if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
+			$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index};
+			$html .= sprintf(' with %d %s plate change%s',
+					@$specs{'txtPlateChangeQuantity'.$qty_index,'PlateChangeType'.$qty_index},
+					( $$specs{"txtPlateChangeQuantity$qty_index"} == 1 ? '' : 's' )
+					);
+		}
+		if ( $plate_changes ) {
+			$html .= sprintf(' = %d plates', $$specs{'txtPlateQuantity'.$qty_index} );
+		}
 
 #if ( 1 ) {
 # Have Stock summary line now
