@@ -779,11 +779,11 @@ $log->debug("Adding special colour for $colour");
 	if ( $$services{SaddleStitching} ) {
 		%{$project{StitchingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{SaddleStitching}[0] )};
 		$project{HasStitching} = $$services{SaddleStitching}[0];
-
-
+		openprint::Estimating::Stitching::init($Project, \%project);
 	} elsif ( $$services{LoopStitching} ) {
 		%{$project{StitchingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{LoopStitching}[0] )};
 		$project{HasStitching} = $$services{LoopStitching}[0];
+		openprint::Estimating::Stitching::init($Project, \%project);
 	} # end if
 	if ( $project{HasStitching} ) {
 		%{$project{FoldingStitchingSpecs}} = %{$project{StitchingSpecs}};
