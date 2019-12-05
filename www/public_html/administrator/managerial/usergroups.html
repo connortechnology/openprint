@@ -16,7 +16,7 @@
   <td class="duration">%3$s</td>
   <td class="Users">%4$d</td>
 </tr>`,
-			$UG->id(), $UG->name(), $UG->duration(), scalar $UG->Users(), $UG->description(),
+			$UG->id(), $UG->name(), $UG->duration(), (scalar $UG->Users()), $UG->description(),
 			);
 	} # end foreach UG
 	return $html;

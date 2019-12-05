@@ -88,14 +88,6 @@ if ( @Interfaces ) {
 						note	=> "IP Address changed from $old_ip to $ip",
 						action	=> 'IP Changed'
 						} );
-
-				my $Host = $Interface->Host();
-
-				my $hostname = $Host->hostname();
-				if ( $hostname !~ /\./ ) {
-					$log->debug("Transforming $hostname into $hostname.internal.point-one.com");
-					$hostname .= '.internal.point-one.com';
-				}
 			} else {
 				$log->debug("IP unchanged for $mac => $ip => $hostname");
 			} # end if

@@ -40,7 +40,7 @@
 		$_ = $$a{height} <=> $$b{height};
 		return $_ if $_;
 
-	} openprint::Paper->find( %sql ) ];
+	} openprint::Paper->find(%sql) ];
 	my @paper_ids = @{$$variable{paper_ids}} = map { $$_{id} } @{$$variable{Papers}};
 	my %SkidContents;
 
@@ -57,6 +57,7 @@ if ( DEBUG ) {
 		$log->debug("Initial Papers: " . $Paper->to_string() );
 	}
 }
+openprint::Location->find(company_id=>$openprint::User->company_id());
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
 	<table class="List">
@@ -70,7 +71,7 @@ if ( DEBUG ) {
 			<th class="buttons">&nbsp;</th>
 		</tr>
 		<? echo (
-			openprint::Location->find( 'type_id is null'=>1 );
+			#openprint::Location->find( 'type_id is null'=>1 );
 			my $html;
 			my $rowclass;
 			my $selected;

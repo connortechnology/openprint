@@ -19,7 +19,7 @@
 </li>
 <? endif ( $$variable{Project}->Type()->name() ne 'Envelopes' ) ?>
 <li class="stocksize">
-	<label><? echo ( writeTip( 'Stock size' ); ) ?></label>
+	<label><? echo ( writeTip('Stock size'); ) ?></label>
 <? echo (
 	my @options = misc::trim( split(',', $config{$$variable{Project}->Type()->name().'StockOptions'} ));
     @options = misc::trim( split(',', $config{StockOptions} )) if ! @options;
@@ -64,18 +64,18 @@
 					$$variable{'chkOverrideSheetSize'.$qty_index},
 					"\$('OverrideStockSize$qty_index').show();", 
 					"f1.OverrideStockWidth$qty_index.value='';f1.OverrideStockHeight$qty_index.value='';\$('OverrideStockSize$qty_index').hide();calc('f1');" );
-			$html .= sprintf(q`<br/><span id="OverrideStockSize%1$d">`, $qty_index );
+			$html .= sprintf(q`<br/><span id="OverrideStockSize%1$d">`, $qty_index);
 			$html .= join("\n",
-					input( type=>'float', name=>"OverrideStockWidth$qty_index", value=>$$variable{'OverrideStockWidth'.$qty_index}, oninput=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);", oninput=>'this.oninput();' ),
+					input( type=>'float', name=>"OverrideStockWidth$qty_index", value=>$$variable{'OverrideStockWidth'.$qty_index}, oninput=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" ),
 					' x ',
-					input( type=>'float', name=>"OverrideStockHeight$qty_index", value=>$$variable{'OverrideStockHeight'.$qty_index}, oninput=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);", oninput=>'this.oninput();' ),
+					input( type=>'float', name=>"OverrideStockHeight$qty_index", value=>$$variable{'OverrideStockHeight'.$qty_index}, oninput=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" ),
 			);
 			$html .= '</span>';
 		} else {
 			$html .= sprintf(q`
-				<input type="hidden" name="chkOverrideSheetSize%1$d" value="%2$s" />
-				<input type="hidden" name="OverrideStockWidth%1$d" value="%3$s" />
-				<input type="hidden" name="OverrideStockHeight%1$d" value="%4$s" />
+				<input type="hidden" name="chkOverrideSheetSize%1$d" value="%2$s"/>
+				<input type="hidden" name="OverrideStockWidth%1$d" value="%3$s"/>
+				<input type="hidden" name="OverrideStockHeight%1$d" value="%4$s"/>
 			`, $qty_index, 
 				$$variable{'chkOverrideSheetSize'.$qty_index},
 				$$variable{'OverrideStockWidth'.$qty_index},
@@ -84,10 +84,10 @@
 	} # end if A or E
 	$html .= sprintf('
 	</span>
-<input type="hidden" name="hdnSuppliedStockWidth%1$d" />
-<input type="hidden" name="hdnSuppliedStockHeight%1$d" />
-<input type="hidden" name="StockWidth%1$d" />
-<input type="hidden" name="StockHeight%1$d" />', $qty_index );
+<input type="hidden" name="hdnSuppliedStockWidth%1$d"/>
+<input type="hidden" name="hdnSuppliedStockHeight%1$d"/>
+<input type="hidden" name="StockWidth%1$d"/>
+<input type="hidden" name="StockHeight%1$d"/>', $qty_index);
 	} # end foreach qty_index
 	return $html;
 ) ?>
@@ -125,7 +125,7 @@
 		<? eval ( $$variable{QTYIndex} += 1 ) ?>
 <? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 </li>
-<? if ( ($$variable{Mode} eq 'Easy') or $$variable{txtSignatureType} or sets::isin( $$variable{ProjectType}->name(), ['Envelopes' ] ) ) ?>
+<? if ( ($$variable{Mode} eq 'Easy') or $$variable{txtSignatureType} or sets::isin( $$variable{ProjectType}->name(), ['Envelopes'] ) ) ?>
 <li>
 <? eval ( $$variable{QTYIndex} = 1 ) ?>
 <? while ( $$variable{QTYIndex} <= 3 ) ?>
@@ -135,7 +135,7 @@
 		<? eval ( $$variable{QTYIndex} += 1 ) ?>
 <? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 </li>
-<? else ( ($$variable{Mode} eq 'Easy') or $$variable{txtSignatureType} or sets::isin( $$variable{ProjectType}->name(), ['Envelopes' ] ) ) ?>
+<? else ( ($$variable{Mode} eq 'Easy') or $$variable{txtSignatureType} or sets::isin( $$variable{ProjectType}->name(), ['Envelopes'] ) ) ?>
 <li>
 	<label>Bleed Size</label>
 <? eval ( $$variable{QTYIndex} = 1 ) ?>
@@ -159,7 +159,7 @@
 		<? eval ( $$variable{QTYIndex} += 1 ) ?>
 <? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 </li>
-<? endif ( ($$variable{Mode} eq 'Easy') or $$variable{txtSignatureType} or sets::isin( $$variable{ProjectType}->name(), ['Envelopes' ] ) ) ?>
+<? endif ( ($$variable{Mode} eq 'Easy') or $$variable{txtSignatureType} or sets::isin( $$variable{ProjectType}->name(), ['Envelopes'] ) ) ?>
 
 <? if ( $$variable{Mode} eq 'Easy' ) ?>
 <? eval ( $$variable{QTYIndex} = 1 ) ?>
@@ -362,7 +362,6 @@
 	<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 <? endif ( sets::isin( $session{user_type}, [ 'E','A' ] ) ) ?>
 </ul>
-<? endif ( $$variable{Mode} eq 'Easy' ) ?>
 <ul>
 <li class="stockquantity">
 	<label>Stock Quantity</label>
@@ -494,7 +493,7 @@ join("\n", map {
 					input( type=>'hidden', name=>"txtImageHeight$qty_index" ),
 					);
 			} # end if
-		$html .= '<div id="ImpositionImage'.$qty_index.'"></div>' if $session{user_type} eq 'A';
+		$html .= '<div id="ImpositionImage'.$qty_index.'"></div>' if $session{user_type} eq 'A' or $session{user_type} eq 'E';
 		$html .= '</div>';
 		} # end foreach
 		return $html;

@@ -70,21 +70,6 @@ function from_sheets( e, type_id, c_id ) {
 
 } // end function from_sheets
 
-function mweight_to_gsm( form, type_id ) {
-	var mweight = parseFloat(1*form.elements['mweight-'+type_id].value);
-	var width = parseFloat(1*form.elements['width-'+type_id].value);
-	var height = parseFloat(1*form.elements['height-'+type_id].value);
-	var gsm = parseInt((mweight/1000)/(width*height)*7030645.0)/10;
-	form.elements['gsm-'+type_id].value = gsm;
-}
-function gsm_to_mweight( form, type_id ) {
-	var gsm = parseFloat(1*form.elements['gsm-'+type_id].value);
-	var width = parseFloat(1*form.elements['width-'+type_id].value);
-	var height = parseFloat(1*form.elements['height-'+type_id].value);
-	var mweight = parseInt((gsm/703064.5)*(width*height)*10000)/10;
-	form.elements['mweight-'+type_id].value = mweight;
-}
-
 function delete_content( c_id ) {
 	new Ajax.Request( '_manifest_content.html', {
 		parameters: { content_id: c_id, action: 'Remove' },
@@ -220,7 +205,7 @@ function select_stock( type_id, stock_id ) {
 }
 
 function confirm_po_content(type_id,poc_id) {
-	new Ajax.Request('/employee/accounting/_stock.json', { 
+	new Ajax.Request('/employee/inventory/_manifest_type.json', { 
 		parameters: { 
 				action: 'confirm_po_content', 
 				manifest_content_type_id: type_id,
@@ -228,4 +213,52 @@ function confirm_po_content(type_id,poc_id) {
 			}
 		}
 	);
+}
+function unconfirm_po_content(type_id,poc_id) {
+	new Ajax.Request('/employee/inventory/_manifest_type.json', { 
+		parameters: { 
+				action: 'unconfirm_po_content', 
+				manifest_content_type_id: type_id,
+				po_content_id: poc_id 
+			}
+		}
+	);
+}
+
+function select_po(type_id, po_id) {
+	var input = $j('#po_id-'+type_id);
+	if ( ! input ) {
+		console.log("No input found for #po_id-"+type_id);
+	} else {
+		input.val(po_id);
+	}
+}
+
+function load_pos(type_id) {
+	new Ajax.Updater('PurchaseOrders'+type_id, '_manifest_purchase_orders.html', {
+			parameters: {
+				supplier_id: $('supplier_id').value,
+				Docket: $('docket-'+type_id).value,
+				type_id: type_id
+				}
+				} );
+}
+
+function load_po_contents(type_id) {
+	var input = $j('#po_id-'+type_id);
+	if ( !input ) {
+		console.log("No input found for #po_id-"+type_id);
+	} else if ( !input.val() ) {
+		console.log("No po to load");
+	} else {
+		new Ajax.Updater(
+				'PO_'+type_id,
+				'/employee/inventory/_manifest_purchase_order_contents.html', { 
+			parameters: { 
+					type_id: type_id,
+					po_id: input.val()
+				}
+			}
+		);
+	}
 }

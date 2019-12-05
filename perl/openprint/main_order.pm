@@ -63,8 +63,47 @@ sub information {
 		} # end if
 	} elsif ( $param{btnFunction} eq 'New Order' ) {
 		# Re order situation
-		$order_id = openprint::order::make_order_from_order( $order_id );
+
+		my $SRC_Order = new openprint::Order( $order_id );
+		return 0 if check_credit( $SRC_Order->total() );
+
+		if ( $SRC_Order->status() eq '' ) {
+			misc::error( $log, $dbh, \%variable, 'Can\'t re-order.', 'Order does not exist.' );
+			return 0;
+		} elsif ( ! sets::isin( $SRC_Order->status(), 'Complete', 'Paid',	'Shipped', 'Waiting For Pickup', 'Picked Up' ) ) {
+			misc::error( $log, $dbh, \%variable, 'Can\'t re-order.', 'The given order is not complete.' );
+			return 0;
+		} 
+
+		my $ac = sql::start_transaction( $openprint::dbh );
+		# this goes before get_order_id so that we re-use orderids
+		delete_unfinished_orders();
+
+		# get the contents
+		my @contents = sql::execute($log, $dbh, q{SELECT lngProjectIndex, intQuantityIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id);
+
+		my $order_id = openprint::order::make_order($log, $dbh, $session{_session_id}, \%variable);
+		if ( $order_id ) {
+			while ( my ( $p_id, $qty ) = splice(@contents, 0, 2) ) {
+				my $Project = new openprint::Project( $p_id );
+				my $New = $Project->copy();
+				$New->save({reference=>'ReOrder of ' . $New->reference() });
+				openprint::order::add_to_order($log, $dbh, $order_id, \%variable, ( $New->id(), $qty ));
+			} # end while
+			foreach my $Product ( $SRC_Order->Products() ) {
+				my $NewProduct = $Product->copy();
+				$NewProduct->order_id($order_id);
+				$NewProduct->save();
+			} # end foreach
+		} # end if
+		if ( $openprint::dbh->errstr() ) {
+			$openprint::dbh->rollback();
+			sql::end_transaction($openprint::dbh, $ac);
+			return;
+		} # end if
+		sql::end_transaction($openprint::dbh, $ac);
 		return if ! $order_id;
+
 	} elsif ( $param{btnFunction} eq 'ReOpen' ) {
 		if ( $order_id ) {
 			openprint::order::delete_unfinished_orders();
@@ -171,8 +210,8 @@ $log->debug("Adding product $param{product_id}");
 			} = $User->get('email','title','firstname','lastname','salutation','phone','fax');
 
 		} # end if
-		foreach my $OP ( openprint::OrderedProject->find( order_id=>$order_id) ) {
-			if ( ! sets::isin( $OP->quantity_index(), $OP->Project->quantity_indexes() ) ) {
+		foreach my $OP ( openprint::OrderedProject->find(order_id=>$order_id) ) {
+			if ( ! ($OP->quantity_index() and sets::isin($OP->quantity_index(), $OP->Project->quantity_indexes())) ) {
 				$OP->save({quantity_index=>undef});
 			}
 		}
@@ -282,8 +321,8 @@ sub confirmation {
 					$variable{ExternalRedirect} = '/main/order/submit.html';
 					return;
 				} else {
-					$Order->add_log( 'User accepted the terms and conditions.' );
-					$Order->save({'terms_accepted'=>1});
+					$Order->add_log('User accepted the terms and conditions.');
+					$Order->save({terms_accepted=>1});
 				} # end if
 			} # end if employee or admin
 
@@ -446,7 +485,7 @@ sub history_details {
 			$variable{error} = 'Terms not accepted';
 			$variable{information} = 'You must check the box to indicate your acceptance of the terms and conditions.';
 		} else {
-			$Order->add_log( 'User accepted the terms and conditions.' );
+			$Order->add_log('User accepted the terms and conditions.');
 			$Order->save({'terms_accepted'=>1});
 		} # end if
 
@@ -456,7 +495,7 @@ sub history_details {
 		$Order->pay();
 	} elsif ( $param{btnFunction} eq 'Save Payment' ) {
 
-		$param{amount} = openprint::Payment->transform('amount', $param{amount} );
+		$param{amount} = openprint::Payment->transform(amount=>$param{amount});
 
 		if ( ! $param{amount} ) {
 			$variable{error} .= 'Invalid Amount<br/>';

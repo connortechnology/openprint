@@ -13,7 +13,7 @@
 		<ul>
 		<li><label>Asset #</label>
 			<? echo ( join("\n",
-				input( type=>'cardinal', id=>'asset_id', name=>'asset_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){load_page('f1');};` ),
+				input( type=>'cardinal', id=>'asset_id', name=>'asset_id', onkeydown=>q`if(event.keyCode==13){load_page('f1');};` ),
 				button( 'Go3', { onclick=>q`load_page('f1');`, text=>'Go' } ),
 			); ) ?>
 		</li>
@@ -25,30 +25,33 @@
 				<option value="">All</option>
 				<? echo ( 
 my @company_ids = sql::execute( undef, undef, 'SELECT DISTINCT company_id FROM ASSETS' );
-make_drop_down( openprint::Company->dropdown(id=>\@company_ids), $session{'/employee/assets/history.html?company_id'} ); ) ?>
+make_drop_down( openprint::Company->dropdown(id=>\@company_ids), $session{$r->uri().'?company_id'} ); ) ?>
 			</select>
 		</li>
 		<li><label>Created By</label>
 			<select name="created_by" onchange="load_page('f1');">
 				<option value="">All</option>
 				<? echo ( 
-					make_drop_down( openprint::User->dropdown( type=>['A','E'] ), $session{'/employee/assets/history.html?created_by'} ); ) ?>
+					make_drop_down( openprint::User->dropdown( type=>['A','E'] ), $session{$r->uri().'?created_by'} ); ) ?>
 			</select>
 		</li>
 		<li><label>Type</label>
 			<select name="type_id" onchange="load_page('f1');">
 				<option value="">All</option>
-				<? echo ( make_drop_down( openprint::Asset_Type->dropdown( order=>'lower(name)' ), $session{'/employee/assets/history.html?type_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::Asset_Type->dropdown( order=>'lower(name)' ), $session{$r->uri().'?type_id'} ); ) ?>
 			</select>
 		</li>
 		<li>
 			<label>Date</label>
-<? echo ( date_select_session( '/employee/assets/history.html', 'created_on_start', { onchange=>q`load_page('f1');`, with_today=>1, with_clear=>1} ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>q`load_page('f1');`, with_today=>1, with_clear=>1} ); ) ?>
             to
-<? echo ( date_select_session( '/employee/assets/history.html', 'created_on_end', { onchange=>q`load_page('f1');`, with_today=>1, with_clear=>1} ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>q`load_page('f1');`, with_today=>1, with_clear=>1} ); ) ?>
 		</li>
 		<li><label>Deleted</label>
-			<? echo ( radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/employee/assets/history.html?deleted'}, { onclick=>q`load_page('f1');` } ); ) ?>
+			<? echo ( radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'All' ], $session{$r->uri().'?deleted'}, { onclick=>q`load_page('f1');` } ); ) ?>
+		</li>
+		<li><label>Public?</label>
+			<? echo ( radio( 'public', [ '1', 'Yes', '0', 'No', '', 'All' ], $session{$r->uri().'?public'}, { onclick=>q`load_page('f1');` } ); ) ?>
 		</li>
 		<li><label>Search</label>
 			<input type="text" name="search" onkeydown="if(event.keyCode == 13){load_page('f1');}"/>

@@ -63,7 +63,7 @@
 				</ul>
             </div>
 	<? if ( $$variable{Group} == 1 ) ?>
-            <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
+            <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( sets::isin( $$variable{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? '' : 'style="display:none;"' ) ?> >
             <?include('/includes/main/proj/presentation_folder_printing.html')?>
             </div>
 	<? endif ( $$variable{Group} == 1 ) ?>

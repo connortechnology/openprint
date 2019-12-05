@@ -19,7 +19,10 @@ require JSON;
 sub sign_off {
 	require Authen::Captcha;
 	if ( $param{btnFunction} eq 'Approve Project' ) {
-		my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{SkinPath}.'/images/captcha');
+		my $Captcha = new Authen::Captcha(
+				data_folder => $config{SkinPath}.'/tmp',
+				output_folder => $config{SkinPath}.'/images/captcha'
+				);
 		if ( 1 == $Captcha->check_code( $param{Captcha}, $param{MD5SUM} ) ) {
 			$variable{Approved} = 1;
 			# Transitions from Waiting for Customer Approval to Waiting for QA Approval
@@ -59,6 +62,8 @@ sub history {
 			foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
 				openprint::print_project::reuse_project( $project_id );
 			} # end if
+			$variable{ExternalRedirect} = '/main/project/history.html';
+			return;
 		} elsif ( $param{btnFunction} eq 'Reset' ) {
 			foreach my $k ( keys %session ) {
 				if ( $k =~ /^\/main\/project\/history.html/ ) {
@@ -87,6 +92,7 @@ sub history {
 sub _history {
 	ssi::save_params( '/main/project/history.html', 
 			'ddmStatus', 'type_id', 'predefined', 'company_id', 'user_id', 'servicetype_id','salesrep_id',
+			'reference', 'project_id',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day', 
@@ -150,7 +156,7 @@ sub create_edit {
 
 	my $services = $Project->services();
 	@{$variable{SelectedServices}} = keys %{$services};
-$log->debug("Services: " . join(',',@{$variable{SelectedServices}}) );
+#$log->debug("Services: " . join(',',@{$variable{SelectedServices}}) );
 
 	$variable{ProjectIndex} = $$Project{id};
 } # end sub create_edit
@@ -293,14 +299,14 @@ sub calc {
 
 sub reuse {
 
-	$variable{Project} = new openprint::Project( $param{project_id} );
-	$variable{ProjectIndex} = $variable{Project}->id();
-	if ( $variable{Project}->reference() ) {
-		$variable{Project}->reference( 'Copy of ' . $variable{Project}->reference() );
+	my $Project = $variable{Project} = new openprint::Project($param{project_id});
+	$variable{ProjectIndex} = $Project->id();
+	if ( $Project->reference() ) {
+		$Project->reference('Copy of ' . $Project->reference());
 	} else {
-		$variable{Project}->reference( 'Copy of project # ' . $param{project_id} );
+		$Project->reference('Copy of project # ' . $param{project_id});
 	} # end if
-	
+
 } # end sub
 
 sub docket_sheet {

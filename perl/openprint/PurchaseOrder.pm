@@ -502,9 +502,16 @@ sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
 	@$New{keys %fields} = @$self{keys %fields};
-	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled', 'manifest_id' ) {
+	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled', 'manifest_id', 'Taxes' ) {
 		delete $$New{$_};
 	} # end foreach
+	my @Taxes;
+	foreach my $Tax ( $self->Taxes() ) {
+		my $NewTax = $Tax->copy();
+		$NewTax->PurchaseOrder($New);
+		push @Taxes, $NewTax;
+	} # end foreach
+	$$New{Taxes} = \@Taxes;
 	$$New{created_by} = $session{user_id};
 	return $New;
 } # end sub copy
@@ -515,10 +522,8 @@ sub Manifest {
 
 # We don't make any db changes here.  That only happens on PO saving
 sub Taxes {
-	my ( $self ) = @_;
-	if ( @_ > 1 ) {
-		$$self{Taxes} = $_[1];
-	}
+	my $self = shift;
+	$$self{Taxes} = shift if @_;
 	@{$$self{Taxes}} = openprint::PurchaseOrder_Tax->find(purchaseorder_id=>$$self{id}) if $$self{id} and ! $$self{Taxes};
 
 if ( 0 ) {
@@ -686,6 +691,7 @@ sub num {
 sub can_send {
 	my $User = @_ > 1 ? $_[1] : $openprint::User;
 	return 1 if $$User{id} == $_[0]{created_by};
+	return 1 if $$User{type} eq 'A';
 	return $_[0]->can_authorize();
 } # end sub can_send
 
@@ -726,16 +732,25 @@ sub can_authorize {
 # Can we assume that we can view it?
 sub can_see_pricing {
 	if ( ! $_[0]{id} ) {
-		$log->debug("Ccan see because new PO") if $debug;
+		$log->debug('Can see because new PO') if $debug;
 		return 1;
 	} # end if
 
 	my $User = $openprint::User;
 	
-	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','InventoryManager'], $$User{id} ) ) {
+	if (
+			( $$User{id} == $_[0]->created_by() )
+			or
+			( $$User{type} eq 'A' )
+			or
+			$User->in_Group('Accounting','SalesAdmin','InventoryManager')
+		 ) {
 		$log->debug('can see pricing') if $debug;
 		return 1;
 	} # end if
+
+# Now Ahmed wants everything to not show pricing
+	return 0;
 
 	if ( $_[1] ) {
 		if ( $_[1]->Type()->type() eq 'Sheet Stock' or $_[1]->Type()->type() eq 'Roll Stock' ) {
@@ -761,6 +776,7 @@ sub can_see_pricing {
 			} # end if
 		} # end foreach C
 	} # end if
+
 	if ( my @notifications = $_[0]->notifications() ) {
 		if ( sets::isin( $$User{id}, \@notifications ) ) {
 			$log->debug($$User{firstname} . ' can see because in notifications.' ) if $debug;

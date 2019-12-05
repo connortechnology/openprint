@@ -36,6 +36,7 @@ use constant DEBUG_NEEDS => 0;
 
 my @equipment;
 my @stitchers;
+my %Services;
 
 my @variables = (
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
@@ -49,7 +50,7 @@ my @variables = (
 
 sub variables {
 	my @v = @variables;
-	my ( $p_id, $s_id, $specs ) = @_;
+	my ( $p_id, $s_id, $old_specs, $specs ) = @_;
 
 	my $Project = new openprint::Project( $p_id );
 	foreach my $s_s_id ( $Project->signatures() ) {
@@ -412,6 +413,12 @@ sub has_overrides {
 
 } # end sub has_overrides
 
+sub init {
+	my ( $Project, $calc_hash ) = @_;
+	$Services{FoldingFoldMakeReady} = openprint::Service->find_one(name=>'FoldingFoldMakeReady');
+	$Services{FoldingAngleMakeReady} = openprint::Service->find_one(name=>'FoldingAngleMakeReady');
+}
+
 # Finds the different ways to run the job, and returns different impositions
 sub impositions {
 	my ( $Project, $Imposition, $specs, $sig_specs, $qty_index ) = @_;
@@ -428,6 +435,7 @@ sub impositions {
 			page_width		=>	$Imposition->page_width(),
 			page_height		=>	$Imposition->page_height(),
 			spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+			grain_direction	=>	$Imposition->grain_direction(),
 			stitching		=>	($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0,
 			perfectbind		=>	$$services{PerfectBound} ? 1 : 0,
 			spinepaste		=>	$$services{SpinePaste} ? 1 : 0,
@@ -869,8 +877,8 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 	$$SignatureImposition{cut_impositions} = \@All_Impositions;
 
 #FIXME
-	my $FoldingFoldMakeReadyService = openprint::Service->find_one(name=>'FoldingFoldMakeReady');
-	my $FoldingAngleMakeReadyService = openprint::Service->find_one(name=>'FoldingAngleMakeReady');
+	my $FoldingFoldMakeReadyService = $Services{FoldingFoldMakeReady};
+	my $FoldingAngleMakeReadyService = $Services{FoldingAngleMakeReady};
 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
@@ -1038,6 +1046,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 							page_width		=>	$$Imposition{page_width},
 							page_height		=>	$$Imposition{page_height},
 							spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+							grain_direction	=>	$Imposition->grain_direction(),
 							stitching		=>	($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0,
 							perfectbind		=>	$$services{PerfectBound} ? 1 : 0,
 							spinepaste		=>	$$services{SpinePaste} ? 1 : 0,
@@ -1098,6 +1107,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 							rows						=>	$$Imposition{rows},
 							printing_type		=>	$ppt,
 							spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+							grain_direction	=>	$Imposition->grain_direction(),
 							});
 
 						if ( ! $Fold ) {
@@ -1129,6 +1139,7 @@ if ( 0 ) {
 									rows						=>	$$Imposition{rows},
 									printing_type		=>	$ppt,
 									spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+									grain_direction	=>	$Imposition->grain_direction(),
 									});
 								$$specs{alert} .= "Fold for form $form may exceed equipment specifications.<br/>" if ! $$specs{alert};
 							}
@@ -1205,7 +1216,8 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									$$specs{alert} .= "Warning: $failure_reason<br/>";
 								}
 
-								$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s StockWeight %.2fgsm calliper:%.4f<br/>', $$sig_specs{rdbTemplateType}, @$Imposition{'quantity','imposition'},
+								$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s StockWeight %.2fgsm calliper:%.4f<br/>',
+										$$sig_specs{rdbTemplateType}, @$Imposition{'quantity','imposition'},
 										$openprint::Imposition::Orientations{$$Imposition{image_orientation}},
 										@$Imposition{'layout_width', 'layout_height'},
 										@$Paper{'gsm', 'calliper'} );
@@ -1229,7 +1241,8 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 
 					} else { # No template, might be a book
 						#$Imposition->display("Trying: $$Equipment{name}") if DEBUG;
-						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',@$Imposition{'columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height'} ).' on ' . $$Equipment{name}) if DEBUG;
+						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',
+									@$Imposition{'columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height'} ).' on ' . $$Equipment{name}) if DEBUG;
 
 #$Imposition->display('fitting');
 						# See if it fits
@@ -1692,8 +1705,9 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? 
 			} # end if has stitching
 			$comparison_cost += $totalPrice + $stitching_part;
 # + $cutting_results{Price};
+
 			if ( ( defined $bestComparison ) and ( $comparison_cost > $bestComparison ) ) {
-				$openprint::log->debug("Bailing early because comparison $comparison_cost > best $bestComparison");
+				$openprint::log->debug("Bailing early because comparison $comparison_cost > best $bestComparison") if DEBUG;
 				next;
 			} elsif ( DEBUG ) {
 				$openprint::log->debug("Not bailing early because comparison $comparison_cost < best $bestComparison");
@@ -1858,6 +1872,7 @@ sub calc {
 		$$calc_hash{PerforatingSpecs} = openprint::service::get_specs_ref( $Project, $$services{Perforating}[0] );
 	} # end if
 
+	init($Project, $calc_hash);
 	load_equipment( $Project );
 	$openprint::log->debug("Have Equipment " . join(',', map { $_->strid() } @equipment ) ) if DEBUG;
 
@@ -2318,7 +2333,7 @@ sub remove_duplicates {
 	my %Results;
 	foreach my $Set ( @_ ) {
 		my $string = join(',', map { join('-', @$_{'quantity','columns','rows','page_columns','page_rows'}) } @{$Set} );
-		$openprint::log->debug("String representing set $string results: $Results{$string}");
+		$openprint::log->debug("String representing set $string results: $Results{$string}") if DEBUG;
 		next if $Results{$string};
 		$Results{$string} = $Set;
 	}

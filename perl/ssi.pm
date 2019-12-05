@@ -89,7 +89,7 @@ sub variable_substitution {
 	while ( $after ) {
 		if ( $after =~ /(.*?)<\?\s*(.*?)\s*\?>(.*)/ms ) {
 			$result .= $1;
-			(my $command, $after ) = ( $2, $3 );
+			(my $command, $after) = ( $2, $3 );
 			$after =~ s/^\s+$//m;
 
 			if ( $command =~ /^while\s*\(\s*(.*)\s*\)/ ) {
@@ -131,11 +131,18 @@ sub variable_substitution {
 				} # end if
 			} elsif ( $command =~ /^eval\s*\(\s*(.*)\s*\)/ms ) {
 				$_ = eval $1;
-				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
+				$log->error("Eval error of ($1), Reason: ".$@) if $@;
 			} elsif ( $command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
-				$_ = eval $1;
-				$result .= $_ if $_;
-				$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
+				if ( !$1 ) {	
+					Warning("No content in echo command $command");
+				} else {
+					$_ = eval $1;
+					if ( $@ ) {
+						$log->error("Eval error ($@) of ($1)")
+					} else {
+						$result .= $_ if $_;
+					}
+				}
 			} elsif ( $command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
 				$result .= translate($1);
 			} elsif ( $command =~ /^hash_link\s*\(\s*'?([^\s']+)'?\s*\)/ms ) {
@@ -151,9 +158,16 @@ sub variable_substitution {
 			} elsif ( $command =~ /^slurp\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
 				$result .= slurp_content( $1 );
 			} else {
-				$result .= $$variable{$command} if $$variable{$command};
+				if ( ! exists $$variable{$command} ) {
+					$log->debug("Unknown simple variable subsititution $command");
+				} elsif ( ! defined $$variable{$command} ) {
+					$log->debug("Undefined simple variable subsititution $command");
+				} else {
+					$result .= $$variable{$command} if $$variable{$command};
+				}
 			} # end if
 		} else {
+# No subsititutions found, just return
 			return $result.$after;
 		} # end if have a command
 	} # end while after
@@ -819,7 +833,7 @@ sub radio {
 	my $onclick = $$options{onclick} if $options;
 	my $html;
 	if ( exists($$options{default}) and ! defined($selected) ) {
-$log->debug("Selecting default $$options{default} for radio $name");
+#$log->debug("Selecting default $$options{default} for radio $name");
 		$selected = $$options{default};
 	} # end if
 
@@ -1124,9 +1138,15 @@ sub hash_link {
 sub format_date {
 	return $_[0] ? Date::Format::time2str( $_[1] ? $_[1] : $config{DateFormat}, Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_date
+
 sub format_datetime {
 	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_datetime
+
+sub format_time {
+	return $_[0] ? Date::Format::time2str('%H:%M', Date::Parse::str2time($_[0])) : '';
+} # end sub format_time
+
 sub format_csv_datetime {
 	return $_[0] ? Date::Format::time2str( '%Y-%m-%d %H:%M:%S', Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_datetime

@@ -49,7 +49,7 @@ my %variables = (
 my @possible_pages = ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40 );
 
 sub variables {
-  my ( $p_id, $s_id, $specs ) = @_;
+  my ( $p_id, $s_id, $old_specs, $specs ) = @_;
   my $Project = new openprint::Project( $p_id );
 	my @v;
 	foreach my $k ( keys %variables ) {

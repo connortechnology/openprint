@@ -41,7 +41,7 @@ my $program = basename($0);
 my $opts = {};
 Getopt::Long::GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
 	'log_file=s', 'log_level=s',
-	'recipient=s', 'sleep=s', 'smtp-server=s', 'subject=s',
+	'recipient=s', 'sleep=s', 'smtp_server=s', 'subject=s',
 	'watch-users=s','pid_file=s', 'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'skin_path=s', 'document_root=s', 'file_path=s','site_title=s', 'site_url=s',
 	'scoreboard=s','max_files=s', 'config=s',
@@ -65,6 +65,7 @@ my %codes = (
 	257	=>	'Path created',
 	331 =>	'User name ok, need password',
 	350	=>	'Requested file action pending further information.',
+	500	=>	'Syntax error, command unrecognized, command line too long',
 	530	=>	'User not logged in',
 	550	=>	'Requested action not taken. File unavailable, not found, not accessible',
 );
@@ -75,14 +76,14 @@ foreach my $default ( keys %defaults ) {
     $$opts{$default} = $defaults{$default} if ! $$opts{$default};
 } # end foreach default
 
-$log = new logger(level=>'debug',program=>$program);
+$log = new logger(level=>'debug', program=>$program);
 # Get our configuration information
 if (my $err = configuration::from_file($$opts{config})) {
     die $err;
 }
 configuration::merge( $opts );
-foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp-server' ) {
-	if ( ! $config{$param} ) {
+foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp_server' ) {
+	if ( ! $openprint::config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
@@ -107,7 +108,7 @@ if ( $config{pid_file} ) {
 	} # end if
 } # end if
 
-$log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
+$openprint::log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
 $log->info("Opening SQL connection $config{db_host} $config{db_name}");
 $openprint::dbh = sql::open_sql( $log,
 	port		=> $config{db_port},
@@ -321,7 +322,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 				if ( $response_code == 331 ) {
 #Username OK, need password
 					next;
-				} elsif ( $command eq 'LIST' or $command eq 'MLSD' or $command eq 'CDUP' ) {
+				} elsif ( $command eq 'LIST' or $command eq 'MLSD' or $command eq 'CDUP' or $command eq 'RETR' ) {
 $log->debug("Command was not an upload");
 					next;
 				} elsif ( $response_code == 230 ) {
@@ -675,7 +676,7 @@ $log->debug("regexp: $regexp");
 					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),
 					'Reply-To'	=>	$from,
 					TO      => \@to,
-BCC		=>	'iconnor@connortechnology.com',
+#BCC		=>	'iconnor@connortechnology.com',
 					SUBJECT => $subject,
 					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);
@@ -783,7 +784,7 @@ sub usage {
 	print <<EOH;
 
 usage: $program [--help] [--fifo \$path] [--from \$addr] [--log \$path] [--pid_file \$pid]
-	[--recipient \$addr] [--subject \$string] [--smtp-server \$addr]
+	[--recipient \$addr] [--subject \$string] [--smtp_server \$addr]
 	[--attach-file] [--ignore-users \$regex | --watch-users \$regex]
 
 The purpose of this script is to monitor the TransferLog written by proftpd
@@ -826,7 +827,7 @@ Command-line options:
 			used multiple times to specify multiple recipients.
 			AT LEAST ONE recipient is REQUIRED.
 
-	--smtp-server \$addr	Specifies the SMTP server to which to send the email.
+	--smtp_server \$addr	Specifies the SMTP server to which to send the email.
 												This parameter is REQUIRED.
 
 	--subject \$string	Specify a custom Subject header for the email sent.

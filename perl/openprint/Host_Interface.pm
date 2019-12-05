@@ -3,13 +3,17 @@ require openprint::Object;
 require openprint::Host;
 use Data::Dumper;
 
-
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
-use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults );
+use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field );
 $debug = 0;
 $serial = 'host_interfaces_id_seq';
 $table = 'host_interfaces';
+
+$cache_field = 'ip';
+sub cache_field {
+  return $cache_field;
+}
 
 %fields = (
 	id						=>	'id',
@@ -131,6 +135,10 @@ sub vendor {
       my $oui = $_[0]{mac};
       $oui =~ s/[^A-Fa-f0-9]//g;
       $oui =~ s/^([A-Fa-f0-9]{6}).*$/${1}000000/;
+			if ( ! $oui ) {
+				$openprint::log->error("Got no oui from $oui $_[0]{mac}");
+				return;
+			}
 
       if ( my $Vendor = openprint::OUI_Vendor->find_one(oui=>$oui) ) {
         $_[0]{vendor} = $$Vendor{vendor_name};
@@ -158,6 +166,29 @@ sub vendor {
 
 sub is_subnet {
   return ( index($_[0]{ip}, '/') == -1 ) ? 0 : 1;
+}
+
+sub wake {
+	my $error;
+	my $info;
+
+	my $I = shift;
+
+	if ( $I->ip() ) {
+		$_ = `wakeonlan -i $$I{ip} $$I{mac} 2>&1`;
+		if ( defined $_ ) {
+			$info = "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
+		} else {
+			$error .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
+		}
+	} # end if ip
+	$_ = `wakeonlan $$I{mac} 2>&1`;
+	if ( defined $_ ) {
+		$info .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
+	} else {
+		$error .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
+	}
+	return ($error, $info );
 }
 
 1;

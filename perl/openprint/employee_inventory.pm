@@ -164,7 +164,10 @@ sub skids {
 		if ( exists $param{Captcha} ) {
 	# Remove spaces, because some people want to put spaces between the characters, etc.
 			$param{Captcha} =~ s/\s//g;
-			my $Captcha = new Authen::Captcha( data_folder => '/tmp', output_folder => $config{SkinPath}.'/images/captcha' );
+			my $Captcha = new Authen::Captcha(
+					data_folder => $config{SkinPath}.'/tmp',
+					output_folder => $config{SkinPath}.'/images/captcha'
+					);
 			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
 				$variable{error} .= 'Captcha Validation Code incorrect.	Please try again.';
 				return;
@@ -530,29 +533,28 @@ sub paper_details {
 		} # end if
 		$Paper->mweight( $param{mweight} ) if $param{mweight};
 		$Paper->basis_mweight( $param{basis_weight} ) if exists $param{basis_weight};
-$openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 		if ( exists $param{manufacturers_name} ) {
 			s/^\s+//, s/\s+$//, s/\s+/ /g for $param{manufacturers_name};
 			$Paper->manufacturers_name( $param{manufacturers_name} );
 		} # end if
-		$Paper->calliper( $param{txtCalliper} );
+		$Paper->calliper( $param{calliper} );
 		if ( ! $param{paper_id} ) {
 			my @papers = openprint::Paper->find(
-					( $param{Owner} ? ( 'owner_id'	=>	$param{Owner} ) : () ),
-					( $param{txtManufacturer} ? ( 'manufacturer'		=>	$param{txtManufacturer} ) : () ),
-					( $param{Manufacturer} ? ( 'manufacturer_id'	=>	$param{Manufacturer} ) : () ),
-					( $param{txtBrand} ? ( 'brand'		=>	$param{txtBrand} ) : () ),
-					( $param{Brand} ? ( 'brand_id'	=>	$param{Brand} ) : () ),
-					( $param{txtFinish} ? ( 'finish'	=>	$param{txtFinish} ) : () ),
-					( $param{Finish} ? ( 'finish_id' =>	$param{Finish} ) : () ),
-					( $param{txtColour} ? ( 'colour'	=>	$param{txtColour} ) : () ),
-					( $param{Colour} ? ( 'colour_id' =>	$param{Colour} ) : () ),
-					( $param{txtWeight} ? ( 'weight'	=>	$param{txtWeight} ) : () ),
-					( $param{Weight} ? ( 'weight_id' =>	$param{Weight} ) : () ),
-					( $param{txtQuality} ? ( 'quality'	=>	$param{txtQuality} ) : () ),
-					( $param{Quality} ? ( 'quality_id'=>	$param{Quality} ) : () ),
-					( $param{width} ? ( 'width'		=> $param{width} ) : () ),
-					( $param{height} ? ( 'height'	=>	$param{height} ) : () ),
+					( $param{Owner} ? ( owner_id	=>	$param{Owner} ) : () ),
+					( $param{txtManufacturer} ? ( manufacturer		=>	$param{txtManufacturer} ) : () ),
+					( $param{Manufacturer} ? ( manufacturer_id	=>	$param{Manufacturer} ) : () ),
+					( $param{txtBrand} ? ( brand		=>	$param{txtBrand} ) : () ),
+					( $param{Brand} ? ( brand_id	=>	$param{Brand} ) : () ),
+					( $param{txtFinish} ? ( finish	=>	$param{txtFinish} ) : () ),
+					( $param{Finish} ? ( finish_id =>	$param{Finish} ) : () ),
+					( $param{txtColour} ? ( colour	=>	$param{txtColour} ) : () ),
+					( $param{Colour} ? ( colour_id =>	$param{Colour} ) : () ),
+					( $param{txtWeight} ? ( weight	=>	$param{txtWeight} ) : () ),
+					( $param{Weight} ? ( weight_id =>	$param{Weight} ) : () ),
+					( $param{txtQuality} ? ( quality	=>	$param{txtQuality} ) : () ),
+					( $param{Quality} ? ( quality_id=>	$param{Quality} ) : () ),
+					( $param{width} ? ( width		=> $param{width} ) : () ),
+					( $param{height} ? ( height	=>	$param{height} ) : () ),
 					);
 			if ( @papers ) {
 				$variable{error} .= qq`A paper matching those parameters already exists. Click here to edit it: <a href="paper_details.html?paper_id=$papers[0]{id}">paper $papers[0]{id}</a>`;
@@ -568,8 +570,10 @@ $openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 					user_id     =>  $openprint::session{user_id},
 					poindex     =>  undef,
 					instock     =>  $Paper->in_stock(),
-					comment     =>  join(', ', @changes),
 					});
+			if ( @changes ) {
+				(new openprint::Log())->save({Object=>$Paper, action=>'Edit', note=>join(', ', @changes)});
+			}
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		if ( ! ( $variable{error} .= $Paper->delete() ) ) {
@@ -579,7 +583,10 @@ $openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 		if ( exists $param{Captcha} ) {
 	# Remove spaces, because some people want to put spaces between the characters, etc.
 			$param{Captcha} =~ s/\s//g;
-			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{SkinPath}.'/images/captcha');
+			my $Captcha = new Authen::Captcha(
+					data_folder => $config{SkinPath}.'/tmp',
+					output_folder => $config{SkinPath}.'/images/captcha'
+					);
 			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
 				$variable{error} .= 'Captcha Validation Code incorrect.	Please try again.';
 				return;
@@ -602,14 +609,14 @@ $openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 			return;
 		} # end if
 		my @Duplicates = openprint::Paper->find(
-				'manufacturer_id'	=> $Paper->manufacturer_id(),
-				'brand_id'			=> $Paper->brand_id(),
-				'finish_id'			=> $Paper->finish_id(),
-				'colour_id'			=> $Paper->colour_id(),
-				'weight_id'			=> $Paper->weight_id(),
-				'quality_id'		=> $Paper->quality_id(),
-				'width'				=> $Paper->width(),
-				'height'			=> $Paper->height(),
+				manufacturer_id	=> $Paper->manufacturer_id(),
+				brand_id			=> $Paper->brand_id(),
+				finish_id			=> $Paper->finish_id(),
+				colour_id			=> $Paper->colour_id(),
+				weight_id			=> $Paper->weight_id(),
+				quality_id		=> $Paper->quality_id(),
+				width				=> $Paper->width(),
+				height			=> $Paper->height(),
 				fsc_code			=>	$Paper->fsc_code(),
 				);
 
@@ -642,12 +649,17 @@ sub save_Paper {
 			$weight .= 'lb' if ! ( $param{'weight'.$id} =~ /lb/ );
 		} # end if
 	} elsif ( $param{'calliper'.$id} ) {
-		$weight = ($param{'calliper'.$id}*1000).'PT';
+		if ( $param{'calliper'.$id} > 1 ) {
+			$weight = $param{'calliper'.$id}.'PT';
+			$param{'calliper'.$id} /= 1000;
+		} else {
+			$weight = ($param{'calliper'.$id}*1000).'PT';
+		}
 	} # end if
 
 	my @Papers = openprint::Paper->find(
-			( $param{'owner_id'.$id} ? ( 'owner_id'	=>	$param{'owner_id'.$id} ) : () ),
-			( $param{'Owner'.$id} ? ( 'owner_id'	=>	$param{'Owner'.$id} ) : () ),
+			( $param{'owner_id'.$id} ? ( owner_id	=>	$param{'owner_id'.$id} ) : () ),
+			( $param{'Owner'.$id} ? ( owner_id	=>	$param{'Owner'.$id} ) : () ),
 			( $param{'group_id'.$id} ? ( group_id	=>	$param{'group_id'.$id} ) : () ),
 			( $param{'Group'.$id} ? ( group_id	=>	$param{'Group'.$id} ) : () ),
 			( $param{'txtGroup'.$id} ? ( group		=>	$param{'txtGroup'.$id} ) : () ),
@@ -656,21 +668,21 @@ sub save_Paper {
 			( $param{'Manufacturer'.$id} ? ( manufacturer_id	=>	$param{'Manufacturer'.$id} ) : () ),
 			( $param{'txtManufacturer'.$id} ? ( manufacturer		=>	$param{'txtManufacturer'.$id} ) : () ),
 			( $param{'manufacturer'.$id} ? ( manufacturer		=>	$param{'manufacturer'.$id} ) : () ),
-			( $param{'brand_id'.$id} ? ( 'brand_id'	=>	$param{'brand_id'.$id} ) : () ),
-			( $param{'Brand'.$id} ? ( 'brand_id'	=>	$param{'Brand'.$id} ) : () ),
-			( $param{'txtBrand'.$id} ? ( 'brand'		=>	$param{'txtBrand'.$id} ) : () ),
+			( $param{'brand_id'.$id} ? ( brand_id	=>	$param{'brand_id'.$id} ) : () ),
+			( $param{'Brand'.$id} ? ( brand_id	=>	$param{'Brand'.$id} ) : () ),
+			( $param{'txtBrand'.$id} ? ( brand		=>	$param{'txtBrand'.$id} ) : () ),
 			( $param{'brand'.$id} ? ( brand		=>	$param{'brand'.$id} ) : () ),
-			( $param{'Finish'.$id} ? ( 'finish_id' =>	$param{'Finish'.$id} ) : () ),
+			( $param{'Finish'.$id} ? ( finish_id =>	$param{'Finish'.$id} ) : () ),
 			( $param{'finish_id'.$id} ? ( finish_id =>	$param{'finish_id'.$id} ) : () ),
-			( $param{'txtFinish'.$id} ? ( 'finish'	=>	$param{'txtFinish'.$id} ) : () ),
+			( $param{'txtFinish'.$id} ? ( finish	=>	$param{'txtFinish'.$id} ) : () ),
 			( $param{'finish'.$id} ? ( finish	=>	$param{'finish'.$id} ) : () ),
 			( $param{'colour_id'.$id} ? ( colour_id =>	$param{'colour_id'.$id} ) : () ),
-			( $param{'Colour'.$id} ? ( 'colour_id' =>	$param{'Colour'.$id} ) : () ),
-			( $param{'txtColour'.$id} ? ( 'colour'	=>	$param{'txtColour'.$id} ) : () ),
+			( $param{'Colour'.$id} ? ( colour_id =>	$param{'Colour'.$id} ) : () ),
+			( $param{'txtColour'.$id} ? ( colour	=>	$param{'txtColour'.$id} ) : () ),
 			( $param{'colour'.$id} ? ( colour	=>	$param{'colour'.$id} ) : () ),
 			( $param{'weight_id'.$id} ? ( weight_id =>	$param{'weight_id'.$id} ) : () ),
-			( $param{'Weight'.$id} ? ( 'weight_id' =>	$param{'Weight'.$id} ) : () ),
-			( $weight ? ( weight	=>	$weight ) : () ),
+			( $param{'Weight'.$id} ? ( weight_id =>	$param{'Weight'.$id} ) : () ),
+			( $weight ? ( weight=>$weight ) : () ),
 # We might 
 			( $param{'material_id'.$id} ? ( material_id =>	$param{'material_id'.$id} ) : () ),
 			( $param{'material'.$id} ? ( material	=>	$param{'material'.$id} ) : () ),
@@ -680,7 +692,7 @@ sub save_Paper {
 			( $param{'height'.$id} ? ( height	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef ) : () ),
 			( $param{'type'.$id} ? ( type		=>	$param{'type'.$id} ) : () ),
 			( $param{'calliper'.$id} ? ( 'calliper is null or ='	=>	$param{'calliper'.$id} ) : () ),
-			( $param{'fsc_code'.$id} ? ( 'fsc_code'	=>	$param{'fsc_code'.$id} ) : ( 'fsc_code is null or =' => $param{'fsc_code'.$id} ) ),
+			( $param{'fsc_code'.$id} ? ( fsc_code	=>	$param{'fsc_code'.$id} ) : ( 'fsc_code is null or =' => $param{'fsc_code'.$id} ) ),
 			);
 	my $Paper;
 
@@ -727,13 +739,14 @@ sub save_Paper {
 			$Paper->width( $param{'width'.$id} );
 			$Paper->height( $param{'height'.$id} );
 		} # end if
-		if ( $weight =~ /^([\d\.]+)lb$/ ) {
-			$Paper->basis_mweight( $1 * 2 );
+		if ( $weight =~ /^([\d\.]+)lb$/i ) {
+			$Paper->basis_mweight($1 * 2);
+		} elsif ( $param{'basis_weight'.$id} ) {
+			$Paper->basis_mweight( $param{'basis_weight'.$id} );
 		} # end if
-		$Paper->calliper( $param{'calliper'.$id} );
-		$Paper->mweight( $param{'mweight'.$id} );
-		$Paper->basis_weight( $param{'basis_weight'.$id} ) if exists $param{'basis_weight'.$id};
-		$Paper->gsm( $param{'gsm'.$id} );
+		$Paper->calliper( $param{'calliper'.$id} ) if $param{'calliper'.$id} ;
+		$Paper->mweight( $param{'mweight'.$id} ) if $param{'mweight'.$id};
+		$Paper->gsm( $param{'gsm'.$id} ) if $param{'gsm'.$id};
 		if ( my $error = $Paper->save() ) {
 			$variable{error} .= $error;
 		} else {
@@ -1126,7 +1139,10 @@ sub skid_details {
 			if ( exists $param{Captcha} ) {
 # Remove spaces, because some people want to put spaces between the characters, etc.
 				$param{Captcha} =~ s/\s//g;
-				my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{SkinPath}.'/images/captcha');
+				my $Captcha = new Authen::Captcha(
+						data_folder => $config{SkinPath}.'/tmp',
+						output_folder => $config{SkinPath}.'/images/captcha'
+						);
 				if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
 					$variable{error} .= 'Captcha Validation Code incorrect.	Please try again.';
 					return;
@@ -1665,7 +1681,8 @@ sub save_Manifest {
 	my ( $Manifest ) = @_;
 
 	my $error;
-	$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
+	
+	$param{received_on} = join('-', @param{'received_on_year','received_on_month','received_on_day'});
 
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE companies IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
@@ -1686,17 +1703,29 @@ sub save_Manifest {
 			} # end if
 			$param{supplier_id} = $Companies[0]->id();
 		} # end if
+	} elsif ( ! ( $param{supplier} and $param{supplier_id} ) ) {
+# No vendor supplied, look in POs.
+			my @Types = openprint::Manifest_Content_Type->find(manifest_id=>$Manifest->id());
+			my @vendor_ids = sets::union( map { $param{"po_id-$$_{id}"} ? new openprint::PurchaseOrder($param{"po_id-$$_{id}"})->supplier_id(): () } @Types );
+			if ( @vendor_ids == 1 ) {
+			$param{supplier_id} = $vendor_ids[0];
+			}
 	} # end if supplier and ! supplier_id
 	sql::end_transaction( $dbh, $ac );
 
 	$ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Manifests IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
-	$error .= $Manifest->save( \%param );
 	my $Log = new openprint::Log();
-	$Log->save({object_type => 'openprint::Manifest', object_id=>$$Manifest{id}, action=>'Save Manifest',user_id=>$session{user_id},company_id=>$session{company_id} });
+	$Log->set({Object=>$Manifest, action=>'Save Manifest'});
 
-	my @Types = openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id());
+	my @changes = $Manifest->changes(\%param);
+	if ( @changes ) {
+		$error .= $Manifest->save( \%param );
+		$Log->save({ note=>'Changes: ' . join('=>', @changes) });
+	}
+
+	my @Types = openprint::Manifest_Content_Type->find(manifest_id=>$Manifest->id());
 	if ( ! @Types ) {
 		# It's an empty, brand new manifest
 		my $Type = new openprint::Manifest_Content_Type();
@@ -1705,7 +1734,7 @@ sub save_Manifest {
 		return $error;
 	} # end if
 
-	foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
+	foreach my $Type ( @Types ) {
 		my $Paper = save_Paper('-'.$Type->id());
 		
 		my %data = (
@@ -1719,7 +1748,12 @@ sub save_Manifest {
 		);
 		$data{cost} = $param{'cost-'.$Type->id()} if exists $param{'cost-'.$Type->id()};
 		$data{supplier_invoice} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
-		$variable{error} .= $Type->save(\%data);
+
+		@changes = $Type->changes(\%data);
+		if ( @changes ) {
+			$Log->save({ note=>$$Log{note} . '<br/>Type: ' . join('=>', @changes) });
+			$variable{error} .= $Type->save(\%data) if @changes;
+		}
 
 		my $NewMC = new openprint::ManifestContent();
 		$NewMC->set({manifest_id=>$$Manifest{id}, type_id=>$$Type{id}});
@@ -1913,7 +1947,7 @@ sub manifest {
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		$variable{error} = save_Manifest( $Manifest );
 		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/employee/inventory/manifest.html?manifest_id='.$Manifest->id();
+			$variable{ExternalRedirect} = '/employee/inventory/manifest_view.html?manifest_id='.$Manifest->id();
 		} # end if
 	} elsif ( $param{btnFunction} eq 'ChangePaper' ) {
 		foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
@@ -2275,8 +2309,11 @@ sub available_paper {
 		if ( exists $param{Captcha} ) {
 	# Remove spaces, because some people want to put spaces between the characters, etc.
 			$param{Captcha} =~ s/\s//g;
-			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{SkinPath}.'/images/captcha');
-			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+			my $Captcha = new Authen::Captcha(
+						data_folder => $config{SkinPath}.'/tmp',
+						output_folder => $config{SkinPath}.'/images/captcha'
+						);
+			if ( 1 != $Captcha->check_code(@param{'Captcha','MD5SUM'}) ) {
 				$variable{error} .= 'Captcha Validation Code incorrect.	Please try again.';
 				return;
 			} # end if
@@ -2325,7 +2362,13 @@ sub _allocate_popup {
 } # end sub _allocate_popup
 
 sub _manifest_purchase_orders {
+	$variable{Type} = new openprint::Manifest_Content_Type($param{type_id});
 } # end sub _manifest_purchase_orders
+
+sub _manifest_purchase_order_contents {
+	$variable{Type} = new openprint::Manifest_Content_Type($param{type_id});
+	$variable{Type}->po_id($param{po_id});
+} # end sub _manifest_purchase_order_contents
 
 sub _rfidtag_log {
 	if ( ! exists $param{start_year} ) {
@@ -2344,15 +2387,6 @@ sub _rfidtag_log {
 
 sub _rfidtag_log_entries {
 } # end sub _rfidtag_log_entries
-
-sub _manifest_type {
-	$variable{Manifest} = new openprint::Manifest( $param{manifest_id} );
-	if ( $param{action} eq 'Add' ) {
-		$variable{Type} = new openprint::Manifest_Content_Type();
-		$variable{error} .= $variable{Type}->save({'manifest_id'=>$param{manifest_id}});
-		$variable{type_id} = $variable{Type}->id();
-	} # end if
-}
 
 sub _verification_log {
 	$variable{Skid} = new openprint::Skid( $param{skid_id} );
@@ -2501,7 +2535,6 @@ sub manifest_import {
 
 			while ( my $line = <$io> ) {
 				s/^\s+//, s/\s+$//, s/\s+/ /g, s/\.\s+/\./g for $line;
-				
 
 				if ( $line =~ /(.+)Page\s+(\d+) of (\d+)$/ ) {
 					# Start a new page
@@ -3242,5 +3275,49 @@ sub _select_stock {
 sub _check_lookup_item {
 }
 
+sub _manifest_type {
+	$variable{Manifest} = new openprint::Manifest( $param{manifest_id} );
+	if ( $param{action} ) {
+		if ( $param{action} eq 'Add' ) {
+			$variable{Type} = new openprint::Manifest_Content_Type();
+			$variable{error} .= $variable{Type}->save({manifest_id=>$param{manifest_id}});
+			$variable{type_id} = $variable{Type}->id();
+		} elsif ( $param{action} eq 'remove' ) {
+			my $Type = openprint::Manifest_Content_Type->find(id=>$param{manifest_content_type_id});
+			if ( $Type ) {
+				$variable{error} .= $Type->delete();
+			} else {
+				$variable{error} .= 'Manifest Content not found.<br/>';
+			}
+		} elsif ( $param{action} eq 'confirm_po_content' ) {
+			my $Manifest_Content_Type = openprint::Manifest_Content_Type->find_one(id=>$param{manifest_content_type_id});
+			if ( $Manifest_Content_Type ) {
+				$variable{error} .= $Manifest_Content_Type->save({po_content_id=>$param{po_content_id}});
+				my $POC = $Manifest_Content_Type->PurchaseOrder_Content();
+				(new openprint::Log())->save({
+						Object=>$Manifest_Content_Type->Manifest(),
+						action=>'Edit',
+						note=>'Confirm PO Content '.$POC->item(),
+						});
+
+			} else {
+				$variable{error} .= "Manifest Content Type not found for id=.$param{manifest_content_type_id}<br/>";
+			}
+		} elsif ( $param{action} eq 'unconfirm_po_content' ) {
+			my $Manifest_Content_Type = openprint::Manifest_Content_Type->find_one(id=>$param{manifest_content_type_id});
+			if ( $Manifest_Content_Type ) {
+				my $POC = $Manifest_Content_Type->PurchaseOrder_Content();
+				$variable{error} .= $Manifest_Content_Type->save({po_content_id=>undef});
+				(new openprint::Log())->save({
+						Object=>$Manifest_Content_Type->Manifest(),
+						action=>'Edit',
+						note=>'Unconfirm PO Content '.$POC->item(),
+						});
+			} else {
+				$variable{error} .= "Manifest Content Type not found for id=.$param{manifest_content_type_id}<br/>";
+			}
+		} # end if
+	}
+} # end sub _manifest_type
 1;
 __END__

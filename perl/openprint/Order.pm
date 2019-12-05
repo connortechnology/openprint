@@ -737,11 +737,16 @@ sub Taxes {
 } # end sub Taxes
 
 sub Tax {
-	my $result = openprint::Order_Tax->find_one('order_id'=>$_[0]{id}, 'tax_id'=>$_[1]->id() );
-	if ( ! $result ) {
-		return new openprint::Order_Tax();
-	} # end if
-	return $result;
+	my $self = shift;
+	my $Tax = shift;
+
+	$self->Taxes() if !$$self{Taxes};
+	if ( $$self{Taxes} ) {
+		foreach my $OT ( @{$$self{Taxes}} ) {
+			return $OT if $$OT{tax_id} == $$Tax{id};
+		}
+	}
+	return new openprint::Order_Tax();
 } # end sub Tax
 
 sub Payments {
@@ -940,7 +945,7 @@ sub Invoices {
 } # end sub Invoices
 
 sub invoiced_on {
-	my @Invoices = $_[0]->Invoices() ;
+	my @Invoices = $_[0]->Invoices();
 	if ( @Invoices ) {
 		return $Invoices[0]->Invoice()->created_on();
 	} 

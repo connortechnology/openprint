@@ -1,13 +1,16 @@
+<div class="Assets">
 <fieldset><legend>Assets</legend>
 <? if ( $$variable{Object}->can_edit() ) ?>
 	<div id="fine-uploader">
 	</div>
+<div class="AssetSearch">
 	<fieldset><legend>Search for Assets</legend>
 		<ul id="asset_search">
 			<li><label>Name</label><input type="text" name="asset_name_search" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'asset_search_results', '/employee/assets/_search_results.html', { parameters: { asset_name: this.value } } ); return false;};return true;"/></li>
 		</ul>
 		<ul id="asset_search_results"></ul>
 	</fieldset>
+</div>
 
 <script type="text/template" id="qq-template">
 	<div class="qq-uploader-selector qq-uploader" qq-drop-area-text="Drop files here">
@@ -105,3 +108,4 @@
 	<div id="assets"><?include('/employee/assets/_assets.html') ?></div>
 <? endif ( $$variable{Object}->can_edit() ) ?>
 </fieldset>
+</div>

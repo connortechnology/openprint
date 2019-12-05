@@ -49,9 +49,8 @@ $dbh = sql::open_sql( $log,
 		login=>$config{db_user},
 		password=>$config{db_pass}, 
 		host=>$config{db_host} );
-die "Unable to connect to db." if ! $dbh;
+die 'Unable to connect to db.' if ! $dbh;
 configuration::from_db();
-my $die = 0;
 foreach my $param ( 'Archive_Directories' ) {
     if ( ! $config{$param} ) {
         $log->error("archive_files: missing required --$param parameter");

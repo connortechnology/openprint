@@ -62,74 +62,48 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init( $r->dir_config() );
 	if ( $dbh ) {
+
+		if ( $r->param('campaign_id') and $r->param('user_id') ) {
+			sql::update(undef,undef, 'EmailCampaign_Sent', [ 'campaign_id=? AND user_Id=?', $r->param('campaign_id'), $r->param('user_id') ], 'last_read', 'NOW()' );
+		}
+
 		# Need session, have to know who we are!
 		openprint::session_init();
 		# If the session was created, then we want to tell it when, otherwise
 		# don't update it so that we don't incur another db update
 		# Do it up here cuz if the browser kills the connection, we will die during sending and won't do this line
-		$session{'lastupdated'} = time if ! $session{'lastupdated'};
+		$session{lastupdated} = time if ! $session{lastupdated};
 
 		# The asset filename form is id_title.extension, path is either assets or thumbnails
 		my ( $path, $id, $filename ) = $r->uri() =~ /^\/(.*)\/(\d+)_(.+)$/;
 $log->debug("Path: $path id: $id uri:" . $r->uri());
-		$path =~ s/^assets\///;
+		$path =~ s/^assets//;
 $log->debug("Path: $path id: $id uri:" . $r->uri());
 		if ( $id ) {
+			my $can_view = undef;
+
 			my $Asset = new openprint::Asset( $id );
 			if ( $$Asset{id} ) {
-				if ( my @Photos = openprint::Photo_in_Album->find( asset_id=>$$Asset{id} ) ) {
-$log->debug(" Have " . @Photos . " photo for this asset" );
-					my $can_view = 0;
-					foreach my $Album ( map { $_->Album() } @Photos ) {
-						if ( $Album->can_view() ) {
-							$can_view = 1;
-							last;
-						} else {
-							$log->debug("Album " . $Album->to_string() . " cannot view" );
-						} # end if
-					} # end foreach Album
-					if ( $can_view ) {
-						#$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
-						if ( $path eq 'thumbnails' ) {
-							$r->sendfile( $Asset->thumbnail_path() );
-						} elsif ( $path eq 'medium' ) {
-							$r->sendfile( $Asset->medium_path() );
-						} elsif ( $path eq 'large' ) {
-							$r->sendfile( $Asset->large_path() );
-						} elsif ( $path eq 'small' ) {
-$log->debug("Sending: " .  $Asset->sized_path( 'small' ) );
-							$r->sendfile( $Asset->sized_path( 'small' ) );
-						} elsif ( $path eq 'videos' ) {
-							if ( -e $config{AssetPath}.'videos/'.$id.'_'.$filename ) {
-								#$r->content_type( $Asset->content_type( $id.'_'.$filename ) );
-#$r->rflush;
-								$log->debug('Sending ' . $config{AssetPath}.'videos/'.$id.'_'.$filename );
-								$return_code = $request->sendfile( $config{AssetPath}.'videos/'.$id.'_'.$filename );
-$log->debug( "sendfile has failed" ) unless $return_code == APR::Const::SUCCESS;
-$log->debug("Return code: $return_code");
-							} else {
-								$log->error("DOes not exist at: " . $config{AssetPath}.'videos/'.$id.'_'.$filename );
-							} # en dif
-						} else {
-$log->debug("Sending ... " . $Asset->on_disk_path() );
-							$r->sendfile( $Asset->on_disk_path() );
-						} # end if
-$log->error( "Eval error sending image Reason: " . $@ ) if $@;
-					} else {
-$log->error("FORBIDDEN");
-						$return_code = Apache2::Const::HTTP_FORBIDDEN;
-					} # end if
-				} else {
-					$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
+
+				if ( $Asset->can_view() ) {
+#$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 					if ( $path eq 'thumbnails' ) {
 						$r->sendfile( $Asset->thumbnail_path() );
 					} elsif ( $path eq 'medium' ) {
 						$r->sendfile( $Asset->medium_path() );
+					} elsif ( $path eq 'large' ) {
+						$r->sendfile( $Asset->large_path() );
+					} elsif ( $path eq 'small' ) {
+						$log->debug('Sending: ' .  $Asset->sized_path('small') );
+						$r->sendfile($Asset->sized_path('small'));
 					} else {
-# No album means has to be an article image, or a generic site image.
-#$log->debug( $Asset->on_disk_path() );
-						$r->sendfile( $Asset->sized_path( $path ) );
+						$log->debug('Sending ... ' . $Asset->on_disk_path());
+						$r->sendfile($Asset->on_disk_path());
 					} # end if
+					$log->error('Eval error sending image Reason: ' . $@) if $@;
+				} else {
+					$log->error('FORBIDDEN');
+					$return_code = Apache2::Const::HTTP_FORBIDDEN;
 				} # end if
 			} else {
 $log->error("NOT FOUND");

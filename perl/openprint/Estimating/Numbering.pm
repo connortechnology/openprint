@@ -33,7 +33,7 @@ my %variables = (
 );
 
 sub variables {
-	my ( $pid, $sid, $specs ) = @_;
+	my ( $pid, $sid, $old_specs, $specs ) = @_;
   my @v;
   foreach my $k ( keys %variables ) {
     push @v, $k if sets::isin( 'save', $variables{$k} );

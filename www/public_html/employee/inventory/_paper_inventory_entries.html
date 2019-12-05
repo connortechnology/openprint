@@ -36,7 +36,7 @@
 					$html .= sprintf('<tr%1$s><td class="Skid"><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
 						<td class="RFID"><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>
 						<td class="ManufacturersID"><a href="skid_details.html?skid_id=%2$d">%9$s</a></td>
-						<td class="po_id">%10$s</td>
+						<td class="po_id" title="%11$s">%10$s</td>
 						<td class="Location"><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>
 						<td class="last_seen"><a href="skid_details.html?skid_id=%2$d">%7$s</a></td>
 						<td class="Quantity"><a href="skid_details.html?skid_id=%2$d">%5$s%6$s</a></td>
@@ -49,6 +49,9 @@
 						$Skid->manufacturers_id(),
 						join("\n", 
 							map { sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>', $_->id() ) } @PurchaseOrders 
+						),
+						join("\n", 
+							map { $_->summary() } @PurchaseOrders 
 						),
 						);
 					if ( $$variable{can_see_prices} ) {

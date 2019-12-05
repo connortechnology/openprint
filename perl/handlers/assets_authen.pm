@@ -25,52 +25,52 @@ use vars qw( $r %session %config $log $dbh );
 use constant DEBUG => 1;
 
 sub cleanup {
-    if ( $dbh ) {
+	if ( $dbh ) {
 		if ( %session ) {
 			$session{lastupdated} = time;
 			untie %session;
 		} # end if
-        $dbh->disconnect();
-    } # end if
+		$dbh->disconnect();
+	} # end if
 } # end sub cleanup
 
 sub access_handler {
-    my $request = $_[0];
+	my $request = $_[0];
 
-    unless ($request->some_auth_required) {
-        $request->log_reason("No authentication has been configured");
-        return Apache2::Const::FORBIDDEN;
-    }
+	unless ($request->some_auth_required) {
+		$request->log_reason("No authentication has been configured");
+		return Apache2::Const::FORBIDDEN;
+	}
 
-    $r = Apache2::Request->new( $request );
-    $log = $r->log;
+	$r = Apache2::Request->new( $request );
+	$log = $r->log;
 	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 
-    $dbh = sql::open_sql( $log,
-            database  => $r->dir_config('db_name'),
-			port		=>	$r->dir_config('db_port'),
-            driver    => $r->dir_config('db_driver'),
-            host      => $r->dir_config('db_host'),
-            login     => $r->dir_config('db_user'),
-            password  => $r->dir_config('db_password'),
-            );
+	$dbh = sql::open_sql( $log,
+			database  => $r->dir_config('db_name'),
+			port			=> $r->dir_config('db_port'),
+			driver    => $r->dir_config('db_driver'),
+			host      => $r->dir_config('db_host'),
+			login     => $r->dir_config('db_user'),
+			password  => $r->dir_config('db_password'),
+			);
 	my $return_code = Apache2::Const::OK;
-    # This one has to go here, because it loads data, the others clear data, so they can go after the requires
-    configuration::init( $r->dir_config() );
-    if ( $dbh ) {
-        # Need session, have to know who we are!
-        openprint::session_init();
-$log->debug("Session is: $session{_session_id} user_id:$session{user_id} company_id:$session{company_id}");
-        # update connection record
-        if ( $session{user_id} ) {
-            my $User = new openprint::User( $session{user_id} );
-            if ( $User->id() and ! $User->deleted() ) {
-                $request->user($User->email());
+# This one has to go here, because it loads data, the others clear data, so they can go after the requires
+	configuration::init( $r->dir_config() );
+	if ( $dbh ) {
+# Need session, have to know who we are!
+		openprint::session_init();
+		$log->debug("Session is: $session{_session_id} user_id:$session{user_id} company_id:$session{company_id}");
+# update connection record
+		if ( $session{user_id} ) {
+			my $User = new openprint::User( $session{user_id} );
+			if ( $User->id() and ! $User->deleted() ) {
+				$request->user($User->email());
 				$log->debug("Already logged in as $$User{email}") if DEBUG;
-                # do not ask for a password
-                $r->set_handlers(PerlAuthenHandler => [\&Apache2::Const::OK]);
-            } # end if
-        } # end if
+# do not ask for a password
+				$r->set_handlers(PerlAuthenHandler => [\&Apache2::Const::OK]);
+			} # end if
+		} # end if
 
 		$session{lastupdated} = time if ! $session{lastupdated};
 

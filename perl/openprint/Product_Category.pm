@@ -18,6 +18,7 @@ $table = 'Product_Categories';
 	parent_ids		=>	'parent_ids',
 	sorting			=>	'sorting',
 	deleted			=>	'deleted',
+	album_id                                =>      'album_id',
 );
 
 %transforms = (
@@ -29,6 +30,7 @@ $table = 'Product_Categories';
 	parent_ids	=>	[],
 	projecttype_id	=>	undef,
 	sorting			=>	undef,
+	album_id=>undef,
 );
 
 sub destroy {
@@ -89,7 +91,7 @@ sub link_to {
 }
 sub Parents {
 	if ( ! $_[0]{Parents} ) {
-		$_[0]{Parents} = [ openprint::Product_Category->find( 'parent_ids @>'=>$_[0]{parent_ids} ) ];
+		$_[0]{Parents} = ($_[0]{parent_ids} and @{$_[0]{parent_ids}} ) ? [ openprint::Product_Category->find( 'id <@'=>$_[0]{parent_ids} ) ] : [];
 	}
 	return @{$_[0]{Parents}};
 }
@@ -100,6 +102,17 @@ sub Categories {
 	}
 	return @{$_[0]{Categories}};
 } # end sub Categories
+
+sub upload {
+	my $self = shift;
+	my $Album = $self->Album();
+	if ( ! $Album->id() ) {
+		$Album->save();
+		$$self{album_id} = $Album->id();
+		$self->save();
+	}
+	return $Album->upload(@_);
+} # end sub upload
 
 1;
 __END__

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser );
+use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser $Host);
 
 use constant Debug => 1;
 
@@ -15,7 +15,7 @@ sub session_init {
 	$parser = 'DateTime::Format::Pg';
  
 	if ( ! $openprint::config{Timezone} ) {
-		$log->error("You must configure a time zone.  Defaulting to America/Toronto");
+		$log->error('You must configure a time zone.  Defaulting to America/Toronto');
 		$openprint::config{Timezone} = 'America/Toronto';
 	} # end if
 	$TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
@@ -23,14 +23,14 @@ sub session_init {
 	my $cookies;
 	my $cookie;
 	if ( $r ) {
-		$cookies = Apache2::Cookie->fetch( $r );
+		$cookies = Apache2::Cookie->fetch($r);
 		if ( $$cookies{_session_id} ) {
 			$cookie = $$cookies{_session_id};
 			$cookie = $cookie->value if $cookie;
 $log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
 		} else {
 			if ( $r->param('_session_id') ) {
-				$log->error("Since when is session_id in the params");
+				$log->error('Since when is session_id in the params');
 				$cookie = $r->param('_session_id');
 			} # end if
 		} # end if
@@ -44,7 +44,7 @@ $log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
 				} # end if
 				if ( $r->param('_session_id') ) {
 					if ( $session{ip} ne $ENV{REMOTE_ADDR} ) {
-						$log->error("Change of session ip");
+						$log->error('Change of session ip');
 						untie %session;
 						%session = ();
 					} # end if
@@ -66,7 +66,7 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 					$Cookie->bake( $r );
 					$cookie = $Cookie->value;
 				} else {
-					$log->error("No Cookie.  Does db have a sessions table?");
+					$log->error('No Cookie.  Does db have a sessions table?');
 				} # end if
 			} # end if
 		} else {
@@ -85,9 +85,10 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 
 	return if ! $dbh;
 
-	$User = new openprint::User( $session{user_id} );
+	$User = new openprint::User($session{user_id});
 
-	if ( $param{btnFunction} and $session{user_type} and sets::isin( $session{user_type}, ['E','A'] ) ) {
+# This probably shouldn't be here
+	if ( $param{btnFunction} and $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) {
 		if ( $param{btnFunction} eq 'SelectCompany' ) {
 			if ( $param{ddmCompany} != $session{company_id} ) {
 
@@ -122,8 +123,16 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 		} # end if
 	}
 	if ( ! $session{Currency_id} ) {
-		$_ = openprint::Currency->find_one( short => $config{Currency} );
-		$session{Currency_id} = $_->id() if $_;
+		if ( ! $config{Currency} ) {
+			$log->warn("Please specify a default currency!");
+		} else {
+			my $C = openprint::Currency->find_one( short => $config{Currency} );
+			if ( ! $C ) {
+				$log->error("The default currency $config{Currency} was not found in db!");
+			} else {
+				$session{Currency_id} = $C->id();
+			}
+		}
 	} # end if
 
 	$Company = new openprint::Company( $session{company_id} );
@@ -149,6 +158,22 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 		} # end if
 	} # end if
 	$Pricelist = new openprint::Pricelist( $session{Pricelist_id} ) if $session{Pricelist_id};
+
+	if ( $ENV{REMOTE_ADDR} ) {
+		my @Interfaces = openprint::Host_Interface->find(ip=>$ENV{REMOTE_ADDR});
+		if ( !@Interfaces ) {
+			$Host = openprint::Host->find_one(hostname=>$ENV{REMOTE_ADDR});
+			if ( !$Host ) {
+				$Host = new openprint::Host();
+				$Host->save({hostname=>$ENV{REMOTE_ADDR}});
+			}
+		} else { 
+			if ( @Interfaces > 1 ) {
+				$log->error("More than 1 Host with ip $ENV{REMOTE_ADDR}");
+			}
+			$Host = $Interfaces[0]->Host();
+		}
+	}
 
 } # end sub session_init
 

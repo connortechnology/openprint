@@ -37,7 +37,7 @@ my @variables = (
 );
 
 sub variables {
-	my ( $p_id, $s_id, $specs ) = @_;
+	my ( $p_id, $s_id, $old_specs, $specs ) = @_;
 	my @v = @variables;
 
 	my $Project = new openprint::Project( $p_id );
@@ -516,9 +516,9 @@ sub get_stocks {
 } # end sub get_stocks
 
 sub get_stocks_and_quantities {
-    my ( $Project, $service_id, $specs, $qty_index, @Stocks ) = @_;
+	my ( $Project, $service_id, $specs, $qty_index, @Stocks ) = @_;
 
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	@Stocks = get_stocks( $Project, $service_id, $specs ) if ! @Stocks;
 
 	foreach my $Stock ( @Stocks ) {
