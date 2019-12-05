@@ -224,29 +224,15 @@ foreach my $Asset ( @Assets ) {
 ';
 return $html;
 ) ?>
-			<div class="Logs">
-			<fieldset><legend>Logs</legend>
-				<table class="List">
-					<tr>
-						<th class="Date">When</th>
-						<th class="description">Description</th>
-					</tr>
-					<? echo (
-						my $html = '';
-						foreach my $L ( $$variable{PurchaseOrder}->Logs() ) {
-							$html .= sprintf('<tr><td class="Date">%s</td><td class="description">%s</td></tr>', format_datetime( $L->created_on() ), $L->reason() );
-						} # end foreach
-						return $html;
-					) ?>
-				</table>
-			</fieldset>
-			</div>
 <? if ( ! $$variable{PurchaseOrder}->authorized() ) ?>
 <div id="not_approved"><img src="/images/not_approved.png"/></div>
 <? endif ( ! $$variable{PurchaseOrder}->authorized() ) ?>
 <? if ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
 <div id="do_not_pay"><img src="/images/do_not_pay.png"/></div>
 <? endif ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
+<? if ( $$variable{PurchaseOrder}->cancelled() ) ?>
+<div id="cancelled"><img src="/images/cancelled.png"/></div>
+<? endif ( $$variable{PurchaseOrder}->cancelled() ) ?>
 		</div><!--PO-->
 	</body>
 </html>
