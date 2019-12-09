@@ -110,15 +110,14 @@ sub has_overrides {
 
 	my @v;
 	if ( $qty_index ) {
-		push @v, map { $$specs{$_.$qty_index} and ($$specs{$_.$qty_index} ne 'N') }
+		push @v, (map { ($$specs{$_.$qty_index} and ($$specs{$_.$qty_index} ne 'N')) ? $_ : () }
 		(
 		 'chkOverrideEquipment',
 		 'OverrideImposition',
 		 'OverridePockets',
 		 'OverridePrice',
-		);
+		));
 	} # end if
-
 	return @v;
 
 } # end sub has_overrides
