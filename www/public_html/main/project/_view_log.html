@@ -1,34 +1,32 @@
 <fieldset><legend>Modification History</legend>
 	<table class="List" style="table-layout: auto;">
-	<tr>
-	<th class="Company">Company</th>
-	<th class="User">User</th>
-	<th class="DateTime">When</th>
-	<th class="description">Description</th>
-	</tr>
-	<? eval ( 
-		$_ = q{SELECT company_id, user_id, dtmTimestamp, Description FROM Project_Log WHERE project_id=? ORDER BY dtmTimestamp DESC};
-		@{$$variable{ProjectLog}} = sql::execute( $log, $dbh, $_, $param{project_id} );
-	) ?>
-	<? while ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{ProjectLog}},0,4; ) ?>
-		<? eval ( 
-			if ( $$variable{Description} =~ /^Reused from project (\d+)$/ ) {
-				$$variable{Description} = "Reused from project <a href=\"/main/project/view.html?ProjectIndex=$1\">$1</a>";
-			} elsif ( $$variable{Description} =~ /^Reused to project (\d+)$/ ) {
-				$$variable{Description} = "Reused to project <a href=\"/main/project/view.html?ProjectIndex=$1\">$1</a>";
-			} elsif ( $$variable{Description} =~ /^Add to Order (\d+)$/ ) {
-				$$variable{Description} = "Add to order <a href=\"/main/order/history_details.html?order_id=$1\">$1</a>";
-			} elsif ( $$variable{Description} =~ /^Add to quote (\d+) (.+)$/ ) {
-				$$variable{Description} = "Add to quote <a href=\"/main/quote/history_details.html?quote_id=$1\">$1</a> $2";
-			} # end if
-		) ?>
-	<tr<?rowclass?>>
-	<td class="Company"><? echo ( new openprint::Company( $$variable{CustomerIndex} )->name(); ) ?></td>
-	<td class="User"><? echo ( new openprint::User( $$variable{UserIndex} )->link_to(); ) ?></td>
-	<td class="DateTime"><? echo ( format_datetime($$variable{When}) ) ?></td>
-	<td class="description"><? echo ( $$variable{Description} ) ?></td>
-	</tr>
-	<? eval ( $$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"'; ) ?>
-	<? endwhile ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{ProjectLog}},0,4; ) ?>
+		<thead>
+		<tr>
+			<th class="Company">Company</th>
+			<th class="User">User</th>
+			<th class="DateTime">When</th>
+			<th class="description">Description</th>
+		</tr>
+		</thead>
+		<tbody>
+<? echo ( 
+my $html = '';
+my $Project = new openprint::Project($param{project_id});
+my $rowclass = '';
+foreach my $Log ( openprint::Project_Log->find(project_id=>$param{project_id}, order=>'dtmTimestamp DESC') ) {
+	$html .= sprintf('
+		<tr%1$s>
+			<td class="Company">%2$s</td>
+			<td class="User">%3$s</td>
+			<td class="DateTime">%4$s</td>
+			<td class="description">%5$s</td>
+		</tr>
+	', $rowclass, $Log->Company()->link_to(), $Log->User()->link_to(), format_datetime($Log->created_on()), $Log->description_html(),
+);
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+}
+return $html;
+)?>
+		</tbody>
 	</table>
 </fieldset>

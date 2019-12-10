@@ -1,7 +1,7 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/printing.js') ) ?>"></script>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/paper.js') ) ?>"></script>
-<script type="text/javascript">
+<script src="<? echo ( hash_link('/javascripts/printing.js') ) ?>"></script>
+<script src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script src="<? echo ( hash_link('/javascripts/proj/paper.js') ) ?>"></script>
+<script>
 
 var quantities=new Array();
 <?QUANTITIES?>
@@ -23,15 +23,15 @@ function calc( formName, force ) {
 <? if ( $$variable{'Group'} == 1 ) ?>
 			<div class="leftColumn">
 <? endif ( $$variable{'Group'} == 1 ) ?>
-				<p><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
+				<p><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>"/></p>
 				<p class="dimensions">
 					<label>Spread dimensions</label>
 					<? echo (
 						my $html = sprintf('%s x %s => %s x %s',
-							ssi::input( type=>'float', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>'calc(this.form.name);' ),
-							ssi::input( type=>'float', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>'calc(this.form.name);' ),
-							ssi::input( type=>'float', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'calc(this.form.name);' ),
-							ssi::input( type=>'float', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'calc(this.form.name);' ),
+							input( type=>'float', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>'calc(this.form.name);' ),
+							input( type=>'float', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>'calc(this.form.name);' ),
+							input( type=>'float', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'calc(this.form.name);' ),
+							input( type=>'float', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'calc(this.form.name);' ),
 							);
 						if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
 							$html .= ssi::write_override( 'chkOverrideDimensions', $$variable{'chkOverrideDimensions'}, '', 'calc(this.form.name);' );

@@ -3,7 +3,7 @@
 <h2>History</h2>
 </div>
 <?include('/includes/error_reporting.html')?>
-<script type="text/javascript">
+<script>
 	function delete_confirm(form) {
 		var number_of_deleted_projects = 0;
 		if ( form.elements['project_id'] ) {
@@ -139,13 +139,16 @@
 					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
 					button( 'Create', { href=>'create_edit.html', text=>'Create New' } ),
 					button( 'Reset', { onclick=>q`f1.btnFunction.value='Reset';f1.submit();`, text=>'Reset' } ),
-					button( 'Delete', { onclick=>'delete_confirm(document.f1);' } ),
+					button( 'Delete', { onclick=>'delete_confirm(document.f2);' } ),
 				); ) ?>
 			</p>
 		</fieldset>
+	</div>
+	</div>
+	<input type="hidden" name="btnFunction" />
+</form>
+<form id="f2" name="f2" method="post" action="/main/project/history.html">
 		<div id="ProjectList"><? include('_history.html') ?></div>
-	</div>
-	</div>
 	<input type="hidden" name="btnFunction" />
 </form>
 <? else ( $session{user_id} ) ?>
