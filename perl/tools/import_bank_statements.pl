@@ -74,7 +74,7 @@ openprint::session_init();
 while ( !($$opts{account} and openprint::Expense_Account->find_one(name=>$$opts{account})) ) {
   my %accounts = map { $$_{id} => $_ } openprint::Expense_Account->find(order=>'lower(name)');
   print "Please select the account:\n";
-  foreach ( keys %accounts ) {
+  foreach ( sort keys %accounts ) {
     print '['.$_.'] '.$accounts{$_}{name}."\n";
   }
   my $response = <STDIN>;
