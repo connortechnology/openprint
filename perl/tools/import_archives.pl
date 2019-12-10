@@ -18,8 +18,14 @@ use vars qw( $log $dbh %config %session );
 $log = new logger('debug');
 
 $openprint::Object::no_cache = 1;
-$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>'database') );
-die "Unable to connect to db." if !$dbh;
+$dbh = sql::open_sql( $log, (
+			database	=>$ARGV[0],
+			driver		=>'Pg',
+			login		=>$ARGV[1],
+			password	=>$ARGV[2],
+			host		=>'database'
+			) );
+die 'Unable to connect to db.' if !$dbh;
 configuration::init();
 configuration::from_file('/etc/openprint/import_archives.conf');
 $log = new logger( {file=>$config{log_file}, level=>$config{log_level}} );

@@ -164,7 +164,10 @@ sub skids {
 		if ( exists $param{Captcha} ) {
 	# Remove spaces, because some people want to put spaces between the characters, etc.
 			$param{Captcha} =~ s/\s//g;
-			my $Captcha = new Authen::Captcha( data_folder => '/tmp', output_folder => $config{SkinPath}.'/images/captcha' );
+			my $Captcha = new Authen::Captcha(
+					data_folder => $config{SkinPath}.'/tmp',
+					output_folder => $config{SkinPath}.'/images/captcha'
+					);
 			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
 				$variable{error} .= 'Captcha Validation Code incorrect.	Please try again.';
 				return;
@@ -580,7 +583,10 @@ sub paper_details {
 		if ( exists $param{Captcha} ) {
 	# Remove spaces, because some people want to put spaces between the characters, etc.
 			$param{Captcha} =~ s/\s//g;
-			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{SkinPath}.'/images/captcha');
+			my $Captcha = new Authen::Captcha(
+					data_folder => $config{SkinPath}.'/tmp',
+					output_folder => $config{SkinPath}.'/images/captcha'
+					);
 			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
 				$variable{error} .= 'Captcha Validation Code incorrect.	Please try again.';
 				return;
@@ -1133,7 +1139,10 @@ sub skid_details {
 			if ( exists $param{Captcha} ) {
 # Remove spaces, because some people want to put spaces between the characters, etc.
 				$param{Captcha} =~ s/\s//g;
-				my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{SkinPath}.'/images/captcha');
+				my $Captcha = new Authen::Captcha(
+						data_folder => $config{SkinPath}.'/tmp',
+						output_folder => $config{SkinPath}.'/images/captcha'
+						);
 				if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
 					$variable{error} .= 'Captcha Validation Code incorrect.	Please try again.';
 					return;
@@ -2300,8 +2309,11 @@ sub available_paper {
 		if ( exists $param{Captcha} ) {
 	# Remove spaces, because some people want to put spaces between the characters, etc.
 			$param{Captcha} =~ s/\s//g;
-			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{SkinPath}.'/images/captcha');
-			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+			my $Captcha = new Authen::Captcha(
+						data_folder => $config{SkinPath}.'/tmp',
+						output_folder => $config{SkinPath}.'/images/captcha'
+						);
+			if ( 1 != $Captcha->check_code(@param{'Captcha','MD5SUM'}) ) {
 				$variable{error} .= 'Captcha Validation Code incorrect.	Please try again.';
 				return;
 			} # end if

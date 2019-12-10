@@ -9,7 +9,11 @@ my $html;
 		my $queue_id;
 		if ( $line =~ /^(\w+)(\*|\!)?\s/ ) {
 		  $queue_id = $1;
-		  $html .= '<p>'.ssi::checkboxes('queue_id', [$queue_id], undef).$line.'<br/>'.shift(@data).'<br/>'.shift(@data).'</p>';
+		  $html .= '<p>'.checkboxes('queue_id', [$queue_id], undef).$line.'<br/>'.shift(@data).'<br/>'.shift(@data).'</p>';
+# Need to be root to view
+#my $content = `postcat -q $queue_id`;
+#$log->debug("Content for postcat -q $queue_id: $content");
+#		$html .= '<p>'.$content.'</p>';
 		}
 	}
 	return $html;

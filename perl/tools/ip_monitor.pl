@@ -100,8 +100,7 @@ if ( ! $dbh ) {
 	$log->error( 'Error opening db. Sleeping for 5.' );
 	die;
 } # end if ! dbh
-
-configuration::init();
+configuration::from_db( );
 configuration::from_file($$opts{config});
 configuration::merge($opts);
 
@@ -111,6 +110,7 @@ if ( $config{user_id} ) {
 	$openprint::sesssion{company_id} = $openprint::User->company_id();
 	$openprint::Company = $openprint::User->Company();
 }
+
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	

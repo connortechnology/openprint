@@ -129,7 +129,10 @@ sub help_desk {
 				# Remove spaces, because some people want to put spaces between the characters, etc.
 				$param{Captcha} =~ s/\s//g;
 				require Authen::Captcha;
-				my $Captcha = new Authen::Captcha(data_folder => '/tmp', output_folder => $config{SkinPath}.'/images/captcha');
+				my $Captcha = new Authen::Captcha(
+						data_folder => $config{SkinPath}.'/tmp',
+						output_folder => $config{SkinPath}.'/images/captcha'
+						);
 				if ( 1 != $Captcha->check_code( $param{Captcha}, $param{MD5SUM} ) ) {
 					$error .= 'Validation Code incorrect. Please try again.';
 				} # end if
