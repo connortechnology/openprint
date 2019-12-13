@@ -1,49 +1,7 @@
 <script src="edit.js"></script>
 <? if ( $$variable{Payment}->id() ) ?>
-<script type="text/javascript">
-	function pay_invoice( invoice_id ) {
-		new Ajax.Updater( 'Paid', '_paid.html', { 
-				parameters: { 
-					payment_id: <? echo ( $$variable{Payment}->id() ) ?>,
-					invoice_id: invoice_id 
-				},
-				onSuccess: function(transport) {
-					new Ajax.Updater( 'Unpaid', '_unpaid.html', {
-						parameters: { payment_id: <? echo ( $$variable{Payment}->id() ) ?> }
-						} );
-				},
-				onFailure: function(transport) {
-					alert('failure to pay');
-				}
-		} );
-	} // end function pay_invoice( invoice_id)
-	function unpay_invoice( invoice_id ) {
-		new Ajax.Updater( 'Unpaid', '_unpaid.html', {
-				parameters: {
-					payment_id: <? echo ( $$variable{Payment}->id() ) ?>,
-					invoice_id: invoice_id
-				},
-				onSuccess: load_paid(),
-				onFailure: function(transport) {
-					alert('failure to unpay');
-				}
-			} );
-	} // end function unpay_invoice(invoice_id)
-	function load_paid ( ) {
-		new Ajax.Updater( 'Paid', '_paid.html', {
-			parameters: { payment_id: <? echo ( $$variable{Payment}->id() ) ?> },
-			evalScripts: true,
-		} );
-	} // end function load_paid
-  function load_unpaid( ) {
-    new Ajax.Updater( 'Unpaid', '_unpaid.html', {
-        parameters: {
-          payment_id: <? echo ( $$variable{Payment}->id() ) ?>,
-          recipient_id: $('recipient_id').value,
-     },
-          evalScripts: true,
-    } );
-  } // end function load_unpaid()
+<script>
+	var payment_id = '<? echo ( $$variable{Payment}->id() ) ?>';
 </script>
 <? endif ( $$variable{Payment}->id() ) ?>
 <?include('/includes/error_reporting.html')?>
