@@ -570,7 +570,8 @@ sub button {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
 	}
 	#$html .= "</a>";
-	$html .= '</button>'."\n";
+	$html .= '</button>
+';
 	return $html;
 } # end sub button
 
@@ -715,14 +716,12 @@ sub date_select {
 				onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
 				text=>'C', title=>'Clear', class=>'Clear',
 				} );
-      $html .= "\n";
 	} # end if
 	if ( $$options{with_today} ) {
 		$html .= button( $prefix.'_today', {
 				onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
 				text=>'T', title=>'Today', class=>'Today',
 				} );
-      $html .= "\n";
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span></span>';
@@ -1048,12 +1047,12 @@ sub input {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
-        } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
-            $options{type} = 'text';
-			$options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
-            delete $options{step};
-		} else {
-			$options{type} = 'number';
+    } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+      $options{type} = 'text';
+      $options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
+      delete $options{step};
+    } else {
+			$options{type} = 'text';
 		} # end if
 		$options{step} = 'any' if ! exists $options{step};
 		$options{oninput} = 'floatize_calculator(this);'.$options{oninput};
