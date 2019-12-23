@@ -1171,6 +1171,7 @@ sub mailqueue {
 $log->debug("sudo /usr/sbin/postsuper -d $queue_id");
 				$variable{information} .= `sudo /usr/sbin/postsuper -d $queue_id 2>&1`.'<br/>';
 			}
+			$variable{ExternalRedirect} = '/administrator/managerial/mailqueue.html';
 		}
 	}
 } # end sub mailqueue
