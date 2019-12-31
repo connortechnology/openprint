@@ -97,12 +97,12 @@
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr>
 		<td width="30%" class="headerText"><b>Press Proof Required?</b>&nbsp;
-		<? echo ( 
-			my $press_proof_required = 0;
+<? echo (
+	my $press_proof_required = 0;
 	openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ProofServiceIndex'} );
-   while ( @{$$variable{SignatureGroups}} ) {
+  while ( @{$$variable{SignatureGroups}} ) {
 		if ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{SignatureGroups}},0,2 ) {
-			my $proofs_string = join('-', 'Proofs',$$variable{SignatureIndex},$$variable{Project}->ordered_quantity_index());
+			my $proofs_string = join('-', 'Proofs', $$variable{SignatureIndex}, $$variable{Project}->ordered_quantity_index());
 			
 			next if ! ( $$variable{$proofs_string} and @{$$variable{$proofs_string}} );
 
@@ -110,14 +110,12 @@
 				if ( $$variable{ProofQuantity} and $$variable{ProofType} eq 'PressProof' ) {
 					$press_proof_required = 1;
 					last;
-} else {
-$log->debug("No a press proof: $$variable{ProofType} ");
 				}
 			} # end while
 		} # end if
-    } # end while SignatureGgroups
+  } # end while SignatureGgroups
 	return $press_proof_required ? 'Yes' : 'No';
-	) ?>
+) ?>
 		</td>
 		<td width="40%" class="headerText"><b>Special Inks</b>&nbsp;</td>
 		<td width="30%" class="docketText"><b><? echo ( 'FM SCREENING' if $$variable{ScreenType} eq 'FM' ) ?></b>&nbsp;</td>
@@ -431,6 +429,7 @@ $log->debug("Getting sheets from $lbs / " . $Imposition->sheet_area() . ' * ' . 
 <? echo ( 
 	openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{ProjectIndex}, $$variable{ProofServiceIndex} );
 	openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ProofServiceIndex'} );
+
 	my $html;
 	my $qty_index = $$variable{Project}->ordered_quantity_index();
 
@@ -449,7 +448,7 @@ $log->debug("Getting sheets from $lbs / " . $Imposition->sheet_area() . ' * ' . 
 			$html .= '<td class="docketText">';
 			if ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{SignatureGroups}},0,2 ) {
 				$html .= '<b>For '.$$variable{Reference}.'</b><br/>' if $$variable{Reference};
-				my $proofs_string = join('-', 'Proofs',$$variable{SignatureIndex},$qty_index);
+				my $proofs_string = join('-', 'Proofs', $$variable{SignatureIndex}, $qty_index);
 
 				next if ! ( $$variable{$proofs_string} and @{$$variable{$proofs_string}} );
 

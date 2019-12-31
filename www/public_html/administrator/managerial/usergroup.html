@@ -19,7 +19,7 @@
 						<input type="text" name="name" id="name" value="<? echo ( $$variable{UserGroup}->name() ) ?>" />
 					</li>
 					<li><label>Description</label>
-						<textarea name="description" rows="<?echo(count_lines($$variable{UserGroup}->description())?>"><? echo ( $$variable{UserGroup}->description() ?></textarea>
+						<textarea name="description" rows="<?echo( count_lines($$variable{UserGroup}->description()); )?>"><? echo ( $$variable{UserGroup}->description(); ) ?></textarea>
 					</li>
 					<li><label>Duration</label>
 						<input type="text" name="duration" id="duration" value="<? echo ( $$variable{UserGroup}->duration() ) ?>" />
@@ -41,13 +41,13 @@
 		</div>
 	</fieldset>
 	Listing of users in <? echo ( $$variable{UserGroup}->name() ) ?><br/>
-	<table class="sortable">
-		<thead><tr><th>Name</th><th>Company</th></tr></thead>
+	<table class="List sortable">
+		<thead><tr><th class="User">Name</th><th class="Company">Company</th></tr></thead>
 		<tbody>
 		<? echo (
 		my $html;
 		foreach my $User ( $$variable{UserGroup}->Users( order=>'lower(firstname),lower(lastname)') ) {
-			$html .= sprintf(q`<tr><td>%1$s</td><td>%2$s</td></tr>`, 
+			$html .= sprintf(q`<tr><td class="User">%1$s</td><td class="Company">%2$s</td></tr>`, 
 				$User->link_to(), $User->Company()->link_to(),
 				);
 		} # end foreach UG

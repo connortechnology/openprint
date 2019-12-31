@@ -321,8 +321,8 @@ sub confirmation {
 					$variable{ExternalRedirect} = '/main/order/submit.html';
 					return;
 				} else {
-					$Order->add_log( 'User accepted the terms and conditions.' );
-					$Order->save({'terms_accepted'=>1});
+					$Order->add_log('User accepted the terms and conditions.');
+					$Order->save({terms_accepted=>1});
 				} # end if
 			} # end if employee or admin
 
@@ -485,7 +485,7 @@ sub history_details {
 			$variable{error} = 'Terms not accepted';
 			$variable{information} = 'You must check the box to indicate your acceptance of the terms and conditions.';
 		} else {
-			$Order->add_log( 'User accepted the terms and conditions.' );
+			$Order->add_log('User accepted the terms and conditions.');
 			$Order->save({'terms_accepted'=>1});
 		} # end if
 
@@ -495,7 +495,7 @@ sub history_details {
 		$Order->pay();
 	} elsif ( $param{btnFunction} eq 'Save Payment' ) {
 
-		$param{amount} = openprint::Payment->transform('amount', $param{amount} );
+		$param{amount} = openprint::Payment->transform(amount=>$param{amount});
 
 		if ( ! $param{amount} ) {
 			$variable{error} .= 'Invalid Amount<br/>';

@@ -7,10 +7,12 @@
 			<ul>
 			<li>
 				<label>Company</label>
-				<input type="text" onkeyup="filterDDM(this, f1.company_id);" onkeydown="if(event.keyCode==13){this.form.submit();}" class="filter" />
-				<select name="company_id" id="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+        <select id="company_id" name="company_id" onchange="stop_filter_companies();f1.submit();">
 					<option value="">select</option>
-					<? echo ( make_drop_down( openprint::Company->dropdown(order=>'lower(name)' ), $param{company_id} ? $param{company_id} : $session{company_id} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown(
+or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
+), $param{company_id} ? $param{company_id} : $session{company_id}); ) ?>
 				</select>
 				<? echo ( button( 'Go1', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
 			</li>
@@ -125,19 +127,19 @@
 			<ul>
 				<li class="required"> 
 					<label for="email">E-mail Address</label>
-					<input type="email" id="email" name="email" value="<?  hecho ( $$variable{User}->email() ) ?>" />
+					<input type="email" id="email" name="email" value="<? hecho ( $$variable{User}->email() ) ?>" autocomplete="username"/>
 				</li>
 				<li>
 					<? include('/includes/password_requirements.html') ?>
 				</li>
 				<li class="required"> 
 					<label for="password">Password</label>
-					<input type="<?echo($session{user_type} eq 'A' ? 'text' : 'password' )?>" name="password" id="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);"/>
+					<input type="<?echo($session{user_type} eq 'A' ? 'text' : 'password' )?>" name="password" id="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" autocomplete="current-password"/>
 					<span id="psContainer"><span id="psStrength"></span></span>
 				</li>
 				<li class="required"> 
 					<label for="VerifyPassword">Verify Password</label>
-					<input type="password" name="VerifyPassword" id="VerifyPassword" onkeyup="check_passwords(this.form.password, this);"/>
+					<input type="password" name="VerifyPassword" id="VerifyPassword" onkeyup="check_passwords(this.form.password, this);" autocomplete="current-password"/>
 					<span id="password_alert"></span>
 				</li>
 				<li><label>Password Last Changed</label>

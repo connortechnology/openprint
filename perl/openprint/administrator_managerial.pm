@@ -775,18 +775,19 @@ sub email {
 
 sub usergroups {
 	if ( $param{command} eq 'Save' ) {
-		my $Group = new openprint::UserGroup( $param{id} );
+		my $Group = new openprint::UserGroup($param{id});
 		if ( $param{filename} ) {
-			my $Asset = openprint::Asset::upload( 'filename' );
+			my $Asset = openprint::Asset::upload('filename');
 			if ( ref $Asset ne 'openprint::Asset' ) {
 				$variable{error} .= $Asset;
 			} else {
 				$param{asset_id} = $Asset->id();
 			} # end if
 		} # end if
-		$variable{error} .= $Group->save( \%param );
+		$variable{error} .= $Group->save(\%param);
 	} # end if
 } # end sub usergroups
+
 sub usergroup {
 	$variable{UserGroup} = new openprint::UserGroup( $param{id} );
 } # end sub usergroup
@@ -1170,6 +1171,7 @@ sub mailqueue {
 $log->debug("sudo /usr/sbin/postsuper -d $queue_id");
 				$variable{information} .= `sudo /usr/sbin/postsuper -d $queue_id 2>&1`.'<br/>';
 			}
+			$variable{ExternalRedirect} = '/administrator/managerial/mailqueue.html';
 		}
 	}
 } # end sub mailqueue
