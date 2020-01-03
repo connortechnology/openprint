@@ -1318,7 +1318,7 @@ sub _production_performance {
 				);
 	my @dockets = map { $_->docket() } @Orders;
 	my %PI_by_docket = misc::make_hash_from_array('docket', openprint::PaperInventory->find(docket=>\@dockets, 'skid_id is null'=>0)) if @dockets;
-	my %POC_by_docket = misc::make_hash_from_array( 'docket', openprint::PurchaseOrder_Content->find(docket=>\@dockets)) if @dockets;
+	my %POC_by_docket = misc::make_hash_from_array('docket', openprint::PurchaseOrder_Content->find(docket=>\@dockets)) if @dockets;
 
 	foreach my $Order ( @Orders ) {
 		next if ! $$Order{docket};
@@ -1343,7 +1343,7 @@ sub _production_performance {
 				my $found = 0;
 
 				foreach my $sig_id ( @signatures ) {
-					my $Service = $Project->Service( $sig_id );
+					my $Service = $Project->Service($sig_id);
 					my $sig_specs = $Service->specs();
 					if ( ! $$sig_specs{UsePress} ) {
 						$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$qty_index};
@@ -1536,7 +1536,7 @@ $openprint::log->debug("Adding stock_cost from MC value $stock_weight $stock_she
 		( $columns{services} ? ( map { $$_{name} } @ServiceType_Categories ) : () ),
 		( $columns{plates} ? ( 'Plates', 'Plate Cost', 'Plate Total' ) : () ),
 		( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Shipped On', 'Invoiced On' ) : () ),
-		( $columns{stock} or $columns{stock_customer_supplied} ? ( 
+		( ($columns{stock} or $columns{stock_customer_supplied}) ? ( 
 												 'Used Stock Sheets', 'Used Stock Weight', 'Used Stock Cost',
 												 'Purchased Stock Sheets', 'Purchased Stock Weight', 'Purchaseed Stock Cost',
 												 'Received Stock Sheets', 'Received Stock Weight', 'Received Stock Cost',

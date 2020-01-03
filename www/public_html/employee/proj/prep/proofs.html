@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script>
 function check_input( form, signature_index ) {
 	if ( form.elements['txtProofQuantity-'+signature_index].value ) {
 		if ( ! form.elements['txtProofWidth-'+signature_index].value ) {
@@ -101,7 +101,7 @@ function check_input( form, signature_index ) {
 <? echo ( 
 input( name=>'duedate', type=>'text', value=>$$variable{duedate} );
 ) ?>
-<script type="text/javascript">$j("[name$='duedate']").datepicker({ dateFormat: "yy-mm-dd", constrainInput: true}); </script>
+<script>$j("[name$='duedate']").datepicker({ dateFormat: "yy-mm-dd", constrainInput: true}); </script>
 <? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 			</p>
 			<p class="buttons">
@@ -132,6 +132,7 @@ input( name=>'duedate', type=>'text', value=>$$variable{duedate} );
 		</fieldset>
 		<input type="hidden" name="btnFunction" value="Save"/>
 	</form>
+<?include('/employee/proj/prep/_pdf_proofs.html')?>
 </div><!-- Column -->
 <div id="Signatures" class="leftColumn"/>
 <?include('/employee/proj/prep/_proofs_signatures.html')?>

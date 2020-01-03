@@ -110,12 +110,14 @@ sub has_overrides {
 
 	my @v;
 	if ( $qty_index ) {
-		push @v, "chkOverrideEquipment$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
-		push @v, "OverrideImposition$qty_index" if $$specs{"OverrideImposition$qty_index"};
-		push @v, "OverridePockets$qty_index" if $$specs{"OverridePockets$qty_index"};
-		push @v, "OverridePrice$qty_index" if $$specs{"OverridePrice$qty_index"};
+		push @v, (map { ($$specs{$_.$qty_index} and ($$specs{$_.$qty_index} ne 'N')) ? $_ : () }
+		(
+		 'chkOverrideEquipment',
+		 'OverrideImposition',
+		 'OverridePockets',
+		 'OverridePrice',
+		));
 	} # end if
-
 	return @v;
 
 } # end sub has_overrides
@@ -166,7 +168,7 @@ sub init {
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $qty_index, $Impositions, $calc_hash ) = @_;
 
-	$openprint::log->debug("# of impositions in Stitching::signature_calc: " . @{$Impositions} ) if DEBUG;
+	$openprint::log->debug('# of impositions in Stitching::signature_calc: ' . @{$Impositions} ) if DEBUG;
 
 	my %results = (
 			alert	=>	'',
@@ -460,7 +462,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 				} # end if
 			} # end if
 
-			my $type = $Equipment->specification('Type');
+			my $type = $Equipment->specification('Type') // '';
 			$openprint::log->debug("Printed impo: @printed_impositions, stitched: $imposition type: $type $$Equipment{strid}") if DEBUG;
 			if ( $type eq 'Press' ) {
 				if ( @printed_impositions > 1 ) {
@@ -494,17 +496,19 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 
 			my $max_spine_length = $Equipment->specification('Maximum Spine Length', $imposition);
 			if ( $max_spine_length and ( $$specs{Height} > $max_spine_length ) ) {
-				$results{Breakdown} .= sprintf('Spine Too big. Spine: %s, Maximum for %dout: %s<br/>', $$specs{Height}, $imposition, $max_spine_length);
+				$results{Breakdown} .= sprintf('Spine Too big. Spine: %s, Maximum for %dout: %s<br/>',
+						$$specs{Height}, $imposition, $max_spine_length);
 				next;
 			} # end if
 			my $min_spine_length = $Equipment->specification('Minimum Spine Length', $imposition);
 			if ( $min_spine_length and ( $$specs{Height} < $min_spine_length ) ) {
-				$results{Breakdown} .= sprintf('Spine Too small. Spine: %s, Minimum for %dout: %s<br/>', $$specs{Height}, $imposition, $min_spine_length);
+				$results{Breakdown} .= sprintf('Spine Too small. Spine: %s, Minimum for %dout: %s<br/>',
+						$$specs{Height}, $imposition, $min_spine_length);
 				next;
 			} # end if
 			my $max_face_trim = $Equipment->specification('Maximum Spread Width');
 			if ( $max_face_trim and ( $$specs{Width} > $max_face_trim ) ) {
-				$results{Breakdown} .= sprintf('Face Trim too width. %s, Maximum: %s<br/>', $$specs{Width}, $max_face_trim );
+				$results{Breakdown} .= sprintf('Face Trim too width. %s, Maximum: %s<br/>', $$specs{Width}, $max_face_trim);
 				next;
 			} # end if
 
@@ -908,10 +912,17 @@ sub get_price {
 
 	my $service_name = $$ServiceType{name}.$price{Imposition}.'out';
 
-	$Services{$service_name} = openprint::Service->find_one(name=>$service_name) if ! exists $Services{$service_name};
-	$Services{$$ServiceType{name}} = openprint::Service->find_one(name=>$$ServiceType{name}) if (!$Services{$service_name}) and !exists $Services{$service_name};
+	if ( ! exists $Services{$service_name} ) {
+		$Services{$service_name} = openprint::Service->find_one(name=>$service_name);
+		$openprint::log->debug("Service for $service_name $Services{$service_name}") if DEBUG;
+	}
+	if ( (!$Services{$service_name}) and !exists $Services{$$ServiceType{name}} ) {
+		$Services{$$ServiceType{name}} = openprint::Service->find_one(name=>$$ServiceType{name});
+		$openprint::log->debug("Service for $service_name ".$Services{$$ServiceType{name}}) if DEBUG;
+	}
 
 	my $BaseService = $Services{$service_name} ? $Services{$service_name} : $Services{$$ServiceType{name}};
+$openprint::log->debug("BaseService ".($BaseService ?  $BaseService->to_string() : 'undef')) if DEBUG;
 
 	$service_name = join('',$$ServiceType{name},'MakeReady',$price{Imposition},'out');
 	$Services{$service_name} = openprint::Service->find_one(name=>$service_name) if ! exists $Services{$service_name};
