@@ -163,7 +163,7 @@ join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->
 
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportTotal} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportBalance} ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Commission} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{CommissionTotal} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{CreditCardTotal} ); ) ?></td>
 		</tr>
 	</table>
