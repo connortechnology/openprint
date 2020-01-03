@@ -145,8 +145,8 @@ openprint::Currency::format( $subtotal ),
 join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format($Order->Tax($_)->amount()) ) : () } @{$$variable{Taxes}} ),
 openprint::Currency::format( $$variable{total} ),
 openprint::Currency::format( $$variable{balance} ),
-openprint::Currency::format( $credit_card_fee ),
 openprint::Currency::format( $csr_commission ),
+openprint::Currency::format( $credit_card_fee ),
 join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->Projects() ),
 9+misc::sum(map { exists $$variable{tax_totals}{$_->id()} ? 1 : 0 } @{$$variable{Taxes}} ),
 );
@@ -163,8 +163,8 @@ join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->
 
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportTotal} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportBalance} ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{CreditCardTotal} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Commission} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{CreditCardTotal} ); ) ?></td>
 		</tr>
 	</table>
 	<br/>
