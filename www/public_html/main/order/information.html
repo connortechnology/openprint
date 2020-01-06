@@ -12,9 +12,9 @@
 					<div class="content">
 						<ul>
 							<li class="order_id"><label>Order ID</label><? echo ( $$variable{Order}->id() ) ?></li>
-							<li class="po_id"> 
+							<li class="po<? echo ( $$variable{RequiredFields}{po} ? ' required' : '' ) ?>"> 
 								<label>Purchase Order</label>
-								<input type="text" id="txtPurchaseOrder" name="txtPurchaseOrder" value="<? echo ( $$variable{Order}->po() ) ?>" />
+								<input type="text" id="po" name="po" value="<? echo ( $$variable{Order}->po() ) ?>" />
 							</li>
 							<? echo (
 								my $html;

@@ -214,19 +214,21 @@ sub save {
 sub load {
 	my ( $email, $data ) = @_;
 
-	my @domains = email::domains();
 	my ( $user, $domain ) = $email =~ /^([^\@]+)\@(.+)$/;
-	if ( sets::isin($domain, \@domains) ) {
-		my $v = get_vacation_entry($email);
-		$$data{DoEmail} = 1;
-		if ( $v ) {
-			$$data{vacation_state} = 1;
+	if ( $domain ) {
+		my @domains = email::domains();
+		if ( sets::isin($domain, \@domains) ) {
+			my $v = get_vacation_entry($email);
+			$$data{DoEmail} = 1;
+			if ( $v ) {
+				$$data{vacation_state} = 1;
 
-			my @fields = qw'subject body system_emails';
-			@$data{map { 'vacation_'.$_ } @fields} = @$v{@fields};
+				my @fields = qw'subject body system_emails';
+				@$data{map { 'vacation_'.$_ } @fields} = @$v{@fields};
+			}
+			@{$$data{vacation_aliases}} = aliases($email);
 		}
-		@{$$data{vacation_aliases}} = aliases($email);
-	}
+	} # end if domain
 } # end sub load
 
 1;

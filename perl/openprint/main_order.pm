@@ -34,7 +34,7 @@ sub information {
 	# Order creation can happen here as well, because we are doing away with quantity_select
 	# order_id may also be the word New
 
-	if ( $order_id and $param{action} eq 'remove' ) {
+	if ( $order_id and ($param{action} eq 'remove') ) {
 		if ( $param{project_id} ) {
 			$param{project_id} =~ s/\D//g;
 			my $OrderedProject = openprint::OrderedProject->find_one('project_id'=>$param{project_id}, 'order_id'=>$order_id);
@@ -108,12 +108,11 @@ sub information {
 		if ( $order_id ) {
 			openprint::order::delete_unfinished_orders();
 			my $Order = new openprint::Order( $order_id );
-			$Order->save({'status'=>'Re-Opened','session_id'=>$session{_session_id}, total=>undef});
+			$Order->save({status=>'Re-Opened', session_id=>$session{_session_id}, total=>undef});
 			foreach my $OP ( $Order->Ordered_Projects() ) {
-				$variable{error} .= $OP->save({'price'=>undef});
-				
+				$variable{error} .= $OP->save({price=>undef});
 			} # end foreach
-			$Order->add_log( 'Re-Opened' );
+			$Order->add_log('Re-Opened');
 		} else {
 			$error = 'No order_id given to Re-Open.';
 		} # end if order_id
@@ -140,7 +139,7 @@ sub information {
 		return;
 	} elsif ( $param{btnFunction} eq 'Continue') { # saving projcet information
 		$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
-		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$order_id) ) {
+		foreach my $OP ( openprint::OrderedProject->find(order_id=>$order_id) ) {
 			$variable{error} .= openprint::order::save_project_information( $OP );
 		} # end foreach
 	} elsif ( $param{Product} and $param{Quantity} ) {
@@ -162,25 +161,11 @@ $log->debug("Adding product $param{product_id}");
 	if ( $order_id ) {
 		$variable{error} = check_for_errors( $Order ) if ! $variable{error};
 
-	# First thing to do is to try to load info directly from the order.
-		@variable{'company_name',
-			'salutation',
-			'firstname',
-			'lastname',
-			'address1',
-			'address2',
-			'city',
-			'state',
-			'postalcode',
-			'country',
-			'phone',
-			'fax',
-			'email',
-			'alsonotify',
-		} = @$Order{'company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify'};
+	  # First thing to do is to try to load info directly from the order.
+		my @company_fields =('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
+		@variable{@company_fields} = @$Order{@company_fields};
 
 		if ( $variable{company_name} eq '' ) {
-			my $Company = new openprint::Company($session{company_id});
 			@variable{'company_name',
 				'address1',
 				'address2',
@@ -189,25 +174,29 @@ $log->debug("Adding product $param{product_id}");
 				'postalcode',
 				'country',
 				'phone',
-				'fax'} = $Company->get('name','address1','address2','city','state','postalcode','country','phone','fax');
+				'fax'} = $openprint::Company->get('name','address1','address2','city','state','postalcode','country','phone','fax');
 		} # end if
 
 		if ( $variable{email} eq '' ) {
-			my $User = new openprint::User( $session{user_id} );
+			my $User = $openprint::User;
 			# Assume that we are acting on someone else's behalf
 			if ( sets::isin( $session{user_type}, [ 'A','E'] ) ) {
 			
-				# WE ARE logged in as someone else
+				# We are logged in as someone else
 				if ( $User->company_id() != $session{company_id} ) {
 					my @Users = openprint::User->find( 
-							company_id=>$param{company_id} ? $param{company_id} : $session{company_id}, 
+							company_id=>($param{company_id} ? $param{company_id} : $session{company_id}), 
 							order=>'lower(lastname),lower(firstname)'
 							);
 					$User = $Users[0] if @Users;
 				} # end if
 			} # end if
-			@variable{'email', 'title', 'firstname', 'lastname', 'salutation', 'phone', 'fax',
-			} = $User->get('email','title','firstname','lastname','salutation','phone','fax');
+			my @user_fields = ('email', 'title', 'firstname', 'lastname', 'salutation');
+			@variable{@user_fields} = $User->get(@user_fields);
+			foreach my $field ( 'phone', 'fax' ) {
+				# These fields exist in Company as well, so only store them in variable if not defined
+				$variable{$field} = $User->$field() if $User->$field();
+			}
 
 		} # end if
 		foreach my $OP ( openprint::OrderedProject->find(order_id=>$order_id) ) {
@@ -218,6 +207,7 @@ $log->debug("Adding product $param{product_id}");
 	} # end if $Order_id
 	$variable{order_id} = $order_id;
 	$variable{Order} = new openprint::Order( $order_id );
+	%{$variable{RequiredFields}} = map { $_ => $_ } split(',',$openprint::config{OrderRequiredFields});
 
 } # end sub information
 
@@ -247,11 +237,11 @@ sub submit {
 			$variable{error} .= openprint::order::save_project_information( $Product );
 			# Need to update price to include shipping costs
 			my %Price = $Product->Product()->get_price( $Product->quantity() );
-			$openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . $Price{Price} );
+			$openprint::log->debug('Initial price for ' . $Product->quantity() . ' is : ' . $Price{Price} );
 			my $Project = $Product->Project();
 			if ( $Project ) {
 				my $services = $Project->services();
-				foreach my $ShippingType ( openprint::ServiceType->find('category'=>'Shipping') ) {
+				foreach my $ShippingType ( openprint::ServiceType->find(category=>'Shipping') ) {
 					next if ! $$services{$ShippingType->name()};
 					foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
 						my $specs =  openprint::service::get_specs_ref( $Project, $service_id );
@@ -296,7 +286,7 @@ sub submit {
 	$variable{Order} = $Order;
 
 	if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-		$variable{AdministratorName} = new openprint::User( $session{user_id} )->name();
+		$variable{AdministratorName} = $openprint::User->name();
 	} # end if
 
 } # end sub submit
@@ -305,7 +295,7 @@ sub confirmation {
 	my $order_id = $param{order_id};
 	$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
 	if ( $order_id eq '' ) {
-		$log->error( "Still no Order ID" );
+		$log->error('Still no Order ID');
 		return;
 	} # end if
 
@@ -466,7 +456,7 @@ sub history {
 
 sub _history {
 	ssi::save_params( '/main/order/history.html', 
-			'ddmOrderedBy','company_id','status_id','salesrep_id',
+			'user_id','company_id','status_id','salesrep_id',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			);
