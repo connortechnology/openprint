@@ -128,6 +128,7 @@ sub calc {
 
 	my @signature_service_indices = $Project->signatures();
 	my $minCharge = openprint::service::get_price('ProofsMinimumCharge', undef, undef);
+	%ProofServices = map { $_->name(), $_ } openprint::Service->find(category=>'Proofs');
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} = '';
