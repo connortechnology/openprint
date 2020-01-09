@@ -423,54 +423,54 @@ sub signature_calc {
 		$Results{Breakdown} .= join( '', 'Cylinder Count: ', $CylinderCount, '<br/>' ) if defined $CylinderCount;
 
 		foreach my $I ( @impositions ) {
-			$Results{Breakdown} .= "Imposition: " . $I->to_string() . '<br/>';
+			$Results{Breakdown} .= 'Imposition: ' . $I->to_string() . '<br/>';
  
-            if ( $max_feed_width ) {
-                if ( $orientation ) {
-                    $Results{Breakdown} .= "Has orientation setting.<br/>";
-                    if (
-                            ( $orientation eq 'Portrait' and $I->layout_width() <= $I->layout_height() ) or
-                            ( $orientation eq 'Landscape' and $I->layout_width() >= $I->layout_height() )
-                       ) {
-                        if ( $I->layout_width() >= $max_feed_width ) {
-                            $Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width ($$sig_specs{txtWidth}).<br/>";
-                            next;
-                        } # end if
-                    } else {
-                        if ( $I->layout_height() >= $max_feed_width ) {
-                            $Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width ($$sig_specs{txtHeight}).<br/>";
-                            next;
-                        } # end if
-                    } # end if
-                } else {
-                    if ( $$specs{"txtVerticalQty-$form"} and $$specs{"txtHorizontalQty-$form"} ) {
+			if ( $max_feed_width ) {
+				if ( $orientation ) {
+					$Results{Breakdown} .= 'Has orientation setting.<br/>';
+					if (
+							( $orientation eq 'Portrait' and $I->layout_width() <= $I->layout_height() ) or
+							( $orientation eq 'Landscape' and $I->layout_width() >= $I->layout_height() )
+						 ) {
+						if ( $I->layout_width() >= $max_feed_width ) {
+							$Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width ($$sig_specs{txtWidth}).<br/>";
+							next;
+						} # end if
+					} else {
+						if ( $I->layout_height() >= $max_feed_width ) {
+							$Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width ($$sig_specs{txtHeight}).<br/>";
+							next;
+						} # end if
+					} # end if
+				} else {
+					if ( $$specs{"txtVerticalQty-$form"} and $$specs{"txtHorizontalQty-$form"} ) {
 # Do nothing, we already know it fits on the machine, and it has to go one way or another.
-                        $Results{Breakdown} .= 'Running either way because scores both ways.<br/>';
-                    } elsif ( $$specs{"txtVerticalQty-$form"} ) {
-                        if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
-                            $Results{Breakdown} .= 'Running ' . $I->layout_width() . ' ' . $$I{image_orientation} . ' on feed of ' . $max_feed_width . '<br/>';
-                            if ( $I->layout_width() >= $max_feed_width ) {
-                                $Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width (".$I->layout_width().").<br/>";
-                                next;
-                            } # end if
-                        } else {
-                            $Results{Breakdown} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
-                        } # end if
-                    } elsif ( $$specs{"txtHorizontalQty-$form"} ) {
-                        if ( $$I{image_orientation} == openprint::Imposition::Horizontal ) {
-                            $Results{Breakdown} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
-                            if ( $I->layout_height() >= $max_feed_width ) {
-                                $Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width (".$I->layout_height().").<br/>";
-                                next;
-                            } # end if
-                        } else {
-                            $Results{Breakdown} .= 'Running ' . $I->layout_width() . ' on feed of ' . $max_feed_width . '<br/>';
-                        } # end if
-                    } else {
-                        $Results{Breakdown} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
-                    } # end if
-                } # end if orientation or not
-            } # end if max_feed)wudetg
+						$Results{Breakdown} .= 'Running either way because scores both ways.<br/>';
+					} elsif ( $$specs{"txtVerticalQty-$form"} ) {
+						if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
+							$Results{Breakdown} .= 'Running ' . $I->layout_width() . ' ' . $$I{image_orientation} . ' on feed of ' . $max_feed_width . '<br/>';
+							if ( $I->layout_width() >= $max_feed_width ) {
+								$Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width (".$I->layout_width().").<br/>";
+								next;
+							} # end if
+						} else {
+							$Results{Breakdown} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
+						} # end if
+					} elsif ( $$specs{"txtHorizontalQty-$form"} ) {
+						if ( $$I{image_orientation} == openprint::Imposition::Horizontal ) {
+							$Results{Breakdown} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
+							if ( $I->layout_height() >= $max_feed_width ) {
+								$Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width (".$I->layout_height().").<br/>";
+								next;
+							} # end if
+						} else {
+							$Results{Breakdown} .= 'Running ' . $I->layout_width() . ' on feed of ' . $max_feed_width . '<br/>';
+						} # end if
+					} else {
+						$Results{Breakdown} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
+					} # end if
+				} # end if orientation or not
+			} # end if max_feed)wudetg
 
 			if ( $max_impo and ( $$I{imposition} > $max_impo ) ) {
 				$Results{Breakdown} .= sprintf('Too many out %d > max imposition (%d)<br/>', $$I{imposition}, $max_impo );
@@ -490,10 +490,11 @@ sub signature_calc {
 
 			my %servicePrice;
 
-			if ( $scor_equipment and ( $scor_equipment eq $Equipment->strid() ) and ( $scor_imposition == $$I{imposition} ) ) {
+			if ( $scor_equipment and ( $scor_equipment eq $$Equipment{strid} ) and ( $scor_imposition == $$I{imposition} ) ) {
 				$Results{Breakdown} .= "\tSame equipment as scoring, no service price needed.<br/>";
 			} else {
-				%servicePrice = openprint::service::get_price_object( 'Perforating', $rule_qty, $Equipment );
+				%servicePrice = openprint::service::get_price_object( 'Perforating', $qty/$$I{imposition}, $Equipment );
+				#%servicePrice = openprint::service::get_price_object( 'Perforating', $rule_qty, $Equipment );
 # I don't know if we should be multiplying by this or not.. how many perfs can a given piece of equipment do in an impression?
 #$servicePrice *= $$specs{"txtQty-$signature_index"};
 			} # end if
