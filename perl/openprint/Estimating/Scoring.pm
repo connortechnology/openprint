@@ -606,7 +606,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 					 $I->Press( $Equipment );
 					 $Results{Breakdown} .= '<br/>Imp: '.$I->to_string().'<br/>';
 
-					 if ( $_ = is_desirable($Equipment, $Fold, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}) ) {
+					 if ( $_ = is_desirable($Equipment, $I, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}) ) {
 						 $Results{Breakdown} .= "Not good. $_<br/>";
 						 $complete = 0;
 						 last;
@@ -1046,7 +1046,7 @@ sub fits_on_equipment {
 	return '';
 } # end sub fits_on_equipment
 
-sub is_desireable {
+sub is_desirable {
 	my ( $Equipment, $I, $vertical_scores, $horizontal_scores ) = @_;
 	my $type = $Equipment->specification('Type');
 	if ( $type eq 'Folder' ) {
@@ -1054,30 +1054,31 @@ sub is_desireable {
 # Don't want to run an impo that results in 2out sections being output, we don't want to cut after folding
 		if ( $vertical_scores and $horizontal_scores ) {
 # Do nothing, we already know it fits on the machine, and it has to go one way or another.
-			$Results{Breakdown} .= 'Folders can\'t do scores in both directions.<br/>';
+			return 'Folders can\'t do scores in both directions.<br/>';
 		} elsif ( $vertical_scores ) {
 # Ona folder scoring is done with a wheel, so for a vertical score we feed by width
 			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				if ( $$I{rows} > 1 ) {
-					$Results{Breakdown} .= "Results in $$I{rows} out pieces. Undesirable.<br/>";
+					return "Results in $$I{rows} out pieces. Undesirable.<br/>";
 				} # end if
 			} else {
 				if ( $$I{columns} > 1 ) {
-					$Results{Breakdown} .= "Results in $$I{columns} out pieces. Undesirable.<br/>";
+					return "Results in $$I{columns} out pieces. Undesirable.<br/>";
 				} # end if
 			} # end if
 		} elsif ( $horizontal_scores ) { 
 			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				if ( $$I{columns} > 1 ) {
-					$Results{Breakdown} .= "Results in $$I{columns} out pieces. Undesirable.<br/>";
+				return "Results in $$I{columns} out pieces. Undesirable.<br/>";
 				} # end if
 			} else {
 				if ( $$I{rows} > 1 ) {
-					$Results{Breakdown} .= "Results in $$I{rows} out pieces. Undesirable.<br/>";
+					return "Results in $$I{rows} out pieces. Undesirable.<br/>";
 				} # end if
 			} # end if
 		} # end if
 	} # end if Folder
+	return '';
 } # end if is_desireable
 
 sub save {
