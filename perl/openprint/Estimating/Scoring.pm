@@ -206,8 +206,8 @@ sub calc {
 	init( $Project, $calc_hash );
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
-		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g if $$specs{'txtPrice'.$qty_index};
+		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g if $$specs{'Markup'.$qty_index};
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! ( $$specs{"txtQuantity$qty_index"} > 0 ) ) {
@@ -227,7 +227,7 @@ sub calc {
 			if ( $$sig_specs{Versions} ) {
 				$qty *= $$sig_specs{Versions};
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{txtServiceDescription}, " if $$sig_specs{txtServiceDescription} ne '';
+			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{txtServiceDescription}, " if $$sig_specs{txtServiceDescription};
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No imposition for signature $$sig_specs{SignatureIndex}";
 				next;
@@ -263,7 +263,7 @@ sub calc {
 					} # end foreach 
 				} # end if
 			} else {
-				$$specs{"ddmEquipment-$form-$qty_index"} = '' if $$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y';
+				$$specs{"ddmEquipment-$form-$qty_index"} = '' if (!$$specs{"chkOverrideEquipment-$form-$qty_index"}) or ($$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y');
 #$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
 #$$specs{"txtLayoutWidth-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
 #$$specs{"txtLayoutHeight-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
@@ -485,14 +485,14 @@ sub signature_calc {
 		@All_Impositions = openprint::Estimating::Folding::reduce_impositions( \@Sets_of_Impositions );
 		@All_Impositions = openprint::Estimating::Folding::remove_duplicates( @All_Impositions );
 		if ( DEBUG ) {
-			$openprint::log->debug("Sets of Maximum Impositions: " . @All_Impositions);
+			$openprint::log->debug('Sets of Maximum Impositions: ' . @All_Impositions);
 			foreach my $Set ( @All_Impositions ) {
-				$openprint::log->debug("Impositions in set: " . @$Set);
+				$openprint::log->debug('Impositions in set: ' . @$Set);
 				foreach my $I ( @$Set ) {
 					$I->display('quantity '.$I->quantity() );
 				} # end foreach I
 			} # end foreach set
-			$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', @$SignatureImposition{'spread_columns', 'spread_rows', 'spread_size', 'imposition'} ) );
+			$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', @$SignatureImposition{'spread_columns', 'spread_rows', 'spread_size', 'imposition'}));
 		} # end if debug
 
 # Store for use by other parts like perforating
@@ -622,7 +622,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 next if ! $complete;
 				 $Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice );
 
-				 if ( $totalPrice < $Results{Price} or ! exists $Results{Price} ) {
+				 if ( (! exists $Results{Price}) or ($totalPrice < $Results{Price}) ) {
 					 $Results{Price} = $totalPrice;
 					 $Results{Equipment} = $Equipment;
 					 $Results{Impositions} = $Set_Of_Impositions;
@@ -945,8 +945,6 @@ sub fits_on_equipment {
 	my $type = $Equipment->specification('Type');
 	my $Paper = $I->Paper();
 	my $calliper = $Paper->calliper();
-	my $max_feed_width = $Equipment->specification('Maximum Feed Width');
-	my $orientation = $Equipment->specification('Orientation');
 	my $width = $I->layout_width();
 	my $height = $I->layout_height();
 
@@ -958,6 +956,7 @@ sub fits_on_equipment {
 			return "Doesn't fit minimum Score Size Width $width < $minimum_score_size";
 		} # end if
 	} # end if
+
 	my $maximum_score_size = $Equipment->specification('Maximum Score Size');
 	if ( $maximum_score_size ) {
 		if ( $vertical_scores and $height > $maximum_score_size ) {
@@ -969,20 +968,23 @@ sub fits_on_equipment {
 
 	if ( my $min_calliper = $Equipment->specification('Minimum Score Calliper') ) {
 		if ( $calliper < $min_calliper ) {
-			return "Calliper too small: ($calliper), Min: " . $min_calliper;
+			return 'Calliper too small: ('.$calliper.'), Min: '.$min_calliper;
 		} # end if
 	} # end if
+
 	my $max_calliper = $Equipment->specification('Maximum Score Calliper');
 	if ( $max_calliper and ( $calliper > $max_calliper ) ) {
 		return "Calliper too big max($max_calliper) < $calliper on $$Equipment{strid}";
 	} # end if
 
+	my $max_feed_width = $Equipment->specification('Maximum Feed Width');
 	if ( $max_feed_width ) {
+		my $orientation = $Equipment->specification('Orientation');
 
 		if ( $orientation ) {
 			if (
-					( $orientation eq 'Portrait' and $I->layout_width() <= $I->layout_height() ) or
-					( $orientation eq 'Landscape' and $I->layout_width() >= $I->layout_height() )
+					( $orientation eq 'Portrait' and ($I->layout_width() <= $I->layout_height()) ) or
+					( $orientation eq 'Landscape' and ($I->layout_width() >= $I->layout_height()) )
 				 ) {
 				if ( $width >= $max_feed_width ) {
 					return "Score no good due to max feed width($max_feed_width) on width ($width).<br/>";
@@ -996,29 +998,32 @@ sub fits_on_equipment {
 			if ( $vertical_scores and $horizontal_scores ) {
 # Do nothing, we already know it fits on the machine, and it has to go one way or another.
 			} elsif ( $vertical_scores ) {
+# Ona folder scoring is done with a wheel, so for a vertical score we feed by width
 				if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
-					if ( $height >= $max_feed_width ) {
-						return "Scoring no good due to max feed width($max_feed_width) on height ($height).<br/>";
-					} # end if
-				} else {
 					if ( $width >= $max_feed_width ) {
 						return "Scoring no good due to max feed width($max_feed_width) on width ($width).<br/>";
+					} # end if
+				} else {
+					if ( $height >= $max_feed_width ) {
+						return "Scoring no good due to max feed width($max_feed_width) on height ($height).<br/>";
 					} # end if
 				} # end if
 			} elsif ( $horizontal_scores ) {
 				if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
-					if ( $width >= $max_feed_width ) {
-						return "Scoring no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
-					} # end if
-				} else {
 					if ( $height >= $max_feed_width ) {
 						return "Scoring no good due to max feed width($max_feed_width) on height (".$height.").<br/>";
+					} # end if
+				} else {
+					if ( $width >= $max_feed_width ) {
+						return "Scoring no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
 					} # end if
 				} # end if
 			} else {
 				return 'Running ' . $height . ' on feed of ' . $max_feed_width . '<br/>';
 			} # end if
 		} # end if orientation or not
+	} elsif ( DEBUG ) {
+		$openprint::log->debug('No max feed');
 	} # end if max_feed
 	if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $$I{imposition} ) ) {
 		return "Imposition $$I{imposition}out too high. Maximum: $_<br/>";
