@@ -569,7 +569,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 			 my $parts = 0;
 			 foreach my $Fold ( @Folds ) {
 				 $parts += $$Fold{imposition} * $$Fold{quantity};
-				 if ( $_ = fits_on_equipment( $Equipment, $Fold, $sig_specs, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"} ) ) {
+				 if ( $_ = fits_on_equipment( $Equipment, $Fold, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"} ) ) {
 					 $Results{Breakdown} .= "Fold Doesn't fit. $_<br/>";
 					 next EQUIPMENT;
 				 } # end if
@@ -605,6 +605,12 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 foreach my $I ( @impositions ) {
 					 $I->Press( $Equipment );
 					 $Results{Breakdown} .= '<br/>Imp: '.$I->to_string().'<br/>';
+
+					 if ( $_ = is_desirable($Equipment, $Fold, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}) ) {
+						 $Results{Breakdown} .= "Not good. $_<br/>";
+						 $complete = 0;
+						 last;
+					 } # end if
 
 					 if ( $_ = fits_on_equipment( $Equipment, $I, $sig_specs, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"} ) ) {
 						 $Results{Breakdown} .= "Doesn't fit. $_<br/>";
@@ -940,11 +946,8 @@ sub summary {
 } # end sub summary
 
 sub fits_on_equipment {
-	my ( $Equipment, $I, $sig_specs, $vertical_scores, $horizontal_scores ) = @_;
+	my ( $Equipment, $I, $vertical_scores, $horizontal_scores ) = @_;
 
-	my $type = $Equipment->specification('Type');
-	my $Paper = $I->Paper();
-	my $calliper = $Paper->calliper();
 	my $width = $I->layout_width();
 	my $height = $I->layout_height();
 
@@ -966,6 +969,8 @@ sub fits_on_equipment {
 		} # end if
 	} # end if
 
+	my $Paper = $I->Paper();
+	my $calliper = $Paper->calliper();
 	if ( my $min_calliper = $Equipment->specification('Minimum Score Calliper') ) {
 		if ( $calliper < $min_calliper ) {
 			return 'Calliper too small: ('.$calliper.'), Min: '.$min_calliper;
@@ -1028,6 +1033,7 @@ sub fits_on_equipment {
 	if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $$I{imposition} ) ) {
 		return "Imposition $$I{imposition}out too high. Maximum: $_<br/>";
 	} # end if
+	my $type = $Equipment->specification('Type');
 	if ( $type eq 'Press' ) {
 		if ( $_ = $Equipment->fits( $Paper->width(), $Paper->height(), $Paper->calliper() ) ) {
 			return "Doesn't fit. $_<br/>";
@@ -1039,6 +1045,40 @@ sub fits_on_equipment {
 	} # end if
 	return '';
 } # end sub fits_on_equipment
+
+sub is_desireable {
+	my ( $Equipment, $I, $vertical_scores, $horizontal_scores ) = @_;
+	my $type = $Equipment->specification('Type');
+	if ( $type eq 'Folder' ) {
+# Not being folded
+# Don't want to run an impo that results in 2out sections being output, we don't want to cut after folding
+		if ( $vertical_scores and $horizontal_scores ) {
+# Do nothing, we already know it fits on the machine, and it has to go one way or another.
+			$Results{Breakdown} .= 'Folders can\'t do scores in both directions.<br/>';
+		} elsif ( $vertical_scores ) {
+# Ona folder scoring is done with a wheel, so for a vertical score we feed by width
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
+				if ( $$I{rows} > 1 ) {
+					$Results{Breakdown} .= "Results in $$I{rows} out pieces. Undesirable.<br/>";
+				} # end if
+			} else {
+				if ( $$I{columns} > 1 ) {
+					$Results{Breakdown} .= "Results in $$I{columns} out pieces. Undesirable.<br/>";
+				} # end if
+			} # end if
+		} elsif ( $horizontal_scores ) { 
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
+				if ( $$I{columns} > 1 ) {
+					$Results{Breakdown} .= "Results in $$I{columns} out pieces. Undesirable.<br/>";
+				} # end if
+			} else {
+				if ( $$I{rows} > 1 ) {
+					$Results{Breakdown} .= "Results in $$I{rows} out pieces. Undesirable.<br/>";
+				} # end if
+			} # end if
+		} # end if
+	} # end if Folder
+} # end if is_desireable
 
 sub save {
 } # end sub save
