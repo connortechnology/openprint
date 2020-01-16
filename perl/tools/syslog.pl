@@ -228,11 +228,11 @@ while(1) {
 
 			if ( $line =~ /$re/ ) {
 				my ($when, $source) = ( $1, $+{IP} );
-				$log->debug( "match for source: $source\nline:$line\nre:$re") if $config{debug};
+				$log->debug("match for source: $source\nline:$line\nre:$re") if $config{debug};
 				my ( $ip, $hostname );
 				if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
 	# Is an IP
-					$log->debug( "$source is an ip" ) if $config{debug};
+					$log->debug("$source is an ip") if $config{debug};
 					$ip = $source;
 				} elsif ( $hostname_lookups{$source} ) {
 					$hostname = $source;
@@ -244,23 +244,23 @@ while(1) {
 					if ( defined $ip ) {
 						$ip = Socket::inet_ntoa($ip);
 						$hostname_lookups{$source} = $ip;
-						$log->debug( "Got $ip for $source" ) if $config{debug};
+						$log->debug("Got $ip for $source") if $config{debug};
 					} # end if
 				} # end if
 				if ( $ip eq '127.0.0.1' ) {
-					$log->debug("No more testing for localhost");
+					$log->debug('No more testing for localhost');
 					next;
 				} else {
 					$log->debug("IP is $ip");
 				} # end if
 
 				if ( ! $ip ) {
-					$log->debug( "No ip for $source" ) if $config{debug};
+					$log->debug("No ip for $source") if $config{debug};
 					next;
 				} # end if
 
 				if ( $whitelist{$ip} ) {
-					$log->debug( "$ip is whitelisted" ) if $config{debug};
+					$log->debug("$ip is whitelisted") if $config{debug};
 					last;
 				} # end if
 
@@ -287,19 +287,19 @@ while(1) {
 					$host_counts{$ip} = $Host;
 				} # end if
 
-				my $updated_on_dt = $parser->parse_datetime( $host_counts{$ip}{updated_on} );
+				my $updated_on_dt = $parser->parse_datetime($host_counts{$ip}{updated_on});
 
 				# Instead of parsing when, we just use the current time
 				my $now_dt = DateTime->now( time_zone=>$config{Timezone} );
 
 				if ( $host_counts{$ip}{updated_on} and ! $host_counts{$ip}{updated_on_seconds} ) {
 					$host_counts{$ip}{updated_on_seconds} = $updated_on_dt->epoch();
-					$log->debug("Covnerting  $host_counts{$ip}{updated_on} to $host_counts{$ip}{updated_on_seconds} seconds") if $config{debug};
+					$log->debug("Converting  $host_counts{$ip}{updated_on} to $host_counts{$ip}{updated_on_seconds} seconds") if $config{debug};
 				}
 	#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
 				#if ( DateTime->compare( $updated_on_dt, $now_dt ) <= 0 ) {
 					$host_counts{$ip}{count} += 1;
-$log->debug("coutn for $ip is $host_counts{$ip}{count}");
+$log->debug("count for $ip is $host_counts{$ip}{count}");
 					$host_counts{$ip}{update} = 1;
 					$changed = $ip;
 				#} else {
