@@ -269,7 +269,7 @@ sub host {
       $variable{error} .= $Host->save(\%param) if @changes;
       foreach my $I ( $Host->Interfaces(), new openprint::Host_Interface() ) {
         if ( $param{"mac-$$I{id}"} or $param{"ip-$$I{id}"} or $param{"comment-$$I{id}"} ) {
-          my %c =map { $_, $param{"$_-$$I{id}"} } ( 'mac', 'ip', 'dhcp', 'monitor', 'comment' );
+          my %c = map { exists($param{"$_-$$I{id}"}) ?( $_=>$param{"$_-$$I{id}"} ) : ( $_=>$openprint::Host_Interface::defaults{$_} ) } ( 'mac', 'ip', 'dhcp', 'monitor', 'comment' );
           my @c = $I->changes( \%c );
           if ( @c ) {
             $c{host_id} = $$Host{id};
@@ -297,7 +297,7 @@ sub host {
       $Host->Notifications(undef);
       
       if ( ! $variable{error} ) {
-        (new openprint::Log())->save({Object=>$Host, action=>'Edit', note=>join('<br/>', @changes) });
+        (new openprint::Log())->save({Object=>$Host, action=>'Edit', note=>join('<br/>', @changes) }) if @changes;
         $variable{ExternalRedirect} = '/employee/it/hosts.html';
         return;
       } # end if
