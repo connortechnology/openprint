@@ -85,8 +85,8 @@
                  openprint::Company->dropdown(
                    order=>'lower(name)',
                    'last_expense_on >=' => DateTime::Format::Pg->format_datetime(
-                     DateTime->now()->subtract(years=>1)
-                   )), $session{'/employee/accounting/expenses.html?recipient_id'} ); ) ?>
+                     DateTime->now()->subtract(years=>2)
+                     )), $session{$r->uri().'?recipient_id'} ); ) ?>
 						</select>
 					</li>
 					<li>
