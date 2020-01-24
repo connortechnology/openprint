@@ -5160,7 +5160,7 @@ $imp->display('[warn]');
 											$$Setup{possible_presses} = \@possible_presses;
 											my @available_printingtypes = sets::union(map { $_->specification('Printing Type') } @possible_presses);
 											$$Setup{specs}{PrintingTypes} = get_printing_types( $Project, $sigs[0], $printing_specs, $$Setup{specs}, $qty_index, \@available_printingtypes, $imp );
-$imp->display("PrintingTYpes for other group: " . join(',', @{$$Setup{specs}{PrintingTypes}} ) );
+$imp->display("PrintingTYpes for other group: " . join(',', @{$$Setup{specs}{PrintingTypes}} ) ) if $$Setup{specs}{PrintingTypes};
 											my %sub_impositions = get_impositions($Project, $$Setup{specs}, $new_project, $qty, $qty_index, \@possible_presses, $$Setup{Stocks}, \%Overrides);
 											convert_impositions($Project, @$Setup{'project','specs'}, $qty_index, \%sub_impositions);
 
@@ -7763,7 +7763,7 @@ sub filter_coatings_from_colours {
 sub get_printing_types {
 	my ( $Project, $service_index, $printing_specs, $specs, $qty_index, $available_printingtypes, $cover_imposition ) = @_;
 	# Generally only care if having different signature groups.  
-	return [] if ! $$specs{txtSignatureType};
+	return if ! $$specs{txtSignatureType};
 	my $results = undef;
 
 	my %available_types = map { $_, $_ } @{$available_printingtypes};
@@ -7807,7 +7807,7 @@ $openprint::log->debug("get printing type from sig $index " . $$sig_specs{'Print
 $log->debug("We are interior $service_index") if DEBUG;
 			#foreach my $index ( sort { $a <=> $b } $Project->signatures({Group=>$$specs{Group}}) ) {
 			my @sigs = $Project->signatures({type=>'Interior Pages'});
-			return [] if @sigs <= 1;
+			return if @sigs <= 1;
 
 			foreach my $index ( sort { $a <=> $b } @sigs ) {
 $log->debug("Looking at interior sig $index == $service_index") if DEBUG;
@@ -7875,7 +7875,6 @@ $log->warn("Unknown printing type in sig $$sig_specs{SignatureIndex} : " . $$sig
 	} # end if printing_specs{PrintingType}
 	if ( !$results ) {
 		$log->error('No results for get_printing_types');
-		$results = [];
 	} else {
 		$log->debug("Printing Type Results: @$results") if DEBUG;
 	}
