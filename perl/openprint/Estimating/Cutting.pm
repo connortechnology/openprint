@@ -530,9 +530,9 @@ sub signature_calc {
   if ( $$services{Folding} and @{$$services{Folding}} ) {
     $folding_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] ) if ! $folding_specs;
     if ( $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
-      $Folder = openprint::Equipment->find_one( id=>$$folding_specs{"ddmEquipment-$form-$qty_index"} );
+      $Folder = openprint::Equipment->find_one(id=>$$folding_specs{"ddmEquipment-$form-$qty_index"});
     } else {
-      $openprint::log->debug("No folder in folding_specs") if DEBUG; 
+      $openprint::log->debug('No folder in folding_specs') if DEBUG; 
     }
     if ( $$Imposition{Folds} ) {
       @folding_impositions = @{$$Imposition{Folds}};
