@@ -1068,6 +1068,12 @@ sub find_one {
 	} else {
 		%{$params} = @_;
 	} # end if
+	if ( ((scalar keys %{$params}) == 1) and $$params{id} ) {
+		my $id = $$params{id};
+		$cache{$config{db_name}}{$object_type} = {} if ! $cache{$config{db_name}}{$object_type};
+		my $sub_cache = $cache{$config{db_name}}{$object_type};
+    return $$sub_cache{$id} if $$sub_cache{$id};
+	}
 	$$params{limit} = 1;
 	my @Results = $object_type->find(%$params);
 	my ( $caller, undef, $line ) = caller;
