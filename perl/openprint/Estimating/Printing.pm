@@ -721,6 +721,7 @@ $log->debug("Adding special colour for $colour");
 	openprint::Estimating::Folding::init($Project, \%project) if $project{NeedFolding};
 	$project{NeedUVCoating} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
 	$project{NeedAqueous} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
+	openprint::Estimating::Aqueous::init($Project, \%project) if $project{NeedAqueous};
 	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
 
 	# These aer questionable: Should not modify a project in calculation
@@ -2735,7 +2736,6 @@ sub calc {
 				$$specs{"$k$qty_index"} = $$specs{$k};
 			} # end foreach
 		} # end foreach K
-$log->debug("No printing");
 		return $$specs{Status} = 'calculated';
 	} # end if
 
@@ -6254,7 +6254,6 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			} # end if
 		} # end if
 
-
 		my $Ink;
 
 		foreach my $C ( @{$special_colours{$colour}} ) {
@@ -6453,7 +6452,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 				$Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition, $aq_makereadies );
 
 		my $aq_elapsed = sprintf('%.4f seconds', (gettimeofday() - $aq_time)*1000);
-		$log->warn("AQ elapsed: $aq_elapsed");
+		$log->debug("AQ elapsed: $aq_elapsed") if DEBUG;
 #$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
 		if ( $aq_results{Status} eq 'uncalculated' ) {
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} ".
@@ -7775,7 +7774,7 @@ sub get_printing_types {
 $log->debug('PT: ' . join(',', @{$$specs{PrintingTypes}} ) ) if DEBUG;
 	} else {
 
-			if ( $$specs{txtSignatureType} eq 'Cover Pages' ) {
+		if ( $$specs{txtSignatureType} eq 'Cover Pages' ) {
 # FIgure out printing types
 #$log->debug("We are cover");
 			# If this is the cover, then we should ignore the interior pages, except for if there is an override.
@@ -7793,10 +7792,10 @@ $log->debug('PT: ' . join(',', @{$$specs{PrintingTypes}} ) ) if DEBUG;
 					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
 						$results = ['Sheetfed', 'Web'];
 					} else {
-						$log->warn("Unknown printing type: " . $$sig_specs{'PrintingType'.$qty_index} );
+						$log->warn('Unknown printing type: '.$$sig_specs{'PrintingType'.$qty_index} );
 					} # end if
 				} # end if
-$openprint::log->debug(" get printing type from sig $index " . $$sig_specs{'PrintingType'.$qty_index} . ($results ? join(',',@$results) : ' none'));
+$openprint::log->debug("get printing type from sig $index " . $$sig_specs{'PrintingType'.$qty_index} . ($results ? join(',',@$results) : ' none'));
 				last if $results;
 			} # end foreach
 
@@ -7807,7 +7806,10 @@ $openprint::log->debug(" get printing type from sig $index " . $$sig_specs{'Prin
 # if the cover is waterless, then we can do waterless, or offset
 $log->debug("We are interior $service_index") if DEBUG;
 			#foreach my $index ( sort { $a <=> $b } $Project->signatures({Group=>$$specs{Group}}) ) {
-			foreach my $index ( sort { $a <=> $b } $Project->signatures({type=>'Interior Pages'}) ) {
+			my @sigs = $Project->signatures({type=>'Interior Pages'});
+			return if @sigs <= 1;
+
+			foreach my $index ( sort { $a <=> $b } @sigs ) {
 $log->debug("Looking at interior sig $index == $service_index") if DEBUG;
 
 				next if $index == $service_index;
@@ -7817,7 +7819,7 @@ $log->debug("Looking at interior sig $index == $service_index") if DEBUG;
 					next;
 				}
 				next if ( ( $index > $service_index ) and ( (!$$sig_specs{'OverridePrintingType'.$qty_index}) or ( $$sig_specs{'OverridePrintingType'.$qty_index} ne 'Y' ) ) );
-$log->debug("Getting prnting tpes from $$sig_specs{SignatureIndex} group: $$sig_specs{Group}") if DEBUG;
+$log->debug("Getting prnting types from $$sig_specs{SignatureIndex} group: $$sig_specs{Group}") if DEBUG;
 
 				if ( $available_types{$$sig_specs{'PrintingType'.$qty_index}} ) {
 					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
@@ -7864,15 +7866,15 @@ $log->warn("Unknown printing type in sig $$sig_specs{SignatureIndex} : " . $$sig
 				} elsif ( $cover_type eq 'Offset' ) {
 					$results = ['Offset'];
 				} elsif ( $cover_type eq 'Web' ) {
-					$results = ['Sheetfed','Web'];
+					$results = ['Sheetfed', 'Web'];
 				} elsif ( $cover_type eq 'Sheetfed' ) {
-					$results = ['Sheetfed','Web', 'Digital'];
+					$results = ['Sheetfed', 'Web', 'Digital'];
 				} # end if
 			} # end if
 		} # end if Spread Type
 	} # end if printing_specs{PrintingType}
 	if ( !$results ) {
-		$log->error('No printing types');
+		$log->error('No results for get_printing_types');
 	} else {
 		$log->debug("Printing Type Results: @$results") if DEBUG;
 	}
