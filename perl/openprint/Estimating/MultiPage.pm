@@ -678,7 +678,6 @@ $openprint::log->warn("Have error $error for $qty_index. Existing error is ".$$s
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error ) if $error;
 		} # end if
 	} else {
-$openprint::log->warn("Have no error $error for $qty_index. Existing error is ".$$specs{"alert$qty_index"});
 # Clears it, but leaves alert messages from elsewhere
 		if ( $$specs{"alert$qty_index"} =~ /^Group/ or $$specs{"alert$qty_index"} =~ /^Stock/ ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error );
