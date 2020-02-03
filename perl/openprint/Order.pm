@@ -19,6 +19,8 @@ require openprint::Order_Status;
 require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
+require openprint::OrderedProject;
+require openprint::OrderedProduct;
 
 $debug = 0;
 
@@ -313,18 +315,15 @@ sub Company {
 
 sub Contents {
 	if ( ! $_[0]{Contents} ) {
-require openprint::OrderedProject;
-require openprint::OrderedProduct;
 		$_[0]{Contents} = [ 
-			openprint::OrderedProject->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProject::fields{project_id}), 
-			openprint::OrderedProduct->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProduct::fields{project_id}),
+			$_[0]->Ordered_Projects(),
+			$_[0]->Products(),
 			];
 	} # end if
 	return @{$_[0]{Contents}};
 } # end sub Contents
 
 sub Ordered_Projects {
-	require openprint::OrderedProject;
 	return openprint::OrderedProject->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProject::fields{project_id});
 } # end sub Ordered_Projects
 
@@ -332,7 +331,6 @@ sub Projects {
 	my $self = shift;
 	$$self{Projects} = shift if @_;
 	if ( $$self{id} and ! $$self{Projects} ) {
-		require openprint::OrderedProject;
 		$$self{Projects} = [ map { $_->Project() } $self->Ordered_Projects() ];
 	}
 
@@ -342,12 +340,14 @@ sub Projects {
 
 sub Products {
 	my $self = shift;
+ 	$$self{Products} = shift if @_;
 	if ( ! $$self{id} ) {
 		$openprint::log->warn("openrpint::Order->Products called with no id");
 		return ();
 	} # end if
-	require openprint::OrderedProduct;
-	@{$$self{Products}} = openprint::OrderedProduct->find( order_id=>$$self{id}, order=>'product_id' );
+	if ( ! $$self{Products} ) {
+		@{$$self{Products}} = openprint::OrderedProduct->find( order_id=>$$self{id}, order=>'product_id' );
+	}
 	return @{$$self{Products}};
 } # end sub Products
 
