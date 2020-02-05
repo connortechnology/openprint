@@ -24,7 +24,7 @@ use vars qw( $log $dbh %config $use_compression $debug );
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 $use_compression = 1;
-$debug = 0;
+$debug = 1;
 my $mangle = 1;
 
 $log = logger->new();
@@ -244,8 +244,14 @@ die 'Error opening db' if ! $dbh;
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 $dbh->disconnect();
 
+			if ( $debug ) {
+				File::Copy::move($$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension, $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension);
+				File::Copy::move($$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension, $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension);
+} else {
+			
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
+}
 		} # end foreach file in input hotfolder
 	} # end if cip3_merge
 
@@ -321,7 +327,12 @@ $dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 		my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
 		$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
-		unlink $$Equipment{'cip3_in'}.'/'.$file;
+if ( $debug ) {
+
+	File::Copy::move($$Equipment{'cip3_in'}.'/'.$file, $$Equipment{'cip3_in'}.'/done/'.$file);
+} else {
+	unlink $$Equipment{'cip3_in'}.'/'.$file;
+}
 	} # end foreach file in input hotfolder
 	close S;
 
