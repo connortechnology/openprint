@@ -72,7 +72,7 @@ sub delete {
 sub prices {
 	my $self = shift;
 
-	return openprint::MaterialPrice->find('material_id'=>$$self{id});
+	return openprint::MaterialPrice->find(material_id=>$$self{id});
 } # end sub prices
 
 sub New_Specification {

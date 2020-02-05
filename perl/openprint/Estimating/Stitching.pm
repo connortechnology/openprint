@@ -990,7 +990,7 @@ $openprint::log->debug("BaseService ".($BaseService ?  $BaseService->to_string()
 					$pass{PocketMakeReadyTime} = $maxPockets * $$PocketMakeReady{value} /60;
 					$price{MRTime} += $pass{PocketMakeReadyTime};
 				} else {
-					$openprint::log->error('Unknown units on PocketMakeReady');
+					$openprint::log->error('Unknown units on PocketMakeReady ' . $PocketMakeReady->to_string());
 				} # end if
 			} # end if PocketMakeReady
 
@@ -1015,7 +1015,7 @@ $openprint::log->debug("BaseService ".($BaseService ?  $BaseService->to_string()
 				$pass{PocketMakeReadyTime} = $neededPockets * $$PocketMakeReady{value} / 60;
 				$price{MRTime} += $pass{PocketMakeReadyTime};
 			} else {
-				$openprint::log->error('Unknown units on PocketMakeReady');
+				$openprint::log->error('Unknown units on PocketMakeReady ' . $PocketMakeReady->to_string());
 			} # end if
 		} # end if PocketMakeReady
 
