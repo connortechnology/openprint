@@ -46,13 +46,13 @@ sub history {
   if ( $param{btnFunction} eq 'Delete' ) {
     if ( ref $param{chkDelete} eq 'ARRAY' ) {
       foreach my $quote_id ( @{$param{chkDelete}} ) {
-        $variable{error} .= try_to_delete( $quote_id );  
+        $variable{error} .= try_to_delete($quote_id);
       } # end foreach
     } else {
-      $variable{error} .= try_to_delete($param{chkDelete});  
+      $variable{error} .= try_to_delete($param{chkDelete});
     } # end if
   } elsif ( $param{btnFunction} eq 'Delete Quote' ) {
-    $variable{error} .= try_to_delete($param{quote_id});  
+    $variable{error} .= try_to_delete($param{quote_id});
   } elsif ( $param{btnFunction} eq 'Download in CSV format' ) {
 
     my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Currency', 
@@ -66,16 +66,21 @@ sub history {
     my $total2;
     my $total3;
     foreach my $Quote ( @{$variable{Quotes}} ) {
-			foreach my $Project ( $Quote->Quoted_Projects() ) {
-				push @data, $Quote->id(), ssi::format_csv_datetime($Quote->created_on()),
-						 $Quote->by_name(), $Quote->Company()->name(), $Quote->for_name(), $Quote->status(),
-						 $Quote->Currency()->name(),
-						 $Quote->total1(), $Quote->total2(), $Quote->total3(),
-						 $Project->quantity1(), $Project->price1(),
-						 $Project->quantity2(), $Project->price2(),
-						 $Project->quantity3(), $Project->price3(),
-						 $Project->Project()->ordered_price(),
-						 $Project->Project()->docket(),
+			foreach my $QP ( $Quote->Quoted_Projects() ) {
+				my $Project = $QP->Project();
+
+				push @data, (
+						$Quote->id(), ssi::format_csv_datetime($Quote->created_on()),
+						$Quote->by_name(), $Quote->Company()->name(), $Quote->for_name(), $Quote->status(),
+						$Quote->Currency()->name(),
+						$Quote->total1(), $Quote->total2(), $Quote->total3(),
+						$QP->quantity1(), $QP->price1(),
+						$QP->quantity2(), $QP->price2(),
+						$QP->quantity3(), $QP->price3(),
+						$Project->ordered_quantity(),
+						$Project->ordered_price(),
+						$Project->docket(),
+						);
 			} # end foreach Project
       $total1 += $Quote->total1();
       $total2 += $Quote->total2();
