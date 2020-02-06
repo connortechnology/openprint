@@ -55,21 +55,33 @@ sub history {
     $variable{error} .= try_to_delete($param{quote_id});  
   } elsif ( $param{btnFunction} eq 'Download in CSV format' ) {
 
-    my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Total1', 'Total2', 'Total3', 'Currency', 'Dockets' );
-    my @data;
+    my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Currency', 
+				'Total 1', 'Total 2', 'Total 3',
+				'Project Quantity 1', 'Project Price 1',
+				'Project Quantity 2', 'Project Price 2',
+				'Project Quantity 3', 'Project Price 3',
+				'Ordered Quantity', 'Ordered Price', 'Docket' );
+		my @data;
     my $total1;
     my $total2;
     my $total3;
     foreach my $Quote ( @{$variable{Quotes}} ) {
-      push @data, $Quote->id(), ssi::format_csv_datetime($Quote->created_on()),
-					 $Quote->by_name(), $Quote->Company()->name(), $Quote->for_name(), $Quote->status(),
-					 $Quote->total1(), $Quote->total2(), $Quote->total3(), $Quote->Currency()->name(),
-					 join(',', map { $_->Project()->docket() ? $_->Project()->docket() : () } $Quote->Quoted_Projects());
+			foreach my $Project ( $Quote->Quoted_Projects() ) {
+				push @data, $Quote->id(), ssi::format_csv_datetime($Quote->created_on()),
+						 $Quote->by_name(), $Quote->Company()->name(), $Quote->for_name(), $Quote->status(),
+						 $Quote->Currency()->name(),
+						 $Quote->total1(), $Quote->total2(), $Quote->total3(),
+						 $Project->quantity1(), $Project->price1(),
+						 $Project->quantity2(), $Project->price2(),
+						 $Project->quantity3(), $Project->price3(),
+						 $Project->Project()->ordered_price(),
+						 $Project->Project()->docket(),
+			} # end foreach Project
       $total1 += $Quote->total1();
       $total2 += $Quote->total2();
       $total3 += $Quote->total3();
 		} # end foreach
-		push @data, '','','','','','Totals:', $total1, $total2, $total3, '', '';
+		push @data, '','','','','','', 'Totals:', $total1, $total2, $total3, '', '', '', '', '', '';
 		misc::export_csv( $r, $log, \%variable, 'quote_report.csv', \@header, \@data );
 	} # end if
 } # end sub history
@@ -130,6 +142,11 @@ sub _history {
 		my @Projects = openprint::Project->find(id=>\@project_ids) if @project_ids;
 		my @company_ids = map { $$_{company_id} } @Quotes;
 		my @Companies = openprint::Company->find(id=>\@company_ids) if @company_ids > 1;
+		my @Ordered_Projects = openprint::OrderedProject->find(project_id=>\@project_ids);
+		my %Ordered_Projects_by_project_id = misc::make_hash_from_array('project_id', @Ordered_Projects);
+		foreach my $Project ( @Projects ) {
+			$Project->Ordered_Project($Ordered_Projects_by_project_id{$$Project{id}}[0]) if $Ordered_Projects_by_project_id{$$Project{id}};
+		}
 		
     foreach my $Quote ( @Quotes ) {
 			$Quote->Quoted_Projects( $Quoted_Projects{$$Quote{id}} ? $Quoted_Projects{$$Quote{id}} : [] );
