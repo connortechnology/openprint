@@ -25,6 +25,9 @@ use vars qw( $log $dbh %config $use_compression $debug );
 *config = \%openprint::config;
 $use_compression = 1;
 $debug = 1;
+if ( $debug ) {
+	require File::Copy;
+}
 my $mangle = 1;
 
 $log = logger->new();
@@ -245,8 +248,10 @@ die 'Error opening db' if ! $dbh;
 $dbh->disconnect();
 
 			if ( $debug ) {
-				File::Copy::move($$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension, $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension);
-				File::Copy::move($$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension, $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension);
+				File::Copy::move($$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension,
+						$$Equipment{'cip3_in'}.'/done/'.$file_base.'A.'.$extension);
+				File::Copy::move($$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension,
+						$$Equipment{'cip3_in'}.'/done/'.$file_base.'B.'.$extension);
 } else {
 			
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
