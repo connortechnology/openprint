@@ -70,6 +70,9 @@ $serial = 'lngProjectIndex_seq';
 	csr_commission    =>  'csr_commission',
 	priority					=>	'priority',
 	production_comments	=>	'production_comments',
+ordered_quantity	=> undef,
+ordered_quantity_index	=> undef,
+ordered_price	=> undef,
 );
 %transforms = (
 	id								=>	[ 's/\D//g', '<2147483647' ],
@@ -655,11 +658,9 @@ sub save {
 
 sub quantity_indexes {
 	my ( $self ) = @_;
-	if ( @_ > 1 ) {
-		$$self{quantity_indexes} = $_[1];
-	}
+	$$self{quantity_indexes} = $_[1] if @_ > 1;
 	if ( ! $$self{quantity_indexes} ) {
-		@{$$self{quantity_indexes}} = ();
+		$$self{quantity_indexes} = [];
 		foreach my $qty_index ( 1 .. 3 ) {
 			push @{$$self{quantity_indexes}}, $qty_index if $$self{"quantity$qty_index"};
 		} # end foreach qty_index
@@ -695,6 +696,7 @@ sub quantity1 {
 	} # end if
 	return $$self{quantity1};
 } # end sub quantity1
+
 sub quantity2 {
 	my $self = shift;
 	if ( @_ ) {
@@ -706,6 +708,7 @@ sub quantity2 {
 	} # end if
 	return $$self{quantity2};
 } # end sub quantity2
+
 sub quantity3 {
 	my $self = shift;
 	if ( @_ ) {
@@ -976,7 +979,12 @@ sub shippingtype {
 } # end sub shippingtype
 
 sub ordered_quantity {
-	return $_[0]{'quantity'.$_[0]->ordered_quantity_index()};
+	my $qty_index = $_[0]->ordered_quantity_index();
+	if ( $qty_index ) {
+		return $_[0]{'quantity'.$qty_index};
+	}
+
+	return undef;
 } # end sub ordered_quantity
 
 sub ordered_quantity_index {
@@ -987,10 +995,11 @@ sub ordered_quantity_index {
 
 	if ( ! $$OP{quantity_index} ) {
 		my @qtys = $_[0]->quantity_indexes();
-#$openprint::log->debug("Project ordered_qty_index @qtys ");
-		if ( 1 == @qtys ) {
-			$$OP{quantity_index} = $qtys[0];
-		} # end if
+#$openprint::log->debug("Project ordered_qty_index (@qtys)");
+# This causes problems reporting ordered info on projects that havn't been ordered
+		#if ( 1 == @qtys ) {
+			#$$OP{quantity_index} = $qtys[0];
+		#} # end if
 	} # end if
 	return $$OP{quantity_index};
 } # end sub ordered_quantity_index
@@ -998,7 +1007,7 @@ sub ordered_quantity_index {
 sub ordered_price {
 	my $OP = $_[0]->Ordered_Project();
 	if ( ! $OP ) {
-		$openprint::log->error("No OP in ordered_price");
+		$openprint::log->error('No OP in ordered_price');
 	} else {
 		return $$OP{price} if $$OP{price};
 		return $_[0]{'price'.$$OP{quantity_index}};
@@ -1228,7 +1237,7 @@ sub get_due_date {
 		$runtime += openprint::service::get_runtime( $self, $_ );
 $openprint::log->debug("Adding runtime $runtime");
 	} # end foreach
-$openprint::log->debug("Adding runtime days: " . int( $runtime / ( 24*60 ) ) );
+$openprint::log->debug('Adding runtime days: ' . int( $runtime / ( 24*60 ) ) );
 	$duedatedays += int( $runtime / ( 24*60*60 ) );
 	
 	return sprintf('%.4d-%.2d-%.2d', misc::add_delta_business_days( Date::Calc::Today(), $duedatedays ) );
@@ -1236,7 +1245,7 @@ $openprint::log->debug("Adding runtime days: " . int( $runtime / ( 24*60 ) ) );
 
 sub Ordered_Product {
 	my ( $self ) = @_;
-	if ( ! exists $$self{Ordered_Product} ) {
+	if ( ! exists($$self{Ordered_Product}) ) {
 		my @Products = openprint::OrderedProduct->find( project_id=>$$self{id} );
 		if ( @Products == 1 ) {
 			$$self{Ordered_Product} = $Products[0];
@@ -1248,8 +1257,10 @@ sub Ordered_Product {
 } # end sub Ordered_Product
 
 sub Ordered_Project {
+	$_[0]{Ordered_Project} = $_[1] if @_ > 1;
+
 	if ( ! exists $_[0]{Ordered_Project} ) {
-		$_[0]{Ordered_Project} = openprint::OrderedProject->find_one(order_id=>$_[0]{order_id}, project_id=>$_[0]{id} ) if $_[0]{order_id};
+		$_[0]{Ordered_Project} = openprint::OrderedProject->find_one(order_id=>$_[0]{order_id}, project_id=>$_[0]{id}) if $_[0]{order_id};
 	} # end if
 
 	if ( ! $_[0]{Ordered_Project} ) {
