@@ -385,8 +385,8 @@ sub signature_calc {
 
 # Get the impositions to consider
 	if ( ! $$SignatureImposition{imposition} ) {
-		$openprint::log->error("Scoring passed an invalid imposition");
-		$Results{alert} .= "Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>";
+		$openprint::log->error('Scoring passed an invalid imposition');
+		$Results{alert} .= 'Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>';
 		return $Results{Status};
 	} # end if
 
@@ -401,11 +401,11 @@ sub signature_calc {
 	my @All_Impositions;
 
 	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
-		$openprint::log->debug("Overriding impositions");
+		$openprint::log->debug('Overriding impositions');
 
 		my @override_impos;
 		foreach my $index ( 1 .. 4 ) {
-			my $imp_qty =$$specs{join('-','ImpQty', $form,$qty_index,$index)};
+			my $imp_qty =$$specs{join('-','ImpQty',$form,$qty_index,$index)};
 			next if ! $imp_qty;
 			my $I = $SignatureImposition->copy();
 			$I->quantity( $imp_qty );
@@ -626,7 +626,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 					 $Results{Breakdown} .= $$Price{Breakdown};
 				 } # end foreach imposition I
 				 next if ! $complete;
-				 $Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice );
+				 $Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice);
 
 				 if ( (! exists $Results{Price}) or ($totalPrice < $Results{Price}) ) {
 					 $Results{Price} = $totalPrice;
