@@ -117,7 +117,7 @@ $serial	= 'paper_id_seq';
 	id			=>	[ 's/\D//g', '<2147483647' ],
 	manufacturers_name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
 	gsm				=>	 [ 's/[^\d\.]//g' ],
-	wpsi				=>	 [ 's/[^\d\.]//g' ],
+	wpsi				=>	 [ 's/[^\d\.\-eE]//g' ],
 	calliper		=>	 [ 's/[^\d\.]//g' ],
 	basis_mweight	=>	 [ 's/[^\d\.]//g' ],
 	mweight			=>	 [ 's/[^\d\.]//g' ],
@@ -703,6 +703,7 @@ sub mweight {
 			my $wpsi = $$self{gsm}/703064.5;
 			if ( $$self{type} eq 'Roll' and $$self{basis_width} and $$self{basis_height} ) {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{basis_width} * $$self{basis_height} * 1000 );
+$openprint::log->debug("Setting mweight to $$self{mweight} from wpsi $wpsi and basis size");
 				# MWeight is in relaion to the basis size
 			} elsif ( $$self{width} and $$self{height} ) {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 1000 );
