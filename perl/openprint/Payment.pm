@@ -171,7 +171,7 @@ sub value {
 
 sub exchange {
   if ( !$_[0]{exchange} ) {
-    if ( $_[0]{currency_id} != $$openprint::Currency{id} ) {
+    if ( $_[0]{currency_id} and ( $_[0]{currency_id} != $$openprint::Currency{id} ) ) {
       my $Conversion = openprint::Currency_Conversion->find_one(
         from_id=>$_[0]{currency_id}, to_id=>$$openprint::Currency{id},
         'period_start null_or_<=' => $_[0]{received_on},
