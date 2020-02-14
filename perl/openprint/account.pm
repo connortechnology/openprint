@@ -193,8 +193,8 @@ sub registration {
 			$Company = new openprint::Company();
 			$Company->set( \%param );
 			$Company->activation( $config{NewCustomerAccountActivation} );
-			if ( sets::isin( $session{user_type}, ['E','A'] ) and ! $Company->salesrep_id() ) {
-				$Company->salesrep_id( $session{user_id} );
+			if ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) and ! $Company->salesrep_id() ) {
+				$Company->salesrep_id($session{user_id});
 			} # end if
 			if ( my $error = $Company->save() ) {
 				$variable{error} .= $error;
@@ -286,9 +286,9 @@ sub registration {
 						);
 			} # end if
 
-			if ( ! sets::isin( $session{user_type}, ['E','A'] ) ) {
+			if ( ! ($session{user_type} and sets::isin($session{user_type}, ['E','A']) ) ) {
 # send notification
-				$info{ReplacementText} = ssi::include( '/email_content/first_user_login_app_notification.html', \%info );
+				$info{ReplacementText} = ssi::include('/email_content/first_user_login_app_notification.html', \%info);
 				foreach my $to ( split(',', $config{UserRegistrationEmail} ) ) {
 					new openprint::Email()->send(
 							FROM	=> $agent,
@@ -363,7 +363,7 @@ sub registration {
 		} # end if Company has users or not
 	} # end if has email first or last name
 
-	if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
+	if ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) {
 		# If I'm a salesrep, then only change my company, not the user.
 		$session{company_id} = $Company->id();
 		$variable{information} .= 'You are now representing '.$Company->name().'<br/>';
