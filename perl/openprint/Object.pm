@@ -1148,7 +1148,7 @@ sub to_string {
 	my $fields = eval '\%'.$type.'::fields';
 	return $type . ': '. join(' ', map {
 #$$fields{$_} ? $_ . ' => ' . (ref $_[0]{$_} eq 'ARRAY' ? join(',',@{$_[0]{$_}}) : $_[0]{$_} )
- $_ . ' => ' . (ref $_[0]{$_} eq 'ARRAY' ? join(',',@{$_[0]{$_}}) : $_[0]{$_} )
+ $_ . ' => ' . (ref $_[0]{$_} eq 'ARRAY' ? join(',',@{$_[0]{$_}}) : (defined( $_[0]{$_})?$_[0]{$_}:'undef') )
 #: ()
 } sort { $a cmp $b } keys %$fields );
 }
