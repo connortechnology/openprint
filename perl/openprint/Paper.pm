@@ -1902,6 +1902,11 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
 			push @results, 'may have wrong basis mweight.  Should probably be '.2*$1;
 		}
 	}
+my $old_wpsi = 1*$$Paper{wpsi};
+
+	if ( $old_wpsi ne $Paper->wpsi(undef) ) {
+			push @results, "invalid value for wpsi $old_wpsi should maybe be $$Paper{wpsi}";
+	}
 
 	return join('<br/>', @results);
 } # end sub check
