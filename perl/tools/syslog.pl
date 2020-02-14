@@ -59,7 +59,6 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 
 
 $log = new logger( {file=>$config{log_file}, level=>$config{log_level}} );
-$log->info("Opening SQL connection");
 my %db_connect_info = (
 	port		=> $config{db_port},
 	host		=> $config{db_host},
@@ -220,7 +219,6 @@ while(1) {
 			$log->debug("no line for buf($buf)");
 			next;
 		} 
-	#$log->debug("Thing1: $1, thing3: $line ");
 		my $changed = 0;
 		foreach my $re ( @re ) {
 
@@ -292,15 +290,18 @@ while(1) {
 				# Instead of parsing when, we just use the current time
 				my $now_dt = DateTime->now( time_zone=>$config{Timezone} );
 
-				if ( $host_counts{$ip}{updated_on} and ! $host_counts{$ip}{updated_on_seconds} ) {
-					$host_counts{$ip}{updated_on_seconds} = $updated_on_dt->epoch();
-					$log->debug("Converting  $host_counts{$ip}{updated_on} to $host_counts{$ip}{updated_on_seconds} seconds") if $config{debug};
+        my $Host = $host_counts{$ip};
+				if ( $$Host{updated_on} and ! $$Host{updated_on_seconds} ) {
+					$$Host{updated_on_seconds} = $updated_on_dt->epoch();
+					$log->debug("Converting  $$Host{updated_on} to $$Host{updated_on_seconds} seconds") if $config{debug};
 				}
 	#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
 				#if ( DateTime->compare( $updated_on_dt, $now_dt ) <= 0 ) {
-					$host_counts{$ip}{count} += 1;
-$log->debug("count for $ip is $host_counts{$ip}{count}");
-					$host_counts{$ip}{update} = 1;
+					$$Host{count} += 1;
+$log->debug("count for $ip is $$Host{count}");
+					$$Host{update} = 1;
+          $$Host{matches} = [] if ! $$Host{matches};
+          push @{$$Host{matches}}, "$line matched by $re";
 					$changed = $ip;
 				#} else {
 					#$log->debug( "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when " ) if $config{debug};
@@ -312,48 +313,38 @@ $log->debug("count for $ip is $host_counts{$ip}{count}");
 
 		if ( $changed ) {
 			my $ip = $changed;
-			$log->debug( "# of entries in host_counts: " . keys %host_counts ) if $config{debug};
-			#foreach my $ip ( sort keys %host_counts ) {
-				#next if ! $host_counts{$ip}{update};
-				my $count = $host_counts{$ip}{count};
-				$host_counts{$ip}->load();
-				if ( $host_counts{$ip}{whitelist} ) {
-					delete $host_counts{$ip};
-					next;
-				}
-				$host_counts{$ip}{count} = $count;
-				
-				if ( $ip eq '127.0.0.1' ) {
-					$log->warn("WTF blacklistint localhost?!");
-					next;
-				} # end if
-				if ( ! defined $host_counts{$ip}{count} ) {
-					$host_counts{$ip}{count} = 0;
-				}
-				if ( ! $host_counts{$ip}{blacklist} ) {
-					if ( $host_counts{$ip}{count} > 20 ) {
-						$host_counts{$ip}{blacklist} = 1;
-					} # end if
-					if ( $dbh and $dbh->ping() ) {
-						$_ = $host_counts{$ip}->save();
-						if ( $_ ) {
-							$log->error( $_ );
-						} # end if
-						$host_counts{$ip}{updated_on_seconds} = time;
-					} # end if
-					#$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
-	
-					if ( $host_counts{$ip}{blacklist} ) {
-            (new openprint::Log())->save( { Object=>$host_counts{$ip}, action=>'Blacklist' } );
-						$log->debug("Dropping $ip");
-						`shorewall drop $ip`;
-					}
-				} elsif ( $host_counts{$ip}{count} > 20 ) {
-					$log->debug("Dropping $ip beacuse $host_counts{$ip}{count} > 20");
-            (new openprint::Log())->save( { Object=>$host_counts{$ip}, action=>'Blacklist' } );
-					`shorewall drop $ip`;
-				} # end if wasn't blacklisted, but now is
-			#} # end foreach ip
+			$log->debug('# of entries in host_counts: '. keys %host_counts) if $config{debug};
+      my $Host = $host_counts{$ip};
+      my $count = $$Host{count};
+      $Host->load(); # refresh from db
+      if ( $$Host{whitelist} ) {
+        delete $host_counts{$ip};
+        next;
+      }
+      $$Host{count} = $count;
+
+      if ( ! defined $$Host{count} ) {
+        $$Host{count} = 0;
+      }
+      if ( ! $$Host{blacklist} ) {
+        $$Host{blacklist} = 1 if $$Host{count} > 20;
+        if ( $dbh and $dbh->ping() ) {
+          $_ = $Host->save();
+          $log->error($_) if $_;
+          $$Host{updated_on_seconds} = time;
+        } # end if dbh is alive
+        #$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
+      } 
+      if ( $$Host{count} > 20 ) {
+        $log->debug("Dropping $ip because $$Host{count} > 20");
+        `shorewall drop $ip`;
+        (new openprint::Log())->save({
+            Object=>$Host,
+            action=>'Blacklist',
+            note=>join('<br/>', @{$$Host{matches}}),
+          });
+        $$Host{matches} = [];
+      } # end if wasn't blacklisted, but now is
 			$changed = 0;
 		} elsif ( $config{debug} ) {
 			$log->debug("No match or changes for $line") if $config{debug};
