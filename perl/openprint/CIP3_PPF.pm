@@ -21,34 +21,33 @@ $debug = 0;
 $table = 'CIP3_PPF';
 $serial = 'CIP3_PPF_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'created_on'	=>	'created_on',
-	'data'			=>	'data',
-	'front_preview'	=>	'front_preview',
-	'back_preview'	=>	'back_preview',
-	'signature'		=>	'signature',
-	'side'			=>	'side',
-	'docket'		=>	'docket',
-	'version'		=>	'version',
-	'deleted'		=>	'deleted',
-	'compressed'	=>	'compressed',
+	id						=>	'id',
+	created_on		=>	'created_on',
+	data					=>	'data',
+	front_preview	=>	'front_preview',
+	back_preview	=>	'back_preview',
+	signature			=>	'signature',
+	side					=>	'side',
+	docket				=>	'docket',
+	version				=>	'version',
+	deleted				=>	'deleted',
+	compressed		=>	'compressed',
 );
 %find_fields = (
-	'status'		=>	'(SELECT strstatus from tbl_Projects WHERE lngdocketnumber=docket)',
+	status		=>	'(SELECT strstatus from tbl_Projects WHERE lngdocketnumber=docket)',
 );
 %defaults = (
-	'created_on'	=>	q`'NOW()'`,
-	'deleted'		=>	0,
+	created_on	=>	q`'NOW()'`,
+	deleted			=>	0,
 );
 %transforms = (
-	'signature'		=> [ 's/\D//g' ],
+	signature		=> [ 's/\D//g' ],
 );
 
 my %WorkStyles = (
-	'Perfecting'	=>	'Perfecting',
-	'WorkAndTurn'	=>	'Work & Turn',
-	'WorkAndBack'	=>	'Work & Tumble',
-
+	Perfecting	=>	'Perfecting',
+	WorkAndTurn	=>	'Work & Turn',
+	WorkAndBack	=>	'Work & Tumble',
 );
 
 sub runstyle {
