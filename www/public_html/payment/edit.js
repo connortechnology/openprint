@@ -1,14 +1,29 @@
 
-function calc_from_exchange(form) {
-  if ( form.amount.value && form.amount_locked.checked ) {
-    form.value.value = form.amount.value * form.exchange.value;
-  } else if ( form.value.value && form.value_locked.checked ) {
-    form.amount.value = form.value.value / form.exchange.value;
-  }
-}
+function calc(element) {
+  var form = element.form;
 
-function calc_exchange_from_value(form) {
-  form.exchange.value = form.value.value / form.amount.value;
+  if ( element.name == 'amount' ) {
+    if ( form.value.value && form.value_locked.checked ) {
+      form.exchange.value = form.value.value / form.amount.value;
+    } else {
+      form.value.value = form.amount.value * form.exchange.value;
+    }
+  } else if ( element.name == 'value' ) {
+    if ( form.amount.value && form.amount_locked.checked ) {
+      // if amount is set & locked, then set exchange
+      form.exchange.value = form.value.value / form.amount.value;
+    } else {
+      form.amount.value = form.value.value / form.exchange.value;
+    }
+  } else if ( element.name == 'exchange' ) {
+    if ( form.amount.value && form.amount_locked.checked ) {
+      form.value.value = form.amount.value * form.exchange.value;
+    } else if ( form.value.value && form.value_locked.checked ) {
+      form.amount.value = form.value.value / form.exchange.value;
+    } else {
+      alert('can\'t adjust amount or value because both are locked!');
+    }
+  } // end if element
 }
 
 function pay_invoice( invoice_id ) {

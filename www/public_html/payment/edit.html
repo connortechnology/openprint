@@ -1,4 +1,4 @@
-<script src="edit.js"></script>
+<script src="<?hash_link(/payment/edit.js)?>"></script>
 <? if ( $$variable{Payment}->id() ) ?>
 <script>
 	var payment_id = '<? echo ( $$variable{Payment}->id() ) ?>';
@@ -33,7 +33,7 @@
 			</li>
 			<li><label for="amount">Amount</label>
 				<? echo ( join("\n",
-        input( type=>'float', name=>'amount', id=>'amount', value=> $$variable{Payment}->amount() ),
+              input( type=>'float', name=>'amount', id=>'amount', value=> $$variable{Payment}->amount(), oninput=>'calc(this);' ),
         write_override('amount_locked', $$variable{Payment}->amount_locked()),
         ); ) ?>
 				<select name="currency_id" id="currency_id">
@@ -41,13 +41,13 @@
 				</select>
 			</li>
       <li id="exchange"><label>Exchange Rate</label>
-        <? echo ( input( type=>'float', name=>'exchange', id=>'exchange', value=>$$variable{Payment}->exchange(), onkeyup=>'calc_from_exchange(this.form);' ); ) ?>
+        <? echo ( input( type=>'float', name=>'exchange', id=>'exchange', value=>$$variable{Payment}->exchange(), onkeyup=>'calc(this);' ); ) ?>
       </li>
       <li><label>Value</label>
 				<? echo ( join("\n",
           input(type=>'float', name=>'value', id=>'value',
           value=>$$variable{Payment}->value(),
-          onkeyup=>'calc_exchange_from_value(this.form);'),
+          onkeyup=>'calc(this);'),
         write_override('value_locked', $$variable{Payment}->value_locked()),
         ); ) ?>
       </li>
