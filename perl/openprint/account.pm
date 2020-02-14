@@ -114,30 +114,33 @@ sub registration {
 		} elsif ( ! $param{MD5SUM} ) {
 			$log->error('No MD5SUM, there must have been a problem creating the png!');
 		} else {
-			require Authen::Captcha;
-			my $Captcha = new Authen::Captcha(
-					data_folder => $config{SkinPath}.'/tmp/',
-					output_folder => $config{SkinPath}.'/images/captcha');
-			# Remove spaces, because some people want to put spaces between the characters, etc.
-			$param{Captcha} =~ s/\s//g;
-			my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
-			if ( $rc == 1 ) {
-				# Passed
-			} elsif ( $rc == 0 ) {
-				# File error, log and carry on
-				$log->error('Captcha file error');
-			} elsif ( $rc == -1 ) {
-				$log->debug('Failed: code expired');
-				$error .= 'Captcha validation code has expired.  Please try again.';
-			} elsif ( $rc == -2 ) {
-				$log->debug('Failed: invalid code (not in db)');
-				$error .= 'Captcha validation code incorrect.  Please try again.';
-			} elsif ( $rc == -3 ) {
-				$log->debug('Failed: invalid code (does not match token)');
-				$error .= 'Captcha validation code incorrect.  Please try again.';
-			} else {
-				$log->error("unknown return code $rc from Authen::Captcha");
-			}
+			# Auth::Captcha calls die... so must do this in an eval
+			eval {
+				require Authen::Captcha;
+				my $Captcha = new Authen::Captcha(
+						data_folder => $config{SkinPath}.'/tmp/',
+						output_folder => $config{SkinPath}.'/images/captcha');
+# Remove spaces, because some people want to put spaces between the characters, etc.
+				$param{Captcha} =~ s/\s//g;
+				my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
+				if ( $rc == 1 ) {
+# Passed
+				} elsif ( $rc == 0 ) {
+# File error, log and carry on
+					$log->error('Captcha file error');
+				} elsif ( $rc == -1 ) {
+					$log->debug('Failed: code expired');
+					$error .= 'Captcha validation code has expired.  Please try again.';
+				} elsif ( $rc == -2 ) {
+					$log->debug('Failed: invalid code (not in db)');
+					$error .= 'Captcha validation code incorrect.  Please try again.';
+				} elsif ( $rc == -3 ) {
+					$log->debug('Failed: invalid code (does not match token)');
+					$error .= 'Captcha validation code incorrect.  Please try again.';
+				} else {
+					$log->error("unknown return code $rc from Authen::Captcha");
+				}
+			};
 		} # end if
 	} # end if
 
