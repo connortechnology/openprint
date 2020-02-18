@@ -204,8 +204,8 @@ sub load {
 		} # end if
 	} # end if
 	if ( $data and %$data ) {
-		my @keys = map { (defined $$fields{$_} or exists $$data{$_} ) ? $_ : () } keys %$fields;
-		@$self{@keys} = @$data{@$fields{@keys}};
+		my %keys = map { (defined $$fields{$_} ? ($_=>$$fields{$_}) : (exists $$data{$_} ? ($_=>$_) : ()) ) } keys %$fields;
+		@$self{keys %keys} = @$data{ values %keys };
 	} # end if
 } # end sub load
 
