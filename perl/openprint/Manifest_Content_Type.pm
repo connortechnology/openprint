@@ -140,9 +140,9 @@ sub PurchaseOrder_Content {
 					}
 				} # end if
 
-				my ( $caliper ) = $POC->item() =~ /(\d+)PT/i;
+				my ( $caliper ) = ( $POC->item() =~ /([\.\d]+)PT/i );
 				if ( $caliper ) {
-					if ( $Paper->weight() =~ /(\d+PT)/i ) {
+					if ( $Paper->weight() =~ /([\.\d]+)PT/i ) {
 						if ( $1 != $caliper ) {
 							$openprint::log->debug("Caliper doesn't match $caliper != $1") if $debug;
 							next;
@@ -181,7 +181,7 @@ sub PurchaseOrder_Content {
 						next;
 					} # end if
 				} # end if
-				$openprint::log->debug("Matched $$POC{item} => " . $Paper->to_string()) if $debug;
+				$openprint::log->debug('Matched '.($$POC{item}?$$POC{item}:'').' => '.$Paper->to_string()) if $debug;
 				$_[0]{PurchaseOrder_Content} = $POC;
 				last;
 			} # end foreach POC
