@@ -299,6 +299,7 @@ my %variables = (
 	txtPlateQuantity1 => ['save','output'], txtPlateQuantity2 => ['save','output'], txtPlateQuantity3 => ['save','output'], 
 	BlankPlateQuantity1 => ['save','output'], BlankPlateQuantity2 => ['save','output'], BlankPlateQuantity3 => ['save','output'], 
 	txtPlateChangeQuantity1 => ['save'], txtPlateChangeQuantity2 => ['save'], txtPlateChangeQuantity3 => ['save'], 
+	txtPlateChangeType1 => ['save'], txtPlateChangeType2 => ['save'], txtPlateChangeType3 => ['save'], 
 #
 	PerPlateCost1 => ['save','output'], PerPlateCost2 => ['save','output'], PerPlateCost3 => ['save','output'],
 	PlateTotalCost1 => ['save','output'], PlateTotalCost2	=> ['save','output'], PlateTotalCost3 => ['save','output'],
@@ -716,9 +717,11 @@ $log->debug("Adding special colour for $colour");
 		$project{NeedScoring} = 0;
 		$project{NeedFolding} = 0;
 	} # end if
-	openprint::Estimating::Cutting::init( $Project, \%project );
+	openprint::Estimating::Cutting::init($Project, \%project);
+	openprint::Estimating::Folding::init($Project, \%project) if $project{NeedFolding};
 	$project{NeedUVCoating} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
 	$project{NeedAqueous} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
+	openprint::Estimating::Aqueous::init($Project, \%project) if $project{NeedAqueous};
 	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
 
 	# These aer questionable: Should not modify a project in calculation
@@ -777,11 +780,11 @@ $log->debug("Adding special colour for $colour");
 	if ( $$services{SaddleStitching} ) {
 		%{$project{StitchingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{SaddleStitching}[0] )};
 		$project{HasStitching} = $$services{SaddleStitching}[0];
-
-
+		openprint::Estimating::Stitching::init($Project, \%project);
 	} elsif ( $$services{LoopStitching} ) {
 		%{$project{StitchingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{LoopStitching}[0] )};
 		$project{HasStitching} = $$services{LoopStitching}[0];
+		openprint::Estimating::Stitching::init($Project, \%project);
 	} # end if
 	if ( $project{HasStitching} ) {
 		%{$project{FoldingStitchingSpecs}} = %{$project{StitchingSpecs}};
@@ -1060,11 +1063,12 @@ sub get_Stocks {
 	} else {
 		$$v{txtStockGSM} = [ sets::union( 'output', @{$$v{txtStockGSM}} ) ];
 
-		my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} )) if $openprint::config{$Project->Type()->name().'StockOptions'};;
+		my $project_type_name = $Project->Type()->name();
+		my @StockOptions = misc::trim(split(',', $openprint::config{$project_type_name.'StockOptions'} )) if $openprint::config{$project_type_name.'StockOptions'};
 		@StockOptions = misc::trim(split (',', $openprint::config{StockOptions} )) if ( ! @StockOptions ) and $openprint::config{StockOptions};
 		@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
-		my @RequiredStockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'RequiredStockOptions'} )) if $openprint::config{$Project->Type()->name().'RequiredStockOptions'};
+		my @RequiredStockOptions = misc::trim(split (',', $openprint::config{$project_type_name.'RequiredStockOptions'} )) if $openprint::config{$project_type_name.'RequiredStockOptions'};
 		@RequiredStockOptions = misc::trim(split (',', $openprint::config{RequiredStockOptions} )) if ( ! @RequiredStockOptions ) and $openprint::config{RequiredStockOptions};
 		@RequiredStockOptions = @StockOptions if ! @RequiredStockOptions;
 
@@ -1089,8 +1093,8 @@ sub get_Stocks {
 				( exists $$specs{ddmStockWidth} ? ( width=>$$specs{ddmStockWidth} ) : () ),
 				( exists $$specs{ddmStockHeight} ? ( height=>$$specs{ddmStockHeight} ) : () ),
 				'project_type_id any'=>$Project->type_id(),
+				( ( $openprint::usergroup::groups_cache{'Roll Estimating'} and ! $openprint::User->in_Group('Roll Estimating') ) ? ( type=>'Sheet' ) : () ),
 				);
-
 		if ( !@Papers ) {
 			$log->warn('no papers');
 			$$specs{alert} .= 'Unable to find any stocks matching your specifications.<br/>';
@@ -2732,7 +2736,6 @@ sub calc {
 				$$specs{"$k$qty_index"} = $$specs{$k};
 			} # end foreach
 		} # end foreach K
-$log->debug("No printing");
 		return $$specs{Status} = 'calculated';
 	} # end if
 
@@ -4566,7 +4569,10 @@ $log->debug("$k => $washed_colours");
 							}
 
 							if ( ( int($$sig_price{'Comparison Cost'}) == $last_sig_price ) and ( 
-		 ( ! $sig_specs{'txtPlateChangeQuantity'.$qty_index} and ! $$new_specs{'txtPlateChangeQuantity'.$qty_index} ) or ( $sig_specs{'txtPlateChangeQuantity'.$qty_index} and $$new_specs{'txtPlateChangeQuantity'.$qty_index} and $sig_specs{'txtPlateChangeQuantity'.$qty_index} == $$new_specs{'txtPlateChangeQuantity'.$qty_index}) ) ) {
+										( ! $sig_specs{'txtPlateChangeQuantity'.$qty_index} and ! $$new_specs{'txtPlateChangeQuantity'.$qty_index} )
+										or
+										( $sig_specs{'txtPlateChangeQuantity'.$qty_index} and $$new_specs{'txtPlateChangeQuantity'.$qty_index} and $sig_specs{'txtPlateChangeQuantity'.$qty_index} == $$new_specs{'txtPlateChangeQuantity'.$qty_index} )
+										) ) {
 								my $sigs = int($$price{upq}/$$imp{pages});
 #$log->debug("Sigs: $sigs: signatures( @signatures )");
 								#$PaperCounts{$$Paper{id_string}} = 0 if ! defined $PaperCounts{$Paper->id_string()};
@@ -5154,7 +5160,7 @@ $imp->display('[warn]');
 											$$Setup{possible_presses} = \@possible_presses;
 											my @available_printingtypes = sets::union(map { $_->specification('Printing Type') } @possible_presses);
 											$$Setup{specs}{PrintingTypes} = get_printing_types( $Project, $sigs[0], $printing_specs, $$Setup{specs}, $qty_index, \@available_printingtypes, $imp );
-$imp->display("PrintingTYpes for other group: " . join(',', @{$$Setup{specs}{PrintingTypes}} ) );
+$imp->display("PrintingTYpes for other group: " . join(',', @{$$Setup{specs}{PrintingTypes}} ) ) if $$Setup{specs}{PrintingTypes};
 											my %sub_impositions = get_impositions($Project, $$Setup{specs}, $new_project, $qty, $qty_index, \@possible_presses, $$Setup{Stocks}, \%Overrides);
 											convert_impositions($Project, @$Setup{'project','specs'}, $qty_index, \%sub_impositions);
 
@@ -5583,7 +5589,18 @@ sub calc_price {
 	} # end if
 
 	my $plate_changes = 0;
-	$plate_changes += $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"} if $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
+	if ( $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"} ) {
+		if ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} ) {
+			if ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '1/0' ) {
+			} elsif ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '1/1' ) {
+			} elsif ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '1/1' ) {
+			} elsif ( $$project{ProjectSpecs}{"PlateChangeType-$$specs{Group}"} eq '1/1' ) {
+			}
+		} else {
+			$plate_changes += $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
+		}
+	} # end if project platechanges
+
 	$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
 	
 	my $additional_overs = 0;
@@ -5889,20 +5906,20 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 		if ( $cutting_results{Status} eq 'uncalculated' ) {
 			$price{'Cutting Breakdown'} .= "Cutting error: $cutting_results{alert}<br/>";
 		} else {
-			$price{'Cutting Breakdown'} .= sprintf('Cutting Price: $%.2f',$cutting_results{Price} );
-			$price{'Cutting Breakdown'} .=$cutting_results{Breakdown};
+			$price{'Cutting Breakdown'} .= sprintf('Cutting Price: $%.2f<br/>', $cutting_results{Price});
+			$price{'Cutting Breakdown'} .= $cutting_results{Breakdown};
 			#$price{'Cutting Breakdown'} .= ' on '. $cutting_results{Equipment}->name() if $cutting_results{Equipment};
 			$price{'Cutting Breakdown'} .= '<br/>';
 
 #$price{'Cutting Breakdown'} .= $$project{CuttingSpecs}{'hdnBreakdown'.$qty_index}.'<br/>';
 			$price{'Comparison Cost'} += $cutting_results{Price};
-			$price{'Comparison Log'} .= "Cutting : $cutting_results{Price} total: $price{'Comparison Cost'}<br/>" if COMPARISON_LOG;
+			$price{'Comparison Cost'} += $cutting_results{FoldingPrice};
+			$price{'Comparison Log'} .= "Cutting : $cutting_results{Price} PreFolding: $cutting_results{FoldingPrice} total: $price{'Comparison Cost'}<br/>" if COMPARISON_LOG;
 			$price{'Cutting Overs'} = $cutting_results{Overs};
 		} # end if
 	#} else {
 		#$log->debug("Has no cutting") if DEBUG;
 	} # end if
-			#$log->error("Done Cutting is not being done");
 
 	# Now we know the bindery overs
 	my $bindery_overs = sets::max( $$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}, $scoring_results{Overs}, $uv_results{Overs}, $diecutting_results{Overs}, $price{'Cutting Overs'} );
@@ -6237,7 +6254,6 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			} # end if
 		} # end if
 
-
 		my $Ink;
 
 		foreach my $C ( @{$special_colours{$colour}} ) {
@@ -6436,7 +6452,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 				$Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition, $aq_makereadies );
 
 		my $aq_elapsed = sprintf('%.4f seconds', (gettimeofday() - $aq_time)*1000);
-		$log->warn("AQ elapsed: $aq_elapsed");
+		$log->debug("AQ elapsed: $aq_elapsed") if DEBUG;
 #$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
 		if ( $aq_results{Status} eq 'uncalculated' ) {
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} ".
@@ -7758,7 +7774,7 @@ sub get_printing_types {
 $log->debug('PT: ' . join(',', @{$$specs{PrintingTypes}} ) ) if DEBUG;
 	} else {
 
-			if ( $$specs{txtSignatureType} eq 'Cover Pages' ) {
+		if ( $$specs{txtSignatureType} eq 'Cover Pages' ) {
 # FIgure out printing types
 #$log->debug("We are cover");
 			# If this is the cover, then we should ignore the interior pages, except for if there is an override.
@@ -7776,10 +7792,10 @@ $log->debug('PT: ' . join(',', @{$$specs{PrintingTypes}} ) ) if DEBUG;
 					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
 						$results = ['Sheetfed', 'Web'];
 					} else {
-						$log->warn("Unknown printing type: " . $$sig_specs{'PrintingType'.$qty_index} );
+						$log->warn('Unknown printing type: '.$$sig_specs{'PrintingType'.$qty_index} );
 					} # end if
 				} # end if
-$openprint::log->debug(" get printing type from sig $index " . $$sig_specs{'PrintingType'.$qty_index} . ($results ? join(',',@$results) : ' none'));
+$openprint::log->debug("get printing type from sig $index " . $$sig_specs{'PrintingType'.$qty_index} . ($results ? join(',',@$results) : ' none'));
 				last if $results;
 			} # end foreach
 
@@ -7790,7 +7806,10 @@ $openprint::log->debug(" get printing type from sig $index " . $$sig_specs{'Prin
 # if the cover is waterless, then we can do waterless, or offset
 $log->debug("We are interior $service_index") if DEBUG;
 			#foreach my $index ( sort { $a <=> $b } $Project->signatures({Group=>$$specs{Group}}) ) {
-			foreach my $index ( sort { $a <=> $b } $Project->signatures({type=>'Interior Pages'}) ) {
+			my @sigs = $Project->signatures({type=>'Interior Pages'});
+			return if @sigs <= 1;
+
+			foreach my $index ( sort { $a <=> $b } @sigs ) {
 $log->debug("Looking at interior sig $index == $service_index") if DEBUG;
 
 				next if $index == $service_index;
@@ -7800,7 +7819,7 @@ $log->debug("Looking at interior sig $index == $service_index") if DEBUG;
 					next;
 				}
 				next if ( ( $index > $service_index ) and ( (!$$sig_specs{'OverridePrintingType'.$qty_index}) or ( $$sig_specs{'OverridePrintingType'.$qty_index} ne 'Y' ) ) );
-$log->debug("Getting prnting tpes from $$sig_specs{SignatureIndex} group: $$sig_specs{Group}") if DEBUG;
+$log->debug("Getting prnting types from $$sig_specs{SignatureIndex} group: $$sig_specs{Group}") if DEBUG;
 
 				if ( $available_types{$$sig_specs{'PrintingType'.$qty_index}} ) {
 					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
@@ -7847,15 +7866,15 @@ $log->warn("Unknown printing type in sig $$sig_specs{SignatureIndex} : " . $$sig
 				} elsif ( $cover_type eq 'Offset' ) {
 					$results = ['Offset'];
 				} elsif ( $cover_type eq 'Web' ) {
-					$results = ['Sheetfed','Web'];
+					$results = ['Sheetfed', 'Web'];
 				} elsif ( $cover_type eq 'Sheetfed' ) {
-					$results = ['Sheetfed','Web', 'Digital'];
+					$results = ['Sheetfed', 'Web', 'Digital'];
 				} # end if
 			} # end if
 		} # end if Spread Type
 	} # end if printing_specs{PrintingType}
 	if ( !$results ) {
-		$log->error('No printing types');
+		$log->error('No results for get_printing_types');
 	} else {
 		$log->debug("Printing Type Results: @$results") if DEBUG;
 	}

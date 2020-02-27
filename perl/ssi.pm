@@ -833,7 +833,7 @@ sub radio {
 	my $onclick = $$options{onclick} if $options;
 	my $html;
 	if ( exists($$options{default}) and ! defined($selected) ) {
-$log->debug("Selecting default $$options{default} for radio $name");
+#$log->debug("Selecting default $$options{default} for radio $name");
 		$selected = $$options{default};
 	} # end if
 
@@ -958,10 +958,10 @@ sub input {
 		$options{step} = 'any' if ! exists $options{step};
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{pattern} = '[\+\-]?[.0-9]*' if ! $options{pattern};
+			$options{pattern} = '[\+\-]?[.0-9eE]*' if ! $options{pattern};
 		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
 			$options{type} = 'text';
-			$options{pattern} = '^[\+\-]?[.0-9]*' if ! $options{pattern};
+			$options{pattern} = '^[\+\-]?[.0-9eE]*' if ! $options{pattern};
 			delete $options{step};
 		} else {
 			$options{type} = 'number';
@@ -972,10 +972,10 @@ sub input {
         $options{step} = 'any' if ! exists $options{step};
         if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
             $options{type} = 'text';
-            $options{pattern} = '[.0-9]*' if ! $options{pattern};
+            $options{pattern} = '[.0-9eE]*' if ! $options{pattern};
         } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
             $options{type} = 'text';
-            $options{pattern} = '[.0-9]*' if ! $options{pattern};
+            $options{pattern} = '[.0-9eE]*' if ! $options{pattern};
             delete $options{step};
         } else {
             $options{type} = 'number';
@@ -985,10 +985,10 @@ sub input {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
-        } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
-            $options{type} = 'text';
+		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+			$options{type} = 'text';
 			$options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
-            delete $options{step};
+			delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if

@@ -25,12 +25,12 @@
 	} # end if
 	if ( $$variable{PurchaseOrder}->can_edit() ) {
 		$html .= button( 'Edit', { href=>'/employee/purchase_order/edit.html?po_id='.$$variable{PurchaseOrder}->id() } );
-		if ( $$variable{PurchaseOrder}->deleted() ) {
-			$html .= button( 'UnDelete', { onclick=>q`f2.btnFunction.value='Undelete';f2.submit();` } );
-		} else {
-			$html .= button( 'Delete', { onclick=>q`if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};` } );
-		} # end if
 		if ( $$variable{PurchaseOrder}->cancelled() eq '1' ) {
+			if ( $$variable{PurchaseOrder}->deleted() ) {
+				$html .= button( 'UnDelete', { onclick=>q`f2.btnFunction.value='Undelete';f2.submit();` } );
+			} else {
+				$html .= button( 'Delete', { onclick=>q`if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};` } );
+			} # end if
 			$html .= button( 'UnCancel', { onclick=>q`f2.btnFunction.value='UnCancel';f2.submit();` } );
 		} elsif ( $$variable{PurchaseOrder}->cancelled() eq '0' ) {
 			$html .= button( 'Cancel', { onclick=>q`f2.btnFunction.value='Cancel';f2.submit();` } );

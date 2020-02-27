@@ -117,7 +117,7 @@ $serial	= 'paper_id_seq';
 	id			=>	[ 's/\D//g', '<2147483647' ],
 	manufacturers_name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
 	gsm				=>	 [ 's/[^\d\.]//g' ],
-	wpsi				=>	 [ 's/[^\d\.]//g' ],
+	wpsi				=>	 [ 's/[^\d\.\-eE]//g' ],
 	calliper		=>	 [ 's/[^\d\.]//g' ],
 	basis_mweight	=>	 [ 's/[^\d\.]//g' ],
 	mweight			=>	 [ 's/[^\d\.]//g' ],
@@ -703,6 +703,7 @@ sub mweight {
 			my $wpsi = $$self{gsm}/703064.5;
 			if ( $$self{type} eq 'Roll' and $$self{basis_width} and $$self{basis_height} ) {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{basis_width} * $$self{basis_height} * 1000 );
+$openprint::log->debug("Setting mweight to $$self{mweight} from wpsi $wpsi and basis size");
 				# MWeight is in relaion to the basis size
 			} elsif ( $$self{width} and $$self{height} ) {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 1000 );
@@ -1657,17 +1658,19 @@ sub is_cut {
 sub basis_mweight {
 	my $self = shift;
 	if ( @_ ) {
-		$$self{basis_mweight} = $self->transform( 'basis_mweight', shift );
+		$$self{basis_mweight} = $_[0] ? $self->transform('basis_mweight'=>shift) : $_[0];
 	} # end if
 	if ( ! $$self{basis_mweight} ) {
-		my $wpsi = $self->wpsi();
+		my $wpsi = $self->wpsi(undef);
 		if ( $wpsi ) {
 			$$self{basis_mweight} = Math::Round::nearest(0.01, $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
+#$openprint::log->debug("calcing basis_mweight from wpsi: $$self{basis_mweight} = $wpsi * $$self{basis_width} * $$self{basis_height} * 1000");
 		} elsif ( ( $$self{weight} =~ /^(\d+)lb/i ) or ( $$self{weight} =~ /^(\d+)#/i ) ) {
 			$$self{basis_mweight} = 2*$1;
+#$openprint::log->debug("calcing basis_mweight from weght: $$self{basis_mweight} = $$self{weight} =~ 2*$1");
 		} else {
 			#$$self{basis_mweight} = 'Unknown';
-			$openprint::log->error("Unable to calculated basis_mweight" . $$self{id} );
+			$openprint::log->error('Unable to calculated basis_mweight'.$$self{id});
 		} # end if
 	} # end if
 	return $$self{basis_mweight};
@@ -1682,6 +1685,8 @@ sub basis_width {
 	if ( ! $$self{basis_width} ) {
 		if ( $self->is_cover() ) {
 			$$self{basis_width} = 20;
+		} elsif ( $self->is_bond() ) {
+			$$self{basis_width} = 17;
 		} else {
 			$$self{basis_width} = 25;
 		} # end if
@@ -1698,6 +1703,8 @@ sub basis_height {
 	if ( ! $$self{basis_height} ) {
 		if ( $self->is_cover() ) {
 			$$self{basis_height} = 26;
+		} elsif ( $self->is_bond() ) {
+			$$self{basis_height} = 22;
 		} else {
 			$$self{basis_height} = 38;
 		} # end if
@@ -1753,6 +1760,7 @@ sub start_width {
 	} 
 	return $_[0]{start_width};
 } # end sub start_width
+
 sub start_height {
 	if ( @_ > 1 ) {
 		$_[0]{start_height} = $_[1];
@@ -1863,7 +1871,7 @@ $openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil
     push @results, "may have invalid mweight current:$$Paper{mweight} != calculated:$$Copy{mweight}";
 	}
   $Copy = $Paper->clone();
-  if ( abs( POSIX::ceil( $Paper->basis_mweight()) - POSIX::ceil( $Copy->basis_mweight(undef)) ) -1 > 0 ) {
+  if ( abs( POSIX::ceil($Paper->basis_mweight()) - POSIX::ceil($Copy->basis_mweight(undef)) ) -1 > 0 ) {
     push @results, "may have invalid basis weight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
 	}
 	if ( $Paper->is_cover()
@@ -1876,6 +1884,16 @@ $openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil
 $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
 		push @results, 'may have wrong basis size. Should probably be 20x26';
 	}
+	if ( $Paper->is_bond()
+			and (
+				($Paper->basis_width() != 17) 
+				or 
+				($Paper->basis_height() != 22)
+				) 
+		 ) {
+$openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
+		push @results, 'may have wrong basis size. Should probably be 17x22';
+	}
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
     push @results, 'appears to be C1S, but is marked double sided.';
   }
@@ -1883,6 +1901,11 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
 		if ( $Paper->basis_mweight() != 2*$1 ) {
 			push @results, 'may have wrong basis mweight.  Should probably be '.2*$1;
 		}
+	}
+my $old_wpsi = 1*$$Paper{wpsi};
+
+	if ( $old_wpsi ne $Paper->wpsi(undef) ) {
+			push @results, "invalid value for wpsi $old_wpsi should maybe be $$Paper{wpsi}";
 	}
 
 	return join('<br/>', @results);
@@ -1896,6 +1919,16 @@ sub is_cover {
 			$Paper->finish() =~ /cover/i
 			or 
 			$Paper->weight() =~ /cover/i);
+}
+
+sub is_bond {
+	my $Paper = shift;
+	return 
+			($Paper->brand() =~ /bond/i
+			 or
+			$Paper->finish() =~ /bond/i
+			or 
+			$Paper->weight() =~ /bond/i);
 }
 
 1;

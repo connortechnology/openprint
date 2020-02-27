@@ -14,11 +14,11 @@
 		<?include('/includes/main/proj/colour_bars.html')?>
 		<?include('/includes/main/proj/cropmarks.html')?>
 		<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
-			<li><label>Add Grip</label><? echo ( radio( 'OverrideAddGrip', ['','Yes','N','No'], $$variable{OverrideAddGrip}, { default=>'', onclick=>q`calc('f1');` } ); ) ?></li>
+			<li><label>Add Grip</label><? echo ( radio( 'OverrideAddGrip'.$$variable{Signature}, ['','Yes','N','No'], $$variable{'OverrideAddGrip'.$$variable{Signature}}, { default=>'', onclick=>q`calc('f1');` } ); ) ?></li>
 			<? else ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
-			<? if ( $$variable{OverrideAddGrip} ) ?>
-				<li><label>Add Grip</label>No <input type="hidden" name="OverrideAddGrip" value="N" /></li>
-			<? endif ( $$variable{OverrideAddGrip} ) ?>
+			<? if ( $$variable{'OverrideAddGrip'.$$variable{Signature}} ) ?>
+				<li><label>Add Grip</label>No <input type="hidden" name="OverrideAddGrip<?Signature?>" value="N" /></li>
+			<? endif ( $$variable{'OverrideAddGrip'.$$variable{Signature}} ) ?>
 		<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
     </ul>
 <? if ( $$variable{Mode} ne 'Easy' ) ?>

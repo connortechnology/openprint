@@ -18,6 +18,7 @@ require configuration;
 require openprint::Currency;
 require openprint::Project;
 require openprint::Quote;
+require openprint::QuotedProject;
 require openprint::quote;
 
 sub try_to_delete {
@@ -37,35 +38,57 @@ sub history {
   ssi::setup_date_select($r->uri(), 'created_on_end', 0);
   $session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
   $session{$r->uri().'?deleted'} = '0' if ! exists $session{$r->uri().'?deleted'};
-  $session{$r->uri().'?limit'} = '1000' if ! exists $session{$r->uri().'?limit'};
+  #$session{$r->uri().'?limit'} = '1000' if ! exists $session{$r->uri().'?limit'};
   _history();
+
+	return if ! $param{btnFunction};
 
   if ( $param{btnFunction} eq 'Delete' ) {
     if ( ref $param{chkDelete} eq 'ARRAY' ) {
       foreach my $quote_id ( @{$param{chkDelete}} ) {
-        $variable{error} .= try_to_delete( $quote_id );  
+        $variable{error} .= try_to_delete($quote_id);
       } # end foreach
     } else {
-      $variable{error} .= try_to_delete($param{chkDelete});  
+      $variable{error} .= try_to_delete($param{chkDelete});
     } # end if
   } elsif ( $param{btnFunction} eq 'Delete Quote' ) {
-    $variable{error} .= try_to_delete($param{quote_id});  
+    $variable{error} .= try_to_delete($param{quote_id});
   } elsif ( $param{btnFunction} eq 'Download in CSV format' ) {
 
-    my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Total1', 'Total2', 'Total3', 'Currency' );
-    my @data;
+    my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Currency', 
+				'Total 1', 'Total 2', 'Total 3',
+				'Project Quantity 1', 'Project Price 1',
+				'Project Quantity 2', 'Project Price 2',
+				'Project Quantity 3', 'Project Price 3',
+				'Ordered Quantity', 'Ordered Price', 'Docket' );
+		my @data;
     my $total1;
     my $total2;
     my $total3;
     foreach my $Quote ( @{$variable{Quotes}} ) {
-      push @data, $Quote->id(), Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $Quote->created_on() ) ), $Quote->by_name(), $Quote->Company()->name(), $Quote->for_name(), $Quote->status(), $Quote->total1(), $Quote->total2(), $Quote->total3(), $Quote->Currency()->name();
+			foreach my $QP ( $Quote->Quoted_Projects() ) {
+				my $Project = $QP->Project();
+
+				push @data, (
+						$Quote->id(), ssi::format_csv_datetime($Quote->created_on()),
+						$Quote->by_name(), $Quote->Company()->name(), $Quote->for_name(), $Quote->status(),
+						$Quote->Currency()->name(),
+						$Quote->total1(), $Quote->total2(), $Quote->total3(),
+						$QP->quantity1(), $QP->price1(),
+						$QP->quantity2(), $QP->price2(),
+						$QP->quantity3(), $QP->price3(),
+						$Project->ordered_quantity(),
+						$Project->ordered_price(),
+						$Project->docket(),
+						);
+			} # end foreach Project
       $total1 += $Quote->total1();
       $total2 += $Quote->total2();
       $total3 += $Quote->total3();
-        } # end foreach
-        push @data, '','','','','','Totals:', $total1, $total2, $total3, '';
-        misc::export_csv( $r, $log, \%variable, 'quote_report.csv', \@header, \@data );
-  } # end if
+		} # end foreach
+		push @data, '','','','','','', 'Totals:', $total1, $total2, $total3, '', '', '', '', '', '';
+		misc::export_csv( $r, $log, \%variable, 'quote_report.csv', \@header, \@data );
+	} # end if
 } # end sub history
 
 sub _history {
@@ -85,7 +108,8 @@ sub _history {
   } else {
     my $Press = new openprint::Equipment( $param{press_id} ) if $param{press_id};
     @{$variable{Quotes}} = ();
-    foreach my $Quote ( openprint::Quote->find(
+
+		my @Quotes = openprint::Quote->find(
         ( sets::isin($session{user_type}, ['E','A']) ? (
           ( $session{$uri.'?company_id'} ? ( company_id=>$session{$uri.'?company_id'}) : () ),
           ( $session{$uri.'?user_id'} ? ( user_id=>$session{$uri.'?user_id'}) : () ),
@@ -111,10 +135,26 @@ sub _history {
                'total2 <=' => $session{$uri.'?total_end'},
                'total3 <=' => $session{$uri.'?total_end'},
                } ) : () ),
-           ] ) : () ),
+					 ] ) : () ),
 				order =>  $openprint::Quote::fields{created_on}.' DESC',
-				limit =>   $session{$uri.'?limit'},
-					 ) ) {
+				#limit =>   $session{$uri.'?limit'},
+					 );
+
+		my @quote_ids = map { $$_{id} } @Quotes;
+		my @Quoted_Projects = openprint::QuotedProject->find(quote_id=>\@quote_ids,order=>'project_id') if @quote_ids;
+		my @project_ids = map { $$_{project_id} } @Quoted_Projects;
+		my %Quoted_Projects = misc::make_hash_from_array('quote_id', @Quoted_Projects);
+		my @Projects = openprint::Project->find(id=>\@project_ids) if @project_ids;
+		my @company_ids = map { $$_{company_id} } @Quotes;
+		my @Companies = openprint::Company->find(id=>\@company_ids) if @company_ids > 1;
+		my @Ordered_Projects = openprint::OrderedProject->find(project_id=>\@project_ids);
+		my %Ordered_Projects_by_project_id = misc::make_hash_from_array('project_id', @Ordered_Projects);
+		foreach my $Project ( @Projects ) {
+			$Project->Ordered_Project($Ordered_Projects_by_project_id{$$Project{id}}[0]) if $Ordered_Projects_by_project_id{$$Project{id}};
+		}
+		
+    foreach my $Quote ( @Quotes ) {
+			$Quote->Quoted_Projects( $Quoted_Projects{$$Quote{id}} ? $Quoted_Projects{$$Quote{id}} : [] );
 
 			if ( $param{ordered} ne '' ) {
 				my $keep = 0;

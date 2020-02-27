@@ -240,9 +240,12 @@ sub subscriptions {
 	if ( $param{action} eq 'Save' ) {
 		if ( ! $openprint::session{user_id} ) {
 			require Authen::Captcha;
-			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+			my $Captcha = new Authen::Captcha(
+					data_folder => $config{SkinPath}.'/tmp',
+					output_folder => $config{SkinPath}.'/images/captcha'
+					);
 	# Remove spaces, because some people want to put spaces between the characters, etc.
-			$param{'Captcha'} =~ s/\s//g;
+			$param{Captcha} =~ s/\s//g;
 			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
 				$variable{error} .= 'Captcha validation code incorrect.  Please try again.';
 				return;

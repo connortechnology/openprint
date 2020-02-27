@@ -1,7 +1,7 @@
-<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
-<script type="text/javascript" src="<?hash_link('/javascripts/proj/paper.js')?>"></script>
-<script type="text/javascript" src="<?hash_link('/javascripts/printing.js')?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link('/javascripts/service.js')?>"></script>
+<script src="<?hash_link('/javascripts/proj/paper.js')?>"></script>
+<script src="<?hash_link('/javascripts/printing.js')?>"></script>
+<script>
  function calc( formName, force ) {
         if ( gettingNewPrice && ! force ) {
             if ( timeout ) {
@@ -57,12 +57,12 @@
 		<fieldset><legend><?ProjectTypeName?></legend>
 		<?include('/includes/main/proj/templates/generic.html') ?>
 		<?include('/includes/main/proj/dimensions.html') ?>
-<div id="OtherSpecifications">
-<fieldset><legend>Other Specifications</legend>
-		<?include('/includes/main/proj/multipage_printing_type.html') ?>
-		<?include('/includes/main/proj/screen_type.html') ?>
-</fieldset>
-</div>
+			<div id="OtherSpecifications">
+			<fieldset><legend>Other Specifications</legend>
+					<?include('/includes/main/proj/multipage_printing_type.html') ?>
+					<?include('/includes/main/proj/screen_type.html') ?>
+			</fieldset>
+			</div>
 			<br class="spacer"/>
 			<fieldset><legend>Pad Specifications</legend>
 				<ul>

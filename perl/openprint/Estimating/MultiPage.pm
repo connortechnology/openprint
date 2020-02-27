@@ -55,7 +55,7 @@ my %variables = (
                 'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
                 'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
                 'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
-                'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace',
+                'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace', 'OverrideAddGrip',
 		'ddmRunStyle-', 'ddmPress-', 'PrintingType-', 'StockType-', 'txtPlateChangeQuantity-', 'PageQuantity-',
 		'Pages', 'OverrideGroupPageQuantity', 'GroupPageQuantity', 'txtSignatureType',
 		'chkOverrideDimensions', 'txtFinalHeight', 'txtFinalWidth', 'txtHeight', 'txtWidth',
@@ -678,7 +678,6 @@ $openprint::log->warn("Have error $error for $qty_index. Existing error is ".$$s
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error ) if $error;
 		} # end if
 	} else {
-$openprint::log->warn("Have no error $error for $qty_index. Existing error is ".$$specs{"alert$qty_index"});
 # Clears it, but leaves alert messages from elsewhere
 		if ( $$specs{"alert$qty_index"} =~ /^Group/ or $$specs{"alert$qty_index"} =~ /^Stock/ ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error );
