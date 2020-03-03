@@ -69,7 +69,7 @@ my %db_connect_info = (
 	password	=> $config{db_pass},
 );
 
-$dbh = sql::open_sql( $log, %db_connect_info );
+$openprint::dbh = sql::open_sql( $log, %db_connect_info );
 die "Couldn't connect to db: $$dbh{errstr}" if ! $dbh;
 configuration::init();
 configuration::from_file($$opts{config});
@@ -87,7 +87,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for (illegal user root|[\._a-zA-Z0-9\-]+) from (?<IP>[\._a-zA-Z0-9\-]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (error: )?PAM: [[:digit:]]+ more authentication failures?; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)(\s+user=\w+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting: Too many authentication failures for (invalid user )?[^[:space:]]* from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (Connection closed by|Disconnected from) (invalid user [.@[:alnum:]]+ )?(?<IP>[.[:digit:]]+)( port [[:digit:]]+ \[preauth\])?$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (Connection closed by|Disconnected from) ((authenticating|invalid) user [.@[:alnum:]]+ )?(?<IP>[.[:digit:]]+)( port [[:digit:]]+ \[preauth\])?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting invalid user [[:alnum:]]+ (?<IP>[.[:digit:]]+) port [[:digit:]]+: Change of username or service not allowed:',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: maximum authentication attempts exceeded for (invalid user )?[[:alnum:]]+ from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user [.\?|@[:alnum:]-]+ from (?<IP>[0-9.]+)',
@@ -125,7 +125,7 @@ my $parser = 'DateTime::Format::Pg';
 my $MAXLEN = 1524;
 
 # Start Listening on UDP port 514
-$log->debug("Opening $config{protocol} socket on port $config{port}") if $config{debug};
+$log->debug("Opening $config{protocol} socket on port $config{port}") if $openprint::config{debug};
 my $sock = IO::Socket::INET->new( LocalPort=>$config{port}, Proto=>$config{protocol} )||die("Socket: $@");
 
 if ( $config{'pid_file'} ) {
@@ -155,8 +155,8 @@ while(1) {
 	} elsif ( $hup ) {
 		$log->hup();
 $log->debug("# of entries in host_counts: " . keys %host_counts);
-$log->debug("# of entries in Object_cache: " . keys %{$openprint::Object::cache{$config{db_name}}} );
-$log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::name_cache{$config{db_name}}} );
+#$log->debug("# of entries in Object_cache: " . keys %{$openprint::Object::cache{$config{db_name}}} );
+#$log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::name_cache{$config{db_name}}} );
 		configuration::init( );
 		configuration::from_file($$opts{config});
 		configuration::merge($opts);

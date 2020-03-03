@@ -79,7 +79,14 @@ foreach my $user ( @users ) {
 
 		my $process = 0;
 		foreach my $y ( sort keys %move_count ) {
-			print "$move_count{$y} emails moved for $user/$folder $y\n";
+			print "$move_count{$y} emails moved for $user/$folder $y [Yn]?\n";
+
+			my $input = <STDIN>;
+			chomp $input;
+			if ( !($input eq 'Y' or $input eq 'y' or $input eq '') ) {
+				next;
+			}
+
 			if ( ! -e "$spool_path$user/$folder/.".$y ) {
 				mkdir "$spool_path$user/$folder/.".$y;
 				mkdir "$spool_path$user/$folder/.".$y.'/tmp';
@@ -93,7 +100,7 @@ foreach my $user ( @users ) {
 						`echo "INBOX$folder.$y" >> $spool_path$user/courierimapsubscribed`;
 					} # end if
 				} 
-				if ( -e "$spool_path$user/ubscriptions" ) {
+				if ( -e "$spool_path$user/subscriptions" ) {
 					if ( $folder eq '.' ) {
 						`echo "$y" >> $spool_path$user/subscriptions`;
 					} else {
