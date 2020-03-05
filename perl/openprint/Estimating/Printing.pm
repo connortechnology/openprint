@@ -2401,6 +2401,16 @@ $log->debug("Using spine height");
 					} # end if
 				} elsif ( $$specs{txtSpreadSize} == 2 ) {
 					@$specs{'txtWidth','txtHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+				} elsif ( $$specs{txtSpreadSize} == 6 ) {
+					if ( $$printing_specs{spine} eq 'height' ) {
+						$$specs{txtWidth} = $$printing_specs{txtFinalWidth} * 3;
+						$$specs{txtHeight} = $$printing_specs{txtFinalHeight};
+						$log->debug("Using spine height");
+					} else {
+						$$specs{txtWidth} = $$printing_specs{txtFinalWidth};
+						$$specs{txtHeight} = $$printing_specs{txtFinalHeight} * 3;
+					} # end if
+
 				} else {
 					$log->debug("Unknown spreadsize $$specs{txtSpreadSize}");
 					$$specs{txtWidth} = $$printing_specs{txtFinalWidth};
