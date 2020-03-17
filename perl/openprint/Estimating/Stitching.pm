@@ -867,6 +867,26 @@ sub equipment_fits {
 	} else {
 		$openprint::log->error('No calliper in Stitching::get_equipment');
 	} # end if
+
+	my $sizes = $Equipment->specification($$specs{ServiceTypeName}.' Final Sizes');
+	if ( $sizes ) {
+		my @sizes = map { [ split('x', $_) ] } split(',',$sizes);
+		my $found = 0;
+		foreach my $size ( @sizes ) {
+			my ( $width, $height ) = @{$size};
+			if (
+					( $width == $$specs{Width} and $height == $$specs{Height} )
+				 ) {
+				$found = 1;
+				last;
+			} # end if
+		} # end foreach
+		if ( ! $found ) {
+			return ":book size not in allowed sizes: $sizes<br/>";
+			next;
+		}
+	} # end if sizes  
+
 	return '';
 }
 

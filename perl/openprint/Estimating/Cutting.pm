@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 use strict;
-#use warnings;
+use warnings;
 package openprint::Estimating::Cutting;
 use POSIX qw{ ceil };
 
@@ -175,7 +175,7 @@ sub signature_needs_bindery_cutting {
 
 sub signature_has_cut_stock {
 	my ( $sig_specs, $qty_index ) = @_;
-	if ( ! (
+	if ( ($$sig_specs{'StockType'.$qty_index} ne 'Roll') and ! (
 				(
 				 $$sig_specs{'hdnSuppliedStockWidth'.$qty_index} == $$sig_specs{txtWidth}
 				 and
@@ -489,7 +489,7 @@ sub signature_calc {
 
   my $calliper = $$Paper{calliper};
   if ( ! $calliper ) {
-    $openprint::log->debug("**** NO Calliper ****") if DEBUG;
+    $openprint::log->debug('**** NO Calliper ****') if DEBUG;
     $results{alert} .= "Calliper is unknown for signature $form.<br/>";
     $results{Status} = 'uncalculated';
     return %results;
@@ -515,20 +515,20 @@ sub signature_calc {
   my %pretrim_sides;
   my $Stitcher;
   if ( $stitching_specs and $$stitching_specs{"ddmEquipment$qty_index"} ) {
-    $Stitcher = new openprint::Equipment( $$stitching_specs{"ddmEquipment$qty_index"} );
+    $Stitcher = new openprint::Equipment($$stitching_specs{"ddmEquipment$qty_index"});
     my $pretrim_sides = $Stitcher->specification('Pre-trimmed Edges '.$$sig_specs{txtSignatureType});
     $pretrim_sides = $Stitcher->specification('Pre-trimmed Edges') if ! $pretrim_sides;
-    %pretrim_sides = map { $_, $_ } split(',',$pretrim_sides) if $pretrim_sides;
+    %pretrim_sides = map { $_, $_ } split(',', $pretrim_sides) if $pretrim_sides;
     $stitching_imposition = 1 if ! defined $stitching_imposition;
   }
 
-  my $has_uv = $$services{UVCoating} and openprint::Estimating::UVCoating::signature_needs( $Project, $sig_specs );
+  my $has_uv = $$services{UVCoating} and openprint::Estimating::UVCoating::signature_needs($Project, $sig_specs);
 
   my @folding_impositions;
 
   my $Folder = undef;
   if ( $$services{Folding} and @{$$services{Folding}} ) {
-    $folding_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] ) if ! $folding_specs;
+    $folding_specs = openprint::service::get_specs_ref($Project, $$services{Folding}[0]) if ! $folding_specs;
     if ( $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
       $Folder = openprint::Equipment->find_one(id=>$$folding_specs{"ddmEquipment-$form-$qty_index"});
     } else {
@@ -567,7 +567,7 @@ sub signature_calc {
 # Take care of cutting before folding
   if ( @folding_impositions and $Folder and ( $$Folder{id} != $$Press{id} ) ) {
 
-    $openprint::log->debug('Folding impositions: ' . @folding_impositions ) if DEBUG;
+    $openprint::log->debug('Folding impositions: '.@folding_impositions) if DEBUG;
 
     my $folding_cuts = 0;
     if (
@@ -588,13 +588,17 @@ sub signature_calc {
         $trim_before_folding = 1;
       } else {
         if ( (@folding_impositions > 1) or ($folding_impositions[0]{quantity} > 1) ) {
+					$openprint::log->debug('Folds: '.@folding_impositions) if DEBUG;
+					# If we are stitching, final trim is done on stitcher, otherwise we might final trim before folding	
+					if ( ! $stitching_imposition ) {
 # So according to Brendan, anyone doing the cutting would first make the 4 outer edge trims.  
-          $openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
-          $folding_cuts += 4; # outside cuts
+						$folding_cuts += 4; # outside cuts
+					}
+					
 					$folding_cuts += @folding_impositions - 1;
-          foreach my $folding_imposition ( @folding_impositions ) {
-            $folding_cuts += $$folding_imposition{quantity}-1 if $$folding_imposition{quantity};
-          } # end foreach
+					foreach my $folding_imposition ( @folding_impositions ) {
+						$folding_cuts += $$folding_imposition{quantity}-1 if $$folding_imposition{quantity};
+					} # end foreach
 				} elsif (
 						($folding_impositions[0]{imposition} > $stitching_imposition)
 						and
@@ -617,8 +621,13 @@ sub signature_calc {
 					and
 					( $$specs{"OverrideFoldingEquipment-$form-$qty_index"} eq 'Y' )
 				 ) {
-        if ( !$PreFoldEquipment{$$specs{"OverrideFoldingEquipment-$form-$qty_index"}} ) {
-          $results{alert} .= 'Overriden Equipment is not suitable for cutting before folding.<br/>';
+        if ( !$PreFoldEquipment{$$specs{"FoldingEquipment-$form-$qty_index"}} ) {
+          $results{alert} .= 'Overriden Equipment ('.$$specs{"OverrideFoldingEquipment-$form-$qty_index"}.') is not suitable for cutting before folding.<br/>';
+					if ( DEBUG ) {
+						foreach my $E ( @PreFoldEquipment ) {
+							$openprint::log->error("Prefold Equipment $$E{id} $$E{strid}");
+						}
+					}
         } # end if
         @PreFoldEquipment = ( new openprint::Equipment($$specs{"FoldingEquipment-$form-$qty_index"}) );
       } # end if

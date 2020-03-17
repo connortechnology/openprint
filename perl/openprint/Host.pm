@@ -273,7 +273,14 @@ sub reboot {
 			$method = 'post';
     } elsif( $_[0]->type() eq 'Grandview' ) {
       $initial_url = $HI->ip();
-      $url = '/goform/maintenance?cmd=set&restart=yes';
+      $url = $HI->ip().'/goform/maintenance?cmd=set&restart=yes';
+    } elsif( $_[0]->type() eq 'Vivotek' ) {
+      $initial_url = $HI->ip();
+      $url = $HI->ip().'/cgi-bin/admin/setparam.cgi';
+			$method = 'post';
+			$args = {
+				system_reset => 1
+			};
 		} elsif( $_[0]->type() eq 'DLink DCS-910' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/ReplyF.htm';
@@ -467,8 +474,13 @@ sub Owner {
 }
 
 sub can_reboot {
-  if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W','M8640','TL-WPA4220','D-Link DAP1522','DGS-1224T','DLink DCS-910','TP-Link Archer C7',
-        'DCS932L','DCS-933L','DCS-942L', 'WG602v3' ] ) ) {
+  if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [
+				'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W',
+				'M8640',
+				'TL-WPA4220', 'TP-Link Archer C7',
+				'D-Link DAP1522','DGS-1224T','DLink DCS-910',
+        'DCS932L','DCS-933L','DCS-942L', 'WG602v3',
+				'Vivotek' ] ) ) {
     return !undef;
   }
   return undef;
