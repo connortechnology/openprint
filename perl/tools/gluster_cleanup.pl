@@ -14,7 +14,7 @@ foreach my $line ( `gluster volume heal 48TB info` ) {
 					$atime,$mtime,$ctime,$blksize,$blocks) = stat($file);
 			if ( $nlink == 1 ) {
 				print " Orphaned: delete.";
-				#unlink $file;
+				unlink $file;
 			} else {
 				print " ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size, $atime,$mtime,$ctime,$blksize,$blocks)";
 			}
