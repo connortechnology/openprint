@@ -112,21 +112,22 @@ foreach my $Equipment ( @Equipment ) {
 
 		foreach my $file ( @Bs ) {
 			# Will ignore ., .., any hidden file
-		$log->warn("File... $file" ) if $debug;
 			next if $file =~ /^\./; 
 			next if -d $Equipment->cip3_in().'/'.$file;
 			my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
-$log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
+$log->debug("Parsed to $file_base, $side, $extension from $file") if $debug;
 			if ( $side ne 'B' ) {
-$log->warn("Not a B") if $debug;
+$log->debug('Not a B') if $debug;
 				next;
 			} # end if
 
 			my $out_base = $file_base;
 			$out_base =~ s/\./_/g;
 
-			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d+)(\w\w)?_?(.+?)Sg(\d+)/i;
-	print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n" if $debug;
+			$file_base =~ /^(?<DOCKET>\d+)(?<OP>\w\w)?_(?<COMPANY>.+?)Sg(?<SIG>\d+)/i;
+			my ( $docket, $ppo, $name, $sig ) = ( $+{DOCKET}, $+{OP}, $+{COMPANY}, $+{SIG} );
+
+			print "File: $file Docket $docket, Operator: $ppo, Name: $name, Sig: $sig, $side\n" if $debug;
 			$sig = 0 if ! $sig;
 			my $data;
 			$side = 'M';
