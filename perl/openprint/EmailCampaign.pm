@@ -173,7 +173,7 @@ sub send {
 	my $query = $self->{query};
 	if ( $$self{timestosend} ) {
 		$query .= " AND (
-( NOT EXISTS (SELECT NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=102 AND user_id=Users.id))
+( NOT EXISTS (SELECT NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=$$self{id} AND user_id=Users.id))
  OR
 ( (SELECT MAX(NumEmailSent) FROM EmailCampaign_Sent WHERE campaign_id=$$self{id} AND user_id=Users.id) < $$self{timestosend}) )";
 	}
