@@ -13,12 +13,13 @@ $table = 'emailcampaign_sent';
 $serial = 'emailcampaign_sent_id_seq';
 
 %fields = (
-		campaign_id	=>	'campaign_id',
+		id						=>	'id',
+		campaign_id		=>	'campaign_id',
 		user_id				=>	'user_id',
 		EmailSentOn		=>	'EmailSentOn',
-		NumEmailSent =>	'NumEmailSent',
+		NumEmailSent	=>	'NumEmailSent',
 		MarkedForDeletion	=>	' MarkedForDeletion',
-		last_read 	=>	'last_read',
+		last_read     =>	'last_read',
 );
 
 %defaults = (
