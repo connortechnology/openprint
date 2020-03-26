@@ -506,7 +506,7 @@ sub expense {
 			my $Recipient = openprint::Company->find_one('name lc'=>lc $param{recipient});
 			if ( ! $Recipient ) {
 				$Recipient = new openprint::Company();
-				$variable{error} .= $Recipient->save({'name'=>$param{recipient}});
+				$variable{error} .= $Recipient->save({name=>$param{recipient}});
 			} # end if ! Recipeint
 			$param{recipient_id} = $Recipient->id();
 		} # end if ! recipient_Id
@@ -526,7 +526,7 @@ sub expense {
 			return;	
 		} # end if
 
-# At this point,  the array returned should be the correct, appropriate list of taxes.  What we are updating is merely whether we are charging to for those taxes
+# At this point, the array returned should be the correct, appropriate list of taxes.  What we are updating is merely whether we are charging for those taxes
 		foreach my $Tax ( $Expense->Taxes() ) {
 # Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
 			if ( $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()} ) {
