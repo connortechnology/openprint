@@ -8,7 +8,7 @@ package openprint::Expense_Category;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'expense_categories';
 $serial = 'expense_categories_id_seq';
 %fields = (
@@ -191,29 +191,32 @@ sub Taxes {
   my ( $self ) = @_;
 
   if ( $$self{id} ) {
-    if ( ! $$self{Taxes} ) {
-      @{$$self{Taxes}} = openprint::Expense_Tax->find(expense_id=>$$self{id});
-    } # end if
+    $$self{Taxes} = [openprint::Expense_Tax->find(expense_id=>$$self{id})] if !$$self{Taxes};
   } else { 
-    @{$$self{Taxes}} = ();
+    $$self{Taxes} = [];
   } # end if
-  if ( $self->Company()->country() and $self->Company()->state() and $$self{invoiced_on} and ! @{$$self{Taxes}} ) {
+
+  if ( (!@{$$self{Taxes}}) and $self->Company()->country() and $self->Company()->state() and ($$self{invoiced_on} or $$self{paid_on}) ) {
     foreach my $Tax ( openprint::Tax->find(
-        'period_start null_or_<='   =>  $$self{invoiced_on},
-        'period_end null_or_>='     =>  $$self{invoiced_on},
+        'period_start null_or_<='   =>  ( $$self{invoiced_on} ? $$self{invoiced_on} : $$self{paid_on} ),
+        'period_end null_or_>='     =>  ( $$self{invoiced_on} ? $$self{invoiced_on} : $$self{paid_on} ),
         country   =>  $self->Company()->country(),
         state     =>  $self->Company()->state()),
     ) {
       my $T = new openprint::Expense_Tax();
       $T->set({
+          Expense     =>  $self,
           expense_id	=>	$$self{id},
-          tax_id    =>  $$Tax{id},
-          rate      =>  $$Tax{rate},
+          tax_id      =>  $$Tax{id},
+          rate        =>  $$Tax{rate},
         });
-      # SHould not save.  Saving will be done in the save function This is okay, because in the html, we id our field by the tax_id
+      $openprint::log->debug("New aTax: " . $T->to_string());
+      # Should not save.  Saving will be done in the save function This is okay, because in the html, we id our field by the tax_id
       #$T->save({ 'expense_id'=>  $$self{id}}) if $$self{id};
       push @{$$self{Taxes}}, $T;
     } # end foreach Tax
+  } else {
+    $openprint::log->debug('NOt loading taxes');
   } # end if
   return @{$$self{Taxes}};
 } # end sub Taxes
@@ -231,8 +234,8 @@ sub save {
 		foreach my $Tax ( openprint::Tax->find(
 					'period_start null_or_<='   =>  $$self{invoiced_on},
 					'period_end null_or_>='     =>  $$self{invoiced_on},
-					'country'   =>  $self->Company()->country(),
-					'state'     =>  $self->Company()->state()),
+					country   =>  $self->Company()->country(),
+					state     =>  $self->Company()->state()),
 				) {
 			my $T = $self->Tax( $Tax );
 			push @New_Taxes, $T;
@@ -257,7 +260,7 @@ sub save {
 	my $error = $self->SUPER::save( @_ );
 	if ( ! $error ) {
 		foreach my $Tax ( $self->Taxes() ) {
-			$error .= $Tax->save({'expense_id'=>$self->id()});
+			$error .= $Tax->save({expense_id=>$self->id()});
 		} # end foreach Tax
 	} # end if
 	return $error;
@@ -294,6 +297,23 @@ sub Tax {
   } # end if
   return $result;
 } # end sub Tax
+
+sub tax_charged { 
+  my ( $self, $name, $yesno ) = @_;
+	foreach my $T ( $self->Taxes() ) {
+    my $tax_name = $T->Tax()->name();
+    $openprint::log->debug("Looking at tax $tax_name !? $name ");
+    if ( $tax_name eq $name ) {
+      if ( @_ > 2 ) {
+        $$T{charge} = $yesno;
+        $T->amount(undef);
+        $openprint::log->debug("Setting tax charged to $yesno for T: " . $T->to_string());
+      }
+      return $T->charge();
+    }
+  } # end foreach Tax
+  $openprint::log->error("Tax not found for $name in " . $self->to_string());
+}
 
 sub business_use_amount {
 	if ( @_ > 1 ) {
