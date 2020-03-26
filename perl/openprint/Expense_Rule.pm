@@ -79,13 +79,20 @@ sub apply {
 
   foreach my $key ( keys %action ) {
 
-    if ( $action{$key} =~ /\$/ ) {
+    if ( $key =~ /^(\w+):(\w+)$/ ) {
+      $openprint::log->debug("Complex action $key Expense->$1($2, $action{$key})");
+      $Expense->$1($2, $action{$key});
+    } elsif ( $action{$key} =~ /\$/ ) {
       $Expense->$key(eval $action{$key});
       $openprint::log->error("Failure to eval $action{$key} $@") if $@;
     } else {
-      $Expense->$key($action{$key});
+      if ( ref $action{$key} eq 'ARRAY' ) {
+        $Expense->$key(@{$action{$key}});
+      } else {
+        $Expense->$key($action{$key});
+      }
     }
-    $openprint::log->debug("Applied actoin $key $action{$key} = $$Expense{$key}");
+    $openprint::log->debug("Applied actoin $key $action{$key} = $$Expense{$key}" . $Expense->to_string());
   } # end foreach key
 } # end sub apply
 
