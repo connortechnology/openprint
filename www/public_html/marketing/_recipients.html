@@ -40,17 +40,16 @@ $html .=
 			$User->link_to($User->email()),
 			( $User->password() ? 'yes' : 'no' ),
 			format_datetime($User->last_logged_in()),
-			join('<br/>', map { $$_{NumEmailSent} } ( $Sent_Info{$$User{id}} ? @{$Sent_Info{$$User{id}}} : () ) ),
-			join('<br/>', map { format_datetime($$_{EmailSentOn}) } ( $Sent_Info{$$User{id}} ? @{$Sent_Info{$$User{id}}} : () ) ),
+			join('<br/>', map { $$_{numemailsent} } ( $Sent_Info{$$User{id}} ? @{$Sent_Info{$$User{id}}} : () ) ),
+			join('<br/>', map { format_datetime($$_{emailsenton}) } ( $Sent_Info{$$User{id}} ? @{$Sent_Info{$$User{id}}} : () ) ),
 			join('<br/>', map { format_datetime($$_{last_read}) } ( $Sent_Info{$$User{id}} ? @{$Sent_Info{$$User{id}}} : () ) ),
  );
-
 	} # end foreach Recipient
 
 	return $html;
 ) ?>
 </table>
 <?
-<script type="text/javascript">
+<script>
 TableKit.Sortable.init('recipients');
 </script>
