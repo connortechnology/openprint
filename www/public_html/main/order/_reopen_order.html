@@ -7,7 +7,7 @@
 		<textarea name="reason" placeholder="Enter a reason for the reopen"></textarea>
 		<p class="buttons">
 		<? echo ( join("\n",
-			button('ReOpenSubmit', { onclick=> q`if(this.form.elements['reason'].value){this.form.submit();}else{alert('Please give a reason.');};`,text=>'ReOpen'}),
+			button('ReOpenSubmit', { onclick=> q`if($('ReOpenForm').elements['reason'].value){$('ReOpenForm').submit();}else{alert('Please give a reason.');};`,text=>'ReOpen'}),
 			button('CancelReopen', { onclick=>'popupWin.close();', text=>'Cancel'}),
 			); ) ?>
 	</p>
