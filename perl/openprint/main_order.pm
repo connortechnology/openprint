@@ -602,8 +602,10 @@ sub history_details {
 						$Order->owing(undef);
 						$Order->paid(undef);
 						$Order->update_status();
+						$variable{error} .= $Order->save();
 					} # end if
 				} # end if
+				$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
 			} else {
 				$variable{error} .= 'You are not permitted to delete a payment.<br/>';
 			}
