@@ -759,11 +759,13 @@ sub Payments {
 }
 
 sub paid {
-	$_[0]{paid} = $_[1] if ( @_ == 2 );
-	if ( $_[0]{id} and ! defined $_[0]{paid} ) {
-		$_[0]{paid} = misc::sum( map { $_->Currency()->convert_from($_->amount(), $_[0]->Currency()) } $_[0]->Payments() );
+	my $self = shift;
+
+	$$self{paid} = shift if @_;
+	if ( $$self{id} and ! defined $$self{paid} ) {
+		$$self{paid} = misc::sum( map { $_->Currency()->convert_from($_->amount(), $self->Currency()) } $self->Payments() );
 	} # end if
-	return $_[0]{paid};
+	return $$self{paid};
 } # end sub paid
 
 sub payment_days {
