@@ -87,8 +87,8 @@
 				next if ! $Order->owing();
 				$html .= sprintf('
 				<tr%1$s> 
-					<td class="order_id"><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
-					<td class="Docket"><a href="/employee/accounting/details.html?order_id=%2$d">%3$d</a></td>
+					<td class="order_id"><a href="/main/order/history_details.html?order_id=%2$d">%2$d</a></td>
+					<td class="Docket"><a href="/main/order/history_details.html?order_id=%2$d">%3$d</a></td>
 					<td class="invoice_id">%5$s</td>
 					<td class="po_id">%6$s</td>
 					<td class="Date">%4$s</td>
@@ -98,10 +98,10 @@
 					<td class="checkbox"><input type="checkbox" name="PAID" value="%2$d"/></td>
 				</tr>
 				', $rowclass, $Order->id(), $Order->docket(), 
-					format_date( $Order->created_on() ),
-					join('<br/>', map { $_->Invoice()->link_to() } $Order->Invoices() ), $Order->po(), 
+					format_date($Order->created_on()),
+					join('<br/>', map { $_->Invoice()->link_to() } $Order->Invoices()), $Order->po(), 
 					openprint::Currency::format($Order->total()),
-					openprint::Currency::format( $Order->owing() ),
+					openprint::Currency::format($Order->owing()),
 					$Order->status(),
 					);
 					$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -115,7 +115,10 @@
 				<td class="Price">%s</td>
 				<td class="Price">%s</td>
 				<td></td>
-			</tr>', scalar @{$$variable{UnpaidOrders}}, openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ),
+			</tr>',
+			scalar @{$$variable{UnpaidOrders}},
+			openprint::Currency::format($total_total),
+			openprint::Currency::format($balance_total),
 			);
 			return $html;
 		) ?>
