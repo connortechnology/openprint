@@ -11,7 +11,7 @@
 	<? echo ( 
 		my $html;
 		my $rowclass;
-		foreach my $Payment ( openprint::Payment->find('order_id'=>$$variable{'Order'}->id()) ) {
+		foreach my $Payment ( openprint::Payment->find(order_id=>$$variable{Order}->id()) ) {
 			$html .= sprintf(q`
 				<tr%1$s> 
 					<td class="payment_id">%2$d</td>
