@@ -761,7 +761,7 @@ sub Payments {
 sub paid {
 	$_[0]{paid} = $_[1] if ( @_ == 2 );
 	if ( $_[0]{id} and ! defined $_[0]{paid} ) {
-		$_[0]{paid} = misc::sum( map { $_->amount() } $_[0]->Payments() );
+		$_[0]{paid} = misc::sum( map { $_->Currency()->convert_from($_->amount(), $_[0]->Currency()) } $_[0]->Payments() );
 	} # end if
 	return $_[0]{paid};
 } # end sub paid
@@ -1044,6 +1044,21 @@ sub address_html {
     ( map { $self->$_() ? $countries::countries{$$self{$_}} : () } ( 'country' ) ),
   );
 }
+
+sub deposit_due {
+	my $Order = shift;
+
+	if (
+			($Order->status() ne 'Cancelled')
+			and
+			$Order->downpayment()
+			and
+			( $Order->paid() < $Order->downpayment())
+		 ) {
+    return Math::Round::nearest(0.01, $Order->downpayment() - $Order->paid());
+  } # end if
+	return 0;
+} # end sub deposit_due
 
 1;
 __END__
