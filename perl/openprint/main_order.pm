@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 package openprint::main_order;
 
 require Email::Valid;
@@ -37,11 +38,11 @@ sub information {
 	if ( $order_id and ($param{action} eq 'remove') ) {
 		if ( $param{project_id} ) {
 			$param{project_id} =~ s/\D//g;
-			my $OrderedProject = openprint::OrderedProject->find_one('project_id'=>$param{project_id}, 'order_id'=>$order_id);
+			my $OrderedProject = openprint::OrderedProject->find_one(project_id=>$param{project_id}, order_id=>$order_id);
 			if ( ! $OrderedProject ) {
 				$variable{error} .= "Project $param{project_id} is not in order $order_id<br/>";
 			} elsif ( $OrderedProject->order_id() != $order_id or $OrderedProject->project_id() != $param{project_id} ) {
-				$openprint::log->error("Wrong OrderedProject returned!");
+				$openprint::log->error('Wrong OrderedProject returned!');
 			} else {
 				$variable{error} .= $OrderedProject->delete();
 			} # end if
@@ -52,7 +53,7 @@ sub information {
 			if ( ! $OrderedProduct ) {
 				$variable{error} .= "Product $param{product_id} is not in order $order_id<br/>";
 			} elsif ( $OrderedProduct->order_id() != $order_id or $OrderedProduct->id() != $param{product_id} ) {
-				$openprint::log->error("Wrong OrderedProduct returned!");
+				$openprint::log->error('Wrong OrderedProduct returned!');
 			} else {
 				$variable{error} .= $OrderedProduct->delete();
 			} # end if
@@ -143,10 +144,8 @@ sub information {
 			$variable{error} .= openprint::order::save_project_information( $OP );
 		} # end foreach
 	} elsif ( $param{Product} and $param{Quantity} ) {
-$log->debug("Adding product $param{Product}");
 		( $order_id, $error ) = openprint::order::add_product( $order_id, @param{'Product','Quantity'} );
 	} elsif ( $param{product_id} and $param{quantity} ) {
-$log->debug("Adding product $param{product_id}");
 		( $order_id, $error ) = openprint::order::add_product( $order_id, @param{'product_id','quantity'} );
 	} # end if
 
@@ -154,8 +153,8 @@ $log->debug("Adding product $param{product_id}");
 		$variable{error} = $error;
 		return;
 	} # end if
-	$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
-	my $Order = new openprint::Order( $order_id );
+	$order_id = openprint::order::get_unfinished_order() if !$order_id;
+	my $Order = new openprint::Order($order_id);
 	$session{order_id} = $order_id;
 
 	if ( $order_id ) {
@@ -211,16 +210,16 @@ $log->debug("Adding product $param{product_id}");
 
 } # end sub information
 
-# So I guess the idea should be that there shouldn't be any changes after the viewing f submit.  So we should save currency, save prices, save all the data.
+# So I guess the idea should be that there shouldn't be any changes after the viewing of submit.
+# So we should save currency, save prices, save all the data.
 sub submit {
-		
 	my $order_id = $param{order_id};
 	$order_id =~ s/\D//g;
-	$order_id = openprint::order::get_unfinished_order() if ! $order_id;
-	my $Order = new openprint::Order( $order_id );
+	$order_id = openprint::order::get_unfinished_order() if !$order_id;
+	my $Order = new openprint::Order($order_id);
 	$session{order_id} = $order_id;
 	my $Currency = openprint::Currency::get_current();
-	$variable{error} .= $Order->save({currency_id=>$Currency->id()}) if $$Order{currency_id} != $$Currency{id} or ! $Order->id();;
+	$variable{error} .= $Order->save({currency_id=>$Currency->id()}) if $$Order{currency_id} != $$Currency{id} or ! $Order->id();
 
 	if ( $param{btnFunction} eq 'Continue') { # saving project information
 		
@@ -464,92 +463,115 @@ sub _history {
 } # end sub _history
 
 sub history_details {
-	my $order_id = $param{order_id};
-	my $Order = new openprint::Order( $order_id );
+	my $order_id = openprint::Order->transform(id=>$param{order_id});
+	my $Order;
 
-	if ( $param{btnFunction} eq 'AcceptTerms' ) {
-		if ( ( $Order->company_id() != $session{company_id} ) or ( new openprint::User( $session{user_id} )->company_id() != $session{company_id} ) ) {
-			$variable{error} = 'Terms not accepted';
-			$variable{information} = 'You are not authorised to accept the terms and conditions.';
-		} elsif ( ! $param{accept_terms} ) {
-			$variable{error} = 'Terms not accepted';
-			$variable{information} = 'You must check the box to indicate your acceptance of the terms and conditions.';
+	if ( !$order_id and $param{docket} ) {
+		$Order = openprint::Order->find_one(docket=>$param{docket});
+		$order_id = $Order->id() if $Order;
+	} elsif ( $order_id ) {
+		$Order = new openprint::Order($order_id);
+	}
+
+  if ( $param{action} and $Order->id() ) {
+    if ( $param{action} eq 'reopen' ) {
+      $Order->save({status=>'Re-Opened', session_id=>$session{_session_id}, total=>undef});
+      foreach my $OP ( $Order->Ordered_Projects() ) {
+        $variable{error} .= $OP->save({price=>undef});
+      } # end foreach
+      $Order->add_log('Re-Opened. Reason: '.$param{reason});
+			$variable{information} .= 'Order re-opened.';
 		} else {
-			$Order->add_log('User accepted the terms and conditions.');
-			$Order->save({'terms_accepted'=>1});
-		} # end if
-
-	} elsif ( $param{btnFunction} eq 'Cancel' ) {
-		$variable{error} .= $Order->cancel();
-	} elsif ( $param{btnFunction} eq 'Pay' ) {
-		$Order->pay();
-	} elsif ( $param{btnFunction} eq 'Save Payment' ) {
-
-		$param{amount} = openprint::Payment->transform(amount=>$param{amount});
-
-		if ( ! $param{amount} ) {
-			$variable{error} .= 'Invalid Amount<br/>';
-			$variable{information} .= 'Please enter a valid monetary amount.';
-		} # end if
-		if ( ! Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
-			$variable{error} .= 'Invalid received on date.';
-			$variable{information} .= 'Please enter a valid date.';
-		} # end if
-		if ( ! $variable{error} ) {
-
-			my $Payment = new openprint::Payment();
-			my $error .= $Payment->save( {
-					'order_id'		=> $order_id,
-					'payor_id'		=> $Order->company_id(),
-					'recipient_id'	=> new openprint::User( $session{user_id} )->company_id(),
-					'amount'		=> $param{amount},
-					'method'		=> 'Manual',
-					'currency_id'	=> ( $param{payment_currency_id} ? $param{payment_currency_id} : $Order->currency_id() ),
-					'memo'			=> $param{memo},
-					'completed'		=> 1,
-					} );
-			if ( $error ) {
-				return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
-			} # end if
-
-			openprint::order::get_misc( \%variable, $Order );
-
-			if ( $variable{DepositDue} > 0 ) {
-				foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-					sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
-					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?',$project_index, 'Ordered'], 'strStatus', 'Pending Deposit' );
-				} # end foreach
-			} else {
-				$Order->status('In Production') if $Order->status() eq 'Pending Deposit';
-
-				foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-					sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
-					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
-				} # end foreach
-				if ( $variable{AmountPaid} >= $variable{TOTAL} ) {
-					$Order->status('Paid') if $Order->status() eq 'Complete';
-				} # end if
-				$Order->save();
-			} # end if no error
-			$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
-        } # end if btnFunction
-	} elsif ( $param{btnFunction} eq 'Delete Payment' ) {
-		my $Payment = new openprint::Payment( $param{payment_id} );
-		if ( ! $Payment->id() ) {
-			$variable{error} .= 'Invalid payment id specified.<br/>';
-		} else {
-			if ( my $error = $Payment->delete() ) {
-				$variable{error} .= 'Payment not deleted: <br/>' . $error . '<br/>';
-			} else {
-				$variable{information} .= 'Payment deleted successfully.<br/>';
-				$Order->update_status();
-			} # end if
-		} # end if
-	} elsif ( $param{btnFunction} eq 'Resend') {
-		$variable{information} .= $Order->send_sales_order( );
+			$variable{error} .= 'Invalid action '.$param{action};
+    }
 		$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
-	} # end if
-	openprint::order::display_order( $order_id );
+  } elsif ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'AcceptTerms' ) {
+			if ( ( $Order->company_id() != $session{company_id} ) or ( new openprint::User( $session{user_id} )->company_id() != $session{company_id} ) ) {
+				$variable{error} = 'Terms not accepted';
+				$variable{information} = 'You are not authorised to accept the terms and conditions.';
+			} elsif ( ! $param{accept_terms} ) {
+				$variable{error} = 'Terms not accepted';
+				$variable{information} = 'You must check the box to indicate your acceptance of the terms and conditions.';
+			} else {
+				$Order->add_log('User accepted the terms and conditions.');
+				$Order->save({'terms_accepted'=>1});
+			} # end if
+
+		} elsif ( $param{btnFunction} eq 'Cancel' ) {
+			$variable{error} .= $Order->cancel();
+		} elsif ( $param{btnFunction} eq 'Pay' ) {
+			$variable{error} .= $Order->pay();
+			$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
+		} elsif ( $param{btnFunction} eq 'Save Payment' ) {
+
+			$param{amount} = openprint::Payment->transform(amount=>$param{amount});
+
+			if ( ! $param{amount} ) {
+				$variable{error} .= 'Invalid Amount<br/>';
+				$variable{information} .= 'Please enter a valid monetary amount.';
+			} # end if
+			if ( ! Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
+				$variable{error} .= 'Invalid received on date.';
+				$variable{information} .= 'Please enter a valid date.';
+			} # end if
+			if ( ! $variable{error} ) {
+
+				my $Payment = new openprint::Payment();
+				my $error .= $Payment->save( {
+						'order_id'		=> $order_id,
+						'payor_id'		=> $Order->company_id(),
+						'recipient_id'	=> new openprint::User( $session{user_id} )->company_id(),
+						'amount'		=> $param{amount},
+						'method'		=> 'Manual',
+						'currency_id'	=> ( $param{payment_currency_id} ? $param{payment_currency_id} : $Order->currency_id() ),
+						'memo'			=> $param{memo},
+						'completed'		=> 1,
+						} );
+				if ( $error ) {
+					return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
+				} # end if
+
+				openprint::order::get_misc( \%variable, $Order );
+
+				if ( $variable{DepositDue} > 0 ) {
+					foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
+						sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
+						sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?',$project_index, 'Ordered'], 'strStatus', 'Pending Deposit' );
+					} # end foreach
+				} else {
+					$Order->status('In Production') if $Order->status() eq 'Pending Deposit';
+
+					foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
+						sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
+						sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
+					} # end foreach
+					if ( $variable{AmountPaid} >= $variable{TOTAL} ) {
+						$Order->status('Paid') if $Order->status() eq 'Complete';
+					} # end if
+					$Order->save();
+				} # end if no error
+				$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
+					} # end if btnFunction
+		} elsif ( $param{btnFunction} eq 'Delete Payment' ) {
+			my $Payment = new openprint::Payment( $param{payment_id} );
+			if ( ! $Payment->id() ) {
+				$variable{error} .= 'Invalid payment id specified.<br/>';
+			} else {
+				if ( my $error = $Payment->delete() ) {
+					$variable{error} .= 'Payment not deleted: <br/>' . $error . '<br/>';
+				} else {
+					$variable{information} .= 'Payment deleted successfully.<br/>';
+					$Order->update_status();
+				} # end if
+			} # end if
+		} elsif ( $param{btnFunction} eq 'Resend') {
+			$variable{information} .= $Order->send_sales_order();
+			$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
+		} # end if
+	} # end if action or btnFunction
+
+	openprint::order::display_order($order_id);
 } # end sub history_details
 
 sub _Shipping {
@@ -679,5 +701,10 @@ sub _product_list_edit {
 	} # end if
 	$variable{Products} = [ $Order->Products() ];
 } # end sub 
+
+sub _reopen_order {
+  my $Order = $variable{Order} = openprint::Order->find_one(id=>$param{order_id});
+} # end sub _reopen_order
+
 1;
 __END__
