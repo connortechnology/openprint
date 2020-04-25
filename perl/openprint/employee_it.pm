@@ -14,6 +14,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 require openprint::Backup;
 require openprint::Host;
 require openprint::Host_Info;
+require openprint::Host_Config;
 require openprint::RADIUS_Check;
 require openprint::RADIUS_Reply;
 require openprint::User_Type;
