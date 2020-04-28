@@ -177,11 +177,10 @@ sub online_html {
 			my $html;
 			my $rowclass;
 			foreach my $Host ( @{$$variable{Hosts}} ) {
-				my @Assets = $Host->Assets();
 				$html .= sprintf('
 					<tr class="%10$s">
 						<td class="checkbox"><input type="checkbox" id="host_id" name="host_id" value="%1$d"/></td>
-						<td class="thumbnail">%10$s</td>
+						<td class="thumbnail">%11$s</td>
 						<td class="name"><a href="/employee/it/host.html?host_id=%1$d">%2$s</a></td>
 						<td class="type"><a href="/employee/it/host.html?host_id=%1$d">%3$s</a></td>
 						<td class="ip"><a href="/employee/it/host.html?host_id=%1$d">%4$s</a></td>
@@ -203,7 +202,7 @@ sub online_html {
 					) ),
 					$Host->description(),
 					join(' ', $rowclass, ($Host->deleted() ? 'deleted' : () ) ),
-					( @Assets ? $Assets[0]->Asset()->sized_html('small') : '' ),
+					$Host->thumbnail_html(),
 					);
 				$rowclass = $rowclass ? '' : 'colRow';
 			} # end foreach Host
