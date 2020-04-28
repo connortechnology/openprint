@@ -496,7 +496,7 @@ sub get_config {
 		%config = $Host->get_config();
 	};
 	$openprint::log->error('Eval error of require Reason: '.$@) if $@;
-		return %config;
+	return %config;
 } # end sub get_config
 
 sub can_get_config {
@@ -509,6 +509,23 @@ sub get_and_store_config {
 	} else {
 		Error("Host type $$self{type} doesn't have support for getting config.");
 	}
+}
+
+sub can_get_image {
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L','Vivotek' ] ) );
+}
+
+sub get_image {
+	my $self = shift;
+	my $url;
+
+	eval {
+		require 'openprint/Host/'.$self->type().'.pm';
+		my $Host = ('openprint::Host::'.$self->type())->new($self);
+		$url = $Host->get_image(@_);
+	};
+	$openprint::log->error('Eval error of require Reason: '.$@) if $@;
+	return $url;
 }
 
 sub check {
@@ -530,6 +547,23 @@ sub check {
 	#}
 	#return $self;
 #}
+
+sub thumbnail_html {
+	my $self = shift;
+	my $size = @_ ? shift : 'small';
+	return '<img src="'.$self->thumbnail_url($size).'" alt=""/>';
+}
+
+sub thumbnail_url {
+	my $self = shift;
+	my $size = @_ ? shift : 'small';
+	if ( $self->can_get_image() ) {
+		my @dimensions = openprint::Asset::get_dimensions('Landscape', $size);
+		return $self->get_image(@dimensions);
+	}
+	my @Assets = $self->Assets();
+	return ( @Assets ? $Assets[0]->Asset()->sized_html($size) : '' );
+}
 
 1;
 __END__
