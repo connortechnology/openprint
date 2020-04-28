@@ -96,6 +96,7 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 			</ul>
 		</div>
 		<div class="content rightColumn">
+			<? echo ( $$variable{Host}->thumbnail_html('medium') ) ?>
 <? if ( $$variable{Host}->id() ) ?>
 			<? echo (
 				$$variable{Object} = $$variable{Host};
