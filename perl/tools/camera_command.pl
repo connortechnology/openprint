@@ -84,12 +84,14 @@ my @Hosts = openprint::Host->find(
 	( $$opts{hostname} ? ( hostname=>$$opts{hostname} ) : () ),
 	);
 if ( ! @Hosts ) {
-	$log->error("NO hosts found for command.");
+	$log->error('NO hosts found for command.');
+} else {
+	$log->debug('Found ' . @Hosts . ' hosts.');
 }
 foreach my $Host ( @Hosts ) {
 	my @ips = map { $_->ip() ? $_->ip() : () } $Host->Interfaces();
 	if ( ! @ips ) {
-		$log->debug( "Camera without ips: " . $Host->to_string() );
+		$log->debug('Camera without ips: '.$Host->to_string() );
 		next;
 	} # end if
 	my $ip = $ips[0];
@@ -97,7 +99,7 @@ foreach my $Host ( @Hosts ) {
 	my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
 	if ( ! @ping ) {
-		$log->warn("Problem with ping for " . $Host->hostname() );
+		$log->warn('Problem with ping for '.$Host->hostname() );
 		next;
 	} # end if
 
@@ -115,6 +117,9 @@ foreach my $Host ( @Hosts ) {
 			} else {
 				$log->error("Host doesn't support moving");
 			}
+		} elsif ( $$opts{command} eq 'get_config' ) {
+$log->debug("Getting config for $$Host{hostname}");
+			$Host->get_config();
 		} else {
 			$log->error("Unknown command $$opts{command}");
 		} # end if

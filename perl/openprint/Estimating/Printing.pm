@@ -23,6 +23,7 @@ use strict;
 use Data::Dumper;
 use Storable 'dclone';
 use POSIX qw(ceil);
+use List::Util qw(sum);
 use openprint ();
 use vars qw( %config $log $dbh %ServicePrices );
 *config = \%openprint::config;
@@ -6446,7 +6447,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 	} # end if
 
 
-	my $run_cost = misc::sum( map { $$_{Total} } @{$run_prices} );
+	my $run_cost = List::Util::sum(map { $$_{Total} } @{$run_prices});
 	$price{'Run Prices'} = $run_prices;
 
 	if ( $$Imposition{sides} == 2 and $$Imposition{runstyle} eq 'Sheet Work' ) {
@@ -6500,7 +6501,7 @@ $log->warn("Something wrong in AQ");
 #$log->debug("Setup Cost $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Press Wash Total'} + $price{'Version Charge'} + $price{'Imposition Total'}");
 
 	$price{'Press Setup'} = $press_setup;
-	$price{'Impression MPrice'} = misc::sum( map { $$_{MPrice} } @{$run_prices} );
+	$price{'Impression MPrice'} = List::Util::sum( map { $$_{MPrice} } @{$run_prices} );
 
 	$price{'Minimum Run Charge'} = openprint::service::get_price('PressRunChargeMinimum', undef, $Press);
 

@@ -1,10 +1,6 @@
 <? echo ( 
-	if ( $$variable{'Project'}->order_id() ) {
-		if ( -e $config{'SkinPath'}.'/docket.html' ) {
-			return ssi::include( $config{'SkinPath'}.'/docket.html' );
-		} else {
-			return ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/summ/project_docket_sheet.html' );
-		} # end if
+	if ( $$variable{Project}->order_id() ) {
+		return ssi::include('/includes/docket.html');
 	} else {
 		return 'This Project has not been ordered yet.';
 	} # end if

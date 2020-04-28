@@ -35,7 +35,7 @@ sub information {
 	# Order creation can happen here as well, because we are doing away with quantity_select
 	# order_id may also be the word New
 
-	if ( $order_id and ($param{action} eq 'remove') ) {
+	if ( $order_id and $param{action} and ($param{action} eq 'remove') ) {
 		if ( $param{project_id} ) {
 			$param{project_id} =~ s/\D//g;
 			my $OrderedProject = openprint::OrderedProject->find_one(project_id=>$param{project_id}, order_id=>$order_id);
@@ -62,87 +62,89 @@ sub information {
 			$openprint::log->error('Nothing specified to delete');
 			$variable{error} .= 'Nothing specified to delete.';
 		} # end if
-	} elsif ( $param{btnFunction} eq 'New Order' ) {
-		# Re order situation
+	} elsif ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'New Order' ) {
+			# Re order situation
 
-		my $SRC_Order = new openprint::Order( $order_id );
-		return 0 if check_credit( $SRC_Order->total() );
+			my $SRC_Order = new openprint::Order( $order_id );
+			return 0 if check_credit( $SRC_Order->total() );
 
-		if ( $SRC_Order->status() eq '' ) {
-			misc::error( $log, $dbh, \%variable, 'Can\'t re-order.', 'Order does not exist.' );
-			return 0;
-		} elsif ( ! sets::isin( $SRC_Order->status(), 'Complete', 'Paid',	'Shipped', 'Waiting For Pickup', 'Picked Up' ) ) {
-			misc::error( $log, $dbh, \%variable, 'Can\'t re-order.', 'The given order is not complete.' );
-			return 0;
-		} 
+			if ( $SRC_Order->status() eq '' ) {
+				misc::error( $log, $dbh, \%variable, 'Can\'t re-order.', 'Order does not exist.' );
+				return 0;
+			} elsif ( ! sets::isin( $SRC_Order->status(), 'Complete', 'Paid',	'Shipped', 'Waiting For Pickup', 'Picked Up' ) ) {
+				misc::error( $log, $dbh, \%variable, 'Can\'t re-order.', 'The given order is not complete.' );
+				return 0;
+			} 
 
-		my $ac = sql::start_transaction( $openprint::dbh );
-		# this goes before get_order_id so that we re-use orderids
-		delete_unfinished_orders();
+			my $ac = sql::start_transaction( $openprint::dbh );
+			# this goes before get_order_id so that we re-use orderids
+			delete_unfinished_orders();
 
-		# get the contents
-		my @contents = sql::execute($log, $dbh, q{SELECT lngProjectIndex, intQuantityIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id);
+			# get the contents
+			my @contents = sql::execute($log, $dbh, q{SELECT lngProjectIndex, intQuantityIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id);
 
-		my $order_id = openprint::order::make_order($log, $dbh, $session{_session_id}, \%variable);
-		if ( $order_id ) {
-			while ( my ( $p_id, $qty ) = splice(@contents, 0, 2) ) {
-				my $Project = new openprint::Project( $p_id );
-				my $New = $Project->copy();
-				$New->save({reference=>'ReOrder of ' . $New->reference() });
-				openprint::order::add_to_order($log, $dbh, $order_id, \%variable, ( $New->id(), $qty ));
-			} # end while
-			foreach my $Product ( $SRC_Order->Products() ) {
-				my $NewProduct = $Product->copy();
-				$NewProduct->order_id($order_id);
-				$NewProduct->save();
-			} # end foreach
-		} # end if
-		if ( $openprint::dbh->errstr() ) {
-			$openprint::dbh->rollback();
-			sql::end_transaction($openprint::dbh, $ac);
-			return;
-		} # end if
-		sql::end_transaction($openprint::dbh, $ac);
-		return if ! $order_id;
-
-	} elsif ( $param{btnFunction} eq 'ReOpen' ) {
-		if ( $order_id ) {
-			openprint::order::delete_unfinished_orders();
-			my $Order = new openprint::Order( $order_id );
-			$Order->save({status=>'Re-Opened', session_id=>$session{_session_id}, total=>undef});
-			foreach my $OP ( $Order->Ordered_Projects() ) {
-				$variable{error} .= $OP->save({price=>undef});
-			} # end foreach
-			$Order->add_log('Re-Opened');
-		} else {
-			$error = 'No order_id given to Re-Open.';
-		} # end if order_id
-	} elsif ( $param{btnFunction} eq 'Process Order' ) {
-		if ( $param{quote_id} ) {
-			( $order_id, $error ) = openprint::order::make_order_from_quote( $param{quote_id} );
-		} else {
-			if ( openprint::Order->find( project_id=>$param{ProjectIndex},status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
-				return misc::error($log, $dbh, \%variable, q{Can't order project.}, "Project $param{ProjectIndex} has already been ordered." );
+			my $order_id = openprint::order::make_order($log, $dbh, $session{_session_id}, \%variable);
+			if ( $order_id ) {
+				while ( my ( $p_id, $qty ) = splice(@contents, 0, 2) ) {
+					my $Project = new openprint::Project( $p_id );
+					my $New = $Project->copy();
+					$New->save({reference=>'ReOrder of ' . $New->reference() });
+					openprint::order::add_to_order($log, $dbh, $order_id, \%variable, ( $New->id(), $qty ));
+				} # end while
+				foreach my $Product ( $SRC_Order->Products() ) {
+					my $NewProduct = $Product->copy();
+					$NewProduct->order_id($order_id);
+					$NewProduct->save();
+				} # end foreach
 			} # end if
+			if ( $openprint::dbh->errstr() ) {
+				$openprint::dbh->rollback();
+				sql::end_transaction($openprint::dbh, $ac);
+				return;
+			} # end if
+			sql::end_transaction($openprint::dbh, $ac);
+			return if ! $order_id;
 
-			# Normal Order Creation
-			my $Project = new openprint::Project( $param{ProjectIndex} );
-			# migt be recalculating, wait for it to finish
-			$Project->lock();
-			( $order_id, $error ) = openprint::order::add_project_to_order( $Project, $order_id );
-			$Project->unlock();
-		} # end if
-		if ( ! $order_id ) {
-			$log->debug("Had trouble generating order $error");
-			$variable{error} .= 'Had trouble generating order.' . $error;
-		}
-		$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$order_id;
-		return;
-	} elsif ( $param{btnFunction} eq 'Continue') { # saving projcet information
-		$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
-		foreach my $OP ( openprint::OrderedProject->find(order_id=>$order_id) ) {
-			$variable{error} .= openprint::order::save_project_information( $OP );
-		} # end foreach
+		} elsif ( $param{btnFunction} eq 'ReOpen' ) {
+			if ( $order_id ) {
+				openprint::order::delete_unfinished_orders();
+				my $Order = new openprint::Order( $order_id );
+				$Order->save({status=>'Re-Opened', session_id=>$session{_session_id}, total=>undef});
+				foreach my $OP ( $Order->Ordered_Projects() ) {
+					$variable{error} .= $OP->save({price=>undef});
+				} # end foreach
+				$Order->add_log('Re-Opened');
+			} else {
+				$error = 'No order_id given to Re-Open.';
+			} # end if order_id
+		} elsif ( $param{btnFunction} eq 'Process Order' ) {
+			if ( $param{quote_id} ) {
+				( $order_id, $error ) = openprint::order::make_order_from_quote( $param{quote_id} );
+			} else {
+				if ( openprint::Order->find( project_id=>$param{ProjectIndex},status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
+					return misc::error($log, $dbh, \%variable, q{Can't order project.}, "Project $param{ProjectIndex} has already been ordered." );
+				} # end if
+
+				# Normal Order Creation
+				my $Project = new openprint::Project( $param{ProjectIndex} );
+				# migt be recalculating, wait for it to finish
+				$Project->lock();
+				( $order_id, $error ) = openprint::order::add_project_to_order( $Project, $order_id );
+				$Project->unlock();
+			} # end if
+			if ( ! $order_id ) {
+				$log->debug("Had trouble generating order $error");
+				$variable{error} .= 'Had trouble generating order.' . $error;
+			}
+			$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$order_id;
+			return;
+		} elsif ( $param{btnFunction} eq 'Continue') { # saving projcet information
+			$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
+			foreach my $OP ( openprint::OrderedProject->find(order_id=>$order_id) ) {
+				$variable{error} .= openprint::order::save_project_information( $OP );
+			} # end foreach
+		} # end if btnFunction
 	} elsif ( $param{Product} and $param{Quantity} ) {
 		( $order_id, $error ) = openprint::order::add_product( $order_id, @param{'Product','Quantity'} );
 	} elsif ( $param{product_id} and $param{quantity} ) {
@@ -221,50 +223,52 @@ sub submit {
 	my $Currency = openprint::Currency::get_current();
 	$variable{error} .= $Order->save({currency_id=>$Currency->id()}) if $$Order{currency_id} != $$Currency{id} or ! $Order->id();
 
-	if ( $param{btnFunction} eq 'Continue') { # saving project information
-		
-		foreach my $OP ( openprint::OrderedProject->find( order_id=>$Order->id() ) ) {
-			$variable{error} .= openprint::order::save_project_information( $OP );
-		} # end foreach
-		foreach my $Product ( $Order->Products() ) {
-			if ( exists $param{'ProductQuantity'.$Product->id()} ) {
-				$param{'ProductQuantity'.$Product->id()} =~ s/\D//g;
-				$Product->quantity( $param{'ProductQuantity'.$Product->id()} );
-			} # end if
-			#my %price = $Product->Product()->get_price( $Product->quantity() );
-			#$Product->price( $price{Price} );
-			$variable{error} .= openprint::order::save_project_information( $Product );
-			# Need to update price to include shipping costs
-			my %Price = $Product->Product()->get_price( $Product->quantity() );
-			$openprint::log->debug('Initial price for ' . $Product->quantity() . ' is : ' . $Price{Price} );
-			my $Project = $Product->Project();
-			if ( $Project ) {
-				my $services = $Project->services();
-				foreach my $ShippingType ( openprint::ServiceType->find(category=>'Shipping') ) {
-					next if ! $$services{$ShippingType->name()};
-					foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
-						my $specs =  openprint::service::get_specs_ref( $Project, $service_id );
-						$Price{Price} += $$specs{txtPrice1};
-					} # end foreach service_id
-				} # end foreach
-			} # end if
-			$Product->price( $Product->Currency()->convert_to( $Currency, $Price{Price} ) );
-			$Product->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$$Project{id},'ddmDueDateMonth'.$$Project{id},'ddmDueDateDay'.$$Project{id}} ) ) if exists $param{'ddmDueDateYear'.$$Project{id}};
-			$Product->save();
-		} # end foreach Product
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Continue') { # saving project information
 
-		$variable{error} .= openprint::order::store_order_info( $openprint::r, $log, $dbh, $session{_session_id}, \%variable );
-		if ( $variable{error} ) {
-			$session{error} = $variable{error};
-			$variable{ExternalRedirect} = '/main/order/information.html';
-			return;
-		} else {
-			$variable{ExternalRedirect} = '/main/order/submit.html?order_id='.$Order->id();
+			foreach my $OP ( openprint::OrderedProject->find( order_id=>$Order->id() ) ) {
+				$variable{error} .= openprint::order::save_project_information( $OP );
+			} # end foreach
+			foreach my $Product ( $Order->Products() ) {
+				if ( exists $param{'ProductQuantity'.$Product->id()} ) {
+					$param{'ProductQuantity'.$Product->id()} =~ s/\D//g;
+					$Product->quantity( $param{'ProductQuantity'.$Product->id()} );
+				} # end if
+#my %price = $Product->Product()->get_price( $Product->quantity() );
+#$Product->price( $price{Price} );
+				$variable{error} .= openprint::order::save_project_information( $Product );
+# Need to update price to include shipping costs
+				my %Price = $Product->Product()->get_price( $Product->quantity() );
+				$openprint::log->debug('Initial price for ' . $Product->quantity() . ' is : ' . $Price{Price} );
+				my $Project = $Product->Project();
+				if ( $Project ) {
+					my $services = $Project->services();
+					foreach my $ShippingType ( openprint::ServiceType->find(category=>'Shipping') ) {
+						next if ! $$services{$ShippingType->name()};
+						foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
+							my $specs =  openprint::service::get_specs_ref( $Project, $service_id );
+							$Price{Price} += $$specs{txtPrice1};
+						} # end foreach service_id
+					} # end foreach
+				} # end if
+				$Product->price( $Product->Currency()->convert_to( $Currency, $Price{Price} ) );
+				$Product->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$$Project{id},'ddmDueDateMonth'.$$Project{id},'ddmDueDateDay'.$$Project{id}} ) ) if exists $param{'ddmDueDateYear'.$$Project{id}};
+				$Product->save();
+			} # end foreach Product
+
+			$variable{error} .= openprint::order::store_order_info( $openprint::r, $log, $dbh, $session{_session_id}, \%variable );
+			if ( $variable{error} ) {
+				$session{error} = $variable{error};
+				$variable{ExternalRedirect} = '/main/order/information.html';
+				return;
+			} else {
+				$variable{ExternalRedirect} = '/main/order/submit.html?order_id='.$Order->id();
+			} # end if
+		} elsif ( $param{btnFunction} eq 'Save Service' ) {
+			my $Project = new openprint::Project( $param{ProjectIndex} );
+			openprint::print::save_service( $openprint::r, $log, $dbh, \%variable, $Project, $param{ServiceIndex} );
 		} # end if
-	} elsif ( $param{btnFunction} eq 'Save Service' ) {
-		my $Project = new openprint::Project( $param{ProjectIndex} );
-		openprint::print::save_service( $openprint::r, $log, $dbh, \%variable, $Project, $param{ServiceIndex} );
-	} # end if
+	} # end if btnFunction
 
 	$variable{error} = check_for_errors( $Order );
 	if ( $variable{error} ) {
@@ -339,7 +343,7 @@ sub confirmation {
 			my $total = $Order->total(undef);
 
 			#my $customer_credit = new openprint::customer_credit( $session{company_id} );
-			my $downpayment;
+			my $downpayment = 0;
 			#my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
 			#if ( $downpayment eq '' ) {
 				#$downpayment = $config{DefaultDownpayment};
@@ -391,7 +395,6 @@ sub confirmation {
 				}
 			} # end foreach Product
 
-			
 			$variable{Downpayment} = $downpayment - $Order->paid();
 			$variable{Downpayment} = 0 if $variable{Downpayment} < 0;
 			$variable{Downpayment} = Math::Round::nearest( 0.01, $variable{Downpayment} );

@@ -639,7 +639,7 @@ sub send_admin_emails {
 	my @project_dockets = ();
 
 	# Add a project summary and docket sheet for each project in the order
-	my $docket_content = ssi::slurp_content( '/email_content/order_docket_sheet.html' );
+	my $docket_content = ssi::slurp_content('/email_content/order_docket_sheet.html');
 	my $summary_content = ssi::slurp_content( '/email_content/project_summary.html' );
 	foreach my $Project ($self->Projects()) {
 		my %data = (
