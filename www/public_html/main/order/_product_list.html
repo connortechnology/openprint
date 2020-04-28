@@ -1,3 +1,11 @@
+<? echo (
+	my $html;
+
+	my @Products = $$variable{Order}->Products();
+	if ( @Products ) {
+		my @ShippingServices = openprint::ServiceType->find(category=>'Shipping');
+
+		$html .= '
 <table class="List">
 	<thead>
 		<tr>
@@ -9,14 +17,10 @@
 			<th class="Price">Total</th>
 		</tr>
 	</thead>
-	<tbody>
-<? echo (
-	my $html;
+  <tbody>';
 
-  my @ShippingServices = openprint::ServiceType->find(category=>'Shipping');
-
-	foreach my $Ordered_Product ( $$variable{Order}->Products() ) {
-		my $Product = $Ordered_Product->Product();
+		foreach my $Ordered_Product ( @Products ) {
+			my $Product = $Ordered_Product->Product();
 
 		$html .= sprintf(q`
     <tr%s>
@@ -95,7 +99,9 @@
 			openprint::Currency::format($Ordered_Product->total()),
 			).$shipping_html;
 	} # end foreach Product
+		$html .= '</tbody>
+</table>
+';
+	} # end if products
 	return $html;
 ) ?>
-	</tbody>
-</table>
