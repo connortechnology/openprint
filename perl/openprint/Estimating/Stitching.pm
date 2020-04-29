@@ -22,6 +22,7 @@ use constant DEBUG => 0;
 
 require openprint::Equipment;
 require openprint::service;
+require openprint::Project;
 
 my %Services;
 
@@ -252,6 +253,7 @@ sub signature_calc {
 		my $form = $$sig_specs{SignatureIndex};
 		push @printed_impositions, $$I{imposition};
 		if ( ! $$I{Folds} ) {
+			$openprint::log->error("Sitchign: No folds in imposition, generating");
 			if ( DEBUG ) {
 				$openprint::log->debug('Stitching: No folds in imposition, generating') if DEBUG;
 				$I->display('No Folds');
