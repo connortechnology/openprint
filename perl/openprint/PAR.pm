@@ -63,7 +63,7 @@ sub send_notifications {
 	my @Users = openprint::User->find( company_id=>$openprint::config{owner_id}, type=>['E','A'], 'usergroup any'=>'Quality Control Notifications');
 
 	if ( @Users ) {
-		my $From = new openprint::User( $openprint::session{'user_id'} );
+		my $From = $openprint::User;
 
 		my %info = ( PAR	=>	$self );
 		$info{'ReplacementText'} = ssi::include( '/email_content/iso_par_notification.html', \%info );

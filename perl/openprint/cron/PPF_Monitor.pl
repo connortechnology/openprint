@@ -24,7 +24,10 @@ use vars qw( $log $dbh %config $use_compression $debug );
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 $use_compression = 1;
-$debug = 0;
+$debug = 1;
+if ( $debug ) {
+	require File::Copy;
+}
 my $mangle = 1;
 
 $log = logger->new();
@@ -109,21 +112,22 @@ foreach my $Equipment ( @Equipment ) {
 
 		foreach my $file ( @Bs ) {
 			# Will ignore ., .., any hidden file
-		$log->warn("File... $file" ) if $debug;
 			next if $file =~ /^\./; 
 			next if -d $Equipment->cip3_in().'/'.$file;
 			my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
-$log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
+$log->debug("Parsed to $file_base, $side, $extension from $file") if $debug;
 			if ( $side ne 'B' ) {
-$log->warn("Not a B") if $debug;
+$log->debug('Not a B') if $debug;
 				next;
 			} # end if
 
 			my $out_base = $file_base;
 			$out_base =~ s/\./_/g;
 
-			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d+)(\w\w)?_?(.+?)Sg(\d+)/i;
-	print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n" if $debug;
+			$file_base =~ /^(?<DOCKET>\d+)(?<OP>\w\w)?_(?<COMPANY>.+?)Sg(?<SIG>\d+)/i;
+			my ( $docket, $ppo, $name, $sig ) = ( $+{DOCKET}, $+{OP}, $+{COMPANY}, $+{SIG} );
+
+			print "File: $file Docket $docket, Operator: $ppo, Name: $name, Sig: $sig, $side\n" if $debug;
 			$sig = 0 if ! $sig;
 			my $data;
 			$side = 'M';
@@ -244,8 +248,16 @@ die 'Error opening db' if ! $dbh;
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 $dbh->disconnect();
 
+			if ( $debug ) {
+				File::Copy::move($$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension,
+						$$Equipment{'cip3_in'}.'/done/'.$file_base.'A.'.$extension);
+				File::Copy::move($$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension,
+						$$Equipment{'cip3_in'}.'/done/'.$file_base.'B.'.$extension);
+} else {
+			
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
+}
 		} # end foreach file in input hotfolder
 	} # end if cip3_merge
 
@@ -321,7 +333,12 @@ $dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 		my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
 		$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
-		unlink $$Equipment{'cip3_in'}.'/'.$file;
+if ( $debug ) {
+
+	File::Copy::move($$Equipment{'cip3_in'}.'/'.$file, $$Equipment{'cip3_in'}.'/done/'.$file);
+} else {
+	unlink $$Equipment{'cip3_in'}.'/'.$file;
+}
 	} # end foreach file in input hotfolder
 	close S;
 

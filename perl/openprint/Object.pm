@@ -1,6 +1,6 @@
 use strict;
 package openprint::Object;
-use Time::HiRes qw{ gettimeofday tv_interval }; 
+use Time::HiRes qw{ gettimeofday tv_interval };
 use Carp qw( cluck );
 
 require openprint;
@@ -131,7 +131,7 @@ if ( 1 ) {
 				# Using $id instead of $$self{id} means that we cache non existent entries
 			#if ( $$self{id} ) {
 $log->debug("new id_Caching $config{db_name} $parent $id = $self") if DEBUG_CACHE or $debug;
-				
+
 				$$sub_cache{$id} = $self;
 			} # end if
 		} else {
@@ -204,8 +204,8 @@ sub load {
 		} # end if
 	} # end if
 	if ( $data and %$data ) {
-		my @keys = map { (defined $$fields{$_} or exists $$data{$_} ) ? $_ : () } keys %$fields;
-		@$self{@keys} = @$data{@$fields{@keys}};
+		my %keys = map { (defined $$fields{$_} ? ($_=>$$fields{$_}) : (exists $$data{$_} ? ($_=>$_) : ()) ) } keys %$fields;
+		@$self{keys %keys} = @$data{ values %keys };
 	} # end if
 } # end sub load
 
@@ -267,7 +267,7 @@ $log->debug("No serial") if $debug;
 				if ( $debug ) {
 					$log->debug("DELETE FROM $table WHERE $where");
 				} # end if
-				
+
 				if ( ! ( ( $_ = $local_dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {
 					$where =~ s/\?/\%s/g;
 					$log->error("Error deleting: DELETE FROM $table WHERE " .  sprintf($where, map { defined $_ ? $_ : 'undef' } ( @$self{@identified_by}) ).'):' . $local_dbh->errstr);
@@ -330,7 +330,7 @@ $log->debug("No serial") if $debug;
 		my $need_serial = ! ( @identified_by == map { $$self{$_} ? $_ : () } @identified_by );
 
 		if ( $force_insert or $need_serial ) {
-			
+
 			if ( $need_serial ) {
 				if ( $serial ) {
 					@$self{@identified_by} = @sql{@$fields{@identified_by}} = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
@@ -422,11 +422,11 @@ $log->warn('Object::changes called on an object with no fields');
 			next;
 		}
 		if ( ref $$self{$field} eq 'ARRAY'  ) {
-      my @new_value = $$params{$field} eq 'ARRAY' ? @{$$params{$field}} : ( $$params{$field} );
+      my @new_value = ($$params{$field} eq 'ARRAY' ? @{$$params{$field}} : ( $$params{$field} ));
 			if ( @{$$self{$field}} != sets::intersection(@{$$self{$field}}, @new_value) ) {
-				push @results, "$field changed from ".join(',',@{$$self{$field}}).' to '.join(',', @new_value );
+				push @results, $field.' changed from '.join(',',@{$$self{$field}}).' to '.join(',', @new_value);
       } elsif ( $debug ) {
-        $log->debug( "$field not changed from ".join(',',@{$$self{$field}}).' to '.join(',', @new_value) );
+        $log->debug( "$field not changed from ".join(',',@{$$self{$field}}).' to '.join(',', @new_value));
 			}
 		} elsif ( $$self{$field} ne $$params{$field} ) {
 			if ( $field eq 'password' ) {
@@ -602,7 +602,7 @@ sub delete {
 		my $rows = $local_dbh->do( 'DELETE FROM '.$table.' WHERE '.$where, undef, @$self{@identified_by} );
 		$log->warn("No rows deleted for 'DELETE FROM $table WHERE $where, @$self{@identified_by}") if ! $rows;
 		$log->debug("DELETE FROM $table WHERE $where, @$self{@identified_by}") if $debug;
-	
+
 		return $local_dbh->errstr if $local_dbh->errstr;
 		delete $openprint::Object::cache{$config{db_name}}{$type}{join('-',@$self{@identified_by})};
 	(new openprint::Log())->save({action=>'Delete', note=>$self->to_string()}) if $type ne 'openprint::Log';
@@ -721,13 +721,13 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 		return 'trunc('.$field.$type.') = ?', $value;
 	} elsif ( $operator eq 'any' ) {
 		if ( ref $value eq 'ARRAY' ) {
-			return '(' . join(',', map { '?' } @{$value} ).") = ANY($field)", @{$value}; 
+			return '(' . join(',', map { '?' } @{$value} ).") = ANY($field)", @{$value};
 		} else {
 			return "? = ANY($field)", $value;
 		} # end if
 	} elsif ( $operator eq 'not any' ) {
 		if ( ref $value eq 'ARRAY' ) {
-			return '(' . join(',', map { '?' } @{$value} ).") != ANY($field)", @{$value}; 
+			return '(' . join(',', map { '?' } @{$value} ).") != ANY($field)", @{$value};
 		} else {
 			return "? != ANY($field)", $value;
 		} # end if
@@ -782,7 +782,7 @@ sub get_fields_values {
 				my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%s,  [ keys %s ] );
 				push @where, '('.join(' OR ', @{$where} ).')';
 				push @values, @{$values};
-				
+
 			} else {
 				$log->error("Deprecated use of or $or_ref for $$search{or}");
 			} # end if
@@ -799,7 +799,7 @@ sub get_fields_values {
 				push @values, @{$values};
 				} else {
 					$log->error("No keys in and");
-				} 
+				}
 			} elsif ( $and_ref eq 'ARRAY' and @{$$search{and}} ) {
 				my @sub_where;
 
@@ -841,7 +841,7 @@ $log->debug("$object_type param $field($type) func($function) " . ( ref $$search
 
 					if ( ref $$search{$k} eq 'ARRAY' ) {
 $openprint::log->debug("Have array for $k $$search{$k}") if DEBUG_ALL;
-						
+
 						if ( ! ( $db_field =~ /\?/ ) ) {
 							if ( @{$$search{$k}} != 1 ) {
 								push @where, $db_field .' IN ('.join(',', map {'?'} @{$$search{$k}} ) . ')';
@@ -880,8 +880,8 @@ $openprint::log->debug("Have question ? for $k $$search{$k} $db_field") if DEBUG
 					} # end if
 					push @used_fields, $k;
 				} else {
-					#my @w = 
-#ref $search{$k} eq 'ARRAY' ? 
+					#my @w =
+#ref $search{$k} eq 'ARRAY' ?
 						#map { find_operators( $field, $type, $function, $_ ); } @{$search{$k}} :
 					my ( $w, @v ) = find_operators( $db_field, $type, $function, $$search{$k} );
 					if ( $w ) {
@@ -930,7 +930,7 @@ sub find_sql {
 		$sql{order} = $order if $order;
 	} # end if
 	delete @$params{'distinct','columns','table','group by','limit','offset','order'};
-	
+
 	my @where;
 	my @values;
 	if ( exists $$params{custom} ) {
@@ -999,7 +999,7 @@ $openprint::log->error("Wasting time looking for objects in find $k $search{$k}"
 			( $sql{'group by'} ? ( 'GROUP BY', $sql{'group by'} ) : () ),
 			( $sql{limit} ? ( 'LIMIT', $sql{limit}) : () ),
 			( $sql{offset} ? ( 'OFFSET', $sql{offset} ) : () ),
-	);	
+	);
 	$log->debug("find_sql $object_type ($sql{sql}) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if $debug;
 	return \%sql;
 } # end sub find_sql
@@ -1054,7 +1054,7 @@ sub find {
 			if ( $name_cache{$object_type}{$$params{$cache_field}} ) {
 				my ( $caller, undef, $line ) = caller;
 				$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
-				return $name_cache{$object_type}{$$params{$cache_field}}; 
+				return $name_cache{$object_type}{$$params{$cache_field}};
 			} else {
 				# Shouldn't have to test for cached, because the hash will not get populated.
 $log->error("returning nothing for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
@@ -1077,7 +1077,7 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 		$do_cache = 0;
 		$log->debug("Not doing caching for $object_type using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL or DEBUG_CACHE;
 	} # end if
-	
+
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $local_dbh->selectall_arrayref($$sql{sql}, { Slice => {} }, @{$$sql{values}});
 	if ( ! $data ) {
@@ -1101,7 +1101,7 @@ $log->debug("Doing find_cache for $object_type $cache_ref $name_cache{$object_ty
 				next if !$$O{$cache_field};
 				$cache_ref->{$$O{$cache_field}} = $O;
 #$log->warn("Doing find_cache for $object_type $$O{$cache_field}");
-			} 
+			}
 #debug();
 			return @results;
 		} # end if
@@ -1123,6 +1123,12 @@ sub find_one {
 	} else {
 		%{$params} = @_;
 	} # end if
+	if ( ((scalar keys %{$params}) == 1) and $$params{id} ) {
+		my $id = $$params{id};
+		$cache{$config{db_name}}{$object_type} = {} if ! $cache{$config{db_name}}{$object_type};
+		my $sub_cache = $cache{$config{db_name}}{$object_type};
+    return $$sub_cache{$id} if $$sub_cache{$id};
+	}
 	$$params{limit} = 1;
 	my @Results = $object_type->find(%$params);
 	my ( $caller, undef, $line ) = caller;
@@ -1195,7 +1201,11 @@ $openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue") if ! 
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';
-    return $type . ': '. join(' ' , map { $_[0]{$_} ? $_ . ' => ' . (ref $_[0]{$_} eq 'ARRAY' ? join(',',@{$_[0]{$_}}) : $_[0]{$_} ) : () } keys %$fields );
+	return $type . ': '. join(' ', map {
+#$$fields{$_} ? $_ . ' => ' . (ref $_[0]{$_} eq 'ARRAY' ? join(',',@{$_[0]{$_}}) : $_[0]{$_} )
+ $_ . ' => ' . (ref $_[0]{$_} eq 'ARRAY' ? join(',',@{$_[0]{$_}}) : (defined( $_[0]{$_})?$_[0]{$_}:'undef') )
+#: ()
+} sort { $a cmp $b } keys %$fields );
 }
 
 sub dropdown {
@@ -1252,7 +1262,7 @@ sub transform {
 				}
 	$openprint::log->debug("After $transform: $value") if $debug;
 			} # end foreach
-		} # end if 
+		} # end if
 	} else {
 		$openprint::log->error("Object::transform ($_[1]) not in fields for $type");
 	} # end if
@@ -1402,10 +1412,10 @@ sub Object {
 
 sub date_format {
 	return Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $_[0]{$_[1]} ) );
-} # end sub date_format 
+} # end sub date_format
 sub datetime_format {
 	return Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0]{$_[1]} ) );
-} # end sub datetime_format 
+} # end sub datetime_format
 
 sub Views {
 	if ( $_[1] ) {
@@ -1469,7 +1479,7 @@ sub Assets {
 	$param{object_id} = $_[0]{id};
 	$param{order}	= 'asset_id' if ! $param{order};
 	$param{object_type} = ref $_[0];
-	my @Assets = openprint::Object_Asset->find(%param);	
+	my @Assets = openprint::Object_Asset->find(%param);
 $openprint::log->debug("# of Assets: " . scalar @Assets ) if $debug;
 	return @Assets;
 } # end sub Assets
@@ -1587,7 +1597,7 @@ sub keywords {
 				$OK->delete();
 			} # end if
 		} # end foreach
-			
+
 		$_[0]{Keywords} = [ openprint::Object_Keyword->find( object_type=>$object_type, object_id=>$_[0]{id} ) ];
 		$_[0]{keywords} = undef;
 	} # end if

@@ -128,6 +128,7 @@ sub calc {
 
 	my @signature_service_indices = $Project->signatures();
 	my $minCharge = openprint::service::get_price('ProofsMinimumCharge', undef, undef);
+	%ProofServices = map { $_->name(), $_ } openprint::Service->find(category=>'Proofs');
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} = '';
@@ -871,15 +872,14 @@ sub has_overrides {
 
 sub status {
 	my ( $Project, $service_id, $specs ) = @_;
-	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	$specs = openprint::service::get_specs_ref($Project, $service_id) if !$specs;
 
-$openprint::log->debug("$$specs{rdbApproved} client: $$specs{rdbClientApproved} complete: $$specs{rdbComplete}");
 	my $status;
-	if ( $$specs{rdbApproved} eq 'Yes' ) {
+	if ( $$specs{rdbApproved} and ($$specs{rdbApproved} eq 'Yes') ) {
 		$status = 'Approved';
-	} elsif ( $$specs{rdbClientApproved} eq 'Y' ) {
+	} elsif ( $$specs{rdbClientApproved} and ($$specs{rdbClientApproved} eq 'Y') ) {
 		$status = 'Waiting For QA Approval';
-	} elsif ( $$specs{rdbComplete} eq 'Yes' ) {
+	} elsif ( $$specs{rdbComplete} and ($$specs{rdbComplete} eq 'Yes') ) {
 		$status = 'Proofs out';
 	} else {
 		$status = 'Ordered'
