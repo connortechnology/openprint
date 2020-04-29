@@ -135,10 +135,7 @@ sub signature_calc {
 
 				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 				foreach my $Material ( @Materials ) {
-<<<<<<< HEAD
-=======
 					#FIXME optimise
->>>>>>> e3d9b4dd908c507f310e97d85ce637eb20a343c5
 					if ( sets::isin( $$Paper{grade}, misc::trim(split(',',$Material->specification('Recommended For Stock Grade'))) ) ) {
 						$$specs{glue_id} = $$Material{id};
 						last;
