@@ -58,7 +58,8 @@ $default_sort	=	'lower(firstname),lower(lastname)';
 ); # end %fields
 %find_fields = (
 	name	=>	q`firstname || ' ' || lastname`,
-	usergroup_id	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
+	#usergroup_id	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
+	usergroup_id	=>	'id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id=?)',
 	usergroup		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
 	last_online	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
 	profile_field	=>	'(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id=?)',
@@ -203,8 +204,12 @@ sub next {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MIN(firstname) FROM users WHERE firstname > ?';
+	my $sql = 'SELECT id, firstname FROM users WHERE firstname >= ? AND deleted != true';
 	my @values = ( $$self{firstname} );
+	if ( $$self{id} ) {
+		$sql .= ' AND id!=?';
+		push @values, $$self{id};
+	}
 	if ( $params{company_id} ) {
 		$sql .= ' AND company_id=?';
 		push @values, $params{company_id};
@@ -214,7 +219,7 @@ sub next {
 		push @values, $params{type};
 	} # end if
 
-	$sql = qq{SELECT id FROM users WHERE firstname = ($sql)};
+	$sql .= ' ORDER BY firstname ASC LIMIT 1';
 	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
@@ -227,8 +232,12 @@ sub prev {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MAX(FirstName) FROM Users WHERE FirstName < ?';
+	my $sql = 'SELECT id, firstname FROM Users WHERE firstname <= ? AND deleted != true';
 	my @values = ( $$self{firstname} );
+	if ( $$self{id} ) {
+		$sql .= ' AND id!=?';
+		push @values, $$self{id};
+	}
 	if ( $params{company_id} ) {
 		$sql .= ' AND company_id=?';
 		push @values, $params{company_id};
@@ -238,7 +247,7 @@ sub prev {
 		push @values, $params{type};
 	} # end if
 
-	$sql = qq{SELECT id FROM Users WHERE FirstName = ($sql)};
+	$sql .= ' ORDER BY firstname DESC LIMIT 1';
 	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
@@ -321,11 +330,17 @@ sub csr_ids {
 	return @{$$self{csr_ids}};
 } # end sub
 
+sub in_Group {
+	my $self = shift;
+	return sets::intersection(@_, map { $$_{name} } $self->Groups());
+}
+
 sub Groups {
-	require openprint::UserGroup;
-	if ( $_[0]{id} ) {
-		return openprint::UserGroup->find('user_id any'=>$_[0]{id} );
+	if ( $_[0]{id} and ! $_[0]{Groups} ) {
+		require openprint::UserGroup;
+		$_[0]{Groups} = [ openprint::UserGroup->find('user_id any'=>$_[0]{id} ) ];
 	} # end if
+	return @{$_[0]{Groups}} if $_[0]{Groups};
 	return ();
 } # end sub Groups
 
@@ -449,8 +464,17 @@ sub link {
 } # end sub link
 
 sub link_to {
-    return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+	my $self = shift;
+	my $content = ( @_ ? shift @_ : $self->name() );
+	my %options = ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
+
+	return sprintf('<a href="/account/view.html?user_id=%1$d"%3$s>%2$s</a>', 
+			$$self{id},
+			$content,
+			( %options ? join(' ', '', map { $_.'="'.$options{$_}.'"' } keys %options ) : '' ),
+			);
 } # end sub link_to
+
 sub admin_link_to {
     return sprintf('<a href="/administrator/managerial/user_profiles.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
 } # end sub admin_link_to
@@ -507,7 +531,7 @@ sub html {
 sub last_logged_in {
 	if ( (! $_[0]{last_logged_in} ) and $_[0]{id} ) {
 		# Almost any entry means we were logged in.  
-		my $Log = openprint::Log->find_one(user_id=>$_[0]{id}, order=>'date_time DESC');
+		my $Log = openprint::Log->find_one(user_id=>$_[0]{id}, action=>'Login', order=>'date_time DESC');
 		if ( $Log ) {
 #$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
 			$_[0]{last_logged_in} = $$Log{date_time};

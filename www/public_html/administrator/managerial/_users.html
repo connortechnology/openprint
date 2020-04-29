@@ -2,7 +2,8 @@
 	my $uri = '/administrator/managerial/users.html';
 	if ( $session{$uri.'?email'} ) {
     my %filters = (
-		'email ilike' => '%'.$session{$uri.'?email'}.'%' ,
+		'email ilike' => '%'.$session{$uri.'?email'}.'%',
+			deleted => [0,1],
 	);
     $$variable{Users} = [ openprint::User->find( %filters ) ];
 	} else {
@@ -31,6 +32,7 @@
 		} # end if
 		
 		my @Users = openprint::User->find( %filters );
+		my @Companies = openprint::Company->find(id=>[ map { $$_{company_id} } @Users ]) if @Users;
 
 		if ( $session{$uri.'?notification_type_id'} ) {
 			my %Notifications = map { $$_{user_id}, $_ } openprint::User_Notification->find( type_id=>$session{$uri.'?notification_type_id'} );
@@ -48,6 +50,8 @@
 			<th class="Email">Email</th>
 			<th class="Company">Company</th>
 			<th class="UserType">Type</th>
+			<th class="Access">Access</th>
+			<th class="Groups">Groups</th>
 			<th class="Date">Created</th>
 		</tr>
 <? echo (
@@ -61,14 +65,22 @@
 	<td class="Email">%4$s</td>
 	<td class="Company">%6$s</td>
 	<td class="UserType">%7$s</td>
+	<td class="Access">%8$s</td>
+	<td class="Groups">%9$s</td>
 	<td class="Date">%5$s</td>
 </tr>
 `, $rowclass, 
 	$User->admin_link_to( $$User{id} ),
 	$User->admin_link_to( $User->name() ), 
 	$User->admin_link_to( $User->email() ), 
-format_date( $$User{created_on} ), $User->Company()->name(),
+	format_date( $$User{created_on} ),
+	$User->Company()->name(),
 	$User->type(),
+	join(', ', 
+		( $User->ftp_active() ? 'FTP' : () ),
+		( ($User->web_active() eq 'Y') ? 'Web' : () ),
+		),
+	join(', ', map { $$_{name} } $User->Groups() ),
  );
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';

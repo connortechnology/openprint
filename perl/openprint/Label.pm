@@ -25,6 +25,7 @@ $serial = 'labels_id_seq';
 );
 %find_fields = (
 	company_id	=>	'(SELECT DISTINCT company_id FROM Projects WHERE Projects.lngDocketNumber=labels.docket)',
+	type				=>	'(SELECT name FROM labeltypes where labeltypes.id=type_id)',
 );
 
 %transforms = (
@@ -88,9 +89,16 @@ sub set_data {
 	my %new_data = @_;	
 	my @changes;
 	foreach my $k ( keys %new_data ) {
-		if ( $$self{data}{$k} ne $new_data{$k} ) {	
-			push @changes, "$k changed from $$self{data}{$k} to $new_data{$k}";
+		if ( exists $$self{data}{$k} ) {
+			if ( $$self{data}{$k} ne $new_data{$k} ) {	
+				push @changes, "$k changed from $$self{data}{$k} to $new_data{$k}";
+				$$self{data}{$k} = $new_data{$k};
+				sql::update(undef,undef, 'Label_data', [ 'label_id=? AND name=?', $$self{id}, $k ], value=>$new_data{$k} );
+			}
+		} else {
+			push @changes, "$k set to $new_data{$k}";
 			$$self{data}{$k} = $new_data{$k};
+			sql::insert(undef,undef, 'Label_data', label_id=>$$self{id}, name=>$k, value=>$new_data{$k} );
 		}
 	} # end foreach
 	(new openprint::Log())->save({object_id=>$$self{id},object_type=>ref$self,action=>'Edit', note=>'Document Changed:<br/>'.join('<br/>', @changes) }) if @changes;
@@ -112,8 +120,11 @@ sub copy {
 	return $new;
 } # end sub copy
 
+sub url {
+	return '/employee/production/labels/label.html?id='.$_[0]{id}.'&docket='.$_[0]{docket};
+}
 sub link_to {
-	return sprintf('<a href="/employee/production/labels/label.html?id=%d&docket=%d">%s</a>', $_[0]{id}, $_[0]{docket}, @_ > 1 ? $_[1] :  join(' ', $_[0]->Type()->name(), $_[0]{reference} ) );
+	return sprintf('<a href="%s">%s</a>', $_[0]->url(), @_ > 1 ? $_[1] :  join(' ', $_[0]->Type()->name(), $_[0]{reference} ) );
 } # end sub link_to
 
 sub notify_csr {
@@ -160,6 +171,25 @@ Click to view this ' . $Label->link_to() . ', however it may not be filled in ye
 			});
 	return $results;
 } # end sub notify_csr
+
+sub reference {
+	my $self = shift;
+	$$self{reference} = shift if @_;
+
+	if ( !$$self{reference} ) {
+		my $ref = $self->get_data('reference_default');
+		if ( $ref ) {
+$log->debug("Have $ref");
+			$ref =~ s/%([^%]+)%/$self->get_data($1)/;
+
+			$$self{reference} = $ref;
+} else {
+$log->debug("No Have reference in label");
+		}
+	}
+	return $$self{reference};
+}
+
 
 1;
 __END__

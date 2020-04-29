@@ -1,10 +1,10 @@
-function isin ( array, value ) {
+function isin( array, value ) {
 	if ( array ) {
 		for ( var i = 0; i < array.length; i += 1 ) {
 			if ( array[i] == value ) 
 				return true;
 		} // end for
-	} else {
+	//} else {
 		//alert("Array has no properties. " + array + ": value: " + value );
 	} // end if
 	return false;
@@ -43,6 +43,7 @@ function get_value( obj ) {
 
 function set_value( obj, value ) {
 	if ( ! obj ) {
+		console.log("No object passed to set_value");
 		return;
 	} // end if
 	if ( obj.type == 'select-one' ) {
@@ -51,6 +52,12 @@ function set_value( obj, value ) {
 		set_rdb_value( obj, value );
 	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'tel' ) {
 		obj.value = value;
+	} else if ( obj.length ) {
+		for ( var x = 0, len=obj.length; x < len; x += 1 ) {
+			if ( obj[x].value == value ) {
+				obj[x].checked = 'checked';
+			} // end if
+		}
 	} else {
 		obj.innerHTML = value;
 	} // end if
@@ -281,10 +288,19 @@ function ddm_select_by_value( ddm, value, defaultValue ) {
 	} // end if
 	return false;
 } // end function ddm_select_by_value( ddm, value );
+
 function ddm_select_by_text( ddm, value, defaultValue ) {
 	if ( ddm ) {
-		for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
-			if ( ddm.options[index].text == value ) {
+    var options;
+    if ( ddm.options )
+      options = ddm.options;
+    else if ( ddm[0].options ) {
+      options = ddm[0].options;
+      ddm = ddm[0];
+    }
+
+		for ( var index = 0, len = options.length; index < len; index += 1 ) {
+			if ( options[index].text == value ) {
 				ddm_select_by_index( ddm, index );
 				return;
 			} // end if
@@ -294,6 +310,7 @@ function ddm_select_by_text( ddm, value, defaultValue ) {
 		alert( "null ddm passed to ddm_select_by_text" );
 	} // end if
 } // end function ddm_select_by_text( ddm, value );
+
 function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
 	var lowervalue = value.toLowerCase();
 	if ( ddm ) {
@@ -312,6 +329,7 @@ function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
 
 function filterDDM( filter, ddm ) {
 	if ( ! filter.value.length ) {
+		// If no filter content, restore default selected
 		if ( ! ddm.defaultSelected ) {
 			for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
 				if ( ddm.options[index].defaultSelected ) {
@@ -323,6 +341,7 @@ function filterDDM( filter, ddm ) {
 		ddm.selectedIndex = ddm.defaultSelected;
 		return;
 	} // end if
+
 	var old_selected_index = ddm.selectedIndex;
 	if ( old_selected_index <= 0 )
 		old_selected_index = 1;
@@ -1015,27 +1034,27 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 	var end_year = form.elements[ending_prefix+suffix+'_year'] ? form.elements[ending_prefix+suffix+'_year'].value : 0;
 	var end_month = form.elements[ending_prefix+suffix+'_month'] ? form.elements[ending_prefix+suffix+'_month'].value : 0;
 	var end_day = form.elements[ending_prefix+suffix+'_day'] ? form.elements[ending_prefix+suffix+'_day'].value : 0;
-	var end_hour = form.elements[ending_prefix+suffix+'_hour'] ? form.elements[ending_prefix+suffix+'_hour'].value : 0;
-	var end_minute = form.elements[ending_prefix+suffix+'_minute'] ? form.elements[ending_prefix+suffix+'_minute'].value : 0;
+	var end_hour = ( do_time && form.elements[ending_prefix+suffix+'_hour'] ) ? form.elements[ending_prefix+suffix+'_hour'].value : 23;
+	var end_minute = ( do_time && form.elements[ending_prefix+suffix+'_minute'] ) ? form.elements[ending_prefix+suffix+'_minute'].value : 59;
 
-	var start = new Date( start_year, start_month, start_day, start_hour, start_minute );
-	var end = new Date( end_year, end_month, end_day, end_hour, end_minute );
+	var start = new Date( start_year, start_month, start_day, start_hour, start_minute, 0 );
+	var end = new Date( end_year, end_month, end_day, end_hour, end_minute, 59 );
 
 	var difference = parseInt( ( end - start ) / 1000 );
 	var days = parseInt(difference/(60*60*24));
 
 	if ( do_time ) {
 		if ( unknown_time ) {
-			if(starting_time_elem)starting_time_elem.hide();
-			if(ending_time_elem)ending_time_elem.hide();
+			if ( starting_time_elem ) starting_time_elem.hide();
+			if ( ending_time_elem ) ending_time_elem.hide();
 
 			if ( form.elements[starting_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[starting_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_minute'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], 0 );
 		} else {
-			if(starting_time_elem)starting_time_elem.show();
-			if(ending_time_elem)ending_time_elem.show();
+			if ( starting_time_elem ) starting_time_elem.show();
+			if ( ending_time_elem ) ending_time_elem.show();
 		} // end if
 		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').show();
 		difference -= days * ( 60*60*24 );
@@ -1363,14 +1382,28 @@ onDestroy: function(eventName, win) {
 function toggle_input( ddm, txt ) {
 	ddm.toggle();
 	txt.toggle();
-	if ( ddm.visible() ) {
-		ddm.focus();
-		txt.value = '';
-	} 
-	if ( txt.visible() ) {
-		txt.focus();
-		ddm.selectedIndex = -1;
-	}
+  if ( ddm.visible ) {
+    if ( ddm.visible() ) {
+      ddm.focus();
+      txt.value = '';
+    } 
+    if ( txt.visible() ) {
+      txt.focus();
+      ddm.selectedIndex = -1;
+    }
+  } else {
+console.log("Using jquery visible");
+    if ( ddm.is(':visible') ) {
+console.log("ddm is visible");
+      ddm.focus();
+      txt.value = '';
+    } 
+    if ( txt.is(':visible') ) {
+console.log("txt is visible");
+      txt.focus();
+      ddm.prop('selectedIndex', 0 );
+    }
+  }
 }
 function getValues( form, element_names, more_values ) {
 	form = $(form);
@@ -1478,20 +1511,20 @@ function integerize(e) {
 }
 function to_hostname(e) {
 	if ( e.value.match(/\s/) ) {
-		e.value = parseFloat(e.value.replace(/\s/g,''));
+		e.value = e.value.replace(/\s/g,'');
 	} 
 }
 function floatize(e) {
-	if ( e.value.match(/[^\d\+\-\.%\*]/) ) {
-		e.value = parseFloat(e.value.replace(/[^\d\+\-\.%\*]/g,''));
+	if ( e.value.match(/[^\d\+\-\.%\*eE]/) ) {
+		e.value = parseFloat(e.value.replace(/[^\d\+\-\.%\*eE]/g,''));
 	} 
 	if ( e.value == 'NaN' )
 		e.value = '';
 	return e.value;
 }
 function positive_floatize(e) {
-	if ( e.value.match(/[^\d\+\.%\*]/) ) {
-		e.value = parseFloat(e.value.replace(/[^\d\+\.%\*]/g,''));
+	if ( e.value.match(/[^\d\+\.%\*eE]/) ) {
+		e.value = parseFloat(e.value.replace(/[^\d\+\.%\*eE]/g,''));
 	} 
 	if ( e.value == 'NaN' )
 		e.value = '';

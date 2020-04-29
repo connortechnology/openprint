@@ -19,6 +19,7 @@ require openprint::Host;
 require openprint::Log;
 require openprint::Asset;
 require openprint::Claim_Content;
+require openprint::ScheduledJob;
 use Date::Calc;
 use Apache::Session::Postgres;
 use File::Basename qw(basename);
@@ -50,18 +51,18 @@ foreach my $default ( keys %defaults ) {
     $$opts{$default} = $defaults{$default} if ! $$opts{$default};
 } # end foreach default
 
-$log = new logger(level=>'debug',program=>$program);
+$log = new logger(level=>'debug', program=>$program);
+
 # Get our configuration information
-if ( $$opts{config} ) {
-	if (my $err = configuration::from_file($$opts{config})) {
-		die $err;
-	}
+$$opts{config} = "/etc/openprint/$program.conf" if !$$opts{config};
+if (my $err = configuration::from_file($$opts{config})) {
+	$log->error($err);
 }
-configuration::merge( $opts );
+configuration::merge($opts);
 foreach my $param ( 'db_name','db_user','db_pass' ) {
-    if ( ! $config{$param} ) {
-        die "$program: missing required --$param parameter";
-    }
+	if ( ! $config{$param} ) {
+		die "$program: missing required --$param parameter";
+	}
 } # end foreach required-param
 
 my $r;
@@ -77,10 +78,12 @@ $openprint::dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 
 configuration::init( \%config );
+configuration::from_file($$opts{config});
+configuration::merge($opts);
 
 # Clear out old sessions
 my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
-$log->warn("Cleaning out sessions: " . @$session_ids . " sessions in system");
+$log->debug("Cleaning out sessions: " . @$session_ids . " sessions in system");
 my $deleted_session_count = 0;
 foreach my $session ( @$session_ids ) {
     $session =~ s/\s//g;
@@ -104,19 +107,19 @@ foreach my $session ( @$session_ids ) {
 	} # end if
 } # end foreach
 @$session_ids = ();
-$log->warn("Deleted $deleted_session_count sessions");
+$log->debug("Deleted $deleted_session_count sessions");
 
-if ( openprint::Order->find_one() ) {
+if ( 0 and openprint::Order->find_one() ) {
 # Clean out unfinished Orders
 	my @Orders = openprint::Order->find('status'=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
-	$log->warn('Cleaning out ' . @Orders . ' incomplete orders');
+	$log->debug('Cleaning out ' . @Orders . ' incomplete orders');
 	foreach my $Order ( @Orders ) {
 		$Order->delete();
 	} # end foreach
 } # end if
 if ( openprint::Quote->find_one() ) {
 	my @Quotes = openprint::Quote->find('status'=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) );
-	$log->warn('Cleaning out ' . @Quotes . ' incomplete quotes ');
+	$log->debug('Cleaning out ' . @Quotes . ' incomplete quotes ');
 	foreach my $Quote ( @Quotes ) {
 		$Quote->delete();
 	} # end foreach
@@ -131,7 +134,7 @@ if ( ( exists $config{RFID} ) and $config{RFID} ) {
 			'updated_on <'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
 			'updated_on >'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
 			);
-	$log->warn( "Scanner History Entries: " . @Hs );
+	$log->debug( "Scanner History Entries: " . @Hs );
 	foreach my $H ( @Hs ) {
 		$H->delete();
 	} # end foreach H
@@ -139,7 +142,7 @@ if ( ( exists $config{RFID} ) and $config{RFID} ) {
 			'updated_on <'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
 			'updated_on >'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
 			);
-	$log->warn( "Tag History Entries: " . @Hs );
+	$log->debug( "Tag History Entries: " . @Hs );
 	foreach my $H ( @Hs ) {
 		$H->delete();
 	} # end foreach H
@@ -148,7 +151,7 @@ if ( ( exists $config{RFID} ) and $config{RFID} ) {
 			'skid_id exists'=>	0,
 			'type'			=>	'Skid',
 			);
-	$log->warn( "Tag History Entries (unassigned and old): " . @old_unassigned_tags );
+	$log->debug( "Tag History Entries (unassigned and old): " . @old_unassigned_tags );
 	foreach my $H ( @old_unassigned_tags ) {
 		next if $H->skid_id();
 		$H->delete();
@@ -195,11 +198,27 @@ $openprint::log->debug("Updating wpsi (old: $old_wpsi, new: $$Paper{wpsi}) for "
 
 if ( 1 ) {
 my $log_count = 0;
-foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -2*365 ) ) ) ) {
+# Delete all logs more than 2 years
+foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d 00:00:00',
+				Date::Calc::Add_Delta_Days( Date::Calc::Today(), -2*365 ) ) )
+		) {
 	$Log->delete();
 	$log_count += 1;
 } # end foreach Log
-$log->warn("Deleted $log_count log entries");
+$log->debug("Deleted $log_count log entries");
+
+$log_count = 0;
+# Delete all WAP connections logs more than 7days
+foreach my $Log (
+		openprint::Log->find(
+			'date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -7)),
+			action	=>	'Update',
+			'note like'	=> 'Connection to %', )
+		) {
+	$Log->delete();
+	$log_count += 1;
+} # end foreach Log
+$log->debug("Deleted $log_count log entries for connection updates");
 }
 
 #if ( $config{AssetPath} ) {
@@ -243,7 +262,7 @@ foreach my $Skid ( openprint::Skid->find(
         $deleted_skids += 1;
     } # end if
 } # end foreach Skid
-$log->warn("Deleted $deleted_skids skids");
+$log->debug("Deleted $deleted_skids skids");
 
 if ( 1 ) {
 	# Resolve any unresolved IP's
@@ -259,6 +278,11 @@ if ( 1 ) {
 			}
 			$Host->save({ resolved_on	=> 'NOW()' });
 	} # end foreach Host
+}
+foreach my $Job ( openprint::ScheduledJob->find(
+			'starttime <' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -3 ) ),
+) ) {
+	$Job->delete();
 }
 
 $dbh->disconnect();

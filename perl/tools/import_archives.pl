@@ -15,15 +15,24 @@ use vars qw( $log $dbh %config %session );
 *config = \%openprint::config;
 *session = \%openprint::session;
 
-$log = new logger( 'debug' );
+$log = new logger('debug');
 
 $openprint::Object::no_cache = 1;
-$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>'database') );
-die "Unable to connect to db." if ! $dbh;
+
+my %db_connect_info = (
+#port    => $config{db_port},
+		host		=>'database'
+		database	=>$ARGV[0],
+		driver    => 'Pg',
+		login		=>$ARGV[1],
+		password	=>$ARGV[2],
+		);
+
+$dbh = sql::open_sql( $log, %db_connect_info );(
+die 'Unable to connect to db.' if !$dbh;
 configuration::init();
 configuration::from_file('/etc/openprint/import_archives.conf');
 $log = new logger( {file=>$config{log_file}, level=>$config{log_level}} );
-
 
 foreach my $archive_dir ( split( ',', $config{'Archive_Directories'} ) ) {
 	$log->error("Checking in $archive_dir");
@@ -32,14 +41,24 @@ foreach my $archive_dir ( split( ',', $config{'Archive_Directories'} ) ) {
 
 sub get_files {
 	my ( $archive, $path ) = @_;
+
+	while ( ! ($dbh and $dbh->ping() ) ) {
+		$dbh = sql::open_sql( $log, %db_connect_info );
+		if ( ! $dbh ) {
+			$log->error('Cannot connect to db! Sleeping');
+			sleep(10);
+		} # end if
+	} # end while no db connection
+
 	my @filenames;
-    if ( opendir DIRHANDLE, $archive.'/'.$path ) {
-        @filenames = readdir DIRHANDLE;
-        closedir DIRHANDLE;
-    } else {
-        $log->error( "Cannot open $archive/$path" );
+	if ( opendir DIRHANDLE, $archive.'/'.$path ) {
+		@filenames = readdir DIRHANDLE;
+		closedir DIRHANDLE;
+	} else {
+		$log->error( "Cannot open $archive/$path" );
 		return;
-    } # end if
+	} # end if
+
 	foreach my $file ( @filenames ) {
 		next if $file =~ /^\./;
 

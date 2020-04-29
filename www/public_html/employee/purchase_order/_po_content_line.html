@@ -3,9 +3,14 @@
 
 	my $C = $$variable{C};
 
-	my $html .= sprintf('<div class="item" id="line-%1$d">', $C->id() );
-	$html .= '<div class="buttons">'.button( 'del-'.$C->id(), { onclick=>qq`new Ajax.Request('/employee/purchase_order/_po_content_line.html?action=delete&amp;id=$$C{'id'}', { onSuccess: function(){var tr = \$('line-$$C{id}'); tr.remove();update_totals(\$('f1'));} } );`,text=>'-', title=>'Delete' } );
-	$html .= sprintf(q`<input type="hidden" name="type_id-%1$d" id="type_id-%1$d" value="%3$d"/><input type="hidden" id="type-%1$d" name="type-%1$d" value="%2$s"/></div>`, $C->id(), $C->type(), $C->type_id() );
+	my $html .= sprintf('
+<div class="item" id="line-%1$d">
+  <div class="buttons">%4$s</div>
+	<input type="hidden" name="type_id-%1$d" id="type_id-%1$d" value="%3$d"/>
+	<input type="hidden" id="type-%1$d" name="type-%1$d" value="%2$s"/>',
+		$C->id(), $C->type(), $C->type_id(),
+		button('del-'.$C->id(), { onclick=>qq`del_poc($$C{id});`,text=>'-', title=>'Delete' } ),
+		);
 
 	if ( $C->Type()->type() eq 'Roll Stock' ) {
 		my ( $type, $name );
@@ -48,7 +53,7 @@
 		);
 	} elsif ( $C->Type()->type() eq 'Sheet Stock' ) {
 		my ( $mweight, $type, $name ) = $C->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
-		if ( ! sets::isin( $type, [ '', 'FSC', 'PEFC/SFI' ] ) ) {
+		if ( $type and ! sets::isin( $type, [ '', 'FSC', 'PEFC/SFI' ] ) ) {
 			$name = $type . ' ' . $name;
 			$type = '';
 		} # end if

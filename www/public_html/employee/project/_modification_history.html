@@ -71,12 +71,10 @@
 		} # end foreach
 
 		if ( $$variable{Project} ) {
-$log->debug("ordered: $ordered scheduled start $scheduled_start prepress_start: $prepress_start");
 						$scheduled_end = Date::Parse::str2time( $scheduled_end ) if $scheduled_end;
 						$scheduled_start = Date::Parse::str2time( $scheduled_start ) if $scheduled_start;
 						$ordered = Date::Parse::str2time( $ordered ) if $ordered;
 						$prepress_start = Date::Parse::str2time( $prepress_start ) if $prepress_start;
-$log->debug("ordered: $ordered scheduled start $scheduled_start prepress_start: $prepress_start");
 			$html .= '<tr class="totals">';
 			$html .= '<td colspan="2">Time spent before prepress action:</td><td colspan="2">'. misc::seconds_to_pretty_interval( $prepress_start - $ordered) . '</td></tr>';
 			$html .= '<tr><td colspan="2">Time spent before first scheduled:</td><td colspan="2">'. misc::seconds_to_pretty_interval( $scheduled_start - $ordered) . '</td></tr>';

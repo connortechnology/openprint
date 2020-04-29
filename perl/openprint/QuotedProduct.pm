@@ -40,11 +40,11 @@ $serial = 'Quoted_Products_id_seq';
 );
 
 sub Quote {
-	return new openprint::Quote( $_[0]{'quote_id'} );
+	return new openprint::Quote( $_[0]{quote_id} );
 } # end sub Quote
 
 sub Product {
-	return new openprint::Product( $_[0]{'product_id'} );
+	return new openprint::Product( $_[0]{product_id} );
 } # end sub Product
 
 sub description {
@@ -57,32 +57,44 @@ sub name {
 sub cost {
 	my ( $self, $new_value ) = @_;
 	if ( @_ == 2 ) {
-		$$self{'cost'} = $new_value;
+		$$self{cost} = $new_value;
 	} # end if
-	if ( ! defined $$self{'cost'} ) {
+	if ( ! defined $$self{cost} ) {
 		my %Price = $self->Product()->get_price($self->quantity());
-		$$self{'cost'} = $Price{'Price'};
+		$$self{cost} = $Price{Price};
 	} # end if
-	return $$self{'cost'};
+	return $$self{cost};
 } # end sub cost
+
+sub units {
+	my ( $self, $new_value ) = @_;
+	if ( @_ == 2 ) {
+		$$self{units} = $new_value;
+	} # end if
+	if ( ! defined $$self{units} ) {
+		my %Price = $self->Product()->get_price($self->quantity());
+		$$self{units} = $Price{units};
+	} # end if
+	return $$self{units};
+}
 
 sub price {
 	my ( $self, $new_value ) = @_;
 	if ( @_ == 2 ) {
-		$$self{'price'} = $new_value;
+		$$self{price} = $new_value;
 	} # end if
-	if ( ! defined $$self{'price'} ) {
-		$$self{'price'} = Math::Round::nearest(0.01, $self->cost() * $$self{'quantity'} * ( 1 + $$self{'markup'}/100 ) );
+	if ( ! defined $$self{price} ) {
+		$$self{price} = Math::Round::nearest(0.01, $self->cost() * $$self{quantity} * ( 1 + $$self{markup}/100 ) );
 	} # end if
-	return $$self{'price'};
+	return $$self{price};
 } # end sub total
 
 sub quantity {
 	my ( $self, $new_value ) = @_;
 	if ( @_ == 2 ) {
-		$$self{'quantity'} = $new_value;
+		$$self{quantity} = $new_value;
 	} # end if
-	return $$self{'quantity'};
+	return $$self{quantity};
 } # end sub total
 
 sub save {
@@ -91,9 +103,10 @@ sub save {
 		return $error;
 	} # end if
 	my $Quote = $self->Quote();
-	delete $$Quote{'Products'};
+	delete $$Quote{Products};
 	return;
 } # end sub save
+
 sub copy {
 	no strict 'refs';
 	my $type = ref $_[0];

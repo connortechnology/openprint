@@ -135,6 +135,7 @@ sub data_to_csv {
 	push @data, $csv->string() . "\n";
 
 	for ( my $index = 0; $index < @{$data}; $index += 1 ) {
+		next if ! defined($$data[$index]);
 		$$data[$index] =~ s/[\n\r]//g; # these really mess up the CSV
 	} # end for
 	
@@ -279,20 +280,24 @@ sub seconds_to_pretty_interval {
 
 	my $days = int ( $remainder / ( 60* 60 * 24 ) );
 	$remainder = $remainder % ( 60 * 60 * 24 );
-	if ( sets::isin( $days, [ 28,29,30,31 ] ) ) {
-		$string .= '1 month';
-		return $string;
-	} else {
-    if ( $remainder and ! ( $remainder % (60*60 ) ) ) {
-      $string .= $days * 24 + ( $remainder / 3600 ).'h'; 
-      $remainder = 0;
-    } elsif ( $days ) {
-      $string .= sprintf('%dd', $days );
+	if ( sets::isin($days, [ 28,29,30,31 ]) ) {
+$openprint::log->debug("Remainder: $remainder");
+    if ( (! $remainder) or ( $remainder == 82800 ) ) {
+      $string .= '1 month';
+      return $string;
     }
-	} # end if
-	return $string if ! $remainder;
+	}
+ #else {
+    #if ( $remainder and ! ( $remainder % (60*60 ) ) ) {
+      #$string .= $days * 24 + ( $remainder / 3600 ).'h'; 
+      #$remainder = 0;
+    #} elsif ( $days ) {
+      #$string .= sprintf('%dd', $days );
+    #}
+	#} # end if
+	#return $string if ! $remainder;
 
-	$string .= seconds2hms( $remainder );
+	$string .= seconds2hms( $days * 60 * 60 * 24 + $remainder );
 	return $string;
 } # end sub seconds_to_pretty_interval
 
@@ -393,6 +398,15 @@ sub format_bytes {
 	} # end if
 } # end sub format_bytes
 
+sub seconds2hm {
+  my ( $seconds ) = @_;
+  my $hours = int( $seconds / (60*60) );
+  $seconds = $seconds % ( 60*60 );
+  my $minutes = int ( $seconds / 60 );
+
+  return sprintf('%d:%.2d', $hours, $minutes );
+} # end sub seconds2hm
+
 sub seconds2hms {
 	my ( $seconds ) = @_;
 	my $hours = int( $seconds / (60*60) );
@@ -441,7 +455,7 @@ sub find_entry {
 $openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
 		return if ( $$x{max} and ( $$x{max} < $range ) and ! $$x{interpolate} );
 	} else {
-$openprint::log->debug("Couldn't find monimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
+$openprint::log->debug("Couldn't find minimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
 		return;	
 	}
 	for ( ; $i < @{$array}; $i += 1 ) {
@@ -454,23 +468,23 @@ $openprint::log->debug("Couldn't find monimum for $name : $range on " . ( $$arra
 	} # end foreach
 	if ( $i and $i < @{$array} ) {
 		$y = $$array[$i];
-$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
-    } else {
-$openprint::log->debug("Couldn't find maximum for $name") if $debug;
-        return;
-    } # end if
+		$openprint::log->debug('Found spec max '.$y->min().' '.$y->max().' : '.$y->value()) if $debug;
+	} else {
+		$openprint::log->debug("Couldn't find maximum for $name") if $debug;
+		return;
+	} # end if
 
-    if ( $x == $y ) {
-        return $x;
-    } elsif ( $$x{interpolate} ) {
-        my $Object = $x->copy();
-        $$Object{min} = $$Object{max} = $range;
-        $$Object{value} = $$x{value} + ($range - $$x{min})*($$y{value}-$$x{value})/($$y{min}-$$x{min});
-$openprint::log->debug("Returning " . $$Object{value}) if $debug;
-        return $Object;
-    } # end if
-$openprint::log->debug("Returning nothing") if $debug;
-    return;
+	if ( $x == $y ) {
+		return $x;
+	} elsif ( $$x{interpolate} ) {
+		my $Object = $x->copy();
+		$$Object{min} = $$Object{max} = $range;
+		$$Object{value} = $$x{value} + ($range - $$x{min})*($$y{value}-$$x{value})/($$y{min}-$$x{min});
+		$openprint::log->debug("Returning " . $$Object{value}) if $debug;
+		return $Object;
+	} # end if
+	$openprint::log->debug("Returning nothing") if $debug;
+	return;
 } # end sub find_entry
 
 sub add_delta_business_days {
@@ -534,6 +548,54 @@ $openprint::log->debug("Have @filenames from $_[0]");
 	return @results;
 }
 
+sub make_hash_from_array {
+	my $key = shift;
+	my %results;
+	foreach my $object ( @_ ) {
+		$results{$$object{$key}} = [] if ! $results{$$object{$key}};
+		push @{$results{$$object{$key}}}, $object;
+	}
+	return wantarray ? %results : \%results;
+}
+
+sub compare_hash {
+	my ( $a, $b ) = @_;
+
+	return 0 if ( (!$a) and (!$b) );
+	return 1 if ($a and !$b) or ( !$a and $b );
+
+	if (%{$a} != %{$b}) {
+		return 1;
+	} else {
+		my %cmp = map { $_ => 1 } keys %{$a};
+		for my $key (keys %{$b}) {
+			last unless exists $cmp{$key};
+			last unless $$a{$key} eq $$b{$key};
+			delete $cmp{$key};
+		}
+		if (%cmp) {
+			return 1;
+		}
+		return 0
+	}
+} # end sub compare_hash
+
+sub json_to_html {
+	my ($input) = @_;
+	my $html;
+	if ( ref $input eq 'ARRAY' ) {
+		$html .= '<ol>'. join("\n", map { '<li>'.json_to_html($_).'</li>' } @$input ).'</ol>';
+	} elsif ( ref $input eq 'HASH' ) {
+		$html .= '<table>';
+		for my $k (sort keys %$input) {
+			$html .= '<tr><th>'.$k.'</th><td>'.json_to_html($input->{$k}).'</td></tr>';
+		}
+		$html .= '</table>';
+	} else {
+		$html .= '<span>'.$input.'</span>';
+	}
+	return $html;
+}
 
 1;
 __END__

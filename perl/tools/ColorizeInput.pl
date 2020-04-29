@@ -11,9 +11,9 @@
 # match of the tokens below. To add an error type match, add the
 # appropriate string to match below.
 #
-my @error_tokens = ('error\]');
+my @error_tokens = ('error\]','ERR');
 #my @error_tokens = ('error',"Error", "ERROR", "ERR");
-my @warning_tokens = ('warn',"Warning", "WARNING", "WARN");
+my @warning_tokens = ('warn',"Warning", "WAR");
 
 #
 # Console colors and attributes are set by the following mapping.

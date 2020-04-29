@@ -12,39 +12,40 @@ $table = 'Service_Prices';
 $serial = 'service_prices_id_seq';
 
 %fields = (
-	id				=>	'id',
-	owner_id		=>	'owner_id',
-	pricelist_id	=>	'pricelist_id',
-	service_id		=>	'service_id',
-	equipment_id	=>	'equipment_id',
-	min				=>	'min',
-	max				=>	'max',
-	units			=>	'units',
-	cost			=>	'cost',
-	markup			=>	'markup',
-	price			=>	'price',
-	discountable	=>	'discountable',
-	mode			=>	'mode',
-	supplier_id		=>	'supplier_id',
-	period_start	=>	'period_start',
-	period_end		=>	'period_end',
+	id							=>	'id',
+	owner_id				=>	'owner_id',
+	pricelist_id		=>	'pricelist_id',
+	service_id			=>	'service_id',
+	equipment_id		=>	'equipment_id',
+	min							=>	'min',
+	max							=>	'max',
+	range_units			=>	'range_units',
+	units						=>	'units',
+	cost						=>	'cost',
+	markup					=>	'markup',
+	price						=>	'price',
+	discountable		=>	'discountable',
+	mode						=>	'mode',
+	supplier_id			=>	'supplier_id',
+	period_start		=>	'period_start',
+	period_end			=>	'period_end',
 );
 %find_fields  = 	(
 	service_name	=>	'(SELECT name from services WHERE services.id=service_id)',
 );
 %defaults = (
-	min		=>	undef,
-	max		=>	undef,
-	cost	=>	undef,
-	markup	=>	undef,
-	price			=>	undef,
-	discountable	=>	q`'Y'`,
-	mode			=>	undef,
+	min							=>	undef,
+	max							=>	undef,
+	cost						=>	undef,
+	markup					=>	undef,
+	price						=>	undef,
+	discountable		=>	q`'Y'`,
+	mode						=>	undef,
 	period_start    =>  undef,
 	period_end      =>  undef,
-	supplier_id		=>	undef,
-	equipment_id	=>	undef,
-	owner			=>	q`$openprint::Owner->id()`,
+	supplier_id			=>	undef,
+	equipment_id		=>	undef,
+	owner						=>	q`$openprint::Owner->id()`,
 );
 
 %transforms = (
@@ -70,13 +71,13 @@ sub Service {
 }
 
 sub price {
-    if ( @_ > 1 ) {
-        $_[0]{price} = $_[1];
-    } # end if
-    if ( ! defined $_[0]{price} ) {
-        $_[0]{price} = $_[0]{markup} ? Math::Round::nearest( 0.01, $_[0]{cost} * ( 1+($_[0]{markup}/100) ) ) : $_[0]{cost};
-    } # end if
-    return $_[0]{price};
+	if ( @_ > 1 ) {
+		$_[0]{price} = $_[1];
+	} # end if
+	if ( ! defined $_[0]{price} ) {
+		$_[0]{price} = $_[0]{markup} ? Math::Round::nearest( 0.01, $_[0]{cost} * ( 1+($_[0]{markup}/100) ) ) : $_[0]{cost};
+	} # end if
+	return $_[0]{price};
 } # end sub price
 
 sub markup {
@@ -86,6 +87,7 @@ sub markup {
 	} # end if
 	return $_[0]{markup};
 } # end sub markup
+
 sub cost {
 	if ( @_ > 1 ) {
 		$_[0]{cost} = $_[1];

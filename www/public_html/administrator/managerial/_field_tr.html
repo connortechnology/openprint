@@ -1,5 +1,5 @@
 <? echo (
-	my $Field = $$variable{'Field'};
+	my $Field = $$variable{Field};
 	if ( $Field->id() ) {
 
 	return sprintf(q`<tr id="field_%1$d">
@@ -16,23 +16,23 @@
 			<td class="onregistration">%12$s</td>
 			<td class="buttons">%13$s</td>
 		</tr>`, $Field->id(), $Field->name(), $Field->description(),
-			ssi::make_drop_down( [ map { $_, $_ } ('date','checkbox', 'text', 'number', 'radio', 'select-one','location','country','state','city' ) ], $Field->type() ),
+			make_drop_down( [ map { $_, $_ } ('date','checkbox', 'email', 'text', 'number', 'tel', 'radio', 'select-one','location','country','state','city' ) ], $Field->type() ),
 			( $Field->values() ? join(',', @{$Field->values()} ) : '' ),
 			( $Field->defaults() ? join(',', @{$Field->defaults()} ) : '' ),
-			ssi::radio( 'required-'.$Field->id(), [1,'Yes',0,'No'], $Field->required() ),
-			ssi::radio( 'searchable-'.$Field->id(), [1,'Yes',0,'No'], $Field->searchable() ),
-			ssi::input( name=>'search_default-'.$Field->id(), (value=>$Field->search_default()), type=>'text' ),
-			ssi::input( name=>'match-'.$Field->id(), (value=>$Field->match()), type=>'text' ),
-			ssi::radio( 'viewable-'.$Field->id(), [1,'Yes',0,'No'], $Field->viewable() ),
-			ssi::radio( 'on_registration-'.$Field->id(), [1,'Yes',0,'No'], $Field->on_registration() ),
+			radio( 'required-'.$Field->id(), [1,'Yes',0,'No'], $Field->required(), { onclick=>'check_field(this);' } ),
+			radio( 'searchable-'.$Field->id(), [1,'Yes',0,'No'], $Field->searchable(), { onclick=>'check_field(this);' } ),
+			input( name=>'search_default-'.$Field->id(), (value=>$Field->search_default()), type=>'text' ),
+			input( name=>'match-'.$Field->id(), (value=>$Field->match()), type=>'text' ),
+			radio( 'viewable-'.$Field->id(), [1,'Yes',0,'No'], $Field->viewable(), { onclick=>'check_field(this);' } ),
+			radio( 'on_registration-'.$Field->id(), [1,'Yes',0,'No'], $Field->on_registration(), { onclick=>'check_field(this);' } ),
 			
-		join('', 
-			ssi::button( 'x'.$Field->id(), { 'onclick'=>qq`delField( $$Field{id} );`, 'text'=>'X' } ),
-			ssi::button( 'c'.$Field->id(), { 'onclick'=>qq`copyField( $$Field{id} );`, 'text'=>'C' } ),
-			( $Field->sort() ? ( ssi::button( 'u'.$Field->id(), { 'onclick'=>qq`upField( $$Field{id} );`, 'text'=>'U' } ) ) : () ),
+		join("\n", 
+			button( 'x'.$Field->id(), { onclick=>qq`delField( $$Field{id} );`, text=>'X' } ),
+			button( 'c'.$Field->id(), { onclick=>qq`copyField( $$Field{id} );`, text=>'C' } ),
+			( $Field->sort() ? ( button( 'u'.$Field->id(), { onclick=>qq`upField( $$Field{id} );`, text=>'U' } ) ) : () ),
 			),
 		);
-	} elsif ( $$variable{'error'} ) {
+	} elsif ( $$variable{error} ) {
 		return qq`<script type="text/javascript">alert('$$variable{error}');</script>`;
 	} # end if
 ) ?>

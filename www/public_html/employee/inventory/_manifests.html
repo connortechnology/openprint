@@ -96,63 +96,72 @@
 <?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{Manifests}} ) ?>
 <form id="ManifestResults" name="ManifestResults" action="manifests.html" method="post">
-	<table id="ResultsTable" class="List sortable">
-		<tr>
-			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'manifests', this.checked );"/></th>
-			<th class="manifest_num">Manifest #</th>
-			<th class="po_id">PO ID</th>
-			<th class="Docket">Docket</th>
-			<th class="Company">Vendor</th>
-			<th class="Date">Received On</th>
-			<th class="contents">Contents</th>
-			<? if ( $$variable{canseepricing} ) ?>
-			<th class="Price">Value</th>
-			<? endif ( $$variable{canseepricing} ) ?>
-		</tr>
+	<table id="ResultsTable" class="List">
+    <thead class="sortable">
+			<tr>
+				<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'manifests', this.checked );"/></th>
+				<th class="manifest_num">Manifest #</th>
+				<th class="po_id">PO ID</th>
+				<th class="Docket">Docket</th>
+				<th class="Company">Vendor</th>
+				<th class="Date">Received On</th>
+				<th class="contents">Contents</th>
+				<? if ( $$variable{canseepricing} ) ?>
+				<th class="Price">Value</th>
+				<? endif ( $$variable{canseepricing} ) ?>
+			</tr>
+		</thead>
+		<tbody>
 		<? echo (
 			my $html;
 			my $rowclass;
-			my $value_total;
+			my $value_total = 0;
 			my $ac = sql::start_transaction( $dbh );
 
 			my @manifest_ids = map { $$_{id} } @{$$variable{Manifests}};
 	
-			my @ManifestContentTypes = openprint::Manifest_Content_Type->find( manifest_id=>\@manifest_ids );
+			my @ManifestContentTypes = openprint::Manifest_Content_Type->find(manifest_id=>\@manifest_ids);
+
 			my @po_ids = map { $_->po_id() } @ManifestContentTypes;
-			my @POs	= openprint::PurchaseOrder->find( id=>\@po_ids );
+			my @POs	= openprint::PurchaseOrder->find(id=>\@po_ids);
 
-			my %POCs;
-			foreach my $POC ( openprint::PurchaseOrder_Content->find( id=>\@po_ids, order=>'id' ) ) {
-				push @{$POCs{$$POC{po_id}}}, $POC;
-			}
+			my %POCs = misc::make_hash_from_array( 'po_id', 
+				openprint::PurchaseOrder_Content->find(po_id=>\@po_ids, order=>'id') ) if @POs;
+
 			foreach my $PO ( @POs ) {
-				$PO->Contents( $POCs{$$PO{id}} );
+				$PO->Contents($POCs{$$PO{id}});
 			}
 
-			my %ManifestCTs;
-			foreach my $MCT ( @ManifestContentTypes ) {
-				$ManifestCTs{$$MCT{manifest_id}} = [] if ! $ManifestCTs{$$MCT{manifest_id}};
-				push @{$ManifestCTs{$$MCT{manifest_id}}}, $MCT;
-			}
-
+			my %ManifestCTs = misc::make_hash_from_array('manifest_id', @ManifestContentTypes);
+			my %Manifest_Types = map { $$_{id} => $_ } @ManifestContentTypes;
 		
-			my @MContents = openprint::ManifestContent->find( manifest_id=>\@manifest_ids );
-			my %MContents;
-			foreach my $MC ( @MContents ) {
-				push @{$MContents{$$MC{manifest_id}}}, $MC;
-			} # end foreach MC
+			my @MContents = openprint::ManifestContent->find(manifest_id=>\@manifest_ids);
+			my %MContents = misc::make_hash_from_array('manifest_id', @MContents);
 
 			my %SkidContents = ();
 			my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @MContents;
 			if ( @skid_ids ) {
-				openprint::Skid->find( id=>\@skid_ids );
+				openprint::Skid->find(id=>\@skid_ids);
 				foreach my $SC ( openprint::SkidContent->find(skid_id=>\@skid_ids) ) {
 					push @{$SkidContents{$$SC{skid_id}}}, $SC;
 				} # end foreach
 			} # end if
 
 			foreach my $Manifest ( @{$$variable{Manifests}} ) {
-				$Manifest->Contents( $MContents{$$Manifest{id}} ? $MContents{$$Manifest{id}} : [] );
+				$r->print('');
+				if ( $r->connection()->aborted() ) {
+					$log->warn("ABORTED");
+					return;
+				} # end if
+
+				if ( $MContents{$$Manifest{id}} ) {
+					$Manifest->Contents($MContents{$$Manifest{id}});
+					foreach my $MC ( @{$MContents{$$Manifest{id}}} ) {
+						$MC->Type($Manifest_Types{$$MC{type_id}});
+					}
+				} else { 
+					$Manifest->Contents([]);
+				}
 				$$Manifest{Types} = $ManifestCTs{$$Manifest{id}} if $ManifestCTs{$$Manifest{id}};
 
 				if ( $session{'/employee/inventory/manifests.html?delivery'} ) {
@@ -164,6 +173,7 @@
 						next if ! $Type->po_id();
 
 						my $PO_Content = $Type->PurchaseOrder_Content();
+						$PO_Content = $Type->PurchaseOrder_Content({ignore_fsc=>1}) if !$PO_Content;
 						next if ! $PO_Content;
 
 						my $quantity = 0;
@@ -194,7 +204,6 @@
 
 				my $value = 0;
 
-
 				# Why? We are counting the # of skids and weight on the manifest
 				# Supposedly to compare to the actual skid contents
 				foreach my $MC ( $Manifest->Contents() ) {
@@ -210,13 +219,14 @@
 						$real_weight{$C->paper_id} += $MC->quantity();
 					} # end foreach paper on skid
 					$value += $MC->value();	
+$log->debug("Value from $$MC{manifest_id} $value");
 				} # end foreach MC
 
 				my $error = $Manifest->check();
 				next if $error and $session{'/employee/inventory/manifests.html?has_errors'} eq '0';
 				next if (!$error) and $session{'/employee/inventory/manifests.html?has_errors'} eq '1';
 
-				$html .= sprintf(q`<tr>
+				$html .= sprintf(q`<tr%9$s>
 				<td class="checkbox"><input type="checkbox" name="manifests" value="%1$s"/></td>
 				<td class="manifest_num"><a href="manifest_view.html?manifest_id=%1$s">%2$s</a></td>
 				<td class="po_id"><a href="manifest_view.html?manifest_id=%1$s">%3$s</a></td>
@@ -228,6 +238,7 @@
 					format_date( $Manifest->received_on() ),
 					format_date( $Manifest->updated_on() ),
 					format_datetime( $Manifest->updated_on() ),
+$rowclass,
 					);
 
 				$html .= '<td class="contents">';
@@ -237,9 +248,11 @@
 					$html .= sprintf('%s : %d%s : %d %s%s', $Paper->to_string(), $manifest_weight{$paper_id}, $Paper->units(), $manifest_skids{$paper_id},
   ( $Paper->type() eq 'Roll' ? 'roll' : 'skid' ), ( $manifest_skids{$paper_id} ==1 ? '' : 's' ) );
 					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) {
-						my $Type = openprint::Manifest_Content_Type->find_one('manifest_id'=>$Manifest->id(), 'paper_id'=>($paper_id?$paper_id:undef));
+						my %types = map { $$_{paper_id}, $_ } @{$ManifestCTs{$$Manifest{id}}} if $ManifestCTs{$$Manifest{id}};
+						my $Type = $types{$paper_id?$paper_id:undef};
 						if ( $Type ) {
 							my $POC = $Type->PurchaseOrder_Content();
+							$POC = $Type->PurchaseOrder_Content({ignore_fsc=>1}) if !$POC;
 
 							$html .= ' @ ' . ( $POC ? openprint::Currency::format( $POC->price() ) : '0.00' ). '/100lbs';
 						} # end if
@@ -262,26 +275,28 @@
 				
 				$html .= '</td>';	
 				if ( $$variable{canseepricing} ) {
-					$html .= '<td class="Price">'.openprint::Currency::format( $value ).'</td>';
+$log->debug("Value from $$Manifest{id} $value");
+					$html .= '<td class="Price">'.openprint::Currency::format($value).'</td>';
 					$value_total += $value;
 				} # end if
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
+$log->debug("$value_total");
 			} # end foreach Manifest
 			sql::end_transaction( $dbh, $ac );
+			$html .= '</tbody>';
 			if ( $$variable{canseepricing} ) {
-				$html .= '<tr class="totals"><td colspan="7">Total</td><td class="Price">'.openprint::Currency::format( $value_total ).'</td></tr>';
+$log->debug("$value_total");
+				$html .= '<tfoot><tr class="totals"><td colspan="7">Total</td><td class="Price">'.openprint::Currency::format( $value_total ).'</td></tr></tfoot>';
 			} # end if
 			
 			return $html;
 		) ?>
 	</table>
-<script type="text/javascript">
-TableKit.Sortable.init('ResultsTable');
-</script>
+<script> TableKit.reloadTable('ResultsTable'); </script>
 	<input type="hidden" name="btnFunction"/>
 	<p class="buttons">
-		<? echo ( join('',
+		<? echo ( join("\n",
 					button( 'Delete', { onclick=>q`ManifestResults.btnFunction.value='Delete';ManifestResults.submit();`, text=>'Delete Checked' } ),
 			); ) ?>
 	</p>

@@ -45,20 +45,20 @@ sub view {
 
 	my $project_index = $param{ProjectIndex};
 	$project_index = $param{project_id} if ! $project_index;
-	$project_index = openprint::Project->transform('id', $project_index );
+	$project_index = openprint::Project->transform('id', $project_index);
 		
 	if ( ! $project_index ) {
 		if ( $param{Docket} ) {
 			$param{Docket} =~ s/\D//g;
 			if ( $param{Docket} ) {
-				if ( my @Projects = openprint::Project->find('docket'=>$param{Docket}) ) {
+				if ( my @Projects = openprint::Project->find(docket=>$param{Docket}) ) {
 					$project_index = $Projects[0]->id();
 				} # end if
 			} # end if
 		} elsif ( $param{docket} ) {
 			$param{docket} =~ s/\D//g;
 			if ( $param{docket} ) {
-				if ( my @Projects = openprint::Project->find('docket'=>$param{docket}) ) {
+				if ( my @Projects = openprint::Project->find(docket=>$param{docket}) ) {
 					$project_index = $Projects[0]->id();
 				} # end if
 			} # end if
@@ -85,9 +85,23 @@ sub view {
 		( $order_id ) = sql::execute( $log, $dbh, q{SELECT id FROM Orders WHERE id IN ( SELECT DISTINCT OrderIndex FROM Order_Contents WHERE lngProjectIndex=? ) AND docket=?}, $project_index, $param{Docket} );
 	} # end if
 	$variable{OrderID} = $order_id;
-	$variable{Order} = new openprint::Order( $order_id );
+	my $Order = $variable{Order} = new openprint::Order( $order_id );
 
-	if ( $param{action} eq 'Change Status' ) {
+	if ( $param{action} eq 'DoNotPayCommission' ) {
+		if ( $session{user_type} eq 'A' ) {
+			$Order->save({do_not_pay_commission=>1});
+			(new openprint::Log())->save({Object=>$Order, action=>'Save', note=>'Mark Order as Do Not Pay Commission'});
+		} else {
+			$variable{error} .= 'You do not have permission.';
+		}
+	} elsif ( $param{action} eq 'PayCommission' ) {
+		if ( $session{user_type} eq 'A' ) {
+			$Order->save({do_not_pay_commission=>0});
+			(new openprint::Log())->save({Object=>$Order, action=>'Save', note=>'Mark Order as Ok To Pay Commission'});
+		} else {
+			$variable{error} .= 'You do not have permission.';
+		}
+	} elsif ( $param{action} eq 'Change Status' ) {
 		foreach my $service_id ( split(',', $param{service_id} ) ) {
 			my $Service = $Project->Service( $service_id );
 			if ( ! $Service->service_id() ) {
@@ -167,6 +181,7 @@ $log->debug("Sig complete: $complete");
 					} # end if
 				} # end foreach
 			} # end if
+$log->debug("Project complete: $complete " . $Service->to_string());
 
 			my $services = $Project->services();
 			if ( $$services{''} ) {
@@ -206,11 +221,11 @@ $log->debug("Sig complete: $complete");
 				if ( $param{rdbComplete} eq 'Yes' ) {
 					if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
 						$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
-						$variable{ErrorMessage} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
+						$variable{error} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 						$param{rdbComplete} = 'No';
 					} elsif ( 0 < Date::Calc::Delta_Days( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, Date::Calc::Today() ) ) {
 						$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
-						$variable{ErrorMessage} = 'You cannot select a date in the past. Please try again.';
+						$variable{error} .= 'You cannot select a date in the past. Please try again.';
 						$param{rdbComplete} = 'No';
 					} else {
 						if ( $param{duedate_year} ) {
@@ -242,26 +257,15 @@ $log->debug("Sig complete: $complete");
 						$Service->save({status=>'Ordered'});
 					} # end if
 				} elsif ( $param{rdbApproved} eq 'Y' ) {
-					if ( $param{duedate_year} ) {
-						if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
-							$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
-							$variable{ErrorMessage} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
-							$param{rdbApproved} = 'N';
+					if ( $param{duedate} and ( $param{duedate} ne $Project->due_date() ) ) {
+						$Project->due_date( $param{duedate} );
+						if ( ! $Project->save() ) {
+							$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $param{duedate}" );
+							send_duedate_change_notification( $project_index, $order_id );
 						} else {
-							# It's a valid duedate
-							my $duedate = sprintf('%.4d-%.2d-%.2d', @param{'duedate_year','duedate_month','duedate_day'} );
-
-							if ( $duedate ne $Project->due_date() ) {
-								$Project->due_date( $duedate );
-								if ( ! $Project->save() ) {
-									$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
-									send_duedate_change_notification( $project_index, $order_id );
-								} else {
-									$variable{error} .= 'Error saving duedate.';
-								} # end if
-							} # end if
-						} # end if valid due date
-					} # end if due date is specified
+							$variable{error} .= 'Error saving duedate.';
+						} # end if
+					} # end if
 
 					if ( (!$variable{error}) and ($status ne 'Approved') ) {
 						openprint::employee_production::mark_proofs_approved( $Project, $Service );
@@ -326,11 +330,15 @@ $log->debug("Sig complete: $complete");
 				$Project->add_to_log( @session{'company_id','user_id'}, 'Taken Over by '. $openprint::User->name() . ' as ' . $$Role{name} );
 
 				$Operator->save({ service_id=>$service_index, user_id=>$$openprint::User{id}, role_id=>$$Role{id} });
-			} elsif ( ( exists $$specs{SignatureIndex} ) and ( exists $param{"operator_id-$$specs{SignatureIndex}-$$Role{id}"} ) ) {
+			} elsif ( ( exists $$specs{SignatureIndex} ) and ( exists $param{"operator_id-$$specs{SignatureIndex}-$$Role{id}"} )
+					and ( $param{"operator_id-$$specs{SignatureIndex}-$$Role{id}"} != $Operator->id() )
+					) {
 				$Operator->save({ service_id=>$service_index, user_id=>$param{"operator_id-$$specs{SignatureIndex}-$$Role{id}"}, role_id=>$$Role{id} });
 				$Project->add_to_log( @session{'company_id','user_id'}, 'Operator changed to '. $Operator->User()->name() . ' by ' . $openprint::User->name() . ' as ' . $$Role{name} );
 			
-			} elsif ( exists $param{"operator_id-$$Role{id}"} ) {
+			} elsif ( exists $param{"operator_id-$$Role{id}"} 
+					and ( $param{"operator_id-$$Role{id}"} != $Operator->id() )
+					) {
 				$Operator->save({ service_id=>$service_index, user_id=>$param{"operator_id-$$Role{id}"}, role_id=>$$Role{id} });
 				$Project->add_to_log( @session{'company_id','user_id'}, 'Operator changed to '. $Operator->User()->name() . ' by ' . $openprint::User->name() . ' as ' . $$Role{name} );
 			
@@ -407,6 +415,7 @@ $log->debug("Saving signature");
 			$Order->update_status( );
 		} # end if
 		sql::end_transaction( $dbh, $ac );
+		$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
 	} elsif ( $param{btnFunction} eq 'Shipped' ) {
 		$Project->status_change( undef, undef, 'Shipped' );
 	} elsif ( $param{btnFunction} eq 'Picked Up' ) {
@@ -531,7 +540,7 @@ sub send_additional_charges_notifications {
 	return 'No one to notify.' if ! @Notifications;
 
 	my $CSR = new openprint::User( $Order->salesrep_id() );
-	my $Operator = new openprint::User( $session{user_id} );
+	my $Operator = $openprint::User;
 
 	@info{'CSRFirstName','CSRLastName','CSREmail'} = ( $CSR->firstname(), $CSR->lastname(), $CSR->email() );
 	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
@@ -843,12 +852,16 @@ sub summary {
 	openprint::print_project::summary( $r, $log, $dbh, \%variable, $param{ProjectIndex} );
 } # end sub summary
 
+sub stock_checkout {
+	_stock_checkout();
+}
+
 sub _stock_checkout {
 	my $Order;
-	$variable{Project} = new openprint::Project( $param{project_id} ) if $param{project_id};
+	$variable{Project} = new openprint::Project($param{project_id}) if $param{project_id};
 
 	if ( $param{docket} ) {
-		$Order = openprint::Order->find_one( docket=>$param{docket} );
+		$Order = openprint::Order->find_one(docket=>$param{docket});
 		if ( ! $Order ) {
 			$variable{error} .= 'No docket found for ' . $param{docket} . '<br/>';
 			return;
@@ -937,6 +950,10 @@ sub _production_feedback {
 	$variable{service_id} = $param{service_id};
 } # end sub _production_feedback
 
+sub stock_allocations {
+	_stock_allocations();
+}
+
 sub _stock_allocations {
 	$variable{Order} = openprint::Order->find_one( docket=>$param{docket} );
 	if ( $param{action} eq 'delete' ) {
@@ -994,23 +1011,45 @@ sub _status {
 			} # end if
 		} # end foreach service_id
 	} elsif ( $param{action} eq 'addtoschedule' ) {
+		my $NewShift;
+    if ( $param{shift_id} and Date::Calc::check_date( map { $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
+# We assume that there is a shift, otherwise how can we be scheduling?
+      my $starttime_dt = DateTime->new(
+          ( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
+          hour=>0, minute=>0, second=>0, time_zone=>$openprint::TZ );
+      my $endtime_dt = DateTime->new(
+          ( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
+          hour=>23, minute=>59, second=>59, time_zone=>$openprint::TZ );
+      $NewShift = openprint::Shift->find_one(
+          'starttime >='  =>  $openprint::parser->format_datetime($starttime_dt),
+          'starttime <='  =>  $openprint::parser->format_datetime($endtime_dt),
+          ( $param{shift_id} ? ( shift_id       =>  $param{shift_id}) : () ),
+          equipment_id    =>  $param{equipment_id},
+          );
+    } else {
+      $log->debug("No valid startdate specified");
+    }
+
 		my $Job = new openprint::ScheduledJob();
 		$_ = $Job->save({
-				'project_id'	=>  $param{project_id},
-				'equipment_id'  =>  $param{equipment_id},
-				'starttime'	 =>  undef,
-				'service_id'	=>  [ split(',',$param{service_id}) ],
-				'servicetype_id'	=>  $Service->ServiceType->id(),
+				project_id			=>  $param{project_id},
+				equipment_id 	  =>  $param{equipment_id},
+				starttime	 			=>  ( $NewShift ? $NewShift->starttime() : undef ),
+				service_id			=>  [ split(',',$param{service_id}) ],
+				servicetype_id	=>  $Service->ServiceType->id(),
 				});
 		if ( $_ ) {
 			$variable{error} .= 'Error adding to press schedule: ' . $_;
 		} else {
 			if ( sets::isin( $variable{name}, 'Printing','Signature' ) ) {
 				my $sig_specs = $Service->specs();
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added Form $$sig_specs{SignatureIndex} to pending schedule for " . $Job->Equipment()->strid() );
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added Form $$sig_specs{SignatureIndex} to schedule for " . $Job->Equipment()->strid() );
 			} else {
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added " . $Service->ServiceType->name() . " to pending schedule." );
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added " . $Service->ServiceType->name() . " to schedule." );
 			} # end if
+			if ( $NewShift ) {
+				$Job->bump( undef, $NewShift );
+			}
 		} # end if
 
 	} # end if
@@ -1098,6 +1137,27 @@ sub _additional_charge_notifications {
 		$variable{information} = 'Additional Charges Email sent.' . $_;
 	} # end if action 
 } # end sub _additional_charge_notifications 
+
+sub _change {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'setduedate' ) {
+
+			my $Project = openprint::Project->find_one( id=>$param{project_id} );
+			if ( ! $Project ) {
+					$log->error("Project $param{project_id} not found in set_duedate");
+					return;
+			} # end if
+			$Project->change_due_date($param{duedate});
+		} else {
+			$log->error("Unrecognized action $param{action} in project _change");
+		} # end if action
+	} else {
+		$log->error("No action in project _change");
+	} # end if action
+} # end sub _change
+
+sub _related_projects {
+}
 
 1;
 __END__

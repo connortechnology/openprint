@@ -4,11 +4,14 @@ use lib '/var/www/testing/perl';
 use strict;
 use warnings;
 
+require openprint;
 require configuration;
 require sql;
 require misc;
+require openprint::User;
 require openprint::Host;
 require openprint::Host_Interface;
+require openprint::Host_Config;
 require logger;
 require openprint::Email;
 require openprint::Log;
@@ -28,7 +31,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-	'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s',
+	'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s', 'host_type=s',
  );
 
 if ($opts->{help}) {
@@ -48,7 +51,7 @@ configuration::init( );
 configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
 
-foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp-server' ) {
+foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp_server' ) {
 	if ( ! $openprint::config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
@@ -81,12 +84,38 @@ $config{ping_wait} = 2 if ! $config{ping_wait};
 # udp has less network traffic overhead
 my $p = Net::Ping->new($config{ping_type},$config{ping_wait});
 my $hup;
-my %times;
 $SIG{HUP} = \&sig_handler;
 
 # TUrn off Object caching
 # If we do this, we incur a lot more db load which might be trivial, but.... our use of locking should mean that we don't need to do this anymore
 $openprint::Object::no_cache = 0;
+
+$openprint::dbh = sql::open_sql( $log,
+		port		=> $config{db_port},
+		host		=> $config{db_host},
+		database	=> $config{db_name},
+		driver		=> 'Pg',
+		login		=> $config{db_user},
+		password	=> $config{db_pass},
+		);
+if ( ! $dbh ) {
+	$log->error( 'Error opening db. Sleeping for 5.' );
+	die;
+} # end if ! dbh
+configuration::from_db( );
+configuration::from_file( $$opts{config} );
+configuration::merge( $opts );
+
+if ( $config{user_id} ) {
+	$openprint::session{user_id} = $config{user_id};
+	$openprint::User = new openprint::User($openprint::session{user_id});
+	$openprint::sesssion{company_id} = $openprint::User->company_id();
+	$openprint::Company = $openprint::User->Company();
+}
+
+# Indexed by Host Id
+my %configurations;
+my %status;
 
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
@@ -115,18 +144,17 @@ while(1) {
 		$hup = 0;
 	} # end if ! dbh
 
-	$log->debug( 'Getting hosts' );
-	my @Hosts = openprint::Host->find( monitored=>1 );
+	my @Hosts = openprint::Host->find(monitored=>1, ( $$opts{host_type} ? ( type=>$$opts{host_type} ) : () ));
 	foreach my $Host ( @Hosts ) {
 
-		$log->debug( $Host->hostname() . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
+		$log->debug($Host->hostname().' was '.($Host->online() ? 'online' : 'offline'));
 
 		my $online = undef;
 		my $now = time;
 		my $has_monitored_interfaces = 0;
 
 		# First find out current status, then lock & load to find out previous status because we don't want to hold this lock for however long it takes to ping.
-		my @HIs = $Host->Interfaces( undef );
+		my @HIs = $Host->Interfaces(undef);
 		foreach my $HI ( @HIs ) {
 			next if ! $HI->monitor();
 			if ( ! $HI->ip() ) {
@@ -154,7 +182,7 @@ while(1) {
 			if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) ) {
 				$HI->save({online=>$ping});
 			}
-			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . $ping );
+			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . ( defined $ping ? $ping : 'undef' ) );
 		} # end foreach HI
 
 		if ( ! $has_monitored_interfaces ) {
@@ -214,6 +242,19 @@ while(1) {
 		$Host->unlock();
 
 		if ( $Host->online() ) {
+			if ( $Host->can_get_config() ) {
+				my %host_config = $Host->get_config();
+				if ( misc::compare_hash(\%host_config, $configurations{$$Host{id}}) ) {
+					(new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_config}, name=>'config');
+					$configurations{$$Host{id}} = \%host_config;
+				}
+				my %host_status = $Host->get_status();
+				if ( misc::compare_hash(\%host_status, $status{$$Host{id}}) ) {
+					(new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_status, name=>'status'});
+					$status{$$Host{id}} = \%host_status;
+				}
+			}
+
 			if ( $Host->type() =~ /DCS\-910/ ) {
 				require LWP;
 				my $browser = LWP::UserAgent->new();
@@ -309,7 +350,7 @@ sub sig_handler {
 sub notify {
 	my ( $Host, $online ) = @_;
 	my $results;
-	my @To = map { $_->User() } $Host->Notifications();
+	my @To = map { $_->User() } $Host->Notifications(undef);
 	if ( @To and ( @To < 10 ) ) {
 		my %info = ( Host	=>	$Host,);
 		my $Email = new openprint::Email();

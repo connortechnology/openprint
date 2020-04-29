@@ -52,7 +52,7 @@
 		}
 		$html .= '</tr>';
 	}
-	if ( $$variable{Project}{credit_card_fee} ) {
+	if ( $$variable{Project}{credit_card_fee} and ($session{user_type} eq 'A') ) {
 		$html .= '<tr class="unprintable"><td>'.$$variable{Project}{credit_card_fee}.'% credit card fee</td>';
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $credit_card_fees[$qty_index] ) ).'</td>';
@@ -68,5 +68,4 @@
 	}
 	return;
 ) ?>
-</table>
 <?endif($session{user_type} eq 'E' or $session{user_type} eq 'A')?>

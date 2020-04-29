@@ -181,7 +181,7 @@ sub get_best_prices {
 
 	if ( ! $list_id ) {
 		my ( $caller, undef, $line ) = caller;
-		$log->error("Not specifying pricelist to get_best_prices is deprecated from $caller:$line");
+		#$log->error("Not specifying pricelist to get_best_prices is deprecated from $caller:$line");
 
 		Carp::cluck("Not specifying pricelist to get_best_prices is deprecated from $caller:$line");
 # figure out which price list we select from, because the caller didn't specify.
@@ -360,7 +360,7 @@ sub get_best_price_object {
 	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
 	my $prices = get_best_prices( $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period );
 	if ( DEBUG ) {
-		$openprint::log->debug("Prices in get_best_price_obejct for $qty " . @$prices);
+		$openprint::log->debug("Prices in get_best_price_object for qty $qty : " . @$prices);
 		foreach my $price ( @$prices ) {
 			$openprint::log->debug("service: $$price{service_id} min: $$price{min} max: $$price{max} price:$$price{Price} interpolate: $$price{interpolate}");
 		} # end foreach

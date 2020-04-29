@@ -44,14 +44,14 @@
 			my $function_name = 'openprint::Estimating::'.$Project_Type->type();
 			my $summary = '';
 			if ( my $function = $function_name->can('summary') ) {
-				$summary = $function->( $Project, $$services{''}[0], $printing_specs );
+				$summary = $function->($Project, $$services{''}[0], $printing_specs);
 			} # end if
 
 			my $Service = $Project->Service( $$services{''}[0] );
 			$summary .= '<br/><span class="Overrides">With Overrides</span>' if $Service->overrides();
 
 			if ( $editable ) {
-				if ( $Project->Type()->url() ) {
+				if ( $Project_Type->url() ) {
 					$html .= sprintf('<tr%1$s><td class="description"><a href="/main/project/%2$s?ProjectIndex=%3$d&amp;ServiceIndex=%4$d">%5$s<br/>%6$s%7$s</a></td>', 
 						$rowclass, $Project_Type->url(), $Project->id(), $$services{''}[0], $Project_Type->description(), $summary,
 						( $$printing_specs{alert} ? join( $$printing_specs{alert}, '<span class="error">','</span>' ) : '' ),
@@ -91,7 +91,7 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 }
 					} # end if
 					$html .= '</td>';
-				} # end nif
+				} # end if
 				$html .= "</tr>\n";
 
 				my @sigs = sort {
@@ -109,30 +109,35 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 
 					my $sig_qty = 1;
 					my $similar_sig_qty = 1;
+					my @hidden_sig_ids = ( $ss_id );
 
 					for ( my $i = 0; $i < @sigs; $i += 1 ) {
 						my $SigService2 = $Project->Service( $sigs[$i] );
 						my $sig_specs2 = $SigService2->specs();
 
-						if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( $Project, \%sig_specs, $sig_specs2 ) ) {
+						if (
+								($statuses{$sigs[$i]} eq $statuses{$ss_id})
+								and
+								openprint::Estimating::Printing::compare_signatures( $Project, \%sig_specs, $sig_specs2 )
+							 ) {
 							$similar_sig_qty += 1;
 							
 							if ( ! $session{ShowAllSignatures} ) {
 								$sig_qty += 1;
 								foreach my $qty_index ( @quantity_indexes ) {
-									# Will be convereted later
+									# Will be converted later
 									$sig_specs{'txtPrice'.$qty_index} += $$sig_specs2{'txtPrice'.$qty_index};
 									$sig_specs{'txtPressSheetQty'.$qty_index} =~ s/\D//g;
 									my $sheet_qty = $$sig_specs2{'txtPressSheetQty'.$qty_index};
 									$sheet_qty =~ s/\D//g;
 									$sig_specs{'txtPressSheetQty'.$qty_index} += $sheet_qty;
 									if ( $sig_specs{'StockType'.$qty_index} eq 'Roll' ) {
-										$sig_specs{'txtPressSheetQty'.$qty_index}.='lbs';
+										$sig_specs{'txtPressSheetQty'.$qty_index} .= 'lbs';
 									} else {
-										$sig_specs{'txtPressSheetQty'.$qty_index}.='sheets';
+										$sig_specs{'txtPressSheetQty'.$qty_index} .= 'sheets';
 									} # end if
 								} # end foreach $qty_index
-								splice @sigs, $i, 1;
+								push @hidden_sig_ids, splice @sigs, $i, 1;
 								$i -= 1;
 								delete $statuses{$$SigService2{service_id}};
 							} # end if MergeSigs
@@ -177,7 +182,11 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 					} # end if editable
 
 					if ( ! $$variable{Quote} ) {
-						$html .= join( '', '<td class="status">', $SigService->status(), '</td>' );
+						$html .= join('', '<td class="status">', $SigService->status(), 
+								( ( !$editable and ($openprint::User->email() =~ /iconnor/) ) ?
+									sprintf(q`<br/><a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $ss_id )
+									: () ),
+								'</td>' );
 
 						if ( $editable ) {
 							$html .= '<td class="unprintable actions">';
@@ -187,7 +196,7 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 							#} elsif ( $Project->Type()->url() ) {
 								#$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $ss_id, $Project->Type()->url() );
 							} # end if
-							$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;remove=%2$d">Remove</a>', $Project->id(), $ss_id );
+							$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;remove=%2$s">Remove</a>', $Project->id(), join(',',@hidden_sig_ids) );
 							if ( $similar_sig_qty > 1 ) {
 								if ( ! $session{ShowAllSignatures} ) {
 									$html .= sprintf('<br/><a href="/main/project/view.html?ProjectIndex=%1$d&amp;ShowAllSignatures=1">Show All</a>', $Project->id() );

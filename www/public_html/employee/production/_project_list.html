@@ -1,4 +1,5 @@
 <? eval (
+  my $uri = '/employee/production/projects.html';
 	$$variable{Projects} = [];
 	if ( $param{StartDocket} and $param{EndDocket}) {
 		$$variable{Projects} = [ openprint::Project->find(
@@ -25,20 +26,21 @@
 		
 	} else {
 		my %filters = (
-				( $session{'/employee/production/projects.html?ddmPress'} ? (	'used_press_name in'	=> $session{'/employee/production/projects.html?ddmPress'} ) : () ),
-				( $session{'/employee/production/projects.html?ddmEmployee'} ? (	'operator_id any'	=> $session{'/employee/production/projects.html?ddmEmployee'} ) : () ),
-				status			=> [ split ',', $session{'/employee/production/projects.html?ProjectStatus'} ],
+				( $session{$uri.'?ddmPress'} ? ('used_press_name any'	=> $session{$uri.'?ddmPress'} ) : () ),
+				( $session{$uri.'?ddmEmployee'} ? (	'operator_id any'	=> $session{$uri.'?ddmEmployee'} ) : () ),
+				status			=> [ split ',', $session{$uri.'?ProjectStatus'} ],
 				'order_id is null'	=> 0,
-				date_filter( '/employee/production/projects.html?due_date_end', 'due_date is null or <=' ),
-				date_filter( '/employee/production/projects.html?due_date_start', 'due_date is null or >=' ),
+				date_filter($uri.'?due_date_end', 'due_date is null or <=' ),
+				date_filter($uri.'?due_date_start', 'due_date is null or >=' ),
+			( $session{$uri.'?servicetype_id'} ? ( 'servicetype_id	any'=>	$session{$uri.'?servicetype_id'} ) : () ),
 				order			=> 'due_date, lngDocketNumber',
 			);
-			if ( $session{'/employee/production/projects.html?ddmSalesRep'} ) {
-				$filters{salesrep_id} = $session{'/employee/production/projects.html?ddmSalesRep'};
-			} # end if
-			if ( $session{'/employee/production/projects.html?ddmCustomer'} ) {
-				$filters{company_id} = $session{'/employee/production/projects.html?ddmCustomer'};
-			} # end if
+		if ( $session{$uri.'?ddmSalesRep'} ) {
+			$filters{salesrep_id} = $session{$uri.'?ddmSalesRep'};
+		} # end if
+		if ( $session{$uri.'?ddmCustomer'} ) {
+			$filters{company_id} = $session{$uri.'?ddmCustomer'};
+		} # end if
 		$$variable{Projects} = [ openprint::Project->find( %filters ) ];
 	} # end if
 ) ?>
@@ -58,11 +60,14 @@
 		<? echo (
 			my $html = '';
 			my $rowclass;
+  my $uri = '/employee/production/projects.html';
 
 			foreach my $Project ( @{$$variable{Projects}} ) {
 				#next if $session{'/employee/production/projects.html?ddmPress'} and ! sets::isin( $session{'/employee/production/projects.html?ddmPress'}, [ $Project->used_press_names() ] );
 				#my @operators = sql::execute( $log, $dbh, q{SELECT DISTINCT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND operator_id IS NOT NULL}, $Project->id() );
 				#next if $param{ddmEmployee} and sets::isin( $param{ddmEmployee}, \@operators );
+				next if $session{$uri.'?cod'} eq 'Y' and !$Project->Order()->cod_owing();
+				next if $session{$uri.'?cod'} eq 'N' and $Project->Order()->cod_owing();
 				$html .= "<tr$rowclass>\n";
 				$html .= sprintf(q`
 						<td class="project_id"><a href="/employee/project/view.html?project_id=%1$d">%1$d</a>&nbsp;</td>

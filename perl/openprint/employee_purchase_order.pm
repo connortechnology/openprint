@@ -152,14 +152,14 @@ sub save_contents {
 		} # end if
 
 		$variable{error} .= $C->save( {
-				po_id		=>	$PO->id(),
-				qty			=>	$$p{'qty-'.$content_id},
+				po_id			=>	$PO->id(),
+				qty				=>	$$p{'qty-'.$content_id},
 				product		=>	$$p{'product-'.$content_id},
 				item_id		=>	$$Item{id},
 				description	=>	$$p{'description-'.$content_id},
 				docket		=>	$$p{'docket-'.$content_id},
-				price		=>	$$p{'price-'.$content_id},
-				total		=>	$$p{'total-'.$content_id},
+				price			=>	$$p{'price-'.$content_id},
+				total			=>	$$p{'total-'.$content_id},
 				type_id		=>	$$p{'type_id-'.$content_id},
 				( $Dept ? ( department_id	=>	$Dept->id() ) : ( ) ),
 				});
@@ -193,6 +193,8 @@ sub view {
 	} # end if
 	$variable{PurchaseOrder} = $PO;
 
+	return if ! $param{btnFunction};
+
 	if ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $PO->delete();
 		if ( ! $variable{error} ) {
@@ -206,6 +208,33 @@ sub view {
 			delete $param{btnFunction};
 			$variable{ExternalRedirect} = '/employee/purchase_order/history.html';
 		} # end if
+  } elsif ( $param{btnFunction} eq 'DoNotPay' ) {
+    $variable{error} .= $PO->save({ do_not_pay=>1 });
+    if ( ! $variable{error} ) {
+      my $L = new openprint::PurchaseOrder_Log();
+      $L->save({
+          user_id =>  $session{user_id},
+          po_id   =>  $PO->id(),
+          reason  =>  'Marked do not pay: '. $param{reason},
+          });
+      delete $param{po_id};
+      delete $param{btnFunction};
+      $variable{ExternalRedirect} = '/employee/purchase_order/view.html?po_id='.$PO->id();
+    } # end if
+  } elsif ( $param{btnFunction} eq 'UnDoNotPay' ) {
+    $variable{error} .= $PO->save({do_not_pay=>0});
+    if ( ! $variable{error} ) {
+      my $L = new openprint::PurchaseOrder_Log();
+      $L->save({
+          user_id =>  $session{user_id},
+          po_id   =>  $PO->id(),
+          reason  =>  'Un-DoNotPay: '. $param{reason},
+          });
+      delete $param{po_id};
+      delete $param{btnFunction};
+      $variable{ExternalRedirect} = '/employee/purchase_order/view.html?po_id='.$PO->id();
+    } # end if
+
 	} elsif ( $param{btnFunction} eq 'Cancel' ) {
 		$variable{error} .= $PO->save({ cancelled=>1 });
 		if ( ! $variable{error} ) {
@@ -409,6 +438,14 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		if ( ! $param{po_id} ) {
 			$variable{error} .= $PO->save( { created_by	=> $session{user_id}, company_id => $openprint::User->company_id() } );
+		} elsif ( ($PO->Creator()->type() eq 'E') and ($openprint::User->type() eq 'A') ) {
+			$variable{error} .= $PO->save( { created_by => $session{user_id} });
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					user_id	=>	$session{user_id},
+					po_id		=>	$PO->id(),
+					reason	=>	'Taking ownership',
+					});
 		} # end if
 
 		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{supplier_id} ) and $param{vendor_name};
@@ -428,11 +465,11 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			} # end if
 		} # end if
 		
- if ( $param{supplier_id} and ( ! $param{contact_id} ) and $param{vendor_contact} ) {
-		$param{contact_id} = save_contact( \%param );
-} else {
-$log->debug("Not saving contact ");
-}
+		if ( $param{supplier_id} and ( ! $param{contact_id} ) and $param{vendor_contact} ) {
+			$param{contact_id} = save_contact( \%param );
+		} else {
+			$log->debug("Not saving contact ");
+		}
 		my %types = save_contents( $PO, \%param );
 
 		if ( $param{delivered_on_switch} eq 'DATE' ) {
@@ -654,8 +691,8 @@ $log->error("$key deleted");
     $search{cancelled} = $session{$uri.'?cancelled'} if $session{$uri.'?cancelled'} ne '';
     $search{'item_id any'} = $session{$uri.'?item_id'} if $session{$uri.'?item_id'};
 
-	my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'Docket', 'Printed Start','Printed End' );
-	my @data;
+		my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Manifest', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'Docket', 'Printed Start','Printed End' );
+		my @data;
 
     my $ac = sql::start_transaction( $dbh );
     my @POs = openprint::PurchaseOrder->find( %search );
@@ -673,9 +710,9 @@ $log->error("$key deleted");
       }
     } # end if POs
 
-		my %types = map { $_, $_ } split(',',$session{$uri.'?types'} );
-my $total_quantity = 0;
-my $total_value = 0;
+		my %types = map { $_, $_ } split(',', $session{$uri.'?types'});
+		my $total_quantity = 0;
+		my $total_value = 0;
 
     foreach my $PO ( @POs ) {
       if ( $session{$uri.'?authorized'} eq 'Y' and $PO->authorized() ne '1' ) {
@@ -691,9 +728,9 @@ my $total_value = 0;
         next;
       }
 
-      next if $session{$uri.'?vendor_category_id'} and $PO->Supplier()->category_id() != $session{$uri.'?vendor_category_id'};
-      if ( ! $PO->can_view() ) {
-        $log->debug("! can_view");
+      next if $session{$uri.'?vendor_category_id'} and ($PO->Supplier()->category_id() != $session{$uri.'?vendor_category_id'});
+      if ( !$PO->can_view() ) {
+        $log->debug('! can_view');
         next;
       }
 
@@ -731,11 +768,16 @@ my $total_value = 0;
         next if ! sets::isin( $session{$uri.'?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
       } # end if
 
+
 		#my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Item','Quantity','Unit Price', 'Item Total' );
 			foreach my $C ( $PO->Contents() ) {
 				next if %types and ! $types{$$C{type_id}};
-				push @data, @$PO{'id','vendor_name','subtotal','total'}, ssi::format_csv_date($$PO{created_on}), $PO->Created_By()->name();
-				push @data, $C->item(), $C->qty(), $C->price(), $C->units(), $C->total(), $C->docket();
+		#my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Manifest', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'Docket', 'Printed Start','Printed End' );
+				push @data, (
+						@$PO{'id','vendor_name','subtotal','total'},
+						ssi::format_csv_date($$PO{created_on}), $PO->Created_By()->name(),
+						$PO->Manifest()->name(),
+						$C->item(), $C->qty(), $C->price(), $C->units(), $C->total(), $C->docket());
 
 				$total_quantity += $C->qty();
 				$total_value += $C->total();
@@ -752,17 +794,14 @@ my $total_value = 0;
 							$printed_end = $_ if (!$printed_end) or $printed_end lt $_;
 						}
 					} # end if
-				}
+				} # end if docket
 				push @data, ssi::format_csv_date($printed_start), ssi::format_csv_date($printed_end);
-			}
+			} # end foreach C
     } # end foreach PO
-	my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'Docket', 'Printed Start','Printed End' );
-push @data, '','Totals', '', '', '', '', '', $total_quantity, '', '', $total_value, '', '', '';
+		push @data, '','Totals', '', '', '', '', '', '', $total_quantity, '', '', $total_value, '', '', '';
 		sql::end_transaction( $dbh, $ac );
 
 		misc::export_csv( $r, $log, \%variable, 'purchase_order_history_report.csv', \@header,\@data );	
-
-
 	} # end if
 	} # end if btnFunction
 	_history();
@@ -773,7 +812,7 @@ push @data, '','Totals', '', '', '', '', '', $total_quantity, '', '', $total_val
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/employee/purchase_order/history.html', ( 
+	ssi::save_params('/employee/purchase_order/history.html', ( 
 				( map { 'starting_start_'.$_ } ( 'year', 'month','day' ) ),
 				( map { 'starting_end_'.$_ } ( 'year', 'month','day' ) ),
 				'authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled', 'vendor_category_id', 'department_id', 'docket',

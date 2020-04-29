@@ -62,16 +62,17 @@ Please select a Paper to view/edit.<br>
 				</li>
 <? echo (
 	my $html;
+	my $uri = '/employee/inventory/available_paper.html';
 
 	my %find = (
 			'in_stock null_or_>'	=>	1,
-			( $session{'/employee/inventory/available_paper.html?type'} ? ( type => [ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ] ) : () ),
+			( $session{$uri.'?type'} ? ( type => [ split( ',', $session{$uri.'?type'} ) ] ) : () ),
 	);
-	if ( $session{'/employee/inventory/available_paper.html?owner_id'} ) {
-		if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
-			$find{'owner_id !='} = $session{'/employee/inventory/available_paper.html?owner_id'};
+	if ( $session{$uri.'?owner_id'} ) {
+		if ( $session{$uri.'?owner_id_exclude'} ) {
+			$find{'owner_id !='} = $session{$uri.'?owner_id'};
 		} else {
-			$find{'owner_id'} = $session{'/employee/inventory/available_paper.html?owner_id'};
+			$find{owner_id} = $session{$uri.'?owner_id'};
 		} # end if
 	} # end if
 
@@ -87,15 +88,18 @@ Please select a Paper to view/edit.<br>
  };
 		my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
 		# Validate the filter
-		$session{'/employee/inventory/available_paper.html?'.$option_id} = undef if ! sets::isin( 
-				$session{'/employee/inventory/available_paper.html?'.$option_id}, [ map { $$_{$option_id} } @Papers ] );
+		$session{$uri.'?'.$option_id} = undef if ! (
+				$session{$uri.'?'.$option_id}
+				and
+				sets::isin($session{$uri.'?'.$option_id}, [ map { $$_{$option_id} } @Papers ] )
+				);
 
 		foreach my $Stock ( @Papers ) {
 			# Load up the filter
 			$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
 		} # end foreach $Stock
-		if ( $session{'/employee/inventory/available_paper.html?'.$option_id} ) {
-			@Papers = map { $$_{$option_id} eq $session{'/employee/inventory/available_paper.html?'.$option_id} ? $_ : () } @Papers;
+		if ( $session{$uri.'?'.$option_id} ) {
+			@Papers = map { $$_{$option_id} eq $session{$uri.'?'.$option_id} ? $_ : () } @Papers;
 		} # end if
 	} # end foreach option
 
@@ -103,13 +107,13 @@ Please select a Paper to view/edit.<br>
 		next if ! $filters{$option};
 		my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
 		my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
-		$session{'/employee/inventory/available_paper.html?'.$option_id} = $options[0] if ( @options == 2 );
+		$session{$uri.'?'.$option_id} = $options[0] if ( @options == 2 );
 
 		$html .= sprintf(q`<li><label>%1$s</label>
 				<select name="%2$s_id" id="%2$s_id" size="1" onchange="filter_onChange(this,'');">
 				<option value=""> All </option> %3$s </select>
 			</li>`, $option, $lower_option, 
-			make_drop_down( \@options, $session{'/employee/inventory/available_paper.html?'.$option_id} ),
+			make_drop_down( \@options, $session{$uri.'?'.$option_id} ),
 		);
 	} # end foreach option
 	$$variable{Paper} = \@Papers;
@@ -128,9 +132,9 @@ Please select a Paper to view/edit.<br>
 		<div class="rightColumn">
 			<ul>
 				<li><label>Type</label>
-					<input type="checkbox" id="typeSheet" name="type" value="Sheet" <? echo ( ssi::checked( sets::isin( 'Sheet', split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ) ); ) ?> onclick="calc('f1');"/>
+					<input type="checkbox" id="typeSheet" name="type" value="Sheet" <? echo ( checked( sets::isin( 'Sheet', split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ) ); ) ?> onclick="calc('f1');"/>
 					<label class="radio" for="typeSheet">Sheet</label>
-					<input type="checkbox" id="typeRoll" name="type" value="Roll" <? echo ( ssi::checked( sets::isin( 'Roll', split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ) ); ) ?> onclick="calc('f1');"/>
+					<input type="checkbox" id="typeRoll" name="type" value="Roll" <? echo ( checked( sets::isin( 'Roll', split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ) ); ) ?> onclick="calc('f1');"/>
 					<label class="radio" for="typeRoll">Roll</label>
 				</li>
 				<li>

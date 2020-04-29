@@ -35,7 +35,7 @@ my @variables = (
 		);
 
 sub variables {
-	my ( $p_id, $s_id, $specs ) = @_;
+	my ( $p_id, $s_id, $old_specs, $specs ) = @_;
 
 	my $Project = new openprint::Project( $p_id );
 	my @v = @variables;
@@ -575,7 +575,7 @@ sub save_proof_specs {
 
 # First off, slap everything in, just like every other service
 	#openprint::service::save_service( $r, $log, $dbh, $project_index, $service_index );
-	my @v = variables( $project_index, $service_index, \%openprint::param );
+	my @v = variables( $project_index, $service_index, openprint::service::get_specs_ref($Project, $service_idex), \%openprint::param );
 	my $ac = sql::start_transaction( $dbh );
 	foreach my $key (@v) {
 		if ( ! exists $openprint::param{$key} ) {
@@ -778,23 +778,6 @@ sub project_summary {
 	} # end foreach signature
 	return ' ' . join(',', keys %types) . '<br/>';
 } # end sub project_summary
-
-sub get_next_proof_index {
-	my ( $sig_specs ) = @_;
-
-	my @proof_indexes;
-	my $signature_index = $$sig_specs{'SignatureIndex'};
-	if ( ( ! sets::isin( 1, \@proof_indexes ) ) and $openprint::config{'Add_Default_Layout_Proof'} eq 'Y' ) {
-		push @proof_indexes, 1;
-	} # end if
-	if ( ( ! sets::isin( 2, \@proof_indexes ) ) and $openprint::config{'Add_Default_Colour_Proof'} eq 'Y' ) {
-		push @proof_indexes, 2;
-	} # end if
-	if ( ( ! sets::isin( 3, \@proof_indexes ) ) and $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) {
-		push @proof_indexes, 3;
-	} # end if
-	return sets::max( \@proof_indexes ) + 1;
-}
 
 sub has_overrides {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;

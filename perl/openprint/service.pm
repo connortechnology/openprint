@@ -39,19 +39,21 @@ sub get_price_object {
 sub save_service {
 	my ( $r, $log, $dbh, $project_index, $service_index ) = @_;
 
-	$log->debug("***** START OF  save_service ************");
-	my $Project = new openprint::Project( $project_index );
-	my $specs = get_specs_ref( $Project, $service_index );
+	$log->debug('***** START OF  save_service ************');
+	my $Project = new openprint::Project($project_index);
+	my $Service = $Project->Service($service_index);
+	my $ServiceType = $Service->ServiceType();
+
+	my $specs = $Service->specs();
 
 	my $service_type = $openprint::param{ServiceType};
-	if ( ! $service_type ) {
-		my $ServiceType = $Project->ServiceType( $service_index );
+	if ( !$service_type ) {
 		$service_type = $ServiceType->type();
 	} # end if
-	if ( (! $service_type) and (! $$specs{ProjectType}) ) {
-		$log->error( "No serviceType in params for service $service_index.  Trying to recover" );
+	if ( (!$service_type) and !$$specs{ProjectType} ) {
+		$log->error("No serviceType in params for service $service_index.  Trying to recover");
 	} # end if
-	if ( ! $service_type ) {
+	if ( !$service_type ) {
 		$service_type = $Project->Type()->type();
 	} # end if
 	my $module = 'openprint::Estimating::'.$service_type;
@@ -66,7 +68,7 @@ $openprint::log->debug("Module is: $module");
 	# make this fast by doing it in one transaction, locking does the tranasaction for us
 	$Project->lock();
 	my @changes;
-	foreach my $key (@variables) {
+	foreach my $key ( sort { $a cmp $b } @variables) {
 #$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
 #$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
@@ -87,9 +89,10 @@ $openprint::log->debug("Module is: $module");
 	if ( $openprint::param{Additional} eq 'Y' or $openprint::param{additional_service} eq 'Y' ) {
 		$Project->add_service( $service_type );
 	} # end if
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, join('<br/>', @changes ) ) if @changes;
+	$Project->add_to_log(@openprint::session{'company_id','user_id'},
+			$service_type. ' service saved: '.join('<br/>', @changes));
 
-	$log->debug("***** END  OF  save_service ************");
+	$log->debug('***** END  OF  save_service ************');
 } # end sub save_service
 
 sub get_specifications {
@@ -189,17 +192,6 @@ sub insert_service_spec {
 	$specs_cache{$service_index}{$name} = $value;
 } # end sub
 
-sub insert_service_specs {
-	my ( $log, $dbh, $project_index, $service_index, @specs ) = @_;
-
-# make this fast by doing it in one transaction
-	my $ac = sql::start_transaction( $openprint::dbh );
-	while ( @specs ) {
-		insert_service_spec( $log, $dbh, $project_index, $service_index, shift @specs, shift @specs );
-	} # end while
-	sql::end_transaction( $openprint::dbh, $ac );
-} # end sub
-
 sub auto_calculate {
 	my ( $Project, $exclude ) = @_;
 
@@ -264,6 +256,18 @@ sub auto_calculate {
 		} # end while
 		delete $$services{PerfectBound};
 	} # end if
+
+	require openprint::Estimating::SpinePaste;
+	if ( openprint::Estimating::SpinePaste::neccessary( $Project ) ) {
+		if ( ! $$services{SpinePaste} ) {
+			push @{$$services{SpinePaste}}, $Project->add_service( 'SpinePaste' );
+		} # end if
+	} elsif ( $$services{SpinePaste} ) {
+		while ( my $si = shift @{$$services{SpinePaste}} ) {
+			openprint::print_project::delete_service( $Project, $si );
+		} # end while
+		delete $$services{SpinePaste};
+	} # end if
 			
 	require openprint::Estimating::Stitching;
 	if ( openprint::Estimating::Stitching::neccessary( $Project ) ) {
@@ -304,10 +308,10 @@ sub auto_calculate {
 
 	foreach my $service_type ( 'Collating', 'Aqueous', 'UVCoating', 'Grommeting', 'Sewing' ) {
 		my $module = 'openprint::Estimating::'.$service_type;
-		eval ( 'require '.$module.';' );
+		eval 'require '.$module.';';
 		$openprint::log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
 		if ( my $function = $module->can('neccessary') ) {
-			if ( $function->( $Project ) ) {
+			if ( $function->($Project) ) {
 				$openprint::log->debug("$service_type is neccessary");
 				if ( ! $$services{$service_type} ) {
 					$_ = $Project->add_service( $service_type );
@@ -370,10 +374,9 @@ sub auto_calculate {
 	$openprint::log->error("Error in requiring $service_name $@") if $@;
 	} # end foreach service_name;
 
-
 	# Order for these is important.  Stitching must be calc'd before Folding
 	foreach my $type ( 'Folding','SaddleStitching','LoopStitching' ) {
-		next if ! $$services{$type};
+		next if !$$services{$type};
 		foreach my $service_index ( @{$$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
 			my $service_type = $ServiceType->type();
@@ -388,8 +391,8 @@ sub auto_calculate {
 			$openprint::log->error("Have $type but no actual service");
 			next;
 		} # end if
-		next if sets::isin( $type, [ 'SaddleStitching','LoopStitching','Folding','Signature' ] );
-		next if $exclude and sets::isin( $type, $exclude );
+		next if sets::isin($type, [ 'SaddleStitching','LoopStitching','Folding','Signature' ]);
+		next if $exclude and sets::isin($type, $exclude);
 
 		foreach my $service_index ( @{$$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
@@ -400,8 +403,14 @@ sub auto_calculate {
 			}
 			next if $ServiceType->category() eq 'Shipping';
 			my $service_type = $ServiceType->type();
-			next if sets::isin( $service_type, ['','Signature'] );
-			my $specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{id}, $service_index, $service_type );
+			if ( sets::isin($service_type, ['', 'Signature']) ) {
+				$openprint::log->debug("Next because it's a printing service: $type " . join(',', @{$$services{$type}}));
+				next;
+			}
+			my $specs = internal_calc(
+					$openprint::log, $openprint::dbh, \%openprint::variable,
+					$$Project{id}, $service_index, $service_type
+					);
 			$alert .= $$specs{alert};
 		} # end foreach service_index
 	} # end while service_type
@@ -500,14 +509,15 @@ sub internal_calc {
 	my $Service = $Project->Service($service_index) if $service_index;
 	my $specs;
 	if ( ! $Service ) {
-		$openprint::log->error("Doing internal calc without service_index or, not found");
+		$openprint::log->error('Doing internal calc without service_index or, not found');
 		$Service = new openprint::Project_Service();
 		$Service->set({ project_id=>$project_index, service_id=>$service_index, service_type=>$service_type });
 	} else {
 		if ( $Service->status() ne 'uncalculated' ) {
 			$_ = $Service->save({status=>'uncalculated'});
 			if ( $_ ) {
-				$log->error("Unable to update Service status for $project_index, $service_index, $service_type, $qty_index ");
+				$Project->unlock();
+				$log->error("Unable to update Service status for $project_index, $service_index, $service_type, $qty_index");
 				return;
 			}
 		}
@@ -515,8 +525,17 @@ sub internal_calc {
 	} # end if	
 	my %specs = %{$specs} if $specs;
 
-	if ( ! $service_type ) {
+	if ( !$service_type ) {
 		$service_type = $Service->service_type();
+		if ( ! $service_type ) {
+			if ( $$specs{ProjectType} ) {
+				$log->debug('No service_type for service '.$Service->to_string());
+			} else {
+				$log->error('No service_type for service '.$Service->to_string());
+			}
+			$Project->unlock();
+			return;
+		}
 	} # end if
 
 	my $status;
@@ -527,22 +546,40 @@ sub internal_calc {
 	# We are doing this in an eval because we don't actually want to die.
 	eval 'require openprint::Estimating::'.$service_type;
 	$log->error("Error in requiring $package $@") if $@;
+	my @variables = eval('openprint::Estimating::'.$service_type.'::variables($project_index, $service_index, $specs, \%specs)');
+$log->debug("Variables: @variables");
+
 	if ( Debug ) {
-		foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
+		foreach my $key ( @variables ) {
 			$log->debug("Internal Calc:: before calc $key $specs{$key} :". $specs_cache{$service_index}{$key});
 		} # end foreach
 	} # end if
+
 	if ( my $function = $package->can('calc') ) {
-		my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );
+		my $status = $function->($log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index);
 		$specs{Status} = $status;
 		my $elapsed = time - $starttime;
-		$log->debug( sprintf( '%s calc: (%s) Elapsed seconds: %d (%s) prices(%s)', $service_type, $status, $elapsed, $specs{alert}, join(',',map { $specs{"txtPrice$_"} } $Project->quantity_indexes() ) ) );
+		$log->debug(sprintf(
+					'%s calc: (%s) Elapsed seconds: %d (%s) prices(%s)',
+					$service_type, $status, $elapsed, $specs{alert},
+					join(',', map { $specs{"txtPrice$_"} } $Project->quantity_indexes())
+					));
 
 		$Service->save({status=>$status}) if $status ne $Service->status();
 
-		foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
+		my @changes = map { (
+				($specs{$_} and !$$specs{$_})
+				or
+				(!$specs{$_} and $$specs{$_})
+				or
+				$specs{$_} and $$specs{$_} and ( $specs{$_} ne $$specs{$_} )
+				) ? $_ : () } @variables;
+		$Project->add_to_log( @openprint::session{'company_id','user_id'},
+				'Save Service ' . $Service->name() . ' changes: '.join(', ', map { $_.': '.$$specs{$_}.'=>'.$specs{$_} } @changes ));
+
+		foreach my $key ( @variables ) {
 			$log->debug("Internal Calc:: looking at $key new $specs{$key} : old ". $$specs{$key}) if Debug;
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $specs{$key} );
+			openprint::service::insert_service_spec($log, $dbh, $project_index, $service_index, $key, $specs{$key});
 		} # end foreach
 	} else {
 		$log->error($package . ' cant calc');
@@ -556,7 +593,7 @@ sub internal_calc {
 
 # Returns vale in seconds
 sub get_runtime {
-    my ( $Project, $service_index, $Equipment, $impressions, $speed, $pertains_to ) = @_;
+	my ( $Project, $service_index, $Equipment, $impressions, $speed, $pertains_to ) = @_;
 	my $Service = $Project->Service( $service_index );
 	return $Service->runtime( $Equipment, $impressions, $speed, $pertains_to );
 } # end sub get_runtime

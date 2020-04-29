@@ -11,7 +11,7 @@ use vars qw( $debug $log $dbh %config %session $table $serial %fields %find_fiel
 *config = \%openprint::config;
 *session = \%openprint::session;
 
-$debug = 0;
+$debug = 1;
 
 require sql;
 require ssi;
@@ -84,6 +84,7 @@ $serial = 'purchaseorders_id_seq';
 	shipto_email				=>	'shipto_email',
 	manifest_id					=>	'manifest_id',
 	cancelled						=>		'cancelled',
+	do_not_pay					=>	'do_not_pay',
 	#notifications				=>	undef,
 );
 
@@ -108,6 +109,7 @@ $serial = 'purchaseorders_id_seq';
 	cancelled		=>	0,
 	supplier_id	=>	undef,
 	contact_id	=>	undef,
+	do_not_pay	=>	'0',
 );
 
 sub save {
@@ -218,11 +220,11 @@ sub debug_Approvers {
 sub send_approval_required_notification {
 	my ( $self ) = @_;
 
-	my $email_template = misc::load_file( $log, $config{SkinPath} . '/email_template.html' );
+	my $email_template = ssi::slurp_content('/email_template.html');
 	my %info;
 	$info{From} = $openprint::User;
 	$info{PurchaseOrder} = $self;
-	$info{ReplacementText} = ssi::include( '/email_content/purchase_order_notification.html', \%info );
+	$info{ReplacementText} = ssi::include('/email_content/purchase_order_notification.html', \%info);
 
 	my @notification_types = map { 'PO ' . (new openprint::PurchaseOrder_ContentType( $_ )->name()) . ' Approvals' } sets::union( map { $_->type_id() } $self->Contents() );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
@@ -500,9 +502,16 @@ sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
 	@$New{keys %fields} = @$self{keys %fields};
-	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled', 'manifest_id' ) {
+	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled', 'manifest_id', 'Taxes' ) {
 		delete $$New{$_};
 	} # end foreach
+	my @Taxes;
+	foreach my $Tax ( $self->Taxes() ) {
+		my $NewTax = $Tax->copy();
+		$NewTax->PurchaseOrder($New);
+		push @Taxes, $NewTax;
+	} # end foreach
+	$$New{Taxes} = \@Taxes;
 	$$New{created_by} = $session{user_id};
 	return $New;
 } # end sub copy
@@ -513,10 +522,8 @@ sub Manifest {
 
 # We don't make any db changes here.  That only happens on PO saving
 sub Taxes {
-	my ( $self ) = @_;
-	if ( @_ > 1 ) {
-		$$self{Taxes} = $_[1];
-	}
+	my $self = shift;
+	$$self{Taxes} = shift if @_;
 	@{$$self{Taxes}} = openprint::PurchaseOrder_Tax->find(purchaseorder_id=>$$self{id}) if $$self{id} and ! $$self{Taxes};
 
 if ( 0 ) {
@@ -684,6 +691,7 @@ sub num {
 sub can_send {
 	my $User = @_ > 1 ? $_[1] : $openprint::User;
 	return 1 if $$User{id} == $_[0]{created_by};
+	return 1 if $$User{type} eq 'A';
 	return $_[0]->can_authorize();
 } # end sub can_send
 
@@ -724,19 +732,28 @@ sub can_authorize {
 # Can we assume that we can view it?
 sub can_see_pricing {
 	if ( ! $_[0]{id} ) {
-		$log->debug("Ccan see because new PO") if $debug;
+		$log->debug('Can see because new PO') if $debug;
 		return 1;
 	} # end if
 
 	my $User = $openprint::User;
 	
-	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','InventoryManager'], $$User{id} ) ) {
-		$log->debug('can see') if $debug;
+	if (
+			( $$User{id} == $_[0]->created_by() )
+			or
+			( $$User{type} eq 'A' )
+			or
+			$User->in_Group('Accounting','SalesAdmin','InventoryManager')
+		 ) {
+		$log->debug('can see pricing') if $debug;
 		return 1;
 	} # end if
 
+# Now Ahmed wants everything to not show pricing
+	return 0;
+
 	if ( $_[1] ) {
-		if ( $_[1]->Type()->type() eq 'Sheet Stock' or $_[1]->Type()->type() eq 'Roll stock' ) {
+		if ( $_[1]->Type()->type() eq 'Sheet Stock' or $_[1]->Type()->type() eq 'Roll Stock' ) {
 			# Ahmed doesn't want people to see stock pricing
 		} else {
 			my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] );
@@ -747,7 +764,7 @@ sub can_see_pricing {
 		} # end if
 	} else {
 		foreach my $C ( $_[0]->Contents() ) {
-		if ( $C->Type()->type() eq 'Sheet Stock' or $C->Type()->type() eq 'Roll stock' ) {
+		if ( $C->Type()->type() eq 'Sheet Stock' or $C->Type()->type() eq 'Roll Stock' ) {
 			# Ahmed doesn't want people to see stock pricing
 		} else {
 
@@ -759,6 +776,7 @@ sub can_see_pricing {
 			} # end if
 		} # end foreach C
 	} # end if
+
 	if ( my @notifications = $_[0]->notifications() ) {
 		if ( sets::isin( $$User{id}, \@notifications ) ) {
 			$log->debug($$User{firstname} . ' can see because in notifications.' ) if $debug;

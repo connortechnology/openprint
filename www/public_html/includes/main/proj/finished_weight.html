@@ -1,4 +1,7 @@
 <li> 
 	<label>Finished weight</label>
-	<input name="txtFinishedWeight" size="9" value="<?txtFinishedWeight?>" onkeyup="calc(this.form.name);" /> lbs
+<?echo(
+		input(type=>'float',name=>'txtFinishedWeight', value=>$$variable{txtFinishedWeight}, onkeyup=>'calc(this.form.name);');
+)?>
+lbs
 </li>

@@ -1,4 +1,6 @@
 use strict;
+use warnings;
+
 package openprint::MaterialPrice;
 our @ISA = qw( openprint::Object );
 
@@ -14,35 +16,36 @@ $table = 'tbl_material_prices';
 $serial = 'materialprices_id_seq';
 
 %fields = (
-	'id'			=>  'id',
-	'pricelist_id'	=>	'lnglistindex',
-	'material_id'	=>	'lngmaterialindex',
-	'equipment_id'	=>	'lngequipmentindex',
-	'min'			=>	'lngmin',
-	'max'			=>	'lngmax',
-	'units'			=>	'strunits',
-	'cost'			=>	'dblcost',
-	'markup'		=>	'dblmarkup',
-	'price'			=>	'dblprice',
-	'discountable'	=>	'ysndiscountable',
-	'interpolate'	=>	'interpolate',
+	id							=>  'id',
+	pricelist_id		=>	'lnglistindex',
+	material_id			=>	'lngmaterialindex',
+	equipment_id		=>	'lngequipmentindex',
+	min							=>	'lngmin',
+	max							=>	'lngmax',
+	range_units			=>	'range_units',
+	units						=>	'strunits',
+	cost						=>	'dblcost',
+	markup					=>	'dblmarkup',
+	price						=>	'dblprice',
+	discountable		=>	'ysndiscountable',
+	interpolate			=>	'interpolate',
 );
 %transforms = (
-	'min'		=>	[ 's/[^\d\.\-]//g' ],
-	'max'		=>	[ 's/[^\d\.\-]//g' ],
-	'cost'		=>	[ 's/[^\d\.\-]//g' ],
-	'markup'	=>	[ 's/[^\d\.\-]//g' ],
-	'price'		=>	[ 's/[^\d\.\-]//g' ],
+	min			=>	[ 's/[^\d\.\-]//g' ],
+	max			=>	[ 's/[^\d\.\-]//g' ],
+	cost		=>	[ 's/[^\d\.\-]//g' ],
+	markup	=>	[ 's/[^\d\.\-]//g' ],
+	price		=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (
-	'min'			=>	undef,
-	'max'			=>	undef,
-	'cost'	=>	undef,
-	'markup'	=>	undef,
-	'price'		=>	undef,
-	'equipment_id'	=>	undef,
-	'discountable'	=>	q`'Y'`,
-	'interpolate'	=>	0,
+	min						=>	undef,
+	max						=>	undef,
+	cost					=>	undef,
+	markup				=>	undef,
+	price					=>	undef,
+	equipment_id	=>	undef,
+	discountable	=>	q`'Y'`,
+	interpolate		=>	0,
 );
 
 sub next {
@@ -62,31 +65,30 @@ sub Material {
 } # end sub Material
 
 sub markup {
-    if ( @_ > 1 ) {
-        $_[0]{markup} = $_[1];
-		$_[0]{markup} =~ s/[^\d\.\-]//g;
-        $_[0]->price( undef );
-    } # end if
-    return $_[0]{markup};
+	if ( @_ > 1 ) {
+		$_[0]{markup} = $_[0]->transform(markup=>$_[1]);
+		$_[0]->price(undef);
+	} # end if
+	return $_[0]{markup};
 } # end sub markup
-sub cost {
-    if ( @_ > 1 ) {
-        $_[0]{cost} = $_[1];
-		$_[0]{cost} =~ s/[^\d\.\-]//g;
-        $_[0]->price( undef );
-    } # end if
-    return $_[0]{cost};
-} # end sub cost
-sub price {
 
-    if ( @_ > 1 ) {
-        $_[0]{price} = $_[1];
-    } # end if
+sub cost {
+	if ( @_ > 1 ) {
+		$_[0]{cost} = $_[0]->transform(cost=>$_[1]);
+		$_[0]->price(undef);
+	} # end if
+	return $_[0]{cost};
+} # end sub cost
+
+sub price {
+	if ( @_ > 1 ) {
+		$_[0]{price} = $_[1];
+	} # end if
 	my $self = $_[0];
-    if ( ! defined $_[0]{price} ) {
-        $_[0]{price} = Math::Round::nearest( .00001, $_[0]{cost} * ( 1+($_[0]{markup}/100) ) );
-    } # end if
-    return $_[0]{price};
+	if ( ! defined $_[0]{price} ) {
+		$_[0]{price} = Math::Round::nearest( .00001, $_[0]{cost} * ( 1+($_[0]{markup}/100) ) );
+	} # end if
+	return $_[0]{price};
 } # end sub price
 
 1;

@@ -1,12 +1,12 @@
 #!/bin/bash
 # ----------------------------------------------------------------------
-# mikes handy rotating-filesystem-snapshot utility
+# handy rotating-filesystem-snapshot utility
 # ----------------------------------------------------------------------
 # this needs to be a lot more general, but the basic idea is it makes
 # rotating backup-snapshots of the path given in the first parameter to the path in the second paramter
 # ----------------------------------------------------------------------
 
-unset PATH	  # suggestion from H. Milz: avoid accidental use of $PATH
+unset PATH	  # avoid accidental use of $PATH
 
 # ------------- system commands used by this script --------------------
 ID=/usr/bin/id;
@@ -31,13 +31,16 @@ IONICE="/usr/bin/ionice -c3";
 CP="$NICE $IONICE $CP";
 RSYNC="$NICE $IONICE $RSYNC";
 RM="$NICE $IONICE $RM";
-
 BACKUPS=3;
+DEBUG=0;
 
-USAGE="Usage: `/usr/bin/basename $0` [-hv] [-n int] [-c arg] [-t type] [-T] args"
+USAGE="Usage: `/usr/bin/basename $0` [-hv] [-n int] [-c arg] [-t type] [-T] [-4] args"
 
-while getopts hvn:c:t:T OPT; do
+while getopts dh4vn:c:t:T OPT; do
 	case "$OPT" in
+    d)
+      DEBUG=1;
+      ;;
 		h)
 			echo $USAGE
 			exit 0
@@ -58,6 +61,9 @@ while getopts hvn:c:t:T OPT; do
 		T)
 			TIME="/usr/bin/time "
 			;;
+    4)
+      RSYNC="$RSYNC -4"
+      ;;
 		\?)
 			# getopts issues an error message
 			echo $USAGE >&2
@@ -93,7 +99,7 @@ if [ -d "$DEST$TYPE.new" ] ; then
 	TODAY=$($DATE -I)
 	CREATEDON=$($STAT -c %y "$DEST$TYPE.new" | $AWK '{ printf $1 "\n"}')
 	if (( "${TODAY//-/}" > "${CREATEDON//-/}" )) ; then 
-		echo "$RM -r $DEST$TYPE.new && $RM $DEST$TYPE.new.log";
+    if [ DEBUG ]; then echo "$RM -r $DEST$TYPE.new && $RM $DEST$TYPE.new.log"; fi;
 		$RM -r "$DEST$TYPE.new"
 		$RM "$DEST$TYPE.new.log"
 	else 
@@ -103,33 +109,33 @@ if [ -d "$DEST$TYPE.new" ] ; then
 fi;
 
 if [ -d "$DEST$TYPE.0" ] ; then 
-	echo "$CP -al $DEST$TYPE.0 $DEST$TYPE.new"
+	if [ DEBUG ]; then echo "$CP -al $DEST$TYPE.0 $DEST$TYPE.new"; fi;
 	$CP -al "$DEST$TYPE.0" "$DEST$TYPE.new"
 else
-	echo "Making $DEST$TYPE.new"
+	if [ DEBUG ]; then echo "Making $DEST$TYPE.new"; fi;
 	$MKDIR -p "$DEST$TYPE.new"
 fi;
 # step 4: rsync from the system into the latest snapshot (notice that
 # rsync behaves like cp --remove-destination by default, so the destination
 # is unlinked first.  If it were not so, this would copy over the other
 # snapshot(s) too!
-#echo "$RSYNC \"$1\" \"$DEST\""
 if [ -e "$DEST$TYPE.0.du" ] ; then
 	OLDDU=$(<"$DEST$TYPE.0.du")
 else
 	OLDDU=`$DU -b -sh "$DEST$TYPE.new" |$AWK '{print $1}'`
 	echo $OLDDU > "$DEST$TYPE.0.du"
 fi
-echo $OLDDU
+echo "Size of last backup: $OLDDU"
 if [[ $SOURCE =~ : ]]; then
-	echo "$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file=$DEST$TYPE.new.log $@ -e ssh -T -c aes128-ctr -o Compression=no -x $SOURCE $DEST$TYPE.new"
+	if [ DEBUG ]; then echo "$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file=$DEST$TYPE.new.log $@ -e ssh -T -x $SOURCE $DEST$TYPE.new"; fi;
 	$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file="$DEST$TYPE.new.log" $@ -e "ssh -T -c aes128-ctr -o Compression=no -x" "$SOURCE" "$DEST$TYPE.new"
 else
-	echo "$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file=$DEST$TYPE.new.log $@ $SOURCE $DEST$TYPE.new"
+if [ DEBUG ]; then echo "$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file=$DEST$TYPE.new.log $@ $SOURCE $DEST$TYPE.new"; fi;
 	$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file="$DEST$TYPE.new.log" $@ "$SOURCE" "$DEST$TYPE.new"
 fi
 if [ $? != 0 -a $? != 24 ]; then
     echo "rsync return non-zero code. ($?)"
+rc=$?
 
 	# Only mark it bad if we already haev a scuccessful backup
 	if [ -e "$DEST$TYPE.0" ] ; then
@@ -143,14 +149,14 @@ if [ $? != 0 -a $? != 24 ]; then
 		$TOUCH "$DEST$TYPE.bad"
 		NEWDU=`$DU -b -sh "$DEST$TYPE.bad" |$AWK '{print $1}'`
 		echo $NEWDU > "$DEST$TYPE.bad.du"
-		exit $?
+		exit $rc
 	fi
 fi;
 
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
 $TOUCH "$DEST$TYPE.new"
 NEWDU=`$DU -b -sh "$DEST$TYPE.new" |$AWK '{print $1}'`
-echo $NEWDU
+echo "Size of new backup: $NEWDU";
 
 # rotating snapshots of /home (fixme: this should be more general)
 
@@ -160,23 +166,23 @@ if [ -d "$DEST$TYPE.$BACKUPS" ] ; then
 	$MV "$DEST$TYPE.$BACKUPS" "$DEST$TYPE.$BACKUPS.todelete"
 	$RM -rf "$DEST$TYPE.$BACKUPS.todelete" ;
 	$RM "$DEST$TYPE.$BACKUPS.log"
-else
-	echo "No $DEST$TYPE.$BACKUPS to delete"
+#else
+	#echo "No $DEST$TYPE.$BACKUPS to delete"
 fi ;
 
 while (( "$BACKUPS" > "0" )) ; do
 	# step 2: shift the middle snapshots(s) back by one, if they exist
 	DEC=$(($BACKUPS-1))
 	if [ -d "$DEST$TYPE.$DEC" ] ; then
-		echo "$MV $DEST$TYPE.$DEC $DEST$TYPE.$BACKUPS"
+		#echo "$MV $DEST$TYPE.$DEC $DEST$TYPE.$BACKUPS"
 		$MV "$DEST$TYPE.$DEC" "$DEST$TYPE.$BACKUPS" ;
 	fi ;
 	if [ -e "$DEST$TYPE.$DEC.du" ] ; then
-        echo "$MV $DEST$TYPE.$DEC.du $DEST$TYPE.$BACKUPS.du"
+        #echo "$MV $DEST$TYPE.$DEC.du $DEST$TYPE.$BACKUPS.du"
         $MV "$DEST$TYPE.$DEC.du" "$DEST$TYPE.$BACKUPS.du" ;
     fi ;
 	if [ -e "$DEST$TYPE.$DEC.log" ] ; then
-        echo "$MV $DEST$TYPE.$DEC.log $DEST$TYPE.$BACKUPS.log"
+        #echo "$MV $DEST$TYPE.$DEC.log $DEST$TYPE.$BACKUPS.log"
         $MV "$DEST$TYPE.$DEC.log" "$DEST$TYPE.$BACKUPS.log" ;
     fi ;
 

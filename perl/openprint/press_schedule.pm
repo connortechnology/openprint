@@ -116,7 +116,7 @@ sub add_project_to_press_schedule {
 
 	my @sigs = $service_id ? ( $service_id ) : $Project->signatures();
 
-	my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
+	my $ServiceType = openprint::ServiceType->find_one(name=>'Signature');
 
 	my @sigs_not_on_schedule;
 	foreach my $s_s_id ( sets::union(@sigs) ) {
@@ -152,12 +152,12 @@ sub add_project_to_press_schedule {
 		if ( my $Equipment = openprint::Equipment->find_one(strid=>$$sig_specs{UsePress}) ) {
 			my $Job = new openprint::ScheduledJob();
 			$_ = $Job->save({
-				'project_id'	=>	$Project->id(),
-				'equipment_id'	=>	$Equipment->id(),
-				'starttime'		=>	undef,
-				'service_id'	=>	\@service_ids,
-				'pertains_id'	=>	\@service_ids,
-				'servicetype_id'	=>	$ServiceType->id(),
+				project_id		=>	$Project->id(),
+				equipment_id	=>	$Equipment->id(),
+				starttime		=>	undef,
+				service_id		=>	\@service_ids,
+				pertains_id		=>	\@service_ids,
+				servicetype_id	=>	$ServiceType->id(),
 			});
 			if ( $_ ) {
 				$error .= 'Error adding to press schedule: ' . $_;

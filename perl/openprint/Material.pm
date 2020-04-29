@@ -72,19 +72,19 @@ sub delete {
 sub prices {
 	my $self = shift;
 
-	return openprint::MaterialPrice->find('material_id'=>$$self{id});
+	return openprint::MaterialPrice->find(material_id=>$$self{id});
 } # end sub prices
 
 sub New_Specification {
 	my ( $self, $name, $options ) = @_;
 
 	if ( ! $$self{NewSpecifications} ) {
-		foreach my $Spec ( openprint::MaterialSpecification->find( 'material_id'=>$$self{id}, 'order'=>'equipment_id, min NULLS FIRST' ) ) {
+		foreach my $Spec ( openprint::MaterialSpecification->find( material_id=>$$self{id}, order=>'equipment_id, min NULLS FIRST' ) ) {
 			push @{$$self{NewSpecifications}{$$Spec{equipment_id}}{$$Spec{name}}}, $Spec;
 		} # end foreach
 	} # end if
 	if ( ! $$self{NewSpecifications} ) {
-		$openprint::log->warn("No specfications for " . $self->name() );
+		$openprint::log->warn('No specifications for ' . $$self{name});
 		return;
 	} # end if
 #if ( $debug ) {
@@ -102,7 +102,7 @@ sub New_Specification {
 #$log->debug("Returned $v: $$v{value}");
 		return $v;
 	} # end if 
-	$openprint::log->warn("No specfications for " . $self->name() . " Looking for equipment: $$options{equipment_id} spec: $name") if $debug;
+	$openprint::log->warn("No specfications for $$self{name} Looking for equipment: $$options{equipment_id} spec: $name") if $debug;
 	return;
 
 } # end sub New_Specification

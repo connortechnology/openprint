@@ -23,10 +23,16 @@ $table = 'order_invoices';
 );
 
 sub Order {
-	return new openprint::Order( $_[0]{order_id} );
+	if ( ! $_[0]{Order} ) {
+		$_[0]{Order} = new openprint::Order($_[0]{order_id});
+	}
+	return $_[0]{Order};
 } 
 sub Invoice {
-	return new openprint::Invoice( $_[0]{invoice_id} );
+	if ( ! $_[0]{Invoice} ) {
+		$_[0]{Invoice} = new openprint::Invoice($_[0]{invoice_id});
+	}
+	return $_[0]{Invoice};
 } 
 
 1;

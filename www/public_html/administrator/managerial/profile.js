@@ -6,13 +6,15 @@ function check_field( element ) {
 		var id = matches[1];
 		if ( 
 			element_changed( form.elements['required-'+id] ) ||
+			element_changed( form.elements['viewable-'+id] ) ||
+			element_changed( form.elements['on_registration-'+id] ) ||
 			element_changed( form.elements['name-'+id] ) ||
 			element_changed( form.elements['type-'+id] ) ||
 			element_changed( form.elements['values-'+id] ) 
 		   ) {
-			$('field_'+id).addClassName('changed');
+			$j('#field_'+id).addClass('changed');
 		} else {
-			$('field_'+id).removeClassName('changed');
+			$j('#field_'+id).removeClass('changed');
 		} // end if
 	} else {
 		alert('Not matched' + element.name);
@@ -20,54 +22,67 @@ function check_field( element ) {
 } // end function check_field 
 
 function newField( ) {
-	new Ajax.Request( '_field_tr.html', { 
-			method: 'get', 
-			parameters: { 
+	jQuery.ajax( '_field_tr.html', { 
+			data: { 
 				action: 'Add'
-			},
-			onSuccess: function( transport ) {
-				$('fields').insert({top: transport.responseText} );
-			}
-		} 
-	);
+			} } ).done( function( html ) {
+				$j('#fields').insert({top: html });
+			});
 } // end function newField
+
 function copyField( id ) {
-	var form = $('f1');
-	new Ajax.Request( '_field_tr.html', { 
-			parameters: { 
+	var form = jQuery('#f1')[0];
+	jQuery.ajax( '_field_tr.html', { 
+			data: { 
 				field_id: id,
 				action: 'Copy',
 				required: get_value(form.elements['required-'+id])
-			},
-			onSuccess: function( transport ) {
-				$('field_'+ id).insert({after: transport.responseText} );
+			} } ).done(
+			function( transport ) {
+				$j('#field_'+ id).insert({after: transport.responseText} );
 			}
-		} 
 	);
 }
 function delField( id ) {
-	new Ajax.Request('_field_tr.html', 
+	jQuery.ajax('_field_tr.html', 
 		{ 
-			method: 'get', 
-			parameters: { 
+			data: { 
 				field_id: id,
 				action: 'Delete'
 			},
-			onSuccess: function( transport ) {
-				if ( transport.responseText ) {
-					alert( transport.responseText );
+		} ).done(
+			function( html ) {
+				if ( html ) {
+					alert( html );
 				} else {
-					var tr = $('field_'+id); tr.parentNode.removeChild(tr);
+					var tr = $j('#field_'+id);
+          tr.remove();
 				} // end if
 			}
-		} 
 	);
 }
 
 function upField( field_id ) {
-	new Ajax.Updater('fields','_user_fields_tbody.html', { 
-			method: 'get', 
-			parameters : { action: 'up', field_id: field_id }
-		}
-	);
+	jQuery('#fields').load('_user_fields_tbody.html', { action: 'up', field_id: field_id } );
 } // end function upField
+
+function setup_sortable() {
+Sortable.create( 'fields', {
+    tag: 'tr',
+    constraint: 'vertical',
+    onUpdate: function( container ) {
+        new Ajax.Updater( 'fields', '_company_fields_tbody.html', { parameters: { update: Sortable.serialize(container) }, evalScripts: true } );
+      }
+  } );
+} // end function setup_sortable
+
+function save_all() {
+	var form = $j('#f1');
+	if ( !form ) {
+		console.log("No form found for f1");
+		return;
+	}
+	form = form[0];
+	form.elements['action'].value='Save';
+	form.submit();
+}

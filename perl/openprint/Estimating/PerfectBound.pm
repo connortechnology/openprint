@@ -48,9 +48,10 @@ my %variables = (
 		OverridePrice1=>['save'], OverridePrice2=>['save'], OverridePrice3=>['save'],
 		);
 
-		my @possible_pages = ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40 );
+my @possible_pages = ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40 );
+
 sub variables {
-  my ( $p_id, $s_id, $specs ) = @_;
+  my ( $p_id, $s_id, $old_specs, $specs ) = @_;
   my $Project = new openprint::Project( $p_id );
 	my @v;
 	foreach my $k ( keys %variables ) {
@@ -296,6 +297,24 @@ sub signature_calc {
 				$results{Breakdown} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{Height}, $min_spine_length );
 				next;
 			} # end if
+			my $sizes = $Equipment->specification('PerfectBindFinalSizes');
+			if ( $sizes ) {
+				my @sizes = map { [ split('x',$_) ] } split(',',$sizes);
+				my $found = 0;
+				foreach my $size ( @sizes ) {
+					my ( $width, $height ) = @{$size};
+					if ( 
+							( $width == $$specs{Width} and $height == $$specs{Height} ) 	
+						 ) {
+					$found = 1;
+					last;
+					} # end if
+				} # end foreach
+				if ( ! $found ) {
+					$results{Breakdown} .= "Book size not in allowed sizes: $sizes<br/>";
+					next;
+				}
+			} # end if sizes	
 
 			if ( $Equipment->specification('Type') eq 'Press' ) {
 #next if $$specs{'txtPockets'.$qty_index} > 1;

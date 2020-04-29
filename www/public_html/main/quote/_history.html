@@ -80,6 +80,9 @@
 	<table class="List">
 		<tr> 
 			<th class="quote_id">Quote ID</th>
+<? if ( ! $session{$$variable{uri}.'?company_id'} ) ?>
+			<th class="CompanyName">Company</th>
+<? endif ( ! $session{$$variable{uri}.'?company_id'} ) ?>
 			<th class="QuotedFor">Quoted For</th>
 			<th class="QuotedBy">Quoted By</th>
 			<th class="Date">Date</th>
@@ -91,31 +94,61 @@
 <? echo (
 	my $html;
 	my $rowclass;
+my $total = 0;
 	foreach my $Quote ( @{$$variable{Quotes}} ) {
-if ( $Quote->can_view() ) {
-$html .= sprintf(q`
-<tr%1$s> 
-	<td class="quote_id"><a href="history_details.html?quote_id=%2$d">%2$d</a></td>
-	<td class="QuotedFor"><a href="history_details.html?quote_id=%2$d">%3$s</a></td>
-	<td class="User"><a href="history_details.html?quote_id=%2$d">%4$s</a></td>
-	<td class="Date"><a href="history_details.html?quote_id=%2$d">%5$s</a></td>
-	<td class="Price"><a href="history_details.html?quote_id=%2$d">%6$s</a></td>
-	<td class="Price"><a href="history_details.html?quote_id=%2$d">%7$s</a></td>
-	<td class="Price"><a href="history_details.html?quote_id=%2$d">%8$s</a></td>
-	<td class="checkbox"><input type="checkbox" name="chkDelete" value="%2$d" /></td>
-</tr>
-<tr%1$s>
-	<td>&nbsp;</td>
-	<td colspan="6">%9$s</td><td></td>
-</tr>`, $rowclass, $Quote->id(), 
-	html_escape( $Quote->for_name() ), 
-	$Quote->User()->name(),
-	format_date( $Quote->created_on() ),
-	openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total1() ) ),
-	openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
-	openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),
-	$Quote->description(),
-);
+$total += 1;
+		if ( $Quote->can_view() ) {
+			if ( ! $session{$$variable{uri}.'?company_id'} ) {
+				$html .= sprintf(q`
+				<tr%1$s>
+					<td class="quote_id"><a href="history_details.html?quote_id=%2$d">%2$d</a></td>
+					<td class="CompanyName"><a href="history_details.html?quote_id=%2$d">%3$s</a></td>
+					<td class="QuotedFor"><a href="history_details.html?quote_id=%2$d">%4$s</a></td>
+					<td class="User"><a href="history_details.html?quote_id=%2$d">%5$s</a></td>
+					<td class="Date"><a href="history_details.html?quote_id=%2$d">%6$s</a></td>
+					<td class="Price"><a href="history_details.html?quote_id=%2$d">%7$s</a></td>
+					<td class="Price"><a href="history_details.html?quote_id=%2$d">%8$s</a></td>
+					<td class="Price"><a href="history_details.html?quote_id=%2$d">%9$s</a></td>
+					<td class="checkbox"><input type="checkbox" name="chkDelete" value="%2$d" /></td>
+				</tr>
+				<tr%1$s>
+					<td>&nbsp;</td>
+					<td colspan="7">%10$s</td><td></td>
+				</tr>`, $rowclass, $Quote->id(),
+					html_escape( $Quote->Company->name() ),
+					html_escape( $Quote->for_name() ),
+					$Quote->User()->name(),
+					format_date( $Quote->created_on() ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total1() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),
+					$Quote->description(),
+				);
+			} else {
+				$html .= sprintf(q`
+				<tr%1$s> 
+					<td class="quote_id"><a href="history_details.html?quote_id=%2$d">%2$d</a></td>
+					<td class="QuotedFor"><a href="history_details.html?quote_id=%2$d">%3$s</a></td>
+					<td class="User"><a href="history_details.html?quote_id=%2$d">%4$s</a></td>
+					<td class="Date"><a href="history_details.html?quote_id=%2$d">%5$s</a></td>
+					<td class="Price"><a href="history_details.html?quote_id=%2$d">%6$s</a></td>
+					<td class="Price"><a href="history_details.html?quote_id=%2$d">%7$s</a></td>
+					<td class="Price"><a href="history_details.html?quote_id=%2$d">%8$s</a></td>
+					<td class="checkbox"><input type="checkbox" name="chkDelete" value="%2$d" /></td>
+				</tr>
+				<tr%1$s>
+					<td>&nbsp;</td>
+					<td colspan="6">%9$s</td><td></td>
+				</tr>`, $rowclass, $Quote->id(), 
+					html_escape( $Quote->for_name() ), 
+					$Quote->User()->name(),
+					format_date( $Quote->created_on() ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total1() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),
+					$Quote->description(),
+				);
+			}
 		} else {
 			$html .= sprintf(q`
 <tr%1$s>
@@ -139,6 +172,8 @@ $html .= sprintf(q`
 		} # end if can_view
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 	} # end foreach Quote
+$html .= '</table>';
+$html .= $total .= ' quotes<br/>';
 	return $html;
 ) ?>
 	</table>

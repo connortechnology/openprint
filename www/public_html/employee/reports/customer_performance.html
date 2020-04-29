@@ -5,6 +5,7 @@
 <form id="f1" name="f1" method="post" action="customer_performance.html">
 	<input type="hidden" name="btnFunction" />
 	<fieldset class="filters"><legend>Report Criteria</legend>
+<div class="leftColumn">
 		<ul>
 		 <li><label>Ordered On</label>
 			<? echo ( date_select_session( '/employee/reports/customer_performance.html', 'ordered_on_start', { with_today=>1,with_clear=>1 } ); ) ?>
@@ -46,12 +47,26 @@
 		<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) ?>
 		<li><label>Country</label>
 			<select id="country" name="country">
-				<option value=""> Select </option>
-				<? echo ( make_drop_down( \@countries::countries, $session{'/employee/reports/customer_performance.html?country'} ); ) ?>
+				<option value=""> All </option>
+				<? echo ( make_drop_down( \@countries::countries, $session{$$variable{uri}.'?country'} ); ) ?>
 			</select>
 		</li>
 			
 		</ul>
+</div>
+<div class="leftColumn">
+<ul>
+	<li><label>Has discount / markup?</label>
+		<?echo(radio('has_discount', [ 'Y', 'Yes', 'N','No','','Both' ], $session{$$variable{uri}.'?has_discount'} );)?>
+	</li>
+	<li><label>Has credit card fee?</label>
+		<?echo(radio('has_credit_card_fee', [ 'Y', 'Yes', 'N','No','','Both' ], $session{$$variable{uri}.'?has_credit_card_fee'} );)?>
+	</li>
+	<li><label>Has csr commission?</label>
+		<?echo(radio('has_csr_commission', [ 'Y', 'Yes', 'N','No','','Both' ], $session{$$variable{uri}.'?has_csr_commission'} );)?>
+	</li>
+</ul>
+</div>
 		 <p class="buttons">
 			<? echo ( 
 				my $html;

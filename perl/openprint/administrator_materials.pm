@@ -116,11 +116,16 @@ sub edit {
 			my @Prices = openprint::MaterialPrice->find( material_id=>$Material->id() );
 			my @Equipment = map { $_ ? new openprint::Equipment($_) : () } sets::union( map { $_->equipment_id() } @Prices );
 
+			# This adds entries for the blank new line, but since the checkbox won't be checked they won't have effect
 			my @NewPrices;
 			foreach my $Pricelist ( @Pricelists ) {
 				foreach my $Equipment ( @Equipment, {} ) {
 					my $NewPrice = new openprint::MaterialPrice();
-					$NewPrice->set( { pricelist_id=>$$Pricelist{id}, equipment_id=>$$Equipment{id}, material_id=>$$Material{id} } );
+					$NewPrice->set({
+							pricelist_id=>$$Pricelist{id},
+							equipment_id=>($$Equipment{id}?$$Equipment{id}:''),
+							material_id=>$$Material{id}
+							});
 					push @NewPrices,$NewPrice;
 				} # end foreach Equipment
 			} # end foreach Pricelist;
@@ -130,7 +135,7 @@ sub edit {
 				if ( ! $param{"chk-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"} ) {
 					if ( $$Price{id} ) {
 						$Price->delete();
-						push @pricing_changes, "Delete price: " . $Price->to_string();
+						push @pricing_changes, 'Delete price: ' . $Price->to_string();
 					}
 				} else {
 					my @price_changes = $Price->changes( {

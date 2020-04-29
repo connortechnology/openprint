@@ -52,17 +52,17 @@ sub variables {
 }
 
 sub has_overrides {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-    my @v;
-    if ( $qty_index ) {
-            push @v, map { ( $$specs{$_.$qty_index} and $$specs{$_.$qty_index} ne 'N' ) ? $_ : () } (
-					'OverridePrice','OverridePackageType','OverrideItemsPerPackage',
-                    );
-    } # end if
+	my @v;
+	if ( $qty_index ) {
+		push @v, map { ( $$specs{$_.$qty_index} and $$specs{$_.$qty_index} ne 'N' ) ? $_ : () } (
+				'OverridePrice','OverridePackageType','OverrideItemsPerPackage',
+				);
+	} # end if
 
-    return @v;
+	return @v;
 
 } # end sub has_overrides
 
@@ -239,12 +239,12 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 						#$openprint::log->debug("No versions");
 					} # end if
 				} else {
-					$openprint::log->debug("No signatnures");
+					$openprint::log->debug('No signatures');
 				} # end if
 
 				if ( $$specs{items_per_package} ) {
 					if ( $$specs{items_per_package} > $items_per_package ) {
-						$$specs{alert} .= "Can't fit that many.<br/>";
+						$$specs{alert} .= 'Can\'t fit that many.<br/>';
 						next;
 					} 
 					$items_per_package = $$specs{items_per_package};
@@ -257,7 +257,7 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 			} # end if
 			if ( $$specs{'OverrideItemsPerPackage'.$qty_index} eq 'Y' ) {
 				if ( $items_per_package < $$specs{'txtItemsPerPackage'.$qty_index} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "Can't fit " . $$specs{'txtItemsPerPackage'.$qty_index} . " in this package.<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Can\'t fit ' . $$specs{'txtItemsPerPackage'.$qty_index} . ' in this package.<br/>';
 					next;
 				}
 				$items_per_package = int $$specs{'txtItemsPerPackage'.$qty_index};
@@ -288,13 +288,13 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 			$qty = 0;
 		} # end if
 
-		if ( ! $qty ) {
+		if ( !$qty ) {
 			$status = 'uncalculated';
 		} # end if
 
 		my $unitPrice = $material_charge + $serviceCharge + $packingCharge;
 		my $price = $makeReady + ( $qty * $unitPrice );
-$log->debug(" $price = $makeReady + $qty * $unitPrice;");
+$log->debug("Price $price = MR $makeReady + skid qty $qty * $unitPrice") if DEBUG;
 
 		$$specs{"txtPackageQuantity$qty_index"} = $qty;
 		if ( $Project->markup() ) {
@@ -330,15 +330,23 @@ sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	my $package = 'skid';
+	if ( $$specs{ServiceType} eq 'Gaylords' ) {
+		$package = 'gaylord';
+	}
+	my $summary;
 
 	if ( $qty_index ) {
-		my $summary;
 		my $services = $Project->services();
 		my $Material = new openprint::Material( $$specs{'ddmPackageType'.$qty_index} );
 
 		if ( $$services{BulkSkids} ) {
+			# The purpose of this is to put all the breakdown in the skids line and leave the other packaging summaries empty
 			if ( $$services{BulkSkids}[0] == $service_id ) {
-				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' skid' : ' skids' );
+				if ( !$$specs{items_per_package} ) {
+					$summary .= 'around '.$$specs{"txtItemsPerPackage$qty_index"} . ' per '.$package.'<br/>';
+				}
+				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $package . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
 				my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
 				if ( $g > 1000 ) {
 					$summary .= sprintf( ', Total Weight: %slbs (%skg)', 
@@ -353,7 +361,8 @@ sub summary {
 				} # end if
 			} else {
 				if ( $$Material{name} ) {
-					$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $Material->name() . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
+					$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $$Material{name} . 
+						( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
 				} # end if
 			} # end if
 		} else {
@@ -387,9 +396,90 @@ sub summary {
 				} # end if
 			} # end if
 		} # end if
-		return $summary;
 	} else {
+		if ( $$specs{items_per_package} ) {
+			$summary .= 'maximum '.$$specs{items_per_package} . ' per '.$package.'<br/>';
+		}
 	} # end if
+	return $summary;
+} # end sub summary
+
+sub overview_summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	my $package = 'skid';
+	if ( $$specs{ServiceType} eq 'Gaylords' ) {
+		$package = 'gaylord';
+	}
+	my $summary;
+
+	my $services = $Project->services();
+	my $Material = new openprint::Material( $$specs{'ddmPackageType'.$qty_index} );
+
+	if ( $$services{BulkSkids} ) {
+		# The purpose of this is to put all the breakdown in the skids line and leave the other packaging summaries empty
+		if ( $$services{BulkSkids}[0] == $service_id ) {
+			if ( $$specs{items_per_package} ) {
+				$summary .= $$specs{"txtItemsPerPackage$qty_index"} . ' per '.$package.'<br/>';
+			}
+			$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $package . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
+if ( 0 ) {
+			my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
+			if ( $g > 1000 ) {
+				$summary .= sprintf( ', Total Weight: %slbs (%skg)', 
+						Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
+						Number::Format::format_number( Math::Round::nearest( 1, $g/1000 ) ),
+						);
+			} else {
+				$summary .= sprintf( ', Total Weight: %slbs (%sg)', 
+						Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
+						Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
+				);
+			} # end if
+}
+		} else {
+			if ( $$Material{name} ) {
+				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $$Material{name} . 
+					( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
+			} # end if
+		} # end if
+	} else {
+		if ( $$specs{ServiceType} eq 'Gaylords' ) {
+			$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' gaylord' : ' gaylords' );
+if ( 0 ) {
+			my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
+			if ( $g > 1000 ) {
+				$summary .= sprintf( ', Total Weight: %slbs (%skg)', 
+						Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
+						Number::Format::format_number( Math::Round::nearest( 1, $g/1000 ) ),
+						);
+			} else {
+				$summary .= sprintf( ', Total Weight: %slbs (%sg)', 
+						Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
+						Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
+				);
+			} # end if
+}
+		} else {
+			$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $Material->name() . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
+if ( 0 ) {
+			my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
+			if ( $g > 1000 ) {
+				$summary .= sprintf( ', Total Weight: %slbs (%skg)', 
+						Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
+						Number::Format::format_number( Math::Round::nearest( 1, $g/1000 ) ),
+				);
+			} else {
+				$summary .= sprintf( ', Total Weight: %slbs (%sg)', 
+						Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
+						Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
+				);
+			} # end if
+			} # end if
+		} # end if
+	} # end if
+	return $summary;
 } # end sub summary
 
 sub save {

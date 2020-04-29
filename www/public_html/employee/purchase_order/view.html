@@ -13,9 +13,9 @@
 	$html .= button( 'Print', { onclick=>'window.print();' } );
 	if ( $openprint::User->email() =~ /iconnor/ ) {
 	$html .= button( 'Debug', { onclick=>q`f2.btnFunction.value='Debug';f2.submit();`, text=>'Debug' } );
-	$html .= button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
 	}
 	if ( $$variable{PurchaseOrder}->can_send() ) {
+		$html .= button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
 		if ( $$variable{PurchaseOrder}->authorized() ) {
 			$html .= button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email' } );
 		} else {
@@ -25,23 +25,28 @@
 	} # end if
 	if ( $$variable{PurchaseOrder}->can_edit() ) {
 		$html .= button( 'Edit', { href=>'/employee/purchase_order/edit.html?po_id='.$$variable{PurchaseOrder}->id() } );
-		if ( $$variable{PurchaseOrder}->deleted() ) {
-			$html .= button( 'UnDelete', { onclick=>q`f2.btnFunction.value='Undelete';f2.submit();` } );
-		} else {
-			$html .= button( 'Delete', { onclick=>q`if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};` } );
-		} # end if
 		if ( $$variable{PurchaseOrder}->cancelled() eq '1' ) {
+			if ( $$variable{PurchaseOrder}->deleted() ) {
+				$html .= button( 'UnDelete', { onclick=>q`f2.btnFunction.value='Undelete';f2.submit();` } );
+			} else {
+				$html .= button( 'Delete', { onclick=>q`if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};` } );
+			} # end if
 			$html .= button( 'UnCancel', { onclick=>q`f2.btnFunction.value='UnCancel';f2.submit();` } );
 		} elsif ( $$variable{PurchaseOrder}->cancelled() eq '0' ) {
 			$html .= button( 'Cancel', { onclick=>q`f2.btnFunction.value='Cancel';f2.submit();` } );
+		} # end if
+		if ( $$variable{PurchaseOrder}->do_not_pay() ) {
+			$html .= button( 'UnDoNotPay', { onclick=>q`f2.btnFunction.value='UnDoNotPay';f2.submit();`, text=>'Remove Do Not Pay' } );
+		} else {
+			$html .= button( 'DoNotPay', { onclick=>q`f2.btnFunction.value='DoNotPay';f2.submit();`, text=>'Do Not Pay' } );
 		} # end if
 	} # end if can edit
 	$html .= button( 'Copy', { onclick=>q`f2.action='view.html';f2.btnFunction.value='Copy';f2.submit();` } );
 	return $html;
 ) ?>
 	</p>
-</form>
 	<br class="spacer"/>
+</form>
 	<div class="PO">
 		<div class="Header">
 			<div class="Logo">
@@ -58,9 +63,11 @@
 			</div>
 			<div class="PageTitle">
 				<h1>PURCHASE ORDER</h1><br/>
+				<span class="po">
 				P.O. # [ <? echo ( $$variable{PurchaseOrder}->link_to() ) ?> ]
-<? echo ( $$variable{PurchaseOrder}->is_FSC() ? 'FSC' : '' ) ?>
-<? echo ( $$variable{PurchaseOrder}->is_PEFC() ? 'PEFC' : '' ) ?>
+				<? echo ( $$variable{PurchaseOrder}->is_FSC() ? 'FSC' : '' ) ?>
+				<? echo ( $$variable{PurchaseOrder}->is_PEFC() ? 'PEFC' : '' ) ?>
+				</span>
 				<br/>
 				Date <? echo ( format_date( $$variable{PurchaseOrder}->created_on() ); ) ?><br/>
 <? if ( $$variable{PurchaseOrder}->manifest_id() ) ?>
@@ -81,7 +88,7 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 	$html .= 'Phone: ' . $$variable{PurchaseOrder}->vendor_phone().'<br/>' if $$variable{PurchaseOrder}->vendor_phone();
 	$html .= 'Fax: '.$$variable{PurchaseOrder}->vendor_fax().'<br/>' if $$variable{PurchaseOrder}->vendor_fax();
 	$html .= 'SMS: '.$$variable{PurchaseOrder}->vendor_sms().'<br/>' if $$variable{PurchaseOrder}->vendor_sms();
-	$html .= $$variable{PurchaseOrder}->vendor_email().'<br/>' if $$variable{PurchaseOrder}->vendor_email();
+	$html .= join('<br/>', split(/[;,]/, $$variable{PurchaseOrder}->vendor_email())).'<br/>' if $$variable{PurchaseOrder}->vendor_email();
 	return $html;
 ) ?>
 		</p>
@@ -121,7 +128,7 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 		<div id="DocketSummary"><p><label>DOCKET:</label>
 <? echo ( join('<br/>', $$variable{PurchaseOrder}->dockets() );) ?></p>
 		</div>
-		<br class="spacer"/><br/>
+		<br class="spacer"/>
 		<table class="Shipping">
 			<tr>
 				<th class="method">Shipping Method</th>
@@ -138,7 +145,7 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 		</table>
 		<br class="spacer"/>
 <div class="items">
-	<div class="header">
+	<div class="head">
 		<div class="quantity">QTY</div>
 		<div class="product">PRODUCT #</div>
 		<div class="description">ITEM / DESCRIPTION</div>
@@ -168,13 +175,14 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 			
 		$html .= sprintf('
 			<div class="product">%1$s</div>
-			<div class="description">%2$s<br/>%3$s%6$s</div>
+			<div class="description">%2$s<br/>%3$s%6$s%7$s</div>
 			<div class="docket"><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></div>
 			<div class="dept">%5$s</div>
 			', $C->product(), $C->item(), ( $C->item() eq $C->description() ? '' : $C->description() ), $C->docket(), $C->department(), 
 				join('<br/>',
 					map { $_->to_string() } $C->Item()->Inventory_Items()
 				),
+				( $C->check() ? '<span class="error">'.join('<br/>', $C->check()).'</span>' : '' ),
 			);
 
 		if ( $$variable{PurchaseOrder}->can_see_pricing($C) ) {
@@ -286,11 +294,17 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 			</table>
 		</fieldset>
 		</div>
-	</div><!--PO-->
-	<br class="spacer"/>
 <? if ( ! $$variable{PurchaseOrder}->authorized() ) ?>
 <div id="not_approved"><img src="/images/not_approved.png"/></div>
 <? endif ( ! $$variable{PurchaseOrder}->authorized() ) ?>
+<? if ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
+<div id="do_not_pay"><img src="/images/do_not_pay.png"/></div>
+<? endif ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
+<? if ( $$variable{PurchaseOrder}->cancelled() ) ?>
+<div id="cancelled"><img src="/images/cancelled.png"/></div>
+<? endif ( $$variable{PurchaseOrder}->cancelled() ) ?>
+	</div><!--PO-->
+	<br class="spacer"/>
 <? else ( $$variable{PurchaseOrder}->can_view() ) ?>
 You do not have the rights to view this PO.
 <? endif ( $$variable{PurchaseOrder}->can_view() ) ?>

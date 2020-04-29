@@ -28,14 +28,12 @@
 		</div>
 		<?eval( $$variable{Object} = $$variable{Category};)?>
 <?if($$variable{Category}->Specifications())?>
-		<div class="Specifications">
-		<?include(/includes/_specifications_view.html)?>
-        </div>
+		<div class="Specifications"><?include(/includes/_specifications_view.html)?></div>
 <?endif($$variable{Category}->Specifications())?>
-        <div class="rightColumn">
+		<div class="rightColumn">
 		<? eval ( $$variable{Album} = $$variable{Category};) ?>
-		<?include(/employee/assets/_assets.html)?>
-        </div>
+		<?include(/photo_albums/_album_photos.html)?>
+    </div>
 		<br class="spacer"/>
 		<? echo (
 			my $html;

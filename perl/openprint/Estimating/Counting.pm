@@ -115,5 +115,19 @@ sub save {
 sub display {
 } # end sub display
 
+sub has_overrides {
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+  my @v;
+  if ( $qty_index ) {
+      push @v, "OverridePrice$qty_index" if $$specs{"OverridePrice$qty_index"};
+  } # end if
+
+  return @v;
+
+} # end sub has_overrides
+
+
 1;
 __END__

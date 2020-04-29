@@ -70,6 +70,9 @@ $serial = 'lngProjectIndex_seq';
 	csr_commission    =>  'csr_commission',
 	priority					=>	'priority',
 	production_comments	=>	'production_comments',
+ordered_quantity	=> undef,
+ordered_quantity_index	=> undef,
+ordered_price	=> undef,
 );
 %transforms = (
 	id								=>	[ 's/\D//g', '<2147483647' ],
@@ -115,7 +118,7 @@ $serial = 'lngProjectIndex_seq';
 	value			=>	[ 'price1', 'price2', 'price3' ],
 	used_press_name	=>	q`(SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=projects.id AND strName='UsePress')`,
 	estimated_press_name	=>	q`(SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=projects.id AND strName IN ('ddmPress1','ddmPress2','ddmPress3'))`,
-	operator_id		=>	q`(SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=id)`,
+	operator_id		=>	q`(SELECT user_id FROM Project_Service_Operators WHERE service_id IN (SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngprojectindex=projects.id))`,
 	quote_id		=>	q`(SELECT quote_id FROM tbl_quote_details WHERE project_id=Projects.id)`,
 	servicetype_id	=>	'(SELECT servicetype_id FROM tbl_project_contents WHERE lngprojectIndex=id)',
 	type	=>	'(SELECT name FROM project_types WHERE project_types.id=type_id)',
@@ -123,7 +126,9 @@ $serial = 'lngProjectIndex_seq';
 
 sub delete {
 	my $self = shift;
-	sql::update( undef, undef, $table, ['id=?', $$self{id}], ['strStatus', 'Deleted'] );
+	if ( !$self->save({ status=>'Deleted' }) ) {
+		$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Deleted' );
+	}
 } # end sub delete
 
 sub deleted {
@@ -633,9 +638,9 @@ sub save {
 
 	my $rc;
 	if ( $$self{id} ) {
-		$rc  = $self->SUPER::save( $hash );
+		$rc  = $self->SUPER::save($hash);
 	} else {
-		$rc  = $self->SUPER::save( $hash );
+		$rc  = $self->SUPER::save($hash);
 		$openprint::Company->save({last_project_id=>$$self{id}}) if $openprint::Company and $openprint::Company->id() and $$self{id} and ! $rc;
 	} # end if
 
@@ -653,11 +658,9 @@ sub save {
 
 sub quantity_indexes {
 	my ( $self ) = @_;
-	if ( @_ > 1 ) {
-		$$self{quantity_indexes} = $_[1];
-	}
+	$$self{quantity_indexes} = $_[1] if @_ > 1;
 	if ( ! $$self{quantity_indexes} ) {
-		@{$$self{quantity_indexes}} = ();
+		$$self{quantity_indexes} = [];
 		foreach my $qty_index ( 1 .. 3 ) {
 			push @{$$self{quantity_indexes}}, $qty_index if $$self{"quantity$qty_index"};
 		} # end foreach qty_index
@@ -680,7 +683,7 @@ sub quantity {
 		delete $$self{quantity_indexes};
 	} # end if
 	return $$self{'quantity'.$index};
-} # end sub quanitty
+} # end sub quantity
 
 sub quantity1 {
 	my $self = shift;
@@ -693,6 +696,7 @@ sub quantity1 {
 	} # end if
 	return $$self{quantity1};
 } # end sub quantity1
+
 sub quantity2 {
 	my $self = shift;
 	if ( @_ ) {
@@ -704,6 +708,7 @@ sub quantity2 {
 	} # end if
 	return $$self{quantity2};
 } # end sub quantity2
+
 sub quantity3 {
 	my $self = shift;
 	if ( @_ ) {
@@ -974,7 +979,12 @@ sub shippingtype {
 } # end sub shippingtype
 
 sub ordered_quantity {
-	return $_[0]{'quantity'.$_[0]->ordered_quantity_index()};
+	my $qty_index = $_[0]->ordered_quantity_index();
+	if ( $qty_index ) {
+		return $_[0]{'quantity'.$qty_index};
+	}
+
+	return undef;
 } # end sub ordered_quantity
 
 sub ordered_quantity_index {
@@ -985,10 +995,11 @@ sub ordered_quantity_index {
 
 	if ( ! $$OP{quantity_index} ) {
 		my @qtys = $_[0]->quantity_indexes();
-#$openprint::log->debug("Project ordered_qty_index @qtys ");
-		if ( 1 == @qtys ) {
-			$$OP{quantity_index} = $qtys[0];
-		} # end if
+#$openprint::log->debug("Project ordered_qty_index (@qtys)");
+# This causes problems reporting ordered info on projects that havn't been ordered
+		#if ( 1 == @qtys ) {
+			#$$OP{quantity_index} = $qtys[0];
+		#} # end if
 	} # end if
 	return $$OP{quantity_index};
 } # end sub ordered_quantity_index
@@ -996,7 +1007,7 @@ sub ordered_quantity_index {
 sub ordered_price {
 	my $OP = $_[0]->Ordered_Project();
 	if ( ! $OP ) {
-		$openprint::log->error("No OP in ordered_price");
+		$openprint::log->error('No OP in ordered_price');
 	} else {
 		return $$OP{price} if $$OP{price};
 		return $_[0]{'price'.$$OP{quantity_index}};
@@ -1178,14 +1189,15 @@ sub add_signature {
 
 sub copy_signature {
 	my ( $self, $sig_specs, $data, $status ) = @_;
+	$self->lock();
 	my $new_service_index = $self->add_signature( undef, $status );
 	if ( ! $new_service_index ) {
 		$log->error('Error copying signature.');
+		$self->unlock();
 		return;
 	} # end if
 	my $new_specs = openprint::service::get_specs_ref( $self, $new_service_index );
 
-	my $ac = sql::start_transaction( $dbh );
 	foreach my $key ( openprint::Estimating::Printing::variables( $$self{id}, $new_service_index, $new_specs, $sig_specs ) ) {
 		next if $key eq 'SignatureIndex';
 		if ( exists $$data{$key} ) {
@@ -1194,7 +1206,7 @@ sub copy_signature {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
 		} # end if
 	} # end foreach
-	sql::end_transaction( $dbh, $ac );
+	$self->unlock();
 	return $new_service_index;
 } # end sub copy_signature
 
@@ -1223,15 +1235,17 @@ sub get_due_date {
 	my $runtime = 0;
 	foreach ( $self->signatures() ) {
 		$runtime += openprint::service::get_runtime( $self, $_ );
+$openprint::log->debug("Adding runtime $runtime");
 	} # end foreach
-	$duedatedays += int( $runtime / ( 24*60 ) );
+$openprint::log->debug('Adding runtime days: ' . int( $runtime / ( 24*60 ) ) );
+	$duedatedays += int( $runtime / ( 24*60*60 ) );
 	
 	return sprintf('%.4d-%.2d-%.2d', misc::add_delta_business_days( Date::Calc::Today(), $duedatedays ) );
 } # end sub get_due_date
 
 sub Ordered_Product {
 	my ( $self ) = @_;
-	if ( ! exists $$self{Ordered_Product} ) {
+	if ( ! exists($$self{Ordered_Product}) ) {
 		my @Products = openprint::OrderedProduct->find( project_id=>$$self{id} );
 		if ( @Products == 1 ) {
 			$$self{Ordered_Product} = $Products[0];
@@ -1243,8 +1257,10 @@ sub Ordered_Product {
 } # end sub Ordered_Product
 
 sub Ordered_Project {
+	$_[0]{Ordered_Project} = $_[1] if @_ > 1;
+
 	if ( ! exists $_[0]{Ordered_Project} ) {
-		$_[0]{Ordered_Project} = openprint::OrderedProject->find_one(order_id=>$_[0]{order_id}, project_id=>$_[0]{id} ) if $_[0]{order_id};
+		$_[0]{Ordered_Project} = openprint::OrderedProject->find_one(order_id=>$_[0]{order_id}, project_id=>$_[0]{id}) if $_[0]{order_id};
 	} # end if
 
 	if ( ! $_[0]{Ordered_Project} ) {
@@ -1400,6 +1416,9 @@ sub printed_on {
 	my ( $self ) = @_;
 	if ( ! exists $$self{printed_on} ) {
 		@$self{printed_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Marked Printed%'`, $$self{id} );
+		if ( ! $$self{printed_on} ) {
+			@$self{printed_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Form % Completed for%'`, $$self{id} );
+		}
 	} else {
 $openprint::log->debug("Printed on: $$self{printed_on}");
 	} # end if
@@ -1410,6 +1429,12 @@ sub shipped_on {
 	my ( $self ) = @_;
 	if ( ! exists $$self{shipped_on} ) {
 		@$self{shipped_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description IN ('Marked Shipped','Marked Picked Up')`, $$self{id} );
+		if ( $$self{docket} and ! $$self{shipped_on} ) {
+			my $ShippingLabel = openprint::Label->find_one( docket=>$$self{docket}, type=>'PackingSlip' );
+			if ( $ShippingLabel ) {
+				$$self{shipped_on} = $$ShippingLabel{created_on};
+			}
+		}
 	} # end if
 	return $$self{shipped_on};
 }
@@ -1482,20 +1507,20 @@ sub operator_id {
 	my ( $self ) = @_;
 
 	my ( $caller, undef, $line ) = caller;
-	$openprint::log->debug("deprecated call to Project::operator_id from $caller:$line");
+	$openprint::log->error("deprecated call to Project::operator_id from $caller:$line");
 
 	if ( ! $$self{operator_id} ) {
 		my $services = $self->services();
 		@$self{operator_id} = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $$self{id}, ( $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] ) );
 	} # end if
 	return $$self{operator_id};
-} # end sub Operator
+} # end sub operator_id
 
 sub Operator {
 	my ( $self ) = @_;
 
 	my ( $caller, undef, $line ) = caller;
-	$openprint::log->debug("deprecated call to Project::operator_id from $caller:$line");
+	$openprint::log->error("deprecated call to Project::operator_id from $caller:$line");
 
 	if ( ! $$self{Operator} ) {
 		$$self{Operator} = new openprint::User( $self->operator_id() );
@@ -1545,7 +1570,10 @@ sub Service {
 		$openprint::log->error("No service_id passed to Service for project $$self{id}");
 		Carp::cluck("No service_id passwrod to Project::Service");
 	} # end if
-	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
+	if ( ! $$self{Project_Services}{$service_id} ) {
+		$$self{Project_Services}{$service_id} = new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
+	}
+	return $$self{Project_Services}{$service_id};
 	#return new openprint::Project_Service( { service_id=>$service_id} );
 } # end sub Service
 
@@ -1583,24 +1611,26 @@ sub recalculate {
 	if ( $$services{''} ) {
 		my $Type = $self->Type();
 		$openprint::log->debug("Project::recalculate $$Type{type}");
-		my $specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{id}, $$services{''}[0], $$Type{type} );
+		my $specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable,
+				$$self{id}, $$services{''}[0], $$Type{type} );
 		my $status = $$specs{Status};
 		$openprint::log->debug("Project::recalculate $$Type{type} $status");
 		# Why is this ne calculated... if the project service can't calc... then neither can the signatures
 		if ( $status eq 'calculated' ) {
 			# Recalc signatures
 			my $module = 'openprint::Estimating::'.$$Type{type};
-			if ( my $function = $module->can( 'calculate_signatures' ) ) {
-				$status = $function->( $self );
+			if ( my $function = $module->can('calculate_signatures') ) {
+				$status = $function->($self);
 				$openprint::log->debug("$$Type{type}::Calculate_Sigs: status: $status");
-				openprint::service::status( $$self{id}, $$services{''}[0], $status );
+				openprint::service::status($$self{id}, $$services{''}[0], $status);
 			} # end if
-			openprint::service::auto_calculate( $self, $$services{''}[0] ) if $status eq 'calculated';
+			openprint::service::auto_calculate($self, $$services{''}[0]) if $status eq 'calculated';
 		} # end if
 	} # end if
-	$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Recalculated. Prices: '.join(',', $self->prices() ) );
 	$self->update_status();
 	$self->summary(undef);
+	foreach ( $self->quantity_indexes() ) { $self->price($_,undef); }
+	$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Recalculated. Prices: '.join(',', map { $openprint::Currency->format($_) } $self->prices() ) );
 	return $self->save({calculated_on=>'NOW()'});
 } # end sub recalculate
 
@@ -1658,19 +1688,19 @@ sub calliper {
 				} # end if
 			} # en dif ! calliper
 		} elsif ( $project_type eq 'ScratchPads' ) {
-            my @signatures = $Project->signatures();
+			my @signatures = $Project->signatures();
 # Single page item, if there are multiple signatures, it is due to multiple versions
-            my $signature_service_index = $signatures[0];
-            my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-            my $calliper;
-            if ( $$sig_specs{txtSpecificStockCalliper} ) {
-                $calliper = int($$sig_specs{txtSpecificStockCalliper}*10000);
-            } else {
-                $openprint::log->warn("Loading calliper from stock.  Consider populating sig_specs with calliper for speed.");
-                my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
-                $$sig_specs{txtSpecificStockCalliper} = $Paper->calliper();
-                $calliper = int( $Paper->calliper() * 10000);
-            } # end if
+			my $signature_service_index = $signatures[0];
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			my $calliper;
+			if ( $$sig_specs{txtSpecificStockCalliper} ) {
+				$calliper = int($$sig_specs{txtSpecificStockCalliper}*10000);
+			} else {
+				$openprint::log->warn("Loading calliper from stock.  Consider populating sig_specs with calliper for speed.");
+				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
+				$$sig_specs{txtSpecificStockCalliper} = $Paper->calliper();
+				$calliper = int( $Paper->calliper() * 10000);
+			} # end if
 			$finished_calliper += $$printing_specs{PageQuantity} * $calliper;
 		} else {
 			my @signatures = $Project->signatures();
@@ -1687,36 +1717,40 @@ sub calliper {
 				$calliper = int( $Paper->calliper() * 10000);
 			} # end if
 			my $pages = 1;
-			if ( sets::isin( $$sig_specs{rdbTemplateType}, [ '2PanelFold', '4PageFold', 'Landscape Fold', 'Portrait Fold' ] ) ) {
-				$pages = 2;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [  'NoFold', 'Portrait', 'Landscape','Square','Forms', '' ] ) ) {
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'PadsPortrait', 'PadsLandscape','PadsSquare','Pads' ] ) ) {
-				$pages *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType},['3PanelFold','3PanelZFold'] ) ) {
-				$pages = 3;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['4PanelFold', '4PanelZFold', '4PanelRollFold'] ) ) {
-				$pages = 4;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['5PanelFold', '5PanelZFold'] ) ) {
-				$pages = 5;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['6PanelFold', '6PanelZFold','12pg3PanelRollFold', '12pg3PanelZFold'] ) ) {
-				$pages = 6;
-			} elsif ( $$sig_specs{rdbTemplateType} eq 'SingleGateFold' ) {
-				$pages = 3;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'DoubleGateFold', '2Panel2Pocket' ] ) ) {
-				$pages = 4;
-			} elsif ( $$sig_specs{rdbTemplateType} eq 'DifficultFold' ) {
-				$pages = 6;
-			} elsif ( $$sig_specs{rdbTemplateType} eq '8PageFold' ) {
-				$pages = 4;
-			} elsif ( $$sig_specs{rdbTemplateType} eq '2Panel1Pocket' ) {
+			if ( $$sig_specs{rdbTemplateType} ) {
+				if ( sets::isin( $$sig_specs{rdbTemplateType}, [ '2PanelFold', '4PageFold', 'Landscape Fold', 'Portrait Fold' ] ) ) {
+					$pages = 2;
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [  'NoFold', 'Portrait', 'Landscape','Square','Forms', '' ] ) ) {
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'PadsPortrait', 'PadsLandscape','PadsSquare','Pads' ] ) ) {
+					$pages *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType},['3PanelFold','3PanelZFold'] ) ) {
+					$pages = 3;
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['4PanelFold', '4PanelZFold', '4PanelRollFold'] ) ) {
+					$pages = 4;
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['5PanelFold', '5PanelZFold'] ) ) {
+					$pages = 5;
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['6PanelFold', '6PanelZFold','12Page3PanelRollFold', '12Page3PanelZFold'] ) ) {
+					$pages = 6;
+				} elsif ( $$sig_specs{rdbTemplateType} eq 'SingleGateFold' ) {
+					$pages = 3;
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'DoubleGateFold', '2Panel2Pocket' ] ) ) {
+					$pages = 4;
+				} elsif ( $$sig_specs{rdbTemplateType} eq 'DifficultFold' ) {
+					$pages = 6;
+				} elsif ( $$sig_specs{rdbTemplateType} eq '8PageFold' ) {
+					$pages = 4;
+				} elsif ( $$sig_specs{rdbTemplateType} eq '2Panel1Pocket' ) {
 # FIXME: GUTTERS
-				$pages = 3;
-			} elsif ( $$sig_specs{rdbTemplateType} eq '3Panel1Pocket' ) {
+					$pages = 3;
+				} elsif ( $$sig_specs{rdbTemplateType} eq '3Panel1Pocket' ) {
 # FIXME: GUTTERS
-				$pages = 4;
-			} else {
-				$log->error("Unknown template type n calliper $$sig_specs{rdbTemplateType}");
-			} #// end if
+					$pages = 4;
+				} else {
+					$log->error("Unknown template type n calliper $$sig_specs{rdbTemplateType}");
+				} #// end if
+			} elsif ( $$sig_specs{txtWidth} != $$sig_specs{txtFinalWidth} or $$sig_specs{txtHeight} != $$sig_specs{txtFinalHeight} ) {
+				$log->error("No template given, but flat and final dimensions differ");
+			}
 			$finished_calliper += $pages * $calliper;
 		} # end if
 		$openprint::log->debug("******************************* FINISHED CALLIPER is $finished_calliper/1000 *********************************");
@@ -1731,11 +1765,11 @@ sub Currency {
 
 sub change_ProjectType {
 	my $error;
-	my $Project = $_[0];
+	my ( $Project, $ProjectType ) = @_;
    # This will likely never happen, because the act of cilcking on the different project type changes it.
 	my $services = $Project->services();
-    my $ProjectType = $_[1];
-    my $OldProjectType = $Project->Type();
+	my $OldProjectType = $Project->Type();
+
 # Handle ProjectType
 	if ( $$Project{type_id} ) {
 		if ( $OldProjectType->id() != $ProjectType->id() ) {
@@ -1744,7 +1778,7 @@ sub change_ProjectType {
 			} # end if
 			delete $$services{''};
 			if ( $OldProjectType->type() ne $ProjectType->type() ) {
-				$log->debug("Removing sigs because project type is different");
+				$log->debug('Removing sigs because project type is different');
 				# Brochure to multipage or nice versa.  Have to remove sigs.
 				foreach ( $Project->signatures() ) { openprint::print_project::delete_service( $Project, $_ ); }
 				delete $$services{Signature};
@@ -1754,7 +1788,8 @@ sub change_ProjectType {
 		} else {
 			$openprint::log->debug("Not Removing sigs because project type is same $$OldProjectType{id} == $$ProjectType{id}");
 		} # end if
-    } # end if
+	} # end if $$project{type_id}
+
 	if ( $$Project{id} ) {
 		if ( ! $$services{''} ) {
 			my $printing_service_index = openprint::print_project::insert_project_type( $openprint::r, $openprint::log, $openprint::dbh, $$Project{id}, $ProjectType->name() );
@@ -1765,9 +1800,10 @@ sub change_ProjectType {
 
 	# Remove no longer needed services
 		foreach my $ServiceType ( @oldRequiredServiceTypes ) {
+#FIXME I don't think we should use sets on Objects
 			if ( ! sets::isin( $ServiceType, \@newRequiredServiceTypes ) ) {
 				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
-					openprint::print_project::delete_service( $Project, $s_id );
+					openprint::print_project::delete_service($Project, $s_id);
 				} # end foreach
 				delete $$services{$ServiceType->name()};
 			} # end if
@@ -1783,8 +1819,10 @@ sub change_ProjectType {
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity3', $Project->quantity3() );
 			} # endif
 		} # end foreach
+$log->debug("Saving project type_id $$ProjectType{id}");
 		$error .= $Project->save( { type_id => $ProjectType->id() } );
 	} else {
+		$log->debug("Do not have project id, just setting type_id");
 		$$Project{type_id} = $ProjectType->id();
 	} # end if
 	return $error;
@@ -1799,7 +1837,7 @@ sub link_to {
 } # end sub link_to
 
 sub production_link_to {
-	return sprintf('<a href="/employee/proj/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
+	return sprintf('<a href="/employee/project/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
 } # end sub production_link_to
 
 sub check_for_order {
@@ -1873,34 +1911,34 @@ sub allocate_for_order {
 } # end sub allocate_for_order
 
 sub finished_weight {
-    my $project_weight;
+	my $project_weight;
 
-    my $Project = $_[0];
-    # We do a weird thing with qty_index here, becasue all quantities should have the same weight, but may be calculated diferent ways, so we run through them until we get a valid weight.
+	my $Project = $_[0];
+# We do a weird thing with qty_index here, becasue all quantities should have the same weight, but may be calculated diferent ways, so we run through them until we get a valid weight.
 
 # calculate project weight
-    foreach my $qty_index ( $Project->quantity_indexes() ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
-        foreach my $signature_service_index ( $Project->signatures() ) {
-            my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-            next if $$sig_specs{txtSignatureType} and ! $$sig_specs{'PageQuantity'.$qty_index};
-            next if ! $$sig_specs{'txtImposition'.$qty_index};
-            my $sig_weight = openprint::Estimating::Printing::get_weight( $Project, $sig_specs, $qty_index );
-            if ( ! $sig_weight ) {
-                # unable to get weight for a sig, must recalc printing service
-$openprint::log->error("Unable to get sig_weight for signature $$sig_specs{SignatureIndex}");
-                return 0;
+		foreach my $signature_service_index ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			next if $$sig_specs{txtSignatureType} and ! $$sig_specs{'PageQuantity'.$qty_index};
+			next if ! $$sig_specs{'txtImposition'.$qty_index};
+			my $sig_weight = openprint::Estimating::Printing::get_weight( $Project, $sig_specs, $qty_index );
+			if ( ! $sig_weight ) {
+# unable to get weight for a sig, must recalc printing service
+				$openprint::log->error("Unable to get sig_weight for signature $$sig_specs{SignatureIndex}");
+				return 0;
 			} elsif ( $debug ) {
 				$openprint::log->debug("Sig weight for sig $$sig_specs{SignatureIndex} $sig_weight");
-            } # end if
-            $project_weight += $sig_weight;
-        } # end foreach signature_service_index
-        last;
-    } # end foreach qty_index
-    #$openprint::log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{WeightMarkup}/100));
+			} # end if
+			$project_weight += $sig_weight;
+		} # end foreach signature_service_index
+		last;
+	} # end foreach qty_index
+#$openprint::log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{WeightMarkup}/100));
 
-    # This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.
-    return $project_weight * (1+$openprint::config{WeightMarkup}/100);
+# This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.
+	return $project_weight * (1+$openprint::config{WeightMarkup}/100);
 } # end sub get_finished_weight
 
 sub can_view {
@@ -1953,6 +1991,56 @@ sub can_edit {
   return 0;
 } # end sub can_view
 
+sub change_due_date {
+	my $Project = shift;
+	my $new_due_date = shift;
+
+	my $old_due_date = $$Project{due_date};
+	if ( $old_due_date ne $new_due_date ) {
+		$Project->save( { due_date => $new_due_date } );
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $new_due_date from $old_due_date" );
+		openprint::employee_project::send_duedate_change_notification( $$Project{id}, $Project->order_id() );
+	} # end if date has changed
+}
+
+sub Services {
+	my $self = shift;
+	$$self{Project_Services} = shift if @_;
+	if ( $$self{id} and !$$self{Services} ) {
+		%{$$self{Project_Services}} = map { $$_{service_id} => $_ } openprint::Project_Service->find(project_id=>$$self{id});
+	}
+	return values %{$$self{Project_Services}} if $$self{Project_Services};
+	return ();
+}
+
+sub credit_card_fee {
+  my $self = shift;
+  if ( @_ ) {
+    my $qty_index = shift;
+    if ( ! exists $$self{'credit_card_fee'.$qty_index} ) {
+      my $price = $self->price($qty_index);
+      $$self{'credit_card_fee'.$qty_index} = $price - ( $price/( 1+($$self{credit_card_fee}/100) ) )
+    }
+    return $$self{'credit_card_fee'.$qty_index};
+  }
+  $$self{credit_card_fee} = shift if @_;
+  return $$self{credit_card_fee};
+} # end sub credit_card_fee
+
+sub csr_commission {
+# Commissions are paid on the project cost NOT including credit card processing fees
+	my $self = shift;
+	if ( @_ ) {
+		my $qty_index = shift;
+		if ( ! exists $$self{'csr_commission'.$qty_index} ) {
+			my $price = $self->price($qty_index) - $self->credit_card_fee($qty_index);
+			$$self{'csr_commission'.$qty_index} = $price - ( $price/( 1+($$self{csr_commission}/100) ) )
+		}
+		return $$self{'csr_commission'.$qty_index};
+	}
+	$$self{csr_commission} = shift if @_;
+	return $$self{csr_commission};
+} # end sub csr_commission
 
 1;
 __END__

@@ -98,7 +98,9 @@ sub load {
 	if ( ! $data ) {
 		$data = $dbh->selectrow_hashref( qq{SELECT * FROM $table WHERE id=?}, {}, $$self{id} );
 	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
+	my @keys = map { defined $fields{$_} ? $_ : () } keys %fields;
+
+	@$self{@keys} = @$data{@fields{@keys}};
 
 	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_for WHERE quote_id=?}, {}, $$self{id} );
 	@$self{qw/for_companyname for_firstname for_lastname for_title for_salutation for_address1 for_address2 for_city for_state for_country for_postalcode for_phone for_extension for_fax for_email/} = @$data{qw/strcompanyname strfirstname strlastname strtitle strsalutation straddress straddress2 strcity strstate strcountry strpostalcode strphone strextension strfax stremail/};
@@ -309,11 +311,11 @@ sub send {
 
 	my $results;
 
-    my %quote;
-    $quote{Quote} = $self;
+	my %quote;
+	$quote{Quote} = $self;
 	$quote{uri} = 'quote';
-    openprint::quote::get_user_by_info( $log, $dbh, \%quote, $$self{id} );
-    openprint::quote::get_user_for_info( $log, $dbh, \%quote, $$self{id} );
+	openprint::quote::get_user_by_info( $log, $dbh, \%quote, $$self{id} );
+	openprint::quote::get_user_for_info( $log, $dbh, \%quote, $$self{id} );
 	openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 	my $email_template = ssi::slurp_content( '/email_template.html' );
 
@@ -329,9 +331,9 @@ sub send {
 		if ( $Project->template_id() ) {
 			$var{ReplacementText} = join("\n",
 					'<style type="text/css">',
-					ssi::slurp_content( '/css/project.css' ),
+					ssi::slurp_content('/css/project.css'),
 					'</style>',
-					ssi::slurp_content( '/main/quote/_project_template_view.html' )
+					ssi::slurp_content('/main/quote/_project_template_view.html')
 					);
 		} else {
 			$variable{ReplacementText} = ssi::slurp_content( '/email_content/project_view.html' );
@@ -341,17 +343,16 @@ sub send {
 	} # for each Project
 	
 	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $session{user_type}, ['A', 'E']) ) {
-$openprint::log->debug("We are a reseller or admin");
-
 		if ( $openprint::User->email_quotes_to_myself() ) {
-$log->debug("SEnding quote to myself");
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_body.html', \%quote );
 			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_invoice.html', \%quote );
 			my $html = ssi::variable_substitution( \$email_template, \%quote );
-			#$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
-			$Email->add_html_attachment( "Quote$$self{id}.html", $html );
+			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
+			if ( ( $openprint::User->email() =~ /iconnor/ ) and @_ ) {
+				$Email->add_html_attachment( "Quote$$self{id}.html", $html );
+			}
 
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
@@ -387,10 +388,11 @@ $log->debug("SEnding quote to myself");
 			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
 			my $html = ssi::variable_substitution( \$email_template, \%quote );
+			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
 			if ( $For_User and sets::isin( $For_User->type(), [ 'E', 'A' ] ) ) {
 				$Email->add_html_attachment( "Quote$$self{id}.html", $html );
-			} else {
-				$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
+			} elsif ( ( $openprint::User->email() =~ /iconnor/ ) and @_ ) {
+				$Email->add_html_attachment( "Quote$$self{id}.html", $html );
 			}
 
 			$results .= $Email->send(
@@ -404,8 +406,6 @@ $log->debug("SEnding quote to myself");
 
 	} else {
 # Not a reseller
-
-		# Just changed this from reseller to end user...
 		$quote{ReplacementText} = ssi::include( '/email_content/quote_end_user_body.html', \%quote );
 		my $email_template = ssi::slurp_content( '/email_template.html' );
 		$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
@@ -423,23 +423,58 @@ $log->debug("SEnding quote to myself");
 		$Email->attachments(undef);
 	} # end if reseller or admin
 
-	if ( $openprint::config{SendQuoteToAdmin} eq 'Y' and ! @_ ) {
-$log->debug("Sending quote to admin");
+	if ( ! @_ ) {
+		if ( $openprint::config{SendQuoteToAdmin} eq 'Y' ) {
+			$log->debug("Sending quote to admin");
 # Send one to the admin
-		if ( $email_template ) {
-			$quote{ReplacementText} = ssi::include( '/email_content/quote_admin_body.html', \%quote );
-			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
+			if ( $email_template ) {
+				$quote{ReplacementText} = ssi::include( '/email_content/quote_admin_body.html', \%quote );
+				$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
-			openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
-			$quote{ReplacementText} = ssi::include('/email_content/quote_admin_invoice.html', \%quote );
-			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
-			$results .= $Email->send(
-					FROM    => $openprint::config{QuotingEmail},
-					TO      => $openprint::config{QuotingEmail},
-					SUBJECT => "$$self{for_companyname} : Quote $$self{id}",
-					);
+				openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
+				$quote{ReplacementText} = ssi::include('/email_content/quote_admin_invoice.html', \%quote );
+				$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
+				$results .= $Email->send(
+						FROM    => $openprint::config{QuotingEmail},
+						TO      => $openprint::config{QuotingEmail},
+						SUBJECT => "$$self{for_companyname} : Quote $$self{id}",
+						);
+			} # end if
 		} # end if
-	} # end if
+
+		my $send_due_to_custom_services = 0;
+		foreach my $QuotedProject ($self->Quoted_Projects()) {
+			my $Project = $QuotedProject->Project();
+			my $services = $Project->services();
+			if ( $$services{CustomService} and @{$$services{CustomService}} ) {
+				foreach my $service_id ( @{$$services{CustomService}} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+					if ( map { $$specs{"txtPrice$_"} ? $$specs{"txtPrice$_"} : () } $Project->quantity_indexes() ) {
+						$send_due_to_custom_services = 1;
+						last;
+					}
+				}
+				last if $send_due_to_custom_services;
+			}
+		} # end foreach Project
+		if ( $send_due_to_custom_services ) {
+			if ( $email_template ) {
+				$quote{ReplacementText} = ssi::include( '/email_content/quote_admin_custom_body.html', \%quote );
+				$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
+
+				openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
+				$quote{ReplacementText} = ssi::include('/email_content/quote_admin_invoice.html', \%quote );
+				$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
+				$results .= $Email->send(
+						FROM    => $openprint::config{QuotingEmail},
+						TO      => $openprint::config{QuotingEmail},
+#BCC      => 'iconnor@point-one.com',
+						SUBJECT => "$$self{for_companyname} : Quote $$self{id} has custom modifications",
+						);
+			} # end if
+		}
+	} # end if ! @_
+
 	$self->add_log( $results );
 	return $results;
 } # end sub send
@@ -456,7 +491,7 @@ sub Currency {
 } # end sub Currency
 
 sub can_delete {
-	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	my $User = $_[1] ? $_[1] : $openprint::User;
 	if ( $$User{type} eq 'A' ) {
 		return 1;
 	} elsif ( $$User{id} == $_[0]{user_id} ) {
@@ -471,7 +506,7 @@ sub can_delete {
 } # end sub can_delete
 
 sub can_view {
-	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	my $User = $_[1] ? $_[1] : $openprint::User;
 	if ( $$User{type} eq 'A' ) {
 		return 1;
 	} elsif ( $$User{id} == $_[0]{user_id} ) {
@@ -480,7 +515,7 @@ sub can_view {
 		return 1;
 	} else {
 		my $Company = $_[0]->Company();
-		if ( sets::isin( $$Company{salesrep_id}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+		if ( $$Company{salesrep_id} and sets::isin( $$Company{salesrep_id}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
 			return 1;
 		} # end if
 		if ( openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Estimating'], $$User{id} ) ) {

@@ -51,16 +51,19 @@ sub get_vacation {
 sub get_vacation_entry {
     my ( $email ) = @_;
 
-    $dbh = db_connect() if ! $dbh;
-    if ( $dbh ) {
-		my $data = $dbh->selectall_arrayref( 'SELECT * FROM vacation WHERE email=?', { Slice => {} }, $email );
-		if ( $data and @{$data} ) {
-			return $$data[0];
+		while (! ($dbh and $dbh->ping())) {
+			$openprint::log->info('Connecting to db');
+			$dbh = db_connect();
+			sleep(1) if !($dbh and $dbh->ping());
 		}
+		if ( $dbh ) {
+			my $data = $dbh->selectall_arrayref('SELECT * FROM vacation WHERE email=?', { Slice => {} }, $email);
+			if ( $data and @{$data} ) {
+				return $$data[0];
+			}
     } # end if
     return;
 } # end sub get_vacation
-
 
 sub start_vacation {
 	my ( $email, $subject, $message, $system_emails ) = @_;
@@ -166,6 +169,71 @@ sub domains {
 	$openprint::log->debug("No domains found");
 	return ();
 } # end sub domains
+
+sub save {
+	my ( $email, $param ) = @_;
+	my ( $error, @changes );
+
+	my @domains = email::domains();
+	my ( $user, $domain ) = $email =~ /^([^\@]+)\@(.+)$/;
+	if ( sets::isin( $domain, \@domains ) ) {
+		my $vacation = get_vacation_entry($email);
+
+		if ( $$param{vacation_state} ) {
+			if ( $$param{vacation_subject} ) {
+				email::start_vacation( $email, @$param{'vacation_subject','vacation_body','vacation_system_emails'} );
+				push @changes, ( $vacation ? 'Vacation Enabled' : () ), (
+						 map { $$vacation{$_} ne $$param{"vacation_$_"} ? 'Vacation ' . $_ . ' changed from ' . $$vacation{$_} . ' => ' . $$param{"vacation_$_"} : () }
+				('subject', 'body', 'system_emails')
+					);
+			} else {
+				$error .= 'Not turning on vacation due to empty subject<br/>';
+			}
+		} else {
+			push @changes, ( $vacation ? 'Vacation Disabled' : () );
+			stop_vacation($email);
+		} # end if
+
+		if ( $$param{EmailPassword} ) {
+			if ( ! $$param{VerifyEmailPassword} ) {
+				$error .= 'Verify Email password left blank, password not changed.<br/>';
+			} elsif ( $$param{EmailPassword} eq $$param{VerifyEmailPassword} ) {
+				push @changes, 'Email Password changed.';
+				set_password($email, @$param{'EmailPassword'});
+			} else {
+				$error .= 'Email Password fields do not match.<br/>';
+			} # end if
+		} # end if
+		my @aliases = ();
+		foreach my $alias ( split "\r\n", $$param{vacation_aliases} ) {
+			next if ! $alias;
+			push @aliases, $alias;
+		} # end foreach
+		push @aliases, $email if ! @aliases;
+		aliases($email, @aliases);
+	} # end if
+	return ( $error, @changes );
+} # end sub save
+
+sub load {
+	my ( $email, $data ) = @_;
+
+	my ( $user, $domain ) = $email =~ /^([^\@]+)\@(.+)$/;
+	if ( $domain ) {
+		my @domains = email::domains();
+		if ( sets::isin($domain, \@domains) ) {
+			my $v = get_vacation_entry($email);
+			$$data{DoEmail} = 1;
+			if ( $v ) {
+				$$data{vacation_state} = 1;
+
+				my @fields = qw'subject body system_emails';
+				@$data{map { 'vacation_'.$_ } @fields} = @$v{@fields};
+			}
+			@{$$data{vacation_aliases}} = aliases($email);
+		}
+	} # end if domain
+} # end sub load
 
 1;
 __END__

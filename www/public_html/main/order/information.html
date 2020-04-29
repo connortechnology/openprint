@@ -12,9 +12,9 @@
 					<div class="content">
 						<ul>
 							<li class="order_id"><label>Order ID</label><? echo ( $$variable{Order}->id() ) ?></li>
-							<li class="po_id"> 
+							<li class="po<? echo ( $$variable{RequiredFields}{po} ? ' required' : '' ) ?>"> 
 								<label>Purchase Order</label>
-								<input type="text" id="txtPurchaseOrder" name="txtPurchaseOrder" value="<? echo ( $$variable{Order}->po() ) ?>" />
+								<input type="text" id="po" name="po" value="<? echo ( $$variable{Order}->po() ) ?>" />
 							</li>
 							<? echo (
 								my $html;
@@ -83,8 +83,8 @@
 						foreach my $Project ( @{$$variable{Projects}} ) {
 							$$variable{Project} = $Project;
 							$html .= '<div class="Project"><h3 class="project_id">'.$Project->link_to('Project '.$Project->id() ).'</h3><p class="buttons">';
-							$html .= button( 'Edit'.$$Project{id}, { href=>$Project->url_to(), text=>'Edit' } );
-							$html .= button( 'Remove'.$$Project{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;project_id=$$Project{id}", text=>'Remove' } );
+							$html .= button( 'Edit'.$$Project{id}, { href=>$Project->url_to(), text=>'Edit', class=>'EditButton' } );
+							$html .= button( 'Remove'.$$Project{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;project_id=$$Project{id}", text=>'Remove', class=>'RemoveButton' } );
 							$html .= '</p><br class="spacer"/>';
 							$html .= include( '/main/order/_project_information.html' );
 							$html .= '</div>';
@@ -124,14 +124,11 @@
 				} # end if
 				$html .= button( 'AddProject', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $config{OrderMode} ne 'Simple';
 				if ( $$variable{Order}->status() eq 'Re-Opened' ) {
-        if ( sets::isin( $session{user_type}, ['E','A'] ) {
-				$html .= button( 'Close', { href=>'/main/order/confirmation.html?btnFunction=Close&order_id='.$$variable{Order}->id(), text=>'Close' } );
-				}
+          if ( sets::isin( $session{user_type}, ['E','A'] ) {
+            $html .= button( 'Close', { href=>'/main/order/confirmation.html?btnFunction=Close&amp;order_id='.$$variable{Order}->id(), text=>'Close' } );
+          }
 				}
 				$html .= button( 'SaveAndContinue', { onclick=>'f1.submit();', text=>'Save And Continue' } ); 
-        if ( $$variable{Order}->status() eq 'Re-Opened' and ( sets::isin( $session{user_type}, ['E','A'] ) ) {
-          $html .= button( 'Close', { onclick=>q`f1.btnFunction.value='Close';f1.submit();`, class=>'Close' } );
-        }
   
 				return $html;
 			) ?>

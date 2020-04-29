@@ -55,7 +55,7 @@ my %variables = (
                 'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
                 'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
                 'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
-                'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace',
+                'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace', 'OverrideAddGrip',
 		'ddmRunStyle-', 'ddmPress-', 'PrintingType-', 'StockType-', 'txtPlateChangeQuantity-', 'PageQuantity-',
 		'Pages', 'OverrideGroupPageQuantity', 'GroupPageQuantity', 'txtSignatureType',
 		'chkOverrideDimensions', 'txtFinalHeight', 'txtFinalWidth', 'txtHeight', 'txtWidth',
@@ -160,7 +160,7 @@ sub calc {
 	if ( $$specs{spine} eq 'width' ) {
 		@$specs{'txtWidth','txtHeight'} = ( $$specs{txtFinalWidth}, 2*$$specs{txtFinalHeight} );
 	} else {
-		@$specs{'txtWidth','txtHeight'} = ( 2*$$specs{txtFinalWidth},$$specs{txtFinalHeight} );
+		@$specs{'txtWidth','txtHeight'} = ( 2*$$specs{txtFinalWidth}, $$specs{txtFinalHeight} );
 	} # end if
 
 	if ( $$specs{rdbTemplateType} eq 'PerfectBound' and $$specs{rdbCover} ne 'Different' ) {
@@ -170,7 +170,7 @@ sub calc {
 		$variables{rdbCover} = [sets::union('output', @{$variables{rdbCover}})];
 		$$specs{rdbCover} = 'Self';
 	} elsif ( ! $$specs{rdbCover} ) {
-		$$specs{alert} .= "Please select self or different cover.<br/>";
+		$$specs{alert} .= 'Please select self or different cover.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
@@ -232,18 +232,18 @@ sub calc {
 	} # end foreach group
 
 	# if there is a cover, then force it to be non-zero
-	if ( (! $override_pages{1} ) and ($$specs{OverrideGroupPageQuantity1} ne 'Y' ) and ($$specs{rdbCover} eq 'Different') ) {
-if ( 0 ) {
-		# Ithink the idea here is to give the cover either 4 or 6 pages... depending on the total # of pages.
-		my $new_remaining = int(($remaining_pages-4) / $$specs{txtSpreadSize} ) * $$specs{txtSpreadSize};
-		$override_pages{1} = $remaining_pages - $new_remaining;
-		$remaining_pages = $new_remaining;
-} else {
-		$override_pages{1} = 4;
-		
-		$remaining_pages -= $override_pages{1};
-$openprint::log->warn("FIXM E");
-} # end if
+	if ( (! $override_pages{1}) and ($$specs{OverrideGroupPageQuantity1} ne 'Y') and ($$specs{rdbCover} eq 'Different') ) {
+		my $new_remaining = int(($remaining_pages-4) / $$specs{txtSpreadSize} ) * $$specs{txtSpreadSize} if $$specs{txtSpreadSize};
+		if ( 0 ) {
+# I think the idea here is to give the cover either 4 or 6 pages... depending on the total # of pages.
+			$override_pages{1} = $remaining_pages - $new_remaining;
+			$remaining_pages = $new_remaining;
+		} else {
+			$override_pages{1} = 4;
+
+			$remaining_pages -= $override_pages{1};
+			$openprint::log->warn("FIXM E using coverages = 4 instead of " . ( $remaining_pages - $new_remaining ) );
+		} # end if
 	} # end if
 	$remaining_pages = 0 if $remaining_pages < 0;
 
@@ -268,7 +268,7 @@ $openprint::log->warn("FIXM E");
 	} # end if
 
 	if ( $$specs{rdbCover} eq 'Different') {
-		if ( sets::isin($$specs{rdbTemplateType1}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+		if ( $$specs{rdbTemplateType1} and sets::isin($$specs{rdbTemplateType1}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 			if ( $$specs{rdbPocketSize1} and ( $$specs{rdbPocketSize1} ne 'Other' ) ) {
 				$$specs{PocketSize1} = $$specs{rdbPocketSize1};	
 			} else {
@@ -316,7 +316,10 @@ $openprint::log->warn("FIXM E");
 
 		if ( $$specs{"ddmRunStyle-$group_id"} and $$specs{"ddmPress-$group_id"} ) {
 			my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress-$group_id"});
-			if ( ! sets::isin( $$specs{"ddmRunStyle-$group_id"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
+			if ( !$Press ) {
+				$openprint::log->debug("No press found for " . $$specs{"ddmPress-$group_id"});
+				$$specs{alert} .= "Press ".$$specs{"ddmPress-$group_id"}.' is not in the system<br/>';
+			} elsif ( ! sets::isin( $$specs{"ddmRunStyle-$group_id"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
 				$$specs{alert} .= "Press $$Press{name} cannot do " . $$specs{"ddmRunStyle-$group_id"}.'<br/>';
 			}
 		}
@@ -368,6 +371,7 @@ $openprint::log->debug("********************************************************
 	my @signatures = sort $Project->signatures({type=>'Interior Pages'});
 	push @signatures, sort $Project->signatures({type=>'Cover Pages'});
 	push @signatures, sort $Project->signatures({type=>'Gate Folded Pages'});
+	push @signatures, sort $Project->signatures({type=>'Pad Pages'});
 	push @signatures, sort $Project->signatures({type=>'Backing Pages'});
 	@signatures = $Project->signatures() if ! @signatures;
 	$openprint::log->debug( "Signatures: @signatures");
@@ -626,7 +630,7 @@ $openprint::log->debug("Saving $v for group $group_id") if DEBUG;
 $openprint::log->debug("Not Saving $v for group $group_id") if DEBUG;
 			} # end if
 		} # end foreach v
-	}  # end foreach signature
+	} # end foreach signature
 } # end sub save
 
 sub check {
@@ -674,7 +678,6 @@ $openprint::log->warn("Have error $error for $qty_index. Existing error is ".$$s
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error ) if $error;
 		} # end if
 	} else {
-$openprint::log->warn("Have no error $error for $qty_index. Existing error is ".$$specs{"alert$qty_index"});
 # Clears it, but leaves alert messages from elsewhere
 		if ( $$specs{"alert$qty_index"} =~ /^Group/ or $$specs{"alert$qty_index"} =~ /^Stock/ ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error );

@@ -18,7 +18,10 @@ use strict;
 package openprint::marketing;
 
 require openprint::EmailCampaign;
+require openprint::EmailCampaign_Sent;
 require openprint::MarketingCategory;
+require openprint::Company;
+require openprint::Company_in_Marketing_Category;
 require openprint::Banner;
 require openprint::Survey;
 require openprint::account;
@@ -35,12 +38,14 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub email_campaigns {
 	my $Campaign = new openprint::EmailCampaign( $param{campaign_id} );
-    if ( $param{btnFunction} eq 'Delete' ) {
-        $variable{error} .= $Campaign->delete();
-    } elsif ( $param{btnFunction} eq 'Run' ) {
-        $variable{information} = $Campaign->send();
-    } elsif ( $param{btnFunction} eq 'Trial' ) {
-        $variable{information} = $Campaign->trial( new openprint::User( $openprint::session{user_id} )->email() );
+	if ( $param{btnFunction} eq 'Delete' ) {
+		$variable{error} .= $Campaign->delete();
+		(new openprint::Log())->save({Object=>$Campaign, action=>'Delete'});
+	} elsif ( $param{btnFunction} eq 'Run' ) {
+		$variable{information} = $Campaign->send();
+		#(new openprint::Log())->save({Object=>$Campaign, action=>'Run', note=>$variable{information} });
+	} elsif ( $param{btnFunction} eq 'Trial' ) {
+		$variable{information} = $Campaign->trial( $openprint::User->email() );
 	} # end if
 
 	$variable{campaign_id} = $Campaign->id();
@@ -51,11 +56,11 @@ sub email_campaigns {
 
 sub _email_campaigns {
 
-	    ssi::save_params( '/marketing/email_campaigns.html', (
-                ( map { 'called_on_start_' . $_ } ( 'year','month','day' ) ),
-                ( map { 'called_on_end_' . $_ } ( 'year','month','day' ) ),
+	ssi::save_params( '/marketing/email_campaigns.html', (
+				( map { 'called_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'called_on_end_' . $_ } ( 'year','month','day' ) ),
 				'user_id', 'deleted', 'active',
-		) );
+				) );
 } # end sub _email_campaigns
 
 sub categories {
@@ -81,6 +86,33 @@ sub categories {
 	} elsif ( $param{btnFunction} eq 'Remove' ) {
 		$Category->remove_company( $param{chkDelete} );
 		$Category->save();
+	} elsif ( $param{btnFunction} eq 'Import' ) {
+		my $ac = sql::start_transaction($dbh);
+
+    my $upload = $r->upload('import_file');
+    my $io = $upload->io();
+    $_ = <$io>;
+
+    my $csv = Text::CSV_XS->new();
+
+    while (<$io>) {
+      my $status = $csv->parse($_);
+      my ( $name ) = misc::trim($csv->fields());
+			my @Companies = openprint::Company->find(name=>$name);
+			if ( ! @Companies ) {
+				$variable{error} .= "No company found for $name<br/>";
+				next;
+			} elsif ( @Companies > 1 ) {
+				$variable{error} .= "Multiple companies found for $name<br/>";
+			}
+			foreach my $Company ( @Companies ) {
+				my $Company_in_Category = new openprint::Company_in_Marketing_Category();
+				$variable{error} .= $Company_in_Category->save({company_id=>$$Company{id},category_id=>$$Category{id}});
+			} # end foreach Company
+
+		} # end while
+		sql::end_transaction($dbh, $ac);
+
 	} # end if
 	$variable{Category} = $Category;
 } # end sub categories
@@ -89,19 +121,27 @@ sub categories {
 sub email_campaign {
 	my $Campaign = new openprint::EmailCampaign( $param{campaign_id}) ;
 	if ( $param{btnFunction} eq 'Save' ) {
-		$param{nextrun} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 ) if $param{nextrun_year};
-		$variable{error} .= $Campaign->save( \%param );
-		$variable{ExternalRedirect} = '/marketing/email_campaigns.html' if ! $variable{error};
-    } elsif ( $param{btnFunction} eq 'Delete' ) {
-        $variable{error} .= $Campaign->delete();
+		$param{nextrun} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d',
+				@param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 ) if $param{nextrun_year};
+		my @changes = $Campaign->changes(\%param);
+		if ( @changes ) {
+			$variable{error} .= $Campaign->save(\%param);
+			(new openprint::Log())->save({Object=>$Campaign, action=>'Save', note=>'Changes: ' .join(', ', @changes) });
+		}
+		$variable{ExternalRedirect} = '/marketing/email_campaign.html?campaign_id='.$Campaign->id() if ! $variable{error};
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
+		$variable{error} .= $Campaign->delete();
+		(new openprint::Log())->save({Object=>$Campaign, action=>'Delete' });
 		$variable{ExternalRedirect} = '/marketing/email_campaigns.html' if ! $variable{error};
 	} elsif ( $param{btnFunction} eq 'Run' ) {
 		$variable{Results} = $Campaign->send();
+		(new openprint::Log())->save({Object=>$Campaign, action=>'Run', note=>$variable{Results} });
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		$Campaign = $Campaign->copy();
 		$variable{error} .= $Campaign->save({name=>'Copy of '.$$Campaign{name}});
     } elsif ( $param{btnFunction} eq 'Test' ) {
         $variable{information} = $Campaign->test();
+				$variable{ExternalRedirect} = $Campaign->url_to();
     } elsif ( $param{btnFunction} eq 'Download Recipients' ) {
         my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
         my @data;
@@ -191,7 +231,7 @@ sub subscriptions {
 			return;
 		} # endif
 	} else {
-		if ( $$User{email} ne $param{email} ) {
+		if ( $param{email} and ($$User{email} ne $param{email}) ) {
 			$variable{error} .= "User email ($$User{email}) and provided email address ($param{email}) do not match.<br/>";
 			return;
 		}
@@ -199,14 +239,21 @@ sub subscriptions {
 
 	if ( $param{action} eq 'Save' ) {
 		if ( ! $openprint::session{user_id} ) {
-			require Authen::Captcha;
-			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
-	# Remove spaces, because some people want to put spaces between the characters, etc.
-			$param{'Captcha'} =~ s/\s//g;
-			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
-				$variable{error} .= 'Captcha validation code incorrect.  Please try again.';
+			eval {
+				require Authen::Captcha;
+				my $Captcha = new Authen::Captcha(
+						data_folder => $config{SkinPath}.'/tmp',
+						output_folder => $config{SkinPath}.'/images/captcha'
+						);
+# Remove spaces, because some people want to put spaces between the characters, etc.
+				$param{Captcha} =~ s/\s//g;
+				if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+					$variable{error} .= 'Captcha validation code incorrect.  Please try again.';
+				} # end if
+			};
+			if ( $variable{error} ) {
 				return;
-			} # end if
+			}
 		} # end if not logged in
 		if ( ( $param{all} eq 'N' ) and ( $User->mailinglist() eq 'Y' ) ) {
 			$variable{error} .= $User->save({mailinglist=>$param{all}});
@@ -310,8 +357,9 @@ sub get_clients {
 		$variable{ExternalRedirect} .= '/marketing/get_clients.html';
 	} # end if
 } # end sub get_clients
+
 sub _recipients {
-	$variable{Campaign} = new openprint::EmailCampaign( $param{campaign_id} );
+	$variable{Campaign} = new openprint::EmailCampaign($param{campaign_id});
 }
 
 1;

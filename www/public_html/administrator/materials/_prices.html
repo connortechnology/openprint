@@ -1,6 +1,7 @@
 <? echo (
 	my $html = '';
 	my $equipment_array = $variable{Equipment} ? $variable{Equipment} : [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find( order=>'lower(strID)') ];
+	my %equipment_ids = @{$equipment_array};
 
 	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
 
@@ -12,7 +13,9 @@
 				<p>
 					<label>Equipment</label>
 					<select name="ddmEquipment-'.$$Pricelist{id}.'-'.$$Equipment{id}.'"><option value="">All Equipment</option>';
-			$html .= make_drop_down( $equipment_array, $$Equipment{id} );
+			$html .= make_drop_down( 
+$equipment_ids{$$Equipment{id}} ? $equipment_array : [ ( $$Equipment{id}, $$Equipment{name} ), @{$equipment_array} ],
+, $$Equipment{id} );
 			$html .= '
 					</select>
 				</p>

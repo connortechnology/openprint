@@ -97,7 +97,7 @@
 html_escape( $T->Company()->name() ),
 Date::Format::time2str(($T->time_associated() ? $config{DateTimeFormat} : $config{DateFormat}), Date::Parse::str2time($T->starting())),
 Date::Format::time2str(($T->time_associated() ? $config{DateTimeFormat} : $config{DateFormat}), Date::Parse::str2time($T->ending())),
-misc::seconds_to_pretty_interval( $T->elapsed() ),
+$$T{duration_override} ? $$T{duration} : misc::seconds_to_pretty_interval( $T->elapsed() ),
 ( $T->invoiced() ? 'Y' : 'N' ),
 ( $T->paid() ? 'Y' : 'N' ),
 html_escape($T->Service()->name()),

@@ -5,9 +5,9 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/printing.js)?>"></script>
 <script type="text/javascript" src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
 <script type="text/javascript">
-	var quantities=new Array();
+	var quantities = new Array();
 	<?QUANTITIES?>
-	var projectType = "<?ProjectTypeID?>";
+	var projectType = '<?ProjectTypeID?>';
 </script>
 <?include(/main/project/prin/_templates.html)?>
 
@@ -22,20 +22,20 @@
 <? endif ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<?include(/includes/main/proj/hdn_fields_printing.html)?>
-        <input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
+		<input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
-        <? if ( $$variable{txtSignatureType} eq 'Cover Pages' or $$variable{txtSignatureType} eq 'Gate Folded Pages' ) ?>
-            <?include(/includes/main/proj/templates/signature_template_select.html)?>
-            <?include(/includes/main/proj/templates/signatures.html)?>
-        <? endif ( $$variable{txtSignatureType} eq 'Cover Pages' or $$variable{txtSignatureType} eq 'Gate Folded Pages' ) ?>
+		<? if ( $$variable{txtSignatureType} eq 'Cover Pages' or $$variable{txtSignatureType} eq 'Gate Folded Pages' ) ?>
+			<?include(/includes/main/proj/templates/signature_template_select.html)?>
+			<?include(/includes/main/proj/templates/signatures.html)?>
+		<? endif ( $$variable{txtSignatureType} eq 'Cover Pages' or $$variable{txtSignatureType} eq 'Gate Folded Pages' ) ?>
 		<fieldset><legend><? echo ( $$variable{Project}->Type()->description() ) ?> <?txtSignatureType?></legend>
-<? if ( $$variable{txtSignatureType} ) ?>
-            <div class="<? echo ( my $type = $$variable{txtSignatureType}; $type =~ s/\s//g; return $type; ) ?>">
+			<? if ( $$variable{txtSignatureType} ) ?>
+      <div class="<? echo ( my $type = $$variable{txtSignatureType}; $type =~ s/\s//g; return $type; ) ?>">
 				<ul>
-                <li class="Description"><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></li>
-                <li class="Dimensions">
-                    <label>Spread dimensions</label>
+					<li class="Description"><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></li>
+					<li class="Dimensions">
+						<label>Spread dimensions</label>
 					<? echo (
 						my $html = sprintf('%s x %s => %s x %s',
 							input( type=>'float', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>'calc(this.form.name);', min=>1 ),
@@ -63,7 +63,7 @@
 				</ul>
             </div>
 	<? if ( $$variable{Group} == 1 ) ?>
-            <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
+            <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( sets::isin( $$variable{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? '' : 'style="display:none;"' ) ?> >
             <?include('/includes/main/proj/presentation_folder_printing.html')?>
             </div>
 	<? endif ( $$variable{Group} == 1 ) ?>
@@ -144,7 +144,7 @@
 		} elsif ( $$variable{ProjectType}->name() eq 'ScratchPads' ) {
 			return join("\n",
 				include('/includes/main/proj/templates/generic.html'),
-				'<p id="NotepadPages"><label># of pages per pad</label>',
+				'<p id="NotepadPages"><label>Pages per pad</label>',
 				input(type=>'cardinal', name=>'PageQuantity', value=>$$variable{PageQuantity}, oninput=>'calc(this.form.name);' ),
 				'</p>',
 				include('/includes/main/proj/dimensions.html'),

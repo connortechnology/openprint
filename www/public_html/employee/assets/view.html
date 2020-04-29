@@ -36,8 +36,9 @@
 							<li><label>Description</label>
 							<? echo ( $$variable{Asset}->description() ) ?>
 							</li>
-							</ul>
-							<table><tr><th>Version</th><th>URL</th><th class="size">File Size</th></tr>
+							<li><label>Public?</label><?echo( $$variable{Asset}->public() ? 'Yes' : 'No' )?></li>
+						</ul>
+						<table><tr><th>Version</th><th>URL</th><th class="size">File Size</th></tr>
 							<? echo (
 								my $html;
 								foreach my $size ( '', 'large','medium','small', 'thumbnail' ) {

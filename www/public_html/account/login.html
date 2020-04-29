@@ -43,9 +43,12 @@ if ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) {
 		my $now = DateTime->now();
 		my $weekago = $now->clone->subtract( weeks => 1);
 
-		my @Logs = openprint::Log->find( 'action in'=>['Save Material','Save Service'], 
-			'date_time >=' => DateTime::Format::Pg->format_datetime( $weekago ),
-			order=>'date_time' );
+		my @action_ids = map { $$_{id} } openprint::Log_Action->find(name=>['Save Material','Save Service']);
+		my @Logs = openprint::Log->find(
+				action_id=>\@action_ids,
+				'date_time >=' => DateTime::Format::Pg->format_datetime( $weekago ),
+				order=>'date_time',
+				) if @action_ids;
 		if ( @Logs ) {
 			my $html = 'The following recent actions may have an effect on pricing.<br/>
 <table class="List sortable"><tr>

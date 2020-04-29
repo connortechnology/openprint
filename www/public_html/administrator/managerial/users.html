@@ -78,6 +78,7 @@ return '<option value="">Use the filter to populate this dropdown</option>';
 			<? echo ( join("\n",
 				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
 				#button( 'DownloadCSV', { onclick=>"f1.action='users.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
+				button( 'New', { href=>'/administrator/managerial/user_profiles.html' } ),
 				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
 		</p>

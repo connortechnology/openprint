@@ -179,6 +179,7 @@ sub categories {
 	} # end if
 	_categories();
 } # end sub categories
+
 sub _categories {
 	ssi::save_params( '/product/categories.html', ( 'category_id' ) );
 }
@@ -314,6 +315,9 @@ $log->debug("specification filters: ".join(',', @{$variable{Specifications}}));
 		my @Prices = openprint::ProductPrice->find( product_id=> \@product_ids );
 		@{$variable{Quantities}} = sort { $a <=> $b } sets::union( map { $_->min() == $_->max() ? $_->min() : () } @Prices );
 	}
+}
+
+sub index {
 }
 
 1;
