@@ -93,7 +93,7 @@ or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
 			</li>
 			<li> 
 				<label>Mailing List</label>
-				<? echo ( radio( 'mailinglist', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->mailinglist() ); ) ?>
+				<? echo( radio('mailinglist', [ 'Y', 'Yes', 'N', 'No', '', 'Unset' ], $$variable{User}->mailinglist()); ) ?>
 			</li>
 		<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 				<li>
