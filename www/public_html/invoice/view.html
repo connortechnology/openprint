@@ -43,7 +43,13 @@
 			$html .= $Invoicee->link_to( ($Invoicee->business_name() ? $Invoicee->business_name() : $Invoicee->name()) ).'<br/>';
 			$html .= $Invoicee->address1().'<br/>';
 			$html .= $Invoicee->address2().'<br/>' if $Invoicee->address2();
-			$html .= join(', ', $Invoicee->get('city','state','country') ).'<br/>';
+      $html .= '<div class="city_state_country">'.join(', ', map { $_ ? $_ : () } ( $Invoicee->city(),
+           shift @{[
+            ( ( ( $Invoicee->country() eq 'US' ) and $states::states{$Invoicee->state()} ) ? $states::states{$Invoicee->state()} : () ),
+            ( ( ( $Invoicee->country() eq 'CA' ) and $provinces::provinces{$Invoicee->state()} ) ? $provinces::provinces{$Invoicee->state()} : () ),
+            $Invoicee->state()
+            ]},
+            $countries::countries{$Invoicee->country()} ? $countries::countries{$Invoicee->country()} : $Invoicee->country() ) ).'</div>';
 			$html .= $Invoicee->postalcode().'<br/>' if $Invoicee->postalcode();
 			return $html;
 		) ?>
@@ -55,7 +61,13 @@
 			$html .= ( $Invoicer->business_name() ? $Invoicer->business_name() : $Invoicer->name() ).'<br/>';
 			$html .= $Invoicer->address1().'<br/>';
 			$html .= $Invoicer->address2().'<br/>' if $Invoicer->address2();
-			$html .= join(', ', $Invoicer->get('city','state','country') ).'<br/>';
+      $html .= '<div class="city_state_country">'.join(', ', map { $_ ? $_ : () } ( $Invoicer->city(),
+           shift @{[
+            ( ( ( $Invoicer->country() eq 'US' ) and $states::states{$Invoicer->state()} ) ? $states::states{$Invoicer->state()} : () ),
+            ( ( ( $Invoicer->country() eq 'CA' ) and $provinces::provinces{$Invoicer->state()} ) ? $provinces::provinces{$Invoicer->state()} : () ),
+            $Invoicer->state()
+            ]},
+            $countries::countries{$Invoicer->country()} ? $countries::countries{$Invoicer->country()} : $Invoicer->country() ) ).'</div>';
 			$html .= $Invoicer->postalcode().'<br/>' if $Invoicer->postalcode();
 			return $html;
 		) ?>
@@ -89,7 +101,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 					$html .= sprintf('<td class="Date">%s</td>', $Timetrack->Employee()->link_to() );
 					$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
 					$html .= '<td class="PO">'.html_escape( $Timetrack->po() ) . '</td>';
-					$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
+					$html .= sprintf('<td class="Interval">%s</td>', $Timetrack->elapsed_formatted()); 
 					my $Price = $Timetrack->Price();
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
