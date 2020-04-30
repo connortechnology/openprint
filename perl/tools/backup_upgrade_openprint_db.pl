@@ -14,7 +14,8 @@ GetOptions(\%opts, 'help',
   'src_host=s',
   'date=s',
   'backup_path=s',
-  'log_level=s','log_file=s',
+  'log_level=s',
+  'log_file=s',
 );
 
 if ($opts{help}) {
@@ -31,6 +32,7 @@ foreach my $param ( 'src_db','dst_db','src_host' ) {
 } # end foreach required-param
 
 `/etc/init.d/apache2 reload`;
+`systemctl stop openprint-ftp_monitor\@$opts{dst_db}.service`;
 if ( !$opts{date} ) {
   use Date::Calc;
   $opts{date} = join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 ));
@@ -74,6 +76,7 @@ if ( $opts{backup_path} ) {
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on,backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert(undef, undef, 'database_info', 'version', $version, 'updated_on', 'NOW()', 'backup', 0 ) if $backup;
 
+`systemctl start openprint-ftp_monitor\@$opts{dst_db}.service`;
 print "done\n";
 1;
 __END__
