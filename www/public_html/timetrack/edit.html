@@ -1,6 +1,5 @@
-<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
-
-<script type="text/javascript">
+<script src="/javascripts/tiny_mce/tiny_mce.js"></script>
+<script>
 	tinyMCE.init({
 		mode : "textareas",
 		theme : "advanced"
@@ -86,9 +85,10 @@
 					<? echo ( make_drop_down( openprint::Service->dropdown(order=>'lower(name)'), $$variable{Timetrack}->service_id() ); ) ?>
 				</select>
 			</li>
-			<li><label>Billable</label><? echo ( radio( 'billable', [1,'Yes',0,'No'], $$variable{Timetrack}->billable() ); ) ?></li>
+			<li><label>Billable</label><? echo ( radio('billable', [1,'Yes',0,'No'], $$variable{Timetrack}->billable()); ) ?></li>
 			<li><label for="rate">Override Rate</label>
 				<? echo (input( type=>'float', name=>'rate', id=>'rate', value=>$$variable{Timetrack}->rate() ); ) ?>
+        <? echo (ssi::select([ map { $_ => $_ } ( '/Hr', '/month', '/week' )], $$variable{Timetrack}->units(), { name=>'units' } ); ) ?>
 			</li>
 			<li><label>Currency</label><? echo ( 
 					my $default = $$variable{Timetrack}->currency_id();
@@ -99,7 +99,8 @@
 						$default = $session{Currency_id};
 					}
  
-					ssi::select( openprint::Currency->dropdown(), $default, { name=>'currency_id', id=>'currency_id', prepend=>['','select'] } ); ) ?></li>
+					ssi::select( openprint::Currency->dropdown(), $default, { name=>'currency_id', id=>'currency_id', prepend=>['','select'] } );
+          ) ?></li>
 			<li>
 				<label>Travel Associated</label>
 				<? echo ( radio( 'travel_associated', [ '1', 'Yes', '0', 'No' ], $$variable{Timetrack}->travel_associated() ); ) ?>
