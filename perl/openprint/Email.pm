@@ -245,11 +245,15 @@ sub add_pdf_attachment_from_html {
 	my ( $self, $name, $html ) = @_;
 
 	my @attachments;
-	$html = Encode::encode('utf-8',$html);
-	if ( File::Slurp::write_file('/tmp/'.$name.'.html', { atomic => 1, err_mode=>'carp' }, \$html ) ) {
-		`wkhtmltopdf -q "/tmp/$name.html" "/tmp/$name.pdf"`;
+  #$html = Encode::encode('utf-8', $html);
+
+  if ( open my $fh, ">:utf8", '/tmp/'.$name.'.html' ) {
+    print {$fh} $html;
+    close $fh;
+	#if ( File::Slurp::write_file('/tmp/'.$name.'.html', { atomic => 1, err_mode=>'carp', binmode => ':raw' }, \$html ) ) {
+		`wkhtmltopdf --encoding utf-8 -q "/tmp/$name.html" "/tmp/$name.pdf"`;
 		my $pdf = File::Slurp::read_file( "/tmp/$name.pdf", err_mode => 'carp' );
-		unlink "/tmp/$name.html";
+    #unlink "/tmp/$name.html";
 		unlink "/tmp/$name.pdf";
 		if ( $pdf ) {
 			push @attachments, ($name.'.pdf', MIME::Base64::encode_base64($pdf), 'application/octet-stream', 'base64');
