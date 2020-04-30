@@ -1,7 +1,3 @@
 <? echo ( 
-	if ( -e $config{'SkinPath'}.'/docket.html' ) {
-		return include( $config{'SkinPath'}.'/docket.html', $variable );
-	} else {
-		return include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/summ/project_docket_sheet.html', $variable );
-	} # end if
+	return include('/includes/docket.html', $variable );
 ) ?>

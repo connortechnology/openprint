@@ -273,7 +273,14 @@ sub reboot {
 			$method = 'post';
     } elsif( $_[0]->type() eq 'Grandview' ) {
       $initial_url = $HI->ip();
-      $url = '/goform/maintenance?cmd=set&restart=yes';
+      $url = $HI->ip().'/goform/maintenance?cmd=set&restart=yes';
+    } elsif( $_[0]->type() eq 'Vivotek' ) {
+      $initial_url = $HI->ip();
+      $url = $HI->ip().'/cgi-bin/admin/setparam.cgi';
+			$method = 'post';
+			$args = {
+				system_reset => 1
+			};
 		} elsif( $_[0]->type() eq 'DLink DCS-910' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/ReplyF.htm';
@@ -476,51 +483,95 @@ sub Owner {
 }
 
 sub can_reboot {
-  if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W','M8640','TL-WPA4220','D-Link DAP1522','DGS-1224T',
-        'DLink DCS-910',
-        'DLink DCS-2310L',
-        'TP-Link Archer C7',
-        'DCS932L','DCS-933L','DCS-942L', 'WG602v3' ] ) ) {
+  if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [
+				'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W',
+				'M8640',
+				'TL-WPA4220', 'TP-Link Archer C7',
+				'D-Link DAP1522','DGS-1224T','DLink DCS-910',
+        'DCS932L','DCS-933L','DCS-942L', 'WG602v3',
+				'Vivotek' ] ) ) {
     return !undef;
   }
   return undef;
 } # end sub can_reboot
 
 sub get_config {
-	my $Host = shift;
-	require LWP;
-	my $browser = LWP::UserAgent->new();
-	if ( $Host->type() eq 'DCS-932L' ) {
-		my $protocol = 'http';
-		my $path = '/Config.CFG';
-		my $method = 'get';
-		my $port = 80;
-		my $args;
-		foreach my $HI ( $Host->Interfaces() ) {
+	my $self = shift;
+	my %config;
 
-			my $url = $protocol.'://'.$HI->ip().$path;
-			my $response = $browser->get($url);
-			$openprint::log->debug("Sending initial url: $url");
-			my $headers = $response->headers();
-			if ( $$headers{'client-ssl-cipher'} ) {
-				$openprint::log->debug("Swtiching to https");
-				$protocol = 'https';
-				$port = 443;
-			}
-			$response = $HI->authenticate( $browser, $response, $method, $port, $url, $args);
-			#$openprint::log->debug($response->content());
-			if ( !$response->is_success ) {
-			} else {
-				return $response->content();
-				last;
-			}
-
-		} # end foreach HI
-	} # end if type
+	eval {
+		require 'openprint/Host/'.$self->type().'.pm';
+		my $Host = ('openprint::Host::'.$self->type())->new($self);
+		%config = $Host->get_config();
+	};
+	$openprint::log->error('Eval error of require Reason: '.$@) if $@;
+	return %config;
 } # end sub get_config
 
 sub can_get_config {
-	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L' ] ) );
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L','Vivotek' ] ) );
+}
+
+sub get_and_store_config {
+	my $self = shift;
+	if ( $self->can_get_config() ) {
+	} else {
+		Error("Host type $$self{type} doesn't have support for getting config.");
+	}
+}
+
+sub can_get_image {
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L','Vivotek' ] ) );
+}
+
+sub get_image {
+	my $self = shift;
+	my $url;
+
+	eval {
+		require 'openprint/Host/'.$self->type().'.pm';
+		my $Host = ('openprint::Host::'.$self->type())->new($self);
+		$url = $Host->get_image(@_);
+	};
+	$openprint::log->error('Eval error of require Reason: '.$@) if $@;
+	return $url;
+}
+
+sub check {
+	my $self = shift;
+	my @check;	
+	return if ! ( $$self{type_id} and sets::isin($self->type(), ['Vivotek']) );
+	eval {
+		require 'openprint/Host/'.$self->type().'.pm';
+		my $Host = ('openprint::Host::'.$self->type())->new($self);
+		@check = $Host->check();
+	};
+	return @check;
+}
+#sub new {
+	#my $parent = shift;
+	#my $self = $parent->SUPER::new(@_);
+	#if ( $self->type() eq 'Vivotek' ) {
+		#bless $self, 'openprint::Host::Vivotek';
+	#}
+	#return $self;
+#}
+
+sub thumbnail_html {
+	my $self = shift;
+	my $size = @_ ? shift : 'small';
+	return '<img src="'.$self->thumbnail_url($size).'" alt=""/>';
+}
+
+sub thumbnail_url {
+	my $self = shift;
+	my $size = @_ ? shift : 'small';
+	if ( $self->can_get_image() ) {
+		my @dimensions = openprint::Asset::get_dimensions('Landscape', $size);
+		return $self->get_image(@dimensions);
+	}
+	my @Assets = $self->Assets();
+	return ( @Assets ? $Assets[0]->Asset()->sized_html($size) : '' );
 }
 
 1;

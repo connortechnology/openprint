@@ -26,7 +26,7 @@
 		
 	} else {
 		my %filters = (
-				( $session{$uri.'?ddmPress'} ? (	'used_press_name in'	=> $session{$uri.'?ddmPress'} ) : () ),
+				( $session{$uri.'?ddmPress'} ? ('used_press_name any'	=> $session{$uri.'?ddmPress'} ) : () ),
 				( $session{$uri.'?ddmEmployee'} ? (	'operator_id any'	=> $session{$uri.'?ddmEmployee'} ) : () ),
 				status			=> [ split ',', $session{$uri.'?ProjectStatus'} ],
 				'order_id is null'	=> 0,

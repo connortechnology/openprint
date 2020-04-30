@@ -952,11 +952,10 @@ sub complete_service {
 
 	my $Service = $Project->Service( $service_id );
 	if ( ! $Service->service_id() ) {
-$log->error("No service_id in service for project $$Project{id}, $service_id: " . $Service->to_string() );
+		$log->error("No service_id in service for project $$Project{id}, $service_id: " . $Service->to_string());
 		return;
 	} # end if
-	my $ac = sql::start_transaction( $dbh );
-	$Service->save({status=>'Complete'});
+	my $ac = sql::start_transaction($dbh);
 	my $specs = $Service->specs();
 	my @operator_ids = @{ $Service->operator_ids() };
 # Remove from Print Schedule
@@ -965,16 +964,25 @@ $log->error("No service_id in service for project $$Project{id}, $service_id: " 
 		my $Shift = $Job->Shift();
 		@operator_ids = sets::union(@operator_ids, @{$Shift->operator_ids()}) if $Shift->operator_ids();
 		push @forms, map { my $sig_specs = openprint::service::get_specs_ref( $Project, $_ ); $$sig_specs{SignatureIndex}; } @{$Job->pertains_id()};
-		$Job->delete();
+# FIXME: What if job has other signatures...
+		my @service_ids = @{$Job->service_id()} if $Job->service_id();
+		@service_ids = sets::exclude( \@service_ids, [ $service_id ] );
+
+		if ( ! @service_ids ) {
+			$Job->delete();
+		} else {
+			$Job->save({service_id=>\@service_ids});
+		}
 	} # end foreach Job
 	@forms = sort sets::union( @forms );
 	
 	@operator_ids = map { $_ ? $_ : () } @operator_ids;
+	$Service->save({status=>'Complete', operator_ids=>\@operator_ids});
 	my @Users = openprint::User->find(id=>\@operator_ids) if @operator_ids;
 
 	$log->debug("Completing ".$Service->service_type(). ' for form'.(@forms==1?'':'s')." @forms by $session{user_id} for @operator_ids");
 	$Project->add_to_log( @session{'company_id','user_id'},
-			"Form $$specs{SignatureIndex} Completed". ( ( @operator_ids and sets::isin($session{user_id}, \@operator_ids) ) ? '': ' for ' . join(',',map { $_->name() } @Users ) ) );
+			"Form $$specs{SignatureIndex} Completed". ( ( @operator_ids and sets::isin($session{user_id}, \@operator_ids) ) ? '': ' for ' . join(',', map { $_->name() } @Users) ) );
 	sql::end_transaction($dbh, $ac);
 
 	if ( $Service->service_type() eq 'Printing' ) {
@@ -2150,6 +2158,9 @@ sub operator_schedule {
 		} # end foreach Equipment
 	} else {
 		ssi::save_params( $r->uri(), ( 'category_id', 'equipment_id', 'operator_ids' ) );
+		if ( exists($param{func}) and ! exists $param{equipment_id} ) {
+			delete $session{$r->uri().'?equipment_id'};
+		}
 	} # end if
 
 } # end sub operator_schedule

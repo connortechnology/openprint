@@ -71,8 +71,14 @@
 <? endif ( $$variable{Signature} == 1 or $$variable{Signature} == 2 ) ?>
 		<li>
 			<label>Customer supplied?</label>
-			<? echo ( radio( 'pages_supplied'.$$variable{Signature}, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'pages_supplied'.$$variable{Signature}}, { default=>'N', 
-					onclick=>qq`if(this.value=='Y'){\$('Inks$$variable{Signature}').hide();\$('SuppliedFormat$$variable{Signature}').show();\$('BleedsColourBars$$variable{Signature}').hide();}else{\$('Inks$$variable{Signature}').show();\$('SuppliedFormat$$variable{Signature}').hide();\$('BleedsColourBars$$variable{Signature}').show();}` } ); ) ?>
+			<? echo ( radio( 'pages_supplied'.$$variable{Signature},
+						[ 'Y', 'Yes', 'N', 'No' ],
+						$$variable{'pages_supplied'.$$variable{Signature}},
+						{
+							default=>'N', 
+							onclick=>qq`if(this.value=='Y'){\$('Inks$$variable{Signature}').hide();\$('SuppliedFormat$$variable{Signature}').show();\$('BleedsColourBars$$variable{Signature}').hide();}else{\$('Inks$$variable{Signature}').show();\$('SuppliedFormat$$variable{Signature}').hide();\$('BleedsColourBars$$variable{Signature}').show();}`
+						}
+				); ) ?>
 		</li>
 		<li id="SuppliedFormat<?Signature?>" <? echo ( $$variable{'pages_supplied'.$$variable{Signature}} eq 'Y' ? '' : 'style="display:none;"' ) ?>>
 			<label>Supplied format</label>

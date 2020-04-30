@@ -82,7 +82,7 @@ sub registration {
 	$error .= 'Missing position.<br/>' if $required_fields{title} and ! $param{title};
 	$error .= 'Missing address.<br/>' if $required_fields{address1} and ! $param{address1};
 	$error .= 'Missing city.<br/>' if $required_fields{city} and ! $param{city};
-	$error .= 'Missing state/province.<br/>' if $required_fields{state} and ! $param{state}; 
+	$error .= 'Missing state/province.<br/>' if $required_fields{state} and ! $param{state};
 	$error .= 'Missing country.<br/>' if $required_fields{country} and ! $param{country};
 	if ( ! $session{company_id} ) {
 		$error .= 'You must agree to the terms.<br/>' if $required_fields{agree_terms} and ! $param{agree_terms};
@@ -102,6 +102,7 @@ sub registration {
     $error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address($param{email});
 	}
 	if ( $required_fields{password} ) {
+<<<<<<< HEAD
     $error .= 'Empty Password.<br/>' if $param{password} eq '';
     $error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verifypassword};
     if ( my $reason = openprint::login::check_password($param{password}) ) {
@@ -133,32 +134,36 @@ sub registration {
       } elsif ( ! $param{MD5SUM} ) {
         $log->error('No MD5SUM, there must have been a problem creating the png!');
       } else {
-        require Authen::Captcha;
-        my $Captcha = new Authen::Captcha(
-					data_folder => $config{SkinPath}.'/tmp/',
-          output_folder => $config{SkinPath}.'/images/captcha'
-        );
-        # Remove spaces, because some people want to put spaces between the characters, etc.
-        $param{Captcha} =~ s/\s//g;
-        my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
-        if ( $rc == 1 ) {
-          # Passed
-        } elsif ( $rc == 0 ) {
-          # File error, log and carry on
-          $log->error('Captcha file error');
-        } elsif ( $rc == -1 ) {
-          $log->debug('Failed: code expired');
-          $error .= 'Captcha validation code has expired.  Please try again.';
-        } elsif ( $rc == -2 ) {
-          $log->debug('Failed: invalid code (not in db)');
-          $error .= 'Captcha validation code incorrect.  Please try again.';
-        } elsif ( $rc == -3 ) {
-          $log->debug('Failed: invalid code (does not match token)');
-          $error .= 'Captcha validation code incorrect.  Please try again.';
-        } else {
-          $log->error("unknown return code $rc from Authen::Captcha");
-        }
-      } # end if captcha setup is ok
+# Auth::Captcha calls die... so must do this in an eval
+        eval {
+          require Authen::Captcha;
+          my $Captcha = new Authen::Captcha(
+              data_folder => $config{SkinPath}.'/tmp/',
+              output_folder => $config{SkinPath}.'/images/captcha'
+              );
+# Remove spaces, because some people want to put spaces between the characters, etc.
+          $param{Captcha} =~ s/\s//g;
+          my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
+          if ( $rc == 1 ) {
+# Passed
+          } elsif ( $rc == 0 ) {
+# File error, log and carry on
+            $log->error('Captcha file error');
+          } elsif ( $rc == -1 ) {
+            $log->debug('Failed: code expired');
+            $error .= 'Captcha validation code has expired.  Please try again.';
+          } elsif ( $rc == -2 ) {
+            $log->debug('Failed: invalid code (not in db)');
+            $error .= 'Captcha validation code incorrect.  Please try again.';
+          } elsif ( $rc == -3 ) {
+            $log->debug('Failed: invalid code (does not match token)');
+            $error .= 'Captcha validation code incorrect.  Please try again.';
+          } else {
+            $log->error("unknown return code $rc from Authen::Captcha");
+          }
+        } # end if captcha setup is ok
+			};
+			$log->error('Eval error reason: '.$@) if $@;
     } # end if google recaptcha or not
   } # end if using captcha
 
@@ -185,7 +190,7 @@ sub registration {
 
 	my @agents = split(',', $config{UserRegistrationEmail});
 	my $agent = $agents[0] if @agents;
-	
+
 	# No errors, We are in go status
 	my %info = %param;
 	$info{date} = localtime;
@@ -212,7 +217,7 @@ sub registration {
 			$Company->set( \%param );
 			$Company->activation( $config{NewCustomerAccountActivation} );
 			if ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) and ! $Company->salesrep_id() ) {
-				$Company->salesrep_id( $session{user_id} );
+				$Company->salesrep_id($session{user_id});
 			} # end if
 			if ( my $error = $Company->save() ) {
 				$variable{error} .= $error;
@@ -255,7 +260,7 @@ sub registration {
 			$variable{error} .= $error;
 			return;
 		} # end if
-		
+
 	} # end if
 
 	if ( $param{email} or $param{firstname} or $param{lastname} ) {
@@ -304,9 +309,9 @@ sub registration {
 						);
 			} # end if
 
-			if ( ! ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) ) {
+			if ( ! ($session{user_type} and sets::isin($session{user_type}, ['E','A']) ) ) {
 # send notification
-				$info{ReplacementText} = ssi::include( '/email_content/first_user_login_app_notification.html', \%info );
+				$info{ReplacementText} = ssi::include('/email_content/first_user_login_app_notification.html', \%info);
 				foreach my $to ( split(',', $config{UserRegistrationEmail} ) ) {
 					new openprint::Email()->send(
 							FROM	=> $agent,
@@ -329,7 +334,7 @@ sub registration {
 #FIXME
 			$User->web_active( $session{company_id} ? 'Y' : $config{NewNonFirstUserAccountActivation} );
 			$User->administrator( 'N' );
-			$variable{error} .= $User->save();		
+			$variable{error} .= $User->save();
 			return if $variable{error};
 			$variable{information} .= 'Registration was successful.<br/><br/>';
 			$variable{success} = 1;
@@ -385,10 +390,10 @@ sub registration {
 		# If I'm a salesrep, then only change my company, not the user.
 		$session{company_id} = $Company->id();
 		$variable{information} .= 'You are now representing '.$Company->name().'<br/>';
-	} elsif ( 
+	} elsif (
 			( (! $session{company_id} ) or ( $session{company_id} == $Company->id() ) )
-			and ( ! $session{user_id} ) 
-			) { 
+			and ( ! $session{user_id} )
+			) {
 $log->debug('U ' . $User->web_active(). ' C' . $Company->activation() );
 		# auto log in.
 		if ( $User->web_active() eq 'Y' and $Company->activation() eq 'Y') {
@@ -416,7 +421,7 @@ sub login_password {
 
 sub company_profile {
 	my $Company;
-	
+
 	$Company = new openprint::Company( $param{company_id} );
 
 	if ( $param{company_id} and ! $Company->can_view() ) {
@@ -449,7 +454,7 @@ sub company_profile {
 				$variable{error} = $error;
 				return;
 			} # end if
-	
+
 			if ( $param{StartYear} ) {
 				$param{established} = sprintf('%.4d-%.2d-%.2d',@param{'StartYear','StartMonth'}, 1 );
 			} else {
@@ -571,7 +576,7 @@ $log->debug("Sending password change");
 		} else {
 			$User = $openprint::User;
 		} # end if
-	} # end if 
+	} # end if
 	$variable{User} = $User;
 	if ( $config{mail_db_name} ) {
 		email::load($User->email(), \%variable);
@@ -641,7 +646,7 @@ sub reseller_application {
 
 		if ( $param{StartYear} ) {
 			$param{established} = sprintf( '%.4d-%.2d-%.2d', @param{'StartYear','StartMonth'}, 1 );
-		} # end if 
+		} # end if
 		$variable{error} .= $Company->save( \%param );
 		$variable{error} .= $Company->save_tradereferences( \%param );
 		if ( ! $variable{error} ) {
@@ -703,7 +708,7 @@ sub credit_application {
 
 		if ( $param{StartYear} ) {
 			$param{established} = sprintf( '%.4d-%.2d-%.2d', @param{'StartYear','StartMonth'}, 1 );
-		} # end if 
+		} # end if
 		$variable{error} .= $Company->save( \%param );
 		$variable{error} .= $Company->save_tradereferences( \%param );
 		$Company->Profile()->save( \%param );
@@ -743,7 +748,7 @@ sub view {
     $variable{User} = new openprint::User();
     return;
   }
-  
+
 	if ( ! $User->can_view() ) {
 		$variable{User} = new openprint::User();
 		$variable{error} .= 'You cannot view this user.';
@@ -780,12 +785,12 @@ sub couple_search {
 } # end sub couple_search
 
 sub _couple_search {
-	ssi::save_params( '/account/couple_search.html', ( 
+	ssi::save_params( '/account/couple_search.html', (
 				'created_on_start_year', 'created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'last_online_start_year', 'last_online_start_month','last_online_start_day',
 				'last_online_end_year','last_online_end_month','last_online_end_day', 'distance',
-				map { 'field-'.$_->id() } openprint::Company_Profile_Field->find('order'=>'sort,name') 
+				map { 'field-'.$_->id() } openprint::Company_Profile_Field->find('order'=>'sort,name')
 				) );
 } # end sub _couple_search
 sub search {
@@ -823,7 +828,7 @@ sub search {
 } # end sub search
 
 sub _search {
-	ssi::save_params( '/account/search.html', ( 
+	ssi::save_params( '/account/search.html', (
 				'created_on_start_year', 'created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'last_online_start_year', 'last_online_start_month','last_online_start_day',
@@ -840,7 +845,7 @@ sub _search {
 
 } # end sub _search
 
-sub _wall { 
+sub _wall {
 	$variable{User} = new openprint::User( $param{user_id} );
 	if ( $param{message} ) {
 		my $Wall = new openprint::Wall();
@@ -938,7 +943,7 @@ sub _block_popup {
 } # end sub _block_popup
 
 sub blocklist {
-} # end sub blocklist 
+} # end sub blocklist
 
 sub _blocklist_unblocked {
 } # end sub _blocklist_unblocked

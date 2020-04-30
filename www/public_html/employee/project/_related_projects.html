@@ -24,9 +24,9 @@ $log->debug("Have previous project ids: @previous_project_ids");
 ';
 	$html .= join("\n", map {
 			sprintf('<tr><td class="Docket">%s</td><td class="Date">%s</td><td class="description">%s</td></tr>', 
-					$_->link_to($_->docket()),
-					$_->link_to(format_date($_->Order()->created_on())),
-					$_->link_to($_->reference() . '<br/>'. $_->summary()),
+					$_->production_link_to($_->docket()),
+					$_->production_link_to(format_date($_->Order()->created_on())),
+					$_->production_link_to($_->reference() . '<br/>'. $_->summary()),
 					) } reverse @Projects );
 $html .= '</table>';
 	} else {

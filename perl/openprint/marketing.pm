@@ -231,7 +231,7 @@ sub subscriptions {
 			return;
 		} # endif
 	} else {
-		if ( $$User{email} ne $param{email} ) {
+		if ( $param{email} and ($$User{email} ne $param{email}) ) {
 			$variable{error} .= "User email ($$User{email}) and provided email address ($param{email}) do not match.<br/>";
 			return;
 		}
@@ -239,17 +239,21 @@ sub subscriptions {
 
 	if ( $param{action} eq 'Save' ) {
 		if ( ! $openprint::session{user_id} ) {
-			require Authen::Captcha;
-			my $Captcha = new Authen::Captcha(
-					data_folder => $config{SkinPath}.'/tmp',
-					output_folder => $config{SkinPath}.'/images/captcha'
-					);
-	# Remove spaces, because some people want to put spaces between the characters, etc.
-			$param{Captcha} =~ s/\s//g;
-			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
-				$variable{error} .= 'Captcha validation code incorrect.  Please try again.';
+			eval {
+				require Authen::Captcha;
+				my $Captcha = new Authen::Captcha(
+						data_folder => $config{SkinPath}.'/tmp',
+						output_folder => $config{SkinPath}.'/images/captcha'
+						);
+# Remove spaces, because some people want to put spaces between the characters, etc.
+				$param{Captcha} =~ s/\s//g;
+				if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+					$variable{error} .= 'Captcha validation code incorrect.  Please try again.';
+				} # end if
+			};
+			if ( $variable{error} ) {
 				return;
-			} # end if
+			}
 		} # end if not logged in
 		if ( ( $param{all} eq 'N' ) and ( $User->mailinglist() eq 'Y' ) ) {
 			$variable{error} .= $User->save({mailinglist=>$param{all}});

@@ -133,7 +133,7 @@ sub send_email {
 	$text_body = ssi::variable_substitution( \$$self{email_text}, $replacements ) if $$self{email_text};
 
 	my @attachments = eval $self->{attachments};
-	$openprint::log->warn( "Eval error Reason: " . $@ ) if $@;
+	$openprint::log->warn('Eval error Reason: '.$@) if $@;
 
 	my $results = $Email->send(
 			FROM	=> $self->{email_from} ? $self->{email_from} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
@@ -148,8 +148,8 @@ sub send_email {
 	if ( $$replacements{User} and $$replacements{User}->id() ) {
 		sql::insert( undef, undef, 'EmailCampaign_Sent', 
 				campaign_id =>	$self->{id},
-				EmailSentOn	=>				'NOW()',
-				NumEmailSent	=> 1,
+				emailsenton	=>	'NOW()',
+				numemailsent=> 1,
 				user_id	=>	$$replacements{User}->id(),
 				);
 	}
@@ -173,9 +173,9 @@ sub send {
 	my $query = $self->{query};
 	if ( $$self{timestosend} ) {
 		$query .= " AND (
-( NOT EXISTS (SELECT NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=102 AND user_id=Users.id))
+( NOT EXISTS (SELECT numemailsent FROM EmailCampaign_Sent WHERE campaign_id=$$self{id} AND user_id=Users.id))
  OR
-( (SELECT MAX(NumEmailSent) FROM EmailCampaign_Sent WHERE campaign_id=$$self{id} AND user_id=Users.id) < $$self{timestosend}) )";
+( (SELECT MAX(numemailsent) FROM EmailCampaign_Sent WHERE campaign_id=$$self{id} AND user_id=Users.id) < $$self{timestosend}) )";
 	}
 	if ( $$self{recipients_per_run} ) {
 		$query .= ' LIMIT ' . int($$self{recipients_per_run});
@@ -223,7 +223,7 @@ sub send {
 
 		my ( $interval_expired, $last_sent_on, $num_email_sent );
 # First check if a sent row exists
-    $_ = 'SELECT (NOW() - EmailSentOn) > ?, EmailSentOn, NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
+    $_ = 'SELECT (NOW() - emailsenton) > ?, emailsenton, numemailsent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
 		if ( ( $interval_expired, $last_sent_on, $num_email_sent ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_id ) ) {
 
 # Check if the duration has elapsed 
@@ -368,7 +368,7 @@ sub trial {
 		my ( $interval_expired, $num_email_sent );
 
 # First check if a sent row exists
-		$_ = 'SELECT (NOW() - EmailSentOn) > ?, NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
+		$_ = 'SELECT (NOW() - emailsenton) > ?, numemailsent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
 		if ( ( $interval_expired, $num_email_sent ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_id ) ) {
 
 # Check if the duration has elapsed	
