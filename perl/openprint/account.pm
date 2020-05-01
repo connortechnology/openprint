@@ -102,7 +102,6 @@ sub registration {
     $error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address($param{email});
 	}
 	if ( $required_fields{password} ) {
-<<<<<<< HEAD
     $error .= 'Empty Password.<br/>' if $param{password} eq '';
     $error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verifypassword};
     if ( my $reason = openprint::login::check_password($param{password}) ) {
