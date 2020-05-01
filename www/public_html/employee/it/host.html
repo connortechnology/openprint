@@ -96,6 +96,7 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 			</ul>
 		</div>
 		<div class="content rightColumn">
+			<? echo ( $$variable{Host}->thumbnail_html('medium') ) ?>
 <? if ( $$variable{Host}->id() ) ?>
 			<? echo (
 				$$variable{Object} = $$variable{Host};
@@ -111,6 +112,9 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 			</fieldset>
 			<fieldset class="licenses"><legend>Licenses</legend>
 				<div id="licenses"><?include('_host_licenses.html')?></div>
+			</fieldset>
+			<fieldset><legend>Config</legend>
+				<div id="information"><?include('_host_config.html')?></div>
 			</fieldset>
 <? endif ( $$variable{Host}->id() ) ?>
 		</div>

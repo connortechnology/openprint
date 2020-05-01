@@ -100,6 +100,7 @@ $default_sort	=	'lower(firstname),lower(lastname)';
 	password_changed_on		=>	undef,
 	password				=>	'',
 	email_valid				=>	undef,
+	mailinglist		=>	undef,
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.

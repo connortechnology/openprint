@@ -3492,6 +3492,12 @@ if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
 
 if ( ! sets::isin( 'host_config', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Host_Config.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='host_config'", 'column_name');
+	if ( exists $$data{data} and ! exists $$data{data_json} ) {
+		$log->debug("Converting Host_Config::data to Host_Config::data_json");
+		$dbh->do('ALTER TABLE Host_Config RENAME data to data_json') or die $dbh->errstr();
+	}
 }
 if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Host_Interfaces.sql}) );

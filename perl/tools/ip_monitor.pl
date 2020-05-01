@@ -11,6 +11,7 @@ require misc;
 require openprint::User;
 require openprint::Host;
 require openprint::Host_Interface;
+require openprint::Host_Config;
 require logger;
 require openprint::Email;
 require openprint::Log;
@@ -30,7 +31,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-	'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s',
+	'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s', 'host_type=s',
  );
 
 if ($opts->{help}) {
@@ -83,7 +84,6 @@ $config{ping_wait} = 2 if ! $config{ping_wait};
 # udp has less network traffic overhead
 my $p = Net::Ping->new($config{ping_type},$config{ping_wait});
 my $hup;
-my %times;
 $SIG{HUP} = \&sig_handler;
 
 # TUrn off Object caching
@@ -114,6 +114,10 @@ if ( $config{user_id} ) {
 	$openprint::Company = $openprint::User->Company();
 }
 
+# Indexed by Host Id
+my %configurations;
+my %status;
+
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	
@@ -141,7 +145,7 @@ while(1) {
 		$hup = 0;
 	} # end if ! dbh
 
-	my @Hosts = openprint::Host->find(monitored=>1);
+	my @Hosts = openprint::Host->find(monitored=>1, ( $$opts{host_type} ? ( type=>$$opts{host_type} ) : () ));
 	foreach my $Host ( @Hosts ) {
 
 		$log->debug($Host->hostname().' was '.($Host->online() ? 'online' : 'offline'));
@@ -239,6 +243,19 @@ while(1) {
 		$Host->unlock();
 
 		if ( $Host->online() ) {
+			if ( $Host->can_get_config() ) {
+				my %host_config = $Host->get_config();
+				if ( misc::compare_hash(\%host_config, $configurations{$$Host{id}}) ) {
+					(new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_config}, name=>'config');
+					$configurations{$$Host{id}} = \%host_config;
+				}
+				my %host_status = $Host->get_status();
+				if ( misc::compare_hash(\%host_status, $status{$$Host{id}}) ) {
+					(new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_status, name=>'status'});
+					$status{$$Host{id}} = \%host_status;
+				}
+			}
+
 			if ( $Host->type() =~ /DCS\-910/ ) {
 				require LWP;
 				my $browser = LWP::UserAgent->new();
