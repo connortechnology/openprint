@@ -77,7 +77,6 @@ sub ip_address {
 		}
 		return if ! $_[1];
 
-$openprint::log->debug("Getting HI for $_[1] for " . $_[0]->to_string());
 		my $Interface = openprint::Host_Interface->find_one(ip=>$_[1]);
 		if ( !$Interface ) {
 			$Host = openprint::Host->find_one(hostname=>$_[1]);
