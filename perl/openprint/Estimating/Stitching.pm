@@ -22,6 +22,7 @@ use constant DEBUG => 0;
 
 require openprint::Equipment;
 require openprint::service;
+require openprint::Project;
 
 my %Services;
 
@@ -252,6 +253,7 @@ sub signature_calc {
 		my $form = $$sig_specs{SignatureIndex};
 		push @printed_impositions, $$I{imposition};
 		if ( ! $$I{Folds} ) {
+			$openprint::log->error("Sitchign: No folds in imposition, generating");
 			if ( DEBUG ) {
 				$openprint::log->debug('Stitching: No folds in imposition, generating') if DEBUG;
 				$I->display('No Folds');
@@ -867,6 +869,26 @@ sub equipment_fits {
 	} else {
 		$openprint::log->error('No calliper in Stitching::get_equipment');
 	} # end if
+
+	my $sizes = $Equipment->specification($$specs{ServiceTypeName}.' Final Sizes');
+	if ( $sizes ) {
+		my @sizes = map { [ split('x', $_) ] } split(',',$sizes);
+		my $found = 0;
+		foreach my $size ( @sizes ) {
+			my ( $width, $height ) = @{$size};
+			if (
+					( $width == $$specs{Width} and $height == $$specs{Height} )
+				 ) {
+				$found = 1;
+				last;
+			} # end if
+		} # end foreach
+		if ( ! $found ) {
+			return ":book size not in allowed sizes: $sizes<br/>";
+			next;
+		}
+	} # end if sizes  
+
 	return '';
 }
 
@@ -990,7 +1012,7 @@ $openprint::log->debug("BaseService ".($BaseService ?  $BaseService->to_string()
 					$pass{PocketMakeReadyTime} = $maxPockets * $$PocketMakeReady{value} /60;
 					$price{MRTime} += $pass{PocketMakeReadyTime};
 				} else {
-					$openprint::log->error('Unknown units on PocketMakeReady');
+					$openprint::log->error('Unknown units on PocketMakeReady ' . $PocketMakeReady->to_string());
 				} # end if
 			} # end if PocketMakeReady
 
@@ -1015,7 +1037,7 @@ $openprint::log->debug("BaseService ".($BaseService ?  $BaseService->to_string()
 				$pass{PocketMakeReadyTime} = $neededPockets * $$PocketMakeReady{value} / 60;
 				$price{MRTime} += $pass{PocketMakeReadyTime};
 			} else {
-				$openprint::log->error('Unknown units on PocketMakeReady');
+				$openprint::log->error('Unknown units on PocketMakeReady ' . $PocketMakeReady->to_string());
 			} # end if
 		} # end if PocketMakeReady
 

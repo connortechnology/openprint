@@ -1,10 +1,11 @@
 <? eval (
 	my $uri = '/administrator/managerial/users.html';
 	if ( $session{$uri.'?email'} ) {
-		my %filters = (
-			'email ilike' => '%'.$session{$uri.'?email'}.'%' ,
-		);
-		$$variable{Users} = [ openprint::User->find( %filters ) ];
+    my %filters = (
+      'email ilike' => '%'.$session{$uri.'?email'}.'%',
+      deleted => [0,1],
+      );
+    $$variable{Users} = [ openprint::User->find(%filters) ];
 	} else {
     my %filters = (
 		( map { $session{join('?', $uri, $_)} ? ( $_ => $session{join('?', $uri, $_) } ) : () } ( 'company_id','type' ) ),

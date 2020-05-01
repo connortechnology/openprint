@@ -4,67 +4,55 @@
 	my $front_html;
 	my $back_html;
 
-	my $services = $$variable{'Project'}->services();
-	my $Service = $$variable{'Project'}->Service( $$variable{'ServiceIndex'} );
+	my $Project = $$variable{Project};
+	my $services = $Project->services();
+	my $Service = $Project->Service( $$variable{ServiceIndex} );
 	my $sig_specs = $Service->specs();
-	my $signature = $$variable{'SignatureIndex'};
+	my $signature = $$variable{SignatureIndex};
 
 	my @PPFs = openprint::CIP3_PPF->find(
-				'docket'	=>	$$variable{'Project'}->docket(),
-				'signature'	=>	$signature,
-				'order'		=>	'created_on DESC',
-				'distinct'	=>	1,
+				docket		=>	$Project->docket(),
+				signature	=>	$signature,
+				order			=>	'created_on DESC',
+				distinct	=>	1,
 				);
+
+	sub side_html {
+		my $PPF = shift;
+		my $side = shift;
+
+		my $html = '<div class="Preview"><fieldset><legend>'.$side.' created at '.format_datetime($PPF->created_on()).'</legend>';
+		foreach my $preview ( $PPF->previews($side) ) {
+			next if ! $$preview{separations};
+
+			$html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
+				$Project->docket(), $signature, $side,
+				);
+		} # end foreach preview
+		$html .= button('SendPPF'.$PPF->id(), {
+				onclick=>q`new Ajax.Updater('Previews`.$signature.q`'/employee/proj/prin/prin_multi.html?ProjectIndex=`.$Project->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=SendPPF&ppf_id='.$PPF->id().q`');`,
+				text=>'Send CIP'});
+		$html .= button('DeletePPF'.$PPF->id(), {
+				onclick=>q`new Ajax.Updater('Previews`.$signature.q`','/employee/proj/prin/_previews.html?ProjectIndex=`.$Project->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=DeletePPF&ppf_id='.$PPF->id().q`');`,
+				text=>'Delete CIP'}) if $openprint::User->Groups('Prepress') or $openprint::User->type() eq 'A';
+		$html .= '</fieldset></div>';
+		return $html;
+	}
+
 	foreach my $PPF ( @PPFs ) {
 		$PPF->generate_previews();
 
 		if ( $PPF->side() eq 'M' ) {
-			$front_html .= '<div class="leftColumn"><fieldset><legend>Front created at '.Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PPF->created_on() ) ).'</legend>';
-			foreach my $preview ( $PPF->previews('Front') ) {
-				next if ! $$preview{'separations'};
-
-				$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
-					$$variable{'Project'}->docket(), $$variable{'SignatureIndex'}, 'Front',
-					);
-			} # end foreach preview
-			$front_html .= ssi::writeButton($log, $dbh, 'SendPPF'.$PPF->id(), 'send.gif', '', '/employee/proj/prin/prin_multi.html?ProjectIndex='.$$variable{'Project'}->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=SendPPF&ppf_id='.$PPF->id(), 'Send CIP' );
-			$front_html .= '</fieldset></div>';
-
-			$back_html .= '<div class="rightColumn"><fieldset><legend>Back created at '.Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PPF->created_on() ) ).'</legend>';
-			foreach my $preview ( $PPF->previews('Back') ) {
-				next if ! $$preview{'separations'};
-
-				$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
-					$$variable{'Project'}->docket(), $PPF->signature(), 'Back',
-					);
-			} # end foreach preview
-			$back_html .= '</fieldset></div>';
-			last;			
+			$front_html .= side_html( $PPF, 'Front');
+			$back_html .= side_html( $PPF, 'Back');
 		} elsif ( $PPF->side() eq 'A' or $PPF->side() eq 'Front' ) {
-			$front_html .= '<div class="leftColumn"><fieldset><legend>Front created at '.Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PPF->created_on() ) ).'</legend>';
-			foreach my $preview ( $PPF->previews() ) {
-				next if ! $$preview{'separations'};
-
-				$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
-					$$variable{'Project'}->docket(), $PPF->signature(), 'Front',
-					);
-			} # end foreach preview
-			$front_html .= ssi::writeButton($log, $dbh, 'SendPPF'.$PPF->id(), 'send.gif', '', '/employee/proj/prin/prin_multi.html?ProjectIndex='.$$variable{'Project'}->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=SendPPF&ppf_id='.$PPF->id(), 'Send CIP' );
-			$front_html .= '</fieldset></div>';
-			last if $front_html and $back_html;
+			$front_html .= side_html($PPF, 'Front');
 		} elsif ( $PPF->side() eq 'B' or $PPF->side() eq 'Back' ) {
-			$back_html .= '<div class="rightColumn"><fieldset><legend>Back created at '.Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PPF->created_on() ) ).'</legend>';
-			foreach my $preview ( $PPF->previews() ) {
-				next if ! $$preview{'separations'};
-
-				$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
-					$$variable{'Project'}->docket(), $PPF->signature(), 'Back',
-					);
-			} # end foreach preview
-			$back_html .= ssi::writeButton($log, $dbh, 'SendPPF'.$PPF->id(), 'send.gif', '', '/employee/proj/prin/prin_multi.html?ProjectIndex='.$$variable{'Project'}->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=SendPPF&ppf_id='.$PPF->id(), 'Send CIP' );
-			$back_html .= '</fieldset></div>';
-			last if $front_html and $back_html;
+			$back_html .= side_html( $PPF, 'Back');
+		} else {
+			$log->error("Unknown side $$PPF{side} in ppf");
 		} # end if side
+		last if $front_html and $back_html;
 	} # end foreach PPF
 	return $front_html . $back_html;
 ) ?>

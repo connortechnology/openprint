@@ -83,7 +83,7 @@ configuration::merge($opts);
 
 # Clear out old sessions
 my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
-$log->debug("Cleaning out sessions: " . @$session_ids . " sessions in system");
+$log->debug('Cleaning out sessions: ' . @$session_ids . ' sessions in system');
 my $deleted_session_count = 0;
 foreach my $session ( @$session_ids ) {
     $session =~ s/\s//g;

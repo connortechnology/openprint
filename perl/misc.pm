@@ -558,5 +558,44 @@ sub make_hash_from_array {
 	return wantarray ? %results : \%results;
 }
 
+sub compare_hash {
+	my ( $a, $b ) = @_;
+
+	return 0 if ( (!$a) and (!$b) );
+	return 1 if ($a and !$b) or ( !$a and $b );
+
+	if (%{$a} != %{$b}) {
+		return 1;
+	} else {
+		my %cmp = map { $_ => 1 } keys %{$a};
+		for my $key (keys %{$b}) {
+			last unless exists $cmp{$key};
+			last unless $$a{$key} eq $$b{$key};
+			delete $cmp{$key};
+		}
+		if (%cmp) {
+			return 1;
+		}
+		return 0
+	}
+} # end sub compare_hash
+
+sub json_to_html {
+	my ($input) = @_;
+	my $html;
+	if ( ref $input eq 'ARRAY' ) {
+		$html .= '<ol>'. join("\n", map { '<li>'.json_to_html($_).'</li>' } @$input ).'</ol>';
+	} elsif ( ref $input eq 'HASH' ) {
+		$html .= '<table>';
+		for my $k (sort keys %$input) {
+			$html .= '<tr><th>'.$k.'</th><td>'.json_to_html($input->{$k}).'</td></tr>';
+		}
+		$html .= '</table>';
+	} else {
+		$html .= '<span>'.$input.'</span>';
+	}
+	return $html;
+}
+
 1;
 __END__

@@ -17,6 +17,7 @@ require openprint::Expense_Rule_Category;
 require openprint::Payment;
 require misc;
 require sql;
+require JSON;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -766,9 +767,16 @@ sub expense_rule {
     return if ! $param{action};
 
     if ( $param{action} eq 'Save' ) {
-      $variable{error} .= $Rule->save(\%param);
+      eval {
+        JSON::decode_json($param{rules_json});
+        JSON::decode_json($param{action_json});
+      }; # end eval
+      $variable{error} .= $@;
       if ( ! $variable{error} ) {
-        $variable{ExternalRedirect} = '/employee/accounting/expense_rules.html';
+        $variable{error} .= $Rule->save(\%param);
+        if ( ! $variable{error} ) {
+          $variable{ExternalRedirect} = '/employee/accounting/expense_rules.html';
+        }
       }
     } elsif ( $param{action} eq 'Copy' ) {
       $Rule = $variable{Rule} = $Rule->copy();

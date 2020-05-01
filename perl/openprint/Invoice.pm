@@ -164,7 +164,7 @@ $log->debug("Recalculating subtotal") if $debug;
 			$$self{subtotal} += $T->value();
 $log->debug("T value: " . $T->value() . " subtotal: $$self{subtotal}");
 		} # end foreach
-		foreach my $P ( openprint::Invoiced_Product->find(invoice_id=>$$self{id}) ) {
+		foreach my $P ( $self->Products() ) {
 			$$self{subtotal} += $P->total();
 $log->debug("P value: " . $P->total() . " subtotal: $$self{subtotal}" );
 		}# end foreach P
@@ -312,7 +312,7 @@ sub send {
   $Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
 
 	$data{ReplacementText} = ssi::include('/email_content/invoice.html', \%data);
-	my $invoice_html = Encode::encode('utf-8',ssi::variable_substitution(\$invoice_template, \%data));
+	my $invoice_html = ssi::variable_substitution(\$invoice_template, \%data);
   $Email->add_pdf_attachment_from_html('Invoice'.$self->num(), $invoice_html);
 
 	$Email->add_html_attachment("Invoice".$self->num().'.html', $invoice_html) if $To and ($To->email() =~ /^iconnor/);
@@ -329,8 +329,12 @@ sub send {
 } # end sub send
 
 sub Products {
-	return openprint::Invoiced_Product->find(invoice_id=>$_[0]{id}, order=>'id');
+  if ( ! $_[0]{Products} ) {
+    $_[0]{Products} = [ openprint::Invoiced_Product->find(invoice_id=>$_[0]{id}, order=>'id') ];
+  }
+  return @{$_[0]{Products}};
 } # end sub Products
+
 sub Projects {
 	return openprint::Invoiced_Project->find(invoice_id=>$_[0]{id}, order=>'id');
 } # end sub Projects

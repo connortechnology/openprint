@@ -11,6 +11,7 @@ require misc;
 require openprint::User;
 require openprint::Host;
 require openprint::Host_Interface;
+require openprint::Host_Config;
 require logger;
 require openprint::Email;
 require openprint::Log;
@@ -31,7 +32,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-	'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s',
+	'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s', 'host_type=s',
  );
 
 if ($opts->{help}) {
@@ -83,9 +84,9 @@ if ( $config{pid_file} ) {
 $config{ping_wait} = 2 if ! $config{ping_wait};
 # udp has less network traffic overhead
 my $p = Net::Ping->new($config{ping_type},$config{ping_wait});
-my $hup;
-
 my %last_ping_time;
+
+my $hup;
 $SIG{HUP} = \&sig_handler;
 
 $openprint::dbh = sql::open_sql( $log,
@@ -110,6 +111,10 @@ if ( $config{user_id} ) {
 	$openprint::sesssion{company_id} = $openprint::User->company_id();
 	$openprint::Company = $openprint::User->Company();
 }
+
+# Indexed by Host Id
+my %configurations;
+my %status;
 
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
@@ -138,9 +143,8 @@ while(1) {
 		$hup = 0;
 	} # end if ! dbh
 
-	my @Hosts = openprint::Host->find( monitored=>1 );
+	my @Hosts = openprint::Host->find(monitored=>1, ( $$opts{host_type} ? ( type=>$$opts{host_type} ) : () ));
 	foreach my $Host ( @Hosts ) {
-
 		$log->debug( 'host ' .($Host->hostname()?$Host->hostname():'with no hostname') . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
 
 		my $online = undef;
@@ -162,11 +166,12 @@ while(1) {
 				$log->debug('HI is not monitored ' . $HI->to_string());
         next;
       }
-			if ( ! $HI->ip() ) {
-				$log->debug("No ip for " . $HI->to_string());
+			if ( !$HI->ip() ) {
+				$log->debug('No ip for ' . $HI->to_string());
 				next;
 			}
 
+<<<<<<< HEAD
       $has_monitored_interfaces = 1;
       $log->debug("Ip: " . $HI->ip() );
       my $ip = new Net::IP($HI->ip());
@@ -293,6 +298,20 @@ while(1) {
     $Host->unlock();
 
     if ( $Host->online() and $$Host{type_id} ) {
+
+      if ( $Host->can_get_config() ) {
+        my %host_config = $Host->get_config();
+        if ( misc::compare_hash(\%host_config, $configurations{$$Host{id}}) ) {
+          (new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_config}, name=>'config');
+          $configurations{$$Host{id}} = \%host_config;
+        }
+        my %host_status = $Host->get_status();
+        if ( misc::compare_hash(\%host_status, $status{$$Host{id}}) ) {
+          (new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_status, name=>'status'});
+          $status{$$Host{id}} = \%host_status;
+        }
+      }
+
       if ( $Host->type() =~ /DCS\-910/ ) {
         require LWP;
         my $browser = LWP::UserAgent->new();

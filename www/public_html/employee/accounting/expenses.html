@@ -78,6 +78,7 @@
 					</li>
 					<li>
 						<label>Recipient</label>
+            <input type="text" onkeyup="filter_companies('recipient_id', {name:this.value,selected_id:get_ddm_value($('recipient_id'))});" class="filter" />
 						<select name="recipient_id" id="recipient_id" onchange="load_expenses(this.form);">
 							<option value="">all</option>
               <? echo (
@@ -85,8 +86,8 @@
                  openprint::Company->dropdown(
                    order=>'lower(name)',
                    'last_expense_on >=' => DateTime::Format::Pg->format_datetime(
-                     DateTime->now()->subtract(years=>1)
-                   )), $session{'/employee/accounting/expenses.html?recipient_id'} ); ) ?>
+                     DateTime->now()->subtract(years=>2)
+                     )), $session{$r->uri().'?recipient_id'} ); ) ?>
 						</select>
 					</li>
 					<li>

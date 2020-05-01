@@ -157,7 +157,7 @@ sub history {
 	ssi::setup_date_select($uri, 'due_on_end', '');
 
 	$session{$uri.'?paid'} = '0' if (!exists $session{$uri.'?paid'}) or ! sets::isin($session{$uri.'?paid'}, [0,1,'']);
-	$session{$uri.'?bad_debt'} = '0' if (! exists $session{$uri.'?bad_debt'}) or ! sets::isin($session{$uri.'?bad_debt'}, [0,1,'']);
+	$session{$uri.'?bad_debt'} = '0' if (!exists $session{$uri.'?bad_debt'}) or ! sets::isin($session{$uri.'?bad_debt'}, [0,1,'']);
 	$session{$uri.'?employee_id'} = $session{user_id} if ! exists $session{$uri.'?employee_id'};
 
 	_history();

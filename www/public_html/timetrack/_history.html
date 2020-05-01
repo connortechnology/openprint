@@ -102,7 +102,7 @@ $$T{duration_override} ? $$T{duration} : misc::seconds_to_pretty_interval( $T->e
 ( $T->paid() ? 'Y' : 'N' ),
 html_escape($T->Service()->name()),
 ( $T->distance() ? $T->distance() .'km' : '' ),
-join('',$T->get('rate','units' ) ),
+join('', $T->rate(), $T->units()),
 openprint::Currency::format( $T->wage() ),
 openprint::Currency::format( $T->value() ),
 );
