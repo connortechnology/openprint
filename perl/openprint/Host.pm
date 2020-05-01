@@ -244,7 +244,7 @@ sub reboot {
 	my $success = 0;
 
 	foreach my $HI ( $Host->Interfaces() ) {
-		next if ! $HI->ip();
+		next if !$HI->ip();
 		my $url;
 		my $initial_url; # in case we need to hit a different url first.
 		my $method = 'get';
@@ -254,34 +254,34 @@ sub reboot {
 		my $port = 80;
 		my $protocol = 'http';
 
-		if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
+		if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 			$url = $HI->ip().'/admin/reboot.cgi?type=0';
-		} elsif ( $_[0]->type() eq 'AIC250W' ) {
+		} elsif ( $Host->type() eq 'AIC250W' ) {
 			$url = $HI->ip().'/Reply.htm?Reset=Yes';
-		} elsif ( $_[0]->type() eq 'M8640' ) {
+		} elsif ( $Host->type() eq 'M8640' ) {
 			$url = $HI->ip().'/cgi-bin/reboot.cgi';
-		} elsif ( $_[0]->type() eq 'TL-WPA4220' ) {
+		} elsif ( $Host->type() eq 'TL-WPA4220' ) {
 			$url = $HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
-		} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
+		} elsif( $Host->type() eq 'D-Link DAP1522' ) {
 			$url = $HI->ip().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
-		} elsif( $_[0]->type() eq 'DGS-1224T' ) {
+		} elsif( $Host->type() eq 'DGS-1224T' ) {
 			$initial_url = $HI->ip();
 			$url = '/cgi_device';
 			$args = {
 			post_url => 'cgi_reboot.',
 			};
 			$method = 'post';
-    } elsif( $_[0]->type() eq 'Grandview' ) {
+    } elsif( $Host->type() eq 'Grandview' ) {
       $initial_url = $HI->ip();
       $url = $HI->ip().'/goform/maintenance?cmd=set&restart=yes';
-    } elsif( $_[0]->type() eq 'Vivotek' ) {
+    } elsif( $Host->type() eq 'Vivotek' ) {
       $initial_url = $HI->ip();
       $url = $HI->ip().'/cgi-bin/admin/setparam.cgi';
 			$method = 'post';
 			$args = {
 				system_reset => 1
 			};
-		} elsif( $_[0]->type() eq 'DLink DCS-910' ) {
+		} elsif( $Host->type() eq 'DLink DCS-910' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/ReplyF.htm';
 			$method = 'post';
@@ -290,12 +290,12 @@ sub reboot {
 			};
 			$expect = 'Device has been rebooted';
 
-		} elsif( $_[0]->type() eq 'DLink DCS-2310L' ) {
+		} elsif( $Host->type() eq 'DLink DCS-2310L' ) {
       $initial_url = $HI->ip();
 			$url = $HI->ip().'/vb.htm?setallreboot=1';
 			$method = 'get';
 			$expect = 'OK setallreboot';
-		} elsif ( $_[0]->type() eq 'TP-Link Archer C7' ) {
+		} elsif ( $Host->type() eq 'TP-Link Archer C7' ) {
 			require JSON;
 
 			my $username = $Host->info('username');
@@ -327,7 +327,11 @@ sub reboot {
 			$req->content($json);
 			$response = $browser->request($req);
 			if ( !$response->is_success ) {
-				$openprint::log->error("Failed to reboot:\n".$response->content.":\n".$response->status_line());
+				$openprint::log->error(join("\n",
+							'Failed to reboot:',
+							$response->content,
+							$response->status_line()
+							));
 				next;
 			}
 
@@ -339,39 +343,40 @@ sub reboot {
 			$success = 1;
 			last;
 
-		} elsif( $_[0]->type() eq 'DCS-932L' ) {
+		} elsif( $Host->type() eq 'DCS-932L' ) {
 			$url = $HI->ip().'/setSystemReboot';
-    } elsif ( $_[0]->type() eq 'DCS-942L' ) {
+    } elsif ( $Host->type() eq 'DCS-942L' ) {
       $url = $HI->ip().'/eng/admin/export.cgi';
       $method = 'post';
       $args = {
         reboot => 'true'
       };
-		} elsif( $_[0]->type() eq 'DCS-933L' ) {
+		} elsif( $Host->type() eq 'DCS-933L' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/setSystemReboot';
 			$method = 'post';
 			$args = {
-				ReplySuccessPage=>'reboot.htm',
-				ReplyErrorPage	=>	'reboot.htm',
-				Reset => 'Reboot the Device',
+				ReplySuccessPage=> 'reboot.htm',
+				ReplyErrorPage	=> 'reboot.htm',
+				Reset						=> 'Reboot the Device',
 			};
-		} elsif ( $_[0]->type() eq 'WG602v3' ) {
+		} elsif ( $Host->type() eq 'WG602v3' ) {
 			$url = $HI->ip().'/cgi-bin/reboot.cgi';
 			$args = {
 				reboot_ap => 1,
 			};
 			$do_not_expect = 'SORRY';
 		} else {
-			$openprint::log->error("Unknown host type $_[0]{type}");
+			$openprint::log->error("Unknown host type $$Host{type}");
 			return 0;
 		}
 
 		my $response = $browser->get($protocol.'://'.($initial_url ? $initial_url : $url));
-		$openprint::log->debug("Sending initial url: " . $protocol.'://'.($initial_url ? $initial_url : $url) . ' status: ' . $response->is_success . ' ' . $response->status_line() . $response->content);
+		$openprint::log->debug('Sending initial url: ' . $protocol.'://'.($initial_url ? $initial_url : $url).
+      ' status: ' . $response->is_success . ' ' . $response->status_line() . $response->content);
 		my $headers = $response->headers();
 		if ( $$headers{'client-ssl-cipher'} ) {
-$openprint::log->debug("Switching to https");
+      $openprint::log->debug('Switching to https');
 			$protocol = 'https';
 			$port = 443;
 		}
@@ -391,7 +396,7 @@ $openprint::log->debug("Switching to https");
 					$openprint::log->error( $response->content );
 					next;
 				} else {
-					$openprint::log->debug("Response after second attempt: " . $response->status_line );
+					$openprint::log->debug('Response after second attempt: '.$response->status_line);
 					$success = 1;
 				} # end if
 			} else {
@@ -404,13 +409,13 @@ $openprint::log->debug("Switching to https");
 			} # end if
 		} else {
 			$success = 1;
-			$openprint::log->debug("Success Content: " . $response->content);
+			$openprint::log->debug('Success Content: '.$response->content);
 		} # end if
 
 		if ( $success ) {
       if ( $url ne $initial_url ) {
         $response = $browser->get($protocol.'://'.$url);
-        $openprint::log->debug("Success Content: " . $response->content);
+        $openprint::log->debug('Success Content: '.$response->content);
       }
 			if ( $expect and ! ( $response->content =~ /$expect/ ) ) {
 				$success = 0;
@@ -425,7 +430,12 @@ $openprint::log->debug("Switching to https");
 
 	if ( $success ) {
 
-		(new openprint::Log())->save({ action=>'Host rebooted', Object=>$Host, host_id=>$Host->id(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted by %s.', @$Host{'id','hostname'}, $0)});
+		(new openprint::Log())->save({
+        action=>'Host rebooted',
+        Object=>$Host,
+        host_id=>$Host->id(),
+        note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted by %s.', @$Host{'id','hostname'}, $0)
+      });
 		if ( 0 ) {
 			my @To = map { $_->User() } $Host->Notifications();
 			if ( @To and ( @To < 10 ) ) {

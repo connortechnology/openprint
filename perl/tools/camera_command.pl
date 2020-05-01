@@ -2,6 +2,7 @@
 use utf8;
 use lib '/var/www/testing/perl';
 use strict;
+use warnings;
 use LWP;
 
 require configuration;
@@ -58,7 +59,7 @@ if ( $config{pid_file} ) {
 	} # end if
 } # end if
 
-$log->debug("Connecting to db");
+$log->debug('Connecting to db');
 $dbh = sql::open_sql( $log,
 		port		=> $config{db_port},
 		host		=> $config{db_host},
@@ -91,7 +92,7 @@ if ( ! @Hosts ) {
 foreach my $Host ( @Hosts ) {
 	my @ips = map { $_->ip() ? $_->ip() : () } $Host->Interfaces();
 	if ( ! @ips ) {
-		$log->debug('Camera without ips: '.$Host->to_string() );
+		$log->debug('Camera without ips: '.$Host->to_string());
 		next;
 	} # end if
 	my $ip = $ips[0];
@@ -99,34 +100,35 @@ foreach my $Host ( @Hosts ) {
 	my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
 	if ( ! @ping ) {
-		$log->warn('Problem with ping for '.$Host->hostname() );
+		$log->warn('Problem with ping for '.$Host->hostname());
 		next;
 	} # end if
 
 	if ( $Host->online() or $ping ) {
 		if ( $$opts{command} eq 'reboot' ) {
-			$log->debug('Sending reboot to ' . $Host->hostname());
+			$log->debug('Sending reboot to '.$Host->hostname());
 			$Host->reboot();
 		} elsif ( $$opts{command} eq 'move' ) {
 			my $browser = LWP::UserAgent->new();
-			$browser->credentials( $Host->hostname().':80', 'SkyIPCam', $Host->info('username'), $Host->info('password') );
-			if ( sets::isin( $Host->type(), [ 'AIC777W', 'AIC747W' ] ) ) {
-				$log->debug('Sending move to ' . $Host->hostname() . " position $$opts{position}");
+			$browser->credentials($Host->hostname().':80', 'SkyIPCam',
+					$Host->info('username'), $Host->info('password'));
+			if ( sets::isin($Host->type(), [ 'AIC777W', 'AIC747W' ]) ) {
+				$log->debug('Sending move to '.$Host->hostname().' position '.$$opts{position});
 				my $response = $browser->get('http://'.$Host->hostname().'/admin/ptctl.cgi?move='.$$opts{position});
 				$log->debug('Success?'.$response->is_success);
 			} else {
 				$log->error("Host doesn't support moving");
 			}
 		} elsif ( $$opts{command} eq 'get_config' ) {
-$log->debug("Getting config for $$Host{hostname}");
+			$log->debug('Getting config for '.$$Host{hostname});
 			$Host->get_config();
 		} else {
-			$log->error("Unknown command $$opts{command}");
+			$log->error('Unknown command '.$$opts{command});
 		} # end if
 	} elsif ( $Host->online() ) {
-		$log->debug("No ping for $$Host{hostname}");
+		$log->debug('No ping for '.$$Host{hostname});
 	} else {
-		$log->debug("$$Host{hostname} is offline: ping $ping");
+		$log->debug($$Host{hostname}.' is offline: ping '.$ping);
 	} # end if online
 } # end foreach $Host
 $p->close();

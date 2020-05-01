@@ -102,7 +102,8 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 			my $Host = $HI->Host();
 			my $username = $Host->info('username');
 			my $password = $Host->info('password');
-			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password args: " . ($args ? join(',',map { "$_=>$$args{$_}" } keys %{$args}) :'none'));
+			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password args: ".
+					($args ? join(',',map { $_.'=>'.$$args{$_} } keys %{$args}) :'none'));
 			$browser->credentials(
 					$HI->ip().':'.$port,
 					$tokens{realm},
@@ -113,11 +114,11 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
       $openprint::log->debug("Auth response for $method $url $tokens{realm}, $username, $password ".$response->is_success);
 
 			if ( $response->is_success and ( ($method ne 'get') or $args ) ) {
-$openprint::log->debug("Sending actual url $method");
-				$response = $browser->$method($url, $args);
+        $openprint::log->debug('Sending actual url '.$method);
+				$response = $browser->$method($url, ($args and %{$args}) ? $args : () );
 			}
 		} else {
-			$openprint::log->error("No realm");
+			$openprint::log->error('No realm');
 		} # end if
 	} else {
 		foreach my $k ( keys %{$headers} ) {

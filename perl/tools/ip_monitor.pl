@@ -89,6 +89,10 @@ my %last_ping_time;
 my $hup;
 $SIG{HUP} = \&sig_handler;
 
+# Turn off Object caching
+# If we do this, we incur a lot more db load which might be trivial, but.... our use of locking should mean that we don't need to do this anymore
+$openprint::Object::no_cache = 0;
+
 $openprint::dbh = sql::open_sql( $log,
 		port		=> $config{db_port},
 		host		=> $config{db_host},
@@ -108,7 +112,7 @@ configuration::merge($opts);
 if ( $config{user_id} ) {
 	$openprint::session{user_id} = $config{user_id};
 	$openprint::User = new openprint::User($openprint::session{user_id});
-	$openprint::sesssion{company_id} = $openprint::User->company_id();
+	$openprint::session{company_id} = $openprint::User->company_id();
 	$openprint::Company = $openprint::User->Company();
 }
 
@@ -117,39 +121,39 @@ my %configurations;
 my %status;
 
 while(1) {
-	if ( ! ( $dbh and $dbh->ping ) ) {
-		$log->debug("Connecting to db");	
-		$openprint::dbh = sql::open_sql( $log,
-				port	  	=> $config{db_port},
-				host	  	=> $config{db_host},
-				database	=> $config{db_name},
-				driver		=> 'Pg',
-				login	  	=> $config{db_user},
-				password	=> $config{db_pass},
-				);
-		if ( ! $dbh ) {
-			$log->error( 'Error opening db. Sleeping for 5.' );
-			sleep 5;
-			next;
-		} # end if ! dbh
-		configuration::init( );
-		configuration::from_file( $$opts{config} );
-		configuration::merge( $opts );
-	} elsif ( $hup ) {
-		configuration::init( );
-		configuration::from_file( $$opts{config} );
-		configuration::merge( $opts );
-		$log->hup();
-		$hup = 0;
-	} # end if ! dbh
+  if ( ! ( $dbh and $dbh->ping ) ) {
+    $log->debug('Connecting to db');
+    $openprint::dbh = sql::open_sql($log,
+      port	  	=> $config{db_port},
+      host	  	=> $config{db_host},
+      database	=> $config{db_name},
+      driver		=> 'Pg',
+      login	  	=> $config{db_user},
+      password	=> $config{db_pass},
+    );
+    if ( !$dbh ) {
+      $log->error('Error opening db. Sleeping for 5.');
+      sleep 5;
+      next;
+    } # end if !dbh
+    configuration::init();
+    configuration::from_file($$opts{config});
+    configuration::merge($opts);
+  } elsif ( $hup ) {
+    configuration::init();
+    configuration::from_file($$opts{config});
+    configuration::merge($opts);
+    $log->hup();
+    $hup = 0;
+  } # end if !dbh
 
-	my @Hosts = openprint::Host->find(monitored=>1, ( $$opts{host_type} ? ( type=>$$opts{host_type} ) : () ));
-	foreach my $Host ( @Hosts ) {
-		$log->debug( 'host ' .($Host->hostname()?$Host->hostname():'with no hostname') . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
+  my @Hosts = openprint::Host->find(monitored=>1, ( $$opts{host_type} ? ( type=>$$opts{host_type} ) : () ));
+  foreach my $Host ( @Hosts ) {
+    $log->debug('host '.($Host->hostname()?$Host->hostname():'with no hostname').' was '.($Host->online() ? 'online' : 'offline'));
 
-		my $online = undef;
-		my $now = time;
-		my $has_monitored_interfaces = 0;
+    my $online = undef;
+    my $now = time;
+    my $has_monitored_interfaces = 0;
 
     # If we have a minimum frequency set and not enough time has passed, the skip it.
     if ( $$Host{min_ping_frequency} and $last_ping_time{$$Host{id}} and ( ($now - $last_ping_time{$$Host{id}}) < $$Host{min_ping_frequency} ) ) {
@@ -158,30 +162,28 @@ while(1) {
     }
     $last_ping_time{$$Host{id}} = $now;
 
-		# First find out current status, then lock & load to find out previous 
+    # First find out current status, then lock & load to find out previous 
     # status because we don't want to hold this lock for however long it takes to ping.
-		my @HIs = $Host->Interfaces(undef);
-		foreach my $HI ( @HIs ) {
-      if ( !$HI->monitor() ) {
-				$log->debug('HI is not monitored ' . $HI->to_string());
+    my @HIs = $Host->Interfaces(undef);
+    foreach my $HI ( @HIs ) {
+      next if ! $HI->monitor();
+      if ( ! $HI->ip() ) {
+        $log->debug('No ip for '.$HI->to_string());
+        if ( $HI->online() ) {
+          $HI->save({online=>0});
+        }
         next;
       }
-			if ( !$HI->ip() ) {
-				$log->debug('No ip for ' . $HI->to_string());
-				next;
-			}
 
-<<<<<<< HEAD
       $has_monitored_interfaces = 1;
-      $log->debug("Ip: " . $HI->ip() );
       my $ip = new Net::IP($HI->ip());
       do { # foreach ip
 
-        $log->debug( $ip->ip() . ' was ' . ( $HI->online() ? 'online' : 'offline' ) . ' ' . $HI->to_string() );
+        $log->debug($ip->ip().' was '.( $HI->online() ? 'online' : 'offline' ).' '.$HI->to_string());
         my @ping = $p->ping($ip->ip());
-        
+
         if ( ! @ping ) {
-          $log->warn("Problem with ping for " . $Host->hostname() . ' ip: ' . $ip->ip() );
+          $log->warn('Problem with ping for '.$Host->hostname().' ip: '.$ip->ip());
           next;
         } 
         my $ping = $ping[0];
@@ -386,8 +388,10 @@ while(1) {
     } # end if online
   } # end foreach Host
 
-  $log->debug("Sleeping for $config{sleep} seconds");
-  sleep $config{sleep} if $config{sleep};
+  if ( $config{sleep} ) {
+    $log->debug("Sleeping for $config{sleep} seconds");
+    sleep $config{sleep};
+  }
 } # end while
 $p->close();
 $dbh->disconnect() if $dbh;

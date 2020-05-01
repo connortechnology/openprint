@@ -181,7 +181,12 @@ Please select a company or user to obtain login information.<br/>
 				<ul>
 					<li class="mailinglist"> 
 						<label>Add to our Mailing List</label>
-						<? echo ( radio( 'mailinglist', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->mailinglist(), { inline=>1 } ); ) ?>
+						<? echo( radio(
+              'mailinglist',
+              [ 'Y', 'Yes', 'N', 'No', '', 'Unset' ],
+              $$variable{User}->mailinglist(),
+              { inline=>1 }
+              ); ) ?>
 					</li>
 					<li class="administrator"> 
 						<label>Is this account a company administrator?</label>
