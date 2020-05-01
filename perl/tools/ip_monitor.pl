@@ -159,22 +159,30 @@ while(1) {
 		foreach my $HI ( @HIs ) {
 			next if ! $HI->monitor();
 			if ( ! $HI->ip() ) {
-				$log->debug("No ip for " . $HI->to_string() );
+				$log->debug('No ip for '.$HI->to_string());
+				if ( $HI->online() ) {
+					$HI->save({online=>0});
+				}
 				next;
 			}
 			$has_monitored_interfaces = 1;
 
-			$log->debug( $HI->ip() . ' was ' . ( $HI->online() ? 'online' : 'offline' ) . " " . $HI->to_string() );
+			$log->debug($HI->ip().' was '.( $HI->online() ? 'online' : 'offline' ).' '.$HI->to_string());
 			my @ping = $p->ping($HI->ip());
 			
 #$openprint::log->debug("Ping1: @ping");
 			if ( ! @ping ) {
-				$log->warn("Problem with ping for " . $Host->hostname() . ' ip: ' . $HI->ip() );
+				$log->warn('Problem with ping for '.$Host->hostname().' ip: '.$HI->ip());
 				next;
 			} 
 			my $ping = $ping[0];
       if ( $ping and ( $ping[1] > 1 ) ) {
-				(new openprint::Log())->save({Object=>$Host, action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
+				(new openprint::Log())->save({Object=>$Host,
+						action=>'Long response time',
+						ip_address=>$HI->ip(),
+						host_id=>$$Host{id},
+						note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'})
+						});
 			} # end if
 
 			# The idea is if any ip is pingable... then the host is up
@@ -183,7 +191,7 @@ while(1) {
 			if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) ) {
 				$HI->save({online=>$ping});
 			}
-			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . ( defined $ping ? $ping : 'undef' ) );
+			$log->debug($HI->ip().' is now '.( $HI->online() ? 'online' : 'offline' ).' value of ping was '.( defined $ping ? $ping : 'undef'));
 		} # end foreach HI
 
 		if ( ! $has_monitored_interfaces ) {
