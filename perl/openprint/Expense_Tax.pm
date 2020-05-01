@@ -35,34 +35,32 @@ sub name {
 } # end sub name
 
 sub amount {
-	my $self = $_[0];
-	if ( @_ == 2 ) {
-		$$self{amount} = $_[1];
-	} # end if
+	my $self = shift;
+  $$self{amount} = shift if @_;
 
-	if ( ! defined $$self{amount} ) {
-    if ( ! $$self{rate} ) {
-        $openprint::log->error("No rate in " . $self->to_string());
-        return undef;
+	if ( !defined $$self{amount} ) {
+    if ( !$$self{rate} ) {
+      $openprint::log->error('No rate in '.$self->to_string());
+      return undef;
     }
-		if ( $self->charge() ) {
+    if ( $self->charge() ) {
       my $Expense = $self->Expense();
 
-      my $amount = $Expense->amount();
+      my $amount = $$Expense{amount};
       if ( !defined($amount) ) {
         $amount = $Expense->total();
-        if ( ! defined($amount) ) {
-          $openprint::log->error("No amount in " . $Expense->to_string());
+        if ( !defined($amount) ) {
+          $openprint::log->error('No amount in '.$Expense->to_string());
           return undef;
         }
-
-        $amount = $Expense->total() / ($$self{rate}/100);
+        $amount = $Expense->total() / (1+($$self{rate}/100));
+        $openprint::log->error("calculated amouhnt from total: $amount = $$Expense{total} / ($$self{rate}/100);");
       }
       $$self{amount} = $amount * ($$self{rate}/100);
-		} # end if
-		$$self{amount} = Math::Round::nearest(0.01, $$self{amount});
-	} # end if
-	return $$self{amount};
+    } # end if
+    $$self{amount} = Math::Round::nearest(0.01, $$self{amount});
+  } # end if
+  return $$self{amount};
 } # end sub amount
 
 sub charge {
