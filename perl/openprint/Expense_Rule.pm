@@ -92,7 +92,7 @@ sub apply {
         $Expense->$key($action{$key});
       }
     }
-    $openprint::log->debug("Applied actoin $key $action{$key} = $$Expense{$key}" . $Expense->to_string());
+    $openprint::log->debug("Applied actoin $key $action{$key} = $$Expense{$key}\n".$Expense->to_string());
   } # end foreach key
 } # end sub apply
 
