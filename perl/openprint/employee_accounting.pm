@@ -763,24 +763,26 @@ sub _expense_rules {
 }
 
 sub expense_rule {
-    my $Rule = $variable{Rule} = new openprint::Expense_Rule($param{expense_rule_id});
-    return if ! $param{action};
+  my $Rule = $variable{Rule} = new openprint::Expense_Rule($param{expense_rule_id});
+  return if ! $param{action};
 
-    if ( $param{action} eq 'Save' ) {
-      eval {
-        JSON::decode_json($param{rules_json});
-        JSON::decode_json($param{action_json});
-      }; # end eval
-      $variable{error} .= $@;
-      if ( ! $variable{error} ) {
-        $variable{error} .= $Rule->save(\%param);
-        if ( ! $variable{error} ) {
-          $variable{ExternalRedirect} = '/employee/accounting/expense_rules.html';
-        }
+  if ( $param{action} eq 'Save' ) {
+    eval {
+      JSON::decode_json($param{rules_json});
+      JSON::decode_json($param{action_json});
+    }; # end eval
+    $variable{error} .= $@;
+    if ( !$variable{error} ) {
+      $variable{error} .= $Rule->save(\%param);
+      if ( !$variable{error} ) {
+        $variable{ExternalRedirect} = '/employee/accounting/expense_rules.html';
       }
-    } elsif ( $param{action} eq 'Copy' ) {
-      $Rule = $variable{Rule} = $Rule->copy();
+    } else {
+      $Rule->set(\%param);
     }
+  } elsif ( $param{action} eq 'Copy' ) {
+    $Rule = $variable{Rule} = $Rule->copy();
+  }
 }
 
 1;
