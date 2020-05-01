@@ -43,6 +43,9 @@ if ( $opts->{help} ) {
   usage();
   exit 0;
 }
+
+open(FH, $$opts{file}) or die "Can't open $$opts{file} : $!";
+
 if ( $opts->{debug}) {
   $$log{level} = $opts->{debug};
 }
@@ -97,6 +100,10 @@ if ( ! $openprint::Owner->id() ) {
 my $guessed_format='';
 if ( $$opts{file} =~ /^Transactions(.*)\.csv$/ ) {
   $guessed_format = 'CDNTire';
+} elsif ( $$opts{file} =~ /^accountactivity(.*)\.csv$/ ) {
+  $guessed_format = 'TD';
+} elsif ( $$opts{file} =~ /^cibc(.*)\.csv$/ ) {
+  $guessed_format = 'CIBC';
 }
 
 my @formats = ('CDNTire', 'CIBC', 'PC', 'TD');
@@ -119,30 +126,28 @@ while ( !( $$opts{format} and sets::isin($$opts{format}, \@formats) ) ) {
 my $from_id=2;
 my $to_id=1;
 
-$log->debug('Loading rules');
 my @Rules = openprint::Expense_Rule->find();
-$log->debug(@Rules . ' loaded');
 
 # Track expenses added this run, to help with duplicates
 my %Expenses_Added;
 my @columns;
 
 my $csv = Text::CSV_XS->new();
-open ( FH, "$$opts{file}" ) or die "Can't open $$opts{file} : $!";
-  if ( $$opts{format} eq 'CDNTire' ) {
-    <FH>;
-    <FH>;
-    <FH>;
-    $_ = <FH>;
-    $csv->parse($_);
-    @columns = $csv->fields();
-  }
+if ( $$opts{format} eq 'CDNTire' ) {
+  <FH>;
+  <FH>;
+  <FH>;
+  $_ = <FH>;
+  $csv->parse($_);
+  @columns = $csv->fields();
+}
 
-while ( <FH> ) {
+LINE: while ( <FH> ) {
   my $status = $csv->parse($_);
 
   # Create an object with the data from the line
   my $Expense = new openprint::Expense();
+  $$Expense{owner_id}    =  $$openprint::Owner{id};
   delete $$Expense{id};
   my ($date, $time, $card, $amount, $desc, $debit, $credit, $balance, $paid_on, $type, $posted, $ref );
 
@@ -194,7 +199,7 @@ while ( <FH> ) {
     } elsif ( @columns == 7 ) {
       ( $ref, $date, $posted, $type, $desc, undef, $amount) = misc::trim($csv->fields());
     } else {
-      die "Invalid # of columns " . scalar @columns . " @columns";
+      die 'Invalid # of columns ' . scalar @columns . " @columns";
     }
     $debit = $amount;
     $paid_on = $date;
@@ -203,6 +208,7 @@ while ( <FH> ) {
       description => $desc,
       account_id  => $$Account{id},
       total       => $amount,
+      total_locked=> 1,
       paid_on     => $date,
     });
 
@@ -214,108 +220,120 @@ while ( <FH> ) {
 
     my $response;
 
-    my $matched = 0;
-    foreach my $Rule ( @Rules ) {
-      if ( $Rule->match({desc=>$desc, date=>$date, amount=>$amount, debit=>$debit, credit=>$credit, balance=>$balance}) ) {
-        if ( 0 ) {
-          print "Apply rule $$Rule{name} for $date, $desc, $debit, $credit, $balance ? [Y|n]";
-          $response = <STDIN>;
-          chomp $response;
-          if ( (!$response) or ($response =~ /[Yy]/) ) {
+    while ( 1 ) {
+
+      my $matched = 0;
+      foreach my $Rule ( @Rules ) {
+        if ( $Rule->match({desc=>$desc, date=>$date, amount=>$amount, debit=>$debit, credit=>$credit, balance=>$balance}) ) {
+          if ( 0 ) {
+            print "Apply rule $$Rule{name} for $date, $desc, $debit, $credit, $balance ? [Y|n]";
+            $response = <STDIN>;
+            chomp $response;
+            if ( (!$response) or ($response =~ /[Yy]/) ) {
+              $matched = 1;
+              $Rule->apply($Expense);
+              last;
+            }
+          } else {
             $matched = 1;
             $Rule->apply($Expense);
             last;
           }
-        } else {
-            $matched = 1;
-          $Rule->apply($Expense);
-          last;
-        }
-      } # end if matched
-    } # end foreach Rule
+        } # end if matched
+      } # end foreach Rule
 
-    $log->info("No rules matched") if !$matched;
+      $log->info('No rules matched') if !$matched;
 
-    my %expense_find = %$Expense;
+      my %expense_find = %$Expense;
 
-    if ( $expense_find{recipient} ) {
-      $expense_find{'recipient lc'} = lc $expense_find{recipient};
-      delete $expense_find{recipient};
-    } 
-    if ( $expense_find{paid_on} ) {
-      my ( $year, $month, $day ) = split('-', $expense_find{paid_on});
-      $expense_find{'paid_on >='}    = join('-', Date::Calc::Add_Delta_Days(1*$year, 1*$month, 1*$day,-3));
-      $expense_find{'paid_on <='}    = join('-', Date::Calc::Add_Delta_Days(1*$year, 1*$month, 1*$day,3));
-      delete $expense_find{paid_on};
-    }
-    if ( $expense_find{description} ) {
-      $expense_find{'description ilike'} = $expense_find{description}.'%';
-      delete $expense_find{description};
-    }
-    my @Expenses = openprint::Expense->find(\%expense_find);
-
-    if ( @Expenses ) {
-      $log->info(@Expenses . "Found an expense @Expenses that looks like it matches: \n" . join("\n", map { $_->to_string() } @Expenses));
-      @Expenses = map { $Expenses_Added{$$_{id}} ? () : $_ } @Expenses;
-      if ( @Expenses ) {
-        $log->info("Found an expense after filtering that looks like it matches: \n" . join("\n", map { $_->to_string() } @Expenses));
-        next;
+      if ( $expense_find{recipient} ) {
+        $expense_find{'recipient lc'} = lc $expense_find{recipient};
+        delete $expense_find{recipient};
+      } 
+      if ( $expense_find{paid_on} ) {
+        my ( $year, $month, $day ) = split('-', $expense_find{paid_on});
+        $expense_find{'paid_on >='}    = join('-', Date::Calc::Add_Delta_Days(1*$year, 1*$month, 1*$day,-3));
+        $expense_find{'paid_on <='}    = join('-', Date::Calc::Add_Delta_Days(1*$year, 1*$month, 1*$day,3));
+        delete $expense_find{paid_on};
       }
-    } elsif ( $matched ) {
-      ## Look for it without the description, but with a transaction id
-      delete $expense_find{description};
-      @Expenses = openprint::Expense->find(\%expense_find);
+      if ( $expense_find{description} ) {
+        $expense_find{'description ilike'} = $expense_find{description}.'%';
+        delete $expense_find{description};
+      }
+      delete $expense_find{Taxes};
+      my @Expenses = openprint::Expense->find(\%expense_find);
+
       if ( @Expenses ) {
-        $log->info("Found an expense after filtering that looks like it matches:\n" . join("\n", map { $_->to_string() } @Expenses));
-        next;
-      } else {
-        delete %expense_find{'paid_on >='};
-        delete %expense_find{'paid_on <='};
-        $expense_find{paid_on} = undef;
+        $log->info(@Expenses . "Found an expense @Expenses that looks like it matches: \n" . join("\n", map { $_->to_string() } @Expenses));
+        @Expenses = map { $Expenses_Added{$$_{id}} ? () : $_ } @Expenses;
+        if ( @Expenses ) {
+          $log->info("Found an expense after filtering that looks like it matches: \n" . join("\n", map { $_->to_string() } @Expenses));
+          next LINE;
+        }
+      } elsif ( $matched ) {
+        ## Look for it without the description, but with a transaction id
+        delete $expense_find{description};
         @Expenses = openprint::Expense->find(\%expense_find);
         if ( @Expenses ) {
-          foreach my $E ( @Expenses ) {
-             print "Update paid_on to $paid_on record for? " . $E->to_string()." [Y|n]";
-             $response = <STDIN>;
-             chomp $response;
-             if ( (!$response) or ($response =~ /[Yy]/) ) {
+          $log->info("Found an expense after filtering that looks like it matches:\n" . join("\n", map { $_->to_string() } @Expenses));
+          next LINE;
+        } else {
+          delete %expense_find{'paid_on >='};
+          delete %expense_find{'paid_on <='};
+          $expense_find{paid_on} = undef;
+          @Expenses = openprint::Expense->find(\%expense_find);
+          if ( @Expenses ) {
+            foreach my $E ( @Expenses ) {
+               print "Update paid_on to $paid_on record for? " . $E->to_string()." [Y|n]";
+               $response = <STDIN>;
+               chomp $response;
+               if ( (!$response) or ($response =~ /[Yy]/) ) {
 
-               $_ = $E->save({
-                   paid_on     =>  $paid_on,
-                 });
-               if ( $_ ) {
-                 die $_;
+                 $_ = $E->save({
+                     paid_on     =>  $paid_on,
+                   });
+                 if ( $_ ) {
+                   die $_;
+                 }
+                 #$Expenses_Added{$$Expense{id}} = $Expense;
                }
-               #$Expenses_Added{$$Expense{id}} = $Expense;
-             }
+            } # end foreach Expense
+            next LINE;
           }
-          next;
         }
+      } 
+      $log->info("No expenses found to match $date, $desc, $debit, $credit, $balance, rules? " . @Rules . "\n" . $Expense->to_string());
+
+      print "Add record for? [Y|n|R]";
+      $response = <STDIN>;
+      chomp $response;
+      if ( (!$response) or ($response =~ /[Yy]/) ) {
+
+        $Expense->set({
+            account_id  =>  $$Account{id},
+            total       =>  $amount,
+            paid_on     =>  $paid_on,
+            invoiced_on =>  $paid_on,
+            due_on      =>  $paid_on,
+            description =>  $desc,
+            owner_id    =>  $$openprint::Owner{id},
+            currency_id =>  $$openprint::Currency{id},
+            total_locked => 1,
+          });
+        $_ = $Expense->save({amount=>undef});
+        if ( $_ ) {
+          die $_;
+        }
+        $Expenses_Added{$$Expense{id}} = $Expense;
+        last;
+      } elsif ( $response =~ /[Rr]/ ) {
+        $log->debug('Loading rules');
+        @Rules = openprint::Expense_Rule->find();
+        $log->debug(@Rules . ' loaded');
+      } else {
+        last;
       }
-    } 
-    $log->info("No expenses found to match $date, $desc, $debit, $credit, $balance, rules? " . @Rules . "\n" . $Expense->to_string());
-
-    print "Add record for? [Y|n]";
-    $response = <STDIN>;
-    chomp $response;
-    if ( (!$response) or ($response =~ /[Yy]/) ) {
-
-      $_ = $Expense->save({
-          account_id  =>  $$Account{id},
-          amount      =>  $amount,
-          paid_on     =>  $paid_on,
-          invoiced_on =>  $paid_on,
-          due_on      =>  $paid_on,
-          description =>  $desc,
-          owner_id    =>  $$openprint::Owner{id},
-          currency_id =>  $$openprint::Currency{id},
-        });
-      if ( $_ ) {
-        die $_;
-      }
-      $Expenses_Added{$$Expense{id}} = $Expense;
-    }
-
+    } # end while 1
   } else {
     $log->error("No credit or debit? ");
   }
