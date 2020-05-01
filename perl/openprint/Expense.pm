@@ -8,7 +8,7 @@ package openprint::Expense_Category;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'expense_categories';
 $serial = 'expense_categories_id_seq';
 %fields = (
@@ -188,32 +188,39 @@ sub delete {
 } # end sub delete
 
 sub Taxes {
-  my ( $self ) = @_;
+  my $self = shift;
+
+  $$self{Taxes} = shift if @_;
 
   if ( $$self{id} ) {
-    if ( ! $$self{Taxes} ) {
-      @{$$self{Taxes}} = openprint::Expense_Tax->find(expense_id=>$$self{id});
-    } # end if
-  } else { 
-    @{$$self{Taxes}} = ();
+    $$self{Taxes} = [openprint::Expense_Tax->find(expense_id=>$$self{id})] if !$$self{Taxes};
+  }
+ 
+  if ( ! $$self{Taxes} ) {
+    $$self{Taxes} = [];
   } # end if
-  if ( $self->Company()->country() and $self->Company()->state() and $$self{invoiced_on} and ! @{$$self{Taxes}} ) {
+
+  if ( (!@{$$self{Taxes}}) and $self->Company()->country() and $self->Company()->state() and ($$self{invoiced_on} or $$self{paid_on}) ) {
     foreach my $Tax ( openprint::Tax->find(
-        'period_start null_or_<='   =>  $$self{invoiced_on},
-        'period_end null_or_>='     =>  $$self{invoiced_on},
+        'period_start null_or_<='   =>  ( $$self{invoiced_on} ? $$self{invoiced_on} : $$self{paid_on} ),
+        'period_end null_or_>='     =>  ( $$self{invoiced_on} ? $$self{invoiced_on} : $$self{paid_on} ),
         country   =>  $self->Company()->country(),
         state     =>  $self->Company()->state()),
     ) {
       my $T = new openprint::Expense_Tax();
       $T->set({
+          Expense     =>  $self,
           expense_id	=>	$$self{id},
-          tax_id    =>  $$Tax{id},
-          rate      =>  $$Tax{rate},
+          tax_id      =>  $$Tax{id},
+          rate        =>  $$Tax{rate},
         });
-      # SHould not save.  Saving will be done in the save function This is okay, because in the html, we id our field by the tax_id
+      $openprint::log->debug("New aTax: " . $T->to_string());
+      # Should not save.  Saving will be done in the save function This is okay, because in the html, we id our field by the tax_id
       #$T->save({ 'expense_id'=>  $$self{id}}) if $$self{id};
       push @{$$self{Taxes}}, $T;
     } # end foreach Tax
+  } else {
+    $openprint::log->debug('Not loading taxes: ' . (scalar @{$$self{Taxes}}) . ' country: ' . $self->Company()->country() . ' state: ' . $self->Company()->state() . ' invoiced_on: ' . $$self{invoiced_on});
   } # end if
   return @{$$self{Taxes}};
 } # end sub Taxes
@@ -231,8 +238,8 @@ sub save {
 		foreach my $Tax ( openprint::Tax->find(
 					'period_start null_or_<='   =>  $$self{invoiced_on},
 					'period_end null_or_>='     =>  $$self{invoiced_on},
-					'country'   =>  $self->Company()->country(),
-					'state'     =>  $self->Company()->state()),
+					country   =>  $self->Company()->country(),
+					state     =>  $self->Company()->state()),
 				) {
 			my $T = $self->Tax( $Tax );
 			push @New_Taxes, $T;
@@ -257,7 +264,7 @@ sub save {
 	my $error = $self->SUPER::save( @_ );
 	if ( ! $error ) {
 		foreach my $Tax ( $self->Taxes() ) {
-			$error .= $Tax->save({'expense_id'=>$self->id()});
+			$error .= $Tax->save({expense_id=>$self->id()});
 		} # end foreach Tax
 	} # end if
 	return $error;
@@ -268,7 +275,7 @@ sub total {
 		$_[0]{total} = $_[1];
 	} # end if
 	if ( ! $_[0]{total} ) {
-    $_[0]{total} = $_[0]->amount();
+    $_[0]{total} = $_[0]{amount};
     if ( defined($_[0]{total}) ) {
       foreach my $Tax ( $_[0]->Taxes() ) {
         $_[0]{total} += $Tax->amount();
@@ -295,6 +302,24 @@ sub Tax {
   return $result;
 } # end sub Tax
 
+sub tax_charged { 
+  my ( $self, $name, $yesno ) = @_;
+  $openprint::log->debug("taX_charged: $name $yesno");
+	foreach my $T ( $self->Taxes() ) {
+    my $tax_name = $T->Tax()->name();
+    $openprint::log->debug("Looking at tax $tax_name !? $name ");
+    if ( $tax_name eq $name ) {
+      if ( @_ > 2 ) {
+        $$T{charge} = $yesno;
+        $T->amount(undef);
+        $openprint::log->debug("Setting tax charged to $yesno for T: " . $T->to_string());
+      }
+      return $T->charge();
+    }
+  } # end foreach Tax
+  $openprint::log->error("Tax not found for $name in " . $self->to_string());
+}
+
 sub business_use_amount {
 	if ( @_ > 1 ) {
 		$_[0]{business_use_amount} = $_[1];
@@ -304,6 +329,28 @@ sub business_use_amount {
 	} # end if
 	return $_[0]{business_use_amount};
 } # end sub business_use_amount
+
+sub to_string {
+  my $type = ref($_[0]);
+  return $type . ': '. join(' ' , map { $_[0]{$_} ? $_.' => '.(ref $_[0]{$_} eq 'ARRAY' ? join(',', @{$_[0]{$_}}) : $_[0]{$_} ) : () } keys %fields ).
+  "\nTaxes:".join("\n", map { $_->to_string() } $_[0]->Taxes());
+}
+
+sub amount {
+  my $self = shift;
+  if ( !defined $$self{amount} ) {
+    if ( defined $$self{total} ) {
+      $openprint::log->debug("Getting amount from total");
+      my $amount = $$self{total};
+      foreach my $Tax ( $self->Taxes() ) {
+        $amount -= $Tax->amount();
+      }
+      $$self{amount} = $amount;
+    }
+  }
+  return $$self{amount};
+}
+
 
 1;
 __END__

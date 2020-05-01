@@ -39,13 +39,13 @@ function calc_amount_from_total( form ) {
 	} else {
 		amount = parseFloat( form.amount.value );
 	} // end if
-    for ( var i = 0; i < tax_ids.length; i+= 1 ) {
-        if ( form.elements['tax_charge-'+tax_ids[i]].checked ) {
-            tax = amount * $('tax_rate-'+tax_ids[i]).innerHTML/100;
-        } else {
-            tax = 0;
-        } // end if
-        $('tax_amount-'+tax_ids[i]).value = do_decimals( tax, 2 );
+  for ( var i = 0; i < tax_ids.length; i+= 1 ) {
+    if ( form.elements['tax_charge-'+tax_ids[i]].checked ) {
+      tax = amount * $('tax_rate-'+tax_ids[i]).innerHTML/100;
+    } else {
+      tax = 0;
+    } // end if
+    $('tax_amount-'+tax_ids[i]).value = do_decimals( tax, 2 );
 	} // end for
 }
 
