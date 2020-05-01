@@ -188,11 +188,15 @@ sub delete {
 } # end sub delete
 
 sub Taxes {
-  my ( $self ) = @_;
+  my $self = shift;
+
+  $$self{Taxes} = shift if @_;
 
   if ( $$self{id} ) {
     $$self{Taxes} = [openprint::Expense_Tax->find(expense_id=>$$self{id})] if !$$self{Taxes};
-  } else { 
+  }
+ 
+  if ( ! $$self{Taxes} ) {
     $$self{Taxes} = [];
   } # end if
 
@@ -216,7 +220,7 @@ sub Taxes {
       push @{$$self{Taxes}}, $T;
     } # end foreach Tax
   } else {
-    $openprint::log->debug('NOt loading taxes');
+    $openprint::log->debug('Not loading taxes: ' . (scalar @{$$self{Taxes}}) . ' country: ' . $self->Company()->country() . ' state: ' . $self->Company()->state() . ' invoiced_on: ' . $$self{invoiced_on});
   } # end if
   return @{$$self{Taxes}};
 } # end sub Taxes
@@ -271,7 +275,7 @@ sub total {
 		$_[0]{total} = $_[1];
 	} # end if
 	if ( ! $_[0]{total} ) {
-    $_[0]{total} = $_[0]->amount();
+    $_[0]{total} = $_[0]{amount};
     if ( defined($_[0]{total}) ) {
       foreach my $Tax ( $_[0]->Taxes() ) {
         $_[0]{total} += $Tax->amount();
@@ -300,6 +304,7 @@ sub Tax {
 
 sub tax_charged { 
   my ( $self, $name, $yesno ) = @_;
+  $openprint::log->debug("taX_charged: $name $yesno");
 	foreach my $T ( $self->Taxes() ) {
     my $tax_name = $T->Tax()->name();
     $openprint::log->debug("Looking at tax $tax_name !? $name ");
@@ -324,6 +329,28 @@ sub business_use_amount {
 	} # end if
 	return $_[0]{business_use_amount};
 } # end sub business_use_amount
+
+sub to_string {
+  my $type = ref($_[0]);
+  return $type . ': '. join(' ' , map { $_[0]{$_} ? $_.' => '.(ref $_[0]{$_} eq 'ARRAY' ? join(',', @{$_[0]{$_}}) : $_[0]{$_} ) : () } keys %fields ).
+  "\nTaxes:".join("\n", map { $_->to_string() } $_[0]->Taxes());
+}
+
+sub amount {
+  my $self = shift;
+  if ( !defined $$self{amount} ) {
+    if ( defined $$self{total} ) {
+      $openprint::log->debug("Getting amount from total");
+      my $amount = $$self{total};
+      foreach my $Tax ( $self->Taxes() ) {
+        $amount -= $Tax->amount();
+      }
+      $$self{amount} = $amount;
+    }
+  }
+  return $$self{amount};
+}
+
 
 1;
 __END__
