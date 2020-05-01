@@ -89,6 +89,7 @@ $SIG{HUP} = \&sig_handler;
 # TUrn off Object caching
 # If we do this, we incur a lot more db load which might be trivial, but.... our use of locking should mean that we don't need to do this anymore
 $openprint::Object::no_cache = 0;
+$openprint::Object::no_cache = 0;
 
 $openprint::dbh = sql::open_sql( $log,
 		port		=> $config{db_port},
@@ -109,7 +110,7 @@ configuration::merge( $opts );
 if ( $config{user_id} ) {
 	$openprint::session{user_id} = $config{user_id};
 	$openprint::User = new openprint::User($openprint::session{user_id});
-	$openprint::sesssion{company_id} = $openprint::User->company_id();
+	$openprint::session{company_id} = $openprint::User->company_id();
 	$openprint::Company = $openprint::User->Company();
 }
 
@@ -311,9 +312,11 @@ while(1) {
 			} # end if
 		} # end if online
 	} # end foreach Host
-	
-	$log->debug("Sleeping for $config{sleep} seconds");
-	sleep $config{sleep} if $config{sleep};
+
+	if ( $config{sleep} ) {
+		$log->debug("Sleeping for $config{sleep} seconds");
+		sleep $config{sleep};
+	}
 } # end while
 $p->close();
 $dbh->disconnect() if $dbh;
