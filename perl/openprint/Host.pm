@@ -503,6 +503,24 @@ sub get_config {
 	return %config;
 } # end sub get_config
 
+sub get_status {
+	my $self = shift;
+	my %status;
+
+	eval {
+		require 'openprint/Host/'.$self->type().'.pm';
+		my $Host = ('openprint::Host::'.$self->type())->new($self);
+		%status = $Host->get_status();
+	};
+	$openprint::log->error('Eval error of require Reason: '.$@) if $@;
+	return %status;
+} # end sub get_status
+
+sub can_get_status {
+	return 0;
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L','Vivotek' ] ) );
+}
+
 sub can_get_config {
 	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L','Vivotek' ] ) );
 }

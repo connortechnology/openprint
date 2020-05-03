@@ -257,6 +257,8 @@ while(1) {
 					(new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_config}, name=>'config');
 					$configurations{$$Host{id}} = \%host_config;
 				}
+			}
+			if ( $Host->can_get_status() ) {
 				my %host_status = $Host->get_status();
 				if ( misc::compare_hash(\%host_status, $status{$$Host{id}}) ) {
 					(new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_status, name=>'status'});
