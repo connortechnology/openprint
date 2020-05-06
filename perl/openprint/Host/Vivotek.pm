@@ -71,6 +71,8 @@ sub get_image {
 	my $Host = $self->Host();
 
 	my ( $username, $password ) = $Host->info('viewer username'), $Host->info('viewer password');
+	$username = $Host->info('username') if !$username;
+	$password = $Host->info('password') if !$password;
 	foreach my $HI ( $Host->Interfaces() ) {
 		if ( $HI->online() ) {
 			return 'http://'.
