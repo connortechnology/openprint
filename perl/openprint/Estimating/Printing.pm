@@ -4998,17 +4998,25 @@ $imp->display('[warn]');
 				if ( $sig_specs{rdbSuppliedStock} eq 'Y' ) {
 					if ( my $SuppliedService = $Services{'Supplied'.$$Paper{type}} ) {
 						if ( my %SuppliedPaperPrice = $SuppliedService->get_price( undef, undef ) ) {
+							#$openprint::log->debug("Supplied Service units $SuppliedPaperPrice{units} : " . join(',', map { $_.'=>'.$SuppliedPaperPrice{$_} } keys %SuppliedPaperPrice));
+							if ( $SuppliedPaperPrice{range_units} and ($SuppliedPaperPrice{range_units} eq 'per 100lbs') ) {
+								%SuppliedPaperPrice = $SuppliedService->get_price($$price{'Stock Weight'}/100, undef);
+							#$openprint::log->debug("Supplied Service units for " . ($$price{'Stock Weight'}/100)." $SuppliedPaperPrice{units} : " . join(',', map { $_.'=>'.$SuppliedPaperPrice{$_} } keys %SuppliedPaperPrice));
+							}
 							if ( $SuppliedPaperPrice{units} eq 'per 100lbs' ) {
 								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Stock Weight'} / 100;
 							} elsif ( $SuppliedPaperPrice{units} eq 'per sheet' ) {
 								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Gross Sheet Count'};
 							} elsif ( $SuppliedPaperPrice{units} eq 'per m' ) {
 								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Gross Sheet Count'}/1000;
+							} elsif ( $SuppliedPaperPrice{units} eq 'total' ) {
+								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price};
 							} # end if
 							$$price{SuppliedPaperPrice} = \%SuppliedPaperPrice;
 							$$price{'Comparison Cost'} += $SuppliedPaperPrice{Total};
 							$$price{'Comparison Log'} .= 'SuppliedPaper: +'.$SuppliedPaperPrice{Total} . '<br/>' if COMPARISON_LOG;
 							$$price{'Total Cost'} += $SuppliedPaperPrice{Total};
+					#@$price{'Stock Total'} = $SuppliedPaperPrice{Total};
 						} # end if
 					} # end if
 				} elsif ( ! $PaperServiceType ) {
