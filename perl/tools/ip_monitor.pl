@@ -211,49 +211,52 @@ while(1) {
 			my $notified = $$Host{notified};
 
 # Have a change, so it should get logged, only email notifications should use the offline seconds
-			if ( $_ = $Host->save({online=>$online,state_changed_on=>$now,notified=>0}) ) {
+			if ( $_ = $Host->save({online=>$online, state_changed_on=>$now, notified=>0}) ) {
 				$log->error($_);
 				$Host->unlock();
 				next;
 			} # end if	
 
-			(new openprint::Log())->save({Object=>$Host, action_id=>( $online ? 100 : 101 ), host_id=>$$Host{id}, note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
+			(new openprint::Log())->save({Object=>$Host, action_id=>( $online ? 100 : 101 ), host_id=>$$Host{id},
+					note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
 			if ( $online and $notified ) {
-# We are now online and an offline notification went out. So send an online notification
-				$log->debug("Sending online notification");
+				# We are now online and an offline notification went out. So send an online notification
+				$log->debug('Sending online notification');
 				notify( $Host, $online );
 			}
 		} else {
-			if ( ( ! $online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} < ( $now - $$Host{state_changed_on} ) ) ) {
+			if ( ( !$online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} < ( $now - $$Host{state_changed_on} ) ) ) {
 				$log->debug("( ! $online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} < ( $now - $$Host{state_changed_on}-$now ) ) " . ($now-$$Host{state_changed_on} ));
-				notify( $Host, $online );
+				notify($Host, $online);
 				$Host->save({ state_changed_on => $now });
 			}
 		} # end if online status change
 
 		my $since = $now-($$Host{state_changed_on} ? $$Host{state_changed_on} : 0 );
-		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since seconds ago" );
-		if ( ! $Host->online() ) {
-			if ( ( ! $$Host{notified} ) and ( (!$$Host{offline_seconds}) or ( $since > $$Host{offline_seconds} ) ) ) {
+		$log->debug($Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . $since . ' seconds ago');
+		if ( !$Host->online() ) {
+			if ( ( !$$Host{notified} ) and ( (!$$Host{offline_seconds}) or ( $since > $$Host{offline_seconds} ) ) ) {
 				$_ = $Host->save({ notified=>1 });
 				if ( $_ ) {
 					$log->error($_);
 					$Host->unlock();
 					next;
 				}
-				$log->warn("Sending offline notification");
-				notify( $Host, $online );
+				$log->warn('Sending offline notification');
+				notify($Host, $online);
 			#} else {
 				#$log->debug("Host is notified? $$Host{notified} or since($since) <= $$Host{offline_seconds}");
-			}
-		} # end if ! notified
+			} # end if need to notify
+		} # end if ! online
 
 		$Host->unlock();
 
 		if ( $Host->online() ) {
 			if ( $Host->can_get_config() ) {
 				my %host_config = $Host->get_config();
-				if ( misc::compare_hash(\%host_config, $configurations{$$Host{id}}) ) {
+				if ( ! %host_config ) {
+					$log->debug("No config from $$Host{hostname}");
+				} elsif ( misc::compare_hash(\%host_config, $configurations{$$Host{id}}) ) {
 					(new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_config}, name=>'config');
 					$configurations{$$Host{id}} = \%host_config;
 				}
@@ -272,25 +275,24 @@ while(1) {
 				$browser->credentials( $Host->hostname().':80', 'DCS-910', $Host->info('username') => $Host->info('password') );
 
 				my $url = 'http://'.$Host->hostname().'/IMAGE.JPG';
-				$log->debug("URL: $url");
 				my $response = $browser->get($url);
 				if ( ! $response->is_success ) {
 					if ( $response->status_line() eq '401 Unauthorized' ) {
-						$log->debug("Unauthorized with " . $Host->info('username') . ' password: ' . $Host->info('password') );
+						$log->debug('Unauthorized with ' . $Host->info('username') . ' password: ' . $Host->info('password') );
 						my $header = $response->header('WWW-Authenticate');
 						my ( $realm ) = $header =~ /realm="(.*)"/;
 						if ( $realm and ( $realm ne 'DCS-910' ) ) {
 							$log->debug("Different REALM $realm");
-							$browser->credentials( $Host->hostname().':80', $realm, $Host->info('username') => $Host->info('password') );
+							$browser->credentials($Host->hostname().':80', $realm, $Host->info('username') => $Host->info('password'));
 							$response = $browser->get($url);
 						} # end if
 					} # end if
 				} # end if
 				if ( ! $response->is_success ) {
 					if ( $response->status_line() eq '401 Unauthorized' ) {
-						$log->error("Couldn't get content from " . $url . ' unauthorized'. $response->status_line );
+						$log->error('Couldn\'t get content from '.$url.' unauthorized'.$response->status_line);
 					} else {
-						$log->warn("Couldn't get content from " . $url .' rebooting' . $response->status_line );
+						$log->warn('Couldn\'t get content from '.$url.' rebooting'.$response->status_line);
 						my $headers = $response->headers();
 						foreach my $k ( keys %$headers ) {
 							$log->debug("Header $k => $$headers{$k}");
@@ -304,27 +306,26 @@ while(1) {
 			} elsif ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 				require LWP;
 				my $browser = LWP::UserAgent->new();
-				$browser->credentials( $Host->hostname().':80', 'Netcam', $Host->info('username') => $Host->info('password') );
-
-				$log->debug("URL: " . $Host->hostname().'/cgi/jpg/image.cgi' );
-				my $response = $browser->get('http://'.$Host->hostname().'/cgi/jpg/image.cgi');
-				if ( ! $response->is_success ) {
+				$browser->credentials($Host->hostname().':80', 'Netcam', $Host->info('username') => $Host->info('password'));
+				my $url = 'http://'.$Host->hostname().'/cgi/jpg/image.cgi'
+				my $response = $browser->get($url);
+				if ( !$response->is_success ) {
 					if ( $response->status_line() eq '401 Unauthorized' ) {
-						$log->debug("Unauthorized with " . $Host->info('username') . ' password: ' . $Host->info('password') );
+						$log->debug('Unauthorized with ' .$Host->info('username').' password: '.$Host->info('password'));
 						my $header = $response->header('WWW-Authenticate');
 						my ( $realm ) = $header =~ /realm="(.*)"/;
 						if ( $realm and ( $realm ne 'Netcam' ) ) {
 							$log->debug("Different REALM $realm");
 							$browser->credentials( $Host->hostname().':80', $realm, $Host->info('username') => $Host->info('password') );
-							$response = $browser->get('http://'.$Host->hostname().'/cgi/jpg/image.cgi');
+							$response = $browser->get($url);
 						} # end if
 					} # end if
 				} # end if
 				if ( ! $response->is_success ) {
 					if ( $response->status_line() eq '401 Unauthorized' ) {
-						$log->error("Couldn't get content from " . $Host->hostname().'/cgi/jpg/image.cgi unauthorized'. $response->status_line );
+						$log->error('Couldn\'t get content from '.$url.' unauthorized'.$response->status_line);
 					} else {
-						$log->warn("Couldn't get content from " . $Host->hostname().'/cgi/jpg/image.cgi rebooting' . $response->status_line );
+						$log->warn('Couldn\'t get content from '.$url.' rebooting'.$response->status_line);
 						my $headers = $response->headers();
 						foreach my $k ( keys %$headers ) {
 							$log->debug("Header $k => $$headers{$k}");
@@ -332,10 +333,10 @@ while(1) {
 						$Host->reboot();
 					} # end if
 				} else {
-					$log->debug("Got content from host. Size: " . $response->content_type );
+					$log->debug('Got content from host. Size: '.$response->content_type);
 				} # end if
 			} elsif ( $Host->type() ) {
-				$log->warn("nothing to do for : " . $Host->type()	. ' for host ' . $$Host{hostname}	);
+				$log->warn('nothing to do for : ' . $Host->type()	. ' for host ' . $$Host{hostname});
 			} # end if
 		} # end if online
 	} # end foreach Host
