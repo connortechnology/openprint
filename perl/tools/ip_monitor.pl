@@ -307,7 +307,7 @@ while(1) {
 				require LWP;
 				my $browser = LWP::UserAgent->new();
 				$browser->credentials($Host->hostname().':80', 'Netcam', $Host->info('username') => $Host->info('password'));
-				my $url = 'http://'.$Host->hostname().'/cgi/jpg/image.cgi'
+				my $url = 'http://'.$Host->hostname().'/cgi/jpg/image.cgi';
 				my $response = $browser->get($url);
 				if ( !$response->is_success ) {
 					if ( $response->status_line() eq '401 Unauthorized' ) {
