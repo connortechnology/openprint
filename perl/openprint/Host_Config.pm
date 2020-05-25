@@ -17,6 +17,7 @@ $serial = 'host_config_id_seq';
   host_id     =>  'host_id',
 	name				=>	'name',
 	data_json	=>	'data_json',
+	data				=>	undef,
 	created_on	=>	'created_on',
 );
 %defaults = (
@@ -43,6 +44,7 @@ sub data {
 	if ( @_ ) {
 		$$self{data} = $_[0];
 		$$self{data_json} = JSON::encode_json($_[0]);
+$openprint::log->debug("ENcoded json: $$self{data_json}");
 	}
 	if ( !$$self{data} ) {
 		if ( $$self{data_json} ) {

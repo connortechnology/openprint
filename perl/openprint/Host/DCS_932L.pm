@@ -1,19 +1,30 @@
 use strict;
 use warnings;
 
-use LWP::UserAgent;
+require LWP::UserAgent;
 require HTTP::Request;
 
 require openprint::Object;
 require openprint::Host;
 
-package openprint::Host::Vivotek;
+package openprint::Host::DCS_932L;
 our @ISA = qw( openprint::Object );
+
+sub new {
+	my ( $class, $Host ) = @_;
+	my $self = { Host=>$Host };
+	bless $self, $class;
+	return $self;
+}
+sub Host {
+	return $_[0]{Host};
+}
 
 sub get_config {
 	my $self = shift;
+	my $Host = $self->Host();
+	my %r;
 
- require LWP;
   my $browser = LWP::UserAgent->new();
   if ( $Host->type() eq 'DCS-932L' ) {
     my $protocol = 'http';
