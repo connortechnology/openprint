@@ -31,7 +31,8 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-	'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s', 'host_type=s',
+	'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+	'blacklist=s', 'debug=s', 'config=s', 'ping_type=s', 'host_type=s',
  );
 
 if ($opts->{help}) {
