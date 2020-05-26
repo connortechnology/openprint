@@ -145,7 +145,26 @@ while(1) {
 		$hup = 0;
 	} # end if ! dbh
 
-	my @Hosts = openprint::Host->find(monitored=>1, ( $$opts{host_type} ? ( type=>$$opts{host_type} ) : () ));
+	my $Network_Type = openprint::Host_Type->find_one(name=>'Network');
+	my $Network;
+	my @host_ids;
+	if ( $Network_Type && $config{network} ) {
+		$Network = openprint::Host->find_one(type_id=>$$Network_Type{id}, hostname=>$config{network});	
+		if ( !$Network ) {
+			$log->error("Failed to find network $config{network}");
+			die;
+		}
+		@host_ids = map { $_->host_id() } openprint::Host_Interface->find( 'ip <<=' => $$Network{ip} );
+		if ( !@host_ids ) {
+			$log->error("Failed to find any hosts in network $config{network}");
+			die;
+		}
+	}
+
+	my @Hosts = openprint::Host->find(monitored=>1,
+			( $$opts{host_type} ? ( type=>$$opts{host_type} ) : () ),
+			( @host_ids ? ( id=>\@host_ids ) : () ),
+			);
 	foreach my $Host ( @Hosts ) {
 
 		$log->debug($Host->hostname().' was '.($Host->online() ? 'online' : 'offline'));
