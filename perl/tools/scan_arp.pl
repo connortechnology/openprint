@@ -25,16 +25,15 @@ GetOptions($opts, 'help',
 
 *log = \$openprint::log;
 $log = logger->new();
-if ( $opts->{'debug'} ) {
-	$log->level( $opts->{'debug'} );
+if ( $opts->{debug} ) {
+	$log->level( $opts->{debug} );
 } else {
-	$log->level( 'warn' );
+	$log->level('warn');
 } # end if
 if ($opts->{help}) {
-    usage();
     exit 0;
 }
-if ( $$opts{'db_name'} ) {
+if ( $$opts{db_name} ) {
 	$dbh = sql::open_sql( $log,
 		'host'      => $opts->{'db_host'},
 		'database'  => $opts->{'db_name'},
@@ -44,45 +43,64 @@ if ( $$opts{'db_name'} ) {
 	);
 	die 'Error opening db' if ! $dbh;
 } else {
-	$log->warn("Must specify database name in order to automatically load entries into db.\n");
+	$log->warn('Must specify database name in order to automatically load entries into db.');
 } # end if
 
-open(ARP, "arp -n|");
+open(ARP, 'arp -n|');
 while ( my $line = <ARP> ) {
 	next if $line =~ /^Address/;
 	my ( $ip, $type, $mac, $flags, $iface ) = misc::trim( $line =~ /^([\.\d]{7,15})\s+(\w+)\s+([a-fA-F0-9\-\:]{17})\s+(\w+)\s+(\w+)$/ );
 	if ( ! ($ip or $mac) ) {
-		$log->debug( "line $ip $type $mac $flags $iface" );
+		$log->debug("line $ip $type $mac $flags $iface");
 		next;
 	}
 	
 	next if ! $dbh;
-	my $Host = openprint::Host->find_one('mac any'=>$mac);
-	if ( $Host ) {
-		if ( ! $Host->ip() ) {
-			$Host->save({'ip'=>$ip});
-		} # end if
+	
+	my @HIs = openprint::Host_Interface->find(mac=>$mac);
+	$log->debug('Have ' . @HIs . ' interfaces matching '.$mac);
+	if ( @HIs ) {
+		foreach my $HI ( @HIs ) {
+			if ( !$HI->ip() ) {
+				$log->debug("Updating HI's ip to $ip");
+				$HI->save({ip=>$ip});
+			} else {
+				$log->debug("not Updating HI's ip to $ip from $$HI{ip}");
+			} # end if
+		} # end foreach HI
 	} else {
-		$Host = openprint::Host->find_one('ip'=>$ip);
-		if ( $Host ) {
-			$Host->save({'mac'=>[ $mac ] } ) if $mac;
+		@HIs = openprint::Host_Interface->find(ip=>$ip);
+		$log->debug('Have ' . @HIs . ' interfaces matching '.$ip);
+		if ( @HIs ) {
+			if ( $mac ) {
+				foreach my $HI ( @HIs ) {
+					if ( ! $HI->mac() ) {
+						$HI->save({mac=>$mac});
+					} # end if
+				} # end foreach HI
+			} # end if mac
 		} else {
 			$log->info( "Host for $ip $mac not found, adding" );
-			$Host = new openprint::Host();	
+			my $Host = new openprint::Host();	
 			$Host->save({
-					'mac'	=> [ $mac ], 
-					'ip'	=>	$ip,
-					'hostname'	=>	undef,
-					'description' => 	'Discovered by scan_arp.',
+					hostname	=>	'unknown',
+					description => 	'Discovered by scan_arp.',
 					} ) if ( $mac or $ip );
+			my $HI = new openprint::Host_Interface();
+			$HI->save({host_id=>$Host->id(), 
+					'mac'	=> $mac, 
+					'ip'	=> $ip,
+					});
 		} # end if
 	} # end if
-	if ( $Host and ! $Host->hostname() ) {
-		if ( $_ = $Host->resolve() ) {
-			$Host->save({'hostname'=>$_});
-		} # end if
-	} # end if
-} # end while
+
+	#if ( $Host and ! $Host->hostname() ) {
+		#if ( $_ = $Host->resolve() ) {
+			#$Host->save({'hostname'=>$_});
+		#} # end if
+	#} # end if
+	sleep 1;
+} # end foreach line of arp
 close(ARP);
 
 1;
