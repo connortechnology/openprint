@@ -338,7 +338,7 @@ sub reboot {
 			$success = 1;
 			last;
 
-		} elsif( $Host->type() eq 'DCS-932L' ) {
+		} elsif( $Host->type() eq 'DCS_932L' ) {
 			$url = $HI->ip().'/setSystemReboot';
     } elsif ( $Host->type() eq 'DCS-942L' ) {
       $url = $HI->ip().'/eng/admin/export.cgi';
@@ -483,7 +483,7 @@ sub can_reboot {
 				'M8640',
 				'TL-WPA4220', 'TP-Link Archer C7',
 				'D-Link DAP1522','DGS-1224T','DLink DCS-910',
-        'DCS932L','DCS-933L','DCS-942L', 'WG602v3',
+        'DCS_932L','DCS-933L','DCS-942L', 'WG602v3',
 				'Vivotek' ] ) ) {
     return !undef;
   }
@@ -518,11 +518,11 @@ sub get_status {
 
 sub can_get_status {
 	return 0;
-	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L','Vivotek' ] ) );
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L','Vivotek' ] ) );
 }
 
 sub can_get_config {
-	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L','Vivotek' ] ) );
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L','Vivotek' ] ) );
 }
 
 sub get_and_store_config {
@@ -534,7 +534,7 @@ sub get_and_store_config {
 }
 
 sub can_get_image {
-	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L','Vivotek' ] ) );
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L','Vivotek' ] ) );
 }
 
 sub get_image {
