@@ -21,10 +21,10 @@ my @whitelist = (
     q`^\[\w{3} \w{3} [ .:0-9]+\] \[mpm_prefork:notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: caught SIGTERM, shutting down$`,
 		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[core:notice\] \[pid [0-9]+(:tid [0-9]+)?\] AH[[:digit:]]{5}: Command line: '\/usr\/sbin\/apache2'$`,
 		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[(core|mpm_prefork):notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: Graceful restart requested, doing restart$`,
-		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[authz_core:debug\] \[pid [0-9]+(:tid [0-9]+)?\] mod_authz_core.c\([[:digit:]]+\): \[client [.[:digit:]:]+\] AH[[:digit:]]{5}: authorization result of (Require all|<RequireAny>) granted: granted`,
+		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[authz_core:debug\] \[pid [0-9]+(:tid [0-9]+)?\] mod_authz_core.c\([[:digit:]]+\): \[client [.[:digit:]:]+\] AH[[:digit:]]{5}: authorization result of (Require all granted|<RequireAny>): granted`,
 		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[deflate:debug\] \[pid [0-9]+(:tid [0-9]+)?\]`,
 		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[perl:debug\]`,
-		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[debug]`,
+		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[:?debug]`,
 		q`^\[\w{3} \w{3}  ?[0-9]{1,2} [:0-9]{8} \w+ \d{4}\] \[debug\]`,
 		q`^QFont::setPixelSize: Pixel size <= 0 \(0\)`,
 );
