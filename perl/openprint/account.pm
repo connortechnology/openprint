@@ -408,44 +408,61 @@ sub company_profile {
 		return;
 	} # end if
 
-	if ( $param{btnFunction} eq 'Save' ) {
+	if ( $param{btnFunction} ) {	
 		if ( ! $Company->id() ) {
 			$variable{error} .= 'no company specified.';
 			$variable{Company} = new openprint::Company();
 			return;
 		}
-		if ( ! $Company->can_edit() ) {
-			$variable{error} .= 'You cannot edit company ' . $Company->id() . '<br/>';
-			$variable{Company} = new openprint::Company();
-			return;
-		} # end if
-		my $error = '';
-		$error .= "Company Name cannot be empty.<br/>" if ! $param{companyname};
-		if ( exists $param{StartYear} ) {
-			$param{StartYear} =~ s/\D//g;
-			$param{StartMonth} =~ s/\D//g;
-			$param{StartMonth} = 1 if ! $param{StartMonth};
-			if ( $param{StartYear} and ! Date::Calc::check_date( @param{'StartYear','StartMonth'}, 1 ) ) {
-				$error .= 'Invalid start date.<br/>';
-			} # end if
-			if ( $error ne '' ) {
-				$variable{error} = $error;
+		if ( $param{btnFunction} eq 'delete' ) {
+			if ( !$Company->can_delete() ) {
+				$variable{error} .= 'You cannot delete company '.$Company->name().'<br/>';
+				$variable{Company} = new openprint::Company();
 				return;
 			} # end if
-
-			if ( $param{StartYear} ) {
-				$param{established} = sprintf('%.4d-%.2d-%.2d',@param{'StartYear','StartMonth'}, 1 );
-			} else {
-				$param{established} = undef;
+			$variable{error} .= $Company->delete();
+		} elsif ( $param{btnFunction} eq 'undelete' ) {
+			if ( !$Company->can_edit() ) {
+				$variable{error} .= 'You cannot undelete company '.$Company->name().'<br/>';
+				$variable{Company} = new openprint::Company();
+				return;
 			} # end if
+			$variable{error} .= $Company->undelete();
+		} elsif ( $param{btnFunction} eq 'save' ) {
+			if ( ! $Company->can_edit() ) {
+				$variable{error} .= 'You cannot edit company ' . $Company->id() . '<br/>';
+				$variable{Company} = new openprint::Company();
+				return;
+			} # end if
+			my $error = '';
+			$error .= "Company Name cannot be empty.<br/>" if ! $param{companyname};
+			if ( exists $param{StartYear} ) {
+				$param{StartYear} =~ s/\D//g;
+				$param{StartMonth} =~ s/\D//g;
+				$param{StartMonth} = 1 if ! $param{StartMonth};
+				if ( $param{StartYear} and ! Date::Calc::check_date( @param{'StartYear','StartMonth'}, 1 ) ) {
+					$error .= 'Invalid start date.<br/>';
+				} # end if
+				if ( $error ne '' ) {
+					$variable{error} = $error;
+					return;
+				} # end if
+
+				if ( $param{StartYear} ) {
+					$param{established} = sprintf('%.4d-%.2d-%.2d',@param{'StartYear','StartMonth'}, 1 );
+				} else {
+					$param{established} = undef;
+				} # end if
+			} # end if
+			$param{name} = $param{companyname};
+			$Company->set( \%param );
+			$variable{error} .= $Company->save( );
+			$variable{error} .= $Company->save_tradereferences( \%param );
+			$Company->Profile()->save( \%param );
 		} # end if
-		$param{name} = $param{companyname};
-		$Company->set( \%param );
-		$variable{error} .= $Company->save( );
-		$variable{error} .= $Company->save_tradereferences( \%param );
-		$Company->Profile()->save( \%param );
-	} # end if
-	if ( ! $Company->id() ) {
+	} # end if btnFunction
+
+	if ( !$Company->id() ) {
 		$Company = new openprint::Company( $session{company_id} );
 	}
 
