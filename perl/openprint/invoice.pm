@@ -219,6 +219,7 @@ sub _history {
             ( invoicee_id => $session{company_id} ),
           ) ),
         ( $session{$uri.'?product_id'} ? ( 'product_id any' => $session{$uri.'?product_id'} ) : () ),
+        ( $session{$uri.'?bad_debt'} ne '' ? ( bad_debt=>$session{$uri.'?bad_debt'} ) :() ),
         order => 'created_on',
       ) ) {
       if ( $session{$uri.'?paid'} ne '' ) {
@@ -228,7 +229,7 @@ sub _history {
           next if $session{$uri.'?paid'} == 1;
         } # end if
       } # end if
-      if ( $session{$uri.'?bad_debt'} != 2 ) {
+      if ( $session{$uri.'?bad_debt'} != '' ) {
         if ( $Invoice->bad_debt() ) {
           next if $session{$uri.'?bad_debt'} == 0;
         } elsif ( $Invoice->bad_debt() eq '0' ) {

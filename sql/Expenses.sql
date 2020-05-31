@@ -27,6 +27,7 @@ CREATE TABLE Expenses (
 	business_use	float,
 	business_use_amount	float,
 	deleted		BOOLEAN NOT NULL DEFAULT FALSE,
+  transaction_id  TEXT,
 	PRIMARY KEY (id)
 );
 

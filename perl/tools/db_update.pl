@@ -4260,10 +4260,26 @@ if ( sets::isin( 'emailcampaigns', \@tables ) ) {
 		print "Adding runnable to EmailCampaigns\n";
 		$dbh->do('alter table emailcampaigns add runnable boolean not null default false') or die $dbh->errstr();
 	}
+	if ( ! exists $$data{email_to} ) {
+		print "Adding email_to to EmailCampaigns\n";
+		$dbh->do('alter table emailcampaigns add email_to TEXT') or die $dbh->errstr();
+	}
+	if ( ! exists $$data{email_cc} ) {
+		print "Adding email_cc to EmailCampaigns\n";
+		$dbh->do('alter table emailcampaigns add email_cc TEXT') or die $dbh->errstr();
+	}
+	if ( ! exists $$data{email_bcc} ) {
+		print "Adding email_bcc EmailCampaigns\n";
+		$dbh->do('alter table emailcampaigns add email_bcc TEXT') or die $dbh->errstr();
+	}
 
 	if ( ! exists $$data{recipients_per_run} ) {
 		print "Adding recipients_per_run to EmailCampaigns\n";
 		$dbh->do('alter table emailcampaigns add recipients_per_run integer') or die $dbh->errstr();
+	}
+	if ( ! exists $$data{mailinglist} ) {
+		print "Adding mailinglist to EmailCampaigns\n";
+		$dbh->do('alter table emailcampaigns add mailinglist boolean not null default true') or die $dbh->errstr();
 	}
 } else {
 	$_ = misc::load_file( $log, q{../../sql/EmailCampaigns.sql});
@@ -4274,6 +4290,9 @@ if ( sets::isin( 'emailcampaigns', \@tables ) ) {
 
 if ( ! sets::isin( 'emailcampaign_sent', \@tables ) ) {
   $dbh->do( misc::load_file( $log, q{../../sql/EmailCampaign_Sent.sql}) ) or die $dbh->errstr();
+}
+if ( ! sets::isin( 'emailcampaign_destination', \@tables ) ) {
+  $dbh->do( misc::load_file( $log, q{../../sql/EmailCampaign_Destination.sql}) ) or die $dbh->errstr();
 }
 
 if ( sets::isin( 'trade_references', \@tables ) ) {

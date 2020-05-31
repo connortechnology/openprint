@@ -17,7 +17,7 @@
 <hr/>
 <? endif ( $$variable{Results} ) ?>
 <?if($$variable{Campaign}->can_view())?>
-<form id="f1" name="f1" action="email_campaign.html<? echo ( $$variable{Campaign}->id() ? '?campaign_id='.$$variable{Campaign}->id() : '' ) ?>" method="post">
+<form id="f1" name="f1" action="email_campaign.html<? echo ( $$variable{Campaign}->id() ? '?campaign_id='.$$variable{Campaign}->id() : '' ) ?>" method="post" enctype="multipart/form-data">
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
@@ -30,6 +30,12 @@
 				#button( 'ViewRecipientsTop', { onclick=>"f1.btnFunction.value='View Recipients';f1.submit();",text=>'View Recipients' } ),
 				button( 'DownloadRecipientsTop', { onclick=>"f1.btnFunction.value='Download Recipients';f1.submit();",text=>'Download Recipients' } ),
 			); ) ?>
+</p>
+<p>
+      <input type="file" name="import_file"/>
+      <? echo ( join("\n",
+						button( 'Import', { onclick=>"f1.btnFunction.value='Import Recipients';f1.submit();"} ),
+						) ); ?>
 </p>
 <input type="hidden" name="btnFunction"/>
 <fieldset>
@@ -56,8 +62,24 @@
 		<label>Override To</label>
 		<input type="email" name="email_to" value="<? hecho ( $$variable{Campaign}->email_to() ) ?>"/>
 	</li>
-	<li><label>Email Subject</label><input type="text" name="email_subject" value="<? echo ( $$variable{Campaign}->email_subject() ) ?>"  /></li>
-<li><label>Template</label><select name="template_id"><option value="">select</option><? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::EmailTemplate->find('order'=>'lower(name)') ], $$variable{Campaign}->template_id() ); ) ?></select></li>
+	<li>
+		<label>Carbon Copy (CC)</label>
+		<input type="email" name="email_cc" value="<? hecho ( $$variable{Campaign}->email_cc() ) ?>"/>
+	</li>
+	<li>
+		<label>Blind Carbon Copy (BCC)</label>
+		<input type="email" name="email_bcc" value="<? hecho ( $$variable{Campaign}->email_bcc() ) ?>"/>
+	</li>
+	<li>
+		<label>Email Subject</label>
+		<input type="text" name="email_subject" value="<? echo ( $$variable{Campaign}->email_subject() ) ?>"/>
+	</li>
+	<li>
+		<label>Template</label>
+		<select name="template_id"><option value="">select</option>
+		<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::EmailTemplate->find('order'=>'lower(name)') ], $$variable{Campaign}->template_id() ); ) ?>
+		</select>
+	</li>
 <li><label>Email TEXT Body</label><textarea wrap="physical" name="email_text" rows="<? echo ( count_lines( $$variable{Campaign}->email_text() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( html_escape( $$variable{Campaign}->email_text() ); ) ?></textarea></li>
 <li><label>Email HTML Body</label>
 <textarea wrap="physical" class="mce" name="email_html" rows="<? echo ( count_lines( $$variable{Campaign}->email_html() ) ) ?>" onkeyup="textarea_resize(this);" ><? echo ( html_escape( $$variable{Campaign}->email_html() ); ) ?></textarea>
@@ -77,6 +99,9 @@
 <li><label>Next Run</label><? echo ( 
 		datetime_select( 'nextrun', $$variable{Campaign}->nextrun() ? $$variable{Campaign}->nextrun() : '', {with_today=>1} );
 		) ?></li>
+	<li><label>Check User Mailing List setting?</label>
+		<?echo( radio('mailinglist', [1=>'Yes', 0=>'No'], $$variable{Campaign}->mailinglist()); )?>
+	</li>
 </ul>
 		<p class="buttons">
 			<? echo ( join("\n",

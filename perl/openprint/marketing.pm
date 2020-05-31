@@ -19,6 +19,7 @@ package openprint::marketing;
 
 require openprint::EmailCampaign;
 require openprint::EmailCampaign_Sent;
+require openprint::EmailCampaign_Destination;
 require openprint::MarketingCategory;
 require openprint::Company;
 require openprint::Company_in_Marketing_Category;
@@ -119,7 +120,9 @@ sub categories {
 
 
 sub email_campaign {
-	my $Campaign = new openprint::EmailCampaign( $param{campaign_id}) ;
+	my $Campaign = $variable{Campaign} = new openprint::EmailCampaign( $param{campaign_id}) ;
+	return if !$param{btnFunction};
+
 	if ( $param{btnFunction} eq 'Save' ) {
 		$param{nextrun} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d',
 				@param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 ) if $param{nextrun_year};
@@ -139,23 +142,62 @@ sub email_campaign {
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		$Campaign = $Campaign->copy();
 		$variable{error} .= $Campaign->save({name=>'Copy of '.$$Campaign{name}});
-    } elsif ( $param{btnFunction} eq 'Test' ) {
-        $variable{information} = $Campaign->test();
-				$variable{ExternalRedirect} = $Campaign->url_to();
-    } elsif ( $param{btnFunction} eq 'Download Recipients' ) {
-        my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
-        my @data;
+	} elsif ( $param{btnFunction} eq 'Test' ) {
+		$variable{information} = $Campaign->test();
+		$variable{ExternalRedirect} = $Campaign->url_to();
+	} elsif ( $param{btnFunction} eq 'Download Recipients' ) {
+		my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
+		my @data;
 		foreach my $User ( $Campaign->Recipients() ) {
 			push @data, $User->Company()->name(), $User->name(), $User->email(), $User->phone();
 			my ( $last_sent, $num_times ) = sql::execute( undef, undef, 'SELECT emailsenton, numemailsent FROM emailcampaign_sent WHERE campaign_id=? AND user_id=? ORDER BY emailsenton DESC LIMIT 1', $Campaign->id(), $User->id() );
 			push @data, $last_sent, $num_times;
 		} # end foreach
 
-        misc::export_csv( $r, $log, \%variable, $Campaign->name().' Recipients.csv', \@header, \@data );
-    } elsif ( $param{btnFunction} eq 'View Recipients' ) {
+		misc::export_csv( $r, $log, \%variable, $Campaign->name().' Recipients.csv', \@header, \@data );
+	} elsif ( $param{btnFunction} eq 'View Recipients' ) {
 		$variable{PageContent} = join('<br/>', map { new openprint::User( $_ )->name() } $Campaign->recipients() );
+	} elsif ( $param{btnFunction} eq 'Import Recipients' ) {
+    my $ac = sql::start_transaction($dbh);
+
+    my $upload = $r->upload('import_file');
+    my $io = $upload->io();
+    $_ = <$io>;
+
+    my $csv = Text::CSV_XS->new();
+		my %destinations = misc::make_hash_from_array(user_id=>openprint::EmailCampaign_Destination->find(campaign_id=>$$Campaign{id}));
+		my $error;
+		my $results;
+
+    while (<$io>) {
+      my $status = $csv->parse($_);
+      my ( $emails ) = misc::trim($csv->fields());
+			foreach my $email ( split(',', $emails) ) {
+				$email = openprint::User->transform(email=>$email);
+				next if !$email;
+		
+				my @Users = openprint::User->find(email=>$email);
+				if ( !@Users ) {
+					$results .= "No user found for $email. Adding<br/>";
+					my $User = new openprint::User();
+					if ( ! $User->save({email=>$email}) ) {
+						push @Users, $User;
+					}
+				}
+				foreach my $User ( @Users ) {
+					if ( $destinations{$$User{id}} ) {
+						$results .= "$email already included in destinations.<br/>";
+						next;
+					}
+					my $dest = $destinations{$$User{id}} = new openprint::EmailCampaign_Destination();
+					$error .= $dest->save({user_id=>$$User{id}, campaign_id=>$$Campaign{id}});
+				} # end foreach User
+			} # end foreach email
+    } # end while
+    sql::end_transaction($dbh, $ac);
+		$variable{error} = $error;
+		$variable{information} = $results;
 	} # end if
-	$variable{Campaign} = $Campaign;
 } # end sub email_campaign
 
 sub surveys {

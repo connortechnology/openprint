@@ -51,11 +51,12 @@ sub get_vacation {
 sub get_vacation_entry {
     my ( $email ) = @_;
 
-		while (! ($dbh and $dbh->ping())) {
-			$openprint::log->info('Connecting to db');
-			$dbh = db_connect();
-			sleep(1) if !($dbh and $dbh->ping());
-		}
+	$dbh = db_connect() if ! $dbh; 
+  #while (! ($dbh and $dbh->ping())) {
+  #$openprint::log->info('Connecting to mail db');
+  #$dbh = db_connect();
+  #sleep(1) if !($dbh and $dbh->ping());
+  #}
 		if ( $dbh ) {
 			my $data = $dbh->selectall_arrayref('SELECT * FROM vacation WHERE email=?', { Slice => {} }, $email);
 			if ( $data and @{$data} ) {

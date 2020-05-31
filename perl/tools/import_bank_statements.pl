@@ -101,6 +101,8 @@ if ( ! $Account ) {
 }
 if ( ! $openprint::Owner->id() ) {
   die "Need an owner\n";
+} else {
+  print "Owner_id is $$openprint::Owner{id}\n";
 }
 
 my $guessed_format='';
