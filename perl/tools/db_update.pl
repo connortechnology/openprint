@@ -4728,34 +4728,41 @@ if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
 }
+
 if ( ! sets::isin( 'expenses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Expenses.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
 } else {
 	$dbh->do('ALTER TABLE expenses ALTER category_id DROP NOT NULL');
 
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='expenses'", 'column_name');
-if ( ! exists $$data{amount_locked} ) {
-	$dbh->do('ALTER TABLE expenses add amount_locked BOOLEAN NOT NULL default false');
+  my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='expenses'", 'column_name');
+  if ( ! exists $$data{amount_locked} ) {
+    $dbh->do('ALTER TABLE expenses add amount_locked BOOLEAN NOT NULL default false');
+  }
+  if ( ! exists $$data{total_locked} ) {
+    $dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
+  }
+  if ( ! exists $$data{attention} ) {
+    $dbh->do('ALTER TABLE expenses add attention BOOLEAN NOT NULL default false');
+  }
+  if ( ! exists $$data{business_use_amount} ) {
+    $dbh->do('ALTER TABLE expenses add business_use_amount float');
+  }
+  if ( ! exists $$data{account_id} ) {
+    $dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+    $dbh->do('ALTER TABLE expenses add account_id INTEGER');
+    $dbh->do('ALTER TABLE expenses add FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)');
+  }
+  if ( ! exists $$data{deleted} ) {
+    $dbh->do('ALTER TABLE expenses ADD deleted BOOLEAN NOT NULL default false');
+  }
 }
-if ( ! exists $$data{total_locked} ) {
-	$dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
-}
-if ( ! exists $$data{attention} ) {
-	$dbh->do('ALTER TABLE expenses add attention BOOLEAN NOT NULL default false');
-}
-if ( ! exists $$data{business_use_amount} ) {
-	$dbh->do('ALTER TABLE expenses add business_use_amount float');
-}
-if ( ! exists $$data{account_id} ) {
-	$dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
+
+if ( ! sets::isin( 'expense_taxes', \@tables ) ) {
+  print "Adding Expense Taxes\n";
+	$dbh->do( misc::load_file( $log, '../../sql/Expense_Taxes.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
-	$dbh->do('ALTER TABLE expenses add account_id INTEGER');
-	$dbh->do('ALTER TABLE expenses add FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)');
-}
-if ( ! exists $$data{deleted} ) {
-	$dbh->do('ALTER TABLE expenses ADD deleted BOOLEAN NOT NULL default false');
-}
 }
 
 if ( ! sets::isin( 'host_types', \@tables ) ) {
