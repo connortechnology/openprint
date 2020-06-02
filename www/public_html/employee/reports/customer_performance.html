@@ -44,7 +44,10 @@
 			 </select>
 			 Deleted? :
 			<?echo(
-radio('deleted_salesrep_id', [ 1, 'Yes', 0, 'No' ], $session{$r->uri().'?deleted_salresrep_id'}, { onclick=>q`LoadContent('salesrep_id', '/includes/_users.html', { 'type':'E,A', 'usergroup':'Sales', 'deleted':this.value});console.log(this);` } );
+					radio('deleted_salesrep_id',
+						[ 1, 'Yes', 0, 'No' ],
+						( exists($session{$r->uri().'?deleted_salresrep_id'}) ? $session{$r->uri().'?deleted_salresrep_id'} : 0 ),
+						{ onclick=>q`LoadContent('salesrep_id', '/includes/_users.html', { 'type':'E,A', 'usergroup':'Sales', 'deleted':this.value});console.log(this);` } );
 )?>
 		</li>
 		<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) ?>
