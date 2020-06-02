@@ -506,6 +506,7 @@ sub get_config {
 sub get_status {
 	my $self = shift;
 	my %status;
+	return if !($$self{type_id} and $self->type());
 
 	eval {
 		require 'openprint/Host/'.$self->type().'.pm';

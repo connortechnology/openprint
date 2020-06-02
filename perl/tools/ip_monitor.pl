@@ -232,7 +232,7 @@ while(1) {
         # The idea is if any ip is pingable... then the host is up
         $online = $ping if ! $online;
 
-        if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) ) {
+        if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) or !defined($$HI{online})) {
           $HI->save({online=>$ping});
         }
         $log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . ( defined $ping ? $ping : 'undef' ) );
