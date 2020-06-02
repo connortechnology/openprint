@@ -3308,6 +3308,10 @@ sub breakdown {
 	$breakdown .= $$price{'Setup Breakdown'};
 	$breakdown .= sprintf('Roll2Sheet Charge: $%.2f<br/>', $$price{Roll2SheetMakeReady} ) if $$price{Roll2SheetMakeReady};
 	$breakdown .= sprintf('Stock Setup: $%1$.2f<br/>', $$price{StockSetup} ) if $$price{StockSetup};
+	if ( $$price{SuppliedPaperPrice} and ($$openprint::User{type} ne 'C' ) ) {
+		my $SuppliedPaperPrice = $$price{SuppliedPaperPrice};
+		$breakdown .= sprintf('Supplied Stock Handling Charge: $%1$.2f%2$s = $%3$.2f<br/>', @$SuppliedPaperPrice{'Price','units','Total'});
+	}
 	if ( $$Imposition{versions} ) {
 		my $VersionPrice = $$price{'Version Price'};	
 		$breakdown .= sprintf('Version Charge: $%1$.2f %2$s for %4$d versions = $%3$.2f<br/>', @$VersionPrice{'Price','units','Total'}, $$Imposition{versions} );
