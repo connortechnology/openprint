@@ -426,6 +426,13 @@ sub can_edit {
 sub can_view {
 	return 1 if $_[0]{public};
 
+	if ( $_[0]{created_by} == $$openprint::User{id} ) {
+		$openprint::log->debug('User is owner');
+		return 1;
+	} else {
+		$openprint::log->debug('User is not owner :'.$$openprint::User{id} .' != ' . $_[0]{created_by});
+	}
+
 	my @Albums = openprint::Photo_in_Album->find(asset_id=>$_[0]{id});
 	if ( ! @Albums ) {
 		if ( $_[0]{company_id} == $$openprint::User{company_id} ) {
