@@ -704,7 +704,7 @@ sub mweight {
 			if ( $$self{type} eq 'Roll' and $$self{basis_width} and $$self{basis_height} ) {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{basis_width} * $$self{basis_height} * 1000 );
 $openprint::log->debug("Setting mweight to $$self{mweight} from wpsi $wpsi and basis size");
-				# MWeight is in relaion to the basis size
+				# MWeight is in relation to the basis size
 			} elsif ( $$self{width} and $$self{height} ) {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 1000 );
 			} # end if

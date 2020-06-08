@@ -3312,6 +3312,10 @@ sub breakdown {
 	$breakdown .= $$price{'Setup Breakdown'};
 	$breakdown .= sprintf('Roll2Sheet Charge: $%.2f<br/>', $$price{Roll2SheetMakeReady} ) if $$price{Roll2SheetMakeReady};
 	$breakdown .= sprintf('Stock Setup: $%1$.2f<br/>', $$price{StockSetup} ) if $$price{StockSetup};
+	if ( $$price{SuppliedPaperPrice} and ($$openprint::User{type} ne 'C' ) ) {
+		my $SuppliedPaperPrice = $$price{SuppliedPaperPrice};
+		$breakdown .= sprintf('Supplied Stock Handling Charge: $%1$.2f%2$s = $%3$.2f<br/>', @$SuppliedPaperPrice{'Price','units','Total'});
+	}
 	if ( $$Imposition{versions} ) {
 		my $VersionPrice = $$price{'Version Price'};	
 		$breakdown .= sprintf('Version Charge: $%1$.2f %2$s for %4$d versions = $%3$.2f<br/>', @$VersionPrice{'Price','units','Total'}, $$Imposition{versions} );
@@ -5002,17 +5006,25 @@ $imp->display('[warn]');
 				if ( $sig_specs{rdbSuppliedStock} eq 'Y' ) {
 					if ( my $SuppliedService = $Services{'Supplied'.$$Paper{type}} ) {
 						if ( my %SuppliedPaperPrice = $SuppliedService->get_price( undef, undef ) ) {
+							#$openprint::log->debug("Supplied Service units $SuppliedPaperPrice{units} : " . join(',', map { $_.'=>'.$SuppliedPaperPrice{$_} } keys %SuppliedPaperPrice));
+							if ( $SuppliedPaperPrice{range_units} and ($SuppliedPaperPrice{range_units} eq 'per 100lbs') ) {
+								%SuppliedPaperPrice = $SuppliedService->get_price($$price{'Stock Weight'}/100, undef);
+							#$openprint::log->debug("Supplied Service units for " . ($$price{'Stock Weight'}/100)." $SuppliedPaperPrice{units} : " . join(',', map { $_.'=>'.$SuppliedPaperPrice{$_} } keys %SuppliedPaperPrice));
+							}
 							if ( $SuppliedPaperPrice{units} eq 'per 100lbs' ) {
 								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Stock Weight'} / 100;
 							} elsif ( $SuppliedPaperPrice{units} eq 'per sheet' ) {
 								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Gross Sheet Count'};
 							} elsif ( $SuppliedPaperPrice{units} eq 'per m' ) {
 								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Gross Sheet Count'}/1000;
+							} elsif ( $SuppliedPaperPrice{units} eq 'total' ) {
+								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price};
 							} # end if
 							$$price{SuppliedPaperPrice} = \%SuppliedPaperPrice;
 							$$price{'Comparison Cost'} += $SuppliedPaperPrice{Total};
 							$$price{'Comparison Log'} .= 'SuppliedPaper: +'.$SuppliedPaperPrice{Total} . '<br/>' if COMPARISON_LOG;
 							$$price{'Total Cost'} += $SuppliedPaperPrice{Total};
+					#@$price{'Stock Total'} = $SuppliedPaperPrice{Total};
 						} # end if
 					} # end if
 				} elsif ( ! $PaperServiceType ) {

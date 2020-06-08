@@ -533,9 +533,12 @@ sub button {
 		#$$options{href} = '#';
 	} # end if
 	$$options{text} = $name if ! exists $$options{text};
-
-	#my $html = qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
-	my $html = qq`<button id="Button$name" class="$$options{class}" `;
+	
+	my $html = $$options{type} ?
+		qq`<button id="Button$name" class="button $$options{class}" type="$$options{type}"` :
+		qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
+	$html .= qq`name="$$options{name}" ` if $$options{name};
+	$html .= qq`value="$$options{value}" ` if $$options{value};
 	$html .= qq`title="$$options{title}" ` if $$options{title};
 	$html .= qq`target="$$options{target}" ` if $$options{target};
 	$$options{type} = 'button' if ! $$options{type};
@@ -569,9 +572,7 @@ sub button {
 	} else {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
 	}
-	#$html .= "</a>";
-	$html .= '</button>
-';
+	$html .= $$options{type} ? '</button>' : '</a>';
 	return $html;
 } # end sub button
 

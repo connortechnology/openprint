@@ -97,16 +97,16 @@ $log->debug("Path: $path id: $id uri:" . $r->uri());
 						$log->debug('Sending: ' .  $Asset->sized_path('small') );
 						$r->sendfile($Asset->sized_path('small'));
 					} else {
-						$log->debug('Sending ... ' . $Asset->on_disk_path());
+						$log->debug('Sending ... '.$Asset->on_disk_path());
 						$r->sendfile($Asset->on_disk_path());
 					} # end if
-					$log->error('Eval error sending image Reason: ' . $@) if $@;
+					$log->error('Eval error sending image Reason: '.$@) if $@;
 				} else {
 					$log->error('FORBIDDEN');
 					$return_code = Apache2::Const::HTTP_FORBIDDEN;
 				} # end if
 			} else {
-$log->error("NOT FOUND");
+				$log->error('NOT FOUND');
 				$return_code = Apache2::Const::HTTP_NOT_FOUND;
 			} # end if Asset not found
 		} else {

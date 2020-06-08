@@ -343,7 +343,7 @@ sub reboot {
 			$success = 1;
 			last;
 
-		} elsif( $Host->type() eq 'DCS-932L' ) {
+		} elsif( $Host->type() eq 'DCS_932L' ) {
 			$url = $HI->ip().'/setSystemReboot';
     } elsif ( $Host->type() eq 'DCS-942L' ) {
       $url = $HI->ip().'/eng/admin/export.cgi';
@@ -498,7 +498,7 @@ sub can_reboot {
 				'M8640',
 				'TL-WPA4220', 'TP-Link Archer C7',
 				'D-Link DAP1522','DGS-1224T','DLink DCS-910',
-        'DCS932L','DCS-933L','DCS-942L', 'WG602v3',
+        'DCS_932L','DCS-933L','DCS-942L', 'WG602v3',
 				'Vivotek' ] ) ) {
     return !undef;
   }
@@ -518,8 +518,27 @@ sub get_config {
 	return %config;
 } # end sub get_config
 
+sub get_status {
+	my $self = shift;
+	my %status;
+	return if !($$self{type_id} and $self->type());
+
+	eval {
+		require 'openprint/Host/'.$self->type().'.pm';
+		my $Host = ('openprint::Host::'.$self->type())->new($self);
+		%status = $Host->get_status();
+	};
+	$openprint::log->error('Eval error of require Reason: '.$@) if $@;
+	return %status;
+} # end sub get_status
+
+sub can_get_status {
+	return 0;
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L','Vivotek' ] ) );
+}
+
 sub can_get_config {
-	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L','Vivotek' ] ) );
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L','Vivotek' ] ) );
 }
 
 sub get_and_store_config {
@@ -531,7 +550,7 @@ sub get_and_store_config {
 }
 
 sub can_get_image {
-	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L','Vivotek' ] ) );
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L','Vivotek' ] ) );
 }
 
 sub get_image {
@@ -570,7 +589,13 @@ sub check {
 sub thumbnail_html {
 	my $self = shift;
 	my $size = @_ ? shift : 'small';
-	return '<img src="'.$self->thumbnail_url($size).'" alt=""/>';
+	if ( $self->can_get_image() ) {
+		my @dimensions = openprint::Asset::get_dimensions('Landscape', $size);
+		return '<img src="'.$self->get_image(@dimensions).'" alt=""/>';
+	}
+	my @Assets = $self->Assets();
+	$openprint::log->debug("Assets: $size " . @Assets);
+	return ( @Assets ? $Assets[0]->Asset()->sized_html($size) : '' );
 }
 
 sub thumbnail_url {
@@ -581,7 +606,7 @@ sub thumbnail_url {
 		return $self->get_image(@dimensions);
 	}
 	my @Assets = $self->Assets();
-	return ( @Assets ? $Assets[0]->Asset()->sized_html($size) : '' );
+	return ( @Assets ? $Assets[0]->Asset()->sized_url($size) : '' );
 }
 
 1;

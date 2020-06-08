@@ -181,22 +181,26 @@ sub edit {
 } # end sub edit
 
 sub _prices_table_body {
-	my $Price = new openprint::ServicePrice( $param{price_id} );
-	$variable{Equipment} = $Price->Equipment();
-	$variable{Pricelist} = $Price->Pricelist();
-	my $Service = $variable{Service} = $Price->Service();
-	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
 	if ( $param{action} eq 'add' ) {
 		my $Service = $variable{Service} = new openprint::Service( $param{service_id} );
+		my $Pricelist = $variable{Pricelist} = new openprint::Pricelist($param{pricelist_id});
+		$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
 		my $Price = $variable{Price} = new openprint::ServicePrice();
 		$variable{error} .= $Price->save({ equipment_id=>$param{equipment_id}, pricelist_id=>$param{pricelist_id}, service_id=>$$Service{id} });
-	} elsif ( $param{action} eq 'copy' ) {
-		$Price = $Price->copy();
-		$variable{error} .= $Price->save();
-	} elsif ( $param{action} eq 'delete' ) {
-		$variable{error} .= $Price->delete();
-		(new openprint::Log())->save({Object=>$Service, action=>'Delete Service Price', note=>$Price->id_string() }) if ! $variable{error};
+	} else {
+		my $Price = new openprint::ServicePrice( $param{price_id} );
+		$variable{Equipment} = $Price->Equipment();
+		$variable{Pricelist} = $Price->Pricelist();
+		my $Service = $variable{Service} = $Price->Service();
+		if ( $param{action} eq 'copy' ) {
+			$Price = $Price->copy();
+			$variable{error} .= $Price->save();
+		} elsif ( $param{action} eq 'delete' ) {
+			$variable{error} .= $Price->delete();
+			(new openprint::Log())->save({Object=>$Service, action=>'Delete Service Price', note=>$Price->id_string() }) if ! $variable{error};
+		} # end if
 	} # end if
+	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
 } # end sub _prices_table_body
 
 sub _price {
