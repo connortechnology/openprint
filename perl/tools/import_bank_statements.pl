@@ -75,7 +75,13 @@ configuration::merge($opts);
 openprint::session_init();
 
 while ( !($$opts{account} and openprint::Expense_Account->find_one(name=>$$opts{account})) ) {
-  my %accounts = map { $$_{id} => $_ } openprint::Expense_Account->find(order=>'lower(name)');
+  my @accounts = openprint::Expense_Account->find(order=>'lower(name)');
+  if ( @accounts == 1 ) {
+    $$opts{account} = $accounts[0]{name};
+    print "Selecting $$opts{account} for the account:\n";
+    last;
+  }
+  my %accounts = map { $$_{id} => $_ } @accounts;
   print "Please select the account:\n";
   foreach ( sort keys %accounts ) {
     print '['.$_.'] '.$accounts{$_}{name}."\n";
@@ -106,9 +112,11 @@ if ( $$opts{file} =~ /^Transactions(.*)\.csv$/ ) {
   $guessed_format = 'TD';
 } elsif ( $$opts{file} =~ /^cibc(.*)\.csv$/ ) {
   $guessed_format = 'CIBC';
+} elsif ( $$opts{file} =~ /^download\.csv$/ ) {
+  $guessed_format = 'Meridian';
 }
 
-my @formats = ('CDNTire', 'CIBC', 'PC', 'TD');
+my @formats = ('CDNTire', 'CIBC', 'PC', 'TD', 'Meridian');
 while ( !( $$opts{format} and sets::isin($$opts{format}, \@formats) ) ) {
   print "Please select the format:\n";
   for ( my $i = 0; $i < @formats; $i += 1 ) {
@@ -151,7 +159,7 @@ LINE: while ( <FH> ) {
   my $Expense = new openprint::Expense();
   $$Expense{owner_id}    =  $$openprint::Owner{id};
   delete $$Expense{id};
-  my ($date, $time, $card, $amount, $desc, $debit, $credit, $balance, $paid_on, $type, $posted, $ref );
+  my ($date, $time, $card, $amount, $desc, $desc1, $desc2, $desc3, $debit, $credit, $balance, $paid_on, $type, $posted, $ref );
 
   if ( $$opts{format} eq 'CIBC' ) {
     ($date, $desc, $debit, $credit, $card) = misc::trim($csv->fields());
@@ -178,6 +186,22 @@ LINE: while ( <FH> ) {
       total       => $debit,
       paid_on     => $paid_on,
     });
+} elsif ( $$opts{format} eq 'Meridian' ) {
+  #my  ID, Date, Account Name, Description1, Description2, Description3, Amount, Balance
+  #653656564,2019-11-20 12:00:00 AM,2471118-Maximiser - 0,"Cheque 27",,,-3100,37.49
+    ( $ref, $date, $card, $desc1, $desc2, $desc3, $amount, $balance ) = misc::trim($csv->fields());
+    next if $date eq 'Date';
+    ($paid_on) = $date =~ /^(\d{4}\-\d{2}\-\d{2})/;
+    $desc = join("\n", $desc1, $desc2, $desc3);
+    $amount *= -1;
+    $log->debug("date: $paid_on desc: $desc amount:$amount");
+    $Expense->set_no_defaults({
+      description => $desc,
+      account_id  => $$Account{id},
+      total       => $amount,
+      paid_on     => $paid_on,
+    });
+
   } elsif ( $$opts{format} eq 'PC' ) {
     #( $desc, $card, $date, $time, $amount) = misc::trim($csv->fields()); OLD
     ( $desc, $type, $card, $date, $time, $amount) = misc::trim($csv->fields());

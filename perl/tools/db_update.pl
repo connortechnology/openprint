@@ -4757,6 +4757,10 @@ if ( ! sets::isin( 'expenses', \@tables ) ) {
   if ( ! exists $$data{deleted} ) {
     $dbh->do('ALTER TABLE expenses ADD deleted BOOLEAN NOT NULL default false');
   }
+  if ( ! exists $$data{transaction_id} ) {
+    print "Add transaction_id to expenses\n";
+    $dbh->do('ALTER TABLE expenses ADD  transaction_id text');
+  }
 }
 
 if ( ! sets::isin( 'expense_taxes', \@tables ) ) {
@@ -5867,8 +5871,8 @@ if ( ! sets::isin('oui_vendors', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/OUI_Vendors.sql}) );
 	die if $dbh->errstr();
 }
-if ( ! sets::isin('expense_rule_Categoriess', \@tables ) ) {
-	$log->debug("Adding expense_rule_categoriess");
+if ( ! sets::isin('expense_rule_categories', \@tables ) ) {
+	$log->debug("Adding expense_rule_categories");
 	$dbh->do( misc::load_file( $log, q{../../sql/Expense_Rule_Categories.sql}) );
 	die if $dbh->errstr();
 }
