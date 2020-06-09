@@ -103,6 +103,7 @@ my @re = (
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client (?<IP>[0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '[./[:alnum:]]+' denied$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pam\-abl\[[0-9]+\]: Blocking access from (?<IP>[0-9.]+) to service sshd, user root$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/(submission\/)?smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL (CRAM\-MD5|Login|LOGIN|PLAIN) authentication fail`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/(submission\/)?smtpd\[[0-9]+\]: warning: non\-SMTP command from unknown\[(?<IP>[0-9.]+)\]:`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: Connection rate limimt exceeded: [[:digit:]]+ from unknown \[(?<IP>[0-9.]+)\] for service smtp$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns\[[0-9]+\]: Received a malformed qdomain from (?<IP>[0-9.]+), '[^']+': sending servfail$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns_server\[[0-9]+\]: TCP Connection Thread died because of network error: Error reading DNS data from TCP client (?<IP>[.[:digit:]]{7,15}): Timeout reading data$`,

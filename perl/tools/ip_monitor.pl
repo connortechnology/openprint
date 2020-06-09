@@ -32,7 +32,8 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-	'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s', 'host_type=s',
+	'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+	'blacklist=s', 'debug=s', 'config=s', 'ping_type=s', 'host_type=s',
  );
 
 if ($opts->{help}) {
@@ -231,7 +232,7 @@ while(1) {
         # The idea is if any ip is pingable... then the host is up
         $online = $ping if ! $online;
 
-        if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) ) {
+        if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) or !defined($$HI{online})) {
           $HI->save({online=>$ping});
         }
         $log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . ( defined $ping ? $ping : 'undef' ) );

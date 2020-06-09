@@ -49,21 +49,20 @@ sub get_vacation {
 } # end sub get_vacation
 
 sub get_vacation_entry {
-    my ( $email ) = @_;
+  my ( $email ) = @_;
 
-	$dbh = db_connect() if ! $dbh; 
-  #while (! ($dbh and $dbh->ping())) {
-  #$openprint::log->info('Connecting to mail db');
-  #$dbh = db_connect();
-  #sleep(1) if !($dbh and $dbh->ping());
-  #}
-		if ( $dbh ) {
-			my $data = $dbh->selectall_arrayref('SELECT * FROM vacation WHERE email=?', { Slice => {} }, $email);
-			if ( $data and @{$data} ) {
-				return $$data[0];
-			}
-    } # end if
-    return;
+  if (! ($dbh and $dbh->ping())) {
+    $openprint::log->info('Connecting to db');
+    $dbh = db_connect();
+    return if !($dbh and $dbh->ping());
+  }
+  if ( $dbh ) {
+    my $data = $dbh->selectall_arrayref('SELECT * FROM vacation WHERE email=?', { Slice => {} }, $email);
+    if ( $data and @{$data} ) {
+      return $$data[0];
+    }
+  } # end if
+  return;
 } # end sub get_vacation
 
 sub start_vacation {

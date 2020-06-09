@@ -30,8 +30,8 @@ GetOptions($opts, 'help',
 		);
 
 if ($opts->{help}) {
-    usage();
-    exit 0;
+	usage();
+	exit 0;
 }
 
 my $program = basename($0);
@@ -41,15 +41,15 @@ $log->error($_) if $_;
 configuration::merge($opts);
 
 foreach my $param ( 'db_name','db_user','db_pass', 'command' ) {
-	if ( ! $config{$param} ) {
+	if ( !$config{$param} ) {
 		die "$program: missing required --$param parameter";
 	} # end if
 } # end foreach required-param
 
-$log->file( $config{log_file} ) if $config{log_file};
-$log->level( $config{log_level} ) if $config{log_level} ne 'debug';
+$openprint::log->file( $config{log_file} ) if $config{log_file};
+$openprint::log->level( $config{log_level} ) if $config{log_level} ne 'debug';
 
-if ( $config{pid_file} ) {
+if ( $openprint::config{pid_file} ) {
 	my $pidh;
 	if (open($pidh, '> '.$config{pid_file} ) ) {
 		print $pidh $$."\n"; 
@@ -60,7 +60,7 @@ if ( $config{pid_file} ) {
 } # end if
 
 $log->debug('Connecting to db');
-$dbh = sql::open_sql( $log,
+$openprint::dbh = sql::open_sql( $log,
 		port		=> $config{db_port},
 		host		=> $config{db_host},
 		database	=> $config{db_name},

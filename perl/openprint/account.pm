@@ -446,6 +446,7 @@ sub company_profile {
 			if ( !$Company->can_edit() ) {
 				$variable{error} .= 'You cannot undelete company '.$Company->name().'<br/>';
 				$variable{Company} = new openprint::Company();
+<<<<<<< HEAD
 				return;
 			} # end if
 			$variable{error} .= $Company->undelete();
@@ -455,6 +456,17 @@ sub company_profile {
 				$variable{Company} = new openprint::Company();
 				return;
 			} # end if
+=======
+				return;
+			} # end if
+			$variable{error} .= $Company->undelete();
+		} elsif ( $param{btnFunction} eq 'save' ) {
+			if ( ! $Company->can_edit() ) {
+				$variable{error} .= 'You cannot edit company ' . $Company->id() . '<br/>';
+				$variable{Company} = new openprint::Company();
+				return;
+			} # end if
+>>>>>>> master
 			my $error = '';
 			$error .= "Company Name cannot be empty.<br/>" if ! $param{companyname};
 			if ( exists $param{StartYear} ) {
@@ -1044,6 +1056,20 @@ sub _notifications {
 	} else {
 		$variable{error} .= 'You do not have privilege to edit Notifications for this user.<br/>';
 	} # end if
+}
+
+sub users {
+	$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
+}
+sub _users {
+	my $uri = '/account/users.html';
+	ssi::save_params($uri,(
+				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email','type','administrator',
+				'notification_type_id',
+				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
+				) );
+	$session{$uri.'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
 }
 
 1;

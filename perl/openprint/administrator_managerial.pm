@@ -1145,7 +1145,6 @@ sub _user_logs {
 
 sub users {
 	$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
-
 }
 sub _users {
 	my $uri = '/administrator/managerial/users.html';
@@ -1159,8 +1158,37 @@ sub _users {
 }
 
 sub mailqueue {
+use Data::Dumper;
 	if ( $param{action} ) {
-		if ( $param{action} eq 'Delete' ) {
+		if ( $param{action} eq 'DeleteAndMarkInvalid' ) {
+			my %queue_ids = map { $_ => $_ } ( ref $param{queue_id} eq 'ARRAY' ? @{$param{queue_id}} : ( $param{queue_id} ) );
+
+			my @data = qx</usr/sbin/postqueue -j>;
+			foreach ( @data ) {
+				eval {
+					my $queue_entry = JSON::decode_json($_);
+					next if !$queue_ids{$$queue_entry{queue_id}};
+					foreach my $recipient ( @{$$queue_entry{recipients}} ) {
+						foreach my $User ( openprint::User->find(email=>$$recipient{address}) ) {
+							if ( $User->email_valid() ) {
+								$_ = $User->save({email_valid=>0});
+								if ( ! $_ ) {
+									$variable{information} .= 'User ' . $User->name() . ' marked invalid<br/>';
+								} else {
+									$variable{error} .= $_;
+								}
+							}
+						} # end foreach $User
+					} # end foreach $recipient
+#$log->debug('Entry: '.Data::Dumper::Dumper($queue_entry) );
+
+					$log->debug("sudo /usr/sbin/postsuper -d $$queue_entry{queue_id}");
+					$variable{information} .= `sudo /usr/sbin/postsuper -d $$queue_entry{queue_id} 2>&1`.'<br/>';
+				};
+				$log->error("Error in eval $@") if $@;
+			} # end foreach line
+			$variable{ExternalRedirect} = '/administrator/managerial/mailqueue.html';
+		} elsif ( $param{action} eq 'Delete' ) {
 			foreach my $queue_id ( ref $param{queue_id} eq 'ARRAY' ? @{$param{queue_id}} : ( $param{queue_id} ) ) {
 $log->debug("sudo /usr/sbin/postsuper -d $queue_id");
 				$variable{information} .= `sudo /usr/sbin/postsuper -d $queue_id 2>&1`.'<br/>';
