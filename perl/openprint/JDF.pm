@@ -1,6 +1,7 @@
 package openprint::JDF;
 
 require JMF;
+use openprint::Imposition;
 
 use vars qw( %runstyles %folds %bindingtypes %coatings );
 use strict;
