@@ -4335,13 +4335,13 @@ sub get_project_price {
 	#my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
 	my @Is = calculate_impositions( $Project, $source_sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
 	if ( DEBUG or DEBUG_AFTER_FILTERING ) {
-		$log->debug("@ of impositions: " . @Is );
+		$log->debug('@ of impositions: ' . @Is );
 		foreach my $I ( @Is ) {
-			$I->display( "Before calculation: depth: $recursion_depth # of sigs: " . @Is );
+			$I->display("Before calculation: depth: $recursion_depth # of sigs: " . @Is);
 		} # end while
 	}
-	if ( ! @Is ) {
-		$log->error("No impositions from calculate_impositions");
+	if ( !@Is and DEBUG ) {
+		$log->error('No impositions from calculate_impositions');
 	}
 #$log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 	foreach my $base_imp ( @Is ) {
@@ -5877,9 +5877,8 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 			} # end if
 			#$scoring_results{Overs} = ceil( $scoring_results{Overs} / ( $$Imposition{imposition}/$scoring_results{Imposition}->imposition() ) ) if $scoring_results{Imposition}->imposition();
 		} else {
-			$log->error("Scoring is not uncalculated but no Imposition $scoring_results{Breakdown}");
+			$log->error('Scoring is not uncalculated but no Imposition '.$scoring_results{Breakdown});
 		} # end if
-			$log->error("Done Scoring is not being done");
 	#} else {
 			#$log->error("Scoring is not being done");
 	} # end if
