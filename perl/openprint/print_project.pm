@@ -604,7 +604,7 @@ $log->debug("Already have $$ServiceType{name}");
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited: ' . join('<br/>', @changes) );
 
 	if ( $ProjectType->type() eq 'MultiPage' ) {
-		my $book_type = openprint::print::get_book_type($Project);
+		my $book_type = $project->get_book_type();
 		if ( $book_type ) {
 			my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 			if ( $book_type ne $$project_specs{rdbTemplateType} ) {

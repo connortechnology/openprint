@@ -12,7 +12,6 @@ use vars qw( $log $dbh %config $debug $table $serial %fields %find_fields %trans
 require openprint::ProjectType;
 require openprint::Company;
 require openprint::Order;
-require openprint::print;
 
 require sql;
 require openprint::JDF;
@@ -245,7 +244,7 @@ sub jdf {
 	$Component->setAttribute('Status','Unavailable');
 	$Component->setAttribute('isWaste','false');
 	$Component->setAttribute('AmountRequired',$self->ordered_quantity());
-	$Component->setAttribute('ResourceWeight',openprint::print::get_finished_weight( $self->id() ) );
+	$Component->setAttribute('ResourceWeight', $self->finished_weight());
 	## THese are crucial for Metrix
 	#$Component->setAttribute('ProductType','Body');
 	$Component->setAttribute('Dimensions',join(' ', 
@@ -347,7 +346,7 @@ sub jdf {
 	} # end foreach Signature
 
 	# Add Binding Info
-	if ( my $binding = openprint::print::get_book_type( $self->id() ) ) {
+	if ( my $binding = $self->get_book_type() ) {
 		my $BindingIntent = $ProductResourcePool->appendChild( $doc->createElement('BindingIntent') );
 		$BindingIntent->setAttribute('ID','BI'.$self->id() ); # FInal Binding
 		$BindingIntent->setAttribute('Class','Intent' );
@@ -1939,7 +1938,7 @@ sub finished_weight {
 
 # This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.
 	return $project_weight * (1+$openprint::config{WeightMarkup}/100);
-} # end sub get_finished_weight
+} # end sub finished_weight
 
 sub can_view {
 	if ( ! $_[0]{id} ) {
@@ -2041,6 +2040,26 @@ sub csr_commission {
 	$$self{csr_commission} = shift if @_;
 	return $$self{csr_commission};
 } # end sub csr_commission
+
+sub get_book_type {
+  my $Project = shift;
+  my $services = $Project->services();
+
+# the way we cut down the book depends on how it is being bound, so we need this for the signature information.
+  foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound' ) {
+    if ( $$services{$service} ) {
+      return $service;
+    } # end if
+  } # end foreach
+
+  if ( $$services{''} and @{$$services{''}} ) {
+    my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+    if ( $$printing_specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
+      return 'PerfectBound';
+    } # end if
+  } # end if
+  return;
+} # end sub get_book_type
 
 1;
 __END__
