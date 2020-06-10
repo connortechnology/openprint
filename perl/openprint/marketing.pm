@@ -263,6 +263,12 @@ sub banners {
 } # end sub banners
 
 sub subscriptions {
+	if ( $param{user_id} and ( $param{user_id} != openprint::User->transform(id=>$param{user_id}) ) ) {
+		$variable{error} .= 'Invalid user specified.<br/>';
+		$variable{User} = $openprint::User;
+		return;
+	}
+
 	my $User = $variable{User} = new openprint::User($param{user_id} ? $param{user_id} : $session{user_id});
 	
 	$User = $variable{User} = new openprint::User($session{user_id}) if $session{user_id} and ! $$User{id};
