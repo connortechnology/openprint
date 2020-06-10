@@ -6,7 +6,7 @@
 	if ( @Payments or ! sets::isin($$variable{Order}->status(), ['Incomplete','Cancelled']) ) {
 		my $rowclass;
 
-		if ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::User->Groups('Accounting') ) ) {
+		if ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and $openprint::User->Groups('Accounting') ) ) {
 			$html .= q`
 <table class="List">
 	<thead>
