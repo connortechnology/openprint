@@ -446,7 +446,6 @@ sub company_profile {
 			if ( !$Company->can_edit() ) {
 				$variable{error} .= 'You cannot undelete company '.$Company->name().'<br/>';
 				$variable{Company} = new openprint::Company();
-<<<<<<< HEAD
 				return;
 			} # end if
 			$variable{error} .= $Company->undelete();
@@ -456,17 +455,6 @@ sub company_profile {
 				$variable{Company} = new openprint::Company();
 				return;
 			} # end if
-=======
-				return;
-			} # end if
-			$variable{error} .= $Company->undelete();
-		} elsif ( $param{btnFunction} eq 'save' ) {
-			if ( ! $Company->can_edit() ) {
-				$variable{error} .= 'You cannot edit company ' . $Company->id() . '<br/>';
-				$variable{Company} = new openprint::Company();
-				return;
-			} # end if
->>>>>>> master
 			my $error = '';
 			$error .= "Company Name cannot be empty.<br/>" if ! $param{companyname};
 			if ( exists $param{StartYear} ) {

@@ -1,4 +1,5 @@
 #!/usr/bin/perl 
+use lib '/etc/apache2/lib/perl';
 
 BEGIN {
 # Debugging Stuff
