@@ -265,6 +265,7 @@ sub banners {
 sub subscriptions {
 	if ( $param{user_id} and ( $param{user_id} != openprint::User->transform(id=>$param{user_id}) ) ) {
 		$variable{error} .= 'Invalid user specified.<br/>';
+		$log->error('Invalid user specified:'.$param{user_id});
 		$variable{User} = $openprint::User;
 		return;
 	}
@@ -275,6 +276,7 @@ sub subscriptions {
 	# Either we are logged in and can edit, or the specified user id and that user's email address match.
 	if ( $session{user_id} ) {
 		if ( ! $User->can_edit() ) {
+			$log->error("Person $$openprint::User{name} does not have access to edit $$User{name}'s subscriptions");
 			$variable{error} .= 'You do not have access to edit this users subscriptions.';
 			return;
 		} # endif
@@ -300,6 +302,7 @@ sub subscriptions {
 				} # end if
 			};
 			if ( $variable{error} ) {
+$log->error($variable{error});
 				return;
 			}
 		} # end if not logged in
@@ -313,6 +316,7 @@ sub subscriptions {
 			$variable{information} .= ' No changes made.';
 		} # end if
 	} # end if	
+$log->debug("information: $variable{information}");
 } # end sub subscriptions
 
 sub sales_log {
