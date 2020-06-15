@@ -25,18 +25,18 @@ use vars qw( $r %session %config $log $dbh );
 use constant DEBUG => 0;
 
 sub cleanup {
-    if ( $r->connection->aborted( ) ) {
-$log->debug("Was aborted");
-    } else {
-#$log->debug("cleanup");
-    } # end if
-    if ( $dbh ) {
-        $session{lastupdated} = time;
-        untie %session;
-        $dbh->disconnect();
+	if ( $r->connection->aborted( ) ) {
+		$log->debug('Was aborted');
 	} else {
-$log->error("No dbh in cleanup");
-    } # end if
+#$log->debug("cleanup");
+	} # end if
+	if ( $dbh ) {
+		$session{lastupdated} = time;
+		untie %session;
+		$dbh->disconnect();
+	} else {
+		$log->error('No dbh in cleanup');
+	} # end if
 } # end sub cleanup
 
 sub handler {
