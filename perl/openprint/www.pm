@@ -606,7 +606,7 @@ $log->debug("No proc found for $filename");
 				}
 			} # end if
 		} else {
-			$log->debug($ENV{DOCUMENT_ROOT}.$uri . ' does not exist.');
+			$log->debug($ENV{DOCUMENT_ROOT}.$uri.' does not exist.');
 		} # end if main:$second
 
 	} else {
@@ -615,16 +615,16 @@ $log->debug("No proc found for $filename");
 			if ( $proc ) {
 				my $module = lc $first;
 				$module .= '_'.$second if $second;
-					require "openprint/$module.pm"; 
-					if ( my $function = ('openprint::'.$module)->can($proc) ) {
-						$function->($r, $log, $dbh, \%variable );
-						$log->debug( "calling of require $module :: $proc, Reason: " );
-					} else {
-						$log->error( "Eval error of require $module :: $proc, Reason: " );
-					}
-						$log->error( "Eval error of require $module :: $proc, Reason: $!" ) if $!;
+				require "openprint/$module.pm"; 
+				if ( my $function = ('openprint::'.$module)->can($proc) ) {
+					$function->($r, $log, $dbh, \%variable);
+					$log->debug("calling of require $module :: $proc");
+				} else {
+					$log->error("Eval error of require $module :: $proc");
+				}
+				$log->error("Eval error of require $module :: $proc, Reason: $!") if $!;
 			} else {
-						$log->error( "No proc Eval error of require $proc, $filename Reason: " );
+				$log->error("No proc in filename $filename");
 			} # end if
 		} else {
 			$log->debug("No firstSo or non-existant $uri first: $first ");
