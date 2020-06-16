@@ -4383,13 +4383,10 @@ sub get_project_price {
 		my %aq_makereadies = %{ dclone $aq_makereadies} if $aq_makereadies;
 
 		my @total_impositions = @$other_impositions;
-$openprint::log->error("total impositions from other_impositions: " .  @total_impositions);
 
 		# This is suspect is it?	other_impos doesn't get modified. sig_specs{mpositions} gets populated before recurse
 		push @total_impositions, @{$sig_specs{Impositions}} if $sig_specs{Impositions};
-$openprint::log->error("total impositions from sig_specs impositions: " .  @total_impositions);
 		push @total_impositions, $imp;
-$openprint::log->error("total impositions with this impositions: " .  @total_impositions);
 
 		my $do_final_pricing = 1;
 
