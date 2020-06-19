@@ -286,16 +286,17 @@ $log->debug("Getting assoclist from $url");
 				}
 				# Important to log out or else no one else can access the web ui
 				$response = $browser->get('http://'.$$HI{ip}.'/cgi-bin/logout.html');
-				update_connections( $HI, @macs );
+				update_connections($HI, @macs);
 
 			} else { 
 				$log->error("Unknown Host type ($$Host{type})");
 			} # end if
 		} else {
-			$log->debug("$$Host{hostname} is offline: ping $ping");
+			$log->debug($$Host{hostname}.' is offline: ping '.$ping);
 		} # end if online
 	} # end foreach HI
 } # end foreach $Host
+$log->debug('Shutting down');
 $p->close();
 $dbh->disconnect() if $dbh;
 exit 0;
@@ -304,10 +305,10 @@ sub update_connections {
 	my ( $wap_HI, @macs ) = @_;
 	openprint::Host_Interface->lock();
 	my %OldConnections = map { $$_{mac} ? ( uc $$_{mac}, $_ ) : ( ) } openprint::Host_Interface->find( connected_to=>$$wap_HI{mac} );
-$log->debug("Updating @macs");
-foreach my $k ( keys %OldConnections ) {
-  $log->debug("Old COnnections $k");
-}
+  $log->debug("Updating @macs");
+  foreach my $k ( keys %OldConnections ) {
+    $log->debug("Old COnnections $k");
+  }
 	foreach my $mac ( map { uc $_ } @macs ) {
 		if ( $OldConnections{$mac} ) {
 			# Already connected
