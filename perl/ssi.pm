@@ -527,10 +527,13 @@ sub button {
 			$path =~ s/(.*\/).*/$1/;
 			$href = $path . $href;
 		} # end if
-		my $PageSetting = openprint::Page_Setting::get( $href );
+		my $PageSetting = openprint::Page_Setting::get($href);
 		return if $PageSetting and ! $PageSetting->can_view();
 	#} else {
 		#$$options{href} = '#';
+  } elsif ( ! $$options{type} ) {
+    # Default non-a types to a button
+    $$options{type} = 'button';
 	} # end if
 	$$options{text} = $name if ! exists $$options{text};
 	my $html = $$options{type} ?
@@ -540,9 +543,8 @@ sub button {
 	$html .= qq`value="$$options{value}" ` if $$options{value};
 	$html .= qq`title="$$options{title}" ` if $$options{title};
 	$html .= qq`target="$$options{target}" ` if $$options{target};
-	$$options{type} = 'button' if ! $$options{type};
 	$html .= qq`type="$$options{type}" ` if $$options{type};
-	if ( $$options{href} ) {
+	if ( $$options{href} and $$options{type} ) {
 		$html .= qq`onclick="window.location='$$options{href}'" `;
 	} elsif ( $$options{onclick} ) {
 		$html .= 'onclick="';
