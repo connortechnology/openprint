@@ -159,9 +159,10 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 	$Pricelist = new openprint::Pricelist( $session{Pricelist_id} ) if $session{Pricelist_id};
 
 	if ( $ENV{REMOTE_ADDR} ) {
+    openprint::Host_Interface->lock();
 		my @Interfaces = openprint::Host_Interface->find(ip=>$ENV{REMOTE_ADDR});
 		if ( !@Interfaces ) {
-      $log->debug("No HI found for $ENV{REMOTE_ADDR}");
+      $log->debug('No HI found for '.$ENV{REMOTE_ADDR});
 			$Host = openprint::Host->find_one(hostname=>$ENV{REMOTE_ADDR});
 			if ( !$Host ) {
 				$Host = new openprint::Host();
@@ -174,6 +175,7 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 			}
 			$Host = $Interfaces[0]->Host();
 		}
+    openprint::Host_Interface->unlock();
 	}
 
 } # end sub session_init
