@@ -41,16 +41,16 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *r = \$openprint::r;
 
 sub warn {
-	$log->error("Warning: $_[0]");
+	$log->error('Warning: '.$_[0]);
 }
 
 $SIG{__WARN__} = \&warn;
 
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
-		$log->debug("Was aborted");
+		$log->debug('Was aborted');
 	} elsif ( Debug ) {
-		$log->debug("cleanup");
+		$log->debug('cleanup');
 	} # end if
 	%openprint::variable = ();
 	%openprint::param = ();
@@ -63,13 +63,13 @@ sub cleanup {
 		$session{lastupdated} = time;
 		untie %session;
 		if ( ! $dbh->{AutoCommit} ) {
-			$log->error("Uncommited transaction");
+			$log->error('Uncommited transaction');
 		} elsif ( Debug ) {
-			$log->debug("Finished cleanup");
+			$log->debug('Finished cleanup');
 		} # end if
 		$dbh->disconnect();
 	} else {
-		$log->debug("No dbh at cleanup");
+		$log->debug('No dbh at cleanup');
 	} # end if
 } # end sub cleanup
 
@@ -87,7 +87,7 @@ sub handler {
 	$log	= $r->log;
 	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 	my $page = $r->uri();
-	$log->debug( "Beginning of Request: Page: " . $page );
+	$log->debug('Beginning of Request: Page: '.$page);
 
 	%param = ();
 	# Here we copy the param data into a hash that is sligthly more useful to use.	Wish we didn't have to do this.
@@ -98,16 +98,16 @@ sub handler {
 			#$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = $values[0];
-			utf8::decode($param{$key});
+      #utf8::decode($param{$key});
 #utf8::encode($values[0]);
 			#$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
 		} # end if
 	} # end foreach
 	foreach my $key ( sort keys %param ) {
 		if ( ref $param{$key} eq 'ARRAY' ) {
-			$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
+			$log->debug('Parameter '.$key.' is ARRAY(' . join(',', @{$param{$key}}) . ')');
 		} else {
-			$log->debug("Parameter $key is (" . $param{$key} . ')' . (utf8::is_utf8($param{$key})||0) );
+			$log->debug('Parameter '.$key.' is (' . $param{$key} . ')' . (utf8::is_utf8($param{$key})||0) );
 			#$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
 		} # end if
 	}	# end foreach
