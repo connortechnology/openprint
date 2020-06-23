@@ -7962,18 +7962,16 @@ sub setup_counts {
 
 	foreach my $index ( $Project->signatures({ sort=>1 }) ) {
 		if ( $index >= $service_index ) {
-			if ( DEBUG ) {
-				$log->debug("setup_counts: Next sig $index >= $service_index");
-			}
+			$log->debug("setup_counts: Next sig $index >= $service_index") if DEBUG;
 			next;
 		}
 # Get plates in each previous signature, so we can get qty discounts
 		my $sig_specs = openprint::service::get_specs_ref($Project, $index);
-		if ( $$sig_specs{pages_supplied} ) {
-			$log->debug('pages supplied');
+		if ( $$sig_specs{pages_supplied} and ( $$sig_specs{pages_supplied} eq 'Y') ) {
+			$log->debug("skipping sig $$sig_specs{SignatureIndex} in setup_counts because pages supplied = $$sig_specs{pages_supplied}") if DEBUG;
 			next;
 		} elsif ( $$specs{txtSignatureType} eq 'Cover Pages' and $$sig_specs{txtSignatureType} ne 'Cover Pages' ) {
-			$log->debug('We are cover pages but sig is not');
+			$log->debug('We are cover pages but sig is not') if DEBUG;
 			next;
 		} 
 		if ( DEBUG ) {
