@@ -404,7 +404,7 @@ sub parse_page {
 		} else {
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 			if ( $proc ) {
-				my $module = join('_',@path);
+				my $module = join('_', @path);
 				require "openprint/$module.pm";
 				if ( my $function = ('openprint::'.$module)->can($proc) ) {
 $log->debug("Running openprint::$module->$proc") if Debug;
@@ -622,7 +622,6 @@ $log->debug("No proc found for $filename");
 				} else {
 					$log->error("Eval error of require $module :: $proc");
 				}
-				$log->error("Eval error of require $module :: $proc, Reason: $!") if $!;
 			} else {
 				$log->error("No proc in filename $filename");
 			} # end if

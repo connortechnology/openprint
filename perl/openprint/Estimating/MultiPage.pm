@@ -47,15 +47,15 @@ my %variables = (
 	);
 
 @signature_variables = (
-'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
-( map { ( "chkColourCoating${_}SideOne", "ColourCoatingType${_}SideOne", "ColourCoatingColour${_}SideOne", "ColourCoatingCoverage${_}SideOne" ) } ( 1 .. 20 ) ),
-( map { ( "chkColourCoating${_}SideTwo", "ColourCoatingType${_}SideTwo", "ColourCoatingColour${_}SideTwo", "ColourCoatingCoverage${_}SideTwo" ) } ( 1 .. 20 ) ),
-                'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
-                'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
-                'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
-                'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
-                'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
-                'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace', 'OverrideAddGrip',
+		'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
+		( map { ( "chkColourCoating${_}SideOne", "ColourCoatingType${_}SideOne", "ColourCoatingColour${_}SideOne", "ColourCoatingCoverage${_}SideOne" ) } ( 1 .. 20 ) ),
+		( map { ( "chkColourCoating${_}SideTwo", "ColourCoatingType${_}SideTwo", "ColourCoatingColour${_}SideTwo", "ColourCoatingCoverage${_}SideTwo" ) } ( 1 .. 20 ) ),
+		'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
+		'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
+		'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
+		'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
+		'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
+		'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace', 'OverrideAddGrip',
 		'ddmRunStyle-', 'ddmPress-', 'PrintingType-', 'StockType-', 'txtPlateChangeQuantity-', 'PageQuantity-',
 		'Pages', 'OverrideGroupPageQuantity', 'GroupPageQuantity', 'txtSignatureType',
 		'chkOverrideDimensions', 'txtFinalHeight', 'txtFinalWidth', 'txtHeight', 'txtWidth',
@@ -216,11 +216,6 @@ sub calc {
 							( $group_id == 3 ? ( txtSignatureType=>'Gate Folded Pages', txtServiceDescription=>'Gate Folded Pages' ) : () ),
 							} );
 				} # end if
-#foreach my $sig_id ( $Project->signatures({Group=>$group_id}) ) {
-#my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-#$override_pages{$group_id} = $$sig_specs{GroupPageQuantity} if $$sig_specs{OverrideGroupPageQuantity} eq 'Y';
-#last if $override_pages{$group_id};
-#} # end foreach signature
 			} # end if
 			$remaining_pages -= $override_pages{$group_id};
 			if ( $$specs{"PageQuantity-$group_id"} and ( $$specs{"PageQuantity-$group_id"} > $$specs{'GroupPageQuantity'.$group_id} ) ) {
@@ -287,13 +282,15 @@ sub calc {
 		} # end if
 	} # end if
 
+	my @check_group_ids = @Groups;
+
 	foreach my $group_id ( @Groups ) {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
 		my %sig_specs = map { $$specs{$_.$group_id} ? ( $_, $$specs{$_.$group_id } ) : () } @signature_variables;
 		if ( ! exists $override_pages{$group_id} ) {
 			$override_pages{$group_id} = $remaining_pages;
 
-		# THe purpose of calling this here, is to do auto-population of coverage, etc.
+		# The purpose of calling this here, is to do auto-population of coverage, etc.
 			$remaining_pages = 0;
 		} # end if
 		$sig_specs{GroupPageQuantity} = $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
@@ -338,7 +335,57 @@ sub calc {
 			$$specs{alert} .= "The # of pages for group $group_id is not a multiple of $sig_specs{txtSpreadSize}.  A GateFold page will be required.<br/>";
 			} 
 		}
+		if ( $$specs{"PrintingType-$group_id"} and $$specs{"ddmPress-$group_id"} ) {
+			my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress-$group_id"});
+			if ( $Press->specification('Printing Type') ne $$specs{"PrintingType-$group_id"} ) {
+				$$specs{alert} .= "Press chosen for signature group $group_id is incompatible with printing type<br/>";
+			}
+		}
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}") if DEBUG;
+		my @other_groups = sets::exclude([$group_id], \@check_group_ids);
+		foreach my $other_group_id ( @other_groups ) {
+			if ( $$specs{"txtSignatureType$other_group_id"} eq $$specs{"txtSignatureType$group_id"} ) {
+				# Have to check that we don't have conflicting printing types
+				if ( $$specs{"StockType-$other_group_id"} and $$specs{"StockType-$group_id"} 
+						and 
+						( $$specs{"StockType-$other_group_id"} ne $$specs{"StockType-$group_id"} )
+					 ) {
+					$$specs{alert} .= "Incompatible stocks chosen for signature groups $group_id and $other_group_id<br/>";
+					# If we find an error, exclude the match for further consideration so that we don't get duplicates
+					@check_group_ids = sets::exclude([$group_id, $other_group_id], \@check_group_ids);
+				} # end if stock types are incompatible
+
+				if ( $$specs{"ddmPress-$other_group_id"} and $$specs{"ddmPress-$group_id"}
+						and ( $$specs{"ddmPress-$other_group_id"} ne $$specs{"ddmPress-$group_id"} ) 
+					 ) {
+					my $Press1 = openprint::Equipment->find_one(strid=>$$specs{"ddmPress-$other_group_id"});
+					my $Press2 = openprint::Equipment->find_one(strid=>$$specs{"ddmPress-$group_id"});
+					if ( $Press1->specification('Printing Type') ne $Press2->specification('Printing Type') ) {
+						$$specs{alert} .= "Incompatible presses chosen for signature groups $group_id and $other_group_id<br/>";
+						@check_group_ids = sets::exclude([$group_id, $other_group_id], \@check_group_ids);
+					} # end if non-matching printing types
+				}	 # end if non-matching presses
+				if ( $$specs{"PrintingType-$other_group_id"} and $$specs{"PrintingType-$group_id"}
+						and
+						( $$specs{"PrintingType-$other_group_id"} ne $$specs{"PrintingType-$group_id"} ) 
+					 ) {
+					$$specs{alert} .= "Incompatible printing types chosen for signature groups $group_id and $other_group_id<br/>";
+					@check_group_ids = sets::exclude([$group_id, $other_group_id], \@check_group_ids);
+				} elsif ( $$specs{"PrintingType-$other_group_id"} and $$specs{"ddmPress-$group_id"} ) {
+					my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress-$group_id"});
+					if ( $Press->specification('Printing Type') ne $$specs{"PrintingType-$other_group_id"} ) {
+						$$specs{alert} .= "Press chosen for signature group $group_id is incompatible with printing type of group $other_group_id<br/>";
+						@check_group_ids = sets::exclude([$group_id, $other_group_id], \@check_group_ids);
+					}
+				} elsif ( $$specs{"PrintingType-$group_id"} and $$specs{"ddmPress-$other_group_id"} ) {
+					my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress-$other_group_id"});
+					if ( $Press->specification('Printing Type') ne $$specs{"PrintingType-$group_id"} ) {
+						$$specs{alert} .= "Press chosen for signature group $other_group_id is incompatible with printing type of group $group_id<br/>";
+						@check_group_ids = sets::exclude([$group_id, $other_group_id], \@check_group_ids);
+					}
+				} 
+			} # end if signature types match
+		} # end foreach other grouo
 	} # end foreach group_id
 
 	if ( $$specs{remaining_pages} = $remaining_pages ) {

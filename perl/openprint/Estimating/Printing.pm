@@ -4383,13 +4383,10 @@ sub get_project_price {
 		my %aq_makereadies = %{ dclone $aq_makereadies} if $aq_makereadies;
 
 		my @total_impositions = @$other_impositions;
-$openprint::log->error("total impositions from other_impositions: " .  @total_impositions);
 
 		# This is suspect is it?	other_impos doesn't get modified. sig_specs{mpositions} gets populated before recurse
 		push @total_impositions, @{$sig_specs{Impositions}} if $sig_specs{Impositions};
-$openprint::log->error("total impositions from sig_specs impositions: " .  @total_impositions);
 		push @total_impositions, $imp;
-$openprint::log->error("total impositions with this impositions: " .  @total_impositions);
 
 		my $do_final_pricing = 1;
 
@@ -7965,18 +7962,16 @@ sub setup_counts {
 
 	foreach my $index ( $Project->signatures({ sort=>1 }) ) {
 		if ( $index >= $service_index ) {
-			if ( DEBUG ) {
-				$log->debug("setup_counts: Next sig $index >= $service_index");
-			}
+			$log->debug("setup_counts: Next sig $index >= $service_index") if DEBUG;
 			next;
 		}
 # Get plates in each previous signature, so we can get qty discounts
 		my $sig_specs = openprint::service::get_specs_ref($Project, $index);
-		if ( $$sig_specs{pages_supplied} ) {
-			$log->debug('pages supplied');
+		if ( $$sig_specs{pages_supplied} and ( $$sig_specs{pages_supplied} eq 'Y') ) {
+			$log->debug("skipping sig $$sig_specs{SignatureIndex} in setup_counts because pages supplied = $$sig_specs{pages_supplied}") if DEBUG;
 			next;
 		} elsif ( $$specs{txtSignatureType} eq 'Cover Pages' and $$sig_specs{txtSignatureType} ne 'Cover Pages' ) {
-			$log->debug('We are cover pages but sig is not');
+			$log->debug('We are cover pages but sig is not') if DEBUG;
 			next;
 		} 
 		if ( DEBUG ) {

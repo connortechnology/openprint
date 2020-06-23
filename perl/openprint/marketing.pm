@@ -265,6 +265,7 @@ sub banners {
 sub subscriptions {
 	if ( $param{user_id} and ( $param{user_id} != openprint::User->transform(id=>$param{user_id}) ) ) {
 		$variable{error} .= 'Invalid user specified.<br/>';
+		$log->error('Invalid user specified:'.$param{user_id});
 		$variable{User} = $openprint::User;
 		return;
 	}
@@ -275,6 +276,7 @@ sub subscriptions {
 	# Either we are logged in and can edit, or the specified user id and that user's email address match.
 	if ( $session{user_id} ) {
 		if ( ! $User->can_edit() ) {
+			$log->error("Person $$openprint::User{name} does not have access to edit $$User{name}'s subscriptions");
 			$variable{error} .= 'You do not have access to edit this users subscriptions.';
 			return;
 		} # endif
@@ -287,19 +289,39 @@ sub subscriptions {
 
 	if ( $param{action} eq 'Save' ) {
 		if ( ! $openprint::session{user_id} ) {
-			eval {
-				require Authen::Captcha;
-				my $Captcha = new Authen::Captcha(
-						data_folder => $config{SkinPath}.'/tmp',
-						output_folder => $config{SkinPath}.'/images/captcha'
-						);
+			if ( $config{reCAPTCHA_site_key} ) {
+				if ( ! $param{'g-recaptcha-response'} ) {
+					$variable{error} .= 'You must check the I\'m not a robot box';
+				} else {
+					eval {
+# Using Google recaptcha
+						require Captcha::reCAPTCHA;
+						my $c = Captcha::reCAPTCHA->new;
+						my $result = $c->check_answer_v2($config{reCAPTCHA_secret_key}, $param{'g-recaptcha-response'}, $ENV{REMOTE_ADDR});
+						if ( ! $result->{is_valid} ) {
+							$variable{error} .= 'Failed reCAPTCHA.';
+						}
+					};
+					if ( $@ ) {
+						$variable{error} .= "Failed reCAPTCHA: $@";
+					}
+				}
+			} else {
+				eval {
+					require Authen::Captcha;
+					my $Captcha = new Authen::Captcha(
+							data_folder => $config{SkinPath}.'/tmp',
+							output_folder => $config{SkinPath}.'/images/captcha'
+							);
 # Remove spaces, because some people want to put spaces between the characters, etc.
-				$param{Captcha} =~ s/\s//g;
-				if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
-					$variable{error} .= 'Captcha validation code incorrect.  Please try again.';
-				} # end if
-			};
+					$param{Captcha} =~ s/\s//g;
+					if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+						$variable{error} .= 'Captcha validation code incorrect.  Please try again.';
+					} # end if
+				};
+			}
 			if ( $variable{error} ) {
+$log->error($variable{error});
 				return;
 			}
 		} # end if not logged in
@@ -313,6 +335,7 @@ sub subscriptions {
 			$variable{information} .= ' No changes made.';
 		} # end if
 	} # end if	
+$log->debug("information: $variable{information}");
 } # end sub subscriptions
 
 sub sales_log {
