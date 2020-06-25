@@ -90,14 +90,14 @@
 						address1=>$$PO{vendor_address1},
 						address2=>$$PO{vendor_address2},
 						city=>$$PO{vendor_city},
-						city=>$$PO{vendor_state},
+						state=>$$PO{vendor_state},
 						});
 				if ( @changes ) {
 				  return join("<br/>\n",
 							'<div class="warning">This vendor\'s address information does not match this purchase order.  The current record for '.$Supplier->name() . ' is as follows:',
 							(
 							 join(', ', $Supplier->address1(), ($Supplier->address2()?$Supplier->address2():()) ),
-							 join(', ', $Supplier->city(), $Supplier->state(), $Supplier->postalcode() ),
+							 join(', ', $Supplier->city(), ($Supplier->country() eq 'US' ? $states{$Supplier->state()} : $provinces{$Supplier->state()}), $Supplier->postalcode() ),
 							 $countries::countries{$$Supplier{country}},
 							),
 							button('VendorUpdate', { onclick=>'update_vendor();', text=>'Update' } ),
