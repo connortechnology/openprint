@@ -38,17 +38,20 @@
 		`, $C->id(), $C->qty(), escape_quotes( $C->product(), $C->item() ),
 		CGI::escapeHTML($C->description()), escape_quotes($name), make_drop_down( [ '', 'Normal','FSC', 'FSC','PEFC/SFI', 'PEFC/SFI' ], $type ), 
 		$C->docket(), $C->po_id(),
-		input( type=>'float', class=>'StockCost', name=>'price-'.$C->id(),id=>'price-'.$C->id(), value=>$C->price(),oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}", onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);' ),
-		input( type=>'float', name=>'total-'.$C->id(),id=>'total-'.$C->id(), value=>$C->total(),oninput=>"calc_price(this);", onkeydown=>'this.lastValue=this.value;return check_decimal(this,event);' ),
+		input( type=>'float', class=>'StockCost', name=>'price-'.$C->id(),id=>'price-'.$C->id(), value=>$C->price(),
+			oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}", onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);' ),
+		input( type=>'float', name=>'total-'.$C->id(),id=>'total-'.$C->id(), value=>$C->total(),
+				oninput=>"calc_price(this);", onkeydown=>'this.lastValue=this.value;return check_decimal(this,event);' ),
 			make_drop_down( [ 
 					map { $_->id(), $_->price() ? sprintf('%s %s as of %s', $_->name(),
 						openprint::Currency::format($_->price()),
 						format_date( $_->updated_on() ),
 						) : $_->name()
 					}
-					openprint::PurchaseOrder_Item->find( company_id=>new openprint::User( $session{user_id} )->company_id(), vendor_id=>$$variable{PurchaseOrder}->supplier_id(), type_id=>$C->type_id(), order=>'lower(name)' ) ] , $C->item_id() ),
-			make_drop_down( openprint::PurchaseOrder_Department->dropdown('order'=>'lower(name)'), $$C{'department_id'} ),
-			input( type=>'float', class=>'RollQTY', name=>'qty-'.$C->id(), id=>'qty-'.$C->id(), value=>$C->qty(), oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}" ),
+					openprint::PurchaseOrder_Item->find( company_id=>$openprint::User->company_id(), vendor_id=>$$variable{PurchaseOrder}->supplier_id(), type_id=>$C->type_id(), order=>'lower(name)' ) ] , $C->item_id() ),
+			make_drop_down( openprint::PurchaseOrder_Department->dropdown(order=>'lower(name)'), $$C{'department_id'} ),
+			input( type=>'float', class=>'RollQTY', name=>'qty-'.$C->id(), id=>'qty-'.$C->id(), value=>$C->qty(),
+					oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}" ),
 			$$C{type_id},
 		);
 	} elsif ( $C->Type()->type() eq 'Sheet Stock' ) {
@@ -79,18 +82,25 @@
 				input( type=>'float', class=>'SheetMWeight', name=>'mweight-'.$$C{id}, id=>'mweight-'.$$C{id}, value=>$mweight, oninput=>"calc_price(this);set_item('$$C{id}');filter_items($$C{id},$$C{type_id},this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}else{\$('line-$$C{id}').removeClassName('changed');}"),
 			escape_quotes($name), CGI::escapeHTML( $C->description() ), make_drop_down( [ '', 'Normal','FSC', 'FSC','PEFC/SFI', 'PEFC/SFI' ], $type ),
 			$C->docket(), $C->po_id(),
-		input( type=>'float', class=>'StockCost', name=>'price-'.$C->id(),id=>'price-'.$C->id(), value=>$C->price(),oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}", onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);', step=>'0.01' ),
-		input( type=>'float', class=>'StockCost', name=>'mprice-'.$C->id(),id=>'mprice-'.$C->id(), value=>$C->mprice(),oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}", onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);' ),
-		input( type=>'float', name=>'total-'.$C->id(),id=>'total-'.$C->id(), value=>$C->total(),oninput=>"calc_price(this);", onkeydown=>'this.lastValue=this.value;return check_decimal(this,event);' ),
+		input( type=>'float', class=>'StockCost', name=>'price-'.$C->id(),id=>'price-'.$C->id(), value=>$C->price(),
+				oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}",
+				onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);', step=>'0.01' ),
+		input( type=>'float', class=>'StockCost', name=>'mprice-'.$C->id(),id=>'mprice-'.$C->id(), value=>$C->mprice(),
+				oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}",
+				onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);' ),
+		input( type=>'float', name=>'total-'.$C->id(),id=>'total-'.$C->id(), value=>$C->total(),
+				oninput=>"calc_price(this);",
+				onkeydown=>'this.lastValue=this.value;return check_decimal(this,event);' ),
 			make_drop_down( [ 
 					map { $_->id(), $_->price() ? sprintf('%s %s as of %s', $_->name(),
 						openprint::Currency::format($_->price()),
 						format_date( $_->updated_on() ),
 						) : $_->name()
 					}
-					openprint::PurchaseOrder_Item->find( company_id=>new openprint::User( $session{user_id} )->company_id(), vendor_id=>$$variable{PurchaseOrder}->supplier_id(), type_id=>$C->type_id(), order=>'lower(name)' ) ] , $C->item_id() ),
+					openprint::PurchaseOrder_Item->find( company_id=>$$openprint::User->company_id(), vendor_id=>$$variable{PurchaseOrder}->supplier_id(), type_id=>$C->type_id(), order=>'lower(name)' ) ] , $C->item_id() ),
 			make_drop_down( openprint::PurchaseOrder_Department->dropdown('order'=>'lower(name)'), $$C{'department_id'} ),
-			input( type=>'float', class=>'SheetQTY', name=>'qty-'.$C->id(), id=>'qty-'.$C->id(), value=>$C->qty(), oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}" ),
+			input( type=>'float', class=>'SheetQTY', name=>'qty-'.$C->id(), id=>'qty-'.$C->id(), value=>$C->qty(),
+					oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}" ),
 			$$C{type_id},
 		);
 	} else {
@@ -112,17 +122,22 @@
 			<div class="line_total">%10$s</div>
 			`, $C->id(), $C->qty(), $C->product(), $C->item(), CGI::escapeHTML($C->description()), $rows,
 			$C->docket(), $C->po_id(),
-		input( type=>'float', name=>'price-'.$C->id(),id=>'price-'.$C->id(), value=>$C->price(),oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}", onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);' ),
-		input( type=>'float', name=>'total-'.$C->id(),id=>'total-'.$C->id(), value=>$C->total(),oninput=>"calc_price(this);", onkeydown=>'this.lastValue=this.value;return check_decimal(this,event);' ),
+		input( type=>'float', name=>'price-'.$C->id(),id=>'price-'.$C->id(), value=>$C->price(),
+			oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}",
+			onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);' ),
+		input( type=>'float', name=>'total-'.$C->id(),id=>'total-'.$C->id(), value=>$C->total(),
+			oninput=>"calc_price(this);",
+			onkeydown=>'this.lastValue=this.value;return check_decimal(this,event);' ),
 			make_drop_down( [ 
 					map { $_->id(), $_->price() ? sprintf('%s %s %s as of %s', $_->product(), $_->name(),
 						openprint::Currency::format($_->price()),
 						format_date( $_->updated_on() ),
 						) : $_->name()
 					}
-					openprint::PurchaseOrder_Item->find( company_id=>new openprint::User($session{user_id})->company_id(), vendor_id=>$$variable{PurchaseOrder}->supplier_id(), type_id=>$C->type_id(), order=>'lower(name)' ) ] , $C->item_id() ),
+					openprint::PurchaseOrder_Item->find( company_id=>$openprint::User->company_id(), vendor_id=>$$variable{PurchaseOrder}->supplier_id(), type_id=>$C->type_id(), order=>'lower(name)' ) ] , $C->item_id() ),
 			make_drop_down( openprint::PurchaseOrder_Department->dropdown( order=>'lower(name)'), $$C{department_id} ),
-			input( type=>'float', name=>'qty-'.$C->id(), id=>'qty-'.$C->id(), value=>$C->qty(), oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}" ),
+			input( type=>'float', name=>'qty-'.$C->id(), id=>'qty-'.$C->id(), value=>$C->qty(),
+					oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}" ),
 			$$C{type_id},
 		);
 	} # end if
