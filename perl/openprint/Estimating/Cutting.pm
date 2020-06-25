@@ -1529,7 +1529,7 @@ sub runtime {
 				my $makeready = $E->specification( 'Make Ready Time' );
 				my $runspeed = $E->specification( 'Cutting Time' );
 				$openprint::log->debug("Cutting runtime: $makeready $runspeed");
-				$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"};
+				$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} if ! $impressions;
 				if ( ! $impressions ) {
 					$log->error("No impressions for form $form");
 					next;
@@ -1560,7 +1560,7 @@ $openprint::log->debug("Doing Folding Cuts");
 			# Pre-folding cutting
 			my $E = $Equipment ? $Equipment : openprint::Equipment->find_one(id=>$$specs{"FoldingEquipment-$form-$qty_index"});
 			if ( $E ) {
-				$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"};
+				$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} if ! $impressions;
 				if ( !$impressions ) {
 					$log->error("No impressions for form $form");
 					next;
@@ -1590,7 +1590,7 @@ $openprint::log->debug("Runtime for sig $this_runtime=".misc::seconds2hms($this_
 		} # end if FoldingCuts
 
   } # end foreach Signature
-  $openprint::log->debug("Cutting runtime: RS:$runtime=".misc::seconds2hms($runtime)." Impressions:$impressions");
+  $openprint::log->debug('Cutting runtime: '.$runtime.'='.misc::seconds2hms($runtime));
   return $runtime;
 } # end sub runtime
 
