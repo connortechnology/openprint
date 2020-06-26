@@ -97,7 +97,7 @@
 						format_date( $_->updated_on() ),
 						) : $_->name()
 					}
-					openprint::PurchaseOrder_Item->find( company_id=>$$openprint::User->company_id(), vendor_id=>$$variable{PurchaseOrder}->supplier_id(), type_id=>$C->type_id(), order=>'lower(name)' ) ] , $C->item_id() ),
+					openprint::PurchaseOrder_Item->find( company_id=>$openprint::User->company_id(), vendor_id=>$$variable{PurchaseOrder}->supplier_id(), type_id=>$C->type_id(), order=>'lower(name)' ) ] , $C->item_id() ),
 			make_drop_down( openprint::PurchaseOrder_Department->dropdown('order'=>'lower(name)'), $$C{'department_id'} ),
 			input( type=>'float', class=>'SheetQTY', name=>'qty-'.$C->id(), id=>'qty-'.$C->id(), value=>$C->qty(),
 					oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}" ),
