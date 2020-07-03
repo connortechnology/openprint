@@ -22,7 +22,6 @@ $serial = 'host_config_id_seq';
 );
 %defaults = (
   created_on  =>  q`'NOW()'`,
-  updated_on  =>  q`'NOW()'`,
 );
 
 
@@ -51,7 +50,7 @@ $openprint::log->debug("ENcoded json: $$self{data_json}");
 $openprint::log->debug("Decodeing $$self{data_json}");
 			$$self{data} = JSON::decode_json($$self{data_json});
 		} else {
-			$openprint::log->warn("No data_json in data()");
+			$openprint::log->warn('No data_json in data()');
 		}
 	}
 	return $$self{data};
