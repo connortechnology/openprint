@@ -495,7 +495,7 @@ sub signature_calc {
     return %results;
   } # end if
 
-  my $stitching_imposition;
+  my $stitching_imposition = 0;
   my $stitching_specs;
 
   if ( $$services{SaddleStitching} ) {
@@ -1277,8 +1277,8 @@ sub calc {
     foreach my $signature_service_index ( @signatures ) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
       my $form = $$sig_specs{SignatureIndex};
-      $$specs{'hdnBreakdown'.$qty_index} .= "Signature: $form $$sig_specs{txtSignatureType}<br/>";
-      if ( ! ( $$sig_specs{'txtImposition'.$qty_index} and signature_needs( $Project, $specs, $sig_specs, $qty_index ) ) ) {
+      $$specs{'hdnBreakdown'.$qty_index} .= join(' ', 'Signature: ', $form, ($$sig_specs{txtSignatureType}?$$sig_specs{txtSignatureType}:''), '<br/>');
+      if ( ! ( $$sig_specs{'txtImposition'.$qty_index} and signature_needs($Project, $specs, $sig_specs, $qty_index) ) ) {
         $$specs{'hdnBreakdown'.$qty_index} .= 'no imposition or not needed.';
         $$specs{"txtRegularCutPrice-$form-$qty_index"} = '';
         $$specs{"ddmEquipment-$form-$qty_index"}  = '';
@@ -1300,7 +1300,7 @@ sub calc {
           $stock_id += 1;
         } # end if
       } # end if
-      $openprint::log->debug("Paper: " . $Paper->to_string() ) if DEBUG;
+      $openprint::log->debug('Paper: ' . $Paper->to_string() ) if DEBUG;
 
 			if ( signature_needs_bindery_cutting($Project, $specs, $sig_specs, $qty_index) ) {
 
@@ -1321,7 +1321,7 @@ sub calc {
 				$price += $results{Price};
 				$price += $results{FoldingPrice} if $results{FoldingPrice};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<span style="font-weight: bold;">Post press total $%.2f</span><br/>', 
-						$results{Price} + $results{FoldingPrice}
+						$results{Price} + ($results{FoldingPrice}?$results{FoldingPrice}:0)
 						);
 
 				$mprice += $results{MPrice};
@@ -1333,15 +1333,15 @@ sub calc {
     } # end foreach form
 
     if ( $$services{Paper} and %Cut_Stocks ) {
-      my %results = signature_calc_stock_cutting( $Project, $specs, $qty_index, [ values %Cut_Stocks ] );
+      my %results = signature_calc_stock_cutting($Project, $specs, $qty_index, [ values %Cut_Stocks ]);
 #$$specs{"ddmStockCutEquipment-$form-$qty_index"} = $results{Equipment} ? $results{Equipment}->id() : '';
-      $$specs{"txtStockCutPrice-$qty_index"} = sprintf('%.2f', $results{Price} );
+      $$specs{"txtStockCutPrice-$qty_index"} = sprintf('%.2f', $results{Price});
       foreach my $Stock_Amount ( @{$results{Stocks}} ) {
         if ( ! $$Stock_Amount{Equipment} ) {
-          $openprint::log->error("No Equipment for stock cutting for " . $$Stock_Amount{Stock}->to_string() );
+          $openprint::log->error('No Equipment for stock cutting for '.$$Stock_Amount{Stock}->to_string());
           $$specs{"ddmStockCutEquipment-$$Stock_Amount{index}-$qty_index"} = '';
         } else {
-          $openprint::log->debug("Setting Equipment for stock cutting for " . $$Stock_Amount{Stock}->to_string() . ' to ' . $$Stock_Amount{Equipment}->strid() );
+          $openprint::log->debug('Setting Equipment for stock cutting for '.$$Stock_Amount{Stock}->to_string().' to '.$$Stock_Amount{Equipment}->strid()) if DEBUG;
           $$specs{"ddmStockCutEquipment-$$Stock_Amount{index}-$qty_index"} = $$Stock_Amount{Equipment}->id();
         }
       }
@@ -1351,7 +1351,7 @@ sub calc {
       $$specs{alert} .= $results{alert} if $results{alert};
       $$specs{'hdnBreakdown'.$qty_index} .= $results{Breakdown};
     } # end if
-    if ( my $minCharge = openprint::service::get_price( 'CuttingChargeMinimum' ) ) {
+    if ( my $minCharge = openprint::service::get_price('CuttingChargeMinimum') ) {
       $price = $minCharge if $price and ($price < $minCharge);
     } # end if
 
@@ -1529,7 +1529,7 @@ sub runtime {
 				my $makeready = $E->specification( 'Make Ready Time' );
 				my $runspeed = $E->specification( 'Cutting Time' );
 				$openprint::log->debug("Cutting runtime: $makeready $runspeed");
-				$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"};
+				$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} if ! $impressions;
 				if ( ! $impressions ) {
 					$log->error("No impressions for form $form");
 					next;
@@ -1560,7 +1560,7 @@ $openprint::log->debug("Doing Folding Cuts");
 			# Pre-folding cutting
 			my $E = $Equipment ? $Equipment : openprint::Equipment->find_one(id=>$$specs{"FoldingEquipment-$form-$qty_index"});
 			if ( $E ) {
-				$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"};
+				$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} if ! $impressions;
 				if ( !$impressions ) {
 					$log->error("No impressions for form $form");
 					next;
@@ -1590,7 +1590,7 @@ $openprint::log->debug("Runtime for sig $this_runtime=".misc::seconds2hms($this_
 		} # end if FoldingCuts
 
   } # end foreach Signature
-  $openprint::log->debug("Cutting runtime: RS:$runtime=".misc::seconds2hms($runtime)." Impressions:$impressions");
+  $openprint::log->debug('Cutting runtime: '.$runtime.'='.misc::seconds2hms($runtime));
   return $runtime;
 } # end sub runtime
 

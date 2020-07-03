@@ -574,7 +574,13 @@ sub check {
 sub thumbnail_html {
 	my $self = shift;
 	my $size = @_ ? shift : 'small';
-	return '<img src="'.$self->thumbnail_url($size).'" alt=""/>';
+	if ( $self->can_get_image() ) {
+		my @dimensions = openprint::Asset::get_dimensions('Landscape', $size);
+		return '<img src="'.$self->get_image(@dimensions).'" alt=""/>';
+	}
+	my @Assets = $self->Assets();
+	$openprint::log->debug("Assets: $size " . @Assets);
+	return ( @Assets ? $Assets[0]->Asset()->sized_html($size) : '' );
 }
 
 sub thumbnail_url {
@@ -585,7 +591,7 @@ sub thumbnail_url {
 		return $self->get_image(@dimensions);
 	}
 	my @Assets = $self->Assets();
-	return ( @Assets ? $Assets[0]->Asset()->sized_html($size) : '' );
+	return ( @Assets ? $Assets[0]->Asset()->sized_url($size) : '' );
 }
 
 1;

@@ -11,6 +11,7 @@ $html .= 'There are ' . @Recipients . ' recipients.<br/><br/>';
 $html .= '
 <table id="recipients" class="List sortable">
 	<tr>
+		<th class="User">CSR</th>
 		<th class="Company">Company</th>
 		<th class="User">Name</th>
 		<th class="Email">Email</th>
@@ -25,6 +26,7 @@ foreach my $User ( $variable{Campaign}->Recipients() ) {
 $html .= 
 	sprintf('
 <tr>
+	<td class="User">%s</td>
 	<td class="Company">%s</td>
 	<td class="User">%s</td>
 	<td class="Email">%s</td>
@@ -35,6 +37,7 @@ $html .=
 	<td class="DateTime">%s</td>
 </tr>
 ', 
+			$User->Company()->CSR()->link_to(),
 			$User->Company()->link_to(),
 			$User->link_to($User->name()),
 			$User->link_to($User->email()),
