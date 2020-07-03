@@ -2,7 +2,6 @@ use strict;
 use warnings;
 
 require openprint::Object;
-
 require JSON;
 
 package openprint::Host_Config;
@@ -16,7 +15,7 @@ $serial = 'host_config_id_seq';
 	id					=>	'id',
   host_id     =>  'host_id',
 	name				=>	'name',
-	data_json	=>	'data_json',
+	data_json		=>	'data_json',
 	data				=>	undef,
 	created_on	=>	'created_on',
 );
