@@ -305,7 +305,7 @@ while(1) {
       if ( $Host->can_get_config() ) {
         my %host_config = $Host->get_config();
         if ( %host_config and misc::compare_hash(\%host_config, $configurations{$$Host{id}}) ) {
-          (new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_config}, name=>'config');
+          (new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_config, name=>'config'});
           $configurations{$$Host{id}} = \%host_config;
         }
         my %host_status = $Host->get_status();
