@@ -304,12 +304,12 @@ while(1) {
 
       if ( $Host->can_get_config() ) {
         my %host_config = $Host->get_config();
-        if ( misc::compare_hash(\%host_config, $configurations{$$Host{id}}) ) {
-          (new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_config}, name=>'config');
+        if ( %host_config and misc::compare_hash(\%host_config, $configurations{$$Host{id}}) ) {
+          (new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_config, name=>'config'});
           $configurations{$$Host{id}} = \%host_config;
         }
         my %host_status = $Host->get_status();
-        if ( misc::compare_hash(\%host_status, $status{$$Host{id}}) ) {
+        if ( %host_status and misc::compare_hash(\%host_status, $status{$$Host{id}}) ) {
           (new openprint::Host_Config())->save({host_id=>$$Host{id}, data=>\%host_status, name=>'status'});
           $status{$$Host{id}} = \%host_status;
         }

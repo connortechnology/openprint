@@ -22,7 +22,7 @@ sub Host {
 	return $_[0]{Host};
 }
 
-sub get_config {
+sub get_status {
 	my $self = shift;
 	my $ua = LWP::UserAgent->new;
 	my $Host = $self->Host();
