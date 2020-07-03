@@ -1523,37 +1523,44 @@ sub runtime {
   foreach my $sig_id ( @{$signatures} ) {
     my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
     my $form = $$sig_specs{SignatureIndex};
+
+		$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} if ! $impressions;
+		if ( ! $impressions ) {
+			$log->error("No impressions for form $form");
+			next;
+		}
+
 		if ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
 			my $E = $Equipment ? $Equipment : openprint::Equipment->find_one(id=>$$specs{"ddmEquipment-$form-$qty_index"});
-			if ( $E and ( $E->specification('Type') ne 'Stitcher' ) and ( $E->specification('Type') ne 'Folder' ) ) {
-				my $makeready = $E->specification( 'Make Ready Time' );
-				my $runspeed = $E->specification( 'Cutting Time' );
-				$openprint::log->debug("Cutting runtime: $makeready $runspeed");
-				$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} if ! $impressions;
-				if ( ! $impressions ) {
-					$log->error("No impressions for form $form");
-					next;
-				}
-				my $liftDepth = $E->specification('Maximum Lift Depth', $$sig_specs{txtSpecificStockCalliper});
-				$openprint::log->debug(join('',
-							"Calculating runspeed for sig $sig_id form:$form cuts(",
-							$$specs{"txtCalculatedCuts-$form-$qty_index"},
-							" using lift depth $liftDepth on $$E{strid}",
-							));
-				my $items_per_lift = POSIX::ceil($liftDepth/$$sig_specs{txtSpecificStockCalliper});
-				if ( ! $items_per_lift ) {
-					#$log->error("No items_per_lift for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form of $$Project{id} on $$E{strid}");
-					#next;
-					$items_per_lift = $impressions;
-				}
-				my $piles = $impressions / $items_per_lift;
 
-				$runtime += ( $$specs{"txtCalculatedCuts-$form-$qty_index"} + $$specs{"txtAdditionalCuts$form"} ) * ( $makeready + $runspeed) * $piles;
-				$openprint::log->debug("Resulting runtime: $runtime");
+			if ( $E ) {
+				my $type = $E->specification('Type');
+
+				if ( (!$type) or ( $type ne 'Stitcher' ) and ( $type ne 'Folder' ) ) {
+					my $makeready = $E->specification('Make Ready Time');
+					my $runspeed = $E->specification('Cutting Time');
+					$openprint::log->debug("Cutting runtime: makeready:$makeready runspeed:$runspeed") if DEBUG;
+					my $liftDepth = $E->specification('Maximum Lift Depth', $$sig_specs{txtSpecificStockCalliper});
+					$openprint::log->debug(join('',
+								"Calculating runspeed for sig $sig_id form:$form cuts(",
+								$$specs{"txtCalculatedCuts-$form-$qty_index"},
+								" using lift depth $liftDepth on $$E{strid}",
+								)) if DEBUG;
+					my $items_per_lift = POSIX::ceil($liftDepth/$$sig_specs{txtSpecificStockCalliper});
+					if ( ! $items_per_lift ) {
+#$log->error("No items_per_lift for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form of $$Project{id} on $$E{strid}");
+#next;
+						$items_per_lift = $impressions;
+					}
+					my $piles = $impressions / $items_per_lift;
+
+					$runtime += ( $$specs{"txtCalculatedCuts-$form-$qty_index"} + $$specs{"txtAdditionalCuts$form"} ) * ( $makeready + $runspeed) * $piles;
+					$openprint::log->debug("Resulting runtime for : $runtime") if DEBUG;
+				} # end if not a stitcher or folder
 			} else {
-				$log->debug('None or Equipment is a stitcher, so the cutting happens when stitching');
-			}
-		} # end if has regular cuts
+				$openprint::log->warning('No equipment for regular cuts using id='.$$specs{"ddmEquipment-$form-$qty_index"});
+			} # end if has equipment
+		} # end if has regular cuts/equipment
 	
 		if ( $$specs{"FoldingCuts-$form-$qty_index"} and $$specs{"FoldingEquipment-$form-$qty_index"} ) {
 $openprint::log->debug("Doing Folding Cuts");
