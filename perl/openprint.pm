@@ -39,8 +39,8 @@ $log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
 			# If we have no cookie, then... shouldn't try to load it...
 			if ( ! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
 				$log->error("Error fetching Session: $cookie: $@");
-				if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8, };` ) {
-					$log->error("Error creating Session: ");
+				if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle => $dbh, Commit => 0, IDLength	=> 8 };` ) {
+					$log->error('Error creating Session:');
 				} # end if
 				if ( $r->param('_session_id') ) {
 					if ( $session{ip} ne $ENV{REMOTE_ADDR} ) {
@@ -50,13 +50,11 @@ $log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
 					} # end if
 				} # end if
 				# Store this, will be useful
-				$session{ip} = $ENV{REMOTE_ADDR};
-				$session{lastupdated} = time;
-				$session{HTTP_USER_AGENT} = $ENV{HTTP_USER_AGENT};
 			} # end if
 
+
 			if ( (!$cookie) or ( $cookie ne $session{_session_id} ) ) {
-$log->debug("Generating new cookie $session{_session_id}") if Debug;
+$log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 				my $Cookie = Apache2::Cookie->new($r,
 						-name	=> '_session_id',
 						-value => $session{_session_id},
@@ -74,7 +72,9 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 		} # end if
 	} # end if $r
 
-	$session{ip} = $ENV{REMOTE_ADDR} if $ENV{REMOTE_ADDR} and ! $session{ip};
+  $session{ip} = $ENV{REMOTE_ADDR};
+  $session{lastupdated} = time;
+  $session{HTTP_USER_AGENT} = $ENV{HTTP_USER_AGENT};
 
 # Now set some defaults right away, if we can, FIXME namespace colision
 	if ( $param{Country} ) {
