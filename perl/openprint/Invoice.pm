@@ -329,10 +329,12 @@ sub send {
 } # end sub send
 
 sub Products {
-  if ( ! $_[0]{Products} ) {
-    $_[0]{Products} = [ openprint::Invoiced_Product->find(invoice_id=>$_[0]{id}, order=>'id') ];
+  my $self = shift;
+  $$self{Products} = shift if @_;
+  if ( ! $$self{Products} ) {
+    $$self{Products} = [ openprint::Invoiced_Product->find(invoice_id=>$$self{id}, order=>'id') ];
   }
-  return @{$_[0]{Products}};
+  return @{$$self{Products}};
 } # end sub Products
 
 sub Projects {
