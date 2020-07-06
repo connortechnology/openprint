@@ -36,7 +36,7 @@ if ($opts->{help}) {
 	exit 0;
 } # end if
 
-$log = new logger('level'=>'debug');
+$log = new logger(level=>'debug');
 my %defaults = (
 	port	=>	10514,
 	config	=>	'/etc/openprint/syslog-apache.conf',
@@ -71,6 +71,31 @@ configuration::init();
 configuration::from_file($$opts{config});
 configuration::merge($opts);
 
+sub HupHandler {
+  # This idea at this time is to just exit, freeing up the memory.
+  TermHandler();
+  return;
+
+  $log->debug('Received HUP, reloading');
+}
+sub TermHandler {
+  $log->debug('Received TERM, exiting');
+  Term();
+}
+sub Term {
+  $dbh->disconnect() if $dbh and $dbh->ping();
+
+  closelog;
+
+  if ( $config{pid_file} ) {
+    unlink $config{pid_file};
+  } # end if
+  exit(0);
+}
+$SIG{HUP} = \&HupHandler;
+$SIG{TERM} = \&TermHandler;
+$SIG{INT} = \&TermHandler;
+
 my @re = (
 	q`/^\[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\] \[(?<IP>[^\]]+)\] script '[^']+' not found or unable to stat/`,
 	q`/^\[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\] \[client (?<IP>[\d\.]+):\d+\] script '[^']+' not found or unable to stat/`,
@@ -84,13 +109,13 @@ my $last_update = 0;
 setlogsock('unix');
 openlog('apache', 'cons', 'pid', 'local2');
 
-if ( $config{'pid_file'} ) {
+if ( $config{pid_file} ) {
 	my $pidh;
-	if (open($pidh, '> '.$config{'pid_file'} ) ) {
+	if (open($pidh, '> '.$config{pid_file} ) ) {
 		print $pidh $$."\n";
 		close($pidh);
 	} else {
-		die "Unable to open pid file";
+		die 'Unable to open pid file';
 	} # end if
 } # end if
 
@@ -98,7 +123,7 @@ while (my $buf = <STDIN>) {
 	if ( ! $dbh->ping() ) {
 		$dbh = sql::open_sql( $log, %db_connect_info );
 		if ( ! $dbh ) {
-			$log->error("Cannot connect to db! Sleeping");
+			$log->error('Cannot connect to db! Sleeping');
 			sleep(10);
 			next;
 		} # end if
@@ -165,10 +190,10 @@ while (my $buf = <STDIN>) {
     my $source;
     my $server_response;
     if ( !( $buf =~ /$re/ ) ) {
-      $log->error("No match: " . $buf);
+      $log->error('No match: ' . $buf);
       next;
     }
-    $log->error("match: " . $buf );
+    $log->error('match: ' . $buf );
     my $remote = $+{IP};
     if ( $remote =~ /client ([\.\d]+):\d+/ ) {
       $source = $1;
@@ -177,7 +202,7 @@ while (my $buf = <STDIN>) {
     my ( $ip, $hostname );
     if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
       # Is an IP
-      $log->debug( "$source is an ip" ) if $config{debug};
+      $log->debug( $source.' is an ip' ) if $config{debug};
       $ip = $source;
     } else {
       # is a hostname
@@ -244,13 +269,7 @@ Command-line options:
 EOH
 } # end sub usage
 
-$dbh->disconnect() if $dbh and $dbh->ping();
-
-closelog;
-
-if ( $config{pid_file} ) {
-	unlink $config{pid_file};
-} # end if
+Term();
 
 1;
 __END__
