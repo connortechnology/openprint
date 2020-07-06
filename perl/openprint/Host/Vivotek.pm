@@ -9,8 +9,8 @@ require openprint::Host;
 
 package openprint::Host::Vivotek;
 our @ISA = qw(
- openprint::Host
- );
+		openprint::Host
+		);
 
 sub new {
 	my ( $class, $Host ) = @_;
@@ -18,6 +18,7 @@ sub new {
 	bless $self, $class;
 	return $self;
 }
+
 sub Host {
 	return $_[0]{Host};
 }
@@ -47,7 +48,7 @@ sub get_status {
 		}
 	} # end foreach
 	return;
-} # end sub get_config
+} # end sub get_status
 
 sub check {
 	my $self = shift;
