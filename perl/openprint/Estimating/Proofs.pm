@@ -29,7 +29,7 @@ require openprint::Estimating::Printing;
 use Data::Dumper;
 
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -270,10 +270,10 @@ sub signature_calc {
 	   ) ) {
 		$$indexes{$form}[3] = 3;
 	} # end if
+	$log->debug('Proof indexes '.join(',', map { $_ ? $_ : () } @{$$indexes{$form}})) if DEBUG;
 
 	%ProofServices = map { $_->name(), $_ } openprint::Service->find(category=>'Proofs') if !%ProofServices;
 
-	$log->debug('Proof indexes '.join(',', map { $_ ? $_ : () } @{$$indexes{$form}})) if DEBUG;
 	foreach my $proof_index ( @{$$indexes{$form}} ) {
 		next if ! ($proof_index and $$indexes{$form}[$proof_index]);
 		if (
