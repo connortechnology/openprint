@@ -281,8 +281,6 @@ sub signature_calc_stock_cutting {
     return %results;
   } # end if
 
-  my $services = $Project->services();
-
   my $total = 0;
   my $total_mprice = 0;
 
@@ -488,7 +486,7 @@ sub signature_calc {
 # Grab the Calliper
 
   my $calliper = $$Paper{calliper};
-  if ( ! $calliper ) {
+  if ( !$calliper ) {
     $openprint::log->debug('**** NO Calliper ****') if DEBUG;
     $results{alert} .= "Calliper is unknown for signature $form.<br/>";
     $results{Status} = 'uncalculated';
@@ -546,12 +544,12 @@ sub signature_calc {
   if ( $stitching_specs and $stitching_imposition ) {
 	  if ( $$Imposition{image_orientation} == openprint::Imposition::Horizontal ) {
 		  if ( $stitching_imposition > $$Imposition{columns} ) {
-			  $openprint::log->debug("Adjusting stitching imposition to cols $$Imposition{columns} from $stitching_imposition");
+			  $openprint::log->debug("Adjusting stitching imposition to cols $$Imposition{columns} from $stitching_imposition") if DEBUG;
 			  $stitching_imposition = $$Imposition{columns};
 		  }
 	  } else {
 		  if ( $stitching_imposition > $$Imposition{rows} ) {
-			  $openprint::log->debug("Adjusting stitching imposition to rows $$Imposition{columns} from $stitching_imposition");
+			  $openprint::log->debug("Adjusting stitching imposition to rows $$Imposition{columns} from $stitching_imposition") if DEBUG;
 			  $stitching_imposition = $$Imposition{rows}
 		  }
     } # end if
@@ -720,7 +718,7 @@ sub signature_calc {
   my $bestPrice = undef;
   my $bestM = 0;
   my $bestEquipment;
-  foreach my $Equipment ( @my_equipment ) {
+EQUIPMENT: foreach my $Equipment ( @my_equipment ) {
     next if ! $$Equipment{id};
     $results{Breakdown} .= 'Equipment ' . $$Equipment{name} .':';
     if ( $$services{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) ) {
@@ -851,10 +849,11 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
               $folding_imposition->display('getting stitching cuts from') if DEBUG;
               if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
                 if ( $$folding_imposition{columns} > 1 ) {
-                  $openprint::log->error("Can't do that on the stitcher");
+									$folding_imposition->display('Can\'t do that on the stitcher');
+									next EQUIPMENT;
                 }
                 $vertical_cuts += 1; # Face trim
-                  $horizontal_cuts += 1 + $$folding_imposition{rows};
+								$horizontal_cuts += 1 + $$folding_imposition{rows};
                 if ( $$sig_specs{'ddmBleedSize'.$qty_index} and  
                     ( $$I{image_orientation} == openprint::Imposition::Vertical ) and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) 
                    ) {
@@ -862,10 +861,11 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
                 } # end if
               } elsif ( $$I{image_orientation} == openprint::Imposition::Horizontal ) {
                 if ( $$folding_imposition{rows} > 1 ) {
-                  $openprint::log->error("Can't do that on the stitcher");
+									$folding_imposition->display('Can\'t do that on the stitcher');
+									next EQUIPMENT;
                 }
                 $horizontal_cuts += 1; # Face trim
-                  $vertical_cuts += 1 + $$folding_imposition{columns};
+                $vertical_cuts += 1 + $$folding_imposition{columns};
 
                 if ( $$sig_specs{'ddmBleedSize'.$qty_index} and  
                     ( $$I{image_orientation} == openprint::Imposition::Horizontal ) and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) 
