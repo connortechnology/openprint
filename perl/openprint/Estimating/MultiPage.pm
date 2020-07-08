@@ -234,10 +234,10 @@ sub calc {
 			$override_pages{1} = $remaining_pages - $new_remaining;
 			$remaining_pages = $new_remaining;
 		} else {
+# Not sure what else we can do. I suppose we could try to figure out if it a 6pg or 8pg.. but really how often is that going to happen?
 			$override_pages{1} = 4;
-
 			$remaining_pages -= $override_pages{1};
-			$openprint::log->warn("FIXM E using coverages = 4 instead of " . ( $remaining_pages - $new_remaining ) );
+			#$openprint::log->warn("FIXM E using coverages = 4 instead of " . ( $remaining_pages - $new_remaining ) );
 		} # end if
 	} # end if
 	$remaining_pages = 0 if $remaining_pages < 0;
