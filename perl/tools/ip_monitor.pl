@@ -154,7 +154,11 @@ while(1) {
 			$log->error("Failed to find network $config{network}");
 			die;
 		}
-		@host_ids = map { $_->host_id() } openprint::Host_Interface->find( 'ip <<=' => $$Network{ip} );
+		$log->debug($Network->to_string());
+		my @Network_Interfaces = $Network->Interfaces();
+		foreach my $HI ( $Network->Interfaces() ) {
+			push @host_ids, map { $_->host_id() } openprint::Host_Interface->find('ip <<=' => $$HI{ip});
+		}
 		if ( !@host_ids ) {
 			$log->error("Failed to find any hosts in network $config{network}");
 			die;
