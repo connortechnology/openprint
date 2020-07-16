@@ -231,7 +231,7 @@ sub host {
 		$variable{error} .= $error;
 		$variable{information} .= $info;
       } # end foreach
-      $variable{ExternalRedirect} = $Host->url();
+      $variable{ExternalRedirect} = $Host->url_to();
     } elsif ( $param{action} eq 'GEOLookup' ) {
       foreach my $I ( $Host->Interfaces() ) {
         if ( ! $I->ip() ) {
