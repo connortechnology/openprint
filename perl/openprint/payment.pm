@@ -243,9 +243,8 @@ sub make {
 
 sub _edit_payment {
 	if ( $param{action} eq 'update' ) {
-		my $IP = new openprint::Invoice_Payment( $param{id} );
+		my $IP = $variable{Invoice_Payment} = new openprint::Invoice_Payment($param{id});
 		$IP->save({$param{field}=>$param{value}}) if $IP->id();
-		return $IP->amount();
 	} # end if
 } # end sub_edit_payment
 
