@@ -27,7 +27,7 @@ Thank you for using <? echo ( $$variable{Invoicer}->name() ) ?>. The following i
 		$$variable{total} += $Invoice->total();
 		$$variable{interest_total} += $Invoice->interest();
 		$$variable{owing_total} += $Invoice->owing();
-		$$variable{owing_total} += $Invoice->paid();
+		$$variable{paid_total} += $Invoice->paid();
 
 		if ( ( time - Date::Parse::str2time($Invoice->due_on()) ) > ( 60*60*24*30*3 ) ) {
 			$$variable{'3monthwarning'} = 1;
