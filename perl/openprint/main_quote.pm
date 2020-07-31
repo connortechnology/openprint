@@ -387,51 +387,44 @@ sub information {
     $quote_id = $NewQuote->id();
     $variable{ExternalRedirect} = '/main/quote/information.html?quote_id='.$quote_id;
     return;
-  } elsif ( $param{btnFunction} eq 'Continue' ) {
+  } elsif ( $param{btnFunction} eq 'Continue' or $param{remove} ) {
     $quote_id = $param{quote_id};
-  } # end if
 # this should only happen if there was an error creating the quote
-  $quote_id = $param{quote_id} if ( ! $quote_id ) and $param{quote_id};
-  $quote_id = $session{quote_id} if ! $quote_id;
 
-  my $Quote = $variable{Quote} = new openprint::Quote( $quote_id );  
-  $session{quote_id} = $quote_id;
-  my $Currency = openprint::Currency::get_current();
-  if ( $Quote->currency_id() != $Currency->id() ) {
-    $variable{error} .= $Quote->save({currency_id=>$Currency->id()});
-  }
+		my $Quote = $variable{Quote} = new openprint::Quote( $quote_id );  
+		$session{quote_id} = $quote_id;
+		my $Currency = openprint::Currency::get_current();
+		if ( $Quote->currency_id() != $Currency->id() ) {
+			$variable{error} .= $Quote->save({currency_id=>$Currency->id()});
+		}
 
-  if ( $param{remove} ) {
-    sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE quote_id=? AND project_id=?', @param{'quote_id','remove'} );
-    $Quote->add_log( 'Remove project ' . $param{remove} );
-  } # end if
+		if ( $param{remove} ) {
+			sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE quote_id=? AND project_id=?', @param{'quote_id','remove'} );
+			$Quote->add_log( 'Remove project ' . $param{remove} );
+		} # end if
 
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
-  foreach my $key ( keys %param ) {
-    foreach my $QP ( $Quote->Quoted_Projects() ) {
-      foreach my $qty_index ( $QP->quantity_indexes() ) {
-        $QP->markup( $qty_index, $param{'markup-'.$qty_index.'_'.$QP->project_id()} );
-        $QP->quantity($qty_index, undef );
-        $QP->price( $qty_index, undef );  
-      } # end foreach
-      $QP->description( $QP->Project()->reference() );
-      $QP->save();
-    } # end foreach
-  } # end foreach
-
-  # This isn't neccessarily the logged in company
-  my $cust_id;
-
-  if ( $session{user_id} ) {
-    $cust_id = $openprint::User->company_id();
+		foreach my $key ( keys %param ) {
+			foreach my $QP ( $Quote->Quoted_Projects() ) {
+				foreach my $qty_index ( $QP->quantity_indexes() ) {
+					$QP->markup($qty_index, $param{'markup-'.$qty_index.'_'.$QP->project_id()});
+					$QP->quantity($qty_index, undef);
+# setting markup will recalc price, but should really take the price as seen on screen due to rounding errors
+					$QP->price($qty_index, $param{'price-'.$qty_index.'_'.$QP->project_id()});  
+				} # end foreach
+				$QP->description($QP->Project()->reference());
+				$QP->save();
+			} # end foreach
+		} # end foreach
   } # end if
+
+	$quote_id = ( $param{quote_id} ? $param{quote_id} : $session{quote_id} ) if !$quote_id;
+	my $Quote = $variable{Quote} = new openprint::Quote( $quote_id );  
 
   my $populated = 0;
   if ( ! openprint::quote::get_user_for_info( $log, $dbh, \%variable, $quote_id ) ) {
-$openprint::log->debug("No for info");
     foreach my $k ( 'CompanyName','Address1','Address2','City','StateProvince','PostalCode','Country','Phone','Extension','Fax','FirstName','LastName','Title','Email','Salutation' ) {
       if ( $session{'/main/quote/information.html?For'.$k} ) {
-$log->debug("Session: For$k". $session{'/main/quote/information.html?For'.$k} );
         $variable{'For'.$k} = $session{'/main/quote/information.html?For'.$k};
         $populated = 1;
       } # end if
@@ -439,13 +432,13 @@ $log->debug("Session: For$k". $session{'/main/quote/information.html?For'.$k} );
 
     if ( $session{user_id} and ! $populated ) {
       # If we are representing some other company
-      if ( $cust_id != $session{company_id} ) {
+      if ( $$openprint::User{company_id} != $session{company_id} ) {
         my $Company = $openprint::Company;
 # pull information to pre-fill input fields
 				@variable{'ForCompanyName', 'ForAddress1', 'ForAddress2', 'ForCity', 'ForStateProvince', 'ForPostalCode', 'ForCountry', 'ForPhone','ForExtension', 'ForFax' } = (
         $Company->business_name(), $Company->address1(), $Company->address2(), $Company->city(), $Company->state(), $Company->postalcode(), $Company->country(), $Company->phone(), $Company->extension(), $Company->fax() );
 
-        my @Users = openprint::User->find('company_id'=>$openprint::session{company_id},'limit'=>2);
+        my @Users = openprint::User->find(company_id=>$openprint::session{company_id}, limit=>2);
         if ( @Users == 1 ) {
           @variable{'ForFirstName','ForLastName','ForTitle','ForEmail','ForSalutation'} = $Users[0]->get('firstname','lastname','title','email','salutation');
         } # end if
@@ -456,15 +449,14 @@ $log->debug("Session: For$k". $session{'/main/quote/information.html?For'.$k} );
 	if ( ! openprint::quote::get_user_by_info( $log, $dbh, \%variable, $quote_id ) ) {
 		if ( $session{user_id} ) {
 # pull information to pre-fill input fields
-			my $Company = new openprint::Company( $cust_id );
+			my $Company = $openprint::User->Company();
 			@variable{'ByCompanyName', 'ByAddress1', 'ByAddress2', 'ByCity', 'ByStateProvince', 'ByPostalCode', 'ByCountry', 'ByPhone', 'ByExtension', 'ByFax'} = $Company->get('business_name','address1','address2','city','state','postalcode','country','phone','extension','fax' );
 		} # end if
 	} # end if
 
 	if ( ! $variable{ByEmail} ) {
 		if ( $session{user_id} ) {
-			my $User = $openprint::User;
-			@variable{'ByEmail','ByTitle','ByFirstName','ByLastName','BySalutation'} = $User->get('email','title','firstname','lastname','salutation');
+			@variable{'ByEmail','ByTitle','ByFirstName','ByLastName','BySalutation'} = $openprint::User->get('email','title','firstname','lastname','salutation');
 		} # end if
 	} # end if
 
@@ -543,7 +535,7 @@ sub submit {
       foreach my $qty_index ( $QP->quantity_indexes() ) {
         $QP->markup($qty_index, $param{'markup-'.$qty_index.'_'.$QP->project_id()});
         $QP->quantity($qty_index, undef);
-        $QP->price($qty_index, undef);
+        $QP->price($qty_index, $param{'price-'.$qty_index.'_'.$QP->project_id()});
       } # end foreach
       $QP->description($QP->Project()->reference());
       $QP->save();
@@ -583,49 +575,58 @@ sub confirmation {
     return;
   } # end if
 
-  if ( $Quote->status() ne 'Complete' ) {
+	if ( $param{btnFunction} eq 'Close' ) {
+		$Quote->status('Complete');
+		$Quote->save();
+		$Quote->add_log('Closed');
+	} elsif ( $param{btnFunction} eq 'Submit' ) {
 
-    my @subtotals;
+		if ( $Quote->status() ne 'Complete' ) {
 
-		my $warning = '';
-    foreach my $QP ( $Quote->Quoted_Projects() ) {
-      foreach my $qty_index ( $QP->quantity_indexes() ) {
-				my $old_price = $QP->price($qty_index);
-				if ( $old_price != $QP->price($qty_index,undef) ) {
-					$warning .= 'Price change from '.$Quote->Currency()->format($old_price). ' to ' . $Quote->Currency()->format($QP->price($qty_index)).' for project '.$QP->Project()->id().' quantity ' . $qty_index.'<br/>';
-				}
-				my $old_quantity = $QP->quantity($qty_index);
-				if ( $old_quantity != $QP->quantity($qty_index,undef) ) {
-					$warning .= "Price change from $old_quantity to " . $QP->quantity($qty_index).' for project '.$QP->Project()->id().' quantity ' . $qty_index.'<br/>';
-				}
-        $subtotals[$qty_index] += $QP->price($qty_index);
-      } # end foreach
-      $QP->save();
-    } # end foreach QP
-    foreach my $Product ( $Quote->Products() ) {
-      $Product->save({cost=>$Product->cost()});
-      $subtotals[1] += $Product->price();
-      $subtotals[2] += $Product->price();
-      $subtotals[3] += $Product->price();
-    } # end foreach Product
-    foreach my $qty_index ( 1 .. 3 ) {
-      $Quote->total($qty_index, $subtotals[$qty_index]);
-    } # end foreach
-    $Quote->administrator_name($param{AdministratorName}) if exists $param{AdministratorName};
-    $Quote->administrator_comments($param{AdministratorComments}) if exists $param{AdministratorComments};
-		if ( $warning ) {
-			$Quote->save();
-			$variable{warning} = $warning.'<br/>Please verify the quoted prices/quantities and click Submit again.';
-			$variable{ExternalRedirect} = '/main/quote/submit.html?quote_id='.$Quote->id();
+			my @subtotals;
+
+			my $warning = '';
+			foreach my $QP ( $Quote->Quoted_Projects() ) {
+				foreach my $qty_index ( $QP->quantity_indexes() ) {
+					my $old_price = $QP->price($qty_index);
+					if ( $old_price != $QP->price($qty_index,undef) ) {
+						$warning .= 'Price change from '.$Quote->Currency()->format($old_price). ' to ' . $Quote->Currency()->format($QP->price($qty_index)).' for project '.$QP->Project()->id().' quantity ' . $qty_index.'<br/>';
+					}
+					my $old_quantity = $QP->quantity($qty_index);
+					if ( $old_quantity != $QP->quantity($qty_index,undef) ) {
+						$warning .= "Price change from $old_quantity to " . $QP->quantity($qty_index).' for project '.$QP->Project()->id().' quantity ' . $qty_index.'<br/>';
+					}
+					$subtotals[$qty_index] += $QP->price($qty_index);
+				} # end foreach
+				$QP->save();
+			} # end foreach QP
+			foreach my $Product ( $Quote->Products() ) {
+				$Product->save({cost=>$Product->cost()});
+				$subtotals[1] += $Product->price();
+				$subtotals[2] += $Product->price();
+				$subtotals[3] += $Product->price();
+			} # end foreach Product
+			foreach my $qty_index ( 1 .. 3 ) {
+				$Quote->total($qty_index, $subtotals[$qty_index]);
+			} # end foreach
+			$Quote->administrator_name($param{AdministratorName}) if exists $param{AdministratorName};
+			$Quote->administrator_comments($param{AdministratorComments}) if exists $param{AdministratorComments};
+			if ( $warning ) {
+				$Quote->save();
+				$variable{warning} = $warning.'<br/>Please verify the quoted prices/quantities and click Submit again.';
+				$variable{ExternalRedirect} = '/main/quote/submit.html?quote_id='.$Quote->id();
+			} else {
+				$Quote->status('Complete');
+				$Quote->save();
+				$Quote->send();
+				$Quote->add_log('Submitted');
+			}
 		} else {
-			$Quote->status('Complete');
-			$Quote->save();
-			$Quote->send();
-			$Quote->add_log('Submitted');
-		}
-  } else {
-    $variable{error} .= 'This quote has already been sent.  Not sending again.<br/>';
-  } # end if ! Complete
+			$variable{error} .= 'This quote has already been sent.  Not sending again.<br/>';
+		} # end if ! Complete
+	} else {
+		$log->error("Unknown function in quote confirmation $param{btnFunction}");
+	} # end if action
   delete $session{quote_id};
 } # end sub finalise_quote
 
