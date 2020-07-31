@@ -227,10 +227,10 @@ sub host {
     } elsif ( $param{action} eq 'Wake' ) {
       foreach my $I ( $Host->Interfaces() ) {
         next if ! $I->mac();
-		my ( $error, $info ) = $I->wake();
-		$variable{error} .= $error;
-		$variable{information} .= $info;
-      } # end foreach
+				my ( $error, $info ) = $I->wake();
+				$variable{error} .= $error;
+				$variable{information} .= $info;
+			} # end foreach
       $variable{ExternalRedirect} = $Host->url();
     } elsif ( $param{action} eq 'GEOLookup' ) {
       foreach my $I ( $Host->Interfaces() ) {
