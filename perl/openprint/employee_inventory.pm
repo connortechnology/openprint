@@ -369,7 +369,7 @@ sub inventory_report {
 					( $Allocations{$Skid->id} ? join(',', @{$Allocations{$Skid->id}}) : '' ),
 					join(',', $Skid->dockets() ),
 					);
-			$total_value += $C->value();
+			$total_value += $C->value() if $C->value();
 		} # end foreach C
 	} # end foreach Skid
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
