@@ -253,6 +253,7 @@ sub reboot {
 		my $do_not_expect;
 		my $port = 80;
 		my $protocol = 'http';
+    my $referer = '';
 
 		if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 			$url = $HI->ip().'/admin/reboot.cgi?type=0';
@@ -366,8 +367,16 @@ sub reboot {
 				reboot_ap => 1,
 			};
 			$do_not_expect = 'SORRY';
-		} else {
-			$openprint::log->error("Unknown host type $$Host{type}");
+    } elsif ( $Host->type() eq 'Trendnet TV-862IC' ) {
+      $referer = 'http://'.$HI->ip().'/eng/admin/tools_default.cgi';
+      $initial_url = $HI->ip().'/eng/admin/tools_default.cgi';
+      $url = $HI->ip().'/eng/admin/reboot.cgi';
+      $method = 'post';
+      $args = {
+        reboot => 'true',
+      };
+    } else {
+      $openprint::log->error("Unknown host type $$Host{type}");
 			return 0;
 		}
 
@@ -380,6 +389,10 @@ sub reboot {
 			$protocol = 'https';
 			$port = 443;
 		}
+    my $headers = $response->headers();
+    foreach my $k ( keys %$headers ) {
+      $openprint::log->error("Header $k => $$headers{$k}");
+    }	# end foreach
 		$response = $HI->authenticate($browser, $response, $method, $port, $protocol.'://'.($initial_url ? $initial_url : $url), $args);
 
 		if ( !$response->is_success ) {
@@ -409,12 +422,14 @@ sub reboot {
 			} # end if
 		} else {
 			$success = 1;
-			$openprint::log->debug('Success Content: '.$response->content);
+			$openprint::log->debug('Success content after auth to initial_url: '.$response->content);
 		} # end if
 
 		if ( $success ) {
       if ( $url ne $initial_url ) {
-        $response = $browser->get($protocol.'://'.$url);
+        $openprint::log->debug('Sending actual url '.$method . ' ' . $url);
+        $browser->default_header('Referer', $referer) if $referer;
+        $response = $browser->$method($protocol.'://'.$url, $args ? $args : ());
         $openprint::log->debug('Success Content: '.$response->content);
       }
 			if ( $expect and ! ( $response->content =~ /$expect/ ) ) {
@@ -499,6 +514,7 @@ sub can_reboot {
 				'TL-WPA4220', 'TP-Link Archer C7',
 				'D-Link DAP1522','DGS-1224T','DLink DCS-910',
         'DCS_932L','DCS-933L','DCS-942L', 'WG602v3',
+        'Trendnet TV-862IC',
 				'Vivotek' ] ) ) {
     return !undef;
   }
