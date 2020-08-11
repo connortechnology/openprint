@@ -389,9 +389,8 @@ sub reboot {
 			$protocol = 'https';
 			$port = 443;
 		}
-    my $headers = $response->headers();
     foreach my $k ( keys %$headers ) {
-      $openprint::log->error("Header $k => $$headers{$k}");
+      $openprint::log->debug("Header $k => $$headers{$k}");
     }	# end foreach
 		$response = $HI->authenticate($browser, $response, $method, $port, $protocol.'://'.($initial_url ? $initial_url : $url), $args);
 
