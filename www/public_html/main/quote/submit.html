@@ -10,7 +10,8 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 		<p class="buttons Top">
 			<? echo ( join("\n",
 					button( 'Back', { href=>'/main/quote/information.html?quote_id='.$$variable{Quote}->id(), text=>'Back' } ),
-					button( 'SubmitQuote', { onclick=>"f1.btnFunction.value='Submit Quote';f1.submit();", href=>'', text=>'Submit Quote' } ),
+					button( 'SubmitQuote', { onclick=>"f1.btnFunction.value='Submit';f1.submit();", text=>'Submit Quote' } ),
+					button( 'CloseQuote', { onclick=>"f1.btnFunction.value='Close';f1.submit();", text=>'Close Quote Without Sending' } ),
 					button( 'SendToMe', { onclick=>"f1.action='/main/quote/submit.html';f1.btnFunction.value='SendToMe';f1.submit();", text=>'Send To Me' } ),
 					); ) ?>
 		</p>
@@ -55,11 +56,12 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 	} # end if
 	return $html;
 ) ?>
-	<p class="buttons Bottom">
+	<p class="buttons">
 		<? echo ( join("\n",
 					button( 'BackBottom', { href=>'/main/quote/information.html?quote_id='.$$variable{Quote}->id(), text=>'Back' } ),
-					button( 'SubmitQuoteBottom', { onclick=>"f1.btnFunction.value='Submit Quote';f1.submit();", text=>'Submit Quote' } ),
-					button( 'SendToMe', { onclick=>"f1.action='/main/quote/submit.html';f1.btnFunction.value='SendToMe';f1.submit();", text=>'Send To Me' } ),
+					button( 'SubmitQuoteBottom', { onclick=>"f1.btnFunction.value='Submit';f1.submit();", text=>'Submit Quote' } ),
+					button( 'CloseQuoteBottom', { onclick=>"f1.btnFunction.value='Close';f1.submit();", text=>'Close Quote Without Sending' } ),
+					button( 'SendToMeBottom', { onclick=>"f1.action='/main/quote/submit.html';f1.btnFunction.value='SendToMe';f1.submit();", text=>'Send To Me' } ),
 					); ) ?>
 	</p>
 	<input type="hidden" name="btnFunction"/>

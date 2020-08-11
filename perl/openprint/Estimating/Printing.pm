@@ -5079,7 +5079,6 @@ $imp->display('[warn]');
 						my $starttime = [gettimeofday()] if DEBUG;
 
 						$log->debug("Stitching::signature_calc: recursion_depth; $recursion_depth do_final_pricing: $do_final_pricing total imps: " . @total_impositions) if DEBUG;
-						$log->error("Stitching::signature_calc: recursion_depth; $recursion_depth do_final_pricing: $do_final_pricing total imps: " . @total_impositions);
 						$results = openprint::Estimating::Stitching::signature_calc($Project, @$project{'HasStitching','StitchingSpecs'}, $qty_index, \@total_impositions, $project);
 						if ( $$results{Status} eq 'uncalculated' ) {
 							$$price{'Stitching Breakdown'} .= 'Stitching error: '.$$results{alert}.'<br/>';

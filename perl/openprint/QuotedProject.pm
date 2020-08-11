@@ -77,7 +77,7 @@ sub Quote {
 sub markup {
 	if ( @_ == 3 ) {
 		$_[0]{'markup'.$_[1]} = $_[2];
-		$_[0]->price($_[1], undef );
+		$_[0]->price($_[1], undef);
 	} # end if
 	return $_[0]{'markup'.$_[1]};
 } # end sub total
