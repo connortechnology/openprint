@@ -17,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -604,6 +604,20 @@ sub used {
 	} # end if
 	return $_[0]{used};
 } # end sub used
+
+sub used_for_dockets {
+	my $self = shift;
+	$$self{used_for_dockets} = shift if @_;
+	if ( ! $$self{used_for_dockets} ) {
+		my %dockets;
+		foreach my $PI ( openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
+			$dockets{$$PI{docket}} = !undef;
+		}
+		$$self{used_for_dockets} = [ sort { $a <=> $b } keys %dockets ];
+	} 
+
+	return wantarray ? @{$$self{used_for_dockets}} : $$self{used_for_dockets};
+}
 
 sub merge {
 	my ( $Keep, $Merge ) = @_;
