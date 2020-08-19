@@ -61,6 +61,7 @@ my %codes = (
 	226 =>  'Closing data connection',
 	227 => 	'Entering Passive Mode',
 	230	=>	'User logged in',
+	234 =>	'AUTH TLS successful',
 	250 =>	'Requested file action okay, completed',
 	257	=>	'Path created',
 	331 =>	'User name ok, need password',

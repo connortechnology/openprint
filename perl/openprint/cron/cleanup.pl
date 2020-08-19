@@ -299,10 +299,12 @@ if ( 1 ) {
 			$Host->save({ resolved_on	=> 'NOW()' });
 	} # end foreach Host
 }
+if ( 0 ) {
 foreach my $Job ( openprint::ScheduledJob->find(
-			'starttime <' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -3 ) ),
+			'starttime <' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -14 ) ),
 ) ) {
 	$Job->delete();
+}
 }
 
 $dbh->disconnect();
