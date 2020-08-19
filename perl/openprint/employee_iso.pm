@@ -250,6 +250,7 @@ sub _car_results {
 
 sub car {
 	$variable{CAR} = new openprint::CAR( $param{car_id} );
+	return if ! $param{action};
 	if ( $param{action} eq 'Send' ) {
 		$variable{CAR}->send_notifications();
 	} # end if
@@ -286,13 +287,17 @@ sub _car_view_part1 {
 		if ( $param{issued_to_id} and ! $variable{CAR}->issued_to_id() ) {
 			$send_assignee_notification = 1;
 		} # end if issued_to
+
 		# if a reprint is requested, but if the approval is already given, then we are the Approver, so don't bother.
-		if ( ( $param{reprint} eq 'Yes' ) and ( $variable{CAR}->reprint() ne 'Yes' ) and ( ! $param{reprint_approval} ) ) {
-			$send_reprint_request_notification = 1;
-		} elsif ( $param{reprint_approval} ne $variable{CAR}->reprint_approval() ) {
-			$send_reprint_approval_notification = 1;
+		if ( $param{reprint} eq 'Yes' ) {
+			if ( ($variable{CAR}->reprint() ne 'Yes') and !$param{reprint_approval} ) {
+				$send_reprint_request_notification = 1;
+			} elsif ( $param{reprint_approval} ne $variable{CAR}->reprint_approval() ) {
+				$send_reprint_approval_notification = 1;
+			} # end if reprint
 		} # end if reprint
-		$variable{error} .= $variable{CAR}->save( \%param );
+		$variable{error} .= $variable{CAR}->save(\%param);
+
 		if ( ! $variable{error} ) {
 			if ( $variable{CAR}->id() and ( ! $param{car_id} ) and ! $send_reprint_request_notification ) {
 	# Send out notifications
@@ -417,6 +422,7 @@ sub pars {
 	ssi::setup_date_select( '/employee/iso/pars.html', 'issued_on_end', '' );
 	_par_results();
 } # end sub pars
+
 sub _par_results {
 	ssi::save_params( '/employee/iso/pars.html', ( 
 				'issued_on_start_year','issued_on_start_month','issued_on_start_day',
@@ -428,6 +434,7 @@ sub _par_results {
 sub par {
 	$variable{PAR} = new openprint::PAR( $param{par_id} );
 } # end sub view_par
+
 sub _par_view_part1 {
 	$variable{PAR} = new openprint::PAR( $param{par_id} );
 	if ( $param{btnFunction} eq 'Save' ) {

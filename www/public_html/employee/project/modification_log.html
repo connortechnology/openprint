@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script>
 	var ajax_results = null;
 	function load_projects( form ) {
 		if ( ajax_results ) { ajax_results.transport.abort(); }
@@ -62,6 +62,9 @@
 			to
 <? echo ( datetime_select_session( $r->uri(), 'action_date_end', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
 	</li>
+<li><label>Search Text</label>
+<input type="text" name="search" value="<?echo ( $session{$r->uri().'?search'} ) ?>" oninput="load_projects();"/>
+</li>
 	</ul>
 	<p class="buttons">
 		<? echo ( button( 'ShowResults', { onclick=>'load_projects();', text=>'Show Results' } ); ) ?>

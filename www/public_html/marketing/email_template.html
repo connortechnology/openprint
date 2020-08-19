@@ -6,8 +6,13 @@
 		<div class="leftColumn">
 			<fieldset><legend>Template</legend>
 				<ul>
-				<li><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{Template}->name() ) ?>" /></li>
-				<li><label>Body</label><textarea name="body" rows="<? echo ( count_lines( $$variable{Template}->body() ); ) ?>" onkeyup="textarea_resize(this);$('preview').innerHTML=this.value;" ><? hecho ( $$variable{Template}->body() ) ?></textarea></li>
+				  <li>
+						<label>Name</label>
+						<input type="text" name="name" value="<? echo ( $$variable{Template}->name() ) ?>" />
+					</li>
+				  <li>
+						<label>Body</label>
+						<textarea name="body" rows="<? echo ( count_lines( $$variable{Template}->body() ); ) ?>" onkeyup="textarea_resize(this);$('preview').innerHTML=this.value;" ><? hecho ( $$variable{Template}->body() ) ?></textarea></li>
 				</ul>
 			</fieldset>
 		</div>

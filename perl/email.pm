@@ -51,9 +51,13 @@ sub get_vacation {
 sub get_vacation_entry {
     my ( $email ) = @_;
 
-    $dbh = db_connect() if ! $dbh;
-    if ( $dbh ) {
-			my $data = $dbh->selectall_arrayref( 'SELECT * FROM vacation WHERE email=?', { Slice => {} }, $email );
+		if (! ($dbh and $dbh->ping())) {
+			$openprint::log->info('Connecting to db');
+			$dbh = db_connect();
+			return if !($dbh and $dbh->ping());
+		}
+		if ( $dbh ) {
+			my $data = $dbh->selectall_arrayref('SELECT * FROM vacation WHERE email=?', { Slice => {} }, $email);
 			if ( $data and @{$data} ) {
 				return $$data[0];
 			}
@@ -214,19 +218,21 @@ sub save {
 sub load {
 	my ( $email, $data ) = @_;
 
-	my @domains = email::domains();
 	my ( $user, $domain ) = $email =~ /^([^\@]+)\@(.+)$/;
-	if ( sets::isin($domain, \@domains) ) {
-		my $v = get_vacation_entry($email);
-		$$data{DoEmail} = 1;
-		if ( $v ) {
-			$$data{vacation_state} = 1;
+	if ( $domain ) {
+		my @domains = email::domains();
+		if ( sets::isin($domain, \@domains) ) {
+			my $v = get_vacation_entry($email);
+			$$data{DoEmail} = 1;
+			if ( $v ) {
+				$$data{vacation_state} = 1;
 
-			my @fields = qw'subject body system_emails';
-			@$data{map { 'vacation_'.$_ } @fields} = @$v{@fields};
+				my @fields = qw'subject body system_emails';
+				@$data{map { 'vacation_'.$_ } @fields} = @$v{@fields};
+			}
+			@{$$data{vacation_aliases}} = aliases($email);
 		}
-		@{$$data{vacation_aliases}} = aliases($email);
-	}
+	} # end if domain
 } # end sub load
 
 1;

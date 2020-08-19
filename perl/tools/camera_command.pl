@@ -2,6 +2,7 @@
 use utf8;
 use lib '/var/www/testing/perl';
 use strict;
+use warnings;
 use LWP;
 
 require configuration;
@@ -29,8 +30,8 @@ GetOptions($opts, 'help',
 		);
 
 if ($opts->{help}) {
-    usage();
-    exit 0;
+	usage();
+	exit 0;
 }
 
 my $program = basename($0);
@@ -40,15 +41,15 @@ $log->error($_) if $_;
 configuration::merge($opts);
 
 foreach my $param ( 'db_name','db_user','db_pass', 'command' ) {
-	if ( ! $config{$param} ) {
+	if ( !$config{$param} ) {
 		die "$program: missing required --$param parameter";
 	} # end if
 } # end foreach required-param
 
-$log->file( $config{log_file} ) if $config{log_file};
-$log->level( $config{log_level} ) if $config{log_level} ne 'debug';
+$openprint::log->file( $config{log_file} ) if $config{log_file};
+$openprint::log->level( $config{log_level} ) if $config{log_level} ne 'debug';
 
-if ( $config{pid_file} ) {
+if ( $openprint::config{pid_file} ) {
 	my $pidh;
 	if (open($pidh, '> '.$config{pid_file} ) ) {
 		print $pidh $$."\n"; 
@@ -58,8 +59,8 @@ if ( $config{pid_file} ) {
 	} # end if
 } # end if
 
-$log->debug("Connecting to db");
-$dbh = sql::open_sql( $log,
+$log->debug('Connecting to db');
+$openprint::dbh = sql::open_sql( $log,
 		port		=> $config{db_port},
 		host		=> $config{db_host},
 		database	=> $config{db_name},
@@ -84,12 +85,14 @@ my @Hosts = openprint::Host->find(
 	( $$opts{hostname} ? ( hostname=>$$opts{hostname} ) : () ),
 	);
 if ( ! @Hosts ) {
-	$log->error("NO hosts found for command.");
+	$log->error('NO hosts found for command.');
+} else {
+	$log->debug('Found ' . @Hosts . ' hosts.');
 }
 foreach my $Host ( @Hosts ) {
 	my @ips = map { $_->ip() ? $_->ip() : () } $Host->Interfaces();
 	if ( ! @ips ) {
-		$log->debug( "Camera without ips: " . $Host->to_string() );
+		$log->debug('Camera without ips: '.$Host->to_string());
 		next;
 	} # end if
 	my $ip = $ips[0];
@@ -97,31 +100,35 @@ foreach my $Host ( @Hosts ) {
 	my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
 	if ( ! @ping ) {
-		$log->warn("Problem with ping for " . $Host->hostname() );
+		$log->warn('Problem with ping for '.$Host->hostname());
 		next;
 	} # end if
 
 	if ( $Host->online() or $ping ) {
 		if ( $$opts{command} eq 'reboot' ) {
-			$log->debug('Sending reboot to ' . $Host->hostname());
+			$log->debug('Sending reboot to '.$Host->hostname());
 			$Host->reboot();
 		} elsif ( $$opts{command} eq 'move' ) {
 			my $browser = LWP::UserAgent->new();
-			$browser->credentials( $Host->hostname().':80', 'SkyIPCam', $Host->info('username'), $Host->info('password') );
-			if ( sets::isin( $Host->type(), [ 'AIC777W', 'AIC747W' ] ) ) {
-				$log->debug('Sending move to ' . $Host->hostname() . " position $$opts{position}");
+			$browser->credentials($Host->hostname().':80', 'SkyIPCam',
+					$Host->info('username'), $Host->info('password'));
+			if ( sets::isin($Host->type(), [ 'AIC777W', 'AIC747W' ]) ) {
+				$log->debug('Sending move to '.$Host->hostname().' position '.$$opts{position});
 				my $response = $browser->get('http://'.$Host->hostname().'/admin/ptctl.cgi?move='.$$opts{position});
 				$log->debug('Success?'.$response->is_success);
 			} else {
 				$log->error("Host doesn't support moving");
 			}
+		} elsif ( $$opts{command} eq 'get_config' ) {
+			$log->debug('Getting config for '.$$Host{hostname});
+			$Host->get_config();
 		} else {
-			$log->error("Unknown command $$opts{command}");
+			$log->error('Unknown command '.$$opts{command});
 		} # end if
 	} elsif ( $Host->online() ) {
-		$log->debug("No ping for $$Host{hostname}");
+		$log->debug('No ping for '.$$Host{hostname});
 	} else {
-		$log->debug("$$Host{hostname} is offline: ping $ping");
+		$log->debug($$Host{hostname}.' is offline: ping '.$ping);
 	} # end if online
 } # end foreach $Host
 $p->close();

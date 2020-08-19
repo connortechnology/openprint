@@ -59,8 +59,8 @@ sub skids {
 				$variable{error} .= 'Invalid location.<br/>';
 			} else {
 				foreach my $skid_id ( @skid_ids ) {
-					my $Skid = new openprint::Skid( $skid_id );
-					if ( my $e = $Skid->save({'location_id'=>$param{location_id}}) ) {
+					my $Skid = new openprint::Skid($skid_id);
+					if ( my $e = $Skid->save({location_id=>$param{location_id}}) ) {
 						$variable{error} .= "Skid $$Skid{id} has not been moved. Error: $e<br/>";
 					} else {
 						$variable{information} .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid %1$d</a> has been moved to %2$s.<br/>', $$Skid{id}, $$Location{name} );
@@ -207,7 +207,7 @@ sub skids {
 		} # end if skid_id
 	} elsif ( $param{btnFunction} eq 'Download Inventory' ) {
 		my ( $header, $data ) = inventory_report( %param );
-		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+		my $date = Date::Calc::check_date(@param{'as_of_year','as_of_month','as_of_day'}) ? join('-', @param{'as_of_year','as_of_month','as_of_day'}) : Date::Format::time2str('%Y-%m-%d %H:%M', time);
 		my $location = $param{location_id} ? new openprint::Location($param{location_id})->name() : 'All Locations';
 		misc::export_csv( $r, $log, \%variable, "PaperInventory $location $date.csv", $header, $data );
 	} # end if btnfunction
@@ -261,7 +261,7 @@ sub inventory_report {
 			( $param{height} ? ( ($param{OrLarger} ? 'height >=' : 'height') => $param{height} ) : () ),
 			);
 
-	foreach my $filter ( 'owner_id', 'manufacturer_id','brand_id','finish_id','colour_id','weight_id','group_id','quality_id','material_id', 'type' ) {
+	foreach my $filter ( 'owner_id','manufacturer_id','brand_id','finish_id','colour_id','weight_id','group_id','quality_id','material_id','type' ) {
 		next if ! $param{$filter};
 		if ( $param{$filter.'_id_exclude'} ) {
 			$sql{$filter.' !='} = $param{$filter};
@@ -274,7 +274,7 @@ sub inventory_report {
 		%stock_ids = map { $_->id(), $_ } @Stocks;
 		openprint::StockBrand->find(); # How many can there be?  Just load them all. id => [ map { $_->brand_id() } @Stocks ] );
 	} else {
-		$log->debug("Not loading stocks");
+		$log->debug('Not loading stocks');
 	} # end if
 
 	my @Skids = openprint::Skid->find(
@@ -283,12 +283,21 @@ sub inventory_report {
 				ssi::date_filter( 'added_on_start', 'created_on >=', \%param ),
 				ssi::date_filter( 'added_on_end', 'created_on <=', \%param ),
 				( @location_ids ? ( location_id=>\@location_ids ) : () ),
-				( $param{in_stock} ne '' ? ( $param{in_stock} eq '1' ? ( 'quantity >='=>1 ) : ( quantity=>0 ) ) : () ),
-				( exists $param{empty} ? ( $param{empty} eq 'Y' ? ( 'quantity is null or ='=>0 ) : ( 'quantity >'=>0 ) ) : () ),
+				( ( $param{as_of_year} and $param{as_of_month} and $param{as_of_day} ) ?
+# Is we are doing rollback, can't use current values
+					(
+					 ssi::date_filter( 'as_of', 'created_on <=', \%param ),
+					) :
+					(
+#in_stock is used in available_paper and empty is used in skids
+					 ( $param{in_stock} ne '' ? ( $param{in_stock} eq '1' ? ( 'quantity >='=>1 ) : ( 'quantity is null or ='=>0 ) ) : () ),
+					 ( exists $param{empty} ? ( $param{empty} eq 'Y' ? ( 'quantity is null or ='=>0 ) : ( 'quantity >'=>0 ) ) : () ),
+					)
+				),
 				( $param{type} ? ( 'type is null or in'=>[ ref $param{type} eq 'ARRAY' ? @{$param{type}} : $param{type} ] ) : () ),
 			);
-	$log->debug("# of Skids: " . @Skids );
-	#openprint::RFIDTag->find(id=>[ map { $_->rfidtag_id() ? $_->rfidtag_id() : () } @Skids] );
+	$log->debug('# of Skids: ' . @Skids );
+#openprint::RFIDTag->find(id=>[ map { $_->rfidtag_id() ? $_->rfidtag_id() : () } @Skids] );
 
 	my @skid_ids = map { $$_{id} } @Skids;
 	my %SkidContents;
@@ -304,6 +313,29 @@ sub inventory_report {
 		}
 	}
 
+	my @PIs_to_rollback;
+	my %PIs_to_rollback;
+	if ( $param{as_of_year} and $param{as_of_month} and $param{as_of_day} ) {
+		if ( Date::Calc::check_date(@param{qw( as_of_year as_of_month as_of_day)}) ) {
+ 
+			my $as_of_dt = DateTime->new(
+					year       => $param{as_of_year},
+					month      => $param{as_of_month},
+					day        => $param{as_of_day},
+					hour       => 0,
+					minute     => 0,
+					second     => 0,
+					nanosecond => 0,
+					time_zone  => $openprint::TZ,
+					);
+			@PIs_to_rollback = openprint::PaperInventory->find('updated_on >='=>DateTime::Format::Pg->format_datetime($as_of_dt), order=>'id desc');
+			%PIs_to_rollback = misc::make_hash_from_array(skid_id=>@PIs_to_rollback);
+			$log->debug('Number of PIs to rollback: ' . scalar @PIs_to_rollback);
+		} else {
+			$variable{error} .= 'Invalid as of date';
+		}
+	}
+
 	my $total_value = 0;
 	foreach my $Skid ( @Skids ) {
 		$Skid->Contents( $SkidContents{$$Skid{id}} );
@@ -312,8 +344,26 @@ sub inventory_report {
 		}
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
+
+			if ( $PIs_to_rollback{$$Skid{id}} ) {
+				$log->debug("Have PIs to rollback for skid $$Skid{id}");
+				foreach my $PI ( @{$PIs_to_rollback{$$Skid{id}}} ) {
+					if ( $$PI{paper_id} == $$C{paper_id} ) {
+$log->debug("Rolling back quantity on skid $$Skid{id} from $$C{quantity} by $$PI{delta}");
+						$$C{quantity} -= $$PI{delta};
+					}
+				}
+			}
 			if ( $param{in_stock} eq '1' and ! $C->quantity() ) {
 				$log->debug("Skid $$Skid{id} skipped because no quantity") if DEBUG;
+				next;
+			}
+			if ( $param{empty} eq 'Y' and ( $C->quantity() > 0 ) ) {
+				$log->debug("Skid $$Skid{id} skipped because we want empty") if DEBUG;
+				next;
+			}
+			if ( $param{empty} eq 'N' and ( $C->quantity() <= 0 ) ) {
+				$log->debug("Skid $$Skid{id} skipped because we don't want empty") if DEBUG;
 				next;
 			}
 			if ( defined($param{has_value}) ) {
@@ -334,7 +384,7 @@ sub inventory_report {
 			} elsif ( $Paper->type() eq 'Sheet' ) {
 				$weight += $Paper->sheet_weight() * $C->quantity();
 			} else {
-				$log->error("Unknown stock type! " . $Paper->to_string() );
+				$log->error('Unknown stock type! '.$Paper->to_string());
 			} # end if
 			$total_weight += $weight;
 			$count += 1;
@@ -361,7 +411,7 @@ sub inventory_report {
 					ssi::format_csv_date( $$Skid{updated_on} ),
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
-					$weight,
+					Math::Round::nearest(0.01, $weight),
 					$C->condition(),
 					ssi::format_csv_date( $Skid->updated_on() ),#FIXME
 					1*$C->cost(),
@@ -369,11 +419,12 @@ sub inventory_report {
 					( $Allocations{$Skid->id} ? join(',', @{$Allocations{$Skid->id}}) : '' ),
 					join(',', $Skid->dockets() ),
 					);
-			$total_value += $C->value();
+			$total_value += $C->value() if $C->value();
 		} # end foreach C
 	} # end foreach Skid
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef, undef, $total_value, undef, undef );
+	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef,
+			'Total Weight (lbs):', Math::Round::nearest(0.01, $total_weight), undef, undef, undef, $total_value, undef, undef );
 	return ( \@header, \@data );
 } # end sub inventory_report
 

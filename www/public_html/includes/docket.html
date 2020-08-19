@@ -1,5 +1,3 @@
-<html>
-<body>
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
 		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -241,9 +239,12 @@
 			if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y'  ) {
 				$html .= 'Stock Size Overriden';
 			} # end if
-			$html .='<hr/>';
+			$html .='
+				<hr/>
+				';
 			if ( $$sig_specs{ddmStockFinish} eq 'Coated 1 Side' or $$sig_specs{ddmStockFinish} eq 'C1S' ) {
-				$html .= '<br/><b>Please Verify Uncoated Side Image</b>';
+				$html .= '<br/><b>Please Verify Uncoated Side Image</b>
+';
 			} # end if
 
 
@@ -271,9 +272,12 @@
 					$html .= '<br/>Folding has overrides.';
 				} # end if
 			} # end if
-			$html .= '</td><td class="docketText"> ';
+			$html .= '
+</td>
+<td class="docketText"> ';
 
-			$html .= openprint::Estimating::Printing::get_colour_description($Project, $sig_specs).'<br/>';
+			$html .= openprint::Estimating::Printing::get_colour_description($Project, $sig_specs).'<br/>
+';
 			foreach my $edge ( 'Top','Bottom','Left','Right' ) {
 				if ( $$sig_specs{'Bleed'.$edge} ne $edge ) {
 					$html .= 'No ' . $edge . ' bleed<br/>';
@@ -287,7 +291,8 @@
 			my @side_two_colour_names = map { $$_{name} } @side_two_colours;
 
 			if ( $$sig_specs{UsePress} eq 'Web1' ) {
-				$html .= '<br/><table>';
+				$html .= '<br/><table>
+';
 				my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $$variable{Project}, $sig_specs );
 
 				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
@@ -329,9 +334,11 @@
 					if ( $InkMaterial ) {
 						$coverage = $InkMaterial->specification('Coverage', $grade);
 					}
-					$html .= '<tr><td>'. $inkCoverage{$colour}.'% '.$colour . '</td><td>'.( $coverage ? Math::Round::nearest( 0.1, $area/$coverage ).'kg' : 'unknown' ) . '</td></tr>';
+					$html .= '<tr><td>'. $inkCoverage{$colour}.'% '.$colour . '</td><td>'.( $coverage ? Math::Round::nearest( 0.1, $area/$coverage ).'kg' : 'unknown' ) . '</td></tr>
+';
 				} # end foreach colour
-				$html .= '</table>';
+				$html .= '</table>
+';
 			} # endif Web
 				
 			my $net_sheets = $$variable{Project}->ordered_quantity();
@@ -361,11 +368,13 @@ $log->debug("Getting sheets from $lbs / " . $Imposition->sheet_area() . ' * ' . 
 				$lbs = $sheets * $Imposition->sheet_area() * $Paper->wpsi();
 			} # end if
 
-			$html .= '</td><td class="docketText net_required">';
+			$html .= '</td>
+<td class="docketText net_required">';
 			foreach my $f ( $form .. ($form+$signatures-1) ) {
 				$html .= sprintf('%d sheets<br/>', $net_sheets );
 			} # end foreach
-			$html .= '</td><td class="docketText gross_allowed">';
+			$html .= '</td>
+<td class="docketText gross_allowed">';
 			foreach my $f ( $form .. ($form+$signatures-1) ) {
 				if ( $$paper_specs{"overrideqty-form$$sig_specs{SignatureIndex}-$qty_index"} and ($$paper_specs{"overrideqty-form$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y') ) {
 					$lbs = $$paper_specs{"qty-form$$sig_specs{SignatureIndex}-$qty_index"};
@@ -376,15 +385,18 @@ $log->debug("Getting sheets from $lbs / " . $Imposition->sheet_area() . ' * ' . 
 					}
 				}
 				if ( $Paper->type() eq 'Roll' ) {
-					$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs %dfeet F%d<br/><br/>', $gross_impressions, $sheets, $lbs, ($sheets * $Imposition->sheet_height())/12, $f );
+					$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs %dfeet F%d<br/><br/>
+', $gross_impressions, $sheets, $lbs, ($sheets * $Imposition->sheet_height())/12, $f );
 				} else {
-					$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs F%d<br/><br/>', $gross_impressions, $sheets, $lbs, $f );
+					$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs F%d<br/><br/>
+', $gross_impressions, $sheets, $lbs, $f );
 				} # end if
 			} # end foreach
 			$html .= '</td>';
 			
 			$html .= '<td class="docketText">&nbsp;</td>';
-			$html .= '<td class="docketText"><br/><br/><br/></td></tr>';
+			$html .= '<td class="docketText"><br/><br/><br/></td></tr>
+';
 			$form += $signatures;
 		} # end while service_index
 		return $html;
@@ -644,5 +656,3 @@ $log->debug("Binder: @BinderyServiceNames");
 		<td class="docketText"><input type="checkbox" /> Bindery</td>
 	</tr>
 </table>
-</body>
-</html>

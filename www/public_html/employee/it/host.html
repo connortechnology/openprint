@@ -86,7 +86,7 @@
           <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
             <option value="">None</option>
 <? echo ( 
-my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM Hosts');
+my @owner_ids = sql::execute(undef, undef, 'SELECT DISTINCT owner_id FROM Hosts');
 make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $$variable{Host}->owner_id() );
 ) ?>
           </select>
@@ -96,6 +96,9 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 			</ul>
 		</div>
 		<div class="content rightColumn">
+			<div class="thumbnail">
+			<? echo ( $$variable{Host}->thumbnail_html('medium') ) ?>
+			</div>
 <? if ( $$variable{Host}->id() ) ?>
 			<? echo (
 				$$variable{Object} = $$variable{Host};
@@ -111,6 +114,9 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 			</fieldset>
 			<fieldset class="licenses"><legend>Licenses</legend>
 				<div id="licenses"><?include('_host_licenses.html')?></div>
+			</fieldset>
+			<fieldset><legend>Config</legend>
+				<div id="information"><?include('_host_config.html')?></div>
 			</fieldset>
 <? endif ( $$variable{Host}->id() ) ?>
 		</div>

@@ -117,7 +117,7 @@ $serial	= 'paper_id_seq';
 	id			=>	[ 's/\D//g', '<2147483647' ],
 	manufacturers_name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
 	gsm				=>	 [ 's/[^\d\.]//g' ],
-	wpsi				=>	 [ 's/[^\d\.]//g' ],
+	wpsi				=>	 [ 's/[^\d\.\-eE]//g' ],
 	calliper		=>	 [ 's/[^\d\.]//g' ],
 	basis_mweight	=>	 [ 's/[^\d\.]//g' ],
 	mweight			=>	 [ 's/[^\d\.]//g' ],
@@ -703,7 +703,8 @@ sub mweight {
 			my $wpsi = $$self{gsm}/703064.5;
 			if ( $$self{type} eq 'Roll' and $$self{basis_width} and $$self{basis_height} ) {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{basis_width} * $$self{basis_height} * 1000 );
-				# MWeight is in relaion to the basis size
+$openprint::log->debug("Setting mweight to $$self{mweight} from wpsi $wpsi and basis size");
+				# MWeight is in relation to the basis size
 			} elsif ( $$self{width} and $$self{height} ) {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 1000 );
 			} # end if
@@ -1723,6 +1724,7 @@ sub start_sheet_weight {
 sub units {
 	return ($_[0]{type} eq 'Roll' ? 'lb' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
 } # end sub units
+
 sub types {
 	return ($_[0]{type} eq 'Roll' ? ' roll' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
 } # end sub types
@@ -1897,9 +1899,17 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
     push @results, 'appears to be C1S, but is marked double sided.';
   }
 	if ( $Paper->weight() =~ /(\d+) *lb/i ) {
-		if ( $Paper->basis_mweight() != 2*$1 ) {
+		if ( int($Paper->basis_mweight()) != 2*$1 ) {
 			push @results, 'may have wrong basis mweight.  Should probably be '.2*$1;
 		}
+	}
+my $old_wpsi = 1*$$Paper{wpsi};
+
+	if ( $old_wpsi ne $Paper->wpsi(undef) ) {
+			push @results, "invalid value for wpsi $old_wpsi should maybe be $$Paper{wpsi}";
+	}
+	if ( $Paper->calliper() < 0.002 ) {
+			push @results, "calliper $$Paper{calliper}  appears to be too low.";
 	}
 
 	return join('<br/>', @results);

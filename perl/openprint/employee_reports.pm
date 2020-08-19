@@ -6,6 +6,7 @@ require openprint::Company;
 require openprint::Project;
 require openprint::Project_Log;
 require openprint::Order_Status;
+require openprint::OrderedProduct;
 
 require openprint;
 use vars qw( $r $log $dbh %variable %session %param %config );
@@ -355,7 +356,7 @@ sub _order_history_results {
 	);
 
 	my @ServiceTypes = @{$variable{ServiceTypes}} = openprint::ServiceType->find(order=>'lower(description)');
-	@{$variable{Categories}} = openprint::ServiceType_Category->find( order=>'lower(name)' );
+	@{$variable{Categories}} = openprint::ServiceType_Category->find(order=>'lower(name)');
 	%{$variable{ServiceTypesByCategory}} = {};
 	foreach my $Category ( @{$variable{Categories}} ) {
 		$variable{ServiceTypesByCategory}{$$Category{id}} = [ map { $$_{category_id} == $$Category{id}?$_:() } @ServiceTypes ];
@@ -376,9 +377,9 @@ sub _order_history_results {
 			#$parameters{salesrep_id} = $session{$uri.'?CSR'};
 		} # end if
 		$parameters{'last_ordered_on is null'} = 0;
-		my @Companies = openprint::Company->find( %parameters ) if keys %parameters;
+		my @Companies = openprint::Company->find(%parameters) if keys %parameters;
 		my %companies = map { $_->id(), $_->name() } @Companies;
-		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
+		my @servicetype_ids = split(',', $session{$uri.'?servicetype_id'} );
 
 		$variable{Orders} = [];
 
@@ -414,11 +415,22 @@ sub _order_history_results {
 		my %Order_Taxes = misc::make_hash_from_array('order_id',
 				openprint::Order_Tax->find(order_id=>\@order_ids));
 
-		my %Projects_By_OrderId = misc::make_hash_from_array('order_id', 
-				openprint::Project->find(order_id=>\@order_ids));
+		my @Projects = openprint::Project->find(order_id=>\@order_ids);
+		my %Projects_By_OrderId = misc::make_hash_from_array('order_id', @Projects);
+
+		my %Services;
+		if ( @servicetype_ids and ( @servicetype_ids != @ServiceTypes ) ) {
+			%Services = misc::make_hash_from_array('project_id',
+					openprint::Project_Service->find(
+						project_id      => [ map { $$_{id} } @Projects ],
+						servicetype_id  => \@servicetype_ids,
+						) );
+		}
 
 		my %Invoices_By_OrderId = misc::make_hash_from_array('order_id',
 				openprint::Order_Invoice->find(order_id=>\@order_ids));
+		my %Ordered_Products_By_OrderId = misc::make_hash_from_array('order_id',
+				openprint::OrderedProduct->find(order_id=>\@order_ids));
 
 		my @invoice_ids = map { $$_{invoice_id} } ( map { @{$Invoices_By_OrderId{$_}} } keys %Invoices_By_OrderId );
 
@@ -426,6 +438,7 @@ sub _order_history_results {
 
 		foreach my $Order ( @Orders ) {
 			$$Order{Projects} = $Projects_By_OrderId{$$Order{id}};
+			$$Order{Products} = $Ordered_Products_By_OrderId{$$Order{id}};
 			$$Order{Invoices} = $Invoices_By_OrderId{$$Order{id}};
 			$$Order{Taxes} = $Order_Taxes{$$Order{id}};
 			if ( $param{reprint} ) {

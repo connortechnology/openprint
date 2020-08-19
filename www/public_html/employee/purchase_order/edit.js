@@ -180,3 +180,7 @@ function del_poc(id) {
 		}
 	});
 }
+
+function update_vendor() {
+	new Ajax.Request('/employee/purchase_order/_po_select_vendor.json', { parameters: { supplier_id: $('supplier_id').value } } );
+}

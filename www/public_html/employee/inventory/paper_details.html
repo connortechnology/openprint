@@ -1,8 +1,8 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
-<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
-<script type="text/javascript">
-	function check_inputs(form ) {
-		if ( form.btnFunction && form.btnFunction.value=='Allocate' ) {
+<script src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script>
+	function check_inputs(form) {
+		if ( form.btnFunction && (form.btnFunction.value=='Allocate') ) {
 			if ( form.available_quantity && parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) {
 				return confirm( 'There are only ' + form.available_quantity.value + ' available! Do you want to proceed with the allocation?' );
 			} // end if

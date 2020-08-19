@@ -61,7 +61,7 @@
 					<td class="thumbnail"><a href="view.html?asset_id=%1$d">%7$s</a></td>
 				</tr>`, $$Asset{id}, format_datetime( $Asset->created_on() ), 
 				$Asset->Creator()->name(), $Asset->name(), $Asset->filename(),
-				( $Asset->public() ? 'Yes' : 'No' )
+				( $Asset->public() ? 'Yes' : 'No' ),
 				sprintf('<img src="%s" alt=""/>', $Asset->sized_url( 'small' ) ),
 				);
 		} # end while

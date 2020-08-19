@@ -18,10 +18,12 @@ package openprint::Estimating::PerfectBound;
 use strict;
 use warnings;
 
+use constant DEBUG => 0;
+
+require openprint::Equipment;
 require openprint::service;
 require openprint::Project;
 
-use constant DEBUG => 0;
 my @Equipment;
 
 my %variables = (
@@ -151,22 +153,14 @@ sub signature_calc {
 
 	foreach my $I ( @$Impositions ) {
 		$I->display('In PerfectBi:') if DEBUG;
-		if ( ! $$I{specs} ) {
-			my ( $caller, undef, $line ) = caller;
-			$openprint::log->error("No specs from imposition $caller line $line @$Impositions");
-
-			$I->display('This');
-			foreach my $i ( @$Impositions ) {
-				$i->display('all');
-			}
-			next;
-		}
 		my $sig_specs = $$I{specs};
 		my $form = $$sig_specs{SignatureIndex};
 #$printed_impositions{$$I{imposition}} = !undef;
 		if ( ! $$I{Folds} ) {
-			$openprint::log->error("No folds in imposition, generating");# if DEBUG;
-			$I->display("No Folds") if DEBUG;
+			$openprint::log->error("No folds in imposition, generating");
+      if ( DEBUG ) {
+			$I->display("No Folds");
+      }
 			$$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index, $Project ) ] if $folding_specs;
 		} # end if
 

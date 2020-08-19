@@ -519,8 +519,12 @@ sub button {
 		$$options{href} = '#';
 	} # end if
 	$$options{text} = $name if ! exists $$options{text};
-
-	my $html = qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
+	
+	my $html = $$options{type} ?
+		qq`<button id="Button$name" class="button $$options{class}" type="$$options{type}"` :
+		qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
+	$html .= qq`name="$$options{name}" ` if $$options{name};
+	$html .= qq`value="$$options{value}" ` if $$options{value};
 	$html .= qq`title="$$options{title}" ` if $$options{title};
 	$html .= 'target="$$options{target}" ' if $$options{target};
 	if ( $$options{onclick} ) {
@@ -550,7 +554,7 @@ sub button {
 	} else {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
 	}
-	$html .= "</a>";
+	$html .= $$options{type} ? '</button>' : '</a>';
 	return $html;
 } # end sub button
 
@@ -958,10 +962,10 @@ sub input {
 		$options{step} = 'any' if ! exists $options{step};
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{pattern} = '[\+\-]?[.0-9]*' if ! $options{pattern};
+			$options{pattern} = '[\+\-]?[.0-9eE]*' if ! $options{pattern};
 		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
 			$options{type} = 'text';
-			$options{pattern} = '^[\+\-]?[.0-9]*' if ! $options{pattern};
+			$options{pattern} = '^[\+\-]?[.0-9eE]*' if ! $options{pattern};
 			delete $options{step};
 		} else {
 			$options{type} = 'number';
@@ -972,10 +976,10 @@ sub input {
         $options{step} = 'any' if ! exists $options{step};
         if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
             $options{type} = 'text';
-            $options{pattern} = '[.0-9]*' if ! $options{pattern};
+            $options{pattern} = '[.0-9eE]*' if ! $options{pattern};
         } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
             $options{type} = 'text';
-            $options{pattern} = '[.0-9]*' if ! $options{pattern};
+            $options{pattern} = '[.0-9eE]*' if ! $options{pattern};
             delete $options{step};
         } else {
             $options{type} = 'number';
@@ -985,10 +989,10 @@ sub input {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
-        } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
-            $options{type} = 'text';
+		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+			$options{type} = 'text';
 			$options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
-            delete $options{step};
+			delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if

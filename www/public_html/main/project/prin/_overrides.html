@@ -43,10 +43,19 @@
 <? echo ( my $html;
 	my @PrintingTypes = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} );
 	if ( @PrintingTypes > 1 ) {
-		$html .= '<li><label>Printing type</label>';
-		$html .= ssi::select( [ '', 'Auto', map { $_, $_ } @PrintingTypes ], $$variable{"PrintingType-$$variable{Signature}"}, { name=>"PrintingType-$$variable{Signature}", size=>1 } );
-		$html .= '</li>';
-	} # end if
+		$html .= join("\n",
+				'<li><label>Printing type</label>',
+				ssi::select(
+					[ '', 'Auto', map { $_, $_ } @PrintingTypes ],
+					$$variable{"PrintingType-$$variable{Signature}"},
+					{
+					name=>"PrintingType-$$variable{Signature}",
+					size=>1,
+					onchange=>'calc(this.form.name);'
+					} ),
+				'</li>'
+				);
+		} # end if
 	return $html;
 ) ?>
 	</ul>

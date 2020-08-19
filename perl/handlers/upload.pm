@@ -135,14 +135,14 @@ sub handler {
 			if ( $uploads and %$uploads ) {
 				my $Object = ('openprint::'.$param{UploadType})->new( $param{id} );
 				while ( my ( $field, $upload ) = each %$uploads ) {
-					$error .= $Object->upload( $field );
+					$error .= $Object->upload($field, \%param);
 				} # end while
 			} else {
 				$log->error('no uploads'.$r->body());
 			}
 
 			$r->content_type('application/json');
-			if ( $error and ref $error ne 'openprint::'.$param{UploadType} ) {
+			if ( $error and (ref $error ne 'openprint::'.$param{UploadType}) ) {
 				$log->debug("Printing success:false $error");
 				$r->print( qq|{ "success": false, "error": "$error" }| );
 			} else {

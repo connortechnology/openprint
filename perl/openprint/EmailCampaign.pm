@@ -29,6 +29,8 @@ $serial = 'emailcampaigns_id_seq';
 		email_subject	=>	'email_subject',
 		email_from	=>	'email_from',
 		email_to		=>	'email_to',
+		email_cc		=>	'email_cc',
+		email_bcc		=>	'email_bcc',
 		email_text	=>	'email_text',
 		email_html	=>	'email_html',
 		attachments	=>	'attachments',
@@ -40,6 +42,7 @@ $serial = 'emailcampaigns_id_seq';
 		deleted			=>	'deleted',
 		user_id				=>	'user_id',
 		recipients_per_run	=>	'recipients_per_run',
+	mailinglist		=>	'mailinglist',
 );
 
 %defaults = (
@@ -55,6 +58,7 @@ $serial = 'emailcampaigns_id_seq';
 		user_id			=>	undef,
 		runnable		=> 0,
 		recipients_per_run	=>	undef,
+		mailinglist	=>	1,
 );
 %transforms = (
 	email_text					=>	[ 's/^\s+//', 's/\s+$//' ],
@@ -133,12 +137,14 @@ sub send_email {
 	$text_body = ssi::variable_substitution( \$$self{email_text}, $replacements ) if $$self{email_text};
 
 	my @attachments = eval $self->{attachments};
-	$openprint::log->warn( "Eval error Reason: " . $@ ) if $@;
+	$openprint::log->warn('Eval error Reason: '.$@) if $@;
 
 	my $results = $Email->send(
 			FROM	=> $self->{email_from} ? $self->{email_from} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
 			TO		=> ( $$self{email_to} ? $$self{email_to} : $$replacements{User} ),
 #BCC => 'iconnor@point-one.com',
+			( $$self{email_cc} ? ( CC=>$$self{email_cc} ) : () ),
+			( $$self{email_bcc} ? ( BCC=>$$self{email_bcc} ) : () ),
 			SUBJECT => $$self{email_subject},
 			( $text_body ? ( BODY => $text_body ) : () ),
 			( $html_body ? ( HTML_BODY => $html_body ) : () ),
@@ -148,8 +154,8 @@ sub send_email {
 	if ( $$replacements{User} and $$replacements{User}->id() ) {
 		sql::insert( undef, undef, 'EmailCampaign_Sent', 
 				campaign_id =>	$self->{id},
-				EmailSentOn	=>				'NOW()',
-				NumEmailSent	=> 1,
+				emailsenton	=>	'NOW()',
+				numemailsent=> 1,
 				user_id	=>	$$replacements{User}->id(),
 				);
 	}
@@ -173,9 +179,9 @@ sub send {
 	my $query = $self->{query};
 	if ( $$self{timestosend} ) {
 		$query .= " AND (
-( NOT EXISTS (SELECT NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=102 AND user_id=Users.id))
+( NOT EXISTS (SELECT numemailsent FROM EmailCampaign_Sent WHERE campaign_id=$$self{id} AND EmailCampaign_Sent.user_id=users.id))
  OR
-( (SELECT MAX(NumEmailSent) FROM EmailCampaign_Sent WHERE campaign_id=$$self{id} AND user_id=Users.id) < $$self{timestosend}) )";
+( (SELECT MAX(numemailsent) FROM EmailCampaign_Sent WHERE campaign_id=$$self{id} AND EmailCampaign_Sent.user_id=users.id) < $$self{timestosend}) )";
 	}
 	if ( $$self{recipients_per_run} ) {
 		$query .= ' LIMIT ' . int($$self{recipients_per_run});
@@ -223,7 +229,7 @@ sub send {
 
 		my ( $interval_expired, $last_sent_on, $num_email_sent );
 # First check if a sent row exists
-    $_ = 'SELECT (NOW() - EmailSentOn) > ?, EmailSentOn, NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
+    $_ = 'SELECT (NOW() - emailsenton) > ?, emailsenton, numemailsent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
 		if ( ( $interval_expired, $last_sent_on, $num_email_sent ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_id ) ) {
 
 # Check if the duration has elapsed 
@@ -240,7 +246,7 @@ sub send {
 			} # if $num_email_sent > num_times to send
 		}
 
-		if ( $User->mailinglist() and ($User->mailinglist() eq 'N') ) {
+		if ( $$self{mailinglist} and $User->mailinglist() and ($User->mailinglist() eq 'N') ) {
 			$results .= sprintf(
 					'<span class="error">NOT Sending Email to: %s at %s : they have chosen to not receive email.</span><br/>',
 					$replacements{User}->link_to(),$replacements{User}->email()
@@ -368,7 +374,7 @@ sub trial {
 		my ( $interval_expired, $num_email_sent );
 
 # First check if a sent row exists
-		$_ = 'SELECT (NOW() - EmailSentOn) > ?, NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
+		$_ = 'SELECT (NOW() - emailsenton) > ?, numemailsent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
 		if ( ( $interval_expired, $num_email_sent ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_id ) ) {
 
 # Check if the duration has elapsed	

@@ -19,6 +19,8 @@ require openprint::Order_Status;
 require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
+require openprint::OrderedProject;
+require openprint::OrderedProduct;
 
 $debug = 0;
 
@@ -176,7 +178,9 @@ sub destroy {
 
 sub to_string {
 	my $self = shift;
-	return '';
+	return sprintf('%d %s %s %s %s', $$self{id},
+			$self->Company()->name(), $self->Currency()->format($self->total()),
+			ssi::format_date($self->created_on()), $self->status());
 } # end sub
 
 # Approve is acknowledging the prices, etc and giving the go ahead. So this function updates all the prices, taxes, statuses, etc.
@@ -313,18 +317,15 @@ sub Company {
 
 sub Contents {
 	if ( ! $_[0]{Contents} ) {
-require openprint::OrderedProject;
-require openprint::OrderedProduct;
 		$_[0]{Contents} = [ 
-			openprint::OrderedProject->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProject::fields{project_id}), 
-			openprint::OrderedProduct->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProduct::fields{project_id}),
+			$_[0]->Ordered_Projects(),
+			$_[0]->Products(),
 			];
 	} # end if
 	return @{$_[0]{Contents}};
 } # end sub Contents
 
 sub Ordered_Projects {
-	require openprint::OrderedProject;
 	return openprint::OrderedProject->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProject::fields{project_id});
 } # end sub Ordered_Projects
 
@@ -332,7 +333,6 @@ sub Projects {
 	my $self = shift;
 	$$self{Projects} = shift if @_;
 	if ( $$self{id} and ! $$self{Projects} ) {
-		require openprint::OrderedProject;
 		$$self{Projects} = [ map { $_->Project() } $self->Ordered_Projects() ];
 	}
 
@@ -342,12 +342,14 @@ sub Projects {
 
 sub Products {
 	my $self = shift;
+ 	$$self{Products} = shift if @_;
 	if ( ! $$self{id} ) {
 		$openprint::log->warn("openrpint::Order->Products called with no id");
 		return ();
 	} # end if
-	require openprint::OrderedProduct;
-	@{$$self{Products}} = openprint::OrderedProduct->find( order_id=>$$self{id}, order=>'product_id' );
+	if ( ! $$self{Products} ) {
+		@{$$self{Products}} = openprint::OrderedProduct->find( order_id=>$$self{id}, order=>'product_id' );
+	}
 	return @{$$self{Products}};
 } # end sub Products
 
@@ -639,7 +641,7 @@ sub send_admin_emails {
 	my @project_dockets = ();
 
 	# Add a project summary and docket sheet for each project in the order
-	my $docket_content = ssi::slurp_content( '/email_content/order_docket_sheet.html' );
+	my $docket_content = ssi::slurp_content('/email_content/order_docket_sheet.html');
 	my $summary_content = ssi::slurp_content( '/email_content/project_summary.html' );
 	foreach my $Project ($self->Projects()) {
 		my %data = (
@@ -759,11 +761,13 @@ sub Payments {
 }
 
 sub paid {
-	$_[0]{paid} = $_[1] if ( @_ == 2 );
-	if ( $_[0]{id} and ! defined $_[0]{paid} ) {
-		$_[0]{paid} = misc::sum( map { $_->amount() } $_[0]->Payments() );
+	my $self = shift;
+
+	$$self{paid} = shift if @_;
+	if ( $$self{id} and ! defined $$self{paid} ) {
+		$$self{paid} = misc::sum( map { $_->Currency()->convert_from($_->amount(), $self->Currency()) } $self->Payments() );
 	} # end if
-	return $_[0]{paid};
+	return $$self{paid};
 } # end sub paid
 
 sub payment_days {
@@ -1044,6 +1048,49 @@ sub address_html {
     ( map { $self->$_() ? $countries::countries{$$self{$_}} : () } ( 'country' ) ),
   );
 }
+
+sub deposit_due {
+	my $Order = shift;
+
+	if (
+			($Order->status() ne 'Cancelled')
+			and
+			$Order->downpayment()
+			and
+			( $Order->paid() < $Order->downpayment())
+		 ) {
+    return Math::Round::nearest(0.01, $Order->downpayment() - $Order->paid());
+  } # end if
+	return 0;
+} # end sub deposit_due
+
+sub close {
+	my $Order = shift;
+	$Order->subtotal(undef);
+	foreach my $Tax ( $Order->Taxes() ) {
+		$Tax->save({ amount => undef });
+	} # end foreach Tax
+	$Order->total(undef);
+	$Order->status('In Production');
+	$Order->save();
+	$Order->add_log('Close Order');
+	foreach my $OP ( $Order->Ordered_Projects() ) {
+		my $Project = $OP->Project();
+		sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+		if ( $Project->docket() != $Order->docket() ) {
+			$Project->save({docket=>$Order->docket()});
+		}
+		$Project->update_status();
+	}
+	foreach my $Product ( $Order->Products() ) {
+		if ( $$Product{project_id} ) {
+			my $Project = $Product->Project();
+			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+			$Project->update_status();
+		}
+	}
+	$Order->update_status();
+} # end sub close
 
 1;
 __END__

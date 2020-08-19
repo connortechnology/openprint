@@ -65,6 +65,7 @@ if ( length($mac) != 12 ) {
 	$log->error("Invalid mac $mac from $ARGV[1]");
 	die "Invalid mac $mac";
 }
+$hostname = '' if !defined($hostname);
 
 if ( $config{db_name} ) {
 	$openprint::dbh = sql::open_sql( $log,
@@ -88,9 +89,13 @@ my @Interfaces = openprint::Host_Interface->find(mac=>$mac);
 if ( @Interfaces ) {
 	foreach my $Interface ( @Interfaces ) {
 		if ( $Interface->dhcp() ) {
-			if ( $Interface->ip() ne $ip ) {
+			if ( (!$Interface->ip()) or ($Interface->ip() ne $ip) ) {
 				my $Host = $Interface->Host();
-				(new openprint::Log())->save( { Object=>$Host, note=>"IP Address changed from $$Interface{ip} to $ip " . $Interface->Host()->link_to(), action=>'IP Changed' } );
+				(new openprint::Log())->save({
+						Object=>$Host,
+						note=>join(' ', 'IP Address changed from', (defined($$Interface{ip}) ?$$Interface{ip}:''),'to', $ip, $Interface->Host()->link_to() ),
+						action=>'IP Changed',
+						});
 				$_ = $Interface->save({ip=>$ip});
 				$log->error($_) if $_;
 # Update updated_on
@@ -105,7 +110,11 @@ if ( @Interfaces ) {
 
 		foreach my $I ( openprint::Host_Interface->find( 'mac !=' => $mac, ip=>$ip ) ) {
 			$I->save({ip=>undef});
-			(new openprint::Log())->save( { Object => $I->Host(), note=>'IP Address removed because it is taken by host ' . $Interface->Host()->link_to(), action=>'IP Changed' } );
+			(new openprint::Log())->save({
+					Object => $I->Host(),
+					note=>"IP Address $ip removed because it is taken by host ".$Interface->Host()->link_to(),
+					action=>'IP Changed',
+					});
 		} # end foreach I
 	} # end foreach Interface
 } else {
