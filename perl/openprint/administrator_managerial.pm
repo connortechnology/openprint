@@ -1151,7 +1151,6 @@ sub _user_logs {
 
 sub users {
 	$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
-
 }
 sub _users {
 	my $uri = '/administrator/managerial/users.html';

@@ -147,10 +147,10 @@ sub destroy {
 sub ping {
 	require Net::Ping;
 	my $p = Net::Ping->new();
-my $rc;
+	my $rc;
 	foreach my $HI ( $_[0]->Interfaces() ) {
 		next if ! $$HI{ip};
-	 $rc = $p->ping($$HI{ip});
+		$rc = $p->ping($$HI{ip});
 		return $rc if $rc;
 	}
 	$p->close();
@@ -163,7 +163,7 @@ sub Type {
 
 sub type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::Host_Type->find_one('name lc'=> lc openprint::Host_Type->transform('name',$_[1]) );
+		my $Type = openprint::Host_Type->find_one('name lc'=> lc openprint::Host_Type->transform(name=>$_[1]) );
 		if ( ! $Type ) {
 			$Type = new openprint::Host_Type();
 			$Type->save({name=>$_[1]});
@@ -494,6 +494,12 @@ sub get_config {
 	my $self = shift;
 	my %config;
 
+	if ( !($$self{type_id} and $self->type()) ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->debug("get_config called when can_get_config should have been checked from $caller:$line");
+		return;
+	}
+
 	eval {
 		require 'openprint/Host/'.$self->type().'.pm';
 		my $Host = ('openprint::Host::'.$self->type())->new($self);
@@ -506,6 +512,11 @@ sub get_config {
 sub get_status {
 	my $self = shift;
 	my %status;
+	if ( !($$self{type_id} and $self->type()) ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->debug("get_status called when can_get_status should have been checked from $caller:$line");
+		return;
+	}
 
 	eval {
 		require 'openprint/Host/'.$self->type().'.pm';
@@ -518,11 +529,11 @@ sub get_status {
 
 sub can_get_status {
 	return 0;
-	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L','Vivotek' ] ) );
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'Vivotek' ] ) );
 }
 
 sub can_get_config {
-	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L','Vivotek' ] ) );
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L'] ) );
 }
 
 sub get_and_store_config {
@@ -573,7 +584,13 @@ sub check {
 sub thumbnail_html {
 	my $self = shift;
 	my $size = @_ ? shift : 'small';
-	return '<img src="'.$self->thumbnail_url($size).'" alt=""/>';
+	if ( $self->can_get_image() ) {
+		my @dimensions = openprint::Asset::get_dimensions('Landscape', $size);
+		return '<img src="'.$self->get_image(@dimensions).'" alt=""/>';
+	}
+	my @Assets = $self->Assets();
+	$openprint::log->debug("Assets: $size " . @Assets);
+	return ( @Assets ? $Assets[0]->Asset()->sized_html($size) : '' );
 }
 
 sub thumbnail_url {
@@ -584,7 +601,7 @@ sub thumbnail_url {
 		return $self->get_image(@dimensions);
 	}
 	my @Assets = $self->Assets();
-	return ( @Assets ? $Assets[0]->Asset()->sized_html($size) : '' );
+	return ( @Assets ? $Assets[0]->Asset()->sized_url($size) : '' );
 }
 
 1;

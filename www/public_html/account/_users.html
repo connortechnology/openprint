@@ -1,10 +1,11 @@
 <? eval (
-	my $uri = '/administrator/managerial/users.html';
+	my $uri = '/account/users.html';
 	if ( $session{$uri.'?email'} ) {
     my %filters = (
-		'email ilike' => '%'.$session{$uri.'?email'}.'%',
-			deleted => [0,1],
-	);
+				'email ilike' => '%'.$session{$uri.'?email'}.'%',
+				limit=>100,
+				deleted => [0,1],
+			);
     $$variable{Users} = [ openprint::User->find( %filters ) ];
 	} else {
     my %filters = (
@@ -25,10 +26,10 @@
 			@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};
 			$filters{'salesrep_id not in'} = \@csr_ids;
 		} elsif ( $session{$uri.'?salesrep_id'} ) {
-			$filters{salesrep_id} = $session{$uri.'?salesrep_id'};
+			$filters{'salesrep_id'} = $session{$uri.'?salesrep_id'};
 		} # end if
 		if ( $session{$uri.'?usergroup_id'} ) {
-			$filters{usergroup_id} = $session{$uri.'?usergroup_id'};
+			$filters{'usergroup_id any'} = $session{$uri.'?usergroup_id'};
 		} # end if
 		
 		my @Users = openprint::User->find( %filters );
@@ -36,9 +37,9 @@
 
 		if ( $session{$uri.'?notification_type_id'} ) {
 			my %Notifications = map { $$_{user_id}, $_ } openprint::User_Notification->find( type_id=>$session{$uri.'?notification_type_id'} );
-			@{$$variable{Users}} = map { $Notifications{$$_{id}} ? $_ : () } @Users;
+			@{$$variable{Users}} = map { ( $Notifications{$$_{id}} and $_->can_view() ) ? $_ : () } @Users;
 		}	else {
-			$$variable{Users} = \@Users;
+			@{$$variable{Users}} = map { $_->can_view() ? $_ : () } @Users;
 		}
 	} 
 ) ?>	
@@ -70,11 +71,11 @@
 	<td class="Date">%5$s</td>
 </tr>
 `, $rowclass, 
-	$User->admin_link_to( $$User{id} ),
-	$User->admin_link_to( $User->name() ), 
-	$User->admin_link_to( $User->email() ), 
+	$User->link_to( $$User{id} ),
+	$User->link_to( $User->name() ), 
+	$User->link_to( $User->email() ), 
 	format_date( $$User{created_on} ),
-	$User->Company()->name(),
+	$User->Company()->link_to(),
 	$User->type(),
 	join(', ', 
 		( $User->ftp_active() ? 'FTP' : () ),

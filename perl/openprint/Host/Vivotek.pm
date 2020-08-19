@@ -9,8 +9,8 @@ require openprint::Host;
 
 package openprint::Host::Vivotek;
 our @ISA = qw(
- openprint::Host
- );
+		openprint::Host
+		);
 
 sub new {
 	my ( $class, $Host ) = @_;
@@ -18,11 +18,12 @@ sub new {
 	bless $self, $class;
 	return $self;
 }
+
 sub Host {
 	return $_[0]{Host};
 }
 
-sub get_config {
+sub get_status {
 	my $self = shift;
 	my $ua = LWP::UserAgent->new;
 	my $Host = $self->Host();
@@ -30,7 +31,7 @@ sub get_config {
 	foreach my $HI ( $Host->Interfaces() ) {
 		my $url = 'http://'.$HI->ip().'/cgi-bin/admin/lsctrl.cgi?cmd=queryStatus&retType=javascript';
 		my $req = new HTTP::Request(GET => $url);
-		$req->authorization_basic('root','p1GraPHic');
+		$req->authorization_basic('root', 'p1GraPHic');
 		my $response = $ua->request($req);
 		if ( $response->is_success() ) {
 			my $resp = $response->decoded_content;
@@ -47,7 +48,7 @@ sub get_config {
 		}
 	} # end foreach
 	return;
-} # end sub get_config
+} # end sub get_status
 
 sub check {
 	my $self = shift;
@@ -58,10 +59,10 @@ sub check {
 		if ( $$status{disk_i0_cond} !~ /ready/ ) {
 				push @check, 'SD card not ready';
 		} else {
-			$openprint::log->debug("status was $$Config{data_json}");
+			$openprint::log->debug('status was '.(defined($$Config{data_json}) ? $$Config{data_json} : 'undef'));
 		}
 	} else {
-		$openprint::log->warn("No config found for status");
+		$openprint::log->warn('No config found for status');
 	}
 	return @check;
 }

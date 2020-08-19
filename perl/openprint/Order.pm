@@ -178,7 +178,9 @@ sub destroy {
 
 sub to_string {
 	my $self = shift;
-	return '';
+	return sprintf('%d %s %s %s %s', $$self{id},
+			$self->Company()->name(), $self->Currency()->format($self->total()),
+			ssi::format_date($self->created_on()), $self->status());
 } # end sub
 
 # Approve is acknowledging the prices, etc and giving the go ahead. So this function updates all the prices, taxes, statuses, etc.
@@ -1061,6 +1063,34 @@ sub deposit_due {
   } # end if
 	return 0;
 } # end sub deposit_due
+
+sub close {
+	my $Order = shift;
+	$Order->subtotal(undef);
+	foreach my $Tax ( $Order->Taxes() ) {
+		$Tax->save({ amount => undef });
+	} # end foreach Tax
+	$Order->total(undef);
+	$Order->status('In Production');
+	$Order->save();
+	$Order->add_log('Close Order');
+	foreach my $OP ( $Order->Ordered_Projects() ) {
+		my $Project = $OP->Project();
+		sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+		if ( $Project->docket() != $Order->docket() ) {
+			$Project->save({docket=>$Order->docket()});
+		}
+		$Project->update_status();
+	}
+	foreach my $Product ( $Order->Products() ) {
+		if ( $$Product{project_id} ) {
+			my $Project = $Product->Project();
+			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+			$Project->update_status();
+		}
+	}
+	$Order->update_status();
+} # end sub close
 
 1;
 __END__
