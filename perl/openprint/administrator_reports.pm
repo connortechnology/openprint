@@ -34,11 +34,19 @@ sub orders {
 		my @data;
 		my $total = 0;
 		foreach my $Order ( @Orders ) {
-			push @data, $Order->id(), $Order->docket(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Order->created_on())), $Order->Company()->CSR()->name(), $Order->Company()->name(), $Order->status(), openprint::Currency::format( $Order->Currency()->convert_from( $Order->total() ) );
+			push @data, ( 
+					$Order->id(), $Order->docket(),
+					ssi::format_csv_datetime($Order->created_on()),
+					$Order->Company()->CSR()->name(),
+					$Order->Company()->name(),
+					$Order->status(),
+					$Order->Currency()->format($Order->total()),
+					$Order->Currency()->name(),
+					);
 			next if $Order->status() eq 'Cancelled';
 			$total += $Order->Currency()->convert_from( $Order->total() );
 		} # end foreach Order
-		push @data, '', '', '', '', '', 'Total:', openprint::Currency::format( $total ), '';
+		push @data, '', '', '', '', '', 'Total:', $openprint::Currency->format($total), $openprint::Currency->name();
 
 		misc::export_csv( $r, $log, \%variable, 'order_report.csv', \@header, \@data );
 	} else {
