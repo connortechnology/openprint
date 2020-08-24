@@ -18,18 +18,18 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *config = \%openprint::config;
 
 sub orders {
-	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
+	if ( $param{btnFunction} eq 'Download in CSV format' ) {
 		my @header = ('OrderID', 'Docket', 'Order Date', 'CSR', 'Company Name', 'Status', 'Total', 'Currency');
 
 		my @Orders = openprint::Order->find(
 				( $param{company_id} ? ( company_id		=> $param{company_id} ) : () ),
 				ssi::date_filter( $r->uri().'?created_on_end', 'created_on <=' ), 
 				ssi::date_filter( $r->uri().'?created_on_start', 'created_on >=' ),
-				( $param{'TotalStart'} ? ( 'value >='	   => $param{'TotalStart'} ) : () ),
-				( $param{'TotalEnd'} ? ( 'value <='		 => $param{'TotalEnd'} ) : () ),
-				( $param{ddmEmployee} ? ( 'salesrep_id'	   => $param{'ddmEmployee'} ) : () ),
-				( $param{ddmStatus} ? ( 'status'			=> $param{'ddmStatus'} ) : () ),
-				( $param{ddmCurrency} ? ( 'currency_id'	   => $param{'ddmCurrency'} ) : () ),
+				( $param{TotalStart} ? ( 'value >='	   => $param{TotalStart} ) : () ),
+				( $param{TotalEnd} ? ( 'value <='		 => $param{TotalEnd} ) : () ),
+				( $param{ddmEmployee} ? ( salesrep_id	   => $param{ddmEmployee} ) : () ),
+				( $param{ddmStatus} ? ( status			=> $param{ddmStatus} ) : () ),
+				( $param{ddmCurrency} ? ( 'currency_id'	   => $param{ddmCurrency} ) : () ),
 				);
 		my @data;
 		my $total = 0;
@@ -37,7 +37,7 @@ sub orders {
 			push @data, ( 
 					$Order->id(), $Order->docket(),
 					ssi::format_csv_datetime($Order->created_on()),
-					$Order->Company()->CSR()->name(),
+					$Order->CSR()->name(),
 					$Order->Company()->name(),
 					$Order->status(),
 					$Order->Currency()->format($Order->total()),
@@ -85,16 +85,16 @@ sub custom {
 
 		my ( $num_columns, @data ) = sql::run_query( $log, $dbh, $command );
 		if ( ! @data ) {
-			$$variable{'RESULTS'} = $dbh->errstr;
+			$$variable{RESULTS} = $dbh->errstr;
 		} else {
-			$$variable{'RESULTS'} = "<table>";
+			$$variable{RESULTS} = "<table>";
 			while( my @line = splice( @data, 0, $num_columns ) ) {
 				for ( my $i = 0; $i < @line; $i += 1 ) {
 					$line[$i] =~ s/,//g;
 				} # end for
-				$$variable{'RESULTS'} .= "<tr><td>" . join( "</td><td>", @line )."</td></tr>\n";
+				$$variable{RESULTS} .= "<tr><td>" . join( "</td><td>", @line )."</td></tr>\n";
 			} # end for 
-			$$variable{'RESULTS'} .= "</table>\n";
+			$$variable{RESULTS} .= "</table>\n";
 		} # end if
 
 	} elsif ( $r->param('btnFunction') eq 'Download in CSV format' ) {
@@ -114,7 +114,7 @@ sub custom {
 	} # end if
 
 	$_ = "SELECT lngIndex, strReportName FROM tbl_Reports";
-	$$variable{'ddmStoredReport'} = ssi::fill_drop_down( $log, $dbh, $_, $id );
+	$$variable{ddmStoredReport} = ssi::fill_drop_down( $log, $dbh, $_, $id );
 
 } # end sub custom
 
@@ -122,7 +122,7 @@ sub customer_login {
 
 	ssi::setup_date_select( $r->uri(), 'registered_on_start', -30 );
 	_customer_login();
-	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
+	if ( $param{btnFunction} eq 'Download in CSV format' ) {
 		my @header = ( 'Company Name','Contact Name', 'Phone #', 'Email','City','State','Registration Date','Account Rep','# of Projects','Last Project','# of Orders','Last Order', 'Last Order Value');
 		my @data;
 		foreach my $Company ( @{$variable{Companies}} ) {
@@ -185,12 +185,12 @@ sub CustomerServiceReps {
 	my $date_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?date_end_'.$_ } ( 'year','month','day' ) } ) if Date::Calc::check_date( @session{map { $r->uri().'?date_end_'.$_ } ( 'year','month','day' ) } );;
  
 	$variable{Employees} = openprint::User->dropdown(company_id=>$config{owner_id}, type=>['E','A'],order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales', web_active=>'Y' );
-	$variable{ddmEmployees} = ssi::make_drop_down( $variable{Employees}, $param{'ddmEmployees'} );
+	$variable{ddmEmployees} = ssi::make_drop_down( $variable{Employees}, $param{ddmEmployees} );
 
 	my $estimator = $param{ddmEstimator};
-	$variable{'ddmEstimatorOptions'} = ssi::make_drop_down( $variable{'Employees'}, $param{'ddmEstimator'} );
+	$variable{ddmEstimatorOptions} = ssi::make_drop_down( $variable{Employees}, $param{ddmEstimator} );
 
-	@{$variable{'Currencies'}} = sql::execute( $log, $dbh, "SELECT id, Name, Symbol FROM Currencies ORDER BY lower(name)" );
+	@{$variable{Currencies}} = sql::execute( $log, $dbh, "SELECT id, Name, Symbol FROM Currencies ORDER BY lower(name)" );
 
 	my %ordered_projects;
 
@@ -207,19 +207,19 @@ sub CustomerServiceReps {
 	my @data = sql::execute( $log, $dbh, $query );
 	while ( my ( $project_id, $status, $employee, $price, $currency_index ) = splice @data,0,5 ) {
 		$variable{'TotalProjectCount'.$employee} += 1;
-		$variable{'TotalProjectCount'} += 1;
+		$variable{TotalProjectCount} += 1;
 		if ( $status eq 'Deleted' ) {
 			$variable{'DeletedProjectCount'.$employee} += 1;
-			$variable{'DeletedProjectCount'} += 1;
+			$variable{DeletedProjectCount} += 1;
 		} elsif ( $status eq 'uncalculated' ) {
 			$variable{'UnfinishedProjectCount'.$employee} += 1;
-			$variable{'UnfinishedProjectCount'} += 1;
+			$variable{UnfinishedProjectCount} += 1;
 		} elsif ( $status eq 'Unordered' ) {
 			$variable{'UnorderedProjectCount'.$employee} += 1;
-			$variable{'UnorderedProjectCount'} += 1;
+			$variable{UnorderedProjectCount} += 1;
 		} else { # ordered
 			$variable{'OrderedProjectCount'.$employee} += 1;
-			$variable{'OrderedProjectCount'} += 1;
+			$variable{OrderedProjectCount} += 1;
 			$variable{"OrderValue-$employee-$currency_index"} += $price;
 			$variable{"OrderValue-$currency_index"} += $price;
 		} # end if
@@ -229,26 +229,26 @@ sub CustomerServiceReps {
 
 sub order_details {
 
-	my $order_id = $param{'order_id'};
+	my $order_id = $param{order_id};
 	$order_id =~ s/\D//g;
 	my $Order = new openprint::Order( $order_id );
 
-	if ( $param{'btnFunction'} eq 'Delete' ) {
+	if ( $param{btnFunction} eq 'Delete' ) {
 		if ( openprint::Payment->find('order_id'=>$order_id ) ) {
-			$variable{'error'} .= "Order $order_id appears to have payments.  Please delete the payments before deleting the order.";
+			$variable{error} .= "Order $order_id appears to have payments.  Please delete the payments before deleting the order.";
 		} else {
 			$Order->delete();
-			$variable{'Redirect'} = '/administrator/reports/orders.html';
+			$variable{Redirect} = '/administrator/reports/orders.html';
 			return;
 		} # en dif
-	} elsif ( $param{'btnFunction'} eq 'Resend' ) {
+	} elsif ( $param{btnFunction} eq 'Resend' ) {
 		$Order->add_log( 'Resent' );
 		$Order->send_sales_order( );
-	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
+	} elsif ( $param{btnFunction} eq 'Pay' ) {
 		$Order->pay();
-	} elsif ( $param{'btnFunction'} eq 'Save Payment' ) {
+	} elsif ( $param{btnFunction} eq 'Save Payment' ) {
 
-		if ( ( ! $param{'Amount'} ) or $param{'Amount'} =~ /[^-\$\d\.]/ ) {
+		if ( ( ! $param{Amount} ) or $param{Amount} =~ /[^-\$\d\.]/ ) {
 			return misc::error( $log, $dbh, \%variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
 		} # end if
 
@@ -258,10 +258,10 @@ sub order_details {
 				'order_id'		=>	$order_id,
 				'recipient_id'	=>	$openprint::User->company_id(), 
 				'payor_id'		=>	$Order->company_id(),
-				'amount'		=>	$param{'Amount'},
+				'amount'		=>	$param{Amount},
 				'method'		=>	'Manual',
 				'currency_id'	=>	$Order->currency_id(),
-				'memo'			=>	$param{'Description'},
+				'memo'			=>	$param{Description},
 				} );
 		if ( $error ) {
 			return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
@@ -269,7 +269,7 @@ sub order_details {
 
 		openprint::order::get_misc( \%variable, $Order );
 
-		if ( $variable{'DepositDue'} > 0 ) {
+		if ( $variable{DepositDue} > 0 ) {
 			foreach my $project_id ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
 				sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_id, 'In Prepress'], 'strStatus', 'Pending Deposit' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', [ 'lngProjectIndex=? AND strStatus=?', $project_id, 'Ordered'], 'strStatus', 'Pending Deposit' );
@@ -281,21 +281,21 @@ sub order_details {
 				sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_id, 'Pending Deposit'], 'strStatus', 'In Prepress' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_id, 'Pending Deposit'], 'strStatus', 'Ordered' );
 			} # end foreach
-			if ( $variable{'AmountPaid'} >= $variable{'TOTAL'} ) {
+			if ( $variable{AmountPaid} >= $variable{TOTAL} ) {
 				$Order->status('Paid') if $Order->status() eq 'Complete';
 			} # end if
 			$Order->save();
 		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Delete Payment' ) {
-		$param{'payment_id'} =~ s/\D//g;
-		if ( $param{'payment_id'} ) {
-			my $Payment = new openprint::Payment( $param{'payment_id'} );
+	} elsif ( $param{btnFunction} eq 'Delete Payment' ) {
+		$param{payment_id} =~ s/\D//g;
+		if ( $param{payment_id} ) {
+			my $Payment = new openprint::Payment( $param{payment_id} );
 			$Payment->delete();
 		} # end if
 		$Order->update_status();
-	} elsif ( $param{'btnFunction'} eq 'Cancel' ) {
+	} elsif ( $param{btnFunction} eq 'Cancel' ) {
 		$variable{error} .= $Order->cancel();
-	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+	} elsif ( $param{btnFunction} eq 'Save' ) {
 		$Order->company_id( $param{company_id} );
 		$variable{error} .= $Order->save();
 		my $Company = new openprint::Company( $param{company_id} );
@@ -319,14 +319,14 @@ sub yearly_sales {
 	ssi::setup_date_select( '/administrator/reports/yearly_sales.html', 'ordered_on_start', -365 );
 	ssi::setup_date_select( '/administrator/reports/yearly_sales.html', 'ordered_on_end', '' );
 
-	if ( exists $param{'Download'} ) {
+	if ( exists $param{Download} ) {
 		my @header = ( 'CSR', 'Company Name', 'Contact Name', 'Contact Phone', 'Contact Email' );
 		my @data;
 		my @csr_ids;
-		if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) {
-			@csr_ids = ( $session{'user_id'} );
-		} elsif ( $param{'salesrep_id'} ) {
-			@csr_ids = ( $param{'salesrep_id'} );
+		if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) {
+			@csr_ids = ( $session{user_id} );
+		} elsif ( $param{salesrep_id} ) {
+			@csr_ids = ( $param{salesrep_id} );
 		} else {
 			@csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, type=>['E','A'], usergroup=>'Sales', order=>'lower(firstname),lower(lastname)');
 		} # end if
@@ -382,9 +382,9 @@ sub yearly_sales {
 					$totals{$year}[2] += $payment_cycle;
 				} # end foreach year
 				my $LastOrder = openprint::Order->find_one( 
-						'company_id' => $Company->id(),
-						'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
-						'order'	=>	$openprint::Order::fields{'id'}.' DESC',
+						company_id => $Company->id(),
+						status => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+						order	=>	$openprint::Order::fields{id}.' DESC',
 						);
 				push @data, $LastOrder?Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time( $LastOrder->created_on() ) ):'';
 				last if $dbh->errstr();
