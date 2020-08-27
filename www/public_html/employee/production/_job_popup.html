@@ -10,14 +10,14 @@
 				 return $$variable{Job}->ServiceType()->name();
 				}
 			)?></li>
-			<li>
+			<li title="Click to edit comment">
 				<label onclick="tinymce_on('comment');">Comment</label>
 				<div id="comment" onclick="tinymce_on('comment');"><? echo ( $$variable{Job}->comment() ) ?></div>
 				<? if ( ! $$variable{Job}->comment() ) ?>
 				<span id="comment_click_to_edit" onclick="tinymce_on('comment');$('comment_click_to_edit').remove();">Click to edit</span>
 				<? endif ( ! $$variable{Job}->comment() ) ?>
 			</li>
-			<li>
+			<li title="Click to edit stock information">
 				<label onclick="tinymce_on('stock');">Stock</label>
 				<div id="stock" onclick="tinymce_on('stock');"><? echo ( $$variable{Job}->stock() ) ?></div>
 				<? if ( ! $$variable{Job}->stock() ) ?>
