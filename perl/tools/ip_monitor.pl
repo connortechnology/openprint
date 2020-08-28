@@ -123,7 +123,6 @@ my %status;
 
 while(1) {
   if ( ! ( $dbh and $dbh->ping ) ) {
-    $log->debug('Connecting to db');
     $openprint::dbh = sql::open_sql($log,
       port	  	=> $config{db_port},
       host	  	=> $config{db_host},
@@ -148,7 +147,29 @@ while(1) {
     $hup = 0;
   } # end if !dbh
 
-  my @Hosts = openprint::Host->find(monitored=>1, ( $$opts{host_type} ? ( type=>$$opts{host_type} ) : () ));
+	my $Network_Type = openprint::Host_Type->find_one(name=>'Network');
+	my $Network;
+	my @host_ids;
+	if ( $Network_Type && $config{network} ) {
+		$Network = openprint::Host->find_one(type_id=>$$Network_Type{id}, hostname=>$config{network});	
+		if ( !$Network ) {
+			$log->error("Failed to find network $config{network}");
+			die;
+		}
+		$log->debug($Network->to_string());
+		my @Network_Interfaces = $Network->Interfaces();
+		foreach my $HI ( $Network->Interfaces() ) {
+			push @host_ids, map { $_->host_id() } openprint::Host_Interface->find('ip <<=' => $$HI{ip});
+		}
+		if ( !@host_ids ) {
+			$log->error("Failed to find any hosts in network $config{network}");
+			die;
+		}
+	}
+	my @Hosts = openprint::Host->find(monitored=>1,
+			( $$opts{host_type} ? ( type=>$$opts{host_type} ) : () ),
+			( @host_ids ? ( id=>\@host_ids ) : () ),
+			);
   foreach my $Host ( @Hosts ) {
     $log->debug('host '.($Host->hostname()?$Host->hostname():'with no hostname').' was '.($Host->online() ? 'online' : 'offline'));
 
@@ -197,7 +218,7 @@ while(1) {
             my $mac = $new_HI->get_mac();
             if ( $mac and (my $existing_HI = openprint::Host_Interface->find_one(mac=>$mac) )) {
               (new openprint::Log())->save( {
-                  object  => $existing_HI->Host(),
+                  Object  => $existing_HI->Host(),
                   note  => "IP Address changed from $$existing_HI{ip} to $$new_HI{ip} by ip_monitor subnet scanning.",
                   action  => 'IP Changed'
                 } );
