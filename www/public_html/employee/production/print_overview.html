@@ -146,6 +146,7 @@
 	<div class="unprintable">
 		Please click on the <b>Docket #</b> to view details.<br/>
 	</div><!--unprintable-->
+<div class="schedule">
 	<div class="PressScheduleHeader">
 		Press Schedule For 
 		<? echo ( Date::Calc::Date_to_Text( 
@@ -153,7 +154,10 @@
 					'/employee/production/print_overview.html?schedule_start_month',
 					'/employee/production/print_overview.html?schedule_start_day'} ); ) ?>
 
-		<? if ( Date::Calc::Date_to_Days( @session{'/employee/production/print_overview.html?schedule_end_year', '/employee/production/print_overview.html?schedule_end_month', '/employee/production/print_overview.html?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
+		<? if ( Date::Calc::Date_to_Days(
+					@session{'/employee/production/print_overview.html?schedule_end_year',
+					'/employee/production/print_overview.html?schedule_end_month',
+					'/employee/production/print_overview.html?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
 		to <? echo ( Date::Calc::Date_to_Text( 
 					@session{'/employee/production/print_overview.html?schedule_end_year',
 					'/employee/production/print_overview.html?schedule_end_month',
@@ -162,9 +166,21 @@
 		<br/>
 	</div>
 	Projects highlighted in yellow have forms on other presses.<br/>
-<div class="schedule">
 	<? echo (
 		my $html;
+$html .= '<style type="text/css">
+@media print {
+.PressColumn {
+	width: 100%;
+}
+}
+@media screen {
+	.PressColumn {
+		width: '.int(100/@{$$variable{Equipment}}).'%;
+	}
+}
+</style>
+';
 		@{$$variable{drops}} = ();
 
 		my $parser = 'DateTime::Format::Pg';
