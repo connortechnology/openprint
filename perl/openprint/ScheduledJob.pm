@@ -221,7 +221,7 @@ sub stock {
 		$$self{stock} = $stock;
 	} # end if
 	if ( ( ! $$self{stock} ) and $$self{project_id} and ( $self->ServiceType()->name() eq 'Signature' ) ) {
-		$$self{stock} = 'Stock: ';
+		$$self{stock} = '<p>Stock: ';
 		my $Equipment = $self->Equipment();
 		my $Project = new openprint::Project( $$self{project_id} );
 		my $Stock;
@@ -251,6 +251,7 @@ sub stock {
 				$$self{stock} .= $Stock->width() . 'x' . $Stock->height();
 			} # end if
 		} # end if
+		$$self{stock} .= '</p>';
 	} # end if
 	return $$self{stock};
 } # end sub stock
@@ -290,7 +291,7 @@ sub get_li {
 			'Complete' => 'complete',
 			'Waiting for Pickup' => 'complete',
 			'Picked Up' => 'complete',
-			'Shipped' => 'complete'
+			'Shipped' => 'complete',
 			'Waiting For Customer Approval' => 'approval',
 			);
 
@@ -320,20 +321,21 @@ sub get_li {
 			( $colour ? ' class="'.$colour.'"' : '' ), 
 			( $height ? ' style="height:'.$height.'px;"' : '' )
 			);
-
+	$html .= '<div class="top_row">';
 	if ( $$self{project_id} ) {
-		$html .= '<span class="Company">';
-		$html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>', $$self{project_id}, $Project->docket() );
+		$html .= sprintf('<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>',
+				$$self{project_id}, $Project->docket());
+		$html .= '<div class="Company">';
 		my $n = $Project->Company()->name();
 		$n =~ s/The //gi;
-		$html .= ssi::htmlize( $n );
-		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)' if $$Project{company_id} != $openprint::config{owner_id};
+		$html .= ssi::htmlize( $n ).'</div>';
+		$html .= ' <span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>' if $$Project{company_id} != $openprint::config{owner_id};
 
-		my $Proofs_Service = $Project->Service( $$services{Proofs}[0] ) if $$services{Proofs} and @{$$services{Proofs}};
+		my $Proofs_Service = $Project->Service($$services{Proofs}[0]) if $$services{Proofs} and @{$$services{Proofs}};
 		if ( $Proofs_Service ) {
 			my %operators = map { $$_{user_id}, $_ } $Proofs_Service->Operators();
 
-			$html .= ' ('.join(', ', map { '<span class="PrepressOperator">'.$_->User()->firstname().'</span>' } values %operators ).')';
+			$html .= join(', ', map { '<span class="PrepressOperator">'.$_->User()->firstname().'</span>' } values %operators);
 		} elsif ( $$Project{docket} ) {
 			$openprint::log->error("NO proofs found in $$Project{id}");
 		} # end if
@@ -349,8 +351,10 @@ sub get_li {
 			if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
 				$html .= qq` $day</span>`;
 		} # end if
+		$html .= '</div>';
+		$html .= '<div class="OperatorSignature">Operator Signature:</div>';
 		if ( $printing_service_type_ids{$$self{servicetype_id}} ) {
-			$html .= '<span class="Presses">'.join(' + ', sort( map { new openprint::Equipment( $_ )->strid() } @equipment ) ).'</span>' if @equipment > 1;
+			$html .= '<span class="Presses">'.join(' + ', sort( map { new openprint::Equipment($_)->strid() } @equipment ) ).'</span>' if @equipment > 1;
 		} # end if
 	} # end if project_id
 
@@ -358,17 +362,18 @@ sub get_li {
 		||
 		sets::isin( $session{user_id}, [ map { $_->id() } $Equipment->Operators() ] ) 
 		;
-my $is_signature = $$self{servicetype_id} and ( $self->ServiceType()->name() eq '' or $self->ServiceType()->name() eq 'Signature' );
+	my $is_signature = $$self{servicetype_id} and ( $self->ServiceType()->name() eq '' or $self->ServiceType()->name() eq 'Signature' );
 
-	if ( $openprint::user->Groups('Scheduling') ) {
+	if ( $openprint::User->Groups('Scheduling') ) {
 		$html .= '<div class="Comment" onclick="job_popup(\''.$$self{id}.'\');">'.$self->comment().'</div>';
 		if ( $is_signature ) {
 		  $html .= sprintf( q`<div class="Stock" onclick="popup_window('/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475});">%2$s</div>`, $$self{id}, $self->stock() );
-		  $html .= sprintf( q`<div class="StockLocation" onclick="popup_window('/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475});">%2$s</div>`, $$self{id}, $self->stock() );
+		  #$html .= sprintf( q`<div class="StockLocation" onclick="popup_window('/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475});">%2$s</div>`, $$self{id}, $self->stock() );
 			if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
 				$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
 			} # end if
 		}
+		$html .= '<div class="bottom_row">';
 		if ( $$self{project_id} ) {
 			$html .= sprintf(q`
 					<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>
@@ -431,6 +436,7 @@ my $is_signature = $$self{servicetype_id} and ( $self->ServiceType()->name() eq 
 			$html .= '<span class="Service">no bindery</span>' if $$services{NoBindery};
 			$html .= '</span>';
 		}
+		$html .= '</div>';
 	} else {
 		$html .= sprintf( '<div class="Comment">%1$s</div>', $self->comment() );
 		$html .= sprintf( '<div class="Stock">%1$s</div>', $self->stock() );
