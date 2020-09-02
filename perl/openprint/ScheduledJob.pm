@@ -343,6 +343,9 @@ sub get_li {
 			$html .= ' REPRINT'. $Project->reprint_reason();
 		} # end if
 		$html .= '</span>';
+		if ( $printing_service_type_ids{$$self{servicetype_id}} ) {
+			$html .= '<span class="Presses">'.join(' + ', sort( map { new openprint::Equipment($_)->strid() } @equipment ) ).'</span>' if @equipment > 1;
+		} # end if
 		$html .= qq`<span class="DueDate" id="JumpToDate$$self{id}">`;
 		if ( ! $Project->due_date() ) {
 			$html .= 'no duedate</span>';
@@ -353,9 +356,6 @@ sub get_li {
 		} # end if
 		$html .= '</div>';
 		$html .= '<div class="OperatorSignature">Operator Signature:</div>';
-		if ( $printing_service_type_ids{$$self{servicetype_id}} ) {
-			$html .= '<span class="Presses">'.join(' + ', sort( map { new openprint::Equipment($_)->strid() } @equipment ) ).'</span>' if @equipment > 1;
-		} # end if
 	} # end if project_id
 
 	my $i_am_the_operator = sets::isin( $session{user_id}, $self->Shift()->operator_ids() )
@@ -365,14 +365,13 @@ sub get_li {
 	my $is_signature = $$self{servicetype_id} and ( $self->ServiceType()->name() eq '' or $self->ServiceType()->name() eq 'Signature' );
 
 	if ( $openprint::User->Groups('Scheduling') ) {
+		$html .= '<div class="middle_row">';
 		$html .= '<div class="Comment" onclick="job_popup(\''.$$self{id}.'\');">'.$self->comment().'</div>';
 		if ( $is_signature ) {
 		  $html .= sprintf( q`<div class="Stock" onclick="popup_window('/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475});">%2$s</div>`, $$self{id}, $self->stock() );
 		  #$html .= sprintf( q`<div class="StockLocation" onclick="popup_window('/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475});">%2$s</div>`, $$self{id}, $self->stock() );
-			if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
-				$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
-			} # end if
 		}
+		$html .= '</div>';# middle_row
 		$html .= '<div class="bottom_row">';
 		if ( $$self{project_id} ) {
 			$html .= sprintf(q`
@@ -394,6 +393,9 @@ sub get_li {
 		} # end if
 
 		$html .= sprintf( q`<span class="RunTime" onclick="job_popup('%1$d');">Total Hr: %2$.2d:%3$.2d</span>`, $$self{id}, split(':',$self->runtime()) );
+			if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
+				$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
+			} # end if
 
 		$html .= '<span class="Buttons">';
 		if ( $$self{project_id} ) {
