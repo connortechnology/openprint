@@ -1,7 +1,7 @@
 <? eval (
 	my ( $starttime, $endtime );
-	if ( $session{'/employee/production/print_overview.html?Equipment'} ) {
-		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(',', $session{'/employee/production/print_overview.html?Equipment'} ) ).')' );
+	if ( $session{$r->uri().'?Equipment'} ) {
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(',', $session{$r->uri().'?Equipment'} ) ).')' );
 	} else {
 		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
 	} # end if
@@ -12,19 +12,19 @@
 			$endtime = Date::Format::time2str( '%Y-%m-%d', $endtime_seconds );
 		}
 	} # end if
-	if ( ! $session{'/employee/production/print_overview.html?schedule_start_year'} ) {
+	if ( ! $session{$r->uri().'?schedule_start_year'} ) {
 		@session{
-				'/employee/production/print_overview.html?schedule_start_year',
-				'/employee/production/print_overview.html?schedule_start_month',
-				'/employee/production/print_overview.html?schedule_start_day'}
+				$r->uri().'?schedule_start_year',
+				$r->uri().'?schedule_start_month',
+				$r->uri().'?schedule_start_day'}
 				= $starttime ? split('-', $starttime ) : Date::Calc::Today();
 	} # end if
 
-	if ( ! $session{'/employee/production/print_overview.html?schedule_end_year'} ) {
+	if ( ! $session{$r->uri().'?schedule_end_year'} ) {
 		@session{
-				'/employee/production/print_overview.html?schedule_end_year',
-				'/employee/production/print_overview.html?schedule_end_month',
-				'/employee/production/print_overview.html?schedule_end_day'}
+				$r->uri().'?schedule_end_year',
+				$r->uri().'?schedule_end_month',
+				$r->uri().'?schedule_end_day'}
 				= $endtime ? split('-', $endtime ) : Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
 	} # end if
 ) ?>
@@ -42,7 +42,7 @@
 				<select name="category_id" id="category_id" onchange="f1.submit();">
 					<option value="">All</option>
 				<? echo (
-	make_drop_down( openprint::Equipment_Category->dropdown( order=>'lower(name)'), $session{'/employee/production/print_overview.html?category_id'} );
+	make_drop_down( openprint::Equipment_Category->dropdown( order=>'lower(name)'), $session{$r->uri().'?category_id'} );
 	) ?>
 				</select>
 			</li>
@@ -50,15 +50,15 @@
 <? echo ( 
 	@{$$variable{Equipment}} = ();
 	my @presses = openprint::Equipment->find(
-		( $session{'/employee/production/print_overview.html?category_id'} ? 
-		  ( 'category_id @>' => [ split(',', $session{'/employee/production/print_overview.html?category_id'} ) ] ) : ()
+		( $session{$r->uri().'?category_id'} ? 
+		  ( 'category_id @>' => [ split(',', $session{$r->uri().'?category_id'} ) ] ) : ()
 		),
 		 useinscheduling=>1, order=>'sorting,lower(strname)'
 		);
-	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/print_overview.html?Equipment'} ) );
+	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{$r->uri().'?Equipment'} ) );
 	if ( ! @selected_equipment ) {
 		@selected_equipment = map { $_->id() } @presses;
-		$session{'/employee/production/print_overview.html?Equipment'} = join(',', @selected_equipment );
+		$session{$r->uri().'?Equipment'} = join(',', @selected_equipment );
 	}
 
 	foreach (@presses) {
@@ -77,11 +77,11 @@
 			<li>
 				<label>Date Range</label>
 					<? echo ( 
-						date_select_session( '/employee/production/print_overview.html', 'schedule_start', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
+						date_select_session( $r->uri(), 'schedule_start', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
 					) ?>
 				to
 					<? echo ( 
-						date_select_session( '/employee/production/print_overview.html', 'schedule_end', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
+						date_select_session( $r->uri(), 'schedule_end', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
 					) ?>
 			</li>
 			<li>
@@ -95,22 +95,22 @@
 							'30'	=>	'30px / hour',
 							'40'	=>	'40px / hour',
 						);
-						return make_drop_down( \@options, $session{'/employee/production/print_overview.html?scale'} );
+						return make_drop_down( \@options, $session{$r->uri().'?scale'} );
 					) ?>
 				</select>
 			</li>
 			<li>
 				<label>Views</label>
 				<? echo ( join("\n",
-					button( 'Today', { href=>'/employee/production/print_overview.html?action=Today', text=>'Today' } ),
-					button( 'twoday', { href=>'/employee/production/print_overview.html?action=2day', text=>'2day' } ),
-					button( 'threeday', { href=>'/employee/production/print_overview.html?action=3day', text=>'3day' } ),
-					button( '1week', { href=>'/employee/production/print_overview.html?action=1week', text=>'1week' } ),
+					button( 'Today', { href=>$r->uri().'?action=Today', text=>'Today' } ),
+					button( 'twoday', { href=>$r->uri().'?action=2day', text=>'2day' } ),
+					button( 'threeday', { href=>$r->uri().'?action=3day', text=>'3day' } ),
+					button( '1week', { href=>$r->uri().'?action=1week', text=>'1week' } ),
 					);
 				) ?>
 			</li>
 			<li><label>Show Production</label>
-			<? echo ( radio( 'show_feedback', [ 1, 'Yes', 0, 'No', ], $session{'/employee/production/print_overview.html?show_feedback'} ); ) ?>
+			<? echo ( radio( 'show_feedback', [ 1, 'Yes', 0, 'No', ], $session{$r->uri().'?show_feedback'} ); ) ?>
 			</li>
 			</ul>
 		</div>
@@ -136,7 +136,7 @@
 			<? echo ( button( 'AddMaintenance', { onclick=>"popup_window('_add_maintenance.html', '', { width: 600, height: 400 } );", text=>'Add Maintenance' } ); ) ?>
 			<? echo (
 				if ( @{$$variable{Equipment}} == 1 ) {
-					return button( 'ReFlow', { href=>'/employee/production/print_overview.html?Equipment='.$$variable{Equipment}[0]->id().'&amp;btnFunction=Reflow', text=>'Reflow Jobs' } );
+					return button( 'ReFlow', { href=>$r->uri().'?Equipment='.$$variable{Equipment}[0]->id().'&amp;btnFunction=Reflow', text=>'Reflow Jobs' } );
 				} # end if
 				return;
 			) ?>
@@ -150,19 +150,19 @@
 	<div class="PressScheduleHeader">
 		Press Schedule For 
 		<? echo ( Date::Calc::Date_to_Text( 
-					@session{'/employee/production/print_overview.html?schedule_start_year',
-					'/employee/production/print_overview.html?schedule_start_month',
-					'/employee/production/print_overview.html?schedule_start_day'} ); ) ?>
+					@session{$r->uri().'?schedule_start_year',
+					$r->uri().'?schedule_start_month',
+					$r->uri().'?schedule_start_day'} ); ) ?>
 
 		<? if ( Date::Calc::Date_to_Days(
-					@session{'/employee/production/print_overview.html?schedule_end_year',
-					'/employee/production/print_overview.html?schedule_end_month',
-					'/employee/production/print_overview.html?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
+					@session{$r->uri().'?schedule_end_year',
+					$r->uri().'?schedule_end_month',
+					$r->uri().'?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
 		to <? echo ( Date::Calc::Date_to_Text( 
-					@session{'/employee/production/print_overview.html?schedule_end_year',
-					'/employee/production/print_overview.html?schedule_end_month',
-					'/employee/production/print_overview.html?schedule_end_day'} ); ) ?>
-		<? endif ( Date::Calc::Date_to_Days( @session{'/employee/production/print_overview.html?schedule_end_year', '/employee/production/print_overview.html?schedule_end_month', '/employee/production/print_overview.html?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
+					@session{$r->uri().'?schedule_end_year',
+					$r->uri().'?schedule_end_month',
+					$r->uri().'?schedule_end_day'} ); ) ?>
+		<? endif ( Date::Calc::Date_to_Days( @session{$r->uri().'?schedule_end_year', $r->uri().'?schedule_end_month', $r->uri().'?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
 		<br/>
 	</div>
 	Projects highlighted in yellow have forms on other presses.<br/>
@@ -223,18 +223,23 @@ $html .= '<style type="text/css">
 			$html .= '<br/><div id="message'.$E->id().'" class="message">';
 			$html .= $E->message();
 			$html .= '</div>';
+		  $html .= '</div>';
+		}
+	  $html .= '<br class="spacer"/>';
 
-			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
-					'/employee/production/print_overview.html?schedule_start_month',
-					'/employee/production/print_overview.html?schedule_start_day'};
+		foreach my $E ( @{$$variable{Equipment}} ) {
+			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ). '">';
+			my ( $year, $month, $day ) = @session{$r->uri().'?schedule_start_year',
+					$r->uri().'?schedule_start_month',
+					$r->uri().'?schedule_start_day'};
 			my $end = Date::Calc::Delta_Days( 
 				@session{
-				'/employee/production/print_overview.html?schedule_start_year',
-				'/employee/production/print_overview.html?schedule_start_month',
-				'/employee/production/print_overview.html?schedule_start_day',
-				'/employee/production/print_overview.html?schedule_end_year',
-				'/employee/production/print_overview.html?schedule_end_month',
-				'/employee/production/print_overview.html?schedule_end_day'}
+				$r->uri().'?schedule_start_year',
+				$r->uri().'?schedule_start_month',
+				$r->uri().'?schedule_start_day',
+				$r->uri().'?schedule_end_year',
+				$r->uri().'?schedule_end_month',
+				$r->uri().'?schedule_end_day'}
 				) + 1;
 
 
