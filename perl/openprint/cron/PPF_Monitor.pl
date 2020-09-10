@@ -267,6 +267,12 @@ if ( $mangle ) {
 		next if $file =~ /^\./; 
 		next if -d ($Equipment->cip3_in().'/'.$file);
 
+		if ( $file =~ /\.TIF$/i ) {
+			# TIF's don't go here, delete them.
+			unlink ($Equipment->cip3_in().'/'.$file);
+			next;
+		}
+
     # Check AGE
 		my $mtime = ( stat $file )[9];
 		if ( time - $mtime < 2*60 ) {
