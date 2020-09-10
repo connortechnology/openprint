@@ -169,16 +169,9 @@
 	<? echo (
 		my $html;
 $html .= '<style type="text/css">
-@media print {
-.PressColumn {
-	width: 100%;
-}
-}
-@media screen {
 	.PressColumn {
 		width: '.int(100/@{$$variable{Equipment}}).'%;
 	}
-}
 </style>
 ';
 		@{$$variable{drops}} = ();
