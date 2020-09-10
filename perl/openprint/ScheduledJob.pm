@@ -342,7 +342,6 @@ sub get_li {
 		if ( $Project->reprint() eq 'Y' ) {
 			$html .= ' REPRINT'. $Project->reprint_reason();
 		} # end if
-		$html .= '</span>';
 		if ( $printing_service_type_ids{$$self{servicetype_id}} ) {
 			$html .= '<span class="Presses">'.join(' + ', sort( map { new openprint::Equipment($_)->strid() } @equipment ) ).'</span>' if @equipment > 1;
 		} # end if
