@@ -361,7 +361,7 @@ sub get_li {
 		||
 		sets::isin( $session{user_id}, [ map { $_->id() } $Equipment->Operators() ] ) 
 		;
-	my $is_signature = $$self{servicetype_id} and ( ($self->ServiceType()->name() eq '') or ($self->ServiceType()->name() eq 'Signature') );
+	my $is_signature = ($$self{servicetype_id} and ( ($self->ServiceType()->name() eq '') or ($self->ServiceType()->name() eq 'Signature') ) ) ? 1 : 0;
 
 	if ( $openprint::User->Groups('Scheduling') ) {
 		$html .= '<div class="middle_row">';
