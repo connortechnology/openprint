@@ -396,6 +396,14 @@ sub get_li {
 				$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
 			} # end if
 
+		if ( $$self{project_id} ) {
+			$html .= '<span class="Services">';
+			$html .= '<span class="Service">fold</span>' if $$services{Folding};
+			$html .= '<span class="Service">stitch</span>' if $$services{SaddleStitching} or $$services{LoopStitching};
+			$html .= '<span class="Service">trim</span>' if $$services{Cutting};
+			$html .= '<span class="Service">no bindery</span>' if $$services{NoBindery};
+			$html .= '</span>';
+		}
 		$html .= '<span class="Buttons">';
 		if ( $$self{project_id} ) {
 			$html .= ssi::button( 'Approve'.$$self{id}, {onclick=>"approve_job('$ul_id',$$self{id});", text=>'A', title=>'Approve' } ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
@@ -429,14 +437,6 @@ sub get_li {
 			$html .= ssi::button( 'Stop'.$$self{id}, { onclick=> "stop_job($$self{id});", text=>'Stop' } );
 		} # end if
 		$html .= '</span>';
-		if ( $$self{project_id} ) {
-			$html .= '<span class="Services">';
-			$html .= '<span class="Service">fold</span>' if $$services{Folding};
-			$html .= '<span class="Service">stitch</span>' if $$services{SaddleStitching} or $$services{LoopStitching};
-			$html .= '<span class="Service">trim</span>' if $$services{Cutting};
-			$html .= '<span class="Service">no bindery</span>' if $$services{NoBindery};
-			$html .= '</span>';
-		}
 		$html .= '</div>';
 	} else {
 		$html .= sprintf( '<div class="Comment">%1$s</div>', $self->comment() );
