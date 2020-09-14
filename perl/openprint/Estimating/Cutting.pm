@@ -1554,7 +1554,10 @@ sub runtime {
 					}
 					my $piles = $impressions / $items_per_lift;
 
-					$runtime += ( $$specs{"txtCalculatedCuts-$form-$qty_index"} + $$specs{"txtAdditionalCuts$form"} ) * ( $makeready + $runspeed) * $piles;
+					my $cuts = 0;
+					$cuts += $$specs{"txtCalculatedCuts-$form-$qty_index"} if $$specs{"txtCalculatedCuts-$form-$qty_index"};
+					$cuts += $$specs{"txtAdditionalCuts$form"} if $$specs{"txtAdditionalCuts$form"};
+					$runtime += $cuts * ($makeready + $runspeed) * $piles;
 					$openprint::log->debug("Resulting runtime for : $runtime") if DEBUG;
 				} # end if not a stitcher or folder
 			} else {
