@@ -993,13 +993,14 @@ sub ordered_quantity_index {
 		$$OP{quantity_index} = $_[1];
 	} # end if
 
-	if ( ! $$OP{quantity_index} ) {
+	if ( $$OP{order_id} and ! $$OP{quantity_index} ) {
 		my @qtys = $_[0]->quantity_indexes();
 #$openprint::log->debug("Project ordered_qty_index (@qtys)");
-# This causes problems reporting ordered info on projects that havn't been ordered
-		#if ( 1 == @qtys ) {
-			#$$OP{quantity_index} = $qtys[0];
-		#} # end if
+# A This causes problems reporting ordered info on projects that havn't been ordered
+# B putting it back but with an additional order_id check
+		if ( 1 == @qtys ) {
+			$$OP{quantity_index} = $qtys[0];
+		} # end if
 	} # end if
 	return $$OP{quantity_index};
 } # end sub ordered_quantity_index
