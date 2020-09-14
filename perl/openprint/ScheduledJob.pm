@@ -574,7 +574,29 @@ sub impressions {
 } # end sub impressions
 
 sub Project {
-	return new openprint::Project( $_[0]{project_id} );
+	my $self = shift;
+	$$self{Project} = shift if @_;
+	if ( ! $$self{Project} ) {
+		if ( $$self{project_id} ) {
+			$$self{Project} = new openprint::Project($$self{project_id});
+		} elsif ( $$self{pertains_id} and @{$$self{pertains_id}} ) {
+			foreach my $service_id ( @{$$self{pertains_id}} ) {
+$openprint::log->debug("Guess project from service $service_id");
+				my $Project_Service = openprint::Project_Service->find_one(service_id=>$service_id);
+				next if ! $Project_Service;
+$openprint::log->debug("Guess project from service ".$Project_Service->to_string());
+				$$self{Project} = $Project_Service->Project();
+				last;
+			} # end foreach
+			if ( $$self{Project} ) {
+				$self->save({project_id=>$$self{Project}->id()});
+			}
+		}
+	}
+	if ( ! $$self{Project} ) {
+		$$self{Project} = new openprint::Project( $_[0]{project_id} );
+	}
+	return $$self{Project};
 } # end sub Project
 
 sub runtime {
