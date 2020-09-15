@@ -1151,15 +1151,18 @@ $log->debug("No Shift specified!");
 
 sub _drop {
 
-	if ( ! exists $param{services} ) {
+	if ( ! (exists $param{services} or exists $param{'item[]'}) ) {
 		return;
 	}
-	my $services = $param{services};
-	$services =~ s/$param{ul_id}\[\]=//g;
-	my @order = split( '&', $services );
-	if ( ! @order ) {
-		return;
+	my @order;
+	if ( $param{services} ) {
+		my $services = $param{services};
+		$services =~ s/$param{ul_id}\[\]=//g;
+		@order = split( '&', $services );
+	} else { 
+		@order = @{$param{'item[]'}};
 	} # end if
+	return if ! @order;
 	# First step, run through and see if we need to do a popup before actually applying
 
 	my $ac = sql::start_transaction( $dbh );
@@ -1170,9 +1173,10 @@ sub _drop {
 
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
 	@{$variable{changed}} = ( $Shift->ul_id() );
-$log->debug("Order before coalesce: " . join(',', map { $_ . ' => ' .new openprint::ScheduledJob($_)->docket() } @order ) );
-
 	openprint::ScheduledJob->find(id=>[map { $_ ? $_ : () } @order]);
+$log->debug("Order: @order");
+$log->debug("Order before coalesce: " . join(',', map { $_ . ' => ' .(new openprint::ScheduledJob($_)) ? new openprint::ScheduledJob($_)->docket() : 'undef' } @order ) );
+
 
 	if ( ($param{action} ne 'add_services') and sets::isin('Bindery', [$Equipment->categories()]) ) {
 		# Detect whether we need to do a popup to ask which services to add
