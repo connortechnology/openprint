@@ -60,11 +60,17 @@ sub history {
 				push @Data, $Invoice->id(), 
         ssi::format_csv_datetime($Invoice->created_on()),
         ssi::format_csv_datetime($Invoice->posted_on()),
-        ssi::format_csv_date($Invoice->due_on()),
         ssi::format_csv_datetime($Invoice->first_sent_on()),
+        ssi::format_csv_date($Invoice->due_on()),
         $Invoice->Invoicee()->name(), $Invoice->subtotal(), 
         ( map { $Invoice->Tax( $_ )->amount() } @Taxes ),
         $Invoice->total(), $Invoice->interest(), $Invoice->owing();
+        $subtotal += $Invoice->subtotal();
+        $owing_total += $Invoice->owing();
+        foreach my $Tax ( @Taxes ) {
+          $tax_totals{$Tax->id()} += $Invoice->Tax($Tax)->amount();
+        }
+        $total += $Invoice->total();
 			} # end foreach Invoice
 			push @Data, 'Totals:', '', '', '', '', '', $subtotal, ( map { $tax_totals{$_->id()} } @Taxes ), $total, $interest_total, $owing_total;
 
