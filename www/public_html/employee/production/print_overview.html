@@ -29,7 +29,7 @@
 	} # end if
 ) ?>
 <?include('/includes/error_reporting.html')?>
-<form id="f1" name="f1" method="post" action="/employee/production/print_overview.html">
+<form id="f1" name="f1" method="get" action="/employee/production/print_overview.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="ProjectIndex" />
 	<input type="hidden" name="ServiceIndex" />
@@ -149,20 +149,18 @@
 <div class="schedule">
 	<div class="PressScheduleHeader">
 		Press Schedule For 
-		<? echo ( Date::Calc::Date_to_Text( 
+		<? echo (
+			my $html = Date::Calc::Date_to_Text( 
 					@session{$r->uri().'?schedule_start_year',
 					$r->uri().'?schedule_start_month',
-					$r->uri().'?schedule_start_day'} ); ) ?>
+					$r->uri().'?schedule_start_day'} );
 
-		<? if ( Date::Calc::Date_to_Days(
-					@session{$r->uri().'?schedule_end_year',
-					$r->uri().'?schedule_end_month',
-					$r->uri().'?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
-		to <? echo ( Date::Calc::Date_to_Text( 
-					@session{$r->uri().'?schedule_end_year',
-					$r->uri().'?schedule_end_month',
-					$r->uri().'?schedule_end_day'} ); ) ?>
-		<? endif ( Date::Calc::Date_to_Days( @session{$r->uri().'?schedule_end_year', $r->uri().'?schedule_end_month', $r->uri().'?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
+			my @end_date = @session{map{$r->uri().'?schedule_end_'.$_} ('year','month','day') };
+			if ( Date::Calc::Date_to_Days(@end_date) > Date::Calc::Date_to_Days(Date::Calc::Today()) ) {
+				$html .= ' to '. Date::Calc::Date_to_Text(@end_date);
+			}
+			return $html;
+) ?>
 		<br/>
 	</div>
 	Projects highlighted in yellow have forms on other presses.<br/>
