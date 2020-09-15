@@ -1,10 +1,10 @@
 tinyMCE.init( {
-mode: "none",
-plugins: "paste",
-theme : "advanced",
-theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,bullist,numlist,outdent,indent,cleanup,html",
-theme_advanced_buttons2 : '',
-theme_advanced_buttons3 : ''
+	mode: "none",
+	plugins: "paste",
+	theme : "advanced",
+	theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,bullist,numlist,outdent,indent,cleanup,html",
+	theme_advanced_buttons2 : '',
+	theme_advanced_buttons3 : ''
 } );
 
 var current_editor;
@@ -28,7 +28,7 @@ function job_popup_close() {
 } // end function job_popup_close
 
 var job_popup_options = {
-mode: "textareas",
+			mode: "textareas",
 			editor_selector : "mce",
 			plugins: "paste",
 			theme : "advanced",
@@ -37,15 +37,26 @@ mode: "textareas",
 			theme_advanced_buttons3 : ''
 };
 
-var dropfunction = function(el){
-	new Ajax.Request( '_drop.json', { method: 'post', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+//var dropfunction = function(el){
+var dropfunction = function(e, ui) {
+	new Ajax.Request( '_drop.json', {
+			method: 'post',
+			parameters: 'ul_id='+this.id+'&'+$j(this).sortable('serialize'),
+			evalScripts: true
+			} );
+	//new Ajax.Request( '_drop.json', { method: 'post', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 }
 
 var drops = new Array();
 function setup_drops( ) {
-if ( 0 ) {
+if ( 1 ) {
 	$j('.PressColumn ul').sortable({
-			connectWidth: ".PressColumn ul"
+			items: '> li',
+			handle: '.Company',
+			update: dropfunction,
+			connectWith: '.PressColumn ul',
+			dropOnEmpty: true
+
 		}).disableSelection();
 } else {
 	for ( var i = 0; i < drops.length; i += 1 ) {
@@ -98,10 +109,11 @@ function setduedate( date ) {
 function approve_job( ul_id, job_id ) {
 	new Ajax.Updater( ul_id, '_ul.html', { parameters: { schedule_id: job_id, action:'approve'}, evalScripts: true } );
 } // end function approve_job(job_id)
+
 function remove_job( job_id ) {
-	if(confirm('Are you sure?')){
+	//if ( confirm('Are you sure?') ) {
 		new Ajax.Request('_li_change.json', {parameters: {schedule_id:job_id, action: 'RemoveJob'}, evalScripts: true } );
-	} // end if
+	//} // end if
 } // end function remove_job
 function split_job( ul_id, job_id ) {
 	new Ajax.Updater( ul_id, '_ul.html', { parameters: { schedule_id: job_id, action:'split'}, evalScripts: true } );
