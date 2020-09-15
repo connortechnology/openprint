@@ -163,7 +163,7 @@ sub information {
 		$variable{error} = check_for_errors( $Order ) if ! $variable{error};
 
 	  # First thing to do is to try to load info directly from the order.
-		my @company_fields =('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
+		my @company_fields = ('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
 		@variable{@company_fields} = @$Order{@company_fields};
 
 		if ( $variable{company_name} eq '' ) {
