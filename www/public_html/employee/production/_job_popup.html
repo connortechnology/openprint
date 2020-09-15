@@ -2,6 +2,13 @@
 	<input type="hidden" name="schedule_id" value="<? echo ( $param{schedule_id} ) ?>" />
 	<fieldset><legend>Job Scheduling Information</legend>
 		<ul>
+<?echo(
+	my $Project = $$variable{Job}->Project();
+	if ( $$Project{id} ) {
+			return '<li><label>Project</label>'.$$Project{id}.'</li>';
+	}
+return;
+)?>
 			<li><label>Service</label><?echo(
 				if ( ! $$variable{Job}->servicetype_id() ) {
 				$$variable{Equipment} = $$variable{Job}->Equipment();
