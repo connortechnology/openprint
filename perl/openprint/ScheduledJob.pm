@@ -417,10 +417,10 @@ sub get_li {
 			$html .= ssi::button( 'Complete'.$$self{id}, { onclick=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{id}', { width: '400px', height: '300px', center: 'false' } );", text=>'C',title=>'Complete Job' } );
 			if ( $is_signature ) {
 				$html .= ssi::button( 'House'.$$self{id}, { onclick=>"new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{id}, action: 'House Stock' } } );", text=>'H', title=>'House Stock' } );
-				$html .= ssi::button( 'PO'.$$self{id}, { target=>'_blank', href=>"/employee/purchase_order/edit.html?project_id=$$self{project_id}", text=>'PO', title=>'Create PO' } );
+				$html .= ssi::button( 'PO'.$$self{id}, { target=>'_blank', href=>'/employee/purchase_order/edit.html?project_id='.$$self{project_id}, text=>'PO', title=>'Create PO' } );
 			} # end if
 		} # end if
-		$html .= ssi::button( 'Remove'.$$self{id}, { onclick=>"remove_job($$self{id});", text=> 'D', title=>'Delete from schedule' } );
+		$html .= ssi::button( 'Remove'.$$self{id}, { onclick=>"remove_job($$self{id});", text=>'D', title=>'Delete from schedule' } );
 		if ( $$self{project_id} ) {
 			if ( ( $$self{pertains_id} and @{$$self{pertains_id}} == 2 ) or ( $$self{service_id} and @{$$self{service_id}} == 2 ) ) {
 				$html .= ssi::button( 'Split'.$$self{id}, { onclick=>"split_job('$ul_id',$$self{id});", text=> 'S', title=>'Split Job' } );
