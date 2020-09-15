@@ -527,7 +527,8 @@ sub button {
 	$html .= qq`value="$$options{value}" ` if $$options{value};
 	$html .= qq`title="$$options{title}" ` if $$options{title};
 	$html .= 'target="'.$$options{target}.'" ' if $$options{target};
-	if ( $$options{onclick} ) {
+	$html .= 'disabled="'.$$options{disabled}.'" ' if $$options{disabled};
+	if ( $$options{onclick} and ! $$options{disabled} ) {
 		$html .= 'onclick="';
 		$html .= $$options{onclick}."return false;\" ";
 	} # end if
