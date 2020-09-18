@@ -354,7 +354,6 @@ sub get_li {
 				$html .= qq` $day</span>`;
 		} # end if
 		$html .= '</div>';
-		$html .= '<div class="OperatorSignature">Operator Signature:</div>';
 	} # end if project_id
 
 	my $i_am_the_operator = sets::isin( $session{user_id}, $self->Shift()->operator_ids() )
@@ -372,6 +371,7 @@ sub get_li {
 		}
 		$html .= '</div>';# middle_row
 		$html .= '<div class="bottom_row">';
+		$html .= '<div class="OperatorSignature">Operator Signature:</div>';
 		if ( $$self{project_id} ) {
 			$html .= sprintf(q`
 					<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>
