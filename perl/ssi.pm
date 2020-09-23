@@ -542,11 +542,12 @@ sub button {
 	$html .= qq`name="$$options{name}" ` if $$options{name};
 	$html .= qq`value="$$options{value}" ` if $$options{value};
 	$html .= qq`title="$$options{title}" ` if $$options{title};
-	$html .= qq`target="$$options{target}" ` if $$options{target};
-	$html .= qq`type="$$options{type}" ` if $$options{type};
+	$html .= 'target="'.$$options{target}.'" ' if $$options{target};
+	$html .= 'disabled="'.$$options{disabled}.'" ' if $$options{disabled};
+	$html .= 'type="'.$$options{type}.'" ' if $$options{type};
 	if ( $$options{href} and $$options{type} ) {
 		$html .= qq`onclick="window.location='$$options{href}'" `;
-	} elsif ( $$options{onclick} ) {
+  } elsif ( $$options{onclick} and ! $$options{disabled} ) {
 		$html .= 'onclick="';
 		$html .= $$options{onclick}."return false;\" ";
 	} # end if

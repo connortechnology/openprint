@@ -17,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -605,6 +605,20 @@ sub used {
 	return $_[0]{used};
 } # end sub used
 
+sub used_for_dockets {
+	my $self = shift;
+	$$self{used_for_dockets} = shift if @_;
+	if ( ! $$self{used_for_dockets} ) {
+		my %dockets;
+		foreach my $PI ( openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
+			$dockets{$$PI{docket}} = !undef;
+		}
+		$$self{used_for_dockets} = [ sort { $a <=> $b } keys %dockets ];
+	} 
+
+	return wantarray ? @{$$self{used_for_dockets}} : $$self{used_for_dockets};
+}
+
 sub merge {
 	my ( $Keep, $Merge ) = @_;
 	
@@ -690,10 +704,17 @@ sub description {
 } # end sub description
 
 sub url_to {
-	return '/employee/inventory/skid_details.html?skid_id='.$_[0]{id};
+	return '/employee/inventory/skid_details.html?skid_id='.$_[0]{id} if $_[0]{id};
+	$openprint::log->error('Call to url_to on Skid without id');
+	return '';
 }
 
 sub link_to {
+	if ( ! $_[0]{id} ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("call to link_to on skid without id from $caller:$line");
+		return '';
+	}
 	return sprintf('<a href="%3$s">%2$s %1$d</a>', $_[0]{id}, 
 		( @_ > 1 ? $_[1] : $_[0]->type() eq 'Roll' ? 'Roll':'Skid' ),
 		$_[0]->url_to(),

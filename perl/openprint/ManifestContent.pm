@@ -185,21 +185,25 @@ sub fix {
 
 	if ( $SkidContents{$$Type{paper_id}} ) {
 # Have the right paper., remove the ones that don't match.
-$openprint::log->debug("desired paper exists");
+		$openprint::log->debug('desired paper exists');
 		foreach my $paper_id ( keys %SkidContents ) {
 			next if $$Type{paper_id} == $paper_id;
 			my $SC = $SkidContents{$paper_id};
 			if ( $$SC{paper_id} ) {
 				my $Paper = $SC->Paper();
 				my $PI = new openprint::PaperInventory();
-				$error .= $PI->save({ user_id=>$openprint::session{user_id}, skid_id=>$$SC{skid_id}, paper_id=>$paper_id, quantity=>-1*$SC->quantity(),
+				$error .= $PI->save({
+						user_id=>$openprint::session{user_id},
+						skid_id=>$$SC{skid_id},
+						paper_id=>$paper_id,
+						quantity=>-1*$SC->quantity(),
 						comment=>qq`Removed stock by manifest <a href="/employee/inventory/manifest_view.html?manifest_id=$$Manifest{id}">$$Manifest{name}</a>.`
 						});
-			} # en dif
+			} # end if
 			$error .= $SC->delete();
 		} # end foreach paper_id
 	} else {
-$openprint::log->debug("desired paper does not exists");
+		$openprint::log->debug('desired paper does not exist');
 # Change the stock
 		my $checked_out = 0;
 		require openprint::PaperAllocation;
@@ -210,17 +214,29 @@ $openprint::log->debug("desired paper does not exists");
 
 			{
 				my $PI = new openprint::PaperInventory();
-				$error .= $PI->save({ user_id=>$openprint::session{user_id}, skid_id=>$$SC{skid_id}, paper_id=>$SC->paper_id(), quantity=>-1*$SC->quantity(),
-						comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()});
+				$error .= $PI->save({
+						user_id=>$openprint::session{user_id},
+						skid_id=>$$SC{skid_id},
+						paper_id=>$SC->paper_id(),
+						quantity=>-1*$SC->quantity(),
+						comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()
+						});
 			}
 # Change the type to the new type
-			foreach my $PA ( openprint::PaperAllocation->find( 'skid_ids any'=>$SC->skid_id(), paper_id=>$SC->paper_id() ) ) {
+			foreach my $PA ( openprint::PaperAllocation->find(
+						'skid_ids any'=>$SC->skid_id(),
+						paper_id=>$SC->paper_id() ) ) {
 				$error .= $PA->save({paper_id=>$Type->Paper()->id()});
 			} # end foreach PA
 			{
 				my $PI = new openprint::PaperInventory();
-				$error .= $PI->save({user_id=>$openprint::session{user_id},skid_id=>$$SC{skid_id}, paper_id=>$Type->paper_id(), quantity =>$SC->quantity(),
-						comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()});
+				$error .= $PI->save({
+						user_id=>$openprint::session{user_id},
+						skid_id=>$$SC{skid_id},
+						paper_id=>$Type->paper_id(),
+						quantity =>$SC->quantity(),
+						comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()
+						});
 			}
 			$error .= $SC->save({ paper_id => $$Type{paper_id} });
 			$error .= $Paper->save();

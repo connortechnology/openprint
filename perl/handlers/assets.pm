@@ -3,6 +3,7 @@ package handlers::assets;
 
 use Apache2::Request ();
 use Apache2::RequestRec ();
+use Apache2::RequestUtil ();
 use Apache2::Const -compile => qw(REDIRECT HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
 use APR::Const   -compile => 'SUCCESS';
 use Apache2::Log ();
@@ -25,18 +26,18 @@ use vars qw( $r %session %config $log $dbh );
 use constant DEBUG => 0;
 
 sub cleanup {
-    if ( $r->connection->aborted( ) ) {
-$log->debug("Was aborted");
-    } else {
-#$log->debug("cleanup");
-    } # end if
-    if ( $dbh ) {
-        $session{lastupdated} = time;
-        untie %session;
-        $dbh->disconnect();
+	if ( $r->connection->aborted( ) ) {
+		$log->debug('Was aborted');
 	} else {
-$log->error("No dbh in cleanup");
-    } # end if
+#$log->debug("cleanup");
+	} # end if
+	if ( $dbh ) {
+		$session{lastupdated} = time;
+		untie %session;
+		$dbh->disconnect();
+	} else {
+		$log->error('No dbh in cleanup');
+	} # end if
 } # end sub cleanup
 
 sub handler {

@@ -1,12 +1,12 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
-<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<script src="/javascripts/tiny_mce/tiny_mce.js"></script>
 
-<script type="text/javascript">
-    tinyMCE.init({
+<script>
+  tinyMCE.init({
 		mode : "specific_textareas",
 		editor_selector : "mce",
-        theme : "simple"
-    });
+    theme : "simple"
+  });
 	function company_onchange( e ) {
 		new Ajax.Request( '_company_information.json', { parameters: { company_id: e.value } } );
 	} // end function
@@ -19,11 +19,11 @@
 	<? echo ( button( 'create', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New Quote' } ); ) ?>
 <? else ( ! $$variable{Quote}->id() ) ?>
 
-	<? if ( sets::isin( $session{user_type}, ['A','E'] ) or new openprint::Company($session{company_id})->reseller() eq 'Y' ) ?>
+	<? if ( sets::isin( $session{user_type}, ['A','E'] ) or $openprint::Company->reseller() eq 'Y' ) ?>
 	If you would like to send a copy of this quotation to someone on your behalf 
 	please fill in the necessary information below. This quote will be stored in 
 	quote history. If it is for your own personal reference leave the &quot;Prepared For&quot; fields blank.<br/>
-	<? endif ( sets::isin( $session{user_type}, ['A','E'] ) or new openprint::Company($session{company_id})->reseller() eq 'Y' ) ?>
+	<? endif ( sets::isin( $session{user_type}, ['A','E'] ) or $openprint::Company->reseller() eq 'Y' ) ?>
 <br/>
 <div class="Quote">
 	<div class="Information">
@@ -122,7 +122,7 @@
 			</div>
 		</fieldset>
 	</div><!--PreparedBy-->
-<? if ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) or new openprint::Company($session{company_id})->reseller() eq 'Y' ) ?>
+<? if ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) or $openprint::Company->reseller() eq 'Y' ) ?>
 		<div id="PreparedFor">
 			<fieldset><legend>Prepared For</legend>
 			<div class="content"><ul>
@@ -239,7 +239,7 @@ if ( $$variable{ForCountry} eq 'US' ) {
 			</ul></div>
 		</fieldset>
 	</div>
-	<? endif ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) or new openprint::Company($session{company_id})->reseller() eq 'Y' ) ?>
+	<? endif ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) or $openprint::Company->reseller() eq 'Y' ) ?>
 		<div id="Information">
 			<fieldset><legend>Information</legend>
 				<div class="content">
@@ -262,7 +262,7 @@ if ( $$variable{ForCountry} eq 'US' ) {
 	<? if ( @{$$variable{PROJECTS}} == 0 ) ?>
 			No projects
 	<? else ( @{$$variable{PROJECTS}} == 0 ) ?>
-		<? if ( new openprint::Company($session{company_id})->reseller() eq 'Y' or sets::isin( $session{user_type}, [ 'A', 'E' ] ) ) ?>
+		<? if ( $openprint::Company->reseller() eq 'Y' or sets::isin( $session{user_type}, [ 'A', 'E' ] ) ) ?>
 		<table class="List"> 
 			<thead>
 				<tr> 
@@ -278,6 +278,7 @@ if ( $$variable{ForCountry} eq 'US' ) {
 			<? while ( @$variable{'project_index','reference'} = splice @{$$variable{PROJECTS}},0,2; ) ?>
 			<? eval ( 
 				@$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{project_index}}},0,5; 
+$log->debug("Markup: $$variable{markup}");
 				$$variable{Project} = new openprint::Project( $$variable{project_index} );
 			) ?>
 			<tr<?rowclass?>> 
@@ -325,7 +326,7 @@ if ( $$variable{ForCountry} eq 'US' ) {
 			</tr>
 			</tbody>
 		</table>
-		<? else ( new openprint::Company($session{company_id})->reseller() eq 'Y' or sets::isin( $session{user_type}, [ 'A', 'E' ] ) ) ?>
+		<? else ( $openprint::Company->reseller() eq 'Y' or sets::isin( $session{user_type}, [ 'A', 'E' ] ) ) ?>
 		<table class="List">
 			<tr> 
 				<th class="projects">Project</th>
@@ -374,7 +375,7 @@ if ( $$variable{ForCountry} eq 'US' ) {
 				</td>
 			</tr>
 		</table>
-		<? endif ( new openprint::Company($session{company_id})->reseller() eq 'Y' or sets::isin( $session{user_type}, [ 'A', 'E' ] ) ) ?>
+		<? endif ( $openprint::Company->reseller() eq 'Y' or sets::isin( $session{user_type}, [ 'A', 'E' ] ) ) ?>
 		<? endif ( @{$$variable{PROJECTS}} == 0 ) ?>
 		<? endif ( openprint::ProjectType->find_one() ) ?>
 

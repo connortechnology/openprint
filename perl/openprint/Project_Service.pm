@@ -199,10 +199,8 @@ sub delete {
 	my $Project = $self->Project();
 	$Project->lock();
 	my $specs = $self->specs();
-$openprint::log->warn("Deleting " . $self->service_type() . ' ' . $self->to_string() );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id','service_id'} );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id', 'service_id'} );
-$openprint::log->warn("Deleting Service from " . $Project->to_string() );
 	delete $$Project{Services};
 	delete $$Project{ServicesById};
 	delete $$Project{signatures};
@@ -211,7 +209,8 @@ $openprint::log->warn("Deleting Service from " . $Project->to_string() );
 
 	$Project->unlock();
 
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName} " . join(' $', map { $$specs{"txtPrice$_"} } $Project->quantity_indexes() ). "." );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'},
+			'Deleted service '.$self->ServiceType()->type().' '.$$specs{ServiceName}.' '.join(' $', map { $$specs{"txtPrice$_"} } $Project->quantity_indexes() ).'.');
 	return '';
 } # end sub delete
 

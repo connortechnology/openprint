@@ -299,6 +299,15 @@
 				
 				$html .= input( name=>"txtPlateChangeQuantity$qty_index", value=>$$variable{'txtPlateChangeQuantity'.$qty_index}, type=>'integer', oninput=>'calc(this.form.name);' );
 				$html .=  ( $group_plate_changes ? ' + ' . $group_plate_changes : '' );
+				$html .= ssi::select( 
+[
+ '1/0' => '1/0 change',
+ '1/1' => '1/1 change',
+ '4/0' => '4/0 change',
+ '4/4' => '4/4 change',
+], $$variable{'PlateChangeType'.$qty_index}, { name=>'PlateChangeType'.$qty_index, onchange=>'calc(this.form.name);' }
+);
+
 				$html .= '</span>';
 			} # end foreach qty_index
 			return $html;

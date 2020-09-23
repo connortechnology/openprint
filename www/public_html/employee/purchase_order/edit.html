@@ -1,6 +1,6 @@
 <? if ( $$variable{PurchaseOrder}->can_edit() ) ?>
-<script type="text/javascript" src="<?hash_link(/employee/purchase_order/edit.js)?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link(/employee/purchase_order/edit.js)?>"></script>
+<script>
 var po_id = '<?echo($$variable{PurchaseOrder}->id())?>';
 var tax_ids = [ <? echo ( join(',', map { $_->tax_id() } $$variable{PurchaseOrder}->Taxes() ); ) ?> ];
   tinyMCE.init({
@@ -204,13 +204,27 @@ var tax_ids = [ <? echo ( join(',', map { $_->tax_id() } $$variable{PurchaseOrde
 		</div>
 		<div class="rightColumn" style="text-align: right;">
 			Currency:
-			<select name="currency_id" id="currency_id">
-				<option value=""> select one </option>
-				<? echo ( make_drop_down( openprint::Currency->dropdown(order=>'lower(name)'), $$variable{PurchaseOrder}->currency_id() ? $$variable{PurchaseOrder}->currency_id() : $session{Currency_id} ); ) ?>
-			</select>
+				<? echo ( ssi::select(
+							openprint::Currency->dropdown(order=>'lower(name)'),
+							($$variable{PurchaseOrder}->currency_id() ? $$variable{PurchaseOrder}->currency_id() : $session{Currency_id}),
+							{name=>'currency_id', id=>'currency_id', prepend=>['','select one']}
+							); ) ?>
 			<br/>
 			<br/>
-			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{PurchaseOrder}->Creator()->name() ) ?></i><br/></div>
+			<div class="leftColumn"><i>Prepared by: 
+<? echo (
+		if ( $session{user_type} eq 'A' ) {
+			return ssi::select(
+					openprint::User->dropdown(type=>['E','A'], company_id=>$$openprint::Owner{id}),
+					( $$variable{PurchaseOrder}->created_by() ? $$variable{PurchaseOrder}->created_by() : $openprint::User->id() ),
+					{
+						name=>'created_by'
+						}
+					);
+		}
+		return $$variable{PurchaseOrder}->Creator()->name();
+) ?>
+			</i><br/></div>
 		<? if ( $$variable{PurchaseOrder}->authorized() ) ?>
 			<br/>
 			<br class="spacer"/>

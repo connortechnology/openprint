@@ -86,7 +86,7 @@ if ( ! @Equipment ) {
 $dbh->disconnect();
 
 foreach my $Equipment ( @Equipment ) {
-	$log->debug("Processing " . $Equipment->name() );
+	$log->debug('Processing '.$Equipment->name());
 	my @filenames;
 	if ( ! open(S, "> $$Equipment{cip3_in}/.lock.lck") ) {
 		$log->error("Unable to open semaphoreat $$Equipment{cip3_in}/.lock.lck");
@@ -97,14 +97,14 @@ foreach my $Equipment ( @Equipment ) {
 		next;
 	} # end if
 	if ( opendir DIRHANDLE, $Equipment->cip3_in() ) {
-		@filenames = readdir DIRHANDLE;
+		@filenames = grep { /.ppf$/i } readdir DIRHANDLE;
 		closedir DIRHANDLE;
 	} else {
 		print "Cannot open input hotfolder for $$Equipment{name} at $$Equipment{cip3_in}";
 		next;
 	} # end if
 
-	if ( $$Equipment{'cip3_merge'} ) {
+	if ( $$Equipment{cip3_merge} ) {
 		#$log->warn("Merging..." ) if $debug;
 		# First have to look for Back's, so that we don't process fronts before backs.
 		# Have to copy, because we modify filenames
@@ -173,20 +173,21 @@ if ( $mangle ) {
 				push @Back, $line if ( $back_flag );
 				last if $line =~ /CIPEndBack/;
 			} # end while FH
-			close( FH );
+			close(FH);
 			if ( ! @Back ) {
-				$log->error( "No Back found in B file!" );
+				$log->error('No Back found in B file!');
 				rename $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension, $$Equipment{'cip3_in'}.'/'.$file_base.'E.'.$extension;
 				next;
 			} # end if
 
 			my $A;
-			if ( ! open( $A, '< '.$$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension ) ) {
-				$log->error( "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."A.$extension" );
+			my $A_filename = $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
+			if ( !open($A, '< '.$A_filename) ) {
+				$log->error('Error opening '.$A_filename);
 				next;
 			} # end if
-			if ( ! flock($A, LOCK_EX) ) {
-				$log->error("Unable to lock A!\n");
+			if ( !flock($A, LOCK_EX) ) {
+				$log->error('Unable to lock A!');
 				close($A);
 				next;
 			} # end if
@@ -201,34 +202,34 @@ if ( $mangle ) {
 				} # end if
 				$line =~ s/$fileA/$fileM/g;
 				if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
-					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
+					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1);
 				} 
-if ( $mangle ) {
-				if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def(.*)/ ) {
-					if ( ! $1 ) {
-						$line = "/CIP3AdmJobCode ($docket) def$2";
-					} # end if
-				} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.+)\)\s+def/ ) {
-					my $job_name = $1;
-					if ( length $job_name > 16 ) {
-						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d+\w\w)(.+)SIG(\d\d\d)/ ) ) {
-							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig."SdA) def\r\n";
-						} else {
-							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
+				if ( $mangle ) {
+					if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def(.*)/ ) {
+						if ( ! $1 ) {
+							$line = "/CIP3AdmJobCode ($docket) def$2";
+						} # end if
+					} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.+)\)\s+def/ ) {
+						my $job_name = $1;
+						if ( length $job_name > 16 ) {
+							if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d+\w\w)(.+)SIG(\d\d\d)/ ) ) {
+								$line = '/CIP3AdmJobName ('.$pre.substr($name, 0, 4).'Sg'.$sig."SdA) def\r\n";
+							} else {
+								$line = '/CIP3AdmJobName ('.substr($job_name, 0, 16).") def\r\n";
+							} # end if
 						} # end if
 					} # end if
-				} # end if
-} # end if
+				} # end if mangle
 
 				if ( $line =~ /CIP3EndOfFile/ ) {
-					$data .= join('', @Back );
+					$data .= join('', @Back);
 				} # end if
 				$data .= $line;
 			} # end while
 			close $A;
 
 			if ( ! $complete ) {
-				$log->error("File was not complete! ".$Equipment->cip3_in()."/$file");
+				$log->error('File was not complete! '.$Equipment->cip3_in().'/'.$file);
 				next;
 			} # end if
 			if ( ! $data ) {
@@ -236,28 +237,27 @@ if ( $mangle ) {
 				next;
 			} # end if
 
-$dbh = sql::open_sql( $log,
-		host      => $config{db_host},
-		database  => $config{db_name},
-		driver    => 'Pg',
-		login     => $config{db_user},
-		password  => $config{db_pass},
-		);
-die 'Error opening db' if ! $dbh;
-			my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
-			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
-$dbh->disconnect();
+			$dbh = sql::open_sql( $log,
+					host      => $config{db_host},
+					database  => $config{db_name},
+					driver    => 'Pg',
+					login     => $config{db_user},
+					password  => $config{db_pass},
+					);
+			die 'Error opening db' if ! $dbh;
+			my $PPF = store_PPF($docket, $name, $sig, $side, $Equipment, $data);
+			$PPF->send_ppf($Equipment) if ! $$Equipment{cip3_hold};
+			$dbh->disconnect();
 
 			if ( $debug ) {
 				File::Copy::move($$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension,
 						$$Equipment{'cip3_in'}.'/done/'.$file_base.'A.'.$extension);
 				File::Copy::move($$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension,
 						$$Equipment{'cip3_in'}.'/done/'.$file_base.'B.'.$extension);
-} else {
-			
-			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
-			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
-}
+			} else {
+				unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
+				unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
+			}
 		} # end foreach file in input hotfolder
 	} # end if cip3_merge
 
@@ -265,11 +265,18 @@ $dbh->disconnect();
 	foreach my $file ( @filenames ) {
 		# Will ignore ., .., any hidden file
 		next if $file =~ /^\./; 
-		next if -d $Equipment->cip3_in().'/'.$file;
+		next if -d ($Equipment->cip3_in().'/'.$file);
 
-        # CHeck AGE
+		if ( $file =~ /\.TIF$/i ) {
+			# TIF's don't go here, delete them.
+			unlink ($Equipment->cip3_in().'/'.$file);
+			next;
+		}
+
+    # Check AGE
 		my $mtime = ( stat $file )[9];
 		if ( time - $mtime < 2*60 ) {
+			$log->warn("File $file is too old");
 			next;
 		} # end if
 
@@ -281,8 +288,8 @@ $log->warn("SINGLE SIDE Parsed to $file_base, $side, $extension from $file") if 
 
 		my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d+)(\w\w)?_?(.+?)S?g?(\d+)/i;
 
-		if ( ! open ( IN, '< ' . $$Equipment{'cip3_in'}.'/'.$file ) ) {
-			print "Error opening for read:" . $$Equipment{'cip3_in'}.'/'.$file."\n" ;
+		if ( ! open(IN, '< '.$$Equipment{cip3_in}.'/'.$file) ) {
+			$log->error('Error opening for read:'.$$Equipment{cip3_in}.'/'.$file);
 			next;
 		} # end if
 		if ( ! flock(IN, LOCK_EX) ) {
@@ -297,51 +304,49 @@ $log->warn("SINGLE SIDE Parsed to $file_base, $side, $extension from $file") if 
 				$complete = 1;
 			} 
 			if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
-				$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
+				$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1);
 			} 
-if ( $mangle ) {
-			if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
-				if ( ! $1 ) {
-					$line = "/CIP3AdmJobCode ($docket) def\r\n";
-				} # end if
-			} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
-				my $job_name = $1;
-#$log->warn("Truncating JobName $job_name");
-				if ( length $job_name > 16 ) {
-					if ( my ( $pre, $j_name, $sig ) = ( $job_name =~ /(\d+\w\w)(.+)SIG(\d\d\d)/ ) ) {
-						$line = '/CIP3AdmJobName ('.$pre.(substr($j_name,0,4)).'Sg'.$sig.'Sd'.$side.") def\r\n";
-					} else {
-						$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
+			if ( $mangle ) {
+				if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
+					if ( ! $1 ) {
+						$line = "/CIP3AdmJobCode ($docket) def\r\n";
+					} # end if
+				} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
+					my $job_name = $1;
+	#$log->warn("Truncating JobName $job_name");
+					if ( length $job_name > 16 ) {
+						if ( my ( $pre, $j_name, $sig ) = ( $job_name =~ /(\d+\w\w)(.+)SIG(\d\d\d)/ ) ) {
+							$line = '/CIP3AdmJobName ('.$pre.(substr($j_name,0,4)).'Sg'.$sig.'Sd'.$side.") def\r\n";
+						} else {
+							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
+						} # end if
 					} # end if
 				} # end if
-			} # end if
-} # end if
+			} # end if mangle
 			$data .= $line;
 		} # end while
 		close IN;
 		if ( ! $complete ) {
-			$log->error("File was not complete! ".$Equipment->cip3_in()."/$file");
+			$log->error('File was not complete! '.$Equipment->cip3_in().'/'.$file);
 			next;
 		} # end if
-$dbh = sql::open_sql( $log,
-		host      => $config{db_host},
-		database  => $config{db_name},
-		driver    => 'Pg',
-		login     => $config{db_user},
-		password  => $config{db_pass},
-		);
-die 'Error opening db' if ! $dbh;
+		$dbh = sql::open_sql( $log,
+				host      => $config{db_host},
+				database  => $config{db_name},
+				driver    => 'Pg',
+				login     => $config{db_user},
+				password  => $config{db_pass},
+				);
+		die 'Error opening db' if ! $dbh;
 		my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
 		$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
-if ( $debug ) {
-
-	File::Copy::move($$Equipment{'cip3_in'}.'/'.$file, $$Equipment{'cip3_in'}.'/done/'.$file);
-} else {
-	unlink $$Equipment{'cip3_in'}.'/'.$file;
-}
+		if ( $debug ) {
+			File::Copy::move($$Equipment{cip3_in}.'/'.$file, $$Equipment{cip3_in}.'/done/'.$file);
+		} else {
+			unlink $$Equipment{cip3_in}.'/'.$file;
+		}
 	} # end foreach file in input hotfolder
 	close S;
-
 } # end foreach Equipment
 $dbh->disconnect() if $dbh;
 

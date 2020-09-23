@@ -28,7 +28,7 @@
 			$filters{salesrep_id} = $session{$uri.'?salesrep_id'};
 		} # end if
 		if ( $session{$uri.'?usergroup_id'} ) {
-			$filters{'usergroup_id any'} = $session{$uri.'?usergroup_id'};
+			$filters{usergroup_id} = $session{$uri.'?usergroup_id'};
 		} # end if
 		
 		my @Users = openprint::User->find( %filters );

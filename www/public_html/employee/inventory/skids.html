@@ -1,6 +1,6 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <?include(/includes/error_reporting.html)?>
-<script type="text/javascript">
+<script>
 	function submit_handler() {
 		calc();
 	}
@@ -8,7 +8,7 @@
 		LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f1') );
 	}
 </script>
-Please select a Skid to view/edit.<br/>
+Please select a Skid/Roll to view/edit.<br/>
 <form id="f1" name="f1" method="post" action="skids.html">
 	<div class="leftColumn">
 		<fieldset class="filters"><legend>Choose Skid</legend>
@@ -67,34 +67,38 @@ Please select a Skid to view/edit.<br/>
 		<ul>
 			<li>
 				<label>Received On</label>
-	<? echo ( date_select_session( $r->uri().'', 'received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 				to 
-	<? echo ( date_select_session( $r->uri().'', 'received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Date Entered</label>
-	<? echo ( date_select_session( $r->uri().'', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 				to 
-	<? echo ( date_select_session( $r->uri().'', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Last Updated</label>
-	<? echo ( date_select_session( $r->uri().'', 'updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 				to 
-	<? echo ( date_select_session( $r->uri().'', 'updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Last Seen (RFID)</label>
-	<? echo ( date_select_session( $r->uri().'', 'last_seen_start', { with_today=>1, with_clear=>1 } ); ) ?>
-				to 
-	<? echo ( date_select_session( $r->uri().'', 'last_seen_end', { with_today=>1, with_clear=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'last_seen_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				to
+	<? echo ( date_select_session( $r->uri(), 'last_seen_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>As Of</label>
+	<? echo ( date_select_session( $r->uri(), 'as_of', { with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Purpose</label>
 				<select name="purpose_id">
 					<option value=""> all </option>
 					<? echo (
-						make_drop_down( openprint::StockPurpose->dropdown(order=>'lower(name)'), $session{$r->uri().'?purpose_id'} );
+						make_drop_down( openprint::StockPurpose->dropdown(order=>'lower(name)'), $session{$r->uri().'?purpose_id'});
 					) ?>
 				</select>
 			</li>
