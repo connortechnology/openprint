@@ -59,6 +59,7 @@ sub view_services {
 		return;
 	} # end if
 	my $Project = $variable{Project} = new openprint::Project( $project_index );
+  return if !$$Project{id};
 	my $services = $Project->services();
 	my $Service = $Project->Service( $param{ServiceIndex} ) if $param{ServiceIndex};
 
