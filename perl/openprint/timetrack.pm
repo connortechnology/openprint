@@ -23,20 +23,22 @@ sub history {
 		my $Timetrack = new openprint::Timetrack( $param{timetrack_id} );
 		$variable{error} .= $Timetrack->destroy();
 	} elsif ( $param{func} eq 'Download' ) {
-		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id', 'billable') );
+    
+		ssi::save_params( $r->uri(), ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id', 'billable') );
         my @header = ('Who', 'Company', 'Start', 'End', 'Duration', 'Service', 'Description', 'Rate', 'Price');
         my @data;
         my ( $total_hours, $total_value );
         foreach my $Timetrack ( openprint::Timetrack->find(
-					ssi::date_filter( '/timetrack/history.html?starting_start', 'starting >=' ),
-					ssi::date_filter( '/timetrack/history.html?starting_end', 'starting <=' ),
+					ssi::date_filter( $r->uri().'?starting_start', 'starting >=' ),
+					ssi::date_filter( $r->uri().'?starting_end', 'starting <=' ),
 					( sets::isin( $session{user_type}, ['E', 'A'] ) ?
-					  ( $session{'/timetrack/history.html?company_id'} ? ( 'company_id'   => $session{'/timetrack/history.html?company_id'} ) : () ) :
-					  ( 'company_id'  => $session{company_id} ) ),
-					( $session{'/timetrack/history.html?user_id'} ? ( 'user_id' => $session{'/timetrack/history.html?user_id'} ) : () ),
-					( $session{'/timetrack/history.html?service_id'} ? ( 'service_id'   => $session{'/timetrack/history.html?service_id'} ) : () ),
-					( $session{'/timetrack/history.html?billable'} ? ( 'billable' => $session{'/timetrack/history.html?billable'} ) : () ),
-					'order'             => 'starting',
+					  ( $session{$r->uri().'?company_id'} ? ( company_id => $session{$r->uri().'?company_id'} ) : () ) :
+					  ( company_id  => $session{company_id} ) ),
+					( $session{$r->uri().'?user_id'} ? ( user_id => $session{$r->uri().'?user_id'} ) : () ),
+					( $session{$r->uri().'?service_id'} ? ( service_id   => $session{$r->uri().'?service_id'} ) : () ),
+					( $session{$r->uri().'?billable'} ? ( billable => $session{$r->uri().'?billable'} ) : () ),
+          ( $session{$r->uri().'?contains'} ? ( 'description ilike' => $session{$r->uri().'?contains'} ) : () ),
+					order             => 'starting',
 					) ) {
 			next if $Timetrack->paid() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?paid'} ) );
 			next if ( ! $Timetrack->paid() ) and ! sets::isin( 0, split(',', $session{'/timetrack/history.html?paid'} ) );
