@@ -262,7 +262,7 @@ sub get_from_ul_id {
 sub get_ul {
 	my ( $Shift, $filters ) = @_;
 
-	my $html = '<div id="'.$Shift->ul_id().'_div">';
+	my $html;
 	my $total_impressions = 0;
 
 	my @Jobs = $Shift->Schedule();
@@ -320,8 +320,13 @@ sub get_ul {
 	#} else {
 		#$openprint::log->debug("Shift does not have a name");
 	} # end if Shift->name
+# See if we are the last shift with jobs.
 	my $content = $Shift->get_lis($filters);
-	$html .= sprintf('<ul id="%s" class="shift%s">', $Shift->ul_id(), ($content ? '' : ' Empty') );
+	my @after_jobs = openprint::ScheduledJob->find(equipment_id=>$$Shift{equipment_id}, 'starttime >'=>$Shift->endtime()) if ! $content;
+	$html = '<div id="'.$Shift->ul_id().'_div"'.((!($content or @after_jobs)) ? ' class="last"' : '').'>'.$html;
+	$html .= sprintf('<ul id="%s" class="shift%s">', $Shift->ul_id(),
+			($content ? '' : ' Empty'),
+			);
 	$html .= $content;
 	$html .= '</ul></div>';
 	return $html;
