@@ -3111,6 +3111,7 @@ sub check {
 				require Text::CSV_XS;
 				my $csv = Text::CSV_XS->new();
 				my $io =$upload->io();
+				my $row = 1;
 				while ( my $line = <$io> ) {
 					my $status = $csv->parse($line);        # parse a CSV string into fields
 					my ( $id, $rfid, $quantity, $dimension1, $dimension2, $notes, $location ) = $csv->fields();
@@ -3130,7 +3131,7 @@ $log->debug("Got $id, $rfid, $quantity, $dimension1, $dimension2, $notes, $locat
 						my $RFID = openprint::RFIDTag::from_id( $rfid );
 						if ( ! $RFID ) {
 							$log->debug("Unable to find tag from $rfid");
-							$variable{error} .= "Unable to find tag from $rfid<br/>";
+							$variable{error} .= "Unable to find tag from $rfid on row $row<br/>";
 						} else {
 							$log->debug("Found a more precise rfid for $rfid = $$RFID{id}");
 							$rfid = $RFID->id();
@@ -3139,16 +3140,19 @@ $log->debug("Got $id, $rfid, $quantity, $dimension1, $dimension2, $notes, $locat
 
 					if ( $location and ( $location =~ /^(\w\w)(\d\d)$/ ) ) {
 						$location = $1.$2.($2-1);
+						if ( ! $Locations{$location} ) {
+							$location = $1.($2+1).$2;
+						}
 					}
 					if ( $location and ! $Locations{$location} ) {
-						$variable{error} .= "Location $location for $id $rfid not in system.<br/>";	
+						$variable{error} .= "Location $location for $id $rfid not in system on row $row.<br/>";	
 					}
 
 					if ( $RFID{$rfid} ) {
-						$variable{error} .= "Not adding $rfid because it is already in the check.<br/>"; 
+						$variable{error} .= "Not adding $rfid on row $row because it is already in the check.<br/>"; 
 						next;
 					} elsif ( $id and  $Skids{$id} ) {
-						$variable{error} .= "Not adding rfid:$rfid id:$id because it is already in the check.<br/>"; 
+						$variable{error} .= "Not adding rfid:$rfid id:$id row:$row because it is already in the check.<br/>"; 
 						next;
 					}
 
