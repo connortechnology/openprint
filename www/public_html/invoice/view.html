@@ -24,6 +24,7 @@
 						if ( $$variable{Invoice}->can_send() ) {
 							$html .= button( 'Send', { onclick=>q`f1.btnFunction.value='Send';f1.submit();` } );
 							$html .= button( 'SendMe', { onclick=>q`f1.btnFunction.value='Send To Me';f1.submit();`, text=>'Send To Me' } );
+              $html .= button( 'ViewEmail', { href=>'_view_email.html?invoice_id='.$$variable{Invoice}->id(), text=>'View Email' } );
 						} # end if
 					} else {
 						$html .= button( 'post', { onclick=>"f1.btnFunction.value='Post';f1.submit();",text=>'Post' } );
