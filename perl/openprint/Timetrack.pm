@@ -251,5 +251,16 @@ sub elapsed_formatted {
   } # end if
 }
 
+sub link_to {
+    my $self = shift;
+    my $text = @_ ? shift : $$self{id};
+    if ( $self->invoiced() ) {
+      return '<a href="/timetrack/view.html?timetrack_id='.$$self{id}.'">'.$text.'</a>';
+    } else {
+      return '<a href="/timetrack/edit.html?timetrack_id='.$$self{id}.'">'.$text.'</a>';
+    }
+}
+
+
 1;
 __END__
