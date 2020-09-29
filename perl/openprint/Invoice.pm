@@ -281,6 +281,27 @@ sub Logs {
 	return openprint::Log->find(object_id=>$_[0]{id},object_type=>'openprint::Invoice', order=>'date_time');
 } # end sub Logs
 
+sub email_html {
+  my $self = shift;
+  my %data = (
+    Invoice => $self,
+    uri => 'invoice',
+    Currency	=>	$self->Currency(),
+  );
+  my $skin_path = '';
+  if ( -e ($openprint::config{SkinPath}.'/'.$self->Invoicer()->name()) ) {
+    $skin_path = '/'.$self->Invoicer()->name();
+    $openprint::log->debug("Have skinpath at $skin_path");
+  } else {
+    $openprint::log->debug('Have no skinpath at ' . $openprint::config{SkinPath}.'/'.$self->Invoicer()->name());
+  }
+  my $invoice_template = ssi::slurp_content($skin_path.'/invoice_template.html');
+  $invoice_template = ssi::slurp_content('/invoice_template.html') if ! $invoice_template;
+  $data{ReplacementText} = ssi::include('/email_content/invoice.html', \%data);
+  my $invoice_html = ssi::variable_substitution(\$invoice_template, \%data);
+  return $invoice_html;
+}
+
 sub send {
 	my ( $self, $To ) = @_;
 
@@ -315,12 +336,15 @@ sub send {
 	my $invoice_html = ssi::variable_substitution(\$invoice_template, \%data);
   $Email->add_pdf_attachment_from_html('Invoice'.$self->num(), $invoice_html);
 
+  my @AccountingContacts = $self->Invoicer()->AccountingContacts();
+  my $from = @AccountingContacts ? $AccountingContacts[0]->email() : $config{AccountingEmail};
+
 	$Email->add_html_attachment("Invoice".$self->num().'.html', $invoice_html) if $To and ($To->email() =~ /^iconnor/);
 	my $results = $Email->send(
 		BCC			=>	$openprint::User,
 		#TO			=>	new openprint::User( $session{user_id} ),
 		TO			=>	( $To ? $To : [$self->Invoicee()->AccountingContacts()] ),
-		FROM		=>	$config{AccountingEmail},
+		FROM		=>	$from,
 		ATTACHMENTS	=>	\@attachments,
 		SUBJECT		=>	sprintf('%1$s Invoice (%2$s) is now available.', $self->Invoicer()->name(), $self->num()),
 	);
