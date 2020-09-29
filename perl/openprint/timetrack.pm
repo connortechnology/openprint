@@ -130,6 +130,17 @@ sub _history {
 	} # end if
 } # end sub _history
 
+sub view {
+	my $Timetrack = $variable{Timetrack} = new openprint::Timetrack( $param{timetrack_id} );
+	if ( $param{func} eq 'Destroy' ) {
+		$variable{error} .= $Timetrack->destroy();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/timetrack/history.html';
+			return;
+    }
+  }
+}
+
 sub edit {
 	my $Timetrack = $variable{Timetrack} = new openprint::Timetrack( $param{timetrack_id} );
 	if ( $param{func} eq 'Save' ) {
@@ -184,24 +195,22 @@ sub edit {
 		} # end if
 	} elsif ( $param{func} eq 'Copy' ) {
 		$variable{Timetrack} = $variable{Timetrack}->copy();
-		#$variable{error} .= $variable{Timetrack}->save();
 	} elsif ( $param{func} eq 'Destroy' ) {
-		my $Timetrack = new openprint::Timetrack( $param{timetrack_id} );
 		$variable{error} .= $Timetrack->destroy();
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/timetrack/history.html';
 			return;
 		}
 	} else {
-	if ( (!$variable{Timetrack}->id()) ) {
-		$variable{Timetrack}->set(\%param); # Sets defaults
-		$variable{Timetrack}->user_id( $session{user_id} ) if ! $variable{Timetrack}->user_id();
-		if ( time - $session{'/timetrack/edit.html?lastupdated'} < ( 12*60*60 ) ) {
-			$variable{Timetrack}->company_id( $session{'/timetrack/edit.html?company_id'} ) if ! $variable{Timetrack}->company_id();
-			$variable{Timetrack}->starting( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->starting();
-			$variable{Timetrack}->ending( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->ending();
-		} # end if
-	} # end if
+    if ( (!$variable{Timetrack}->id()) ) {
+      $variable{Timetrack}->set(\%param); # Sets defaults
+      $variable{Timetrack}->user_id( $session{user_id} ) if ! $variable{Timetrack}->user_id();
+      if ( time - $session{'/timetrack/edit.html?lastupdated'} < ( 12*60*60 ) ) {
+        $variable{Timetrack}->company_id( $session{'/timetrack/edit.html?company_id'} ) if ! $variable{Timetrack}->company_id();
+        $variable{Timetrack}->starting( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->starting();
+        $variable{Timetrack}->ending( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->ending();
+      } # end if
+    } # end if
 	} # end if
 } # end sub edit
 
