@@ -554,5 +554,13 @@ $log->debug("Adding");
 
 } # end sub _invoiced_orders
 
+sub _view_email {
+	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
+	if ( ! $Invoice ) {
+		$variable{error} .= "Invoice $param{invoice_id} not found";
+		return;
+	} 
+}
+
 1;
 __END__
