@@ -1907,7 +1907,13 @@ sub apply_Manifest {
 	my $error;
 
 	my $Log = new openprint::Log();
-	$Log->save({object_type => 'openprint::Manifest', object_id=>$$Manifest{id}, action=>'Apply Manifest',user_id=>$session{user_id},company_id=>$session{company_id} });
+	$Log->save({
+			object_type => 'openprint::Manifest',
+			object_id=>$$Manifest{id},
+			action=>'Apply Manifest',
+			user_id=>$session{user_id},
+			company_id=>$session{company_id}
+			});
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Manifests IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
@@ -2980,7 +2986,7 @@ sub check {
 								next;
 							} else {
 								$variable{information} .= 'Checking back in ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' '.$ICE->quantity().'<br/>';
-								$SC->save({quantity=>$ICE->quantity(), condition=>'Used' });
+								$SC->save({quantity=>$ICE->quantity(), condition=>'Used', needs_verification=>1 });
 								$Paper->add_inventory( $Skid, $ICE->quantity(), $Paper->units(), 'Updated from Inventory Check ' . $Check->link_to());
 								next;
 							}
@@ -2992,7 +2998,7 @@ sub check {
 								next;
 							} else {
 								$variable{information} .= 'Adjusting quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.-1*$PI->delta().'<br/>';
-								$SC->save({quantity=>-1*$PI->delta()});
+								$SC->save({quantity=>-1*$PI->delta(), needs_verification=>1});
 								$Paper->add_inventory( $Skid, -1*$PI->delta(), $Paper->units(), 'Updated from Inventory Check ' . $Check->link_to());
 								next;
 							}
@@ -3000,7 +3006,7 @@ sub check {
 					#} else {
 						#$variable{information} .= "Not checking back in " . $Paper->to_string() . ' on ' . $Skid->link_to() . ' cuz checked out after the inventory check?<br/>';
 					}
-				} else {
+				} else { # not checked out
 
 					if ( ! $SC->quantity() and ! $ICE->quantity() ) {
 						if ( my @MCs = $SC->Manifest_Contents() ) {
@@ -3023,7 +3029,7 @@ sub check {
 							$variable{information} .= 'Would adjust the quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
 						} else {
 							$variable{information} .= 'Adjusting quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
-							$SC->save({quantity=>int($ICE->quantity())});
+							$SC->save({quantity=>int($ICE->quantity()), needs_verification=>1});
 							$Paper->add_inventory( $Skid, int($ICE->quantity()-$SC->quantity()), $Paper->units(), 'Updated from Inventory Check ' );
 						} # endi f
 					} # end if quantity needs adjusting
@@ -3058,19 +3064,19 @@ sub check {
 						'inventory_check_id not'=>$Check->id(),
 						) ) {
 				if ( ! $$Skid{type} ) {
-	if ( 0 ) {
-					if ( $Skid->type() ) {
-						$Skid->save();
-					}
-					if ( $$Skid{type} ) {
-						$variable{information} .= 'Updated Skid ' . $Skid->link_to() . ' to be ' . $Skid->type() . '<br/>';
+					if ( 0 ) {
+						if ( $Skid->type() ) {
+							$Skid->save();
+						}
+						if ( $$Skid{type} ) {
+							$variable{information} .= 'Updated Skid ' . $Skid->link_to() . ' to be ' . $Skid->type() . '<br/>';
+						} else {
+							$variable{information} .= 'Failed to update Skid type ' . $Skid->link_to() . ' to be ' . $Skid->type() . '<br/>';
+						}
 					} else {
-						$variable{information} .= 'Failed to update Skid type ' . $Skid->link_to() . ' to be ' . $Skid->type() . '<br/>';
+						$variable{error} .= 'Skid ' . $Skid->link_to() . ' has no type!<br/>';
 					}
-	} else {
-		$variable{error} .= 'Skid ' . $Skid->link_to() . ' has no type!<br/>';
-	}
-				}
+				} # end if ! type
 				#next if it was in the inventory check
 				next if $Skids{$$Skid{id}};
 				if ( openprint::Inventory_Check_Entry->find_one( ic_id=>$$Check{id}, skid_id=>$$Skid{id} ) ) {
@@ -3081,7 +3087,7 @@ sub check {
 					$log->error("Didn't find skid $$Skid{id} in skid cache, but did find it in the check by rfid.");
 					next;
 				} 
-	$log->debug("Have skid not in check: " . $Skid->to_string() );
+				$log->debug("Have skid not in check: " . $Skid->to_string() );
 				if ( $param{action} eq 'Test' ) {
 					$variable{information} .= 'Would check out skid ' . $Skid->link_to( $Skid->to_string() ) . ' located at ' . $Skid->location() .'<br/>';
 				} else {
