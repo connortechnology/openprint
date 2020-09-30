@@ -2967,6 +2967,10 @@ if ( ! sets::isin( 'skid_contents', \@tables ) ) {
 		$dbh->do('alter table skid_contents add primary key (id)');
 		$dbh->do('create index skid_contents_skid_id_idx on skid_contents (skid_id)');
 	} # end if
+	if ( ! exists $$data{needs_verification} ) {
+		$log->debug("Adding needs_verification to skid_contents");
+		$dbh->do('ALTER TABLE skid_contents ADD needs_verification BOOLEAN NOT NULL DEFAULT false') or die $dbh->errstr();
+	}
 } # end if
 foreach my $ServiceType ( openprint::ServiceType->find() ) {
 	if ( $ServiceType->name() eq 'PerfectBound' ) {
