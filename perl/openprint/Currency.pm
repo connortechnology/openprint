@@ -20,6 +20,7 @@ $serial = 'currencies_id_seq';
 	short	=>	'short',
 	name	=>	'name',
 	symbol	=>	'symbol',
+  precision =>  'precision',
 );
 %transforms = (
 	id		=> [ 's/\D//g', '<2147483647' ],
@@ -27,6 +28,7 @@ $serial = 'currencies_id_seq';
 	short => [ 's/\s+//' ],
 );
 %defaults = (
+  precision => 2,
 );
 
 $cache_field = 'short';
@@ -211,7 +213,8 @@ sub format {
 	
 
 	$price = 0 if ! $price;
-	$precision = 2 if ! defined $precision;
+	$precision = $$Currency{precision} if ! defined $precision;
+  $precision = 2 if ! defined $precision;
 	$symbol = $Currency->symbol() if ! defined $symbol;
 
 	require Number::Format;
