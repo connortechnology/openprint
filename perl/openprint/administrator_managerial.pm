@@ -198,7 +198,6 @@ sub taxes {
 
 sub currency {
 	if ( $param{btnFunction} eq 'Save' ) {
-		# Add record to audit log - action "Update Currency".
 		(new openprint::Log())->save({action=>'Update Currency'});
 
 		if ( $param{name} ) {
@@ -207,6 +206,7 @@ sub currency {
 				name	=>	$param{name},
 				short	=>	$param{short},
 				symbol	=>	$param{symbol},
+        precision => $param{precision},
 				});
 		} # end if
 
@@ -216,6 +216,7 @@ sub currency {
 						name	=>	$param{'name-'.$$Currency{id}},
 						short	=>	$param{'short-'.$$Currency{id}},
 						symbol	=>	$param{'symbol-'.$$Currency{id}},
+						precision	=>	$param{'precision-'.$$Currency{id}},
 						});
 			} # end if
 		} # end foreach
