@@ -1,6 +1,7 @@
 <? eval (
+		my $uri = '/employee/inventory/paper.html';
 	my %params;
-	if ( $session{'/employee/inventory/paper.html?Docket'} ) {
+	if ( $session{$uri.'?Docket'} ) {
 		$params{'allocated_to_docket any'} = $session{'/employee/inventory/paper.html?Docket'};
 	} else {
 		%params = (

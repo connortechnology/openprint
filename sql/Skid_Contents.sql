@@ -8,6 +8,7 @@ CREATE TABLE Skid_Contents (
 	purpose_id	INTEGER, FOREIGN KEY (purpose_id) REFERENCES stock_Purposes (id),
 	manifestcontent_id	INTEGER, FOREIGN KEY (manifestcontent_id) REFERENCES ManifestContents (id),
 	condition_id	INTEGER,	FOREIGN KEY (condition_id) REFERENCES inventoryconditions (id),
+	needs_verification BOOLEAN NOT NULL DEFAULT false,
 	PRIMARY KEY (id)
 );
 
