@@ -119,19 +119,19 @@ sub is_paid {
 
 sub owing {
 #$log->debug("Owing total: " . $_[0]->total() . ' int: ' . $_[0]->interest() . ' paid: ' . $_[0]->paid() );
-	return Math::Round::nearest( .01, $_[0]->total() + $_[0]->interest() - $_[0]->paid() );
+	return Math::Round::nearest( 1/(10**$_[0]->Currency()->precision()), $_[0]->total() + $_[0]->interest() - $_[0]->paid() );
 } # end sub owing
 
 sub owing_early {
-#$log->debug("Owing total: " . $_[0]->total() . ' int: ' . $_[0]->interest() . ' paid: ' . $_[0]->paid() );
-	my $owing = $_[0]->total() + $_[0]->interest() - $_[0]->paid();
-	if ( $_[0]{early_payment_units} eq 'amount' ) {
-		return Math::Round::nearest( .01, $owing + $_[0]{early_payment_amount} );
+  my $self = shift;
+	my $owing = $self->total() + $self->interest() - $self->paid();
+	if ( $$self{early_payment_units} eq 'amount' ) {
+		return Math::Round::nearest( 1/(10**$self->Currency()->precision()), $owing + $$self{early_payment_amount} );
 	} elsif ( $_[0]{early_payment_units} eq 'percent' ) {
-		return Math::Round::nearest( .01, $owing * ( 1 - $_[0]{early_payment_amount}/100 ) );
+		return Math::Round::nearest( 1/(10**$self->Currency()->precision()), $owing * ( 1 - $$self{early_payment_amount}/100 ) );
 	} else {
-$openprint::log->error('Unknown units for early_payment '. $_[0]{early_payment_units} );
-		return Math::Round::nearest( .01, $owing );
+$openprint::log->error('Unknown units for early_payment '. $$self{early_payment_units} );
+		return Math::Round::nearest( 1/(10**$self->Currency()->precision()), $owing );
 	} # end if
 } # end sub owing
 
@@ -162,18 +162,18 @@ $log->debug("Recalculating subtotal") if $debug;
 		$$self{subtotal} = 0;
 		foreach my $T ( openprint::Timetrack->find( invoice_id=>$$self{id} ) ) {
 			$$self{subtotal} += $T->value();
-$log->debug("T value: " . $T->value() . " subtotal: $$self{subtotal}");
+$log->debug('T value: ' . $T->value() . ' subtotal: '.$$self{subtotal}) if $debug;
 		} # end foreach
 		foreach my $P ( $self->Products() ) {
 			$$self{subtotal} += $P->total();
-$log->debug("P value: " . $P->total() . " subtotal: $$self{subtotal}" );
+$log->debug('P value: ' . $P->total() . ' subtotal: '.$$self{subtotal} ) if $debug;
 		}# end foreach P
 		foreach my $O ( $self->Orders() ) {
 			$$self{subtotal} += $O->Order()->subtotal();
-$log->debug("O value: " . $O->Order()->subtotal() . " subtotal: $$self{subtotal}" );
+$log->debug('O value: ' . $O->Order()->subtotal() . ' subtotal: '.$$self{subtotal});
 		}# end foreach P
 	} # end if
-	return Math::Round::nearest( .01, $$self{subtotal} );
+	return Math::Round::nearest(1/(10**$self->Currency()->precision()), $$self{subtotal});
 } # end sub subtotal
 
 sub total {
@@ -194,7 +194,7 @@ sub total {
 $log->debug("tax $$Tax{amount} toal: $$self{total}");
 		} # end foreach Tax
 	} # end if
-	return Math::Round::nearest( .01, $$self{total} );
+	return Math::Round::nearest( 1/(10**$self->Currency()->precision()), $$self{total} );
 } # end sub total
 
 sub interest {
@@ -304,6 +304,11 @@ sub email_html {
 
 sub send {
 	my ( $self, $To ) = @_;
+
+  my @To = $To ? ($To) : $self->Invoicee()->AccountingContacts();
+  if ( ! @To ) {
+    return 'Noone to send to!';
+  }
 
 	my $Email = new openprint::Email();
 
