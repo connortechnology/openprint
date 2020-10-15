@@ -60,7 +60,7 @@
 					# If there is only 1 thing in the order, then we can condense
 					$$variable{Project} = $$variable{Contents}[0]->Project();
 					my $html;
-					if ( $$variable{Project}->quantity_indexes() > 1 ) {
+					if ( ($$variable{Project}->quantity_indexes() > 1 ) or ! $$variable{Project}->ordered_quantity_index() ) {
 						$html .= '<fieldset><legend>Select Quantity</legend><div class="content"><ul>';
 						$html .= include( '/main/order/_quantity_select.html' ).'</ul></div></fieldset>';
 					} else {

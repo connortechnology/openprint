@@ -81,7 +81,7 @@ sub PurchaseOrder_Content {
 			my $Paper = $_[0]->Paper();
 			$openprint::log->debug('Paper desc: ' . $Paper->to_string()) if $debug;
 			foreach my $POC ( $PO->Contents() ) {
-				$openprint::log->debug('POC desc: ' . $POC->item()) if $debug;
+				$openprint::log->debug('POC desc: '.$POC->to_string()) if $debug;
 				if ( $POC->type() ne $Paper->type().' Stock' ) {
 					$openprint::log->debug("not the right type POC: $$POC{type} != $$Paper{type} Stock") if $debug;
 					next;

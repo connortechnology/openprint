@@ -37,6 +37,7 @@
 					( $session{$uri.'?host_id'} ? ( host_id=>$session{$uri.'?host_id'} ) : () ),
 					( $session{$uri.'?salesrep_id'} ? ( salesrep_id=>$session{$uri.'?salesrep_id'} ) : () ),
 					( $session{$uri.'?company_id'} ? ( company_id=>$session{$uri.'?company_id'} ) : () ),
+					( $session{$uri.'?search'} ? ( 'description ilike'=>'%'.$session{$uri.'?search'}.'%' ) : () ),
 					( @Companies ? ( company_id=>[ map { $_->id() } @Companies ] ) : () ),
 				) ),
 			order	=>	'dtmTimestamp DESC'

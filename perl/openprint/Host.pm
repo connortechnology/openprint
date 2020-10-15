@@ -147,10 +147,10 @@ sub destroy {
 sub ping {
 	require Net::Ping;
 	my $p = Net::Ping->new();
-my $rc;
+	my $rc;
 	foreach my $HI ( $_[0]->Interfaces() ) {
 		next if ! $$HI{ip};
-	 $rc = $p->ping($$HI{ip});
+		$rc = $p->ping($$HI{ip});
 		return $rc if $rc;
 	}
 	$p->close();
@@ -163,7 +163,7 @@ sub Type {
 
 sub type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::Host_Type->find_one('name lc'=> lc openprint::Host_Type->transform('name',$_[1]) );
+		my $Type = openprint::Host_Type->find_one('name lc'=> lc openprint::Host_Type->transform(name=>$_[1]) );
 		if ( ! $Type ) {
 			$Type = new openprint::Host_Type();
 			$Type->save({name=>$_[1]});
@@ -253,6 +253,7 @@ sub reboot {
 		my $do_not_expect;
 		my $port = 80;
 		my $protocol = 'http';
+    my $referer = '';
 
 		if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 			$url = $HI->ip().'/admin/reboot.cgi?type=0';
@@ -366,8 +367,16 @@ sub reboot {
 				reboot_ap => 1,
 			};
 			$do_not_expect = 'SORRY';
-		} else {
-			$openprint::log->error("Unknown host type $$Host{type}");
+    } elsif ( $Host->type() eq 'Trendnet TV-862IC' ) {
+      $referer = 'http://'.$HI->ip().'/eng/admin/tools_default.cgi';
+      $initial_url = $HI->ip().'/eng/admin/tools_default.cgi';
+      $url = $HI->ip().'/eng/admin/reboot.cgi';
+      $method = 'post';
+      $args = {
+        reboot => 'true',
+      };
+    } else {
+      $openprint::log->error("Unknown host type $$Host{type}");
 			return 0;
 		}
 
@@ -380,6 +389,9 @@ sub reboot {
 			$protocol = 'https';
 			$port = 443;
 		}
+    foreach my $k ( keys %$headers ) {
+      $openprint::log->debug("Header $k => $$headers{$k}");
+    }	# end foreach
 		$response = $HI->authenticate($browser, $response, $method, $port, $protocol.'://'.($initial_url ? $initial_url : $url), $args);
 
 		if ( !$response->is_success ) {
@@ -409,12 +421,14 @@ sub reboot {
 			} # end if
 		} else {
 			$success = 1;
-			$openprint::log->debug('Success Content: '.$response->content);
+			$openprint::log->debug('Success content after auth to initial_url: '.$response->content);
 		} # end if
 
 		if ( $success ) {
       if ( $url ne $initial_url ) {
-        $response = $browser->get($protocol.'://'.$url);
+        $openprint::log->debug('Sending actual url '.$method . ' ' . $url);
+        $browser->default_header('Referer', $referer) if $referer;
+        $response = $browser->$method($protocol.'://'.$url, $args ? $args : ());
         $openprint::log->debug('Success Content: '.$response->content);
       }
 			if ( $expect and ! ( $response->content =~ /$expect/ ) ) {
@@ -499,6 +513,7 @@ sub can_reboot {
 				'TL-WPA4220', 'TP-Link Archer C7',
 				'D-Link DAP1522','DGS-1224T','DLink DCS-910',
         'DCS_932L','DCS-933L','DCS-942L', 'WG602v3',
+        'Trendnet TV-862IC',
 				'Vivotek' ] ) ) {
     return !undef;
   }
@@ -508,6 +523,12 @@ sub can_reboot {
 sub get_config {
 	my $self = shift;
 	my %config;
+
+	if ( !($$self{type_id} and $self->type()) ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->debug("get_config called when can_get_config should have been checked from $caller:$line");
+		return;
+	}
 
 	eval {
 		require 'openprint/Host/'.$self->type().'.pm';
@@ -521,7 +542,11 @@ sub get_config {
 sub get_status {
 	my $self = shift;
 	my %status;
-	return if !($$self{type_id} and $self->type());
+	if ( !($$self{type_id} and $self->type()) ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->debug("get_status called when can_get_status should have been checked from $caller:$line");
+		return;
+	}
 
 	eval {
 		require 'openprint/Host/'.$self->type().'.pm';
@@ -534,11 +559,11 @@ sub get_status {
 
 sub can_get_status {
 	return 0;
-	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L','Vivotek' ] ) );
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'Vivotek' ] ) );
 }
 
 sub can_get_config {
-	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L','Vivotek' ] ) );
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L'] ) );
 }
 
 sub get_and_store_config {

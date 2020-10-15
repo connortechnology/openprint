@@ -39,6 +39,7 @@ sub unescape_substitutions {
 } # end unescape_substitutions
 
 sub save_article {
+  $param{article_id} = openprint::Article->transform(id=>$param{article_id});
 	my $Article = new openprint::Article( $param{article_id} );
 	if ( ! $Article->can_edit() ) {
 		$variable{error} .= 'You do not have rights to edit this article.';

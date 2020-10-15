@@ -215,11 +215,11 @@ sub save {
 	my $type = ref $self;
 	if ( ! $type ) {
 		my ( $caller, undef, $line ) = caller;
-		$log->error("No type in Object::save. self:$self from  $caller:$line");
+		$log->error('No type in Object::save. self:'.$self.' from '.$caller.':'.$line);
 	}
 	my $local_dbh = eval '$'.$type.'::dbh';
 	$local_dbh = $openprint::dbh if ! $local_dbh;
-	$self->set( $data ? $data : {} );
+	$self->set($data ? $data : {});
 	if ( $debug or DEBUG_ALL ) {
 		if ( $data ) {
 			foreach my $k ( keys %$data ) {
@@ -229,10 +229,9 @@ sub save {
 							) );
 			}
 		} else {
-			$log->debug("No data after set");
+			$log->debug('No data after set');
 		}
-	}
-#$debug = 0;
+	} # end if DEBUG
 
 	my $table = eval('$'.$type.'::table');
 	my $fields = eval('\%'.$type.'::fields');
@@ -244,11 +243,7 @@ sub save {
   my @keys = map { defined $$fields{$_} ? $_ : () } keys %$fields;
   @sql{@$fields{@keys}} = @$self{@keys};
 
-  #foreach my $k ( keys %$fields ) {
-  #$sql{$$fields{$k}} = $$self{$k} if defined $$fields{$k};
-  #} # end foreach
-  #
-	if ( ! $force_insert ) {
+	if ( !$force_insert ) {
 		$sql{$$fields{updated_by}} = $openprint::session{user_id} if exists $$fields{updated_by};
 		$sql{$$fields{updated_on}} = 'NOW()' if exists $$fields{updated_on};
 	} # end if
@@ -260,7 +255,7 @@ sub save {
 		my $insert = $force_insert;
 		my %serial = eval('%'.$type.'::serial');
 		if ( ! %serial ) {
-$log->debug("No serial") if $debug;
+#$log->debug('No serial') if $debug;
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
 			if ( @identified_by ) {
 				my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
@@ -311,7 +306,7 @@ $log->debug("No serial") if $debug;
 			} # end if
 		} else {
 			my @keys = keys %sql;
-			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $_ . ' = ?' } @$fields{@identified_by} );
+			my $command = 'UPDATE '.$table.' SET ' . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $_ . ' = ?' } @$fields{@identified_by} );
 			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys,@$fields{@identified_by}} ) ) ) {
 				my $error = $local_dbh->errstr;
 				$command =~ s/\?/\%s/g;
@@ -335,10 +330,10 @@ $log->debug("No serial") if $debug;
 				if ( $serial ) {
 					@$self{@identified_by} = @sql{@$fields{@identified_by}} = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
 					if ( $local_dbh->errstr() )  {
-						$log->error("Error getting next id. " . $local_dbh->errstr() );
-						$log->error("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by}));
+						$log->error('Error getting next id. ' . $local_dbh->errstr() );
+						$log->error("SQL statement execution SELECT nextval('$serial') returned ".join(',', @$self{@identified_by}));
 					} elsif ( $debug or DEBUG_ALL ) {
-						$log->debug("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by}));
+						$log->debug("SQL statement execution SELECT nextval('$serial') returned ".join(',', @$self{@identified_by}));
 					} # end if
 				} # end if
 			} # end if
@@ -386,7 +381,7 @@ $log->debug("No serial") if $debug;
 	$self->load();
 	if ( $$fields{id} ) {
 		if ( ! $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} ) {
-$log->debug("Setting cached object to $self : " . $self->to_string()) if $debug or DEBUG_ALL;
+$log->debug('Setting cached object to '.$self.' : ' . $self->to_string()) if $debug or DEBUG_ALL;
 			$openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} = $self;
 		} # end if
 	#delete $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}};

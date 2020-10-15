@@ -3,19 +3,29 @@
 	<form id="f1" name="f1" method="post" action="/marketing/subscriptions.html">
 		<input type="hidden" name="action"/>
 		<fieldset><legend>Subscriptions</legend>
-		Editing subscriptions for <? echo ( sprintf('%s <%s>', $$variable{User}->name(), $$variable{User}->email()); ) ?>:<br/>
+			<p>
+					Editing subscriptions for <? echo ( sprintf('%s <%s>', $$variable{User}->name(), $$variable{User}->email() ); ) ?>:<br/>
+			</p>
 			<ul>
 				<li><label>All email communications from <? echo ( $config{SiteTitle} ) ?></label>
-				<? echo ( radio('all', [ 'Y', 'Subscribed', 'N', 'Unsubscribed' ], $$variable{User}->mailinglist()); ) ?>
+				<? echo ( radio( 'all', [ 'Y', 'Subscribed', 'N', 'Unsubscribed' ], $$variable{User}->mailinglist(), { default=>'Y' } ); ) ?>
 				</li>
-        <? if ( ! $session{user_id} ) ?>
-          <div id="Captcha"><?include('/includes/_captcha.html')?></div>
-          <input type="hidden" name="email" value="<?echo($param{email})?>"/>
-          <input type="hidden" name="email_id" value="<?echo($param{email_id})?>"/>
-          <input type="hidden" name="campaign_id" value="<?echo($param{campaign_id})?>"/>
-          <input type="hidden" name="user_id" value="<?echo($param{user_id})?>"/>
-        <? endif ( ! $session{user_id} ) ?>
 			</ul>
+	<? if ( ! $session{user_id} ) ?>
+<? if ( $config{reCAPTCHA_site_key} ) ?>
+    <?echo(
+         require Captcha::reCAPTCHA;
+         my $c = Captcha::reCAPTCHA->new;
+         return $c->get_html_v2($config{reCAPTCHA_site_key});
+         ) ?>
+  <? else ( $config{reCAPTCHA_site_key} ) ?>
+		<div id="Captcha"><?include('/includes/_captcha.html')?></div>
+  <? endif ( $config{reCAPTCHA_site_key} ) ?>
+		<input type="hidden" name="email" value="<?echo($param{email})?>"/>
+		<input type="hidden" name="email_id" value="<?echo($param{email_id})?>"/>
+		<input type="hidden" name="campaign_id" value="<?echo($param{campaign_id})?>"/>
+		<input type="hidden" name="user_id" value="<?echo($param{user_id})?>"/>
+	<? endif ( ! $session{user_id} ) ?>
 			<p class="buttons">
 			<? echo ( join("\n",
 					button( 'Save', { onclick=>q`f1.elements['action'].value='Save';f1.submit();` } ),

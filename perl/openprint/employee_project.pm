@@ -1084,6 +1084,7 @@ sub _modification_history {
 		ssi::save_params('/employee/project/modification_log.html', 'project_id', 'operator_id', 'salesrep_id','StartDocket',
 			( map { 'action_date_start_'.$_ } ( 'year', 'month', 'day', 'hour','minute' ) ),
 			( map { 'action_date_end_'.$_ } ( 'year', 'month', 'day', 'hour','minute' ) ),
+			'search',
 				);
 } # end sub _modification_history
 

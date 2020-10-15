@@ -39,13 +39,13 @@ $opts->{db_user} = $opts->{db_name} if ! $opts->{db_user};
 $opts->{db_pass} = $opts->{db_name} if ! $opts->{db_pass};
 
 $dbh = sql::open_sql( $log,
-		port		=>	$$opts{db_port},
-        'host'      => $opts->{db_host},
-        'database'  => $opts->{db_name},
-        'driver'    => 'Pg',
-        'login'     => $opts->{db_user},
-        'password'  => $opts->{db_pass},
-        );
+  port		=>	$$opts{db_port},
+  host      => $opts->{db_host},
+  database  => $opts->{db_name},
+  driver    => 'Pg',
+  login     => $opts->{db_user},
+  password  => $opts->{db_pass},
+);
 
 die 'Error opening db' if ! $dbh;
 configuration::init();

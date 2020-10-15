@@ -23,20 +23,22 @@ sub history {
 		my $Timetrack = new openprint::Timetrack( $param{timetrack_id} );
 		$variable{error} .= $Timetrack->destroy();
 	} elsif ( $param{func} eq 'Download' ) {
-		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id', 'billable') );
+    
+		ssi::save_params( $r->uri(), ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id', 'billable') );
         my @header = ('Who', 'Company', 'Start', 'End', 'Duration', 'Service', 'Description', 'Rate', 'Price');
         my @data;
         my ( $total_hours, $total_value );
         foreach my $Timetrack ( openprint::Timetrack->find(
-					ssi::date_filter( '/timetrack/history.html?starting_start', 'starting >=' ),
-					ssi::date_filter( '/timetrack/history.html?starting_end', 'starting <=' ),
+					ssi::date_filter( $r->uri().'?starting_start', 'starting >=' ),
+					ssi::date_filter( $r->uri().'?starting_end', 'starting <=' ),
 					( sets::isin( $session{user_type}, ['E', 'A'] ) ?
-					  ( $session{'/timetrack/history.html?company_id'} ? ( 'company_id'   => $session{'/timetrack/history.html?company_id'} ) : () ) :
-					  ( 'company_id'  => $session{company_id} ) ),
-					( $session{'/timetrack/history.html?user_id'} ? ( 'user_id' => $session{'/timetrack/history.html?user_id'} ) : () ),
-					( $session{'/timetrack/history.html?service_id'} ? ( 'service_id'   => $session{'/timetrack/history.html?service_id'} ) : () ),
-					( $session{'/timetrack/history.html?billable'} ? ( 'billable' => $session{'/timetrack/history.html?billable'} ) : () ),
-					'order'             => 'starting',
+					  ( $session{$r->uri().'?company_id'} ? ( company_id => $session{$r->uri().'?company_id'} ) : () ) :
+					  ( company_id  => $session{company_id} ) ),
+					( $session{$r->uri().'?user_id'} ? ( user_id => $session{$r->uri().'?user_id'} ) : () ),
+					( $session{$r->uri().'?service_id'} ? ( service_id   => $session{$r->uri().'?service_id'} ) : () ),
+					( $session{$r->uri().'?billable'} ? ( billable => $session{$r->uri().'?billable'} ) : () ),
+          ( $session{$r->uri().'?contains'} ? ( 'description ilike' => $session{$r->uri().'?contains'} ) : () ),
+					order             => 'starting',
 					) ) {
 			next if $Timetrack->paid() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?paid'} ) );
 			next if ( ! $Timetrack->paid() ) and ! sets::isin( 0, split(',', $session{'/timetrack/history.html?paid'} ) );
@@ -128,6 +130,17 @@ sub _history {
 	} # end if
 } # end sub _history
 
+sub view {
+	my $Timetrack = $variable{Timetrack} = new openprint::Timetrack( $param{timetrack_id} );
+	if ( $param{func} eq 'Destroy' ) {
+		$variable{error} .= $Timetrack->destroy();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/timetrack/history.html';
+			return;
+    }
+  }
+}
+
 sub edit {
 	my $Timetrack = $variable{Timetrack} = new openprint::Timetrack( $param{timetrack_id} );
 	if ( $param{func} eq 'Save' ) {
@@ -182,24 +195,22 @@ sub edit {
 		} # end if
 	} elsif ( $param{func} eq 'Copy' ) {
 		$variable{Timetrack} = $variable{Timetrack}->copy();
-		#$variable{error} .= $variable{Timetrack}->save();
 	} elsif ( $param{func} eq 'Destroy' ) {
-		my $Timetrack = new openprint::Timetrack( $param{timetrack_id} );
 		$variable{error} .= $Timetrack->destroy();
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/timetrack/history.html';
 			return;
 		}
 	} else {
-	if ( (!$variable{Timetrack}->id()) ) {
-		$variable{Timetrack}->set(\%param); # Sets defaults
-		$variable{Timetrack}->user_id( $session{user_id} ) if ! $variable{Timetrack}->user_id();
-		if ( time - $session{'/timetrack/edit.html?lastupdated'} < ( 12*60*60 ) ) {
-			$variable{Timetrack}->company_id( $session{'/timetrack/edit.html?company_id'} ) if ! $variable{Timetrack}->company_id();
-			$variable{Timetrack}->starting( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->starting();
-			$variable{Timetrack}->ending( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->ending();
-		} # end if
-	} # end if
+    if ( (!$variable{Timetrack}->id()) ) {
+      $variable{Timetrack}->set(\%param); # Sets defaults
+      $variable{Timetrack}->user_id( $session{user_id} ) if ! $variable{Timetrack}->user_id();
+      if ( time - $session{'/timetrack/edit.html?lastupdated'} < ( 12*60*60 ) ) {
+        $variable{Timetrack}->company_id( $session{'/timetrack/edit.html?company_id'} ) if ! $variable{Timetrack}->company_id();
+        $variable{Timetrack}->starting( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->starting();
+        $variable{Timetrack}->ending( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->ending();
+      } # end if
+    } # end if
 	} # end if
 } # end sub edit
 

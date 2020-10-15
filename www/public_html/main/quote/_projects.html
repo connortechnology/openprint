@@ -1,5 +1,5 @@
 <? if ( openprint::ProjectType->find_one() ) ?>
-<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
+<? if ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) or $openprint::Company->reseller() eq 'Y' ) ?>
 <table class="List">
 	<thead>
 		<tr> 
@@ -38,11 +38,11 @@
 				$html .= '<tr><td class="weight">';
 				my $weight;
 
-				if ( $$services{'BulkSkids'} ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
+				if ( $$services{BulkSkids} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{BulkSkids}[0] );
 					$weight = $$specs{'totalWeight'.$qty_index};
-				} elsif ( $$services{'PlainCartons'} ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
+				} elsif ( $$services{PlainCartons} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{PlainCartons}[0] );
 					$weight = $$specs{'totalWeight'.$qty_index};
 				} else {
 					$weight = openprint::print::get_finished_weight($Project->id()) * $Project->quantity($qty_index);
@@ -91,7 +91,7 @@ if ( 0 ) {
 	) ?>
 	</tbody>
 </table>
-<? else ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
+<? else ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) or $openprint::Company->reseller() eq 'Y' ) ?>
 <table class="List">
 	<thead>
 		<tr> 
@@ -124,7 +124,7 @@ if ( 0 ) {
 				if ( $$services{BulkSkids} ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $$services{BulkSkids}[0] );
 					$weight = $$specs{'totalWeight'.$qty_index};
-				} elsif ( $$services{'PlainCartons'} ) {
+				} elsif ( $$services{PlainCartons} ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $$services{PlainCartons}[0] );
 					$weight = $$specs{'totalWeight'.$qty_index};
 				} else {
@@ -152,5 +152,5 @@ if ( 0 ) {
 		return $html;
 	) ?>
 </table>
-<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
+<? endif ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) or $openprint::Company->reseller() eq 'Y' ) ?>
 <? endif ( openprint::ProjectType->find_one() ) ?>

@@ -60,11 +60,17 @@ sub history {
 				push @Data, $Invoice->id(), 
         ssi::format_csv_datetime($Invoice->created_on()),
         ssi::format_csv_datetime($Invoice->posted_on()),
-        ssi::format_csv_date($Invoice->due_on()),
         ssi::format_csv_datetime($Invoice->first_sent_on()),
+        ssi::format_csv_date($Invoice->due_on()),
         $Invoice->Invoicee()->name(), $Invoice->subtotal(), 
         ( map { $Invoice->Tax( $_ )->amount() } @Taxes ),
         $Invoice->total(), $Invoice->interest(), $Invoice->owing();
+        $subtotal += $Invoice->subtotal();
+        $owing_total += $Invoice->owing();
+        foreach my $Tax ( @Taxes ) {
+          $tax_totals{$Tax->id()} += $Invoice->Tax($Tax)->amount();
+        }
+        $total += $Invoice->total();
 			} # end foreach Invoice
 			push @Data, 'Totals:', '', '', '', '', '', $subtotal, ( map { $tax_totals{$_->id()} } @Taxes ), $total, $interest_total, $owing_total;
 
@@ -74,7 +80,7 @@ sub history {
 
       my $Invoicer = openprint::Company->find_one(id=>$session{'/invoice/history.html?invoicer_id'});
       if ( !$Invoicer ) {
-        $variable{error} .= "Invoicer not found.";
+        $variable{error} .= 'Invoicer not found.';
         return;
       }
 
@@ -142,8 +148,8 @@ sub history {
 			my @Recipients = new openprint::Company($param{invoicee_id})->AccountingContacts();
 			$Email->send(
 						FROM    => $config{AccountingEmail},
-            #TO      =>  \@Recipients,
-            TO      => $openprint::User,
+            TO      =>  \@Recipients,
+            #TO      => $openprint::User,
 						BCC     => $openprint::User,
 						SUBJECT => 'Account Statement from ' . ( $Invoicer->name() ),
 						);
@@ -273,19 +279,19 @@ sub _history {
 } # end sub _history
 
 sub edit {
-	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
+	my $Invoice = $variable{Invoice} = new openprint::Invoice($param{invoice_id});
 	if ( $param{btnFunction} eq 'Save' ) {
-		$param{currency_id} = openprint::Currency::get_current()->id() if ! $param{currency_id};
-		my @due_on = ssi::date( 'due_on', \%param );
-		$param{due_on} = sprintf('%.4d-%.2d-%.2d', @due_on ) if ! $param{due_on} and Date::Calc::check_date( @due_on );
-		my @posted_on = ssi::date( 'posted_on', \%param );
-		$param{posted_on} = sprintf('%.4d-%.2d-%.2d', @posted_on ) if ! $param{posted_on} and Date::Calc::check_date( @posted_on );
-		my @early_payment_date = ssi::date( 'early_payment_date', \%param );
+		$param{currency_id} = $openprint::Currency->id() if !$param{currency_id};
+		my @due_on = ssi::date('due_on', \%param);
+		$param{due_on} = sprintf('%.4d-%.2d-%.2d', @due_on) if ! $param{due_on} and Date::Calc::check_date(@due_on);
+		my @posted_on = ssi::date('posted_on', \%param);
+		$param{posted_on} = sprintf('%.4d-%.2d-%.2d', @posted_on ) if ! $param{posted_on} and Date::Calc::check_date(@posted_on);
+		my @early_payment_date = ssi::date('early_payment_date', \%param);
 
-		$param{early_payment_date} = sprintf('%.4d-%.2d-%.2d', @early_payment_date ) if ( ! $param{early_payment_date} ) and Date::Calc::check_date( @early_payment_date );
+		$param{early_payment_date} = sprintf('%.4d-%.2d-%.2d', @early_payment_date) if ( ! $param{early_payment_date} ) and Date::Calc::check_date(@early_payment_date);
 		$param{invoicer_id} = $session{company_id} if ! $param{invoicer_id};
 		if ( $param{invoicee} ) {
-			my $Invoicee = openprint::Company->find_one(name=>openprint::Company->transform('name', $param{invoicee}) );
+			my $Invoicee = openprint::Company->find_one(name=>openprint::Company->transform(name=>$param{invoicee}));
 			if ( ! $Invoicee ) {
 				$Invoicee = new openprint::Company();
 				$Invoicee->save({name=>$param{invoicee}});
@@ -294,8 +300,8 @@ sub edit {
 		} else {
 			delete $param{invoicee};
 		} # end if
-		my @changes = $Invoice->changes( \%param );
-		$Invoice->subtotal_override( $param{subtotal_override} );
+		my @changes = $Invoice->changes(\%param);
+		$Invoice->subtotal_override($param{subtotal_override});
 		$variable{error} .= $variable{Invoice}->save(\%param);
 		foreach my $Product ( $Invoice->Products() ) {
 			my %p_changes = (
@@ -304,8 +310,8 @@ sub edit {
 				quantity	=>	$param{'product-quantity-'.$Product->id()},
 				po			=>	$param{'product-po-'.$Product->id()},
 				);
-			my @p_changes = $Product->changes( \%p_changes );
-		 	push @changes, 'product changed: ' . join(',',@p_changes) if @p_changes;
+			my @p_changes = $Product->changes(\%p_changes);
+		 	push @changes, 'product changed: ' . join(',', @p_changes) if @p_changes;
 
 			$variable{error} .= $Product->save( \%p_changes );
 		} # end foreach Product
@@ -313,6 +319,8 @@ sub edit {
 		if ( $param{invoice_id} and ! $variable{error} ) {
 			$variable{information} .= 'Invoice saved.<br/>';
 			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
+    } else {
+			$variable{ExternalRedirect} = '/invoice/edit.html?invoice_id='.$Invoice->id();
 		} # end if
 	} # end if
 	if ( ! $variable{Invoice}->id() ) {
@@ -456,33 +464,41 @@ sub _timetracks {
 		$Invoice->invoicee_id( $param{invoicee_id} );
 	} # end if
 } # end sub _timetracks
+
 sub _invoiced_products {
-	$variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
+	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
 
 	# Save any changes to the products
-	foreach my $Product ( $variable{Invoice}->Products() ) {
-		$variable{error} .= $Product->save({
-			'description'	=>	$param{'product-description-'.$Product->id()},
-			'price'			=>	$param{'product-price-'.$Product->id()},
-			'quantity'		=>	$param{'product-quantity-'.$Product->id()},
-			'po'			=>	$param{'product-po-'.$Product->id()},
-			});
+	foreach my $Product ( $Invoice->Products() ) {
+    my @changes = $Product->changes({
+        description	=>	$param{'product-description-'.$Product->id()},
+        price			  =>	$param{'product-price-'.$Product->id()},
+        quantity		=>	$param{'product-quantity-'.$Product->id()},
+        po			    =>	$param{'product-po-'.$Product->id()},
+      });
+    $variable{error} .= $Product->save({
+        description	=>	$param{'product-description-'.$Product->id()},
+        price			  =>	$param{'product-price-'.$Product->id()},
+        quantity		=>	$param{'product-quantity-'.$Product->id()},
+        po			    =>	$param{'product-po-'.$Product->id()},
+      }) if @changes;
 	} # end foreach
 
 	if ( $param{action} eq 'new' ) {
 		my $IP = new openprint::Invoiced_Product( );
 		$variable{error} .= $IP->save({
-				'invoice_id'=>$variable{Invoice}->id(),
-				'quantity'	=> 1
+				invoice_id=>$Invoice->id(),
+				quantity	=> 1
 				});
 	} elsif ( $param{action} eq 'add' ) {
-		my $IP = new openprint::Invoiced_Product( );
-		$variable{error} .= $IP->save({
-				'product_id'	=>	$param{'product-id-'},
-				'invoice_id'	=>	$variable{Invoice}->id(),
-				'quantity'		=>	$param{'product-quantity-'} ? $param{'product-quantity-'} : 1,
-				'po'			=>	$param{'product-po-'},
-				});
+		my $IP = new openprint::Invoiced_Product();
+    $variable{error} .= $IP->save({
+        product_id	=>	$param{'product-id-'},
+        invoice_id	=>	$Invoice->id(),
+        quantity		=>	$param{'product-quantity-'} ? $param{'product-quantity-'} : 1,
+        po    			=>	$param{'product-po-'},
+      });
+    $Invoice->Products( [$Invoice->Products(), $IP] );
 	} elsif ( $param{action} eq 'remove' ) {
 		my $IP = new openprint::Invoiced_Product( $param{product_id} );
 		if ( $IP->id() ) {
@@ -537,6 +553,14 @@ $log->debug("Adding");
 	} # end if param add
 
 } # end sub _invoiced_orders
+
+sub _view_email {
+	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
+	if ( ! $Invoice ) {
+		$variable{error} .= "Invoice $param{invoice_id} not found";
+		return;
+	} 
+}
 
 1;
 __END__

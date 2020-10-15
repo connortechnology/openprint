@@ -17,7 +17,9 @@
 	if ( $$variable{PurchaseOrder}->can_send() ) {
 		$html .= button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
 		if ( $$variable{PurchaseOrder}->authorized() ) {
-			$html .= button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email' } );
+			$html .= button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email',
+					( ( (Date::Parse::str2time($$variable{PurchaseOrder}->created_on()) ) < time-(365*24*60*60) ) ? (disabled=>'disabled', class=>"disabled", title=>'Disabled because too old') : () ),
+					} );
 		} else {
 			$html .= 'This PO has not yet been approved.';
 			$html .= button( 'AuthRequest', { onclick=>q`f2.btnFunction.value='AuthRequest';f2.submit();`, text=>'Send Authorization Request' } );

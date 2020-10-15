@@ -32,8 +32,11 @@
 			if ( $session{$uri.'?created_by'} ) {
 				$search{created_by} = $session{$uri.'?created_by'};
 			} # end if
+			if ( $session{$uri.'?authorized_by'} ) {
+				$search{authorized_by} = $session{$uri.'?authorized_by'};
+			} # end if
 		} else {
-			#$search{created_by} = [ sets::union( $session{user_id}, new openprint::User($session{user_id})->assistant_ids(), new openprint::User($session{user_id})->csr_ids() ) ];
+			#$search{created_by} = [ sets::union( $session{user_id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ) ];
 		} # end if
 		if ( $session{$uri.'?has_manifest'} ne '' ) {
 			$search{'manifest_id is null'} = $session{$uri.'?has_manifest'} eq '1' ? 0 : 1;

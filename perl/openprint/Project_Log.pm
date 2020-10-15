@@ -30,10 +30,11 @@ $serial= 'project_log_id_seq';
 
 sub description_html {
 	if ( ! $_[0]{description_html} ) {
+	
 		if ( $_[0]{description} =~ /^Reused from project (\d+)$/ ) {
-			$_[0]{description_html} = 'Reused from project <a href="/employee/project/view.html?project_id='.$1.'">'.$1.'</a>';
+			$_[0]{description_html} = 'Reused from project '.new openprint::Project($1)->link_to();
 		} elsif ( $_[0]{description} =~ /^Reused to project (\d+)$/ ) {
-			$_[0]{description_html} = 'Reused to project <a href="/employee/project/view.html?project_id='.$1.'">'.$1.'</a>';
+			$_[0]{description_html} = 'Reused to project '.new openprint::Project($1)->link_to();
 		} elsif ( $_[0]{description} =~ /^Add to Order (\d+)$/ ) {
 			$_[0]{description_html} = 'Add to Order <a href="/employee/project/view.html?order_id='.$1.'">'.$1.'</a>';
 		} elsif ( $_[0]{description} =~ /^Removed from order (\d+)$/ ) {

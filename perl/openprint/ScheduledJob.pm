@@ -221,7 +221,7 @@ sub stock {
 		$$self{stock} = $stock;
 	} # end if
 	if ( ( ! $$self{stock} ) and $$self{project_id} and ( $self->ServiceType()->name() eq 'Signature' ) ) {
-		$$self{stock} = 'Stock: ';
+		$$self{stock} = '<p>Stock: ';
 		my $Equipment = $self->Equipment();
 		my $Project = new openprint::Project( $$self{project_id} );
 		my $Stock;
@@ -251,6 +251,7 @@ sub stock {
 				$$self{stock} .= $Stock->width() . 'x' . $Stock->height();
 			} # end if
 		} # end if
+		$$self{stock} .= '</p>';
 	} # end if
 	return $$self{stock};
 } # end sub stock
@@ -282,28 +283,33 @@ sub get_li {
 	my $colour = '';
 	%printing_service_type_ids = map { $$_{id}, $$_{id} } openprint::ServiceType->find(category=>'Printing') if ! %printing_service_type_ids;
 	%bindery_service_type_ids = map { $$_{id}, $$_{id} } openprint::ServiceType->find(category=>'Bindery') if ! %bindery_service_type_ids;
+	my %status_colours = (
+			'In Prepress' => 'inprepress',
+			'Proofs Out' => 'inprepress',
+			'Waiting For QA Approval' => 'inprepress',
+			'Printed' => 'complete',
+			'Complete' => 'complete',
+			'Waiting for Pickup' => 'complete',
+			'Picked Up' => 'complete',
+			'Shipped' => 'complete',
+			'Waiting For Customer Approval' => 'approval',
+			);
 
 	my @equipment;
 
 	if ( $$self{project_id} ) {
-		if ( sets::isin( $Project->status(), ['In Prepress', 'Proofs Out','Waiting For QA Approval'] ) ) {
-			$colour = 'inprepress';
-		} elsif ( sets::isin( $Project->status(), ['Printed', 'Complete','Waiting For Pickup', 'Picked Up', 'Shipped'] ) ) {
-			$colour = 'complete';
-		} elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
-			$colour = 'approval';
-		} elsif ( $printing_service_type_ids{$$self{servicetype_id}} ) {
+		$colour .= $status_colours{$$Project{status}};
+
+		if ( $printing_service_type_ids{$$self{servicetype_id}} ) {
 			@equipment = sets::union( map { $_->equipment_id() ? $_->equipment_id() : () } openprint::ScheduledJob->find( project_id=>$$self{project_id}, servicetype_id=>[ keys %printing_service_type_ids ] ) );
 			if ( sets::exclude( [ $$self{equipment_id} ], \@equipment ) ) {
-				$colour = 'multipress';
+				$colour .= ' multipress';
 			}
 		} elsif ( $bindery_service_type_ids{$$self{servicetype_id}} ) {
 			@equipment = sets::union( map { $_->equipment_id() ? $_->equipment_id() : () } openprint::ScheduledJob->find( project_id=>$$self{project_id}, servicetype_id=>[ keys %bindery_service_type_ids ] ) );
 			if ( sets::exclude( [ $$self{equipment_id} ], \@equipment ) ) {
-				$colour = 'multibindery';
-			} # en dif
-		#} elsif ( 1 < find( project_id=>$$self{project_id} ) ) {
-			#$colour = 'earlier_services';
+				$colour .= ' multibindery';
+			} # end if
 		} # end if
 		if ( $Project->rush() ) {
 			$colour .= ' rush';
@@ -315,27 +321,30 @@ sub get_li {
 			( $colour ? ' class="'.$colour.'"' : '' ), 
 			( $height ? ' style="height:'.$height.'px;"' : '' )
 			);
-
+	$html .= '<div class="top_row">';
 	if ( $$self{project_id} ) {
-		$html .= '<span class="Company">';
-		$html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>', $$self{project_id}, $Project->docket() );
+		$html .= sprintf('<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>',
+				$$self{project_id}, $Project->docket());
+		$html .= '<div class="Company">';
 		my $n = $Project->Company()->name();
 		$n =~ s/The //gi;
-		$html .= ssi::htmlize( $n );
-		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)' if $$Project{company_id} != $openprint::config{owner_id};
+		$html .= ssi::htmlize( $n ).'</div>';
+		$html .= ' <span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>' if $$Project{company_id} != $openprint::config{owner_id};
 
-		my $Proofs_Service = $Project->Service( $$services{Proofs}[0] ) if $$services{Proofs} and @{$$services{Proofs}};
+		my $Proofs_Service = $Project->Service($$services{Proofs}[0]) if $$services{Proofs} and @{$$services{Proofs}};
 		if ( $Proofs_Service ) {
 			my %operators = map { $$_{user_id}, $_ } $Proofs_Service->Operators();
 
-			$html .= ' ('.join(', ', map { '<span class="PrepressOperator">'.$_->User()->firstname().'</span>' } values %operators ).')';
+			$html .= join(', ', map { '<span class="PrepressOperator">'.$_->User()->firstname().'</span>' } values %operators);
 		} elsif ( $$Project{docket} ) {
 			$openprint::log->error("NO proofs found in $$Project{id}");
 		} # end if
 		if ( $Project->reprint() eq 'Y' ) {
 			$html .= ' REPRINT'. $Project->reprint_reason();
 		} # end if
-		$html .= '</span>';
+		if ( $printing_service_type_ids{$$self{servicetype_id}} ) {
+			$html .= '<span class="Presses">'.join(' + ', sort( map { new openprint::Equipment($_)->strid() } @equipment ) ).'</span>' if @equipment > 1;
+		} # end if
 		$html .= qq`<span class="DueDate" id="JumpToDate$$self{id}">`;
 		if ( ! $Project->due_date() ) {
 			$html .= 'no duedate</span>';
@@ -344,21 +353,25 @@ sub get_li {
 			if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
 				$html .= qq` $day</span>`;
 		} # end if
-		if ( $printing_service_type_ids{$$self{servicetype_id}} ) {
-			$html .= '<span class="Presses">'.join(' + ', sort( map { new openprint::Equipment( $_ )->strid() } @equipment ) ).'</span>' if @equipment > 1;
-		} # end if
-
-	} # end if
+		$html .= '</div>';
+	} # end if project_id
 
 	my $i_am_the_operator = sets::isin( $session{user_id}, $self->Shift()->operator_ids() )
 		||
 		sets::isin( $session{user_id}, [ map { $_->id() } $Equipment->Operators() ] ) 
 		;
-	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
-		$html .= sprintf( q`<div class="Comment" onclick="job_popup('%1$d');">%2$s</div>`, $$self{id}, $self->comment() );
-		if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
-		  $html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{id}, $self->stock() );
+	my $is_signature = ($$self{servicetype_id} and ( ($self->ServiceType()->name() eq '') or ($self->ServiceType()->name() eq 'Signature') ) ) ? 1 : 0;
+
+	if ( $openprint::User->Groups('Scheduling') ) {
+		$html .= '<div class="middle_row">';
+		$html .= '<div class="Comment" onclick="job_popup(\''.$$self{id}.'\');">'.$self->comment().'</div>';
+		if ( $is_signature ) {
+		  $html .= sprintf( q`<div class="Stock" onclick="popup_window('/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475});">%2$s</div>`, $$self{id}, $self->stock() );
+		  #$html .= sprintf( q`<div class="StockLocation" onclick="popup_window('/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475});">%2$s</div>`, $$self{id}, $self->stock() );
 		}
+		$html .= '</div>';# middle_row
+		$html .= '<div class="bottom_row">';
+		$html .= '<div class="OperatorSignature">Operator Signature:</div>';
 		if ( $$self{project_id} ) {
 			$html .= sprintf(q`
 					<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>
@@ -366,26 +379,31 @@ sub get_li {
 					`, $$self{id}, $Project->due_date(), $self->forms(), 'form'.($self->forms() > 1 ? 's' : '')
 					);
 			if ( $Equipment->smartscheduling() ) {
-				$html .= sprintf( q`<span class="Impressions" onclick="job_popup('%1$d');">%2$d imps @ %3$d/Hr</span>`, $$self{id}, $self->impressions(), $self->speed() );
+				$html .= sprintf(q`<span class="Impressions" onclick="job_popup('%1$d');">%2$d imps @ %3$d/Hr</span>`, $$self{id}, $self->impressions(), $self->speed());
 			} else {
-				$html .= sprintf( q`<span class="Impressions" onclick="job_popup('%1$d');">%2$d imps</span>`, $$self{id}, $self->impressions() );
+				$html .= sprintf(q`<span class="Impressions" onclick="job_popup('%1$d');">%2$d imps</span>`, $$self{id}, $self->impressions());
 			} # end if
 		} # end if
 		if ( $Equipment->smartscheduling() or $$self{locked} ) {
 			$html .= sprintf( q`<span class="StartTime" onclick="job_popup('%1$d');">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{id},
-					Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{starttime} ) ),
+					Date::Format::time2str('%H:%M', Date::Parse::str2time($$self{starttime})),
 					$$self{locked} ? 'locked' : 'unlocked',
 					);
 		} # end if
 
 		$html .= sprintf( q`<span class="RunTime" onclick="job_popup('%1$d');">Total Hr: %2$.2d:%3$.2d</span>`, $$self{id}, split(':',$self->runtime()) );
-
-		if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
 			if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
 				$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
 			} # end if
-		} # end if
 
+		if ( $$self{project_id} ) {
+			$html .= '<span class="Services">';
+			$html .= '<span class="Service">fold</span>' if $$services{Folding};
+			$html .= '<span class="Service">stitch</span>' if $$services{SaddleStitching} or $$services{LoopStitching};
+			$html .= '<span class="Service">trim</span>' if $$services{Cutting};
+			$html .= '<span class="Service">no bindery</span>' if $$services{NoBindery};
+			$html .= '</span>';
+		}
 		$html .= '<span class="Buttons">';
 		if ( $$self{project_id} ) {
 			$html .= ssi::button( 'Approve'.$$self{id}, {onclick=>"approve_job('$ul_id',$$self{id});", text=>'A', title=>'Approve' } ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
@@ -397,22 +415,20 @@ sub get_li {
 		$html .= ssi::button( 'Bump'.$$self{id}, { onclick=>"popup_window('/employee/production/_bump_job.html','schedule_id=$$self{id}');", text=> 'B', title=>'Bump to next shift' } );
 		if ( $$self{project_id} ) {
 			$html .= ssi::button( 'Complete'.$$self{id}, { onclick=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{id}', { width: '400px', height: '300px', center: 'false' } );", text=>'C',title=>'Complete Job' } );
-			if ( (!$self->ServiceType()->name()) or $self->ServiceType()->name() eq 'Signature' ) {
+			if ( $is_signature ) {
 				$html .= ssi::button( 'House'.$$self{id}, { onclick=>"new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{id}, action: 'House Stock' } } );", text=>'H', title=>'House Stock' } );
-				$html .= ssi::button( 'PO'.$$self{id}, { target=>'_blank', href=>"/employee/purchase_order/edit.html?project_id=$$self{project_id}", text=>'PO', title=>'Create PO' } );
+				$html .= ssi::button( 'PO'.$$self{id}, { target=>'_blank', href=>'/employee/purchase_order/edit.html?project_id='.$$self{project_id}, text=>'PO', title=>'Create PO' } );
 			} # end if
 		} # end if
-		$html .= ssi::button( 'Remove'.$$self{id}, { onclick=>"remove_job($$self{id});", text=> 'D', title=>'Delete from schedule' } );
+		$html .= ssi::button( 'Remove'.$$self{id}, { onclick=>"remove_job($$self{id});", text=>'D', title=>'Delete from schedule' } );
 		if ( $$self{project_id} ) {
 			if ( ( $$self{pertains_id} and @{$$self{pertains_id}} == 2 ) or ( $$self{service_id} and @{$$self{service_id}} == 2 ) ) {
 				$html .= ssi::button( 'Split'.$$self{id}, { onclick=>"split_job('$ul_id',$$self{id});", text=> 'S', title=>'Split Job' } );
 			} elsif ( ( $$self{pertains_id} and @{$$self{pertains_id}} > 2 ) or ( $$self{service_id} and @{$$self{service_id}} == 2 ) ) {
 				$html .= ssi::button( 'Split'.$$self{id}, { onclick=>"popup_window('_split_popup.html', 'schedule_id=$$self{id}' );", text=> 'S', title=>'Split Job' } );
 			} # end if
-			if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+			if ( $is_signature ) {
 				$html .= ssi::button( 'Stock'.$$self{id}, { onclick=> "popup_window('/employee/production/_stock_details.html','project_id='+$$self{project_id} );", text=> 'P', title=>'Paper' } );
-			#} else {
-				#$log->debug("ServiceType: $$self{project_id} $$self{servicetype_id}" . $self->ServiceType()->name() );
 			} # end if
 		} # end if
 		if ( ( $self->starttime_seconds() > time ) or ( $$self{project_id} and ( $self->status() ne 'In Production' ) ) ) {
@@ -421,14 +437,7 @@ sub get_li {
 			$html .= ssi::button( 'Stop'.$$self{id}, { onclick=> "stop_job($$self{id});", text=>'Stop' } );
 		} # end if
 		$html .= '</span>';
-		if ( $$self{project_id} ) {
-			$html .= '<span class="Services">';
-			$html .= '<span class="Service">fold</span>' if $$services{Folding};
-			$html .= '<span class="Service">stitch</span>' if $$services{SaddleStitching} or $$services{LoopStitching};
-			$html .= '<span class="Service">trim</span>' if $$services{Cutting};
-			$html .= '<span class="Service">no bindery</span>' if $$services{NoBindery};
-			$html .= '</span>';
-		}
+		$html .= '</div>';
 	} else {
 		$html .= sprintf( '<div class="Comment">%1$s</div>', $self->comment() );
 		$html .= sprintf( '<div class="Stock">%1$s</div>', $self->stock() );
@@ -565,7 +574,29 @@ sub impressions {
 } # end sub impressions
 
 sub Project {
-	return new openprint::Project( $_[0]{project_id} );
+	my $self = shift;
+	$$self{Project} = shift if @_;
+	if ( ! $$self{Project} ) {
+		if ( $$self{project_id} ) {
+			$$self{Project} = new openprint::Project($$self{project_id});
+		} elsif ( $$self{pertains_id} and @{$$self{pertains_id}} ) {
+			foreach my $service_id ( @{$$self{pertains_id}} ) {
+$openprint::log->debug("Guess project from service $service_id");
+				my $Project_Service = openprint::Project_Service->find_one(service_id=>$service_id);
+				next if ! $Project_Service;
+$openprint::log->debug("Guess project from service ".$Project_Service->to_string());
+				$$self{Project} = $Project_Service->Project();
+				last;
+			} # end foreach
+			if ( $$self{Project} ) {
+				$self->save({project_id=>$$self{Project}->id()});
+			}
+		}
+	}
+	if ( ! $$self{Project} ) {
+		$$self{Project} = new openprint::Project( $_[0]{project_id} );
+	}
+	return $$self{Project};
 } # end sub Project
 
 sub runtime {

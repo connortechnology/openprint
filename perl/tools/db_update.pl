@@ -4728,6 +4728,7 @@ if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
 }
+
 if ( ! sets::isin( 'expenses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Expenses.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
@@ -4760,6 +4761,12 @@ if ( ! sets::isin( 'expenses', \@tables ) ) {
     print "Add transaction_id to expenses\n";
     $dbh->do('ALTER TABLE expenses ADD  transaction_id text');
   }
+}
+
+if ( ! sets::isin( 'expense_taxes', \@tables ) ) {
+  print "Adding Expense Taxes\n";
+	$dbh->do( misc::load_file( $log, '../../sql/Expense_Taxes.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
 }
 
 if ( ! sets::isin( 'host_types', \@tables ) ) {

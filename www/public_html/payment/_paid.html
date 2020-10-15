@@ -21,14 +21,18 @@
 			$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $IP->Invoice()->interest() ) );
 			$html .= sprintf('<td class="Price"><span id="amount_%d">%s</span></td>', $IP->id(), openprint::Currency::format( $IP->amount() ) );
 			$html .= sprintf('<td class="Price" id="remaining_%d">%s%s</td>', $IP->id(), openprint::Currency::format($IP->Invoice()->owing()) );
-			$html .= sprintf('<td class="buttons">%s</td>', ssi::button( 'del'.$IP->id(), {onclick=>'unpay_invoice('.$IP->invoice_id().');', text=>'-', title=>'Remove' } ) );
+			$html .= sprintf('<td class="buttons">%s</td>', button( 'del'.$IP->id(), {onclick=>'unpay_invoice('.$IP->invoice_id().');', text=>'-', title=>'Remove' } ) );
 			$html .= "</tr>\n";
-			$html .= '<script type="text/javascript">';
+			$html .= '<script>';
 			$html .= sprintf(q`new Ajax.InPlaceEditor( 'amount_%1$d', '/payment/_edit_payment.html?id=%1$d&action=update&field=amount',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1,onComplete:load_paid});`, $IP->id() );
 			$html .= "</script>\n";
 			$total += $IP->amount();
 		} # end foreach Invoice
-		$html .= sprintf('</tbody><tfoot><tr class="totals"><td colspan="3">&nbsp;</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td></tr></tfoot>', 
+		$html .= sprintf('
+      </tbody>
+      <tfoot>
+        <tr class="totals"><td colspan="3">&nbsp;</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td></tr>
+      </tfoot>', 
 			openprint::Currency::format( $total ), 
 			openprint::Currency::format( $$variable{Payment}->remaining() )
 			);

@@ -27,6 +27,7 @@
 		} # end foreach Asset
 	} # end if
 ) ?>
+<?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{Assets}} == 0 ) ?>
 	There are no assets matching your search criteria.
 <? else ( @{$$variable{Assets}} == 0 ) ?>

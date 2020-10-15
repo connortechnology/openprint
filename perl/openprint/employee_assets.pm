@@ -20,9 +20,13 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub history {
 	if ( $param{btnFunction} eq 'Delete' ) {
 		foreach my $asset_id ( ref $param{asset_id} eq 'ARRAY' ? @{$param{asset_id}} : split(',',$param{asset_id}) ) {
-			my $Asset = new openprint::Asset( $asset_id );
-			$variable{error} .= $Asset->delete();
-
+      my $Asset = new openprint::Asset( $asset_id );
+      if ( $Asset->deleted() ) {
+        $variable{error} .= $Asset->destroy();
+      } else {
+        $variable{error} .= $Asset->delete();
+      }
+      last if $variable{error};
 		} # end foreach asset_id
 		%param = ();
 	} elsif ( $param{action} eq 'reset' ) {

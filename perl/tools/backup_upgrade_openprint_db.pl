@@ -31,8 +31,8 @@ foreach my $param ( 'src_db','dst_db','src_host' ) {
   } # end if
 } # end foreach required-param
 
-`/etc/init.d/apache2 reload`;
 `systemctl stop openprint-ftp_monitor\@$opts{dst_db}.service`;
+`/etc/init.d/apache2 reload`;
 if ( !$opts{date} ) {
   use Date::Calc;
   $opts{date} = join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 ));

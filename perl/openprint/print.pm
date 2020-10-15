@@ -59,6 +59,7 @@ sub view_services {
 		return;
 	} # end if
 	my $Project = $variable{Project} = new openprint::Project( $project_index );
+  return if !$$Project{id};
 	my $services = $Project->services();
 	my $Service = $Project->Service( $param{ServiceIndex} ) if $param{ServiceIndex};
 
@@ -477,7 +478,7 @@ $log->debug("group $group_id");
 		} # end foreach spec
 	} # end foreach signature
 
-	my $old_bindery_type = get_book_type( $Project );
+	my $old_bindery_type = $Project->get_book_type();
 	if ( $old_bindery_type and ($$param{rdbTemplateType} ne $old_bindery_type) and $$services{$old_bindery_type} ) {
 		foreach ( @{$$services{$old_bindery_type}} ) {
 			openprint::print_project::delete_service( $Project, $_ );
@@ -504,28 +505,6 @@ $log->debug("No Nobindery");
 	$Project->unlock();
 	sql::end_transaction( $dbh, $ac );
 } # end sub multipage_signatures
-
-sub get_book_type {
-	my ( $Project ) = @_;
-	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
-	my $services = $Project->services();
-
-# the way we cut down the book depends on how it is being bound, so we need this for the signature information.
-	foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound' ) {
-		
-		if ( $$services{$service} ) {
-			return $service;
-		} # end if
-	} # end foreach
-	if ( $$services{''} and @{$$services{''}} ) {
-		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		if ( $$printing_specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
-			return 'PerfectBound';
-		} # end if
-	} # end if
-	return;
-} # end sub get_book_type
-
 
 sub publication_pages {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -586,7 +565,7 @@ $log->error("No Group!") if ! $type;
 	} # end foreach ss_id
 
 	if ( ! $$variable{rdbTemplateType} ) {
-		$$variable{rdbTemplateType} = get_book_type( $project_index );
+		$$variable{rdbTemplateType} = $Project->get_book_type();
 	} # end if
 
 } # end sub publication_pages

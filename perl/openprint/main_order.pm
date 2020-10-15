@@ -163,7 +163,7 @@ sub information {
 		$variable{error} = check_for_errors( $Order ) if ! $variable{error};
 
 	  # First thing to do is to try to load info directly from the order.
-		my @company_fields =('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
+		my @company_fields = ('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
 		@variable{@company_fields} = @$Order{@company_fields};
 
 		if ( $variable{company_name} eq '' ) {
@@ -416,30 +416,8 @@ sub confirmation {
 			$variable{ExternalRedirect} = '/main/order/submit.html?order_id='.$Order->id();
 			return;
 		}
-		$Order->subtotal(undef);
-		foreach my $Tax ( $Order->Taxes() ) {
-			$Tax->save({ amount => undef });
-		} # end foreach Tax
-		$Order->total(undef);
-		$Order->status('In Production');
-		$Order->save();
-		$Order->add_log( 'Close Order' );
-		foreach my $OP ( $Order->Ordered_Projects() ) {
-			my $Project = $OP->Project();
-			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
-			if ( $Project->docket() != $Order->docket() ) {
-				$Project->save({docket=>$Order->docket()});
-			}
-			$Project->update_status();
-		}
-		foreach my $Product ( $Order->Products() ) {
-			if ( $$Product{project_id} ) {
-				my $Project = $Product->Project();
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
-				$Project->update_status();
-			}
-		}
-		$Order->update_status();
+		$Order->close();
+
 		$variable{information} .= $Order->link_to() . ' has been closed';
 		$variable{ExternalRedirect} = $Order->url_to();
 	} # end if btnFunction eq 'Close or Complete

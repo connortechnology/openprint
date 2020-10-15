@@ -1,20 +1,23 @@
 <? eval (
-
 	my $uri = '/employee/inventory/skids.html';
 
 	if ( $session{$uri.'?Docket'} ) {
-		$$variable{Skids} = [ openprint::Skid->find( 
+		my %sql_params = (
 			allocated_to_docket	=>	$session{$uri.'?Docket'},
 			order		=>	'id',
-			) ];
+			);
+		$$variable{skids_sql} = openprint::Skid->find_sql(%sql_params);
+		$$variable{Skids} = [ openprint::Skid->find(%sql_params ) ];
 	} elsif ( $session{$uri.'?skid_id'} ) {
-		$$variable{Skids} = [ openprint::Skid->find( 
+	my %sql_params = (
 			( $session{$uri.'?skid_id'} =~ /%/ ? 
-			( 'id ilike'	=>	$session{$uri.'?skid_id'} ) :
-			( id	=>	$session{$uri.'?skid_id'} ) ),
+				( 'id ilike'	=>	$session{$uri.'?skid_id'} ) :
+				( id	=>	$session{$uri.'?skid_id'} ) ),
 			order	=>	'id',
 			deleted =>	[0,1,undef],
-			) ];
+			);
+		$$variable{skids_sql} = openprint::Skid->find_sql(%sql_params);
+		$$variable{Skids} = [ openprint::Skid->find(%sql_params) ];
 	} elsif ( $session{$uri.'?rfid_id'} ) {
 		$$variable{Skids} = [ openprint::Skid->find( 
 			( $session{$uri.'?rfid_id'} =~ /%/ ? 
@@ -145,7 +148,6 @@
 		$$variable{skids_sql} = openprint::Skid->find_sql(%sql);
 
 		$$variable{Skids} = [ openprint::Skid->find(%sql) ];
-
 	} # end if
 
 	openprint::Location->find( type=>'place', company_id=>$openprint::Owner->id() );
@@ -203,14 +205,12 @@
 			} # end foreach
 			my @skid_ids = keys %SkidsById;
 			my %SkidContents;
-$log->debug("Loading SkidContent" ) if $debug;
 			my $skids_sql = $$variable{skids_sql};
 			$$skids_sql{sql} =~ s/\*/id/g;
 
 			foreach my $SC ( openprint::SkidContent->find( custom=>['skid_id IN ('.$$skids_sql{sql}.')', @{$$skids_sql{values}} ] ) ) {
 				push @{$SkidContents{$$SC{skid_id}}}, $SC;
 			} # end foreach SC
-$log->debug("Done Loading SkidContent" ) if $debug;
 
 			foreach my $Skid ( @{$$variable{Skids}} ) {
 				$Skid->Contents( $SkidContents{$$Skid{id}} ? $SkidContents{$$Skid{id}} : [] );
@@ -304,7 +304,7 @@ $RFIDTag->id(),
  );
 
 				$html .= '<td class="Dockets" rowspan="2">';
-				$html .= 'Ordered for ' . join(',',map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $_ ); } $Skid->dockets() ).'<br/>';
+				$html .= 'Ordered for ' . join(',',map { $_ ? sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $_ ) : () } $Skid->dockets() ).'<br/>';
 				foreach my $PA ( @Allocations ) {
 					$html .= sprintf( '<a href="/employee/inventory/skid_details.html?skid_id=%d">%d - %d%s</a><br/>',
 					$$Skid{id},
@@ -313,7 +313,7 @@ $RFIDTag->id(),
 					$PA->Paper()->units(),	
 					);
 				} # end while
-				$html .= 'Used for ' . $Skid->used_for_dockets().'<br/>';
+				$html .= 'Used for ' . join(',',map { $_ ? sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $_ ) : () } $Skid->used_for_dockets() ).'<br/>';
 				$html .= '</td><td rowspan="2" class="Condition">'. join('<br/>', map { $_->condition() } $Skid->Contents() ) . '</td>';
 				if ( $$variable{can_see_pricing} ) {
 					$html .= '<td rowspan="2" class="Price">'.$Skid->cost().'</td>';

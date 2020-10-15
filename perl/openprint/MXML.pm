@@ -43,7 +43,7 @@ sub new {
 	$Project->setAttribute( 'ReadOnly', 'False' );
 	$Project->setAttribute( 'AutoNumberOut', 'True' );
 
-	my $binding = openprint::print::get_book_type( $P );
+	my $binding = $P->get_book_type();
 
 	my $ProductPool = $Project->appendChild( $doc->createElement('ProductPool'));
 	my $Product = $ProductPool->appendChild( $doc->createElement('Product') );

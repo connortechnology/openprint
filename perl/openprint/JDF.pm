@@ -1,6 +1,7 @@
 package openprint::JDF;
 
 require JMF;
+use openprint::Imposition;
 
 use vars qw( %runstyles %folds %bindingtypes %coatings );
 use strict;
@@ -111,9 +112,7 @@ $openprint::log->debug("Starting JDF Prepress");
 
 	my $Assembly = $ResourcePool->appendChild( Assembly( $doc, $Project, $sig_id, $sig_specs ) );
 
-	#if ( openprint::print::get_book_type( $Project ) ) {
-		my $BinderySignature = $ResourcePool->appendChild( BinderySignature( $doc, $Project, $sig_id, $sig_specs ) );
-	#} #end if
+	my $BinderySignature = $ResourcePool->appendChild( BinderySignature( $doc, $Project, $sig_id, $sig_specs ) );
 
 	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
 	my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
@@ -274,7 +273,7 @@ $openprint::log->debug("Starting JDF StrippingParams");
 	$$Imposition{'paper'} = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() );
 	$Imposition->load( $sig_specs, $Project->ordered_quantity_index() );
 	my $Paper = $Imposition->paper();
-	my $binding = openprint::print::get_book_type( $Project );
+	my $binding = $Project->get_book_type();
 
 
 	my $StrippingParams = $doc->createElement('StrippingParams');
@@ -338,10 +337,8 @@ $openprint::log->debug("Starting JDF StrippingParams");
 	$StripCellParams->setAttribute('FrontOverfold',0);
 	} # end if
  
-	#if ( openprint::print::get_book_type( $Project ) ) {
 	my $BinderySignatureRef = $SPSheetName->appendChild( $doc->createElement('BinderySignatureRef') );
 	$BinderySignatureRef->setAttribute('rRef','BIS'.$sig_id );
-	#} # end if
 
 	my @Equipment = openprint::Equipment->find( 'strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 	my $Equipment = shift @Equipment;

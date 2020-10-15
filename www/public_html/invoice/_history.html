@@ -69,7 +69,7 @@
 						format_date( $Invoice->created_on() ),
 						format_date( $Invoice->due_on() ),
             $Invoice->sent_on() ? format_date( $Invoice->sent_on() ) : '',
-            $Invoice->paid_on() ? (format_date( $Invoice->paid_on() ) . ' ' . $Invoice->paid_days() . ' days' ) : '',
+            ($Invoice->paid_on() ? format_date($Invoice->paid_on()).' ' : '').$Invoice->paid_days().' days',
 						htmlize( $Invoice->Invoicee()->name() ),
             ( 
             ( $$Invoice{currency_id} != $session{Currency_id} ) ?

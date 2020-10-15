@@ -52,6 +52,12 @@
 				</select>
 				<input type="checkbox" name="created_by_deleted" id="created_by_deleted" value="1" onclick="new Ajax.Updater($('created_by'), '_po_created_by_options.html', { parameters: { 'created_by_deleted' : this.value } } );" /><label class="radio" for="created_by_deleted">Show Deleted Users</label>
 			</li>
+			<li><label>Authorized By</label>
+				<select id="authorized_by" name="authorized_by" onchange="page_load('Results',$('f1'));">
+				<? echo ( include('_po_created_by_options.html'); ) ?>
+				</select>
+				<input type="checkbox" name="authorized_by_deleted" id="authorized_by_deleted" value="1" onclick="new Ajax.Updater($('authorized_by'), '_po_created_by_options.html', { parameters: { 'created_by_deleted' : this.value } } );" /><label class="radio" for="authorized_by_deleted">Show Deleted Users</label>
+			</li>
 <? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $session{user_id} ) ) ?>
 			<li><label>Vendor</label>
 				<select name="vendor_category_id" id="vendor_category_id" onchange="filter_vendors(this);" >
