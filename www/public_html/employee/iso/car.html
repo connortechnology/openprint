@@ -4,7 +4,7 @@
 <h2>(Re-print Job Request)</h2>
 <? endif ( $$variable{CAR}->reprint() eq 'Yes' ) ?>
 </div>
-<script type="text/javascript">
+<script>
 	function check_part1( form ) {
 		if ( ! get_rdb_value( form.identified_by ) ) {
 			alert('Please select either Internal or Customer for Problem Identification');
@@ -51,7 +51,7 @@
 	<? else ( $param{car_id} and ! $$variable{CAR}->id() ) ?>
 
 		<? echo ( button( 'Print', { onclick=>'window.print();' } ) ) ?>
-		<? echo ( button( 'Send', { 'href'=>'/employee/iso/car.html?action=Send&amp;car_id='.$$variable{CAR}->id() } ); ) ?>
+		<? echo ( button( 'Send', { href=>'/employee/iso/car.html?action=Send&amp;car_id='.$$variable{CAR}->id() } ); ) ?>
 		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{CAR}->id() ) ?></span></h3>
 		<? echo (
 			my $html;
@@ -75,3 +75,6 @@
 		) ?>
 	<? endif ( $param{car_id} and ! $$variable{CAR}->id() ) ?>
 </div>
+<? if ( $$variable{CAR}->id() ) ?>
+<? echo ( include_logs( $$variable{CAR} ); ) ?>
+<? endif ( $$variable{CAR}->id() ) ?>
