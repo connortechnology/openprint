@@ -446,7 +446,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 	} # end if
 
 	if ( ! $User->id() ) {
-		if ( sets::isin( $session{user_id}, map { $_->id() } @Users ) ) {
+		if ( $session{user_id} and sets::isin( $session{user_id}, map { $_->id() } @Users ) ) {
 			$User = new openprint::User( $session{user_id} );
 		} else {
 			$User = $Users[0] if @Users;
@@ -663,12 +663,10 @@ sub company_profiles {
 			} # end if $index
 		} # end if input checks
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		$Company = new openprint::Company( $param{company_id} );
 		$index = $Company->next();
 		$Company->delete();
 		$Company = new openprint::Company( $index );
 	} elsif ( $param{btnFunction} eq 'Destroy' ) {
-		$Company = new openprint::Company( $param{company_id} );
 		if ( ! $Company->destroy() ) {
 			$index = $Company->next();
 		} # end if
