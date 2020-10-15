@@ -2138,6 +2138,10 @@ sub operator_schedule {
 			name			   	=>	$param{name},
 			operator_ids	=>	( ( ref $param{operator_ids} eq 'ARRAY' ) ? $param{operator_ids} : [ split(',',$param{operator_ids}) ] ),
 			});
+		# Need to update all shifts after now.
+		foreach my $S ( openprint::Shift->find(shift_id=>$$Shift{id}, 'starttime >=' => 'NOW()') ) {
+			$S->save({operator_ids=>$$Shift{operator_ids}});
+		}
 	} elsif ( $param{func} eq 'delete' ) {
 		my $Shift = new openprint::Equipment_Shift( $param{shift_id} );
 		$variable{error} .= $Shift->delete() if $Shift->id();

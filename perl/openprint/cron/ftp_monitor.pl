@@ -35,7 +35,7 @@ use Encode ();
 use Data::Dumper;
 use Date::Parse;
 
-my @banned_files = ( 'ftpchk3.txt' );
+my @banned_files = ( 'ftpchk3' );
 my $program = basename($0);
 
 my $opts = {};
@@ -184,7 +184,7 @@ $log->debug("Opened fifo at $config{fifo}");
 
 				my $bad = 0;
 				foreach my $banned_re ( @banned_files ) {
-					if ( $path =~ /$banned_re/ ) {
+					if ( $path =~ /$banned_re/i ) {
 						# Detected bad file
 						$bad = 1;
 						last;
@@ -256,7 +256,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 
 				my $bad = 0;
 				foreach my $banned_re ( @banned_files ) {
-					if ( $path =~ /$banned_re/ ) {
+					if ( $path =~ /$banned_re/i ) {
 						# Detected bad file
 						$bad = 1;
 						last;
@@ -372,7 +372,7 @@ $log->debug("Command was not an upload");
 
 				my $bad = 0;
 				foreach my $banned_re ( @banned_files ) {
-					if ( $path =~ /$banned_re/ ) {
+					if ( $path =~ /$banned_re/i ) {
 						# Detected bad file
 						$bad = 1;
 						last;

@@ -15,6 +15,7 @@ $debug = 0;
 	purpose_id		=>	'purpose_id',
 	units			=>	'units',
 	condition_id	=>	'condition_id',
+	needs_verification	=>	'needs_verification',
 );
 %find_fields = (
 # FIXME
@@ -29,6 +30,7 @@ $debug = 0;
 	quantity		=>	undef,
 	purpose_id		=>	undef,
 	condition_id	=>	undef,
+	needs_verification	=>	0,
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],
