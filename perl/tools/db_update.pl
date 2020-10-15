@@ -90,6 +90,10 @@ if ( ! sets::isin( 'currencies', \@tables ) ) {
 	$dbh->do('UPDATE currencies set sy=symbol');
 	$dbh->do('ALTER TABLE currencies DROP COLUMN symbol');
 	$dbh->do('ALTER TABLE currencies RENAME COLUMN sy TO symbol');
+  if ( ! exists $$data{precision} ) {
+    $log->debug("Add precision to currencies");
+    $dbh->do('ALTER TABLE currencies ADD precision smallint NOT NULL default 2');
+  }
 } # end if
 
 if ( ! sets::isin( 'annualsales', \@tables ) ) {
@@ -4712,6 +4716,7 @@ if ( ! sets::isin( 'timetracks', \@tables ) ) {
     $log->debug("Adding date_associated to timetracks");
 		$dbh->do('ALTER TABLE timetracks ADD date_associated BOOLEAN NOT NULL DEFAULT TRUE');
 	} # end if
+  $dbh->do('alter table timetracks alter rate type numeric(10,3)');
 } # end if
 
 if ( sets::isin('users', \@tables ) ) {
