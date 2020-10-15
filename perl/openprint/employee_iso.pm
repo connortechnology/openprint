@@ -104,13 +104,18 @@ sub _mar_view_part1 {
 			$send_assignee_notification = 1;
 		} # end if issued_to
 		# if a reprint is requested, but if the approval is already given, then we are the Approver, so don't bother.
-		$variable{error} .= $MAR->save( \%param );
-		if ( ! $variable{error} ) {
-			$MAR->send_notifications();
-			if ( $send_assignee_notification ) {
-				$MAR->send_assignee_notification();
-			} # end if
-		} # end if no errors
+
+		my @changes = $MAR->changes(\%param);
+		if ( @changes ) {
+			$variable{error} .= $MAR->save( \%param );
+			if ( ! $variable{error} ) {
+				(new openprint::Log())->save({action=>'Edit', Object=>$MAR, note=>join('<br/>', @changes)});
+				$MAR->send_notifications();
+				if ( $send_assignee_notification ) {
+					$MAR->send_assignee_notification();
+				} # end if
+			} # end if no errors
+		} # end if changes
 	} # end if btnFunction is Save
 } # end sub _mar_view_part1
 
@@ -118,10 +123,14 @@ sub _mar_view_part2 {
 	my $MAR = $variable{MAR} = new openprint::MAR( $param{mar_id} );
 	if ( $param{btnFunction} eq 'Save' ) {
 		$param{part2_signed_on} = sprintf('%.4d-%.2d-%.2d', @param{'part2_signed_on_year','part2_signed_on_month','part2_signed_on_day'} );
-		$variable{error} .= $MAR->save( \%param );
-		if ( ! $variable{error} ) {
-			$MAR->send_changed_notification();
-		} # end if
+		my @changes = $MAR->changes(\%param);
+		if ( @changes ) {
+			$variable{error} .= $MAR->save(\%param);
+			if ( ! $variable{error} ) {
+				(new openprint::Log())->save({action=>'Edit', Object=>$MAR, note=>join('<br/>', @changes)});
+				$MAR->send_changed_notification();
+			} # end if
+		} # end if changes
 	} # end if
 } # end sub _mar_view_part2
 
@@ -129,10 +138,14 @@ sub _mar_view_part3 {
 	my $MAR = $variable{MAR} = new openprint::MAR( $param{mar_id} );
 	if ( $param{btnFunction} eq 'Save' ) {
 		$param{part3_signed_on} = sprintf('%.4d-%.2d-%.2d', @param{'part3_signed_on_year','part3_signed_on_month','part3_signed_on_day'} );
-		$variable{error} .= $MAR->save( \%param );
-		if ( ! $variable{error} ) {
-			$MAR->send_changed_notification();
-		} # end if
+		my @changes = $MAR->changes(\%param);
+		if ( @changes ) {
+			$variable{error} .= $MAR->save( \%param );
+			if ( ! $variable{error} ) {
+				(new openprint::Log())->save({action=>'Edit', Object=>$MAR, note=>join('<br/>', @changes)});
+				$MAR->send_changed_notification();
+			} # end if
+		} # end if changes
 	} # end if
 } # end sub _mar_view_part3
 
@@ -257,7 +270,7 @@ sub car {
 } # end sub view_car
 
 sub _car_view_part1 {
-	$variable{CAR} = new openprint::CAR( $param{car_id} );
+	my $CAR = $variable{CAR} = new openprint::CAR( $param{car_id} );
 	if ( $param{btnFunction} eq 'Save' ) {
 		$param{issued_on} = sprintf('%.4d-%.2d-%.2d', @param{'issued_on_year','issued_on_month','issued_on_day'} );
 		$param{reprint_on} = sprintf('%.4d-%.2d-%.2d', @param{'reprint_on_year','reprint_on_month','reprint_on_day'} ) if $param{reprint_on_year};
@@ -270,49 +283,54 @@ sub _car_view_part1 {
 		my $send_reprint_request_notification = 0;
 		my $send_reprint_approval_notification = 0;
 
-		if ( $param{area_id} and ( ! $param{issued_to_id} ) and ( ! $variable{CAR}->issued_to_id() ) ) {
+		if ( $param{area_id} and ( ! $param{issued_to_id} ) and ( ! $CAR->issued_to_id() ) ) {
 			# Auto assignation
 			my $Area = new openprint::CAR_Area( $param{area_id} );
 			if ( $Area->assignee_id() ) {
 				$param{issued_to_id} = $Area->assignee_id();
 			} elsif ( $param{docket} ) {
 				# Assign to the CSR for the docket
-				my @Orders = openprint::Order->find('docket'=>$param{docket} );
-				if ( @Orders ) {
-					$param{issued_to_id} = $Orders[0]->salesrep_id();
+				my $Order = openprint::Order->find_one(docket=>$param{docket} );
+				if ( $Order ) {
+					$param{issued_to_id} = $Order->salesrep_id();
 				} # end if
 			} # end if
 		} # end if
 
-		if ( $param{issued_to_id} and ! $variable{CAR}->issued_to_id() ) {
+		if ( $param{issued_to_id} and ! $CAR->issued_to_id() ) {
 			$send_assignee_notification = 1;
 		} # end if issued_to
 
 		# if a reprint is requested, but if the approval is already given, then we are the Approver, so don't bother.
 		if ( $param{reprint} eq 'Yes' ) {
-			if ( ($variable{CAR}->reprint() ne 'Yes') and !$param{reprint_approval} ) {
+			if ( ( (!$CAR->reprint()) or ($CAR->reprint() ne 'Yes')) and !$param{reprint_approval} ) {
 				$send_reprint_request_notification = 1;
 			} elsif ( $param{reprint_approval} ne $variable{CAR}->reprint_approval() ) {
 				$send_reprint_approval_notification = 1;
 			} # end if reprint
 		} # end if reprint
-		$variable{error} .= $variable{CAR}->save(\%param);
 
-		if ( ! $variable{error} ) {
-			if ( $variable{CAR}->id() and ( ! $param{car_id} ) and ! $send_reprint_request_notification ) {
-	# Send out notifications
-			} # end if
-			$variable{CAR}->send_notifications();
-			if ( $send_assignee_notification ) {
-				$variable{CAR}->send_assignee_notification();
-			} # end if
-			if ( $send_reprint_request_notification ) {
-				$variable{CAR}->send_reprint_request_notification();
-			} # end if
-			if ( $send_reprint_approval_notification ) {
-				$variable{CAR}->send_reprint_approval_notification();
-			} # end if
-		} # end if no errors
+		my @changes = $CAR->changes(\%param);
+		if ( @changes ) {	
+			$variable{error} .= $CAR->save(\%param);
+
+			if ( ! $variable{error} ) {
+				(new openprint::Log())->save({action=>'Edit', Object=>$CAR, note=>join('<br/>', @changes)});
+				if ( $CAR->id() and ( ! $param{car_id} ) and ! $send_reprint_request_notification ) {
+					# Send out notifications
+				} # end if
+				$CAR->send_notifications();
+				if ( $send_assignee_notification ) {
+					$CAR->send_assignee_notification();
+				} # end if
+				if ( $send_reprint_request_notification ) {
+					$CAR->send_reprint_request_notification();
+				} # end if
+				if ( $send_reprint_approval_notification ) {
+					$CAR->send_reprint_approval_notification();
+				} # end if
+			} # end if no errors
+		} # end if changes
 		
 	} # end if btnFunction is Save
 } # end sub _car_view_part1
