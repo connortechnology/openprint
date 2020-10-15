@@ -102,7 +102,7 @@ name=>'invoicer_id', prepend=>['','select']
 							<td class="Price">%5$s</td>
 						</tr>', $Payment->id(), 
 						$Payment->transaction_id(),
-						Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $Payment->received_on() ) ), 
+						format_date($Payment->received_on()), 
 						$Payment->memo(), openprint::Currency::format( $P->amount() ) );
 					$$variable{payment_total} += $P->amount();
 				} # end foreach
