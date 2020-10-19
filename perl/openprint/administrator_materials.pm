@@ -135,7 +135,7 @@ sub edit {
 				if ( ! $param{"chk-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"} ) {
 					if ( $$Price{id} ) {
 						$Price->delete();
-						push @pricing_changes, "Delete price: " . $Price->to_string();
+						push @pricing_changes, 'Delete price: ' . $Price->to_string();
 					}
 				} else {
 					my @price_changes = $Price->changes( {

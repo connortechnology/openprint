@@ -240,12 +240,12 @@ $log->debug('Materials: ' . map { $_->name() } @Materials ) if DEBUG;
 						#$openprint::log->debug("No versions");
 					} # end if
 				} else {
-					$openprint::log->debug("No signatnures");
+					$openprint::log->debug('No signatures');
 				} # end if
 
 				if ( $$specs{items_per_package} ) {
 					if ( $$specs{items_per_package} > $items_per_package ) {
-						$$specs{alert} .= "Can't fit that many.<br/>";
+						$$specs{alert} .= 'Can\'t fit that many.<br/>';
 						next;
 					} 
 					$items_per_package = $$specs{items_per_package};
@@ -258,7 +258,7 @@ $log->debug('Materials: ' . map { $_->name() } @Materials ) if DEBUG;
 			} # end if
 			if ( $$specs{'OverrideItemsPerPackage'.$qty_index} eq 'Y' ) {
 				if ( $items_per_package < $$specs{'txtItemsPerPackage'.$qty_index} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "Can't fit " . $$specs{'txtItemsPerPackage'.$qty_index} . " in this package.<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Can\'t fit ' . $$specs{'txtItemsPerPackage'.$qty_index} . ' in this package.<br/>';
 					next;
 				}
 				$items_per_package = int $$specs{'txtItemsPerPackage'.$qty_index};
@@ -289,13 +289,13 @@ $log->debug('Materials: ' . map { $_->name() } @Materials ) if DEBUG;
 			$qty = 0;
 		} # end if
 
-		if ( ! $qty ) {
+		if ( !$qty ) {
 			$status = 'uncalculated';
 		} # end if
 
 		my $unitPrice = $material_charge + $serviceCharge + $packingCharge;
 		my $price = $makeReady + ( $qty * $unitPrice );
-$log->debug(" $price = $makeReady + $qty * $unitPrice;");
+$log->debug("Price $price = MR $makeReady + skid qty $qty * $unitPrice") if DEBUG;
 
 		$$specs{"txtPackageQuantity$qty_index"} = $qty;
 		if ( $Project->markup() ) {

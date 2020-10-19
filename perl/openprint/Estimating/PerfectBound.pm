@@ -18,10 +18,12 @@ package openprint::Estimating::PerfectBound;
 use strict;
 use warnings;
 
+use constant DEBUG => 0;
+
+require openprint::Equipment;
 require openprint::service;
 require openprint::Project;
 
-use constant DEBUG => 0;
 my @Equipment;
 
 my %variables = (
@@ -49,7 +51,7 @@ my %variables = (
 my @possible_pages = ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40 );
 
 sub variables {
-  my ( $p_id, $s_id, $specs ) = @_;
+  my ( $p_id, $s_id, $old_specs, $specs ) = @_;
   my $Project = new openprint::Project( $p_id );
 	my @v;
 	foreach my $k ( keys %variables ) {
@@ -151,22 +153,14 @@ sub signature_calc {
 
 	foreach my $I ( @$Impositions ) {
 		$I->display('In PerfectBi:') if DEBUG;
-		if ( ! $$I{specs} ) {
-			my ( $caller, undef, $line ) = caller;
-			$openprint::log->error("No specs from imposition $caller line $line @$Impositions");
-
-			$I->display('This');
-			foreach my $i ( @$Impositions ) {
-				$i->display('all');
-			}
-			next;
-		}
 		my $sig_specs = $$I{specs};
 		my $form = $$sig_specs{SignatureIndex};
 #$printed_impositions{$$I{imposition}} = !undef;
 		if ( ! $$I{Folds} ) {
-			$openprint::log->error("No folds in imposition, generating");# if DEBUG;
-			$I->display("No Folds") if DEBUG;
+			$openprint::log->error("No folds in imposition, generating");
+      if ( DEBUG ) {
+			$I->display("No Folds");
+      }
 			$$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index, $Project ) ] if $folding_specs;
 		} # end if
 

@@ -349,6 +349,15 @@ sub can_edit {
 	return 0;
 } # end sub can_edit
 
+sub can_delete {
+	return 0 if ! $_[0]{id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
+	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
+	return 1 if $_[0]{id} == $$openprint::User{company_id} and $$openprint::User{administrator} eq 'Y';
+	return 0;
+}
+
 sub taxexempt1 {
 	if ( @_ > 1 ) {
 		$_[0]{taxexempt1} = $_[1];

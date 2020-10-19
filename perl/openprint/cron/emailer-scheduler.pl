@@ -27,29 +27,30 @@ my $program = basename($0);
 my @args = @ARGV;
 
 my $opts = {};
-GetOptions($opts, 'help', 'log_file=s', 'log_level=s',
-    'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
-	'config=s', 'campaign_id=s',
+GetOptions($opts,
+		'help', 'log_file=s', 'log_level=s',
+		'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+		'config=s', 'campaign_id=s',
 );
 
-if ($opts->{help}) {
-    usage();
-    exit 0;
+if ( $opts->{help} ) {
+	usage();
+	exit 0;
 }
 
 $$opts{config} = '/etc/openprint/emailer-scheduler.conf' if ! $$opts{config};
 
-$log = new logger( {level=>'warn'});
+$log = new logger({level=>'warn'});
 configuration::init();
-configuration::from_file( $$opts{config} );
-configuration::merge( $opts );
+configuration::from_file($$opts{config});
+configuration::merge($opts);
 
 # required params
 foreach my $param ( 'db_name','db_user','db_pass' ) {
 	die "$program: missing required --$param parameter" if ! $config{$param};
 } # end foreach required-param
 
-$log->info("Opening SQL connection");
+$log->info('Opening SQL connection');
 $dbh = sql::open_sql( $log, 
 	port			=> $config{db_port},
 	host			=> $config{db_host},
@@ -59,11 +60,11 @@ $dbh = sql::open_sql( $log,
 	password	=> $config{db_pass},
 );
 die 'Error opening db' if ! $dbh;
-configuration::from_db( );
-configuration::from_file( $$opts{config} );
-configuration::merge( $opts );
-$config{log_level} = 'debug' if ! $config{log_level};
-$log = logger->new( {file=>$config{log_file}, level=>$config{log_level}} );
+configuration::from_db();
+configuration::from_file($$opts{config});
+configuration::merge($opts);
+$config{log_level} = 'debug' if !$config{log_level};
+$log = logger->new({file=>$config{log_file}, level=>$config{log_level}});
 
 $session{company_id} = $config{owner_id};
 $session{user_type} = $config{user_type} ? $config{user_type} : '';
@@ -77,7 +78,8 @@ openprint::EmailCampaign->lock();
 my @Campaigns = openprint::EmailCampaign->find(
 		$$opts{campaign_id} ?
 		( id=>$$opts{campaign_id} ) :
-		(active => 'Y', 'nextrun <' => 'NOW()', custom=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'])
+		(active => 'Y', 'nextrun <' => 'NOW()',
+		 custom=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'])
 );
 
 $log->info('There are '.@Campaigns.' active campaigns');

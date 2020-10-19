@@ -92,12 +92,12 @@ sub send_notifications {
 	if ( @Users ) {
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		my %info = (
-			'CAR'	=>	$self,
+			CAR	=>	$self,
 		);
 		$info{ReplacementText} = ssi::include('/email_content/iso_car_notification.html', \%info );
 		my $Email = new openprint::Email();
 		$Email->send(
-				FROM    => new openprint::User( $session{'user_id'} ),
+				FROM    => $openprint::User,
 				TO      => \@Users,
 				SUBJECT => 'A new CAR has been generated requiring your attention.',
 				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],

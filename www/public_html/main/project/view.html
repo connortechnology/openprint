@@ -2,7 +2,7 @@
 	<h1>PROJECTS</h1>
 	<h2>View Project</h2>
 </div>
-<script type="text/javascript">
+<script>
 	function open_project_docket() {
 		window.open('/main/project/docket_sheet.html?ProjectIndex=<?echo($$variable{Project}{id})?>','projectdocket','newWin,width=610,top=50,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 	}
@@ -146,7 +146,7 @@ name and then make changes. If you have any questions please click on our <a hre
 <?include(_commissions_discounts.html)?>
 <div class="Disclaimer"><? echo ( $config{ProjectViewDisclaimer} ) ?></div>
 <? if ( $$variable{Project}->can_edit() ) ?>
-<script type="text/javascript">
+<script>
 var tinymce_options = {
     mode : "textareas",
  plugins: "paste,lists",
@@ -172,7 +172,7 @@ new Ajax.InPlaceRichEditor( 'reference', '/main/project/_update.html?project_id=
 	}, tinymce_options );
 </script>
 <? else ( $$variable{Project}->can_edit() ) ?>
-<script type="text/javascript">
+<script>
 console.log("Can't edit");
 </script>
 <? endif ( $$variable{Project}->can_edit() ) ?>

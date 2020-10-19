@@ -6,7 +6,7 @@ use Data::Dumper;
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field );
-$debug = 1;
+$debug = 0;
 $serial = 'host_interfaces_id_seq';
 $table = 'host_interfaces';
 
@@ -102,7 +102,8 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 			my $Host = $HI->Host();
 			my $username = $Host->info('username');
 			my $password = $Host->info('password');
-			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password args: " . ($args ? join(',',map { "$_=>$$args{$_}" } keys %{$args}) :'none'));
+			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password args: ".
+					($args ? join(',',map { $_.'=>'.$$args{$_} } keys %{$args}) :'none'));
 			$browser->credentials(
 					$HI->ip().':'.$port,
 					$tokens{realm},
@@ -114,7 +115,7 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 
 			if ( $response->is_success and ( ($method ne 'get') or $args ) ) {
 $openprint::log->debug("Sending actual url $method ");
-				$response = $browser->$method($url, $args );
+				$response = $browser->$method($url, ($args and %{$args}) ? $args : () );
 			}
 		} else {
 			$openprint::log->error("No realm");

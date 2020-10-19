@@ -4,11 +4,10 @@ use sets;
 use strict;
 use Date::Calc ();
 
-use constant DAYS_TO_KEEP_TRASH => 60*60*24*90*1;
-use constant DEBUG => 0;
+use constant DAYS_TO_KEEP_TRASH => 60*60*24*90;
+use constant DEBUG => 1;
 
 my $amavis_home = '/var/lib/amavis';
-
 
 my $domain = $ARGV[0] ? $ARGV[0] : '';
 my @users;
@@ -21,10 +20,9 @@ if ( $ARGV[1] ) {
 	@users = readdir DIRHANDLE;
 	closedir DIRHANDLE;
 } else {
-	print "Cannot open spool dir $spool_path \n";
-	die;
+	die "Cannot open spool dir $spool_path\n";
 } # end if
-if ( ! @users ) {
+if ( !@users ) {
 	die "There are no users in $domain\n";
 }
 my $DAYS_TO_KEEP_JUNK = $ARGV[2] ? $ARGV[2] : 7;
@@ -34,6 +32,7 @@ my ( $year, $month, $day ) = Date::Calc::Today();
 
 my $postfix_uid = getpwnam('postfix');
 my $postfix_gid = getgrnam('postfix');
+print "postfix $postfix_uid:$postfix_gid\n";
 
 foreach my $user ( @users ) {
 	next if $user =~ /^\./;
@@ -45,39 +44,43 @@ print "Checking $user\n" if DEBUG;
 		} 
 		print "Spam dir $folder exists for $spool_path$user.\n" if DEBUG;
 
-        if ( ! opendir CUR, "$spool_path$user/$folder/cur" ) {
-            print "Unable to open $spool_path$user/$folder/cur\n";
-            next;
-        } # end if
+		if ( ! opendir CUR, "$spool_path$user/$folder/cur" ) {
+			print "Unable to open $spool_path$user/$folder/cur\n";
+			next;
+		} # end if
 
-        my @messages = readdir CUR;
-        closedir CUR;
+		my @messages = readdir CUR;
+		closedir CUR;
 		@messages = sets::exclude( [ '.', '..' ], \@messages );
 		next if ! @messages;
 
-		print "sa-learn for " . @messages . " messages.\n" if DEBUG; 
+		print 'sa-learn for ' . @messages . " messages.\n" if DEBUG; 
 		foreach my $message ( @messages ) {
 			my $mtime = ( stat "$spool_path$user/$folder/cur/$message" )[9];
-            if ( ! $mtime ) {
-                print "Unable to stat $spool_path$user/$folder/cur/$message\n";
-                last;
-            } # end if
-			if ( time - $mtime > $SECONDS_TO_KEEP_JUNK ) {
+			if ( ! $mtime ) {
+				print "Unable to stat $spool_path$user/$folder/cur/$message\n";
+				last;
+			} # end if
+			if ( (time - $mtime) > $SECONDS_TO_KEEP_JUNK ) {
 				print "/usr/bin/sa-learn --spam \"$spool_path$user/$folder/cur/$message\"\n";
 				`/usr/bin/sa-learn --dbpath $amavis_home/.spamassassin -u amavis --spam "$spool_path$user/$folder/cur/$message"`;
 				unlink "$spool_path$user/$folder/cur/$message";
 				$update_spamassassin = 1;
 			} # end if
-		} # end foreach
+		} # end foreach message
 
-	} # end foreach folder
+	} # end foreach Junk folder
+
   if ( $update_spamassassin ) {
     if ( -e '/run/spamassassin.pid' ) {
       `/bin/kill -HUP \`/bin/cat /run/spamassassin.pid\``;
     } elsif ( -e '/var/run/spamd.pid' ) {
       `/bin/kill -HUP \`/bin/cat /var/run/spamd.pid\``;
+		} else {
+			print "No spamassassin pid found\n";
     }
   }
+
 	foreach my $folder ( '.Trash', '.Deleted Messages' ) {
 		next if $user eq 'matt';
 		if ( ! -e "$spool_path$user/$folder" ) {
@@ -95,18 +98,17 @@ print "Checking $user\n" if DEBUG;
 		@messages = sets::exclude( [ '.', '..' ], \@messages );
 		next if ! @messages;
 
-		print "rm for " . @messages . " messages.\n" if DEBUG;
+		print 'rm for ' . @messages . " messages.\n" if DEBUG;
 		foreach my $message ( @messages ) {
 			my $mtime = ( stat "$spool_path$user/$folder/cur/$message" )[9];
 			if ( ! $mtime ) {
 				print "Unable to stat $spool_path$user/$folder/cur/$message\n";
 				last;
 			} # end if
-			if ( time - $mtime > DAYS_TO_KEEP_TRASH ) {
+			if ( (time - $mtime) > DAYS_TO_KEEP_TRASH ) {
 				unlink "$spool_path$user/$folder/cur/$message";
 			} # end if
 		} # end foreach
-
 	} # end foreach folder
 
 } # end foreach $user

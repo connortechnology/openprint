@@ -97,7 +97,7 @@ sub shippingtype {
 	} # end if
 	if ( ! $$self{shippingtype} ) {
 		my $services = $self->Project()->services();
-		$$self{shippingtype} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find('project_id'=>$$self{project_id},'category'=>'Shipping') );
+		$$self{shippingtype} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find(project_id=>$$self{project_id}, category=>'Shipping') );
 	} # end if
 	return $$self{shippingtype};
 } # end sub shippingtype

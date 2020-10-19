@@ -62,7 +62,7 @@ sub _label {
 	} elsif ( $param{action} eq 'get' ) {
 
 	} elsif ( $param{action} eq 'getnohtml' ) {
-		$variable{PageContent} = join('',$Label->get_data($param{field}));
+		$variable{PageContent} = join('', map { $_ ? $_ : () } ( $Label->get_data($param{field})) );
 		$variable{PageContent} =~ s/<br\/>/\n/ig;
 	} # end if
 } # end sub _label

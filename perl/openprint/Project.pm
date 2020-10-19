@@ -70,6 +70,9 @@ $serial = 'lngProjectIndex_seq';
 	csr_commission    =>  'csr_commission',
 	priority					=>	'priority',
 	production_comments	=>	'production_comments',
+ordered_quantity	=> undef,
+ordered_quantity_index	=> undef,
+ordered_price	=> undef,
 );
 %transforms = (
 	id								=>	[ 's/\D//g', '<2147483647' ],
@@ -655,11 +658,9 @@ sub save {
 
 sub quantity_indexes {
 	my ( $self ) = @_;
-	if ( @_ > 1 ) {
-		$$self{quantity_indexes} = $_[1];
-	}
+	$$self{quantity_indexes} = $_[1] if @_ > 1;
 	if ( ! $$self{quantity_indexes} ) {
-		@{$$self{quantity_indexes}} = ();
+		$$self{quantity_indexes} = [];
 		foreach my $qty_index ( 1 .. 3 ) {
 			push @{$$self{quantity_indexes}}, $qty_index if $$self{"quantity$qty_index"};
 		} # end foreach qty_index
@@ -695,6 +696,7 @@ sub quantity1 {
 	} # end if
 	return $$self{quantity1};
 } # end sub quantity1
+
 sub quantity2 {
 	my $self = shift;
 	if ( @_ ) {
@@ -706,6 +708,7 @@ sub quantity2 {
 	} # end if
 	return $$self{quantity2};
 } # end sub quantity2
+
 sub quantity3 {
 	my $self = shift;
 	if ( @_ ) {
@@ -976,7 +979,12 @@ sub shippingtype {
 } # end sub shippingtype
 
 sub ordered_quantity {
-	return $_[0]{'quantity'.$_[0]->ordered_quantity_index()};
+	my $qty_index = $_[0]->ordered_quantity_index();
+	if ( $qty_index ) {
+		return $_[0]{'quantity'.$qty_index};
+	}
+
+	return undef;
 } # end sub ordered_quantity
 
 sub ordered_quantity_index {
@@ -985,9 +993,11 @@ sub ordered_quantity_index {
 		$$OP{quantity_index} = $_[1];
 	} # end if
 
-	if ( ! $$OP{quantity_index} ) {
+	if ( $$OP{order_id} and ! $$OP{quantity_index} ) {
 		my @qtys = $_[0]->quantity_indexes();
-#$openprint::log->debug("Project ordered_qty_index @qtys ");
+#$openprint::log->debug("Project ordered_qty_index (@qtys)");
+# A This causes problems reporting ordered info on projects that havn't been ordered
+# B putting it back but with an additional order_id check
 		if ( 1 == @qtys ) {
 			$$OP{quantity_index} = $qtys[0];
 		} # end if
@@ -998,7 +1008,7 @@ sub ordered_quantity_index {
 sub ordered_price {
 	my $OP = $_[0]->Ordered_Project();
 	if ( ! $OP ) {
-		$openprint::log->error("No OP in ordered_price");
+		$openprint::log->error('No OP in ordered_price');
 	} else {
 		return $$OP{price} if $$OP{price};
 		return $_[0]{'price'.$$OP{quantity_index}};
@@ -1228,7 +1238,7 @@ sub get_due_date {
 		$runtime += openprint::service::get_runtime( $self, $_ );
 $openprint::log->debug("Adding runtime $runtime");
 	} # end foreach
-$openprint::log->debug("Adding runtime days: " . int( $runtime / ( 24*60 ) ) );
+$openprint::log->debug('Adding runtime days: ' . int( $runtime / ( 24*60 ) ) );
 	$duedatedays += int( $runtime / ( 24*60*60 ) );
 	
 	return sprintf('%.4d-%.2d-%.2d', misc::add_delta_business_days( Date::Calc::Today(), $duedatedays ) );
@@ -1236,7 +1246,7 @@ $openprint::log->debug("Adding runtime days: " . int( $runtime / ( 24*60 ) ) );
 
 sub Ordered_Product {
 	my ( $self ) = @_;
-	if ( ! exists $$self{Ordered_Product} ) {
+	if ( ! exists($$self{Ordered_Product}) ) {
 		my @Products = openprint::OrderedProduct->find( project_id=>$$self{id} );
 		if ( @Products == 1 ) {
 			$$self{Ordered_Product} = $Products[0];
@@ -1248,8 +1258,10 @@ sub Ordered_Product {
 } # end sub Ordered_Product
 
 sub Ordered_Project {
+	$_[0]{Ordered_Project} = $_[1] if @_ > 1;
+
 	if ( ! exists $_[0]{Ordered_Project} ) {
-		$_[0]{Ordered_Project} = openprint::OrderedProject->find_one(order_id=>$_[0]{order_id}, project_id=>$_[0]{id} ) if $_[0]{order_id};
+		$_[0]{Ordered_Project} = openprint::OrderedProject->find_one(order_id=>$_[0]{order_id}, project_id=>$_[0]{id}) if $_[0]{order_id};
 	} # end if
 
 	if ( ! $_[0]{Ordered_Project} ) {
@@ -1900,34 +1912,34 @@ sub allocate_for_order {
 } # end sub allocate_for_order
 
 sub finished_weight {
-    my $project_weight;
+	my $project_weight;
 
-    my $Project = $_[0];
-    # We do a weird thing with qty_index here, becasue all quantities should have the same weight, but may be calculated diferent ways, so we run through them until we get a valid weight.
+	my $Project = $_[0];
+# We do a weird thing with qty_index here, becasue all quantities should have the same weight, but may be calculated diferent ways, so we run through them until we get a valid weight.
 
 # calculate project weight
-    foreach my $qty_index ( $Project->quantity_indexes() ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
-        foreach my $signature_service_index ( $Project->signatures() ) {
-            my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-            next if $$sig_specs{txtSignatureType} and ! $$sig_specs{'PageQuantity'.$qty_index};
-            next if ! $$sig_specs{'txtImposition'.$qty_index};
-            my $sig_weight = openprint::Estimating::Printing::get_weight( $Project, $sig_specs, $qty_index );
-            if ( ! $sig_weight ) {
-                # unable to get weight for a sig, must recalc printing service
-$openprint::log->error("Unable to get sig_weight for signature $$sig_specs{SignatureIndex}");
-                return 0;
+		foreach my $signature_service_index ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			next if $$sig_specs{txtSignatureType} and ! $$sig_specs{'PageQuantity'.$qty_index};
+			next if ! $$sig_specs{'txtImposition'.$qty_index};
+			my $sig_weight = openprint::Estimating::Printing::get_weight( $Project, $sig_specs, $qty_index );
+			if ( ! $sig_weight ) {
+# unable to get weight for a sig, must recalc printing service
+				$openprint::log->error("Unable to get sig_weight for signature $$sig_specs{SignatureIndex}");
+				return 0;
 			} elsif ( $debug ) {
 				$openprint::log->debug("Sig weight for sig $$sig_specs{SignatureIndex} $sig_weight");
-            } # end if
-            $project_weight += $sig_weight;
-        } # end foreach signature_service_index
-        last;
-    } # end foreach qty_index
-    #$openprint::log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{WeightMarkup}/100));
+			} # end if
+			$project_weight += $sig_weight;
+		} # end foreach signature_service_index
+		last;
+	} # end foreach qty_index
+#$openprint::log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{WeightMarkup}/100));
 
-    # This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.
-    return $project_weight * (1+$openprint::config{WeightMarkup}/100);
+# This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.
+	return $project_weight * (1+$openprint::config{WeightMarkup}/100);
 } # end sub get_finished_weight
 
 sub can_view {

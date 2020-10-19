@@ -3,6 +3,7 @@ package handlers::assets;
 
 use Apache2::Request ();
 use Apache2::RequestRec ();
+use Apache2::RequestUtil ();
 use Apache2::Const -compile => qw(REDIRECT HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
 use APR::Const   -compile => 'SUCCESS';
 use Apache2::Log ();
@@ -25,18 +26,18 @@ use vars qw( $r %session %config $log $dbh );
 use constant DEBUG => 0;
 
 sub cleanup {
-    if ( $r->connection->aborted( ) ) {
-$log->debug("Was aborted");
-    } else {
-#$log->debug("cleanup");
-    } # end if
-    if ( $dbh ) {
-        $session{lastupdated} = time;
-        untie %session;
-        $dbh->disconnect();
+	if ( $r->connection->aborted( ) ) {
+		$log->debug('Was aborted');
 	} else {
-$log->error("No dbh in cleanup");
-    } # end if
+#$log->debug("cleanup");
+	} # end if
+	if ( $dbh ) {
+		$session{lastupdated} = time;
+		untie %session;
+		$dbh->disconnect();
+	} else {
+		$log->error('No dbh in cleanup');
+	} # end if
 } # end sub cleanup
 
 sub handler {
@@ -97,16 +98,16 @@ $log->debug("Path: $path id: $id uri:" . $r->uri());
 						$log->debug('Sending: ' .  $Asset->sized_path('small') );
 						$r->sendfile($Asset->sized_path('small'));
 					} else {
-						$log->debug('Sending ... ' . $Asset->on_disk_path());
+						$log->debug('Sending ... '.$Asset->on_disk_path());
 						$r->sendfile($Asset->on_disk_path());
 					} # end if
-					$log->error('Eval error sending image Reason: ' . $@) if $@;
+					$log->error('Eval error sending image Reason: '.$@) if $@;
 				} else {
 					$log->error('FORBIDDEN');
 					$return_code = Apache2::Const::HTTP_FORBIDDEN;
 				} # end if
 			} else {
-$log->error("NOT FOUND");
+				$log->error('NOT FOUND');
 				$return_code = Apache2::Const::HTTP_NOT_FOUND;
 			} # end if Asset not found
 		} else {

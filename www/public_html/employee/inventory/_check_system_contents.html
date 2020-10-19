@@ -21,7 +21,6 @@
 		my @RFIDTags = openprint::RFIDTag->find( id=>[ map { $$_{rfidtag_id} } @Contents ] );
 		push @skid_ids, map { $_->id() } openprint::Skid->find( rfidtag_id=>[ map { $_->id() } @RFIDTags ] );
 		@skid_ids = sets::union( @skid_ids );
-$log->debug("SKids to not be in " . @skid_ids );
 		$$variable{skid_ids} = \@skid_ids;
 	}
 
@@ -29,7 +28,7 @@ $log->debug("SKids to not be in " . @skid_ids );
 	if ( $$variable{Check}->location_id() ) {
 		@location_ids = map { $$_{id} } $$variable{Check}->Location()->get_all_children();
 	}
-$log->debug("Locations to be in @location_ids");
+#$log->debug("Locations to be in @location_ids");
 
 	my @Good_Skids = ();
 	my @Skids = openprint::Skid->find(
@@ -38,7 +37,7 @@ $log->debug("Locations to be in @location_ids");
 		( $$variable{Check}->contains() ? ( 'type in' => [ split(',', $$variable{Check}->contains() ) ] ) : () ),
 		#'rfidtag_id is null'=>0,
 		'quantity >=' => 1, 
-		'updated_on <' => $$variable{Check}->started_on(),
+		#'updated_on <' => $$variable{Check}->started_on(),
 		#'id not in'	=> $$variable{skid_ids},
 		);
 $log->debug("# of skids: " . @Skids );

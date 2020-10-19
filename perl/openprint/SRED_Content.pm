@@ -79,52 +79,52 @@ sub view_url {
 
 sub duration {
 	if ( @_ > 1 ) {
-		$_[0]{'duration'} = $_[1];
-		delete $_[0]{'Duration'};
+		$_[0]{duration} = $_[1];
+		delete $_[0]{Duration};
 	} # end if
-	if ( ( ! $_[0]{'duration'} ) and ( $_[0]{'unknown_time'} ) ) {
-		if ( $_[0]{'all_day_event'} ) {
-			return Date::Parse::str2time( $_[0]{'ending'} ) - Date::Parse::str2time( $_[0]{'starting'} );
+	if ( ( ! $_[0]{duration} ) and ( $_[0]{unknown_time} ) ) {
+		if ( $_[0]{all_day_event} ) {
+			return Date::Parse::str2time( $_[0]{ending} ) - Date::Parse::str2time( $_[0]{starting} );
 		} else {
-			my ($start) = $_[0]{'starting'} =~ /(\d\d\d\d-\d\d-\d\d)/;
-			my ($end) = $_[0]{'ending'} =~ /(\d\d\d\d-\d\d-\d\d)/;
+			my ($start) = $_[0]{starting} =~ /(\d\d\d\d-\d\d-\d\d)/;
+			my ($end) = $_[0]{ending} =~ /(\d\d\d\d-\d\d-\d\d)/;
 			return Date::Parse::str2time( $end ) - Date::Parse::str2time( $start );
 		} # end if
 	} # end if
-	return $_[0]{'duration'};
+	return $_[0]{duration};
 } # end sub duration
 
 sub duration_days {
 	my $parser = 'DateTime::Format::Pg';
-	my $duration = $parser->parse_interval( $_[0]{'duration'} );
+	my $duration = $parser->parse_interval( $_[0]{duration} );
 	return $duration->days();
 } # end sub duration_days
 
 sub duration_hours {
 	my $parser = 'DateTime::Format::Pg';
-	my $duration = $parser->parse_interval( $_[0]{'duration'} );
+	my $duration = $parser->parse_interval( $_[0]{duration} );
 	return $duration->hours();
 } # end sub duration_hours
 sub duration_minutes {
 	my $parser = 'DateTime::Format::Pg';
-	my $duration = $parser->parse_interval( $_[0]{'duration'} );
+	my $duration = $parser->parse_interval( $_[0]{duration} );
 	return $duration->minutes();
 } # end sub duration_minutes
 
 sub Duration {
 	if ( @_ > 1 ) {
-		$_[0]{'Duration'} = $_[1];
+		$_[0]{Duration} = $_[1];
 	} # end if
-	if ( ! $_[0]{'Duration'} ) {
-		$_[0]{'Duration'} = DateTime::Format::Pg->parse_interval( $_[0]{'duration'} );
+	if ( ! $_[0]{Duration} ) {
+		$_[0]{Duration} = DateTime::Format::Pg->parse_interval( $_[0]{duration} );
 	} # end if
-	return $_[0]{'Duration'};
+	return $_[0]{Duration};
 } # end sub Duration
 
 sub Assets {
 	my $self = shift;
 	my %params = @_;
-	$params{'object_id'} = $$self{'id'};
+	$params{object_id} = $$self{id};
 	$params{object_type} = 'openprint::SRED_Content';
 	if ( @_ ) {
 		return openprint::Object_Asset->find(%params);
@@ -132,35 +132,35 @@ sub Assets {
 	if ( ! exists $_[0]{Assets} ) {
 		$_[0]{Assets} = [ openprint::Object_Asset->find(%params) ];
 	} # end if
-	return @{$_[0]{'Assets'}};
+	return @{$_[0]{Assets}};
 } # end sub Assets
 
 sub Type {
-	return new openprint::SRED_Content_Type( $_[0]{'type_id'} );
+	return new openprint::SRED_Content_Type( $_[0]{type_id} );
 } # end sub Type
 
 sub Project {
-	return new openprint::SRED_Project( $_[0]{'project_id'} );
+	return new openprint::SRED_Project( $_[0]{project_id} );
 } # end sub Project
 
 sub Starting {
 	if ( @_ > 1 ) {
-		$_[0]{'Starting'} = $_[1];
+		$_[0]{Starting} = $_[1];
 	} # end if
-	if ( ! $_[0]{'Starting'} ) {
-		$_[0]{'Starting'} = DateTime::Format::Pg->parse_datetime( $_[0]{'starting'} );
+	if ( ! $_[0]{Starting} ) {
+		$_[0]{Starting} = DateTime::Format::Pg->parse_datetime( $_[0]{starting} );
 	} # end if
-	return $_[0]{'Starting'};
+	return $_[0]{Starting};
 } # end sub Starting
 
 sub created_by {
 	if ( @_ > 1 ) {
-		$_[0]{'created_by'} = $_[1];
+		$_[0]{created_by} = $_[1];
 	}
-	if ( ! $_[0]{'created_by'} ) {
-		$_[0]{'created_by'} = $openprint::session{'user_id'};
+	if ( ! $_[0]{created_by} ) {
+		$_[0]{created_by} = $openprint::session{user_id};
 	} # end if
-	return $_[0]{'created_by'};
+	return $_[0]{created_by};
 } # end sub created_by
 
 1;

@@ -496,12 +496,12 @@ sub save_project_information {
 		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', map { @param{'requested_for'.$project_index.'_'.$_} } ( 'year','month','day' ) ) );
 	} # end if
 
-	$error .= $Project->save({reference=> $param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and $param{"Reference$project_index"} ne $Project->reference();
+	$error .= $Project->save({reference=>$param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and ($param{"Reference$project_index"} ne $Project->reference());
 	if ( ref $OP eq 'openprint::OrderedProject' ) {
 		$Project->price( $OP->quantity_index(), undef );
-$openprint::log->debug("Project price " . $Project->price( $OP->quantity_index() ) );
+$openprint::log->debug('Project price ' . $Project->price( $OP->quantity_index() ) );
 		$OP->price( undef );
-$openprint::log->debug("OProject price " . $OP->price() );
+$openprint::log->debug('OProject price ' . $OP->price() );
 		$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
 	} elsif ( ref $OP eq 'openprint::OrderedProduct' ) {
 	#$OP->price( $Project->price( $OP->quantity_index(), undef ) );
@@ -519,14 +519,17 @@ sub store_order_info {
 	my $order_id = $param{order_id};
 	$order_id = get_unfinished_order( ) if ! $order_id;
 
+	my %required_fields = map { $_ => $_ } split(',', $openprint::config{OrderRequiredFields});
 	my $error = '';
-	$error .= 'Company Name is a required field.<br/>' if $param{company_name} eq '';
-	$error .= 'Address is a required field.<br/>' if $param{address1} eq '';
-	$error .= 'City is a required field.<br/>' if $param{city} eq '';
-	$error .= 'State/Province is a required field.<br/>' if $param{state} eq '';
-	$error .= 'PostalCode is a required field.<br/>' if $param{postalcode} eq '';
-	$error .= 'Country is a required field.<br/>' if $param{country} eq '';
-	$error .= 'Email is a required field.<br/>' if	$param{email} eq '';
+	$error .= 'Company Name is a required field.<br/>' if $required_fields{company_name} and ($param{company_name} eq '');
+	$error .= 'Address is a required field.<br/>' if $required_fields{address1} and ($param{address1} eq '');
+	$error .= 'City is a required field.<br/>' if $required_fields{city} and ($param{city} eq '');
+	$error .= 'State/Province is a required field.<br/>' if $required_fields{state} and ($param{state} eq '');
+	$error .= 'PostalCode is a required field.<br/>' if $required_fields{postalcode} and ($param{postalcode} eq '');
+	$error .= 'Country is a required field.<br/>' if $required_fields{country} and ($param{country} eq '');
+	$error .= 'Email is a required field.<br/>' if $required_fields{email} and ($param{email} eq '');
+	$error .= 'Purchase Order is a required field.<br/>' if $required_fields{po} and ($param{po} eq '');
+
 	if ( exists $param{company_id} and ! $param{company_id} ) {
 		my @Companies = openprint::Company->find( 'name lc' => lc $param{company_name} );
 		if ( @Companies == 1 ) {
@@ -538,7 +541,7 @@ sub store_order_info {
 
 	$_ = Email::Valid->address($param{email});
 	if ( ( ! $_ ) or ( $_ ne $param{email} ) ) {
-		$error .= "Email is not a valid email address.<br>";
+		$error .= 'Email is not a valid email address.<br>';
 	} # end if
 
 	if ( $error ) {
@@ -546,13 +549,10 @@ sub store_order_info {
 	} # end if
 
 	if ( ! $param{user_id} ) {
-$log->debug("No user_id");
 		my @Users = openprint::User->find( email => $param{email} );
 		if ( @Users == 1 ) {
-$log->debug("No user_id setting to " . $Users[0]->to_string() );
 			$param{user_id} = $Users[0]->id();
 		} elsif ( $param{company_id} and ! @Users ) {
-$log->debug("creating user_id");
 			my $User = new openprint::User();
 			$error .= $User->save({
 				email	=>	$param{email},
@@ -561,8 +561,6 @@ $log->debug("creating user_id");
 				phone		=>	$param{phone},
 				company_id	=>	$param{company_id},
 			});
-		} else {
-$log->debug("not creating user_id");
 		}
 	} # end if
 
@@ -571,7 +569,7 @@ $log->debug("not creating user_id");
 		$Order->company_id( $param{company_id} );
 		$session{company_id} = $param{company_id};
 	} # end if
-	$Order->po( $param{txtPurchaseOrder} );
+	$Order->po($param{po});
 	$Order->currency_id( openprint::Currency::get_current()->id() );
 	$error .= $Order->save(\%param);
 	return $error;

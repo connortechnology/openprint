@@ -96,8 +96,8 @@
 				
 				my $days = $session{$url.'?manifests_within_days'};
 				my @Manifests = openprint::Manifest->find(
-						created_on_start=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $PI->updated_on() ) - $days*(60*60*24 ) ),
-						created_on_end	=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $PI->updated_on() ) + $days*(60*60*24 ) ),
+						created_on_start=>Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time($PI->updated_on() ) - $days*(60*60*24 )),
+						created_on_end	=>Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time($PI->updated_on() ) + $days*(60*60*24 )),
 						);
 
 				my $within_lbs = $session{$url.'?manifests_within_lbs'};
@@ -144,7 +144,15 @@
 						} # end if
 						my $class = ' class="'.($manifest_total==$total?'matched':''). ( $rowclass ? ' colRow' : '' ).'"';
 						
-						$html .= sprintf('<tr%1$s><td>%5$s</td><td>Manifest:</td><td><a href="/employee/inventory/manifest_view.html?manifest_id=%2$d">%3$s</a></td><td class="Paper"><a href="/employee/inventory/paper.html?paper_id=%6$d">%7$s</a></td><td class="Quantity">%4$d</td><td colspan="5">&nbsp;</td></tr>',
+						$html .= sprintf('
+<tr%1$s>
+  <td>%5$s</td>
+  <td>Manifest:</td>
+  <td><a href="/employee/inventory/manifest_view.html?manifest_id=%2$d">%3$s</a></td>
+  <td class="Paper"><a href="/employee/inventory/paper.html?paper_id=%6$d">%7$s</a></td>
+  <td class="Quantity">%4$d</td>
+  <td colspan="5">&nbsp;</td>
+</tr>',
 								$class, $Type->manifest_id(), $Type->Manifest()->name(), $manifest_total,
 								format_datetime( $Type->Manifest()->created_on() ),
 								$Type->paper_id(), 

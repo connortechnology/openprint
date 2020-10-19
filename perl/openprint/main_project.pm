@@ -19,7 +19,10 @@ require JSON;
 sub sign_off {
 	require Authen::Captcha;
 	if ( $param{btnFunction} eq 'Approve Project' ) {
-		my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{SkinPath}.'/images/captcha');
+		my $Captcha = new Authen::Captcha(
+				data_folder => $config{SkinPath}.'/tmp',
+				output_folder => $config{SkinPath}.'/images/captcha'
+				);
 		if ( 1 == $Captcha->check_code( $param{Captcha}, $param{MD5SUM} ) ) {
 			$variable{Approved} = 1;
 			# Transitions from Waiting for Customer Approval to Waiting for QA Approval

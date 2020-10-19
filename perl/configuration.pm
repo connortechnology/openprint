@@ -114,10 +114,12 @@ sub from_db {
 	if ( $openprint::dbh ) {
 		my $data = $openprint::dbh->selectall_arrayref( 'SELECT name, value FROM Configuration', {Slice=>{}} );
 		foreach (@{$data}) {
+#$openprint::log->debug("Assigning $$_{name}=>$$_{value} to config.".($config{$$_{name}} ? "overwriting previous value $config{$$_{name}}" : ''));
 			$config{$$_{name}} = $$_{value};
 		} # end foreach
 	} # end if
-}
+} # end sub from_db
+
 sub dump {
 	foreach ( sort { $a cmp $b } keys %config ) {
 		print "$_ => $config{$_}\n";

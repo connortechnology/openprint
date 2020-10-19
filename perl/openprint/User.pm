@@ -58,7 +58,8 @@ $default_sort	=	'lower(firstname),lower(lastname)';
 ); # end %fields
 %find_fields = (
 	name	=>	q`firstname || ' ' || lastname`,
-	usergroup_id	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
+	#usergroup_id	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
+	usergroup_id	=>	'id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id=?)',
 	usergroup		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
 	last_online	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
 	profile_field	=>	'(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id=?)',
@@ -99,6 +100,7 @@ $default_sort	=	'lower(firstname),lower(lastname)';
 	password_changed_on		=>	undef,
 	password				=>	'',
 	email_valid				=>	undef,
+	mailinglist		=>	undef,
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
@@ -331,8 +333,7 @@ sub csr_ids {
 
 sub in_Group {
 	my $self = shift;
-	my @Results;
-	return sets::intersection( @_, map { $$_{name} } $self->Groups() );
+	return sets::intersection(@_, map { $$_{name} } $self->Groups());
 }
 
 sub Groups {
@@ -475,8 +476,12 @@ sub link_to {
 			);
 } # end sub link_to
 
+sub admin_url_to {
+	return '/administrator/managerial/user_profiles.html?user_id='.$_[0]{id};
+}
+
 sub admin_link_to {
-    return sprintf('<a href="/administrator/managerial/user_profiles.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+	return sprintf('<a href="/administrator/managerial/user_profiles.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
 } # end sub admin_link_to
 
 sub html {
@@ -588,7 +593,7 @@ sub can_view {
 	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
 	require openprint::Blocklist;
 	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{id});
-	return 1;
+	return 0;
 } # end sub can_view
 
 sub Location {

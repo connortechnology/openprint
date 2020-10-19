@@ -37,7 +37,7 @@ my @variables = (
 );
 
 sub variables {
-	my ( $p_id, $s_id, $specs ) = @_;
+	my ( $p_id, $s_id, $old_specs, $specs ) = @_;
 	my @v = @variables;
 
 	my $Project = new openprint::Project( $p_id );
@@ -190,7 +190,7 @@ if ( 0 ) {
 					my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
 $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 					if ( ! ( $PressSheet->area() and $PressSheet->start_area() ) ) {
-						Carp::cluck("No sheet area PressSheet: " . $PressSheet->area() . ' start: ' . $PressSheet->start_area() );
+						Carp::cluck('No sheet area PressSheet: ' . $PressSheet->area() . ' start: ' . $PressSheet->start_area() );
 					} elsif ( $PressSheet->factor() > 1 ) {
 						# convert to supplied count
 						$sheets = ceil( $sheets / $PressSheet->factor() );
@@ -204,11 +204,11 @@ $log->debug("converted StockQuantity: $sheets") if DEBUG;
 				} # end if
 			} else {
 				$log->debug("StockQuantity from sig $form : overriden to ".$$specs{"qty-form$form-$qty_index"} ) if DEBUG;
-				if ( $PressSheet->type() eq 'Sheet' ) {
+				if ( $$PressSheet{type} eq 'Sheet' ) {
           my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
 $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
           if ( ! ( $PressSheet->area() and $PressSheet->start_area() ) ) {
-            Carp::cluck("No sheet area PressSheet: " . $PressSheet->area() . ' start: ' . $PressSheet->start_area() );
+            Carp::cluck('No sheet area PressSheet: ' . $PressSheet->area() . ' start: ' . $PressSheet->start_area() );
 					} elsif ( $PressSheet->factor() > 1 ) {
 # convert to supplied count
 						$sheets = ceil( $sheets / $PressSheet->factor() );
@@ -236,15 +236,16 @@ $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 		} # end foreach qty_index
 	} # end foreach signature
 
-if ( DEBUG ) {
-$openprint::log->debug('Total Paper Totals:');
-	foreach my $Stock_Entry ( @Stocks ) {
-		my $paper_string = $$Stock_Entry{key};
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-$openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$$Stock_Entry{index}}{"qty_$qty_index"} );
-		} # end foreach
+	if ( DEBUG ) {
+		$openprint::log->debug('Total Paper Totals:');
+		foreach my $Stock_Entry ( @Stocks ) {
+			my $paper_string = $$Stock_Entry{key};
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				$openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$$Stock_Entry{index}}{"qty_$qty_index"} );
+			} # end foreach
+		} # end if
 	} # end if
-} # end if
+
 	# Enforce minimum orders and full packages
 	foreach my $Stock_Entry ( @Stocks ) {
 		my $stock_index = $$Stock_Entry{index};
@@ -285,20 +286,19 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$$Stock_En
 		} # end if
 	} # end foreach
 
-if ( DEBUG ) {
-	foreach my $Stock_Entry ( @Stocks ) {
-		my $stock_index = $$Stock_Entry{index};
-		my $total = $totals{$stock_index};
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			if ( ! $total ) {
-$openprint::log->debug("After minimum: QTY $qty_index $$Stock_Entry{key}  => no totals" );
-
-			} else {
-$openprint::log->debug("After minimum: QTY $qty_index $$Stock_Entry{key}  => " . $$total{"qty_$qty_index"} );
-			}
-		} # end foreach
-	} # end if
-}
+	if ( DEBUG ) {
+		foreach my $Stock_Entry ( @Stocks ) {
+			my $stock_index = $$Stock_Entry{index};
+			my $total = $totals{$stock_index};
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				if ( ! $total ) {
+	$openprint::log->debug("After minimum: QTY $qty_index $$Stock_Entry{key}  => no totals" );
+				} else {
+	$openprint::log->debug("After minimum: QTY $qty_index $$Stock_Entry{key}  => " . $$total{"qty_$qty_index"} );
+				}
+			} # end foreach
+		} # end if
+	}
 
 	foreach my $Stock_Entry ( @Stocks ) {
 		my $paper_id = $$Stock_Entry{key};
@@ -307,8 +307,8 @@ $openprint::log->debug("After minimum: QTY $qty_index $$Stock_Entry{key}  => " .
 		my $total = $totals{$stock_index};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			# Normalize and output qtys
-			if ( $Stock->type() eq 'Sheet' ) {
-				$$specs{"qty-$stock_index-$qty_index"} = Math::Round::nearest( 0.1, ( $$total{"qty_$qty_index"} * $Stock->sheet_weight() ) );
+			if ( $$Stock{type} eq 'Sheet' ) {
+				$$specs{"qty-$stock_index-$qty_index"} = Math::Round::nearest(0.1, ( $$total{"qty_$qty_index"} * $Stock->sheet_weight() ));
 				$$specs{"sheets-$stock_index-$qty_index"} = $$total{"qty_$qty_index"};
 			} else {
 				$$specs{"qty-$stock_index-$qty_index"} = $$total{"qty_$qty_index"};
@@ -340,6 +340,8 @@ $openprint::log->debug("After minimum: QTY $qty_index $$Stock_Entry{key}  => " .
 			#$$specs{"MPrice$qty_index"} += $$specs{"cost-$stock_index-$qty_index"} * ceil( (1000/$$sig_specs{'txtImposition'.$qty_index}) * $RunPaper->sheet_weight() )/ 100;
 		} # end foreach qty_index
 	} # end foreach Stock
+
+
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} = 0;
@@ -409,9 +411,9 @@ sub display {
 } # end sub display
 
 sub summary {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	my @Stocks = get_stocks_and_quantities( $Project, $service_id, $specs, $qty_index );
 
 	if ( $qty_index ) {
@@ -427,7 +429,7 @@ sub summary {
 				Project => $Project,
 				qty_index	=>	$qty_index,
 				} ) . 
-			'</span>' : $$_{Stock}->to_string() } @Stocks ];
+		'</span>' : $$_{Stock}->to_string() } @Stocks ];
 } # end sub summary
 
 sub save {
@@ -442,7 +444,7 @@ sub se_quantity_summary {
 
 #$openprint::log->warn("Stock " . $Paper->to_string() . " QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
 	if ( $$specs{"qty-$stock_id-$qty_index"} ) {
-		if ( $Paper->type() eq 'Sheet' ) {
+		if ( $$Paper{type} eq 'Sheet' ) {
 			$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
 		} # end if
 		if ( $$specs{"qty-$stock_id-$qty_index"} < 10 ) {

@@ -54,7 +54,7 @@ foreach my $default ( keys %defaults ) {
 $log = new logger(level=>'debug', program=>$program);
 
 # Get our configuration information
-$$opts{config} = "/etc/openprint/$program.conf" if !$$opts{config};
+$$opts{config} = '/etc/openprint/'.$program.'.conf' if !$$opts{config};
 if (my $err = configuration::from_file($$opts{config})) {
 	$log->error($err);
 }
@@ -82,8 +82,8 @@ configuration::from_file($$opts{config});
 configuration::merge($opts);
 
 # Clear out old sessions
-my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
-$log->debug("Cleaning out sessions: " . @$session_ids . " sessions in system");
+my $session_ids = $dbh->selectcol_arrayref('SELECT id FROM sessions');
+$log->debug('Cleaning out sessions: ' . @$session_ids . ' sessions in system');
 my $deleted_session_count = 0;
 foreach my $session ( @$session_ids ) {
     $session =~ s/\s//g;
@@ -92,8 +92,8 @@ foreach my $session ( @$session_ids ) {
         $log->debug("Error fetching Session: $session: $@");
         next;
     }
-    if ( ! $session{lastupdated} ) {
-		$log->debug("Updating time $session");
+    if ( !$session{lastupdated} ) {
+		$log->debug('Updating time '.$session);
         $session{lastupdated} = time;
         untie %session;
     } elsif ( time - $session{lastupdated} > ( 60*60*24*7 ) ) {
@@ -111,15 +111,35 @@ $log->debug("Deleted $deleted_session_count sessions");
 
 if ( 0 and openprint::Order->find_one() ) {
 # Clean out unfinished Orders
-	my @Orders = openprint::Order->find('status'=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
-	$log->debug('Cleaning out ' . @Orders . ' incomplete orders');
+	my @Orders = openprint::Order->find(status=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
+	$log->debug('Cleaning out '.@Orders.' incomplete orders');
 	foreach my $Order ( @Orders ) {
 		$Order->delete();
 	} # end foreach
 } # end if
+
+if ( openprint::Order->find_one() ) {
+# Clean out unfinished Orders
+	my @Orders = openprint::Order->find(
+			status=>'Re-Opened',
+			'updated_on <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -7))
+			);
+	$log->debug('Closing '.@Orders.' re-opened orders');
+	foreach my $Order ( @Orders ) {
+		print 'Close order ' . $Order->to_string()."? [Y|n]\n";
+		$_ = <STDIN>;
+		if ( !$_ or $_ eq 'Y' or $_ eq 'y' ) {
+			$Order->close();
+		}
+	} # end foreach
+} # end if
+
 if ( openprint::Quote->find_one() ) {
-	my @Quotes = openprint::Quote->find('status'=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) );
-	$log->debug('Cleaning out ' . @Quotes . ' incomplete quotes ');
+	my @Quotes = openprint::Quote->find(
+			status=>'Incomplete',
+			'created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -365))
+			);
+	$log->debug('Cleaning out '.@Quotes.' incomplete quotes ');
 	foreach my $Quote ( @Quotes ) {
 		$Quote->delete();
 	} # end foreach
@@ -279,10 +299,12 @@ if ( 1 ) {
 			$Host->save({ resolved_on	=> 'NOW()' });
 	} # end foreach Host
 }
+if ( 0 ) {
 foreach my $Job ( openprint::ScheduledJob->find(
-			'starttime <' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -3 ) ),
+			'starttime <' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -14 ) ),
 ) ) {
 	$Job->delete();
+}
 }
 
 $dbh->disconnect();

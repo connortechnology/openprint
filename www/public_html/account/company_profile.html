@@ -9,11 +9,20 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 	<div class="CompanyProfile">
 		<fieldset>
 			<p class="buttons">
-				<? echo ( button( 'SaveTop', { onclick=>"f1.btnFunction.value='Save';fmChange=3;f1.submit();", text=>'Save' } ); ) ?>
-				<? echo ( button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ); ) ?>
+				<? echo ( join("\n",
+							button('SaveTop', { onclick=>"f1.btnFunction.value='save';fmChange=3;f1.submit();", text=>'Save' }),
+							button('ResetTop', { onclick=>'f1.reset();', text=>'Reset' }),
+							( ($$variable{Company}->deleted() and $$variable{Company}->can_edit())?
+								button('UnDeleteTop', { onclick=>q`f1.btnFunction.value='undelete';f1.submit();`, text=>'Undelete'}) : 
+							( $$variable{Company}->can_delete() ? button('DeleteTop', { onclick=>q`f1.btnFunction.value='delete';f1.submit();`, text=>'Delete'}) : '' ),
+'' ),
+							); ) ?>
 			</p>
 		</fieldset>
 		<div class="CompanyInformation">
+			<?if($$variable{Company}->deleted())?>
+			<div class="warning">Company is deleted.</div>
+			<?endif($$variable{Company}->deleted())?>
 			<fieldset>
 				<legend>Company Information</legend>
 				<ul>
@@ -113,8 +122,12 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 		</div>
 			<p class="buttons">
 			<? echo ( join("\n",
-						button( 'SaveBottom', { onclick=>"f1.btnFunction.value='Save';fmChange=3;f1.submit();", text=>'Save' } ),
-						button( 'ResetBottom', { onclick=>"f1.reset();", text=>'Reset' } ),
+						button('SaveBottom', { onclick=>"f1.btnFunction.value='save';fmChange=3;f1.submit();", text=>'Save' }),
+						button('ResetBottom', { onclick=>"f1.reset();", text=>'Reset' }),
+						( ($$variable{Company}->deleted() and $$variable{Company}->can_edit())?
+							button('UnDeleteBottom', { onclick=>q`f1.btnFunction.value='undelete';f1.submit();`, text=>'Undelete'}) : 
+						( $$variable{Company}->can_delete() ? button('DeleteBottom', { onclick=>q`f1.btnFunction.value='delete';f1.submit();`, text=>'Delete'}) : '' )
+),
 						); ) ?>
 			</p>
 	</div><!--CompanyProfile-->

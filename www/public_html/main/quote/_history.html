@@ -83,6 +83,9 @@
 <? if ( ! $session{$$variable{uri}.'?company_id'} ) ?>
 			<th class="CompanyName">Company</th>
 <? endif ( ! $session{$$variable{uri}.'?company_id'} ) ?>
+<? if ( ! $session{$$variable{uri}.'?salesrep_id'} ) ?>
+			<th class="CSR">Sales Rep</th>
+<? endif ( ! $session{$$variable{uri}.'?salesrep_id'} ) ?>
 			<th class="QuotedFor">Quoted For</th>
 			<th class="QuotedBy">Quoted By</th>
 			<th class="Date">Date</th>
@@ -94,15 +97,16 @@
 <? echo (
 	my $html;
 	my $rowclass;
-my $total = 0;
+	my $total = 0;
 	foreach my $Quote ( @{$$variable{Quotes}} ) {
-$total += 1;
+		$total += 1;
 		if ( $Quote->can_view() ) {
 			if ( ! $session{$$variable{uri}.'?company_id'} ) {
 				$html .= sprintf(q`
 				<tr%1$s>
 					<td class="quote_id"><a href="history_details.html?quote_id=%2$d">%2$d</a></td>
 					<td class="CompanyName"><a href="history_details.html?quote_id=%2$d">%3$s</a></td>
+					%11$s
 					<td class="QuotedFor"><a href="history_details.html?quote_id=%2$d">%4$s</a></td>
 					<td class="User"><a href="history_details.html?quote_id=%2$d">%5$s</a></td>
 					<td class="Date"><a href="history_details.html?quote_id=%2$d">%6$s</a></td>
@@ -123,6 +127,8 @@ $total += 1;
 					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
 					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),
 					$Quote->description(),
+					( $session{$$variable{uri}.'?salesrep_id'} ? '' : '<td class="User CSR">'.$Quote->Company()->CSR()->name().'</td>'), 
+		
 				);
 			} else {
 				$html .= sprintf(q`
