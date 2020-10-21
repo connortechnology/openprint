@@ -414,13 +414,13 @@ $log->warn('Object::changes called on an object with no fields');
 				@{$$self{$field}},
 				( ref $$params{$field} eq 'ARRAY' ? @{$$params{$field}} : ( $$params{$field} ) )
 				) ) {
-				push @results, "$field changed from ".join(',',@{$$self{$field}}) .' to '.join(',',@{$$params{$field}} );
+				push @results, "$field changed from (".join(',',@{$$self{$field}}) .') to ('.join(',',@{$$params{$field}}).')';
 			}
 		} elsif ( $$self{$field} ne $$params{$field} ) {
 			if ( $field eq 'password' ) {
 				push @results, "$field changed";
 			} else {
-				push @results, "$field changed from $$self{$field} to $$params{$field}";
+				push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$$params{$field}.'\'';
 			}
 		} else {
 			if ( $debug ) {
