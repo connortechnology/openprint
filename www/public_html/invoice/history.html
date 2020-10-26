@@ -119,6 +119,7 @@
 				if ( openprint::Invoice->can_send() ) {
 				$html .= button( 'AccountStatement', { onclick=>"if(!\$('invoicee_id').value){alert('Please select a company');} else {f1.btnFunction.value='Account Statement';f1.submit();}", text=>'Account Statement' } );
 				}
+        $html .= button( 'interest', { onclick=>"f1.btnFunction.value='Calculate Interest';f1.submit();", text=>'Calculate Interest' } );
 				return $html;
 			) ?>
 		</p>
