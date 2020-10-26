@@ -126,12 +126,12 @@ sub owing_early {
   my $self = shift;
 	my $owing = $self->total() + $self->interest() - $self->paid();
 	if ( $$self{early_payment_units} eq 'amount' ) {
-		return Math::Round::nearest( 1/(10**$self->Currency()->precision()), $owing + $$self{early_payment_amount} );
-	} elsif ( $_[0]{early_payment_units} eq 'percent' ) {
-		return Math::Round::nearest( 1/(10**$self->Currency()->precision()), $owing * ( 1 - $$self{early_payment_amount}/100 ) );
+		return Math::Round::nearest(1/(10**$self->Currency()->precision()), $owing + $$self{early_payment_amount});
+	} elsif ( $$self{early_payment_units} eq 'percent' ) {
+		return Math::Round::nearest(1/(10**$self->Currency()->precision()), $owing * ( 1 - $$self{early_payment_amount}/100 ));
 	} else {
-$openprint::log->error('Unknown units for early_payment '. $$self{early_payment_units} );
-		return Math::Round::nearest( 1/(10**$self->Currency()->precision()), $owing );
+    $openprint::log->error('Unknown units for early_payment ('.$$self{early_payment_units}.')');
+		return Math::Round::nearest(1/(10**$self->Currency()->precision()), $owing);
 	} # end if
 } # end sub owing
 
@@ -382,7 +382,71 @@ sub Interests {
 } # end sub Interests
 
 sub calculate_interests {
-	my $self = shift;
+	my $Invoice = shift;
+  my $error = '';
+
+  if ( ! $Invoice->monthly_interest() ) {
+    $error .= 'Invoice has no monthly interest rate!';
+  } elsif ( ! $Invoice->due_on() ) {
+    $error .= 'Invoice has no due date!';
+  } # end if
+
+  my $changed = 0;
+
+  my ( $year, $month, $day ) = $Invoice->due_on() =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
+  my $last_period;
+  my $paid = 0;
+  #( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
+  while ( Date::Calc::Date_to_Time( $year, $month, $day,0, 0, 0 ) <= time ) {
+
+    my $date_string = sprintf('%4d-%.2d-%.2d', $year, $month, $day);
+
+    # The point is to calculate howmuch has beenpaidby this point
+    foreach my $P ( openprint::Invoice_Payment->find(invoice_id=>$Invoice->id(), 'received_on >'=>$last_period, 'received_on <='=>$date_string )) {
+      $paid += $P->amount();
+    } # end foreach
+    # Includes tax
+    my $total = $Invoice->total();
+    foreach my $I ( openprint::Invoice_Interest->find(invoice_id=>$Invoice->id(), 'compounded_on <'=>$date_string )) {
+      $total += $I->amount();
+    } # end foreach InvoiceInterest
+
+    if ( $total - $paid > 0 ) {
+      if ( ! openprint::Invoice_Interest->find(invoice_id=>$Invoice->id(), 'compounded_on'=>$date_string ) ) {
+        my $I = new openprint::Invoice_Interest();
+        $_ = $I->save({
+            invoice_id    =>  $Invoice->id(),
+            amount      =>  Math::Round::nearest( .01, ($total - $paid) * $Invoice->monthly_interest()/100),
+            compounded_on =>  sprintf('%.4d-%.2d-%.2d', $year, $month, $day ),
+            });
+        if ( ! $_ ) {
+          my $note = sprintf('Added %s%.2f interest for %s', $Invoice->Currency()->symbol(), $I->amount(), $date_string);
+          (new openprint::Log())->save({
+            Object  =>  $Invoice,
+            note  =>  $note,
+            action  =>  'Invoice Interest Added'});
+          $error .= $note.'<br/>';
+        } else {
+          $error .= $_;
+          last;
+        } # end if
+        $changed = 1;
+      } # end if No interest for this date.
+    } else {
+      last;
+    } # end if No interest for this date.
+    $last_period = $date_string;
+    ($year,$month,$day) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
+  } # end while
+
+  if ( $changed ) {
+    delete $$Invoice{interest};
+    $Invoice->interest();
+    $Invoice->save();
+  } # end if
+
+  return $error;
+
 } # end sub calculate_interests
 
 sub Taxes {
