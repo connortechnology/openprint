@@ -271,20 +271,23 @@ sub car {
 		if ( $param{action} eq 'Send' ) {
 			$variable{CAR}->send_notifications();
 		}
-	} elsif ( $param{btnFunction} ) {
+	}
+	if ( $param{btnFunction} ) {
 
 		if ( $param{btnFunction} eq 'Save' ) {
-			$param{issued_on} = sprintf('%.4d-%.2d-%.2d', @param{'issued_on_year','issued_on_month','issued_on_day'} );
-			$param{reprint_on} = sprintf('%.4d-%.2d-%.2d', @param{'reprint_on_year','reprint_on_month','reprint_on_day'} ) if $param{reprint_on_year};
-			$param{printed_on} = sprintf('%.4d-%.2d-%.2d', @param{'printed_on_year','printed_on_month','printed_on_day'} ) if $param{printed_on_year} and $param{printed_on_month} and $param{printed_on_day};
+			foreach my $date_field(
+					'part2_signed_on',
+					'part3_signed_on',
+					'part4_signed_on',
+					'issued_on', 'reprint_on', 'printed_on', 'approved_on','reply_by' ) {
+				$param{$date_field} = sprintf('%.4d-%.2d-%.2d', @param{map{ $date_field.'_'.$_} ( 'year','month','day')} ) if $param{$date_field.'_year'};
+			}
 			if ($param{reprint_approval} and ($param{reprint_approval} eq 'Yes')) {
-				$param{approved_on} = sprintf('%.4d-%.2d-%.2d', @param{'approved_on_year','approved_on_month','approved_on_day'} ) if $param{approved_on_year} and $param{approved_on_month} and $param{approved_on_day};
 			} else {
 				$param{approved_on} = undef;
 			}
-			$param{reply_by} = sprintf('%.4d-%.2d-%.2d', @param{'reply_by_year','reply_by_month','reply_by_day'} ) if $param{reply_by_day};
-			$param{presses} = ref $param{presses} eq 'ARRAY' ? join(';', @{$param{presses}} ) : $param{presses};
-#$param{part1_signed_on} = sprintf('%.4d-%.2d-%.2d', @param{'part1_signed_on_year','part1_signed_on_month','part1_signed_on_day'} );
+			$param{presses} = (ref $param{presses} eq 'ARRAY' ? join(';', @{$param{presses}} ) : $param{presses}) if exists $param{presses};
+
 			my $send_assignee_notification = 0;
 			my $send_reprint_request_notification = 0;
 			my $send_reprint_approval_notification = 0;
@@ -308,7 +311,7 @@ sub car {
 			} # end if issued_to
 
 # if a reprint is requested, but if the approval is already given, then we are the Approver, so don't bother.
-			if ( $param{reprint} eq 'Yes' ) {
+			if ( $param{reprint} and ($param{reprint} eq 'Yes') ) {
 				if ( ( (!$CAR->reprint()) or ($CAR->reprint() ne 'Yes')) and !$param{reprint_approval} ) {
 					$send_reprint_request_notification = 1;
 				} elsif ( $param{reprint_approval} and ($param{reprint_approval} eq 'Yes') and ($param{reprint_approval} ne $variable{CAR}->reprint_approval()) ) {
@@ -352,46 +355,14 @@ sub _car_view_part1 {
 
 sub _car_view_part2 {
 	my $CAR = $variable{CAR} = new openprint::CAR( $param{car_id} );
-	if ( $param{btnFunction} eq 'Save' ) {
-		$param{part2_signed_on} = sprintf('%.4d-%.2d-%.2d', @param{'part2_signed_on_year','part2_signed_on_month','part2_signed_on_day'} );
-		my @changes = $CAR->changes(\%param);
-		if ( @changes ) {	
-			$variable{error} .= $CAR->save( \%param );
-			if ( ! $variable{error} ) {
-				$variable{CAR}->send_changed_notification();
-				$variable{ExternalRedirect} = '/employee/iso/car.html?car_id='.$CAR->id();
-			} # end if
-		} # end if changes
-	} # end if
 } # end sub _car_view_part2
 
 sub _car_view_part3 {
 	my $CAR = $variable{CAR} = new openprint::CAR( $param{car_id} );
-	if ( $param{btnFunction} eq 'Save' ) {
-		$param{part3_signed_on} = sprintf('%.4d-%.2d-%.2d', @param{'part3_signed_on_year','part3_signed_on_month','part3_signed_on_day'} );
-		my @changes = $CAR->changes(\%param);
-		if ( @changes ) {	
-			$variable{error} .= $CAR->save( \%param );
-			if ( ! $variable{error} ) {
-				$variable{CAR}->send_changed_notification();
-				$variable{ExternalRedirect} = '/employee/iso/car.html?car_id='.$CAR->id();
-			} # end if
-		} # end if changes
-	} # end if
 } # end sub _car_view_part3
 
 sub _car_view_part4 {
 	my $CAR = $variable{CAR} = new openprint::CAR( $param{car_id} );
-	if ( $param{btnFunction} eq 'Save' ) {
-		$param{part4_signed_on} = sprintf('%.4d-%.2d-%.2d', @param{'part4_signed_on_year','part4_signed_on_month','part4_signed_on_day'} );
-		my @changes = $CAR->changes(\%param);
-		if ( @changes ) {	
-			$variable{error} .= $CAR->save( \%param );
-			if ( ! $variable{error} ) {
-				$variable{CAR}->send_changed_notification();
-			} # end if
-		} # end if changes
-	} # end if
 } # end sub _car_view_part4
 
 sub _car_edit_part1 {
