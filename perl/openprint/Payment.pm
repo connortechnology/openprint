@@ -139,12 +139,12 @@ sub send_receipt {
 	my @attachments;
 	$data{ReplacementText} = ssi::include( '/email_content/payment_receipt.html', \%data );
 
-	@To = map { $_->User() } $self->Payor()->AccountingContacts() if ! @To;
+	@To = $self->Payor()->AccountingContacts() if ! @To;
 
 	my $Email = new openprint::Email();
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
 	my $results = $Email->send(
-		TO			=>	\@To,
+    TO			=>	\@To,
 		BCC			=>	$openprint::User,
 		FROM		=>	$data{User},
 		#'ATTACHMENTS'	=>	\@attachments,
