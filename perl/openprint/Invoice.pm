@@ -449,6 +449,17 @@ sub calculate_interests {
 
 } # end sub calculate_interests
 
+sub tax {
+  my $self = shift;
+  if ( ! $$self{tax} ) {
+    $$self{tax} = 0;
+    foreach my $T ( $self->Taxes() ) {
+      $$self{tax} += $T->amount();
+    }
+  }
+  return $$self{tax};
+}
+
 sub Taxes {
 	my ( $self ) = @_;
 
