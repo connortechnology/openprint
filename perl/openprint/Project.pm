@@ -2043,5 +2043,17 @@ sub csr_commission {
 	return $$self{csr_commission};
 } # end sub csr_commission
 
+sub is_fsc {
+	my $self = shift;	
+	foreach my $sig_id ( $self->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $self, $sig_id );
+		my $Paper = openprint::Paper::load_from_signature( $self, $sig_specs );
+		if ( $Paper->is_fsc() ) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 1;
 __END__

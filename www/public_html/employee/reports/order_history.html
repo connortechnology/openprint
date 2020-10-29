@@ -50,15 +50,15 @@ return $session{user_id};
 		 <li>
 			 <label>Ordered On</label>
 			 <? echo ( join(' to ',
-						date_select_session('/employee/reports/order_history.html', 'created_on_start', { with_today=>1,with_clear=>1 } ),
-						date_select_session('/employee/reports/order_history.html', 'created_on_end', { with_today=>1,with_clear=>1 } ), 
+						date_select_session($r->uri(), 'created_on_start', { with_today=>1,with_clear=>1 } ),
+						date_select_session($r->uri(), 'created_on_end', { with_today=>1,with_clear=>1 } ), 
 						); ) ?>
 		</li>
 		 <li>
 			 <label>Printed On</label>
 			 <? echo ( join(' to ',
-						date_select_session('/employee/reports/order_history.html', 'printed_on_start', { with_today=>1,with_clear=>1 } ),
-						date_select_session('/employee/reports/order_history.html', 'printed_on_end', { with_today=>1,with_clear=>1 } ), 
+						date_select_session($r->uri(), 'printed_on_start', { with_today=>1,with_clear=>1 } ),
+						date_select_session($r->uri(), 'printed_on_end', { with_today=>1,with_clear=>1 } ), 
 						); ) ?>
 		</li>
 		<li>
@@ -88,7 +88,11 @@ return $session{user_id};
 		</li>
 		<li>
 			<label>POs</label>
-			<? echo ( radio( 'pos', [ 'With', 'With', 'Without', 'Without', '', 'All' ], $param{reprint} ); ) ?>
+			<? echo ( radio( 'pos', [ 'With', 'With', 'Without', 'Without', '', 'All' ], $param{pos} ); ) ?>
+		</li>
+		<li>
+			<label>FSC?</label>
+			<? echo ( radio( 'fsc', [ '1', 'With', '0', 'Without', '', 'All' ], $param{fsc} ); ) ?>
 		</li>
 <?include(_services_filter.html)?>
 		<li>
