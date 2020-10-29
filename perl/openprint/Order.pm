@@ -1092,5 +1092,13 @@ sub close {
 	$Order->update_status();
 } # end sub close
 
+sub is_fsc {
+	my $self = shift;
+	foreach my $Project ( $self->Projects() ) {
+		return 1 if $Project->is_fsc();
+	}
+	return 0;
+}
+
 1;
 __END__
