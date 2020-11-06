@@ -924,24 +924,25 @@ $log->debug("$key => $c and set output");
 				next if ! $type;
 
 				my $coverage_key = join('', 'ColourCoatingCoverage'.$index.$side);
-				$$specs{$coverage_key} =~ s/[^\d\.]//g;
+				$$specs{$coverage_key} =~ s/[^\d\.]//g if $$specs{$coverage_key};
 
 				if ( $type =~ /Overall/ ) {
-# Nothing cuz coverage is 100%
+					# Nothing cuz coverage is 100%
 					$$specs{$coverage_key} = 100;
-#$log->warn("Oeral for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
+					#$log->warn("Overall for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
 				} elsif ( ! int($$specs{$coverage_key}) ) {
-					$log->warn("Coverage for $index $side $type" . $$specs{$coverage_key} .' ' . int($$specs{$coverage_key}) );
+					# What we are doing here is detecting an empty coverage value and populating it with the default
+					#$log->warn("Coverage for $index $side $type key:$coverage_key specs:".$$specs{$coverage_key}.' '.int($$specs{$coverage_key}));
 					$type =~ s/ /_/g;
 					my $coverage;
 					if ( $openprint::config{"Default${type}Coverage$ProjectTypeName"} ) {
-						$log->debug(" Got default for $type ProjectTypeName");
+						#$log->debug("Got default for $type ProjectTypeName");
 						$coverage = $openprint::config{"Default${type}Coverage$ProjectTypeName"};
 					} elsif ( $openprint::config{"Default${type}Coverage"} ) {
-						$log->debug(" Got default for $type ");
+						#$log->debug('Got default for '.$type);
 						$coverage = $openprint::config{"Default${type}Coverage"};
 					} else {
-						$log->debug(" Suing regualr default instead of $type ");
+						#$log->debug('Using regular default instead of '.$type);
 						$coverage = $DefaultInkCoverage;
 					}
 					$$specs{$coverage_key} = $coverage;
