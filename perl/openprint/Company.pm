@@ -83,6 +83,7 @@ $serial = 'companies_id_seq';
 	profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id=?)',
 	last_article_id	=>	'(SELECT MAX(id) FROM Articles WHERE company_id=companies.id)',
 	last_timetrack_id	=>	'(SELECT MAX(id) FROM timetracks WHERE company_id=companies.id)',
+	is_invoiced=> 'id IN (SELECT invoicee_id FROM invoices)',
 );
 %transforms = (
 	address1					=>	[ 's/^\s+//', 's/\s+$//' ],
