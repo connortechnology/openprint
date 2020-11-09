@@ -1011,7 +1011,7 @@ sub ordered_price {
 		$openprint::log->error('No OP in ordered_price');
 	} else {
 		return $$OP{price} if $$OP{price};
-		return $_[0]{'price'.$$OP{quantity_index}};
+		return $_[0]{'price'.$$OP{quantity_index}} if $$OP{quantity_index};
 	} # end if
 	return 0;
 } # end sub ordered_price
