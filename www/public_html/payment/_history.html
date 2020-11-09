@@ -33,6 +33,7 @@
 	} # end if
 
 	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
+	$$variable{rowclass} = '';
 ) ?>
 
 <? if ( @{$$variable{Payments}} == 0 ) ?>
@@ -59,7 +60,7 @@
 			<td class="ID"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? echo ( $$variable{Payment}->id(); ) ?></a></td>
 			<td class="From"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? hecho ( $$variable{Payment}->Payor()->name(); ) ?></a></td>
 			<td class="Method"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? hecho ( $$variable{Payment}->method(); ) ?></a></td>
-			<td class="Date"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Payment}->received_on() ) ); ) ?></a></td>
+			<td class="Date"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? echo ( format_date($$variable{Payment}->received_on()); ) ?></a></td>
 			<td class="TransactionID"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? hecho ( $$variable{Payment}->transaction_id(); ) ?></a></td>
 			<td class="Memo"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? hecho ( $$variable{Payment}->memo(); ) ?></a></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Payment}->amount() ); ) ?></td>
