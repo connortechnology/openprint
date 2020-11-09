@@ -11,11 +11,11 @@ $debug = 0;
 $table = 'expense_categories';
 $serial = 'expense_categories_id_seq';
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
+	id	=>	'id',
+	name	=>	'name',
 );
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );
@@ -27,11 +27,11 @@ $debug = 0;
 $table = 'expense_accounts';
 $serial = 'expense_accounts_id_seq';
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
+	id	=>	'id',
+	name	=>	'name',
 );
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );

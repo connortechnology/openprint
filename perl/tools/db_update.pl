@@ -2080,6 +2080,10 @@ if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 			$dbh->do('ALTER TABLE purchaseorders add company_id INTEGER');
 			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (company_id) REFERENCES companies (id)');
 		} # end if
+		if ( ! exists $$data{paid_on} ) {
+			$log->debug('Adding paid_on to Purchase Orders');
+			$dbh->do('ALTER TABLE PurchaseOrders add paid_on TIMESTAMP WITH TIME ZONE') or die $dbh->errstr();
+		}
 		$dbh->do('ALTER TABLE PurchaseOrders ALTER delivered_on DROP NOT NULL');
 		sql::end_transaction( $dbh, $ac );
 } # end if
