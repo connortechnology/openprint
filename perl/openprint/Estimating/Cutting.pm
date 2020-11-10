@@ -640,7 +640,7 @@ sub signature_calc {
 				if ( $CuttingMakeReady ) {
 					my %setup = $CuttingMakeReady->get_price(undef, $Equipment);
 					if ( !%setup ) {
-						$log->error("No Cutting Makeready for $$Equipment{strid}");
+						$log->error('No Cutting Makeready for '.$$Equipment{strid});
 					} else {
 						if ( $setup{units} eq 'per cut' ) {
 							%setup = $CuttingMakeReady->get_price($folding_cuts, $Equipment);
@@ -648,7 +648,7 @@ sub signature_calc {
 							$results{Breakdown} .= sprintf('Make Ready: $%1$.2f%2$s * %4$d cuts = $%3$.2f<br/>',
 									@setup{'Price','units','Total'}, $folding_cuts);
 						} else {
-							$openprint::log->debug("unknown units on $$CuttingMakeReady{units}") if DEBUG;
+							$openprint::log->debug('unknown units on '.$$CuttingMakeReady{units}) if DEBUG;
 							$results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price});
 						} # end if
 						$price{MakeReady} = $setup{Total};
