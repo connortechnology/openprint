@@ -175,6 +175,8 @@ sub _mar_edit_part4 {
 
 ### CARS SECTIONS BEGINS HERE
 sub cars {
+	$variable{error} = '';
+
 	if ( $param{btnFunction} ) {
 		if ( $param{btnFunction} eq 'Delete' ) {
 			foreach my $CAR ( openprint::CAR->find(
@@ -262,110 +264,105 @@ sub _car_results {
 } # end sub _car_results
 
 sub car {
-	$variable{CAR} = new openprint::CAR( $param{car_id} );
-	return if ! $param{action};
-	if ( $param{action} eq 'Send' ) {
-		$variable{CAR}->send_notifications();
-	} # end if
-} # end sub view_car
+	$variable{error} = '';
+
+	my $CAR = $variable{CAR} = new openprint::CAR( $param{car_id} );
+	if ( $param{action} ) {
+		if ( $param{action} eq 'Send' ) {
+			$variable{CAR}->send_notifications();
+		}
+	}
+	if ( $param{btnFunction} ) {
+
+		if ( $param{btnFunction} eq 'Save' ) {
+			foreach my $date_field(
+					'part2_signed_on',
+					'part3_signed_on',
+					'part4_signed_on',
+					'issued_on', 'reprint_on', 'printed_on', 'approved_on','reply_by' ) {
+				$param{$date_field} = sprintf('%.4d-%.2d-%.2d', @param{map{ $date_field.'_'.$_} ( 'year','month','day')} ) if $param{$date_field.'_year'};
+			}
+			if ($param{reprint_approval} and ($param{reprint_approval} eq 'Yes')) {
+			} else {
+				$param{approved_on} = undef;
+			}
+			$param{presses} = (ref $param{presses} eq 'ARRAY' ? join(';', @{$param{presses}} ) : $param{presses}) if exists $param{presses};
+
+			my $send_assignee_notification = 0;
+			my $send_reprint_request_notification = 0;
+			my $send_reprint_approval_notification = 0;
+
+			if ( $param{area_id} and ( ! $param{issued_to_id} ) and ( ! $CAR->issued_to_id() ) ) {
+# Auto assignation
+				my $Area = new openprint::CAR_Area( $param{area_id} );
+				if ( $Area->assignee_id() ) {
+					$param{issued_to_id} = $Area->assignee_id();
+				} elsif ( $param{docket} ) {
+# Assign to the CSR for the docket
+					my $Order = openprint::Order->find_one(docket=>$param{docket} );
+					if ( $Order ) {
+						$param{issued_to_id} = $Order->salesrep_id();
+					} # end if
+				} # end if
+			} # end if
+
+			if ( $param{issued_to_id} and ! $CAR->issued_to_id() ) {
+				$send_assignee_notification = 1;
+			} # end if issued_to
+
+# if a reprint is requested, but if the approval is already given, then we are the Approver, so don't bother.
+			if ( $param{reprint} and ($param{reprint} eq 'Yes') ) {
+				if ( ( (!$CAR->reprint()) or ($CAR->reprint() ne 'Yes')) and !$param{reprint_approval} ) {
+					$send_reprint_request_notification = 1;
+				} elsif ( $param{reprint_approval} and ($param{reprint_approval} eq 'Yes') and ($param{reprint_approval} ne $variable{CAR}->reprint_approval()) ) {
+					$send_reprint_approval_notification = 1;
+				} # end if reprint
+			} # end if reprint
+
+			my @changes = $CAR->changes(\%param);
+			if ( @changes ) {	
+				$variable{error} .= $CAR->save(\%param);
+
+				if ( ! $variable{error} ) {
+					(new openprint::Log())->save({action=>'Edit', Object=>$CAR, note=>join('<br/>', @changes)});
+					if ( ( ! $param{car_id} ) and ! $send_reprint_request_notification ) {
+# Send out notifications
+						$CAR->send_notifications();
+					} else {
+						$CAR->send_changed_notification();
+					} # end if
+
+					if ( $send_reprint_request_notification ) {
+						$CAR->send_reprint_request_notification();
+					} # end if
+					if ( $send_assignee_notification ) {
+						$CAR->send_assignee_notification();
+					} # end if
+					if ( $send_reprint_approval_notification ) {
+						$CAR->send_reprint_approval_notification();
+					} # end if
+				} # end if no errors
+				$variable{ExternalRedirect} = '/employee/iso/car.html?car_id='.$CAR->id();
+			} # end if changes
+
+		} # end if btnFunction is Save
+	} # end if btnFunction
+} # end sub car
 
 sub _car_view_part1 {
 	my $CAR = $variable{CAR} = new openprint::CAR( $param{car_id} );
-	if ( $param{btnFunction} eq 'Save' ) {
-		$param{issued_on} = sprintf('%.4d-%.2d-%.2d', @param{'issued_on_year','issued_on_month','issued_on_day'} );
-		$param{reprint_on} = sprintf('%.4d-%.2d-%.2d', @param{'reprint_on_year','reprint_on_month','reprint_on_day'} ) if $param{reprint_on_year};
-		$param{printed_on} = sprintf('%.4d-%.2d-%.2d', @param{'printed_on_year','printed_on_month','printed_on_day'} ) if $param{printed_on_year} and $param{printed_on_month} and $param{printed_on_day};
-		$param{approved_on} = sprintf('%.4d-%.2d-%.2d', @param{'approved_on_year','approved_on_month','approved_on_day'} ) if $param{approved_on_year} and $param{approved_on_month} and $param{approved_on_day};
-		$param{reply_by} = sprintf('%.4d-%.2d-%.2d', @param{'reply_by_year','reply_by_month','reply_by_day'} ) if $param{reply_by_day};
-		$param{presses} = ref $param{presses} eq 'ARRAY' ? join(';', @{$param{presses}} ) : $param{presses};
-		#$param{part1_signed_on} = sprintf('%.4d-%.2d-%.2d', @param{'part1_signed_on_year','part1_signed_on_month','part1_signed_on_day'} );
-		my $send_assignee_notification = 0;
-		my $send_reprint_request_notification = 0;
-		my $send_reprint_approval_notification = 0;
-
-		if ( $param{area_id} and ( ! $param{issued_to_id} ) and ( ! $CAR->issued_to_id() ) ) {
-			# Auto assignation
-			my $Area = new openprint::CAR_Area( $param{area_id} );
-			if ( $Area->assignee_id() ) {
-				$param{issued_to_id} = $Area->assignee_id();
-			} elsif ( $param{docket} ) {
-				# Assign to the CSR for the docket
-				my $Order = openprint::Order->find_one(docket=>$param{docket} );
-				if ( $Order ) {
-					$param{issued_to_id} = $Order->salesrep_id();
-				} # end if
-			} # end if
-		} # end if
-
-		if ( $param{issued_to_id} and ! $CAR->issued_to_id() ) {
-			$send_assignee_notification = 1;
-		} # end if issued_to
-
-		# if a reprint is requested, but if the approval is already given, then we are the Approver, so don't bother.
-		if ( $param{reprint} eq 'Yes' ) {
-			if ( ( (!$CAR->reprint()) or ($CAR->reprint() ne 'Yes')) and !$param{reprint_approval} ) {
-				$send_reprint_request_notification = 1;
-			} elsif ( $param{reprint_approval} ne $variable{CAR}->reprint_approval() ) {
-				$send_reprint_approval_notification = 1;
-			} # end if reprint
-		} # end if reprint
-
-		my @changes = $CAR->changes(\%param);
-		if ( @changes ) {	
-			$variable{error} .= $CAR->save(\%param);
-
-			if ( ! $variable{error} ) {
-				(new openprint::Log())->save({action=>'Edit', Object=>$CAR, note=>join('<br/>', @changes)});
-				if ( $CAR->id() and ( ! $param{car_id} ) and ! $send_reprint_request_notification ) {
-					# Send out notifications
-				} # end if
-				$CAR->send_notifications();
-				if ( $send_assignee_notification ) {
-					$CAR->send_assignee_notification();
-				} # end if
-				if ( $send_reprint_request_notification ) {
-					$CAR->send_reprint_request_notification();
-				} # end if
-				if ( $send_reprint_approval_notification ) {
-					$CAR->send_reprint_approval_notification();
-				} # end if
-			} # end if no errors
-		} # end if changes
-		
-	} # end if btnFunction is Save
 } # end sub _car_view_part1
 
 sub _car_view_part2 {
-	$variable{CAR} = new openprint::CAR( $param{car_id} );
-	if ( $param{btnFunction} eq 'Save' ) {
-		$param{part2_signed_on} = sprintf('%.4d-%.2d-%.2d', @param{'part2_signed_on_year','part2_signed_on_month','part2_signed_on_day'} );
-		$variable{error} .= $variable{CAR}->save( \%param );
-		if ( ! $variable{error} ) {
-			$variable{CAR}->send_changed_notification();
-		} # end if
-	} # end if
+	my $CAR = $variable{CAR} = new openprint::CAR( $param{car_id} );
 } # end sub _car_view_part2
 
 sub _car_view_part3 {
-	$variable{CAR} = new openprint::CAR( $param{car_id} );
-	if ( $param{btnFunction} eq 'Save' ) {
-		$param{part3_signed_on} = sprintf('%.4d-%.2d-%.2d', @param{'part3_signed_on_year','part3_signed_on_month','part3_signed_on_day'} );
-		$variable{error} .= $variable{CAR}->save( \%param );
-		if ( ! $variable{error} ) {
-			$variable{CAR}->send_changed_notification();
-		} # end if
-	} # end if
+	my $CAR = $variable{CAR} = new openprint::CAR( $param{car_id} );
 } # end sub _car_view_part3
 
 sub _car_view_part4 {
-	$variable{CAR} = new openprint::CAR( $param{car_id} );
-	if ( $param{btnFunction} eq 'Save' ) {
-		$param{part4_signed_on} = sprintf('%.4d-%.2d-%.2d', @param{'part4_signed_on_year','part4_signed_on_month','part4_signed_on_day'} );
-		$variable{error} .= $variable{CAR}->save( \%param );
-		if ( ! $variable{error} ) {
-			$variable{CAR}->send_changed_notification();
-		} # end if
-	} # end if
+	my $CAR = $variable{CAR} = new openprint::CAR( $param{car_id} );
 } # end sub _car_view_part4
 
 sub _car_edit_part1 {

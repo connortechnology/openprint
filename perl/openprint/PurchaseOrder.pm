@@ -50,6 +50,7 @@ $serial = 'purchaseorders_id_seq';
 	authorized_on				=>	'authorized_on',
 	delivered_on				=>	'delivered_on',
 	delivered_on_switch	=>	'delivered_on_switch',
+	paid_on							=>	'paid_on',
 	total								=>	'total',
 	subtotal						=>	'subtotal',
 	deleted							=>	'deleted',
@@ -835,6 +836,11 @@ sub dockets {
 
 sub Created_By {
 	return new openprint::User( $_[0]{created_by} );
+}
+
+sub is_paid {
+	return 1 if $_[0]->payments_total() >= $_[0]->total();
+	return 0;
 }
 
 1;

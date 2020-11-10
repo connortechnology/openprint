@@ -1010,7 +1010,7 @@ sub ordered_price {
 		$openprint::log->error('No OP in ordered_price');
 	} else {
 		return $$OP{price} if $$OP{price};
-		return $_[0]{'price'.$$OP{quantity_index}};
+		return $_[0]{'price'.$$OP{quantity_index}} if $$OP{quantity_index};
 	} # end if
 	return 0;
 } # end sub ordered_price
@@ -2061,6 +2061,18 @@ sub get_book_type {
   } # end if
   return;
 } # end sub get_book_type
+
+sub is_fsc {
+	my $self = shift;	
+	foreach my $sig_id ( $self->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $self, $sig_id );
+		my $Paper = openprint::Paper::load_from_signature( $self, $sig_specs );
+		if ( $Paper->is_fsc() ) {
+			return 1;
+		}
+	}
+	return 0;
+}
 
 1;
 __END__

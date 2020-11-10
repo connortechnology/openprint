@@ -44,6 +44,7 @@
 		} # end if
 	} # end if can edit
 	$html .= button( 'Copy', { onclick=>q`f2.action='view.html';f2.btnFunction.value='Copy';f2.submit();` } );
+	$html .= button( 'Record Payment', { onclick=> 'popup_window(\'/employee/purchase_order/_pay_popup.html?po_id='.$$variable{PurchaseOrder}->id().'\');', text=>'Record Payment' } );
 	return $html;
 ) ?>
 	</p>

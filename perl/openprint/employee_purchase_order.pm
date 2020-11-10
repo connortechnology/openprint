@@ -384,6 +384,43 @@ sub view {
 			} # end if
 		} # end if
 		%param = ();
+	} elsif ( $param{btnFunction} eq 'SavePayment' ) {
+		my $ac = sql::start_transaction( $openprint::dbh );
+		my $Payment = new openprint::Payment();
+		$variable{error} .= $Payment->save({
+				user_id				=>	$openprint::User->id(),
+				amount        =>  $param{amount},
+				currency_id   =>  $$PO{currency_id},
+				received_on   =>  join('-', map { $param{'paid_on_'.$_} } ( 'year','month','day' ) ),
+				memo          =>  $param{description},
+				recipient_id  =>  $PO->supplier_id(),
+				payor_id      =>  $PO->company_id(),
+				transaction_id	=>	$param{transaction_id},
+				});
+		if ( $variable{error} ) {
+			sql::end_transaction( $openprint::dbh, $ac );
+			return;
+    }
+    my $PO_Payment = new openprint::Object_Payment();
+    $variable{error} .= $PO_Payment->save({
+				payment_id=>$Payment->id(),
+				object_id=>$PO->id(),
+				object_type=>'openprint::PurchaseOrder',
+				amount=>$param{amount} });
+    $PO->Payments( undef );
+    $PO->payments_total(undef);
+    $PO->total(undef);
+		$PO->paid_on(join('-', map { $param{'paid_on_'.$_} } ( 'year','month','day' ) )) if (!$PO->paid_on()) and $PO->is_paid();
+    $variable{error} .= $PO->save();
+    $openprint::dbh->rollback() if $variable{error};
+    sql::end_transaction( $openprint::dbh, $ac );
+      my $L = new openprint::PurchaseOrder_Log();
+      $L->save({
+          user_id =>  $session{user_id},
+          po_id   =>  $PO->id(),
+          reason  =>  'add payment ' . $PO_Payment->amount(),
+          });
+		
 	} # end if btnFunction
 
 	$variable{PurchaseOrder} = $PO;
@@ -815,9 +852,11 @@ sub _history {
 	ssi::save_params('/employee/purchase_order/history.html', ( 
 				( map { 'starting_start_'.$_ } ( 'year', 'month','day' ) ),
 				( map { 'starting_end_'.$_ } ( 'year', 'month','day' ) ),
+				( map { 'paid_on_start_'.$_ } ( 'year', 'month','day' ) ),
+				( map { 'paid_on_end_'.$_ } ( 'year', 'month','day' ) ),
 				'authorized', 'supplier_id','created_by','authorized_by', 
 				'deleted','types', 'item_id', 'cancelled', 'vendor_category_id', 'department_id', 'docket',
-				'currency_id', 'has_manifest',
+				'currency_id', 'has_manifest', 'paid',
 				) );
 } # end sub _purchase_orders
 
@@ -1022,6 +1061,7 @@ sub _payments_edit {
 		$PO->Payments( undef );
 		$PO->payments_total(undef);
 		$PO->total(undef);
+		$PO->paid_on(join('-', map { $param{'received_on_'.$_} } ( 'year','month','day' ) )) if (!$PO->paid_on()) and $PO->is_paid();
 		$variable{error} .= $PO->save();
 		$openprint::dbh->rollback() if $variable{error};
 		sql::end_transaction( $openprint::dbh, $ac );
@@ -1139,6 +1179,10 @@ sub _taxes_edit {
 } # end sub payments_edit
 
 sub _logs {
+	$variable{PurchaseOrder} = new openprint::PurchaseOrder( $param{po_id} );
+}
+
+sub _pay_popup {
 	$variable{PurchaseOrder} = new openprint::PurchaseOrder( $param{po_id} );
 }
 

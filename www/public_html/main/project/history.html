@@ -46,7 +46,12 @@
 			<li>
 				<label>Project #</label>
 				<? echo ( join("\n",
-					input(type=>'cardinal', id=>'project_id', name=>'project_id', onkeydown=>'if(event.keyCode==13){load_projects();};', value=>$session{$r->uri().'?project_id'}),
+					input(
+						type=>'cardinal', id=>'project_id', name=>'project_id',
+						onkeydown=>'if(event.keyCode==13){load_projects();};',
+						value=>$session{$r->uri().'?project_id'},
+            with_clear=>1,
+						),
 					button('Go1', { onclick=>q`load_projects();`, text=>'Go' }), 
 				); ) ?>
 			</li>

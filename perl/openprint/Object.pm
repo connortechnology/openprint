@@ -417,7 +417,7 @@ $log->warn('Object::changes called on an object with no fields');
 			next;
 		}
 		if ( ref $$self{$field} eq 'ARRAY'  ) {
-      my @new_value = ($$params{$field} eq 'ARRAY' ? @{$$params{$field}} : ( $$params{$field} ));
+      my @new_value = (ref $$params{$field} eq 'ARRAY' ? @{$$params{$field}} : ( $$params{$field} ));
 			if ( @{$$self{$field}} != sets::intersection(@{$$self{$field}}, @new_value) ) {
 				push @results, $field.' changed from '.join(',',@{$$self{$field}}).' to '.join(',', @new_value);
       } elsif ( $debug ) {
@@ -427,7 +427,7 @@ $log->warn('Object::changes called on an object with no fields');
 			if ( $field eq 'password' ) {
 				push @results, "$field changed";
 			} else {
-				push @results, "$field changed from $$self{$field} to $$params{$field}";
+				push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$$params{$field}.'\'';
 			}
 		} else {
 			if ( $debug ) {
@@ -1243,7 +1243,7 @@ sub transform {
 		if ( @transforms ) {
 			foreach my $transform ( @transforms ) {
 				if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
-					eval '$value =~ ' . $transform;
+					eval '$value =~ '.$transform;
 				} elsif ( $transform =~ /^<(\d+)/ ) {
 					if ( $value > $1 ) {
 						$value = undef;

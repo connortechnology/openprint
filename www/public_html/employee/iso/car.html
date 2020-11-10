@@ -50,8 +50,15 @@
 	Invalid CAR # specified.
 	<? else ( $param{car_id} and ! $$variable{CAR}->id() ) ?>
 
-		<? echo ( button( 'Print', { onclick=>'window.print();' } ) ) ?>
-		<? echo ( button( 'Send', { href=>'/employee/iso/car.html?action=Send&amp;car_id='.$$variable{CAR}->id() } ); ) ?>
+		<? echo (
+			if ( $$variable{CAR}->id() ) {
+				return join("\n",
+					button( 'Print', { onclick=>'window.print();' } ),
+					button( 'Send', { href=>'/employee/iso/car.html?action=Send&amp;car_id='.$$variable{CAR}->id() } ),
+					);
+			}
+			return '';
+		) ?>
 		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{CAR}->id() ) ?></span></h3>
 		<? echo (
 			my $html;

@@ -16,8 +16,8 @@ $default_sort	=	'lower(name)';
 %defaults = (
 );
 %transforms = (
-		name  => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-		human => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/^openprint:://' ],
+  name  => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+  human => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/^openprint:://' ],
 );
 
 sub Object {
@@ -27,6 +27,7 @@ sub Object {
       $name =~ s/::/\//g;
       require $name.'.pm';
     };
+		$openprint::log->error("failed requiring $file $@") if $@;
   	return $_[0]{name}->new($_[1]);
 	}
 	my ($caller, undef, $line) = caller;
