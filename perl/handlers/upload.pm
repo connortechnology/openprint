@@ -220,6 +220,7 @@ sub create_dir {
 
 # Returns path component from ProjectFilesPath onward, basically company and docket components
 sub get_destdir {
+  return '' if !$config{ProjectFilesPath};
 	my $destdir = '/';
 	# First off, determine if we are logged in.
 	if ( $session{company_id} ) {
@@ -261,7 +262,7 @@ sub upload_files {
 	my $destdir = get_destdir();
 	if ( ! $destdir ) {
 		$variable{error} .= 'There was an error saving your upload!<br/>';
-$log->error("No destdir");
+    $log->error('No destdir');
 		return;
 	} # end if
 	
