@@ -1,6 +1,8 @@
 <? eval (
 	if ( $param{id} ) {
 		@{$$variable{Folds}} = ( $$variable{Fold} ? $$variable{Fold} : new openprint::Fold( $param{id} ) );
+  } elsif ( $param{fold_id} ) {
+		@{$$variable{Folds}} = ( $$variable{Fold} ? $$variable{Fold} : new openprint::Fold( $param{fold_id} ) );
 	} else {
 		$$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
 		if ( $param{type} eq 'all' ) {
