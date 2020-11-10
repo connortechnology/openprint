@@ -15,7 +15,7 @@
 				</li>
 				<li class="form-group">
 					<label class="col-form-label">Remember me</label>
-					<? echo ( radio( 'rdbRememberMe', ['Y','Yes','N','No'], ( $param{rdbRememberMe} || $config{rdbRememberMe} || 'N' ), { inline=>0 } ); ) ?>
+					<? echo ( radio( 'rdbRememberMe', ['Y','Yes','N','No'], ( $param{rdbRememberMe} || $config{rdbRememberMe} || 'N' ), { inline=>1 } ); ) ?>
 				</li>
         </ul>
 		</div>
