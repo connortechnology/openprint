@@ -1,39 +1,39 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
-<script type="text/javascript">
-    function calc( formName, force ) {
-        var form = getFormObj( formName );
-        if ( gettingNewPrice ) {
-            if ( timeout ) {
-                clearTimeout( timeout );
-            } // end if
-			if ( ! force ) {
-				setTimeout( "calc('"+formName+"');", 1000 );
-				return;
-			} // end if
-		} // end if
-        timeout = null;
-        gettingNewPrice = true;
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script>
+  function calc( formName, force ) {
+    var form = getFormObj( formName );
+    if ( gettingNewPrice ) {
+      if ( timeout ) {
+        clearTimeout( timeout );
+      } // end if
+      if ( ! force ) {
+        setTimeout( "calc('"+formName+"');", 1000 );
+        return;
+      } // end if
+    } // end if
+    timeout = null;
+    gettingNewPrice = true;
 
-		var h = $H(form.serialize(true));
-		h.set('callback', 'cbFoldingResults' );
-		h.set('ServiceType', 'Folding');
+    var h = $H(form.serialize(true));
+    h.set('callback', 'cbFoldingResults' );
+    h.set('ServiceType', 'Folding');
 
-		h.each(function(pair) {
-			if ( pair.value == '' )
-				h.unset(pair.key);
-			if ( pair.key == 'btnFunction' )
-				h.unset(pair.key);
-			if ( pair.key == 'alert' ) 
-				h.unset(pair.key);
-		});
+    h.each(function(pair) {
+      if ( pair.value == '' )
+        h.unset(pair.key);
+      if ( pair.key == 'btnFunction' )
+        h.unset(pair.key);
+      if ( pair.key == 'alert' ) 
+        h.unset(pair.key);
+    });
 
-		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-    }
-    function cbFoldingResults( results ) {
-		
-        var form = getFormObj('f1');
+    new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+  }
+  function cbFoldingResults( results ) {
 
-        cbFillResults(results);
+    var form = getFormObj('f1');
+
+    cbFillResults(results);
 		var re = /FoldQty\-(\d+)\-(\d+)\-(\d+)/;
 		for ( var index = 0, len = form.elements.length; index < len; index += 1 ) {
 			var key = form.elements[index].id;
@@ -43,7 +43,7 @@
 				var f = $('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
 				if ( f ) {
 					var value = form.elements[index].value;
-					// always leave the first or any witha value
+					// always leave the first or any with a value
 					if ( matches[3] == 1 || value > 0 ) {
 						f.show();
 					//} else {
@@ -82,13 +82,6 @@ function Fold_onchange( element, signature, qty_index, index ) {
 	if ( ! $('FoldQty-'+spec).value ) {
 		// This appears to hide the fold if the qty is empty... but it doesn't seem to work.
 		// and it's bollocks. Basically we the fold we are editing is empty, then hide the next one.  But the next one might be valid.
-//alert('hiding +1');
-if ( 0 ) {
-		var nextfold = $('Fold-'+signature+'-'+qty_index+'-'+next_index );
-		if ( nextfold ) {
-			$('Fold-'+signature+'-'+qty_index+'-'+next_index ).hide();
-		} // end if
-}
 	} else {
 		$('Fold-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
 	} // end if
@@ -115,7 +108,8 @@ if ( 0 ) {
 					$html .= '<div class="'.$$variable{Columns}.'Columns">';
 					if ( $$sig_specs{"txtImposition$qty_index"} ) {
 						$html .= openprint::service::summary( $Project, $ss_id, $qty_index );
-					} else { $html .= '&nbsp;';
+					} else {
+            $html .= '&nbsp;';
 					} # end if
 					$html .= '</div>';
 				} # end foreach qty_index
