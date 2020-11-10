@@ -706,8 +706,6 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' IN ('.join(',', map { '?' } @{$value} ) . '))', @{$value};
 	} elsif ( $operator eq 'null or not in' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' NOT IN ('.join(',', map { '?' } @{$value} ) . '))', @{$value};
-	} elsif ( $operator eq 'exists' ) {
-		return ( $value ? ' EXISTS ' : 'NOT EXISTS ' ).$field;
 	} elsif ( $operator eq 'lc' ) {
 		return 'lower('.$field.$type.') = ?', $value;
 	} elsif ( $operator eq 'uc' ) {
@@ -1387,8 +1385,8 @@ sub Object {
 		$_[0]{object_id} = $_[1]{id};
 	} # end if
 	my $type =  $_[0]->object_type();
-	if ( ! $type ) {
-		$log->error("No type in Object::Object". $_[0]->to_string());
+	if ( !$type ) {
+		$log->error('No type in Object::Object'. $_[0]->to_string()) if ref $_[0] ne 'openprint::Log';
 		return undef;
 	} # end if
 	my ( $module ) = $type =~ /openprint::(.*)/;
