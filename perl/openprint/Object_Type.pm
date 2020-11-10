@@ -22,12 +22,12 @@ $default_sort	=	'lower(name)';
 
 sub Object {
 	if ( $_[0]{name} ) {
+    my $name = $_[0]{name};
+    $name =~ s/::/\//g;
     eval {
-      my $name = $_[0]{name};
-      $name =~ s/::/\//g;
       require $name.'.pm';
     };
-		$openprint::log->error("failed requiring $file $@") if $@;
+		$openprint::log->error("failed requiring $name $@") if $@;
   	return $_[0]{name}->new($_[1]);
 	}
 	my ($caller, undef, $line) = caller;
