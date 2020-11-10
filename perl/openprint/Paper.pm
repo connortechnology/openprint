@@ -1883,7 +1883,7 @@ $openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil
 				) 
 		 ) {
 $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
-		push @results, 'may have wrong basis size. Should probably be 20x26' .
+		push @results, 'may have wrong basis size '.$Paper->basis_width() . 'x' . $Paper->basis_height().'. Should probably be 20x26' .
 ssi::button('fix'.$$Paper{id}, { onclick=>q`set_basis_dimensions('20','26');`, text=>'Fix' } );
 ;
 	}
@@ -1895,8 +1895,18 @@ ssi::button('fix'.$$Paper{id}, { onclick=>q`set_basis_dimensions('20','26');`, t
 				) 
 		 ) {
 $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
-		push @results, 'may have wrong basis size. Should probably be 17x22';
+		push @results, 'may have wrong basis size '.$Paper->basis_width() . 'x' . $Paper->basis_height().'. Should probably be 17x22';
 	}
+  if ( $Paper->is_envelope() 
+			and (
+				($Paper->basis_width() != 17) 
+				or 
+				($Paper->basis_height() != 22)
+				) 
+  ) {
+$openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
+		push @results, 'may have wrong basis size '.$Paper->basis_width() . 'x' . $Paper->basis_height().'. Should probably be 17x22';
+  }
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
     push @results, 'appears to be C1S, but is marked double sided.';
   }
@@ -1935,6 +1945,15 @@ sub is_bond {
 			$Paper->finish() =~ /bond/i
 			or 
 			$Paper->weight() =~ /bond/i);
+}
+sub is_envelope {
+	my $Paper = shift;
+	return 
+			($Paper->brand() =~ /envelope/i
+			 or
+			$Paper->finish() =~ /envelope/i
+			or 
+			$Paper->weight() =~ /envelope/i);
 }
 
 1;
