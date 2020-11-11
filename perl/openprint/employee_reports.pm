@@ -352,7 +352,7 @@ sub _order_history_results {
 		( map { 'printed_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'printed_on_end_'.$_ } ( 'year','month','day' ) ),
 		'status', 'company_id', 'CSR', 'reprint', 'currency_id', 'total_start', 'total_end',
-		'servicetype_id', 'servicetype_category_id',
+		'servicetype_id', 'servicetype_category_id', 'pos', 'fsc',
 	);
 
 	my @ServiceTypes = @{$variable{ServiceTypes}} = openprint::ServiceType->find(order=>'lower(description)');
@@ -452,6 +452,11 @@ sub _order_history_results {
 				next if ( $param{reprint} eq 'Y' ) and ! $reprint;
 				next if ( $param{reprint} eq 'N' ) and $reprint;
 			} # end if reprint
+
+			if ( $param{fsc} ne '' ) {
+				next if ( $param{fsc} == 1 ) and ! $Order->is_fsc();
+				next if ( $param{fsc} == 0 ) and $Order->is_fsc();
+			}
 
 			my @printed_on_start = map{ @session{$uri.'?printed_on_start_'.$_} } ( 'year','month','day' );
 			my $printed_on_start = join('-', @printed_on_start) if Date::Calc::check_date(@printed_on_start);

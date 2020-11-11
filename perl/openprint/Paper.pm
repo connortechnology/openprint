@@ -1956,5 +1956,10 @@ sub is_envelope {
 			$Paper->weight() =~ /envelope/i);
 }
 
+sub is_fsc {
+	my $Paper = shift;
+	return $$Paper{fsc_code} || ($Paper->brand() =~ /fsc/i) || ($Paper->finish() =~ /fsc/i);
+}
+
 1;
 __END__

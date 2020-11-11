@@ -101,7 +101,7 @@ openprint::EmailCampaign->unlock();
 $dbh->disconnect();
 
 sub usage {
-print "email_scheduler.pl 'help', 'log_file=s', 'log_level=s',
+  print "email_scheduler.pl 'help', 'log_file=s', 'log_level=s',
     'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'config=s', 'campaign_id=s',\n";
 }

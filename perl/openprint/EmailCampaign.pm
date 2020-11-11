@@ -61,8 +61,8 @@ $serial = 'emailcampaigns_id_seq';
 		mailinglist	=>	1,
 );
 %transforms = (
-	email_text					=>	[ 's/^\s+//', 's/\s+$//' ],
-	email_html					=>	[ 's/^\s+//', 's/\s+$//' ],
+		email_text					=>	[ 's/^\s+//', 's/\s+$//' ],
+		email_html					=>	[ 's/^\s+//', 's/\s+$//' ],
 );
 
 sub destroy {
@@ -128,15 +128,15 @@ sub send_email {
 			my $EmailTemplate = $self->Template();
 			$email_template = $EmailTemplate->body();
 		} else {
-			$email_template = ssi::slurp_content( '/email_template.html' );
+			$email_template = ssi::slurp_content('/email_template.html');
 		} # end if
 
 		$$replacements{ReplacementText} = ssi::variable_substitution(\$$self{email_html}, $replacements);
-		$html_body = ssi::variable_substitution( \$email_template, $replacements ) if $$replacements{ReplacementText};
+		$html_body = ssi::variable_substitution(\$email_template, $replacements) if $$replacements{ReplacementText};
 	}
-	$text_body = ssi::variable_substitution( \$$self{email_text}, $replacements ) if $$self{email_text};
+	$text_body = ssi::variable_substitution(\$$self{email_text}, $replacements) if $$self{email_text};
 
-	my @attachments = eval $self->{attachments};
+	my @attachments = $self->{attachments} ? (eval $self->{attachments}) : ();
 	$openprint::log->warn('Eval error Reason: '.$@) if $@;
 
 	my $results = $Email->send(
@@ -152,14 +152,14 @@ sub send_email {
 		);
 		
 	if ( $$replacements{User} and $$replacements{User}->id() ) {
-		sql::insert( undef, undef, 'EmailCampaign_Sent', 
+		sql::insert(undef, undef, 'EmailCampaign_Sent', 
 				campaign_id =>	$self->{id},
 				emailsenton	=>	'NOW()',
 				numemailsent=> 1,
 				user_id	=>	$$replacements{User}->id(),
 				);
 	}
-	sql::insert( undef, undef, 'EmailCampaign_Log', 
+	sql::insert(undef, undef, 'EmailCampaign_Log', 
 			campaign_id =>	$self->{id},
 			Log=>			$results,
 			time=>				'NOW()',
@@ -186,11 +186,19 @@ sub send {
 	if ( $$self{recipients_per_run} ) {
 		$query .= ' LIMIT ' . int($$self{recipients_per_run});
 	}
+	# We aren't filtering by timeofday.  Manual runs should ignore it, we filter by it in email_scheduler.pl
+
 	$openprint::log->debug("SQL query $query");
 	my @mail_user_ids = sql::execute(undef, undef, $query);
 	$results .= 'There are '.(scalar @mail_user_ids)." users that fit the campaign<br/>\n";
 
-	@$self{nextrun} = sql::execute(undef, undef, 'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{id}) if $$self{interval};
+	if ( $$self{timeofday} ) {
+		@$self{nextrun} = sql::execute(undef, undef,
+				"SELECT date(NOW()+interval) + '$$self{timeofday}'::time FROM emailcampaigns WHERE id=?", $$self{id}) if $$self{interval};
+	} else {
+		@$self{nextrun} = sql::execute(undef, undef,
+				'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{id}) if $$self{interval};
+	}
 
 	#$self->{log}->info("There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n");
 
@@ -249,12 +257,12 @@ sub send {
 		if ( $$self{mailinglist} and $User->mailinglist() and ($User->mailinglist() eq 'N') ) {
 			$results .= sprintf(
 					'<span class="error">NOT Sending Email to: %s at %s : they have chosen to not receive email.</span><br/>',
-					$replacements{User}->link_to(),$replacements{User}->email()
+					$replacements{User}->link_to(), $replacements{User}->email()
 					);
 			next;
 		} # end if
 
-		my $addr = Email::Valid->address( $replacements{User}->email() );
+		my $addr = Email::Valid->address($replacements{User}->email());
 
 		if ( ( !$addr ) or ( $addr ne $replacements{User}->email() ) ) {
 			$results .= sprintf(
@@ -341,14 +349,15 @@ sub test {
 		return 'No body.  Not sending<br/>';
 	} # end if
 
-	my $addr = Email::Valid->address( $replacements{User}->email() );
+	my $addr = Email::Valid->address($replacements{User}->email());
 	if ( ( ! $addr ) or ( $addr ne $replacements{User}->email() ) ) {
 		return sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>', $replacements{User}->get('firstname','lastname','email') );
 	} else {
-		$self->send_email( \%replacements );
-		return sprintf('Sending Email to: %s %s at %s<br/>',$replacements{User}->get('firstname','lastname','email') );
+		$self->send_email(\%replacements);
+		return sprintf('Sending Email to: %s %s at %s<br/>',
+				$replacements{User}->get('firstname','lastname','email'));
 	} # end if email is valid
-}
+} # end sub test
 
 sub trial {
 	my ( $self ) = @_;
@@ -359,15 +368,15 @@ sub trial {
 	# this campaign
 	my @mail_user_ids = sql::execute($openprint::log, $openprint::dbh, $self->{query});
 
-	$results .= "There are ".@mail_user_ids." users that fit the campaign<br/>";
+	$results .= 'There are '.@mail_user_ids.' users that fit the campaign<br/>';
 	my %replacements;
 	my $body = $self->{email_text};
 	foreach my $user_id ( @mail_user_ids ) {
 # de we need to send this email?
 		$replacements{User} = new openprint::User($user_id);
-		$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
-		if ( ! $replacements{ReplacementText} ) {
-			$results .= 'No body.  Not sending<br/>';
+		$replacements{ReplacementText} = ssi::variable_substitution(\$body, \%replacements);
+		if ( !$replacements{ReplacementText} ) {
+			$results .= 'No body. Not sending<br/>';
 			next;
 		} # end if
 
@@ -395,7 +404,7 @@ sub trial {
 } # end sub trial
 
 sub Template {
-	return new openprint::EmailTemplate( $_[0]->template_id() );
+	return new openprint::EmailTemplate($_[0]->template_id());
 } # end sub Template
 
 sub url_to {
@@ -407,23 +416,24 @@ sub link_to {
 
 sub can_view {
 	if ( $openprint::session{user_type} eq 'A' ) {
-		$openprint::log->debug("Can view because admin");
+		$openprint::log->debug('Can view because admin');
 		return 1 ;
 	}
 	if ( ! $_[0]{user_id} ) {
-		$openprint::log->debug("Can view because no user_Id assigned");
+		$openprint::log->debug('Can view because no user_id assigned');
 		return 1;
 	}
 	if ( $openprint::session{user_id} == $_[0]{user_id} ) {
-		$openprint::log->debug("Can view because user_Id matches");
+		$openprint::log->debug('Can view because user_Id matches');
 		return 1;
 	}
-	if ( ! $_[0]{id} ) {
-		$openprint::log->debug("Can view because no Id");
+	if ( !$_[0]{id} ) {
+		$openprint::log->debug('Can view because no Id');
 		return 1;
 	}
 	return 0;
 }
+
 sub Owner {
 	return new openprint::User($_[0]{user_id});
 }

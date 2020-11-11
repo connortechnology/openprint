@@ -59,10 +59,9 @@ sub edit {
 				while (<$io>) {
 					my $status = $csv->parse($_);
 					my ( $name, $description, $category, $activity_code, $manufacturer, $supplier, $tax1, $tax2 ) = misc::trim( $csv->fields() );
-	$log->debug("$name, $description, $category, $activity_code, $manufacturer, $supplier, $tax1, $tax2");
 					next if $name eq '';
 					if ( $Materials{$name} ) {
-						$error .= "Not importing $name because it already exists at " . $Materials{$name}->link_to().'<br/>';
+						$error .= 'Not importing '.$name.' because it already exists at '.$Materials{$name}->link_to().'<br/>';
 						next;
 					}
 					my $Material = new openprint::Material();
@@ -112,9 +111,9 @@ sub edit {
 				return if $variable{error};
 			} # end if
 			my $ac = sql::start_transaction( $dbh );
-			my @Pricelists = openprint::Pricelist->find( );
+			my @Pricelists = openprint::Pricelist->find();
 			my @Prices = openprint::MaterialPrice->find( material_id=>$Material->id() );
-			my @Equipment = map { $_ ? new openprint::Equipment($_) : () } sets::union( map { $_->equipment_id() } @Prices );
+			my @Equipment = map { new openprint::Equipment($_) } sets::union( map { $_->equipment_id() } @Prices );
 
 			# This adds entries for the blank new line, but since the checkbox won't be checked they won't have effect
 			my @NewPrices;
@@ -123,7 +122,7 @@ sub edit {
 					my $NewPrice = new openprint::MaterialPrice();
 					$NewPrice->set({
 							pricelist_id=>$$Pricelist{id},
-							equipment_id=>($$Equipment{id}?$$Equipment{id}:''),
+							equipment_id=>$$Equipment{id},
 							material_id=>$$Material{id}
 							});
 					push @NewPrices,$NewPrice;
@@ -132,34 +131,36 @@ sub edit {
 
 			my @pricing_changes;
 			foreach my $Price ( @Prices, @NewPrices ) {
-				if ( ! $param{"chk-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"} ) {
+				if ( ! $param{join('-',('chk',$$Price{pricelist_id},($$Price{equipment_id}?$$Price{equipment_id}:''),
+								($$Price{id}?$$Price{id}:'')
+								))} ) {
 					if ( $$Price{id} ) {
 						$Price->delete();
 						push @pricing_changes, 'Delete price: ' . $Price->to_string();
 					}
 				} else {
-					my @price_changes = $Price->changes( {
-							equipment_id	=>	$param{"ddmEquipment-$$Price{pricelist_id}-$$Price{equipment_id}"},
-							min				=>	$param{"min-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-							max				=>	$param{"max-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-							units			=>	$param{"units-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-							cost			=>	$param{"cost-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-							markup			=>	$param{"markup-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-							price			=>	$param{"price-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-							discountable		=>	$param{"discountable-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-							} );
+					my %data = (
+							equipment_id => $param{join('-', 'equipment_id', $$Price{pricelist_id}, ($$Price{equipment_id}?$$Price{equipment_id}:''))},
+									( map { $_ => $param{join('-', $_,
+											$$Price{pricelist_id},
+											($$Price{equipment_id}?$$Price{equipment_id}:''),
+											($$Price{id}?$$Price{id}:'')
+											)} } qw(
+												min					
+												max					
+												units				
+												cost				
+												markup			
+												price				
+												discountable
+												)
+									)
+									);
+		
+					my @price_changes = $Price->changes( \%data );
 
 					if ( @price_changes ) {
-						if ( $Price->set( {
-									equipment_id	=>	$param{"ddmEquipment-$$Price{pricelist_id}-$$Price{equipment_id}"},
-									min				=>	$param{"min-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-									max				=>	$param{"max-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-									units			=>	$param{"units-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-									cost			=>	$param{"cost-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-									markup			=>	$param{"markup-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-									price			=>	$param{"price-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-									discountable	=>	$param{"discountable-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-									} ) ) {
+						if ( $Price->set(\%data) ) {
 							$_ = $Price->save();
 							if ( $_ ) {
 								$variable{error} .= $_;
@@ -168,8 +169,8 @@ sub edit {
 							} # end if
 						} # end if
 						push @pricing_changes, @price_changes;
-					} # end if
-				} # end if
+					} # end if price_changes
+				} # end if delete
 			} # end foreach Price
 			push @changes, @pricing_changes;
 
@@ -179,7 +180,7 @@ sub edit {
 				$New->set( { material_id=>$Material->id() } );
 				foreach my $Spec ( $Material->Specifications(), $New ) {
 
-					if ( $param{"txtSpecificationName$$Spec{id}"} ) {
+					if ( $param{'txtSpecificationName'.($$Spec{id} ? $$Spec{id} : '')} ) {
 						my @spec_changes = $Spec->changes({
 								equipment_id	=>	$param{'spec_equipment_id-'.$$Spec{id}},
 								min				=>	$param{'txtSpecificationMin'.$$Spec{id}},
@@ -204,7 +205,7 @@ sub edit {
 						} # end if
 					} elsif ( $Spec->id() ) {
 						$variable{error} .= $Spec->delete();
-						push @specs_changes, "Delete specification: " . $Spec->to_string();
+						push @specs_changes, 'Delete specification: '.$Spec->to_string();
 					} # end if key
 					if ( $variable{error} ) {
 						$dbh->rollback();
@@ -213,7 +214,7 @@ sub edit {
 				} # end foreach
 			} # end if
 			push @changes, @specs_changes;
-			(new openprint::Log())->save({action=>'Save Material', Object=>$Material, note=>join('<br/>', @changes ) } );
+			(new openprint::Log())->save({action=>'Save Material', Object=>$Material, note=>join('<br/>', @changes)}) if @changes;
 			sql::end_transaction( $dbh, $ac );
 			if ( ! $variable{error} ) {
 				$variable{ExternalRedirect} = '/administrator/materials/edit.html?ddmMaterial='.$Material->id();
