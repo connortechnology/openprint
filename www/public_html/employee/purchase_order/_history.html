@@ -230,6 +230,7 @@
 			} # end if
 
 			my $qty = misc::sum( map { ( (!($$variable{types} and %{$$variable{types}})) or $$variable{types}{$_->type_id()} ) ? $_->qty() : 0 } $PO->Contents() );
+			my %statuses = ( cancelled => 'Cancelled', do_not_pay=>'Do Not Pay', is_paid=>'Paid' );
 
 			$html .= sprintf( q`
 				<td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td>
@@ -246,7 +247,7 @@
 				$PO->cancelled() ? 'CANCELLED' : ( $PO->can_see_pricing() ? openprint::Currency::format($total) : '' ), 
 				( ( $PO->authorized() and ! $PO->authorized_by() ) ? 'Authorized' : $PO->Authorized_By()->name() ),
 				$PO->Manifest()->name(),
-				join(' ', map { $PO->$_() ? $_ : () } ( 'cancelled','do_not_pay' ) ),
+				join(' ', map { $PO->$_() ? $statuses{$_} : () } keys %statuses ),
 				join('<br/>', sets::exclude( [''], [ sets::union( map { $_->docket() } $PO->Contents() ) ] ) ),
 				Number::Format::format_number( $qty ),
 				);
