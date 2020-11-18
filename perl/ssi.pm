@@ -529,6 +529,11 @@ sub button {
 		} # end if
 		my $PageSetting = openprint::Page_Setting::get($href);
 		return if $PageSetting and ! $PageSetting->can_view();
+    if ( ! $$options{onclick} ) {
+      $$options{onclick} = 'window.location.href=\''.$$options{href}.'\';return false;';
+      undef $$options{href};
+      $$options{type} = 'button';
+    }
 	#} else {
 		#$$options{href} = '#';
   } elsif ( ! $$options{type} ) {
@@ -536,9 +541,8 @@ sub button {
     $$options{type} = 'button';
 	} # end if
 	$$options{text} = $name if ! exists $$options{text};
-	my $html = $$options{type} ?
-		qq`<button id="Button$name" class="button $$options{class}" type="$$options{type}"` :
-		qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
+	my $html = 
+		qq`<button id="Button$name" class="button $$options{class}" type="$$options{type}"` ;
 	$html .= qq`name="$$options{name}" ` if $$options{name};
 	$html .= qq`value="$$options{value}" ` if $$options{value};
 	$html .= qq`title="$$options{title}" ` if $$options{title};
