@@ -101,8 +101,8 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 
 					$html .= sprintf('<td class="Date">%s</td>', $Timetrack->Employee()->link_to() );
 					$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
-					$html .= '<td class="PO">'.html_escape( $Timetrack->po() ) . '</td>';
-					$html .= sprintf('<td class="Interval">%s</td>', $Timetrack->elapsed_formatted()); 
+					$html .= '<td class="PO">'.html_escape($Timetrack->po()) . '</td>';
+					$html .= '<td class="Interval">'.$Timetrack->elapsed_formatted().'</td>';
 					my $Price = $Timetrack->Price();
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
