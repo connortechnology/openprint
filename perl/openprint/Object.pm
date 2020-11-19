@@ -35,7 +35,7 @@ sub init_cache {
 	if ( @_ ) {
 		if ( ! $name_cache{$_[0]} ) {
 			my @items = $_[0]->find();
-	$log->debug("init_cache of $_[0] # of items: " . @items );
+      $log->debug('init_cache of '.$_[0].' # of items: '.@items) if DEBUG_CACHE;
 			foreach ( @items ) {
 				$name_cache{$_[0]}{$$_{$_->cache_field()}} = $_;
 			} # end foreach
@@ -95,12 +95,12 @@ sub new {
 			if ( $data ) {
 				my $self = $$sub_cache{$id};
 				# The reason to use load is if we have overriden it in the object, like in Paper
-				$self->load( $data );
+				$self->load($data);
 $log->debug("Loading object $parent $id from cache and populating with data new objcet is $self old cache is " . $$sub_cache{$id}) if DEBUG_CACHE;
 				return $self;
 			} else {
-				$log->debug("Loading from cache $parent $id = ". $$sub_cache{$id}) if DEBUG_CACHE;
-# If the object is cached
+				$log->debug('Loading from cache '.$parent.' '. $id.' = '.$$sub_cache{$id}) if DEBUG_CACHE;
+        # If the object is cached
 				return $$sub_cache{$id};
 			}
 		} elsif ( DEBUG_CACHE ) {
@@ -111,7 +111,7 @@ $log->debug("Loading object $parent $id from cache and populating with data new 
 #$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
 				#$self->load( $data );
 			#} # end if
-			$log->debug("from $caller:$line no ref, $parent id: $id, dont_cache: $dont_cache sub $sub_cache $$sub_cache{$id}");
+			$log->debug("not cached from $caller:$line no ref, $parent id: $id, dont_cache: ".(defined($dont_cache)?$dont_cache:'undef').' sub '.$sub_cache.' '.$$sub_cache{$id}) if $id;
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
@@ -346,7 +346,7 @@ sub save {
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
-				(new openprint::Log())->save({Object=>$self, action=>'Created'}) if ! ( $type =~ /Log/i );
+				(new openprint::Log())->save({Object=>$self, action=>'Created'}) if $type !~ /Log/i;
 			} # end if
       if ( ! ( $type =~ /Log/i ) ) {
         my ( $caller, undef, $line ) = caller;
@@ -378,14 +378,15 @@ sub save {
 		} # end if
 	} # end if
 	sql::end_transaction( $local_dbh, $ac );
-	$self->load();
+  # This is wasteful. Might be needed to pick up default values but that seems like a bad idea.
+  #$self->load();
 	if ( $$fields{id} ) {
-		if ( ! $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} ) {
-$log->debug('Setting cached object to '.$self.' : ' . $self->to_string()) if $debug or DEBUG_ALL;
+    if ( ! $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} ) {
 			$openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} = $self;
-		} # end if
-	#delete $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}};
+    } # end if
 	} # end if
+
+  # Isn't this inefficient?
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 	return '';
 } # end sub save
@@ -1068,7 +1069,7 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 		} # end if is in cache or not
 	} else {
 		$do_cache = 0;
-		$log->debug("Not doing caching for $object_type using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL or DEBUG_CACHE;
+		$log->debug("Not doing caching for $object_type using $cache_field with params ".($cache_field?$$params{$cache_field}:'')) if DEBUG_ALL or DEBUG_CACHE;
 	} # end if
 
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
@@ -1380,13 +1381,15 @@ sub object_type {
 } # end sub object_type
 
 sub Object {
-	if ( @_ > 1 ) {
-		$_[0]->object_type( ref $_[1] );
-		$_[0]{object_id} = $_[1]{id};
+  my $self = shift;
+	if ( @_ ) {
+		$self->object_type( ref $_[0] );
+		$$self{object_id} = $_[0]{id};
+    $$self{Object} = $_[0];
 	} # end if
-	my $type =  $_[0]->object_type();
+	my $type =  $self->object_type();
 	if ( !$type ) {
-		$log->error('No type in Object::Object'. $_[0]->to_string()) if ref $_[0] ne 'openprint::Log';
+		$log->error('No type in Object::Object'. $self->to_string()) if ref $self ne 'openprint::Log';
 		return undef;
 	} # end if
 	my ( $module ) = $type =~ /openprint::(.*)/;
@@ -1394,9 +1397,12 @@ sub Object {
 		eval {
 			require "openprint/$module.pm";
 		};
-		$_ = $type->new( $_[0]{object_id} );
-		$openprint::log->debug( 'Returning object of type ' . ref $_ ) if $debug;
-		return $_;
+    if ( ! $$self{Object} ) {
+      $_ = $type->new($$self{object_id});
+      $openprint::log->debug( 'Returning object of type ' . ref $_ ) if $debug;
+      $$self{Object} = $_;
+    }
+		return $$self{Object};
 	} else {
 		$log->error("Unvalid object $type");
 		return new openprint::Object();
