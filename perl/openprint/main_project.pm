@@ -122,10 +122,12 @@ sub view {
 		$session{ShowAllSignatures} = $param{ShowAllSignatures};
 	} # end if
 	$variable{ProjectIndex} = $project_id;
-	my $Project = $variable{Project} = new openprint::Project( $project_id );
+	my $Project = $variable{Project} = new openprint::Project($project_id);
 	my $save = 0;
+  # A new project will have no quantities, so no quantity_indexes, so this is an error check
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $$Project{'price'.$qty_index} != $Project->price($qty_index,undef) ) {
+      $log->error("Prices have changed in project $project_id");
 			$save = 1;
 			last;
 		} # end if
