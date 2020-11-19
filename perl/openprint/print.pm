@@ -34,12 +34,13 @@ sub view_services {
 			$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, \%variable );
 			return if $variable{Redirect}; # Redirects on error
 			my $Project = new openprint::Project( $project_index );
+      $openprint::log->debug($Project->to_string());
 			my $services = $Project->services();
 # We already did recalc in create_edit_process... aug 6 2019
 			#my $s = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 			#$log->debug("*** After Time to Save Project - View Services Function *** $project_index $session{project_id}");
 			# Display any resulting uncalculated services
-			openprint::print_project::continue_project( $log, $dbh, \%variable, $project_index );
+			openprint::print_project::continue_project($Project);
 			return if $variable{ExternalRedirect};
 		} elsif ( $param{btnFunction} eq 'Delete Project' ) {
 			$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $project_index );
@@ -140,9 +141,9 @@ sub view_services {
 		
 				$Project->summary(undef);
 				$Project->save( { calculated_on => 'NOW()' } );
-				openprint::print_project::continue_project( $log, $dbh, \%variable, $project_index );
+				openprint::print_project::continue_project($Project);
 				return if $variable{ExternalRedirect};
-			} elsif ( $param{'btnFunction'} eq 'Modify Project' ) {
+			} elsif ( $param{btnFunction} eq 'Modify Project' ) {
 				my $service_name = $param{txtServiceName} ? $param{txtServiceName} : 'Adjustment';
 				my $CurrentCurrency = openprint::Currency::get_current();
 				my $ProjectCurrency = $Project->Currency();
@@ -178,13 +179,13 @@ sub view_services {
 				$session{project_id} = $project_index;
 				$Project->currency_id( $session{Currency_id} );
 				$Project->recalculate();
-				openprint::print_project::continue_project( $log, $dbh, \%variable, $project_index );
+				openprint::print_project::continue_project($Project);
 				return if $variable{ExternalRedirect};
 			} elsif ( $param{btnFunction} eq 'Continue Project' ) {
 				$session{project_id} = $project_index;
 				$Project->currency_id( $session{Currency_id} );
 				$Project->recalculate();
-				openprint::print_project::continue_project( $log, $dbh, \%variable, $project_index );
+				openprint::print_project::continue_project($Project);
 				return if $variable{ExternalRedirect};
 			} elsif ( $param{btnFunction} eq 'Reuse Project' ) {
 				$project_index = openprint::print_project::reuse_project( $project_index );
@@ -233,10 +234,9 @@ sub view_services {
 			return;
 		} # end if
 
-		if ( $param{'ContinueProject'} and $param{'ContinueProject'} ne 'Incomplete Form' ) {
-			$log->debug("*** Continue Project called From View Services ( view.html ) Function ***");
-			openprint::print_project::continue_project( $log, $dbh, \%variable, $project_index );
-			return if $variable{ExternalRedirect};
+		if ( $param{ContinueProject} and $param{ContinueProject} ne 'Incomplete Form' ) {
+			$log->debug('*** Continue Project called From View Services ( view.html ) Function ***');
+			openprint::print_project::continue_project($Project);
 		} # end if 
 	} # end if can_edit
 
