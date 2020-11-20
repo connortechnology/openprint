@@ -2,6 +2,7 @@
 	my $html;
 	@{$$variable{pending_drops}} = ();
 	if ( $session{$$variable{referer}.'?pending'} ) {
+		$html .= q`<h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $('f1'));">Pending (click to hide):</h3>`;
 		my $Shift = new openprint::Shift();
 		$Shift->name('Pending');
 
@@ -11,11 +12,14 @@
 			$html .= '<div class="PressColumn">';
 			$Shift->equipment_id( $$E{id} );
 			push @{$$variable{pending_drops}}, $Shift->ul_id();
-			$html .= $Shift->get_ul( {Status=>['','In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete','Pending Deposit']});
+			$html .= $Shift->get_ul( {
+					Status=>['','In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete','Pending Deposit']});
 			$html .= '</div>';
 		} # end foreach Equipment
 
-		sql::end_transaction( $dbh, $ac );
+		sql::end_transaction($dbh, $ac);
+	} else {
+	$html .= q`<h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $('f1'));">Pending (click to show):</h3>`;
 	} # end if 
 	return $html;
 ) ?>

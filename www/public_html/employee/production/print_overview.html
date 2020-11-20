@@ -396,14 +396,19 @@ $log->debug("LastShift $$LastShift{endtime} < $et");
 		$html .= q`
 <div class="unprintable">
   <hr class="spacer"/>
-  <h3 onclick="LoadContent('PendingApproved', '/employee/production/_pending_approved.html', $('f1'));">Pending Approved (click to hide/unhide):</h3>
   <div class="PendingApproved">
     <div id="PendingApproved">`;
 		$html .= include( '/employee/production/_pending_approved.html' );
 		$html .= '</div></div></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $('f1'));">Pending (click to hide/unhide):</h3><div class="Pending"><div id="Pending">`;
-		$html .= include( '/employee/production/_pending.html' );
-		$html .= '</div></div></div>';
+		$html .= q`
+<div class="unprintable">
+	<hr class="spacer"/>
+	<div class="Pending"><div id="Pending">
+`
+	. include( '/employee/production/_pending.html' ).
+		'</div>
+  </div>
+</div>';
 		return $html;
 	) ?>
 </form>
