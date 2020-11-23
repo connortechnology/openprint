@@ -21,32 +21,37 @@
 <li class="stocksize">
 	<label><? echo ( writeTip('Stock size'); ) ?></label>
 <? echo (
-	my @options = misc::trim( split(',', $config{$$variable{Project}->Type()->name().'StockOptions'} ));
-    @options = misc::trim( split(',', $config{StockOptions} )) if ! @options;
-    @options = ( 'Brand','Finish','Colour','Weight' ) if ! @options;
+	my @sizes;
+	if ( $$variable{rdbSpecificStock} and ( $$variable{rdbSpecificStock} eq 'Y' ) ) {
+		@sizes = ($$variable{txtSpecificStockWidth}.'x'.$variable{txtSpecificStockHeight});
+	} else {
+		my @options = misc::trim( split(',', $config{$$variable{Project}->Type()->name().'StockOptions'} ));
+		@options = misc::trim( split(',', $config{StockOptions} )) if ! @options;
+		@options = ( 'Brand','Finish','Colour','Weight' ) if ! @options;
 
-    my %find = (
-        'width is null'			=>	0,
-        'project_type_id any'   =>	$$variable{Project}->type_id(),
-        ( $variable{Supplied} ? ( 'supplied'          =>  [ undef, $variable{Supplied} ] ) : () ),
-        );
-	foreach ( @options ) {
-		if ( $$variable{'ddmStock'.$_} ) {
-			$find{lc $_} = $$variable{'ddmStock'.$_};
-		} # end if
-	} # end foreach
-	my @Stocks = openprint::Paper->find( %find );
-	my @sizes = sort {
-			my ( $a_w, $a_h ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
-			my ( $b_w, $b_h ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
-			if ( $a_w != $b_w ) {
-			return $a_w <=> $b_w;
-			}
-			if ( $a_h != $b_h ) {
-			return $a_w <=> $b_w;
-			}
-			return $a <=> $b;
-	} sets::union( map { $_->width().( $_->height() ? 'x'.$_->height() : '' ) } @Stocks );
+		my %find = (
+				'width is null'			=>	0,
+				'project_type_id any'   =>	$$variable{Project}->type_id(),
+				( $variable{Supplied} ? ( 'supplied'          =>  [ undef, $variable{Supplied} ] ) : () ),
+				);
+		foreach ( @options ) {
+			if ( $$variable{'ddmStock'.$_} ) {
+				$find{lc $_} = $$variable{'ddmStock'.$_};
+			} # end if
+		} # end foreach
+		my @Stocks = openprint::Paper->find( %find );
+		@sizes = sort {
+				my ( $a_w, $a_h ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+				my ( $b_w, $b_h ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+				if ( $a_w != $b_w ) {
+				return $a_w <=> $b_w;
+				}
+				if ( $a_h != $b_h ) {
+				return $a_w <=> $b_w;
+				}
+				return $a <=> $b;
+		} sets::union( map { $_->width().( $_->height() ? 'x'.$_->height() : '' ) } @Stocks );
+	} # end if specific or not
 
 	my $html = '';
 	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
