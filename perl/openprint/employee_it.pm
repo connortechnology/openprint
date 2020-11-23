@@ -236,8 +236,13 @@ sub host {
         $variable{error} .= 'Failed to get content. ';
       }
     } elsif ( $param{action} eq 'Wake' ) {
+      my @Interfaces = $Host->Interfaces();
+      $variable{error} .= 'There are no interfaces to wake on<br/>' if ! @Interfaces;
       foreach my $I ( $Host->Interfaces() ) {
-        next if ! $I->mac();
+        if (! $I->mac() ) {
+          $variable{information} .= 'Not waking by '.$I->ip().' because no mac address<br/>';
+          next;
+        }
 				my ( $error, $info ) = $I->wake();
 				$variable{error} .= $error;
 				$variable{information} .= $info;
