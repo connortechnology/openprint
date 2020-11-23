@@ -806,21 +806,12 @@ sub _host_actions {
 } # end sub _host_actions
 
 sub backups {
-  _hosts();
+  _backups();
   my $uri = $r->uri();
   ssi::setup_date_select( $uri, 'created_on_start', '' );
   ssi::setup_date_select( $uri, 'created_on_end', '' );
   ssi::setup_date_select( $uri, 'updated_on_start', '' );
   ssi::setup_date_select( $uri, 'updated_on_end', '' );
-  if ( ! exists $session{$uri.'?has_hostname'} ) {
-    $session{$uri.'?has_hostname'} = 1;
-  } # end if
-  if ( ! exists $session{$uri.'?assigned'} ) {
-    $session{$uri.'?assigned'} = 1;
-  } # end if
-  if ( ! exists $session{$uri.'?notassigned'} ) {
-    $session{$uri.'?notassigned'} = 1;
-  } # end if
 }
 
 sub _backups {
@@ -833,7 +824,7 @@ sub _backups {
       %param = ();
     } # end if
   } # end if
- ssi::save_params( '/employee/it/backups.html',
+  ssi::save_params( '/employee/it/backups.html',
       'created_on_start_year', 'created_on_start_month', 'created_on_start_day',
       'created_on_end_year', 'created_on_end_month', 'created_on_end_day',
       'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day',
@@ -842,8 +833,8 @@ sub _backups {
       'name','type',
       'order', 'deleted', 'owner_id',
       );
-
 }
+
 sub backup {
   my $Backup = $variable{Backup} = new openprint::Backup( $param{backup_id} );
   if ( $param{action} ) {
