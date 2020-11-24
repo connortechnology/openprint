@@ -764,7 +764,7 @@ EQUIPMENT: foreach my $Equipment ( @my_equipment ) {
 
     my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
     $sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
-    $sheets *= $$sig_specs{'PageQuantity'.$qty_index} if ($$sig_specs{txtSignatureType} eq 'Pad Pages') and $$sig_specs{'PageQuantity'.$qty_index};
+    $sheets *= $$sig_specs{'PageQuantity'.$qty_index} if ($$sig_specs{txtSignatureType} and ($$sig_specs{txtSignatureType} eq 'Pad Pages')) and $$sig_specs{'PageQuantity'.$qty_index};
 
     if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
       if ( $$Spec{units} eq 'Sheets' ) {
