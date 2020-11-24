@@ -1,22 +1,20 @@
 <? eval (
+  my $uri = '/employee/it/backups.html';
 	my @Backups;
 
-  $session{'/employee/it/backups.html?order'} = 'lower(name)' if ! $session{'/employee/it/backups.html?order'};
+  $session{$uri.'?order'} = 'lower(name)' if ! $session{$uri.'?order'};
   @Backups = openprint::Backup->find(
-    order	=> $session{'/employee/it/backups.html?order'} ? $session{'/employee/it/backups.html?order'} : 'lower(name)',
-    ( $session{'/employee/it/backups.html?name'} ? ( 'name ilike' => ( $session{'/employee/it/backups.html?name'} =~ /%/ ? $session{'/employee/it/backups.html?name'} : $session{'/employee/it/backups.html?name'}.'%' ) ) : () ),
-    ( $session{'/employee/it/backups.html?blacklisted'} ne '' ? ( blacklist=>$session{'/employee/it/backups.html?blacklisted'} ) : () ),
-    ( $session{'/employee/it/backups.html?whitelisted'} ne '' ? ( whitelist=>$session{'/employee/it/backups.html?whitelisted'} ) : () ),
-    ( $session{'/employee/it/backups.html?monitored'} ne '' ? ( monitored=>$session{'/employee/it/backups.html?monitored'} ) : () ),
-    ( $session{'/employee/it/backups.html?online'} ne '' ? ( online=>$session{'/employee/it/backups.html?online'} ) : () ),
-    ( $session{'/employee/it/backups.html?has_name'} ne '' ? ( 'name is null' => ! $session{'/employee/it/backups.html?has_name'} ) : () ),
-    ( $session{'/employee/it/backups.html?type'} ne '' ? ( type => $session{'/employee/it/backups.html?type'} ) : () ),
-    ( $session{'/employee/it/backups.html?owner_id'} ne '' ? ( owner_id => $session{'/employee/it/backups.html?owner_id'} ) : () ),
-    ( $session{'/employee/it/backups.html?deleted'} ? ( deleted=>$session{'/employee/it/backups.html?deleted'} ) : () ),
-    date_filter( '/employee/it/backups.html?created_on_end', 'created_on <=' ),
-    date_filter( '/employee/it/backups.html?created_on_start', 'created_on >=' ),
-    date_filter( '/employee/it/backups.html?updated_on_end', 'updated_on <=' ),
-    date_filter( '/employee/it/backups.html?updated_on_start', 'updated_on >=' ),
+    order	=> $session{$uri.'?order'} ? $session{$uri.'?order'} : 'lower(name)',
+    ( $session{$uri.'?name'} ? ( 'name ilike' => ( $session{$uri.'?name'} =~ /%/ ? $session{$uri.'?name'} : $session{$uri.'?name'}.'%' ) ) : () ),
+    ( $session{$uri.'?enabled'} ne '' ? ( enabled=>$session{$uri.'?enabled'} ) : () ),
+    ( $session{$uri.'?has_name'} ne '' ? ( 'name is null' => ! $session{$uri.'?has_name'} ) : () ),
+    ( $session{$uri.'?type'} ne '' ? ( type => $session{$uri.'?type'} ) : () ),
+    ( $session{$uri.'?owner_id'} ne '' ? ( owner_id => $session{$uri.'?owner_id'} ) : () ),
+    ( $session{$uri.'?deleted'} ? ( deleted=>$session{$uri.'?deleted'} ) : () ),
+    date_filter( $uri.'?created_on_end', 'created_on <=' ),
+    date_filter( $uri.'?created_on_start', 'created_on >=' ),
+    date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+    date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
     );
 
 	@{$$variable{Backups}} = @Backups;
@@ -28,6 +26,7 @@
 			<th class="name">Name</th>
 			<th class="hostname">Host</th>
 			<th class="type">Type</th>
+			<th class="enabled">Enabled</th>
 			<th class="Space">Disk Usage</th>
 			<th class="DateTime">Last Ran</th>
 		</tr>
@@ -45,14 +44,15 @@
 						<td class="name"><a href="/employee/it/backup.html?backup_id=%1$d">%2$s</a></td>
 						<td class="hostname"><a href="/employee/it/backup.html?backup_id=%1$d">%3$s</a></td>
 						<td class="type"><a href="/employee/it/backup.html?backup_id=%1$d">%4$s</a></td>
+						<td class="enabled"><a href="/employee/it/backup.html?backup_id=%1$d">%5$s</a></td>
 						<td class="Space"><a href="/employee/it/backup.html?backup_id=%1$d">%6$s</a></td>
 						<td class="DateTime"><a href="/employee/it/backup.html?backup_id=%1$d">%7$s</a></td>
           </tr>
 					', $Backup->id(), $Backup->name(), 
           $Host->hostname() . ' ' . ($Host->online() ? '<span class="online">online</span>' : '<span class="offline">offline</span>'),
           $openprint::Backup::types{$Backup->type()},
-          '',
-          Number::Format::format_bytes($Backup->size()),
+          ($Backup->enabled() ? 'yes':'no'),
+          ($Backup->size() ?Number::Format::format_bytes($Backup->size()) : '0'),
           format_datetime( $Backup->lastran_on() ),
 					$rowclass,
 					);
