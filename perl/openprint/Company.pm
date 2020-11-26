@@ -347,6 +347,7 @@ sub can_edit {
 	return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
 	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
 	return 1 if $_[0]{id} == $$openprint::User{company_id} and $$openprint::User{administrator} eq 'Y';
+	return 1 if $openprint::User->in_Group('Estimating') and ( $_[0]{id} != $$openprint::User{company_id} );
 	return 0;
 } # end sub can_edit
 

@@ -582,6 +582,7 @@ sub can_edit {
 	my $Company = new openprint::Company( $_[0]{company_id} );
 	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
 	return 1 if openprint::usergroup::exists('UserManagement') and openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{user_id} );
+	return 1 if $openprint::User->in_Group('Estimating') and ($_[0]{company_id} != $openprint::User{company_id});
 	return 0;
 } # end sub can_edit
 
@@ -591,6 +592,7 @@ sub can_view {
 	return 1 if ( $openprint::User->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
 	my $Company = new openprint::Company( $_[0]{company_id} );
 	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
+	return 1 if $_[0]->in_Group('Estimating') and ($_[0]{company_id} != $openprint::session{company_id});
 	require openprint::Blocklist;
 	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{id});
 	return 0;
