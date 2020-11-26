@@ -546,6 +546,8 @@ sub can_become {
 			( $$User{id} == $$C{salesrep_id} )
 			or
 			sets::isin( $$User{id}, $C->CSR()->assistant_ids() )
+			or
+			$User->in_Group('Estimating')
 		 ) {
 		return 1;
 	}
