@@ -47,7 +47,6 @@ var dropfunction = function(e, ui) {
 	//new Ajax.Request( '_drop.json', { method: 'post', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 }
 
-var drops = new Array();
 function setup_drops( ) {
 if ( 1 ) {
 	$j('.PressColumn ul').sortable({
