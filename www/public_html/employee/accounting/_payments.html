@@ -24,7 +24,7 @@
 				</tr>`, $rowclass, $Payment->id(),
 					format_date( $Payment->received_on() ),
 					$Payment->transaction_id(),
-					$Payment->method(), $Payment->memo(), openprint::Currency::format($Payment->amount()),
+					$Payment->method(), $Payment->memo(), $Payment->Currency()->format($Payment->amount()) . $Payment->Currency()->short(),
 					button('Delete'.$$Payment{id}, { onclick=>"confirm_delete( document.f1, '$$Payment{id}' );", text=> 'Delete' } ),
 				);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
