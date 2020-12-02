@@ -1081,8 +1081,8 @@ sub _bump_job {
 } # end sub _bump_job
 
 sub _pending_approved {
-	my ( $referer ) = $ENV{HTTP_REFERER} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
-	$variable{referer} = $referer;
+
+		my $referer = $variable{referer} = '/employee/production/print_overview.html';
 	ssi::save_params( $referer, ( 'Equipment','scale', 'show_feedback' ) );
 
 	$session{$referer.'?pending_approved'} = $session{$referer.'?pending_approved'} ? 0 : 1;
