@@ -108,6 +108,7 @@ sub init {
 	$Wheel = openprint::Material->find_one( name=>'ScoringWheel');
 
 	$ScoringService = openprint::Service->find_one(name=>'Scoring');
+	$ScoringWithoutFoldingService = openprint::Service->find_one(name=>'ScoringWithoutFolding');
 	$ScoringMakeReadyService = openprint::Service->find_one(name=>'ScoringMakeReady');
 }
 sub signature_needs {
@@ -703,10 +704,15 @@ sub get_price {
 
 	my %servicePrice;
 	if ( ( $type eq 'Folder' ) and ! $folding_service_index ) {
-		%servicePrice = openprint::service::get_price_object('ScoringWithoutFolding', $qty, $Equipment);
+		%servicePrice = $ScoringWithFoldingService->get_price($qty, $Equipment) if $ScoringWithFoldingService;
 		%servicePrice = $ScoringService->get_price($qty, $Equipment) if ( ! %servicePrice ) and $ScoringService;
-	} else {
-		%servicePrice = $ScoringService->get_price($qty, $Equipment) if $ScoringService;
+	} elsif ( $ScoringService ) {
+		%servicePrice = $ScoringService->get_price($qty, $Equipment);
+		if ( $servicePrice{units} eq 'scores' ) {
+			%servicePrice = $ScoringService->get_price($score_qty, $Equipment);
+		} else {
+			%servicePrice = $ScoringService->get_price($qty, $Equipment);
+		}
 	} # end if
 	$servicePrice{Total} = 0;
 
