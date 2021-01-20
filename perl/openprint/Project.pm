@@ -1956,9 +1956,11 @@ sub can_view {
 		return 1;
 	}
 
-	if ( sets::isin( $_[0]{user_id}, [ $openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
-		$log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
+	if ( sets::isin( $_[0]{user_id}, [ $$openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
+		$log->debug("$$openprint::User{firstname} Either created it or is an assistant") if $debug;
 		return 1;
+	} else {
+		$log->debug("$_[0]{user_id} != $$openprint::User{id}") if $debug;
 	} # end if
 	if ( openprint::usergroup::is_user_in( ['Accounting', 'Estimating'], $openprint::session{user_id} ) ) {
 		return 1;
