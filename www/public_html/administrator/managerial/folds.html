@@ -2,14 +2,14 @@
 <h1>Administrator Managerial</h1>
 <h2>Folds</h2>
 </div>
-<script type="text/javascript">
+<script>
 var load_page_ajax = null;
 function load_page() {
 	if ( load_page_ajax ) load_page_ajax.abort();
-	 load_page_ajax = $jQuery('#Folds').load( '_folds.html',
+	 load_page_ajax = jQuery('#Folds').load( '_folds.html',
 		{	
-			equipment_id: $jQuery('#equipment_id').val(),
-			type: $jQuery('#type').val() 
+			equipment_id: jQuery('#equipment_id').val(),
+			type: jQuery('#type').val() 
 		},
 		function() {
 			load_page_ajax = null;
