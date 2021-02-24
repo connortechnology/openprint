@@ -53,8 +53,8 @@ sub match {
     foreach my $key ( keys %{$rule} ) {
     $openprint::log->debug("rule: $key $$rule{$key}");
       my @matches;
-      if ( $$rule{$key} =~ /^\/(.*)\/$/ ) {
-        @matches = $$line{$key} =~ /$1/;
+      if ( $$rule{$key} =~ /^\/(.*)\/\w*$/ ) {
+        @matches = $$line{$key} =~ /$1/i;
         $openprint::log->debug("testing $key $$line{$key} =~ $$rule{$key} @matches $?");
         if ( @matches ) {
           #$openprint::log->debug("Have matches ".%+);
