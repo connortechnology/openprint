@@ -339,9 +339,9 @@ LINE: while ( my $line = <FH> ) {
           }
         }
       } 
-      $log->info("No expenses found to match $date, $desc, $debit, $credit, $balance, rules? " . @Rules . "\n" . $Expense->to_string());
+      $log->info("No expenses found to match $date, $desc, $debit, $credit, (".(defined $balance ? $balance : 'undef').', rules? ' . @Rules . "\n" . $Expense->to_string());
 
-      print "Add record for? [Y|n|R]";
+      print 'Add record for? [Y|n|R]';
       $response = <STDIN>;
       chomp $response;
       if ( (!$response) or ($response =~ /[Yy]/) ) {
