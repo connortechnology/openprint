@@ -6244,20 +6244,17 @@ $log->debug("Colour: $real_colour impressions $colour_impressions $$Imposition{r
 
 		if ( $real_colour =~ /Varnish/ ) {
 			$colour = $real_colour;
+			if ( $$Imposition{runstyle} eq 'Web' ) {
+				$colour =~ s/ (Spot|Overall)//g;
+			}
 			if ( $is_wt ) {
-				if ( ( $real_colour =~ /Overall/ ) and ! ( sets::isin( $real_colour, $$project{side_one_colour_names} ) and sets::isin( $real_colour, $$project{side_two_colour_names} ) ) ) {
+				if ( ($real_colour =~ /Overall/) and ! (
+							sets::isin($real_colour, $$project{side_one_colour_names})
+							and
+							sets::isin($real_colour, $$project{side_two_colour_names} )
+							) ) {
 					$real_colour =~ s/Overall/Spot/;
 				} # end if
-			} else {
-#$log->debug("Not Work");
-# Not needed, @colours has each colour twice if it's both sides.
-				#if ( $$Imposition{sides} == 2 ) {
-					#if ( ! ( sets::isin( $real_colour, $$project{side_one_colour_names} ) and sets::isin( $real_colour, $$project{side_two_colour_names} ) ) ) {
-						#$colour_impressions /= 2;
-#} else {
-#$log->debug("Not n both colours");
-					#} # end if
-				#} # end if
 			} # end if
 $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			if ( $real_colour =~ /Spot/ ) {
@@ -6282,7 +6279,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 		} else { 
 			$colour = $real_colour;
 		} # end if
-		my $key = join('-',$real_colour,$$Press{strid},$qty_index);
+		my $key = join('-',$colour,$$Press{strid},$qty_index);
 
 # Each Ink/Coating has MakeReady, Mix, Material, Service
 		if ( ! ( $real_colour =~ /Varnish/ and $$washed_colours{$key} ) ) {
@@ -6296,14 +6293,14 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 
 		my $Ink;
 
-		foreach my $C ( @{$special_colours{$colour}} ) {
-			if ( ( ! ( $$C{grades} and scalar @{$$C{grades}} ) ) or sets::isin( $grade, $C->grades() ) ) {
+		foreach my $C ( @{$special_colours{$real_colour}} ) {
+			if ( ( ! ( $$C{grades} and scalar @{$$C{grades}} ) ) or sets::isin($grade, $C->grades()) ) {
 				$Ink = $C;
 				last;
 			} # end if
 		} # end foreach
 
-		if ( ! $Ink ) {
+		if ( !$Ink ) {
 			$log->error("Didnt find ink real ($real_colour) ($colour) ($grade) in colours hash, must be a grade problem");
 			foreach my $k ( keys %special_colours ) {
 			foreach my $C ( @{$special_colours{$k}} ) {
@@ -6312,7 +6309,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			} # end foreach C
 			next;
 		} elsif ( DEBUG_INKS ) {
-			$log->debug("Got INK: " . $Ink->to_string() );
+			$log->debug('Got INK: '.$Ink->to_string());
 		} # end if
 
 		my $InkService = $Ink->Service() ?  $Ink->Service() : $Services{$real_colour};
@@ -6335,14 +6332,18 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 				( 
 				 ( $$Imposition{runstyle} eq 'Perfecting' ) and 
 				 ( $$washed_colours{$key} < 2 ) and
-				 sets::isin( $real_colour, $$project{side_one_colour_names} ) and 
-				 sets::isin( $real_colour, $$project{side_two_colour_names} ) 
+				 sets::isin($real_colour, $$project{side_one_colour_names}) and 
+				 sets::isin($real_colour, $$project{side_two_colour_names}) 
 				)
 			) ) {
 			
-			$price{'Press Washes'} += $$Ink{washups};
-			$$washed_colours{$key} += $$Ink{washups};
-			$log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} ) if DEBUG_INKS;
+			if ( $$Imposition{runstyle} eq 'Web' and $$washed_colours{$key} ) {
+				# On web, top and bottom are considered 1 wash, so will only wash a colour once.
+			} else {
+				$price{'Press Washes'} += $$Ink{washups};
+				$$washed_colours{$key} += $$Ink{washups};
+			}
+			$log->debug("Press Washes: $key $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} ) if DEBUG_INKS;
 		} # end if
 #
 #$log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}") if DEBUG_INKS;
@@ -6518,7 +6519,6 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 $log->warn("Something wrong in AQ");
 		} # end if
 	} # end if Aqueous
-#$price{'Press Washes'} += $varnish_price{'Press Washes'};
 	if ( $price{'Press Washes'} and $Services{WashUp} ) {
 		my $WashPrice = $Services{WashUp}->get_Price(undef, $Press);
 		$price{'Press Wash Price'} = $$WashPrice{Price};
