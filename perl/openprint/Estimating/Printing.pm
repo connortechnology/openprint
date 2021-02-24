@@ -6335,14 +6335,14 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 				( 
 				 ( $$Imposition{runstyle} eq 'Perfecting' ) and 
 				 ( $$washed_colours{$key} < 2 ) and
-				 sets::isin( $real_colour, $$project{side_one_colour_names} ) and 
-				 sets::isin( $real_colour, $$project{side_two_colour_names} ) 
+				 sets::isin($real_colour, $$project{side_one_colour_names}) and 
+				 sets::isin($real_colour, $$project{side_two_colour_names}) 
 				)
 			) ) {
 			
 			$price{'Press Washes'} += $$Ink{washups};
 			$$washed_colours{$key} += $$Ink{washups};
-			$log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} ) if DEBUG_INKS;
+			$log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups}) if DEBUG_INKS;
 		} # end if
 #
 #$log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}") if DEBUG_INKS;
