@@ -37,10 +37,10 @@ $log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
 
 		if ( $dbh ) {
 			# If we have no cookie, then... shouldn't try to load it...
-			if ( ! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
-				$log->error("Error fetching Session: $cookie: $@");
-				if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle => $dbh, Commit => 0, IDLength	=> 8 };` ) {
-					$log->error('Error creating Session:');
+			if ( (!$cookie) or (! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }`) ) {
+				$log->error("Error fetching Session: $cookie: $@") if $@;
+				if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 };` ) {
+					$log->error('Error creating Session'. $@);
 				} # end if
 				if ( $r->param('_session_id') ) {
 					if ( $session{ip} ne $ENV{REMOTE_ADDR} ) {

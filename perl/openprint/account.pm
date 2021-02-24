@@ -167,7 +167,7 @@ sub registration {
   } # end if using captcha
 
 	if ( $error ne '' ) {
-    $log->warn("registration errors $error");
+    $log->debug("registration errors $error");
 		$variable{error} = $error;
 		return;
 	} # end if
