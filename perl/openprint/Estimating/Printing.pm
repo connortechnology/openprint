@@ -649,10 +649,13 @@ $log->debug("Setting washed colours $$Colour{name}.'-'.$$sig_specs{'ddmPress'.$q
 			#$colour =~ s/\D//g;
 		} elsif ( $$real_colour{name} =~ /^(\w+) Spot Colour$/ ) {
 			$colour = $1;
-		#} elsif ( $$real_colour{name} =~ /PMS/ ) {
-			#$colour = $$real_colour{name};
 		} elsif ( $$real_colour{name} =~ /Aqueous/ ) {
 			next;
+		} elsif ( $$real_colour{name} =~ /(Spot|Overall)/ ) {
+			$colour = $$real_colour{name};
+			$colour =~ s/ (Spot|Overall)//ig;
+		#} elsif ( $$real_colour{name} =~ /PMS/ ) {
+			#$colour = $$real_colour{name};
 		} else { 
 			$colour = $$real_colour{name};
 		} # end if
@@ -6246,8 +6249,7 @@ $log->debug("Colour: $real_colour impressions $colour_impressions $$Imposition{r
 			$colour = $real_colour;
 			if ( $$Imposition{runstyle} eq 'Web' ) {
 				$colour =~ s/ (Spot|Overall)//g;
-			}
-			if ( $is_wt ) {
+			} elsif ( $is_wt ) {
 				if ( ($real_colour =~ /Overall/) and ! (
 							sets::isin($real_colour, $$project{side_one_colour_names})
 							and
@@ -6256,6 +6258,7 @@ $log->debug("Colour: $real_colour impressions $colour_impressions $$Imposition{r
 					$real_colour =~ s/Overall/Spot/;
 				} # end if
 			} # end if
+
 $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			if ( $real_colour =~ /Spot/ ) {
 				# Add Blanket Cut
@@ -6293,7 +6296,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 
 		my $Ink;
 
-		foreach my $C ( @{$special_colours{$real_colour}} ) {
+		foreach my $C ( @{$special_colours{$colour}} ) {
 			if ( ( ! ( $$C{grades} and scalar @{$$C{grades}} ) ) or sets::isin($grade, $C->grades()) ) {
 				$Ink = $C;
 				last;
@@ -6343,7 +6346,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 				$price{'Press Washes'} += $$Ink{washups};
 				$$washed_colours{$key} += $$Ink{washups};
 			}
-			$log->debug("Press Washes: $key $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} ) if DEBUG_INKS;
+			$log->debug("Press Washes: $key $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups}) if DEBUG_INKS;
 		} # end if
 #
 #$log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}") if DEBUG_INKS;
