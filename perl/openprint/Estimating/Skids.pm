@@ -191,13 +191,14 @@ $log->debug('Materials: ' . map { $_->name() } @Materials ) if DEBUG;
 #$maxWeight = 30;
 #} # end if
 				if ( $width and $height and $depth ) {
-					my $setup = openprint::imposition::fit( @$specs{'txtFinalWidth','txtFinalHeight'}, $width, $height );
+					my $setup = openprint::imposition::fit(@$specs{'txtFinalWidth','txtFinalHeight'}, $width, $height);
 
 					my $imposition = $$setup{imposition};
 					if ( $imposition ) {
 						# Fits flat
 						$items_by_size = int ( ($depth/$$specs{txtFinishedCalliper}) * $imposition );
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by size: %s/%s * %dout = %d<br/>', $depth, $$specs{txtFinishedCalliper}, $imposition, $items_by_size );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by size: %s/%s * %dout = %d<br/>',
+								$depth, $$specs{txtFinishedCalliper}, $imposition, $items_by_size);
 					} else {
 						# Try Rolling
 						my ( $item_width, $item_length ) = sort @$specs{'txtFinalWidth','txtFinalHeight'};
@@ -226,6 +227,15 @@ $log->debug('Materials: ' . map { $_->name() } @Materials ) if DEBUG;
 					} # end if
 				} else {
 					$items_per_package = $items_by_weight;
+# Have to make sure to limit by height as well.
+					if ($depth and 0 ) {
+						my $items_by_depth = int(($depth/$$specs{txtFinishedCalliper}));
+						if ( $items_by_depth < $items_by_weight ) {
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by height: %s/%s = %d<br/>',
+									$depth, $$specs{txtFinishedCalliper}, $items_by_depth);
+							$items_per_package = $items_by_depth;
+						}
+					}
 				} # end if
 				if ( $$services{Signature} and @{$$services{Signature}} ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{Signature}[0] );

@@ -6346,7 +6346,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 				$price{'Press Washes'} += $$Ink{washups};
 				$$washed_colours{$key} += $$Ink{washups};
 			}
-			$log->debug("Press Washes: $key $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} ) if DEBUG_INKS;
+			$log->debug("Press Washes: $key $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups}) if DEBUG_INKS;
 		} # end if
 #
 #$log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}") if DEBUG_INKS;
