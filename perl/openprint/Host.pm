@@ -383,15 +383,17 @@ sub reboot {
 		my $response = $browser->get($protocol.'://'.($initial_url ? $initial_url : $url));
 		$openprint::log->debug('Sending initial url: ' . $protocol.'://'.($initial_url ? $initial_url : $url).
       ' status: ' . $response->is_success . ' ' . $response->status_line() . $response->content);
-		my $headers = $response->headers();
-		if ( $$headers{'client-ssl-cipher'} ) {
-      $openprint::log->debug('Switching to https');
-			$protocol = 'https';
-			$port = 443;
-		}
-    foreach my $k ( keys %$headers ) {
-      $openprint::log->debug("Header $k => $$headers{$k}");
-    }	# end foreach
+    {
+      my $headers = $response->headers();
+      if ( $$headers{'client-ssl-cipher'} ) {
+        $openprint::log->debug('Switching to https');
+        $protocol = 'https';
+        $port = 443;
+      }
+      foreach my $k ( keys %$headers ) {
+        $openprint::log->debug("Header $k => $$headers{$k}");
+      }	# end foreach
+    }
 		$response = $HI->authenticate($browser, $response, $method, $port, $protocol.'://'.($initial_url ? $initial_url : $url), $args);
 
 		if ( !$response->is_success ) {
