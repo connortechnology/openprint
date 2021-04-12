@@ -379,7 +379,8 @@ sub save {
 	} # end if
 	sql::end_transaction( $local_dbh, $ac );
   # This is wasteful. Might be needed to pick up default values but that seems like a bad idea.
-  #$self->load();
+  # Need it to deal with NOW() etc.  agree it's wasteful. Perhaps we need to detect when it is needed.
+  $self->load();
 	if ( $$fields{id} ) {
     if ( ! $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} ) {
 			$openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} = $self;

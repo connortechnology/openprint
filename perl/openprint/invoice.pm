@@ -157,15 +157,7 @@ sub history {
 					map { sprintf('&quot;%s %s&quot; &lt;%s&gt;',$_->get('firstname','lastname','email')) } @Recipients);
 		} elsif ( $param{btnFunction} eq 'Calculate Interest' ) {
 			_history();
-      my @Invoices = openprint::Invoice->find(
-        ssi::date_filter($uri.'?created_on_start', 'created_on >=' ),
-        ssi::date_filter($uri.'?created_on_end', 'created_on >=' ),
-        invoicee_id => $session{$uri.'?invoicee_id'},
-        invoicer_id => $session{$uri.'?invoicer_id'},
-        posted      => 1,
-        order       => 'id',
-      );
-      foreach my $Invoice ( @Invoices ) {
+      foreach my $Invoice ( @{$variable{Invoices}} ) {
         next if $Invoice->is_paid();
         next if $Invoice->bad_debt();
         $variable{error} .= $Invoice->calculate_interests();
@@ -472,13 +464,13 @@ sub _invoiced_products {
 } # end sub _invoiced_products
 
 sub _interests {
-
 	if ( $param{action} eq 'delete' ) {
 		my $Interest = new openprint::Invoice_Interest( $param{interest_id} );
 		$variable{Invoice} = $Interest->Invoice();
 		$variable{error} .= $Interest->delete();	
 		$variable{Invoice}->interest(undef);
 		$variable{error} = $variable{Invoice}->save();
+    (new openprint::Log())->save({Object=>$variable{Invoice}, action=>'delete', note=>$Interest->to_string()});
 	} # end if
 } # end sub _interests
 

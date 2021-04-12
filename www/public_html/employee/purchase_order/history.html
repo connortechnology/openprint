@@ -81,15 +81,15 @@
 			</li>
 			<li>
 				<label>Created On</label>
-	<? echo ( date_select_session( $r->uri(), 'starting_start',  { onchange=> "page_load('Results',\$('f1'));", with_today=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'starting_start',  { onchange=> "page_load('Results',\$('f1'));", with_today=>1, with_clear=>1 } ); ) ?>
 				to
-	<? echo ( date_select_session( $r->uri(), 'starting_end', { onchange=>"page_load('Results',\$('f1'));", with_today=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'starting_end', { onchange=>"page_load('Results',\$('f1'));", with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Paid On</label>
-	<? echo ( date_select_session( $r->uri(), 'paid_on_start',  { onchange=> "page_load('Results',\$('f1'));", with_today=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'paid_on_start',  { onchange=> "page_load('Results',\$('f1'));", with_today=>1, with_clear=>1 } ); ) ?>
 				to
-	<? echo ( date_select_session( $r->uri(), 'paid_on_end', { onchange=>"page_load('Results',\$('f1'));", with_today=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'paid_on_end', { onchange=>"page_load('Results',\$('f1'));", with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Authorization</label>

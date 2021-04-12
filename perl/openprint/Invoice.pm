@@ -397,35 +397,40 @@ sub calculate_interests {
   my $last_period;
   my $paid = 0;
   #( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
-  while ( Date::Calc::Date_to_Time( $year, $month, $day,0, 0, 0 ) <= time ) {
+  while ( Date::Calc::Date_to_Time($year, $month, $day, 0, 0, 0) <= time ) {
 
     my $date_string = sprintf('%4d-%.2d-%.2d', $year, $month, $day);
 
-    # The point is to calculate howmuch has beenpaidby this point
-    foreach my $P ( openprint::Invoice_Payment->find(invoice_id=>$Invoice->id(), 'received_on >'=>$last_period, 'received_on <='=>$date_string )) {
+    # The point is to calculate how much has been paid by this point
+    foreach my $P ( openprint::Invoice_Payment->find(
+        invoice_id=>$Invoice->id(),
+        ($last_period ? ('received_on >'=>$last_period) : () ),
+        'received_on <='=>$date_string )) {
       $paid += $P->amount();
     } # end foreach
+
     # Includes tax
     my $total = $Invoice->total();
     foreach my $I ( openprint::Invoice_Interest->find(invoice_id=>$Invoice->id(), 'compounded_on <'=>$date_string )) {
       $total += $I->amount();
     } # end foreach InvoiceInterest
 
-    if ( $total - $paid > 0 ) {
-      if ( ! openprint::Invoice_Interest->find(invoice_id=>$Invoice->id(), 'compounded_on'=>$date_string ) ) {
+    if ( ($total - $paid) > 0 ) {
+      if ( ! openprint::Invoice_Interest->find(invoice_id=>$Invoice->id(), compounded_on=>$date_string) ) {
+        # If not interest already applied for this period, apply it
         my $I = new openprint::Invoice_Interest();
         $_ = $I->save({
             invoice_id    =>  $Invoice->id(),
-            amount      =>  Math::Round::nearest( .01, ($total - $paid) * $Invoice->monthly_interest()/100),
-            compounded_on =>  sprintf('%.4d-%.2d-%.2d', $year, $month, $day ),
+            amount        =>  Math::Round::nearest(.01, ($total - $paid) * $Invoice->monthly_interest()/100),
+            compounded_on =>  $date_string,
             });
         if ( ! $_ ) {
           my $note = sprintf('Added %s%.2f interest for %s', $Invoice->Currency()->symbol(), $I->amount(), $date_string);
           (new openprint::Log())->save({
             Object  =>  $Invoice,
-            note  =>  $note,
+            note    =>  $note,
             action  =>  'Invoice Interest Added'});
-          $error .= $note.'<br/>';
+          $error .= $note.' for invoice ' . $Invoice->id().'<br/>';
         } else {
           $error .= $_;
           last;
@@ -436,7 +441,7 @@ sub calculate_interests {
       last;
     } # end if No interest for this date.
     $last_period = $date_string;
-    ($year,$month,$day) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
+    ($year, $month, $day) = Date::Calc::Add_Delta_Days($year, $month, $day, Date::Calc::Days_in_Month($year, $month));
   } # end while
 
   if ( $changed ) {
@@ -464,7 +469,6 @@ sub Taxes {
 	my ( $self ) = @_;
 
 	if ( @_ > 1 and ! defined $_[1] ) {
-$log->debug("Getting rid of taxes") if $debug;
 		if ( $$self{id} ) {
 			foreach ( openprint::Invoice_Tax->find( invoice_id=>$$self{id} ) ) {
 				$_->destroy();
@@ -474,12 +478,10 @@ $log->debug("Getting rid of taxes") if $debug;
 	} # end if
 
 	if ( ( ! $$self{Taxes} ) and $$self{posted} ) {
-		$log->debug("Loading taxes");
 		@{$$self{Taxes}} = openprint::Invoice_Tax->find( invoice_id=>$$self{id} );
 	} # end if
 
 	if ( ! ( $$self{Taxes} and @{$$self{Taxes}} ) ) {
-$log->debug("Generating taxes");
 		$$self{Taxes} = [];
 		foreach my $Tax ( openprint::Tax->find(
 					'period_start null_or_<='	=>	$$self{created_on},

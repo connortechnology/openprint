@@ -1,7 +1,7 @@
-<script type="text/javascript">
+<script>
 	var invoice_id = '<? echo ( $$variable{Invoice}->id() ) ?>';
 </script>
-<script type="text/javascript" src="<?hash_link(/invoice/edit.js)?>"></script>
+<script src="<?hash_link(/invoice/edit.js)?>"></script>
 <?include(/includes/error_reporting.html)?>
 <div class="Invoice"><div class="Edit">
 <form name="f1" id="f1" action="edit.html" method="post">
@@ -117,7 +117,7 @@ name=>'invoicer_id', prepend=>['','select']
 </div>
 <?eval( $$variable{Object} = $$variable{Invoice} ) ?>
 <?include(/employee/assets/_asset_upload.html)?>
-<? echo ( include_logs( $$variable{Invoice} ); ) ?>
 <? endif ( $$variable{Invoice}->id() ) ?>
 </form>
+<? echo ( $$variable{Invoice}->id() ? include_logs($$variable{Invoice}) : ''; ) ?>
 </div></div>

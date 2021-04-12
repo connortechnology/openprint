@@ -1,24 +1,31 @@
 
 function calc(element) {
   var form = element.form;
+  var value_locked = ( form.value_locked.type == 'checkbox' && form.value_locked.checked ) 
+      ||
+      ( form.value_locked.type == 'hidden' && form.value_locked.value=='Y' );
+  var amount_locked = ( form.amount_locked.type == 'checkbox' && form.amount_locked.checked ) 
+    ||
+    ( form.amount_locked.type == 'hidden' && form.amount_locked.valye == 'Y' );
+
 
   if ( element.name == 'amount' ) {
-    if ( form.value.value && form.value_locked.checked ) {
+    if ( form.value.value && value_locked ) {
       form.exchange.value = form.value.value / form.amount.value;
     } else {
       form.value.value = form.amount.value * form.exchange.value;
     }
   } else if ( element.name == 'value' ) {
-    if ( form.amount.value && form.amount_locked.checked ) {
+    if ( form.amount.value && amount_locked ) {
       // if amount is set & locked, then set exchange
       form.exchange.value = form.value.value / form.amount.value;
     } else {
       form.amount.value = form.value.value / form.exchange.value;
     }
   } else if ( element.name == 'exchange' ) {
-    if ( form.amount.value && form.amount_locked.checked ) {
+    if ( form.amount.value && amount_locked ) {
       form.value.value = form.amount.value * form.exchange.value;
-    } else if ( form.value.value && form.value_locked.checked ) {
+    } else if ( form.value.value && value_locked ) {
       form.amount.value = form.value.value / form.exchange.value;
     } else {
       alert('can\'t adjust amount or value because both are locked!');

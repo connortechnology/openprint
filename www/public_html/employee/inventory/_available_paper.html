@@ -1,64 +1,4 @@
 <?include('/includes/error_reporting.html')?>
-<? eval (
-	use constant DEBUG => 0;
-	openprint::StockBrand->find();
-	openprint::StockFinish->find();
-	openprint::StockWeight->find();
-	openprint::Manufacturer->find();
-	my %sql = (
-		'in_stock >'	=>	1,
-		type					=>	[ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ],
-		columns					=>	'*,(SELECT SUM(quantity) FROM paper_allocations WHERE paper_id=papers.id) AS allocated',
-		( $session{'/employee/inventory/available_paper.html?OrLarger'} ne 'Y' ? (
-			( $session{'/employee/inventory/available_paper.html?width'} ? ( width=>$session{'/employee/inventory/available_paper.html?width'} ) : () ),
-			( $session{'/employee/inventory/available_paper.html?height'} ? ( height=>$session{'/employee/inventory/available_paper.html?height'} ) : () ),
-		) : (
-			( $session{'/employee/inventory/available_paper.html?width'} ? ( 'width >='=>$session{'/employee/inventory/available_paper.html?width'} ) : () ),
-			( $session{'/employee/inventory/available_paper.html?height'} ? ( 'height >='=>$session{'/employee/inventory/available_paper.html?height'} ) : () ),
-	) ),
-	);
-	foreach my $filter ( 'owner_id','manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id', 'material_id', 'group_id' ) {
-		if ( $session{'/employee/inventory/available_paper.html?'.$filter} ) {
-			if ( $session{'/employee/inventory/available_paper.html?'.$filter.'_exclude'} ) {
-				$sql{$filter.' !='} = $session{'/employee/inventory/available_paper.html?'.$filter};
-			} else {
-				$sql{$filter} = $session{'/employee/inventory/available_paper.html?'.$filter};
-			} # end if
-		} # end if
-	} # end foreach filter
-	$$variable{Papers} = [ sort {
-		$_ = lc $a->manufacturer cmp lc $b->manufacturer;
-		return $_ if $_;
-		$_ = lc $a->brand cmp lc $b->brand;
-		return $_ if $_;
-		$_ = lc $a->finish cmp lc $b->finish;
-		return $_ if $_;
-		$_ = $a->weight <=> $b->weight;
-		return $_ if $_;
-		$_ = $$a{width} <=> $$b{width};
-		return $_ if $_;
-		$_ = $$a{height} <=> $$b{height};
-		return $_ if $_;
-
-	} openprint::Paper->find(%sql) ];
-	my @paper_ids = @{$$variable{paper_ids}} = map { $$_{id} } @{$$variable{Papers}};
-	my %SkidContents;
-
-	if ( @paper_ids ) {
-		foreach my $SC ( openprint::SkidContent->find( paper_id=>\@paper_ids, 'quantity >' => 1 ) ) {
-			push @{$SkidContents{$$SC{paper_id}}}, $SC;
-		} # end foreach
-	}
-	foreach my $Paper ( @{$$variable{Papers}}  ) {
-		$Paper->SkidContents( $SkidContents{$$Paper{id}} );
-	} # end foreach Paper
-if ( DEBUG ) {
-	foreach my $Paper ( @{$$variable{Papers}}  ) {
-		$log->debug("Initial Papers: " . $Paper->to_string() );
-	}
-}
-openprint::Location->find(company_id=>$openprint::User->company_id());
-) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
 	<table class="List">
 		<tr>
@@ -71,7 +11,6 @@ openprint::Location->find(company_id=>$openprint::User->company_id());
 			<th class="buttons">&nbsp;</th>
 		</tr>
 		<? echo (
-			#openprint::Location->find( 'type_id is null'=>1 );
 			my $html;
 			my $rowclass;
 			my $selected;
