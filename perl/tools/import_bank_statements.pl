@@ -5,6 +5,8 @@ use warnings;
 use 5.10.0;
 use utf8;
 use File::Basename qw(basename);
+use Data::Dumper;
+use Encode qw(decode encode);
 
 require configuration;
 require sets;
@@ -46,7 +48,7 @@ if ( $opts->{help} ) {
 
 if ( ! $$opts{file} and @ARGV ) {
   $$opts{file} = $ARGV[0];
-  print "Setting file to $$opts{file}\n";
+  #print "Setting file to $$opts{file}\n";
 }
 
 open(FH, $$opts{file}) or die "Can't open $$opts{file} : $!";
@@ -80,21 +82,30 @@ configuration::merge($opts);
 openprint::session_init();
 
 while ( !($$opts{account} and openprint::Expense_Account->find_one(name=>$$opts{account})) ) {
+  my $guessed_account = '';
   my @accounts = openprint::Expense_Account->find(order=>'lower(name)');
   if ( @accounts == 1 ) {
     $$opts{account} = $accounts[0]{name};
     print "Selecting $$opts{account} for the account:\n";
     last;
+  } else {
+
+    if ( $$opts{file} =~ /report(.*)\.csv$/ ) {
+      $guessed_account = 'PC Mastercard 6369';
+      print "Guessing account to " . $guessed_account. "\n";
+    }
   }
   my %accounts = map { $$_{id} => $_ } @accounts;
   print "Please select the account:\n";
-  foreach ( sort keys %accounts ) {
-    print '['.$_.'] '.$accounts{$_}{name}."\n";
+  foreach ( @accounts ) {
+    print '['.$$_{id}.'] '.$$_{name}.($$_{name} eq $guessed_account ? ' < ':'')."\n";
   }
   my $response = <STDIN>;
   chomp $response;
   if ( $response and $accounts{$response} ) {
     $$opts{account} = $accounts{$response}{name};
+  } elsif ( (! $response) and $guessed_account ) {
+    $$opts{account} =  $guessed_account;
   } else {
     print "Invalid entry\n";
   }
@@ -119,10 +130,14 @@ if ( $$opts{file} =~ /Transactions(.*)\.csv$/ ) {
   $guessed_format = 'CIBC';
 } elsif ( $$opts{file} =~ /download\.csv$/ ) {
   $guessed_format = 'Meridian';
+} elsif ( $$opts{file} =~ /report(.*)\.csv$/ ) {
+  $guessed_format = 'PC';
+} elsif ( $$opts{file} =~ /Download\.CSV$/ ) {
+  $guessed_format = 'Paypal';
 }
 print "Guessed format is $guessed_format\n";
 
-my @formats = ('CDNTire', 'CIBC', 'PC', 'TD', 'Meridian');
+my @formats = ('CDNTire', 'CIBC', 'PC', 'TD', 'Meridian','Paypal');
 while ( !( $$opts{format} and sets::isin($$opts{format}, \@formats) ) ) {
   print "Please select the format:\n";
   for ( my $i = 0; $i < @formats; $i += 1 ) {
@@ -149,17 +164,26 @@ my %Expenses_Added;
 my @columns;
 
 my $csv = Text::CSV_XS->new();
-if ( $$opts{format} eq 'CDNTire' ) {
+if ($$opts{format} eq 'CDNTire') {
   <FH>;
   <FH>;
   <FH>;
-  $_ = <FH>;
-  $csv->parse($_);
+  my $line = <FH>;
+  #if ( ! utf8::is_utf8($line) ) {
+    utf8::encode($line);
+    print "was unicode $line\n";
+    #}
+  $csv->parse($line);
+  @columns = $csv->fields();
+} elsif ($$opts{format} eq 'Paypal') {
+  my $line = <FH>;
+  $line =~ s/[^[:ascii:]]//g;
+  my $status = $csv->parse($line);
+  die $csv->error_diag() if !$status;
   @columns = $csv->fields();
 }
 
 LINE: while ( my $line = <FH> ) {
-  print("Is $line unicode? ".utf8::is_utf8($line)."\n");
   if ( ! utf8::is_utf8($line) ) {
     utf8::decode($line);
     print "was unicode $line\n";
@@ -247,6 +271,28 @@ LINE: while ( my $line = <FH> ) {
       total       => $amount,
       total_locked=> 1,
       paid_on     => $date,
+    });
+  } elsif ( $$opts{format} eq 'Paypal' ) {
+    my %data;
+    print "columns: @columns\n";
+    print "data: ". join(' ', misc::trim($csv->fields()));
+    @data{@columns} = misc::trim($csv->fields());
+    #"Date","Time","TimeZone","Name","Type","Status","Currency","Gross","Fee","Net","From Email Address","To Email Address","Transaction ID","Shipping Address","Address Status","Item Title","Item ID","Shipping and Handling Amount","Insurance Amount","Sales Tax","Option 1 Name","Option 1 Value","Option 2 Name","Option 2 Value","Reference Txn ID","Invoice Number","Custom Number","Quantity","Receipt ID","Balance","Address Line 1","Address Line 2/District/Neighborhood","Town/City","State/Province/Region/County/Territory/Prefecture/Republic","Zip/Postal Code","Country","Contact Phone Number","Subject","Note","Country Code","Balance Impact"
+    print Data::Dumper::Dumper(\%data);
+
+    $debit = $amount;
+
+    my ( $d, $m, $y ) = split(/\//, $data{Date});
+    $paid_on = join('-', ( $y, $m, $d ));
+    $desc = join("\n", map { $_ . ' = '. $data{$_} } sort { $a cmp $b } keys %data);
+    $amount = $data{Net};
+
+    $Expense->set_no_defaults({
+      description => $desc,
+      account_id  => $$Account{id},
+      total       => $amount,
+      total_luocked=> 1,
+      paid_on     => $paid_on,
     });
 
   } else {
