@@ -167,18 +167,22 @@ sub calc {
 		$$specs{'hdnBreakdown'.$qty_index} = '';
 
 
-		my ($item_width, $item_height, $item_calliper, $item_weight, $item_qty);
+		my ($item_width, $item_height, $item_calliper, $item_weight, $item_qty, $imposition, $item_name);
 		if ( $$specs{item_type} eq 'FlatSheets' ) {
 			my $sig_specs = $printing_specs;
 			my $Stock = openprint::Paper::load_from_signature($Project, $sig_specs, $qty_index);
 			($item_width, $item_height, $item_calliper, $item_weight) = ($Stock->width(), $Stock->height(), $Stock->calliper(), $Stock->sheet_weight());
-			$item_qty = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
+			$item_qty = $$sig_specs{'hdnNetSheetCount'.$qty_index};
+			#$item_qty = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
+			$imposition = new openprint::Imposition();
+			$imposition->load($sig_specs, $qty_index, $Project);
+			$item_name = 'Flat Sheet';
 		} else {
 			($item_width, $item_height, $item_calliper, $item_weight) = @$specs{'txtFinalWidth','txtFinalHeight','txtFinishedCalliper','txtFinishedWeight'};
 			$item_qty = $$specs{"txtQuantity$qty_index"};
 			$item_qty *= $$printing_specs{Versions} if $$printing_specs{Versions};
+			$item_name = 'Finished Product';
 		}
-		$$specs{'hdnBreakdown'.$qty_index} .= "Packaging $item_qty items<br/>";
 
 		my $material_charge = 0;
 		my $best_price = 0;
@@ -205,7 +209,7 @@ sub calc {
 
 # Make sure it's not too heavy
 				$items_by_weight = int ( $Material->specification('Maximum Weight') / $item_weight );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by weight: Max %d / project weight %.3f = %d per package<br/>',
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by weight: Max %d / item weight %.3f = %d per package<br/>',
 						$Material->specification('Maximum Weight'), $item_weight, $items_by_weight );
 
 				my $width = $Material->specification('Width');
@@ -215,14 +219,19 @@ sub calc {
 #$maxWeight = 30;
 #} # end if
 				if ( $width and $height and $depth ) {
-					my $setup = openprint::imposition::fit($item_width,$item_height, $width, $height);
+					my $setup = openprint::imposition::fit($item_width, $item_height, $width, $height);
 
-					my $imposition = $$setup{imposition};
-					if ( $imposition ) {
+					if ( $$setup{imposition} ) {
 						# Fits flat
-						$items_by_size = int($depth/$item_calliper) * $imposition;
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by size: %s/%s = %d high * %dout = %d<br/>',
-								$depth, $item_calliper, int($depth/$item_calliper), $imposition, $items_by_size);
+						if ($$specs{item_type} eq 'FlatSheets') {
+							$items_by_size = int($depth/$item_calliper);
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%ss by size: %s/%s = %d high %dout sheets = %d per package<br/>',
+								$item_name, $depth, $item_calliper, int($depth/$item_calliper), $$imposition{imposition}, $items_by_size*$$imposition{imposition});
+						} else {
+							$items_by_size = int($depth/$item_calliper) * $$setup{imposition};
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%ss by size: %s/%s = %d high * %dout = %d per package<br/>',
+								$item_name, $depth, $item_calliper, int($depth/$item_calliper), $$setup{imposition}, $items_by_size);
+						}
 					} else {
 						# Try Rolling
 						if ( $width == $height and $depth >= $item_width ) {
