@@ -4,8 +4,11 @@
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<ul>
 				<li><label>Item type</label>
-					<?echo(radio('item_type', [FlatSheets=>'Flat Sheets',FinishedItem => 'Finished Item'], $$variable{item_type},
-{ onclick=>'calc(this.form.name);' });)?></li>	
+					<?echo(join("\n",
+radio('item_type', [FlatSheets=>'Flat Sheets',FinishedProduct => 'Finished Product'], $$variable{item_type}, { onclick=>'calc(this.form.name);' }),
+write_override( 'item_type_lock', $$variable{item_type_lock}, '', 'calc(\'f1\');' ),
+);
+)?></li>	
 				<?include(/includes/main/proj/finished_dimensions.html)?>
 				<?include(/includes/main/proj/finished_calliper.html)?>
 				<?include(/includes/main/proj/finished_weight.html)?>

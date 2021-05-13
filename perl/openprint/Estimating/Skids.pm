@@ -24,7 +24,7 @@ use constant DEBUG=>1;
 
 my %variables = (
 	'txtFinalWidth'=>['output'],'txtFinalHeight'=>['output'],
-	item_type	=>	['save','output'],
+	item_type	=>	['save','output'], item_type_lock=>['save'],
 	'txtPackageQuantity1' => ['save','output'], 'txtPackageQuantity2' => ['save','output'], 'txtPackageQuantity3' => ['save','output'],
 	'txtUnitPrice1' => ['output'], 'txtUnitPrice2' => ['output'], 'txtUnitPrice3' => ['output'],
 	'MPrice1' => ['save','output'], 'MPrice2' => ['save','output'], 'MPrice3' => ['save','output'],
@@ -126,7 +126,7 @@ sub calc {
 	} # end if
 
 	# Flat sheets or finished product?
-	if ( !$$specs{item_type} ) {
+	if ( !$$specs{item_type} or !$$specs{item_type_lock}) {
 		if ( $$services{NoBindery} ) {
 			$$specs{item_type} = 'FlatSheets';
 		#} elsif ( ! map { $$services{$_} ? 1 : () } openprint::Service->find(category=>'Bindery') ) {
