@@ -265,7 +265,7 @@ sub calc {
 					$items_per_package = $$specs{items_per_package};
 				} # end if
 
-				my $package_qty = ceil($item_qty/$items_per_package);
+				my $package_qty = $items_per_package ? ceil($item_qty/$items_per_package) : 0;
 				my $package_weight = $items_per_package * $item_weight;
 				my $total_weight =
 					(int($item_qty/$items_per_package) * $package_weight)
