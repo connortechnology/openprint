@@ -178,7 +178,7 @@ sub information {
 				'fax'} = $openprint::Company->get('name','address1','address2','city','state','postalcode','country','phone','fax');
 		} # end if
 
-		if ( $variable{email} eq '' ) {
+		if ( !defined($variable{email}) or ($variable{email} eq '')) {
 			my $User = $openprint::User;
 			# Assume that we are acting on someone else's behalf
 			if ( sets::isin( $session{user_type}, [ 'A','E'] ) ) {
