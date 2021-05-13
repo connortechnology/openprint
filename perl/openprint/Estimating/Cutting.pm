@@ -1372,7 +1372,7 @@ sub calc {
     } else {
       $$specs{"txtPrice$qty_index"} = sprintf( $config{ProjectMoneyFormat}, Math::Round::nearest( 1, $price ) );
     } # end if
-    $$specs{"MPrice$qty_index"} = sprintf( $config{UnitPriceFormat}, $mprice );
+    $$specs{"MPrice$qty_index"} = sprintf( $config{UnitPriceFormat}, $mprice ? $mprice : 0 );
     $$specs{"txtUnitPrice$qty_index"} = sprintf( $config{UnitPriceFormat}, $price/$$specs{"txtQuantity$qty_index"});
 
   } # end foreach quantity
