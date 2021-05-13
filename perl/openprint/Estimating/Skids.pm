@@ -208,7 +208,8 @@ sub calc {
 
 					if ($$setup{imposition}) { # Fits flat
 						if ($$specs{item_type} eq 'FlatSheets') {
-							$items_by_size = int($depth/$item_calliper);
+							# It is unlikely to do more than 2out on a skid
+							$items_by_size = int($depth/$item_calliper) * (($$setup{imposition} > 2) ? 2 : $$setup{imposition} );
 							$$results{breakdown} .= sprintf('%ss by size: %s/%s = %d high %dout sheets = %d per package<br/>',
 									$item_name, $depth, $item_calliper, int($depth/$item_calliper), $$imposition{imposition}, $items_by_size*$$imposition{imposition});
 						} else {
