@@ -129,8 +129,8 @@ sub calc {
 	if ( !$$specs{item_type} ) {
 		if ( $$services{NoBindery} ) {
 			$$specs{item_type} = 'FlatSheets';
-		} elsif ( ! map { $$services{$_} ? 1 : () } openprint::Service->find(category=>'Bindery') ) {
-			$$specs{item_type} = 'FlatSheets';
+		#} elsif ( ! map { $$services{$_} ? 1 : () } openprint::Service->find(category=>'Bindery') ) {
+			#$$specs{item_type} = 'FlatSheets';
 		} else {
 			$$specs{item_type} = 'FinishedProduct';
 		}
