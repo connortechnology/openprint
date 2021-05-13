@@ -196,7 +196,7 @@ sub calc {
 				$$results{breakdown} .= '<fieldset><legend>'.$Material->name().'</legend>';
 
 # Make sure it's not too heavy
-				my $items_by_weight = int($Material->specification('Maximum Weight') / $item_weight);
+				my $items_by_weight = $item_weight ? int($Material->specification('Maximum Weight') / $item_weight) : 0;
 				$$results{breakdown} .= sprintf('Items by weight: Max %d / item weight %.3f = %d per package<br/>',
 						$Material->specification('Maximum Weight'), $item_weight, $items_by_weight );
 
