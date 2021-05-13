@@ -269,7 +269,7 @@ sub calc {
 				my $package_weight = $items_per_package * $item_weight;
 				my $total_weight =
 					(int($item_qty/$items_per_package) * $package_weight)
-					+ (($item_qty % $items_per_package) * $item_weight);
+					+ (($item_qty % $items_per_package) * $item_weight) if $items_per_package;
 				$$results{breakdown} .= sprintf('Items per: %d, %d packages, max weight %dlbs, total weight %dlbs<br/>',
 						$items_per_package, $package_qty, $package_weight, $total_weight);
 				if (!$items_per_package) {
