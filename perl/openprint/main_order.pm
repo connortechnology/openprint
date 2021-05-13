@@ -644,7 +644,8 @@ sub check_for_errors {
 			push @errors, "Please select a shipping type for project $$OP{project_id}<br/>";
 		} # end if
 		my $Project = $OP->Project();
-		push @errors, $Project->check_for_order( $OP );
+		my $project_error = $Project->check_for_order( $OP );
+		push @errors, $project_error if $project_error;
 
 		if ( ! $Project->reference() ) {
 			push @errors, "Please give project $$Project{id} a reference";
