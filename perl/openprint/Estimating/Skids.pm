@@ -266,6 +266,14 @@ sub calc {
 					$items_per_package = $$specs{items_per_package};
 				} # end if
 
+				if ($$specs{'OverrideItemsPerPackage'.$qty_index} eq 'Y') {
+					if ($items_per_package < $$specs{'txtItemsPerPackage'.$qty_index}) {
+						$$results{breakdown} .= 'Can\'t fit '.$$specs{'txtItemsPerPackage'.$qty_index}.' in this package.<br/>';
+						next;
+					}
+					$items_per_package = int $$specs{'txtItemsPerPackage'.$qty_index};
+				} # end if
+
 				my $package_qty = $items_per_package ? ceil($item_qty/$items_per_package) : 0;
 				my $package_weight = $items_per_package * $item_weight;
 				my $total_weight =
@@ -276,13 +284,6 @@ sub calc {
 				if (!$items_per_package) {
 					$$results{breakdown} .= '</fieldset>';
 					next;
-				} # end if
-				if ($$specs{'OverrideItemsPerPackage'.$qty_index} eq 'Y') {
-					if ($items_per_package < $$specs{'txtItemsPerPackage'.$qty_index}) {
-						$$results{breakdown} .= 'Can\'t fit '.$$specs{'txtItemsPerPackage'.$qty_index}.' in this package.<br/>';
-						next;
-					}
-					$items_per_package = int $$specs{'txtItemsPerPackage'.$qty_index};
 				} # end if
 
 				my %MaterialPrice = $Material->get_price($package_qty, undef);
