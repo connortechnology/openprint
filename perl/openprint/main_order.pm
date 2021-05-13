@@ -166,7 +166,7 @@ sub information {
 		my @company_fields = ('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
 		@variable{@company_fields} = @$Order{@company_fields};
 
-		if ( $variable{company_name} eq '' ) {
+		if ( !defined($variable{company_name}) or ($variable{company_name} eq '')) {
 			@variable{'company_name',
 				'address1',
 				'address2',
