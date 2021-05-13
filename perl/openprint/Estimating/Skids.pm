@@ -186,7 +186,7 @@ sub calc {
 			my ($sig_specs, $item_qty, $item_width, $item_height, $item_calliper, $item_weight, $imposition, $item_name) = @_;
 			my $results = {
 				breakdown => '',
-				material_charge => 0,
+				material_price => 0,
 			};
 			my $best_price = undef;
 
@@ -289,8 +289,8 @@ sub calc {
 
 				if ((!defined($best_price)) or ($compare_price < $best_price)) {
 					$best_price = $compare_price;
-					@$results{'material_id','items_per_package','package_qty','package_weight','total_weight','material_charge'} =
-						($Material->id(), $items_per_package, $package_qty, $package_weight, $total_weight, $MaterialPrice{Price});
+					@$results{'material_id','items_per_package','package_qty','package_weight','total_weight','material_price', 'material_total'} =
+						($Material->id(), $items_per_package, $package_qty, $package_weight, $total_weight, $MaterialPrice{Price}, $MaterialPrice{Price}*$package_qty);
 				} # end if
 				$$results{breakdown} .= sprintf(
 						'MakeReady: %.2f, Packing Charge: %.2f: Service Charge: %.2f, Material Charge: %.2f<br/></fieldset>',
@@ -303,7 +303,8 @@ sub calc {
 		my $package_qty = 0;
 		my $package_weight = 0;
 		my $total_weight = 0;
-		my $material_charge = 0;
+		my $material_price = 0;
+		my $material_total = 0;
 		my $packing_charge = 0;
 		my $status = 'calculated';
 
@@ -321,10 +322,11 @@ sub calc {
 				$item_name = 'Flat Sheet';
 				my $results = calc_signature($sig_specs, $item_qty, $item_width, $item_height, $item_calliper, $item_weight, $imposition, $item_name);
 				$package_qty += $$results{package_qty};
-				$material_charge += $$results{material_charge};
+				$material_price = $$results{material_price};
+				$material_total += $$results{material_total};
 				$package_weight = $$results{package_weight};
 				$total_weight += $$results{total_weight};
-				$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>Form '.$$sig_specs{SignatureIndex}.'</legend>'.$$results{breakdown}.'</fieldset>'.$package_qty;
+				$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>Form '.$$sig_specs{SignatureIndex}.'</legend>'.$$results{breakdown}.'</fieldset>';
 				$status = 'uncalculated' if !$$results{package_qty};
 				$$specs{'txtItemsPerPackage'.$qty_index} = $$results{items_per_package};#if $$specs{'txtItemsPerPackage'.$qty_index} > $$results{items_per_package};
 			} # end foreach signature
@@ -338,7 +340,8 @@ sub calc {
 			my $results = calc_signature($sig_specs, $item_qty, $item_width, $item_height, $item_calliper, $item_weight, $imposition, $item_name);
 			$$specs{'hdnBreakdown'.$qty_index} .= $$results{breakdown};
 			$package_qty += $$results{package_qty};
-			$material_charge += $$results{material_charge};
+			$material_price = $$results{material_price};
+				$material_total += $$results{material_total};
 			$package_weight = $$results{package_weight};
 			$total_weight += $$results{total_weight};
 			$$specs{'txtItemsPerPackage'.$qty_index} = $$results{items_per_package};# if $$specs{'txtItemsPerPackage'.$qty_index} > $$results{items_per_package};
@@ -349,8 +352,11 @@ sub calc {
 		$$specs{'txtPackageWeight'.$qty_index} = int($package_weight);
 		$$specs{'totalWeight'.$qty_index} = int($total_weight);
 
-		my $unitPrice = $material_charge + $serviceCharge + $packingCharge;
+		my $unitPrice = $material_price + $serviceCharge + $packingCharge;
 		my $price = $makeReady + ( $package_qty * $unitPrice );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf(
+						'MakeReady: %.2f, Packing Charge: %.2f + Service Charge %.2f + Material Charge: %.2f = %.2f<br/>',
+						$makeReady, $packingCharge * $package_qty, $serviceCharge * $package_qty, $material_total, $price);
 		if ($Project->markup()) {
 			$unitPrice *= (1+$Project->markup()/100);
 			$price *= (1+$Project->markup()/100);
