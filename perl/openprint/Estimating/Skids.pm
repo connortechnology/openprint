@@ -331,6 +331,7 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>Form '.$$sig_specs{SignatureIndex}.'</legend>'.$$results{breakdown}.'</fieldset>';
 				$status = 'uncalculated' if !$$results{package_qty};
 				$$specs{'txtItemsPerPackage'.$qty_index} = $$results{items_per_package};#if $$specs{'txtItemsPerPackage'.$qty_index} > $$results{items_per_package};
+				$$specs{'ddmPackageType'.$qty_index} = $$results{material_id};
 			} # end foreach signature
 		} else {
 			my $sig_specs = openprint::service::get_specs_ref($Project, $signatures[0]);
@@ -347,6 +348,7 @@ sub calc {
 			$package_weight = $$results{package_weight};
 			$total_weight += $$results{total_weight};
 			$$specs{'txtItemsPerPackage'.$qty_index} = $$results{items_per_package};# if $$specs{'txtItemsPerPackage'.$qty_index} > $$results{items_per_package};
+			$$specs{'ddmPackageType'.$qty_index} = $$results{material_id};
 		}
 		$$specs{Status} = 'uncalculated' if $status eq 'uncalculated';
 
