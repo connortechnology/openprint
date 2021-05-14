@@ -405,7 +405,7 @@ $log->debug("Getting sheets from $lbs / " . $Imposition->sheet_area() . ' * ' . 
 	<tr> 
          <td class="headerText"><b>Special Press Instructions</b>
 <? echo ( 
-	$html = '';
+	my $html = '';
 	my $services = $$variable{Project}->services();
 	if ( $$services{PerfectBound} ) {
 		my $specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{PerfectBound}[0] );
