@@ -88,3 +88,7 @@
 		</div>
 	</fieldset>
 </form>
+<? if ( $$variable{ServiceType}->id() ) ?>
+<? echo ( include_logs( $$variable{ServiceType} ); ) ?>
+<? endif ( $$variable{ServiceType}->id() ) ?>
+
