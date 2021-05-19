@@ -15,6 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 use strict;
+use warnings;
 package openprint::Estimating::Skids;
 use POSIX qw(ceil);
 
@@ -113,8 +114,11 @@ sub calc {
 	my $ServiceType = $Project->ServiceType($service_index);
 
 	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
+	$makeReady = 0 if ! defined $makeReady;
 	my $serviceCharge = openprint::service::get_price( $ServiceType->name(), undef, undef );
+	$serviceCharge = 0 if ! defined $serviceCharge;
 	my $packingCharge = openprint::service::get_price( $ServiceType->name().'Packing', undef, undef );
+	$packingCharge = 0 if !defined $packingCharge;
 
 	my @signatures = $Project->signatures();
 
@@ -144,10 +148,10 @@ sub calc {
 		$$specs{alert} .= 'Dimensions of project are not known. Please enter them.';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
-	if ( $$specs{chkOverrideFinishedCalliper} ne 'Y' ) {
+	if ((!$$specs{chkOverrideFinishedCalliper}) or ($$specs{chkOverrideFinishedCalliper} ne 'Y')) {
 		$$specs{txtFinishedCalliper} = $Project->calliper();
 	} # end if
-	if ( ! ( 1*$$specs{txtFinishedCalliper} ) ) {
+	if (!(1*$$specs{txtFinishedCalliper})) {
 		$$specs{alert} .= 'Unable to calculate the calliper of the project.  Please recalculate printing services.';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
@@ -161,9 +165,9 @@ sub calc {
 	$$specs{alert} .= 'There are no materials for '.$ServiceType->name().'<br/>' if !@AllMaterials;
 	
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
-		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
-		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
+		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
 			$log->error("Empty txtQuantity for QTY $qty_index");
@@ -171,10 +175,10 @@ sub calc {
 			next;
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} = '';
-		$$specs{'txtItemsPerPackage'.$qty_index} = '' if $$specs{'OverrideItemsPerPackage'.$qty_index} ne 'Y';
+		$$specs{'txtItemsPerPackage'.$qty_index} = '' if (!$$specs{'OverrideItemsPerPackage'.$qty_index}) or ($$specs{'OverrideItemsPerPackage'.$qty_index} ne 'Y');
 
 		my @Materials;
-		if ( $$specs{'OverridePackageType'.$qty_index} eq 'Y' ) {
+		if ($$specs{'OverridePackageType'.$qty_index} and ($$specs{'OverridePackageType'.$qty_index} eq 'Y')) {
 			my $Material = new openprint::Material( $$specs{'ddmPackageType'.$qty_index} );
 			@Materials = ( $Material );
 		} else {
@@ -191,27 +195,29 @@ sub calc {
 			my $best_price = undef;
 
 			foreach my $Material (@Materials) {
-				my ($items_by_size, $items_per_package);
+				my ($items_by_size, $items_per_package) = (0, 0);
+				my $width = $Material->specification('Width');
+				my $height = $Material->specification('Height');
+				my $depth = $Material->specification('Depth');
 
-				$$results{breakdown} .= '<fieldset><legend>'.$Material->name().'</legend>';
+				$$results{breakdown} .= '<fieldset><legend>'.$Material->name().':'.$width.'x'.$height.'x'.$depth.'</legend>';
 
 # Make sure it's not too heavy
 				my $items_by_weight = $item_weight ? int($Material->specification('Maximum Weight') / $item_weight) : 0;
 				$$results{breakdown} .= sprintf('Items by weight: Max %d / item weight %.3f = %d per package<br/>',
 						$Material->specification('Maximum Weight'), $item_weight, $items_by_weight );
 
-				my $width = $Material->specification('Width');
-				my $height = $Material->specification('Height');
-				my $depth = $Material->specification('Depth');
 				if ($width and $height and $depth) {
 					my $setup = openprint::imposition::fit($item_width, $item_height, $width, $height);
 
 					if ($$setup{imposition}) { # Fits flat
 						if ($$specs{item_type} eq 'FlatSheets') {
+			
 							# It is unlikely to do more than 2out on a skid
-							$items_by_size = int($depth/$item_calliper) * (($$setup{imposition} > 2) ? 2 : $$setup{imposition} );
+							my $imp = ($$setup{imposition} > 2) ? 2 : $$setup{imposition};
+							$items_by_size = int($depth/$item_calliper) * $imp;
 							$$results{breakdown} .= sprintf('%ss by size: %s/%s = %d high %dout sheets = %d per package<br/>',
-									$item_name, $depth, $item_calliper, int($depth/$item_calliper), $$imposition{imposition}, $items_by_size*$$imposition{imposition});
+									$item_name, $depth, $item_calliper, int($depth/$item_calliper), $imp, $items_by_size*$imp);
 						} else {
 							$items_by_size = int($depth/$item_calliper) * $$setup{imposition};
 							$$results{breakdown} .= sprintf('%ss by size: %s/%s = %d high * %dout = %d per package<br/>',
@@ -266,7 +272,7 @@ sub calc {
 					$items_per_package = $$specs{items_per_package};
 				} # end if
 
-				if ($$specs{'OverrideItemsPerPackage'.$qty_index} eq 'Y') {
+				if ($$specs{'OverrideItemsPerPackage'.$qty_index} and ($$specs{'OverrideItemsPerPackage'.$qty_index} eq 'Y')) {
 					if ($items_per_package < $$specs{'txtItemsPerPackage'.$qty_index}) {
 						$$results{breakdown} .= 'Can\'t fit '.$$specs{'txtItemsPerPackage'.$qty_index}.' in this package.<br/>';
 						next;
@@ -315,12 +321,19 @@ sub calc {
 				my $sig_specs = openprint::service::get_specs_ref($Project, $sig_id);
 
 				my $Stock = openprint::Paper::load_from_signature($Project, $sig_specs, $qty_index);
-				my ($item_width, $item_height, $item_calliper, $item_weight, $item_qty, $imposition, $item_name);
-				($item_width, $item_height, $item_calliper, $item_weight) = ($Stock->width(), $Stock->height(), $Stock->calliper(), $Stock->sheet_weight());
-				$item_qty = $$sig_specs{'hdnNetSheetCount'.$qty_index};
+				my $item_name;
+				my $item_qty = $$sig_specs{'hdnNetSheetCount'.$qty_index};
 				#$item_qty = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
-				$imposition = new openprint::Imposition();
+				my $imposition = new openprint::Imposition();
 				$imposition->load($sig_specs, $qty_index, $Project);
+				my ($item_width, $item_height, $item_calliper, $item_weight ) = (
+						$imposition->sheet_width(), $imposition->sheet_height,
+						$Stock->calliper(),
+						$imposition->sheet_width() * $imposition->sheet_height() * $Stock->wpsi()
+						);
+				if (!$item_weight) {
+					$$specs{alert} .= 'Unable to load sheet weight<br/>';
+				}
 				$item_name = 'Flat Sheet';
 				my $results = calc_signature($sig_specs, $item_qty, $item_width, $item_height, $item_calliper, $item_weight, $imposition, $item_name);
 				$package_qty += $$results{package_qty};
@@ -328,7 +341,9 @@ sub calc {
 				$material_total += $$results{material_total};
 				$package_weight = $$results{package_weight};
 				$total_weight += $$results{total_weight};
-				$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>Form '.$$sig_specs{SignatureIndex}.'</legend>'.$$results{breakdown}.'</fieldset>';
+				$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>Form '.$$sig_specs{SignatureIndex}.'</legend>'.
+					sprintf('%d sheets size %dx%d @ %.3flbs<br/>', $$sig_specs{'hdnNetSheetCount'.$qty_index}, $item_width, $item_height, $item_weight).
+					$$results{breakdown}.'</fieldset>';
 				$status = 'uncalculated' if !$$results{package_qty};
 				$$specs{'txtItemsPerPackage'.$qty_index} = $$results{items_per_package};#if $$specs{'txtItemsPerPackage'.$qty_index} > $$results{items_per_package};
 				$$specs{'ddmPackageType'.$qty_index} = $$results{material_id};
