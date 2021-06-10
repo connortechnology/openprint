@@ -16,6 +16,9 @@ GetOptions($opts,
   'events',
   'help',
   'host=s',
+  'no-data',
+  'no-create-db',
+  'no-create-info',
   'password=s',
   'path=s',
   'tables=s',
@@ -39,19 +42,15 @@ if (!$$opts{path}) {
 } else {
 	$path = $$opts{path};
 } # end if
-if ($$opts{host}) {
-	$path .= '/'.$$opts{host};
-} # end if
-
-if (!-d $path) {
-	mkdir($path) or die "Cannot make directory $path: $!";
-} # end if
+if (!-e $path) { mkdir($path) or die "Cannot make directory $path: $!"; };
+$path .= '/'.$$opts{host} if $$opts{host};
+if (!-e $path) { mkdir($path) or die "Cannot make directory $path: $!"; };
 
 my @args = ();
-push @args, ' --defaults-file='.$$opts{'defaults-file'} if $$opts{'defaults-file'};
-push @args, ' --user='.$$opts{user} if $$opts{user};
-push @args, ' --password='.$$opts{password} if $$opts{password};
-push @args, ' -h '.$$opts{host} if $$opts{host} and ($$opts{host} ne 'local');
+push @args, '--defaults-file='.$$opts{'defaults-file'} if $$opts{'defaults-file'};
+push @args, '--user='.$$opts{user} if $$opts{user};
+push @args, '--password='.$$opts{password} if $$opts{password};
+push @args, '-h '.$$opts{host} if $$opts{host} and ($$opts{host} ne 'local');
 
 my @dbs = $$opts{databases} ? split(/,/, $$opts{databases}) : @ARGV;
 if (!@dbs) {
@@ -60,9 +59,7 @@ if (!@dbs) {
 	@dbs = split "\n", $_;
 } # end if
 print "@dbs\n" if $$opts{debug};
-
-push @args, ' --tables='.$$opts{tables} if $$opts{tables};
-push @args, ' --tables='.$$opts{events} if $$opts{events};
+push @args, map { " --$_=$$opts{$_}" if $$opts{$_} } ( 'events','no-data','no-create-db','no-create-info' );
 
 foreach my $db (@dbs) {
 	$db =~ s/^\s+//;
@@ -76,7 +73,7 @@ foreach my $db (@dbs) {
 		}
 	}
 
-  do_backup($db, $$opts{type}, @args);
+  do_backup($db, $$opts{type}, join(' ', @args), join(' ', split(/,/, $$opts{tables})));
 
 	if ($$opts{days}) {
     require Date::Calc;
@@ -107,17 +104,20 @@ foreach my $db (@dbs) {
 } # end foreach database
 
 sub do_backup {
-  my ($db, $type, @args) = @_;
+  my ($db, $type, $args, $tables) = @_;
   my $db_tmp_file = "$path/$db/$year-$mon-$mday.$type.sql.new.bz2";
   my $db_final_file = "$path/$db/$year-$mon-$mday.$type.sql.bz2";
+  my $cmd = "mysqldump $args --single-transaction ";
   if ($type eq 'structure') {
-    system("mysqldump @args --no-data --opt --single-transaction $db | bzip2 > $db_tmp_file");
+    $cmd .= ' --no-data';
   } elsif ($type eq 'data') {
-    system("mysqldump @args --no-create-db --opt --single-transaction $db | bzip2 > $db_tmp_file");
+    $cmd .= ' --no-create-db';
   } else { #full
-    system("mysqldump @args --opt --single-transaction $db | bzip2 > $db_tmp_file");
   }
-	die "Can't dump $db" if $?;
+  $cmd .= ' '.$db. ' '.$tables.' | bzip2 > '.$db_tmp_file;
+  print $cmd."\n" if $$opts{debug};
+  system($cmd);
+	die "Can't dump $db using $cmd" if $?;
 	if (!rename($db_tmp_file, $db_final_file)) {
 		print "Error renaming $db_tmp_file to $db_final_file : $!\n";
 		return;
@@ -142,6 +142,9 @@ Command-line options:
   --debug=s           turn on debugging
   --events            whether to pass --events to mysqldump to dump event scheduler data
   --c=s               look for a an existing file before performing backup
+  --no-data           Do not export rows
+  --no-create-db      Do not output CREATE DATABASE statements
+  --no-create-info    Do not output CREATE TABLE statements
   --user=s            username to use when connecting to db server
   --password=s        password to use when conneting to db server
   --defaults-file=s   path to mysql defaults file
