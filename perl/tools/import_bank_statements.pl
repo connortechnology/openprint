@@ -90,7 +90,9 @@ while ( !($$opts{account} and openprint::Expense_Account->find_one(name=>$$opts{
     last;
   } else {
 
-    if ( $$opts{file} =~ /report(.*)\.csv$/ ) {
+    if ( $$opts{file} =~ /Transactions(.*)\.csv$/ ) {
+      $guessed_account = 'CDT Mastercard 9122 3629';
+    } elsif ( $$opts{file} =~ /report(.*)\.csv$/ ) {
       $guessed_account = 'PC Mastercard 6369';
       print "Guessing account to " . $guessed_account. "\n";
     }
