@@ -73,7 +73,7 @@ foreach my $db (@dbs) {
 		}
 	}
 
-  do_backup($db, $$opts{type}, join(' ', @args), join(' ', split(/,/, $$opts{tables})));
+  do_backup($db, $$opts{type}, join(' ', @args), ($$opts{tables}?join(' ', split(/,/, $$opts{tables})):''));
 
 	if ($$opts{days}) {
     require Date::Calc;
@@ -108,11 +108,13 @@ sub do_backup {
   my $db_tmp_file = "$path/$db/$year-$mon-$mday.$type.sql.new.bz2";
   my $db_final_file = "$path/$db/$year-$mon-$mday.$type.sql.bz2";
   my $cmd = "mysqldump $args --single-transaction ";
-  if ($type eq 'structure') {
-    $cmd .= ' --no-data';
-  } elsif ($type eq 'data') {
-    $cmd .= ' --no-create-db';
-  } else { #full
+  if ($type) {
+    if ($type eq 'structure') {
+      $cmd .= ' --no-data';
+    } elsif ($type eq 'data') {
+      $cmd .= ' --no-create-db';
+    } else { #full
+    }
   }
   $cmd .= ' '.$db. ' '.$tables.' | bzip2 > '.$db_tmp_file;
   print $cmd."\n" if $$opts{debug};
