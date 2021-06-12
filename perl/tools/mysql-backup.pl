@@ -59,7 +59,7 @@ if (!@dbs) {
 	@dbs = split "\n", $_;
 } # end if
 print "@dbs\n" if $$opts{debug};
-push @args, map { " --$_=$$opts{$_}" if $$opts{$_} } ( 'events','no-data','no-create-db','no-create-info' );
+push @args, map { $$opts{$_} ? " --$_=$$opts{$_}" : () } ( 'events','no-data','no-create-db','no-create-info' );
 
 foreach my $db (@dbs) {
 	$db =~ s/^\s+//;
@@ -105,6 +105,7 @@ foreach my $db (@dbs) {
 
 sub do_backup {
   my ($db, $type, $args, $tables) = @_;
+  $type = '' if ! defined $type;
   my $db_tmp_file = "$path/$db/$year-$mon-$mday.$type.sql.new.bz2";
   my $db_final_file = "$path/$db/$year-$mon-$mday.$type.sql.bz2";
   my $cmd = "mysqldump $args --single-transaction ";
