@@ -191,40 +191,14 @@
 			if ( $$sig_specs{rdbSuppliedStock} eq 'Y' ) {
 				$html .= '<b>Customer Supplied</b> ';
 			} # end if
-			my $type = 'unknown';
-			
-			if ( $$sig_specs{rdbSpecificStock} ne 'Y' ) {
-				if ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['gloss','enamel','coated','cast coated'] ) ) {
-					$type = 'GLOSS';
-				} elsif ( $$sig_specs{ddmStockFinish} =~ /gloss/i ) {
-					$type = 'GLOSS';
-				} elsif ( $$sig_specs{ddmStockFinish} =~ /c2s/i ) {
-					$type = 'GLOSS';
-				} elsif ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['dull','silk','matte','satin'] ) ) {
-					$type = 'MATTE';
-				} elsif ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['uncoated','offset','smooth','opaque','vellum','tag','bristol','felt','linen','laid','double thick'] ) ) {
-					$type = 'UNCOATED';
-				} elsif ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['c1s','ccnb','litho label'] ) ) {
-					$type = 'COATED 1 SIDE';
-				} # end if
+			$html .= 'Custom: ' if $$Paper{custom};
+      $html .= sprintf('%s, <b>%s</b>, <b>%s</b> %s',
+          $Paper->brand(),
+          uc $Paper->finish(),
+          (uc($Paper->colour()) eq 'WHITE' ? '' : $Paper->colour()),
+          $Paper->weight()
+          );
 
-				$html .= sprintf('%s, <b>%s</b>, %s', $$sig_specs{ddmStockBrand}, uc $$sig_specs{ddmStockFinish}, $$sig_specs{ddmStockWeight} );
-			} else {
-				if ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['gloss','enamel','coated','cast coated'] ) ) {
-					$type = 'GLOSS';
-				} elsif ( $$sig_specs{txtSpecificStockFinish} =~ /gloss/i ) {
-					$type = 'GLOSS';
-				} elsif ( $$sig_specs{txtSpecificStockFinish} =~ /c2s/i ) {
-					$type = 'GLOSS';
-				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['dull','silk','matte','satin'] ) ) {
-					$type = 'MATTE';
-				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['uncoated','offset','smooth','opaque','vellum','tag','bristol','felt','linen','laid','double thick'] ) ) {
-					$type = 'UNCOATED';
-				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['c1s','ccnb','litho label'] ) ) {
-					$type = 'COATED 1 SIDE';
-				} # end if
-				$html .= sprintf('Custom: %s, <b>%s</b>, %s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
-			} # end if
 			if ( $Paper->type() eq 'Roll' ) {
 				$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$qty_index} );
 				if ( $$sig_specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
@@ -242,7 +216,7 @@
 			$html .='
 				<hr/>
 				';
-			if ( $$sig_specs{ddmStockFinish} eq 'Coated 1 Side' or $$sig_specs{ddmStockFinish} eq 'C1S' ) {
+			if ( $Paper->finish() eq 'Coated 1 Side' or $Paper->finish() eq 'C1S' ) {
 				$html .= '<br/><b>Please Verify Uncoated Side Image</b>
 ';
 			} # end if
