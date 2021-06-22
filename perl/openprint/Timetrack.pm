@@ -167,9 +167,9 @@ sub Price {
   $Price{units} = $units;
 
 	if ( $units eq '/year' ) {
-		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*365));
-		#$openprint::log->debug('Month pricing ' . $elapsed );
-		$Price{Total} = $Price{Price} * $elapsed;
+		my $years = Math::Round::nearest(1,$elapsed/(60*60*24*365));
+    #$openprint::log->debug('Years pricing ' . $years .' from elapsed '.$elapsed);
+		$Price{Total} = $Price{Price} * $years;
 	} elsif ( $units eq '/month' ) {
 		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*30));
 		#$openprint::log->debug('Month pricing ' . $elapsed );
