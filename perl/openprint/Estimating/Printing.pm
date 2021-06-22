@@ -6399,6 +6399,15 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $qty );
 					$ink_price{Total} += $material_price{Total};
 					$price{'Ink breakdown'} .= sprintf(' mileage: %d sq in per cartridge, %.2fsq in means %.4f * $%s%s=$%.2f = $%.2f', $$Coverage{value}, $area, $qty, @material_price{'Price','units','Total'}, $ink_price{Total});
+        } elsif ( $material_price{units} eq 'per can' ) {
+					my $Coverage = $Ink->Coverage($Press, $grade);
+					my $qty = POSIX::ceil($area/$$Coverage{value}) if $Coverage and $$Coverage{value};
+					%material_price = $InkMaterial->get_price( $qty, $Press );
+					$ink_price{Material} = \%material_price;
+					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $qty );
+					$ink_price{Total} += $material_price{Total};
+					$price{'Ink breakdown'} .= sprintf(' %d%% = %d square inches, mileage: %dsquare inches/can = %d cans * $%s%s=$%.2f = $%.2f',
+            $coverage*100, $area, $$Coverage{value}, $qty, @material_price{'Price','units','Total'}, $ink_price{Total});
 				} elsif ( $material_price{units} eq 'per kg' ) {
 					my $Coverage = $Ink->Coverage($Press, $grade);
 					if ( ( ! $Coverage ) or ! $$Coverage{value} ) {
