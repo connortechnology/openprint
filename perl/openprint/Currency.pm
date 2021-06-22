@@ -104,7 +104,7 @@ sub convert_from {
     if ( $period ) {
       ( $rate ) = sql::execute(undef, undef, q{SELECT rate FROM Currency_Conversions WHERE from_id=? AND to_id=? AND (period_end IS NULL OR period_end >= ?) AND (period_start IS NULL OR period_start <= ?)}, $$self{id}, $$DST_Currency{id}, $period, $period);
       if ( !$rate ) {
-        $log->error("No rate found for converting $$self{name} to $$DST_Currency{name}");
+        $log->error("No rate found for converting $$self{name} to $$DST_Currency{name} period $period");
         $rate = $self->conversions($$DST_Currency{id});
       }
     } else {
