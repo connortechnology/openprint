@@ -1034,11 +1034,11 @@ sub find {
 		if ( $cache{$config{db_name}}{$object_type}{$$params{id}} ) {
 			if ( $cache{$config{db_name}}{$object_type}{$$params{id}}{id} ) {
 				my ( $caller, undef, $line ) = caller;
-				$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+				$log->debug('returning ' . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 				return ( $cache{$config{db_name}}{$object_type}{$$params{id}} );
 			} else {
 				my ( $caller, undef, $line ) = caller;
-				$log->debug("Not returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+				$log->debug('Not returning ' . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 			}
 		}
 	} elsif ( $cache_field and $$params{$cache_field} and ( 1 == (scalar keys %{$$sql{used_fields}}) ) ) {
@@ -1052,7 +1052,7 @@ sub find {
 				return $name_cache{$object_type}{$$params{$cache_field}};
 			} else {
 				# Shouldn't have to test for cached, because the hash will not get populated.
-$log->error("returning nothing for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+$log->debug("returning nothing for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 				return ();
 			} # end if
 		} else { # not in cache
