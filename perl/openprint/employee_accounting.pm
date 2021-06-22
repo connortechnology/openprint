@@ -465,7 +465,7 @@ sub _expenses {
 				'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 				'paid_on_end_year','paid_on_end_month','paid_on_end_day',
 				'category_id', 'recipient_id', 'account_id','attention', 'currency_id',
-				'amount','total','business_use',
+				'amount','total','business_use', 'company_id','deleted',
 				) );
 } # end sub _expenses
 
@@ -514,7 +514,7 @@ sub expense {
 		delete $param{recipient};
 		if ( $param{category_id} ) {
 			delete $param{category};
-		} else {
+		} elsif ( $param{category} ) {
 			delete $param{category_id};
 		} # end if
 		if ( $param{account_id} ) {
