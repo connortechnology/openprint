@@ -30,6 +30,15 @@ function load_page() {
 			to
 			<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
 		</li>
+		<li><label>Category</label>
+			<?echo( ssi::select( 
+						openprint::Equipment_Category->dropdown(order=>'lower(name)'), 
+						$session{$r->uri().'?category_id'}, { 
+						name=>'category_id', 
+						prepend=>[ '', 'All' ],
+						onchange=>'load_page();',
+						} ); ) ?>
+		</li>
 		<li><label>Service</label>
 			<?echo( ssi::select( 
 						openprint::ServiceType->dropdown(order=>'lower(name)'), 
