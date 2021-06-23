@@ -1,9 +1,11 @@
 <script src="/javascripts/tiny_mce/tiny_mce.js"></script>
 <script>
+  window.addEventListener('DOMContentLoaded',function(){
 	tinyMCE.init({
 		mode : "textareas",
 		theme : "advanced"
 	});
+  });
 
 	function company_id_onchange( ddm ) {
 		ddm = $j(ddm);
@@ -77,7 +79,11 @@
 			<li><label>Duration</label>
 				<input type="text" name="duration" id="duration" value="<?echo($$variable{Timetrack}->duration())?>"/>
 				<? echo ( write_override( 'duration_override', $$variable{Timetrack}->duration_override() ); ) ?>
-				<script>update_duration(document.forms['f1'],'starting','ending');</script>
+				<script>
+          window.addEventListener('DOMContentLoaded', function(){
+            update_duration(document.forms['f1'],'starting','ending');
+          });
+        </script>
 			</li>
 			<li><label>Service</label>
 				<select id="service_id" name="service_id">
