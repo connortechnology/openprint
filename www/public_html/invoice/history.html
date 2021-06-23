@@ -106,6 +106,8 @@
 <? if ( openprint::Product->find_one() ) ?>
 			<li><label>Contains Product</label><? echo ( ssi::select( openprint::Product->dropdown(order=>'lower(name)'), $session{$r->uri().'?product_id'}, { name=>'product_id', onchange=>'load_invoices(this.form);',prepend=>['','All'] } ); ) ?></li>
 <? endif ( openprint::Product->find_one() ) ?>
+      <li><label>Currency</label>
+        <?echo(ssi::select( openprint::Currency->dropdown(), $session{$r->uri().'?currency_id'}, { name=>'currency_id', onchange=>'load_invoices(this.form);', prepend=>['','All'] } ); ) ?></li>
 			</ul>
 		</div>
 		<br class="spacer"/>
