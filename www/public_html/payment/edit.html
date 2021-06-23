@@ -102,9 +102,9 @@
 	<div class="rightColumn" id="Unpaid">
 		<?include('_unpaid.html')?>
 	</div>
-<br class="spacer"/>
-<?eval( $$variable{Object} = $$variable{Payment} ) ?>
-<?include(/employee/assets/_asset_upload.html)?>
-<? echo ( include_logs( $$variable{Payment} ); ) ?>
+  <br class="spacer"/>
+  <?eval( $$variable{Object} = $$variable{Payment} ) ?>
+  <?include(/employee/assets/_asset_upload.html)?>
+  <? echo ( include_logs( $$variable{Payment} ); ) ?>
 	<? endif ( $$variable{Payment}->id() ) ?>
 </form>
