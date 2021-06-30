@@ -40,6 +40,19 @@ function pay_invoice( invoice_id ) {
     dataType: 'html',
     success: function(html) {
       $j('#Paid').html(html);
+      if (!$j('table.sortable').length) {
+        $j('#paid').tablesorter({
+          theme : 'blue',
+          widgets: [ 'zebra', 'stickyHeaders' ]
+        });
+      } else {
+      console.log($j('table.sortable'));
+        $j('table.sortable').tablesorter({
+          theme : 'blue',
+          widgets: [ 'zebra', 'stickyHeaders' ]
+        });
+      }
+      //TableKit.Sortable.init('table.sortable');
       load_unpaid();
     },
     error: function(e){
@@ -55,6 +68,10 @@ function unpay_invoice( invoice_id ) {
     dataType: 'html',
     success: function(html) {
       $j('#Unpaid').html(html);
+      $j('table.sortable').tablesorter({
+        theme : 'blue',
+        widgets: [ 'zebra', 'stickyHeaders' ]
+      });
       load_paid();
     },
     error: function(e){
