@@ -73,6 +73,10 @@
           <label for="memo">Memo</label>
           <textarea id="memo" name="memo" rows="<? echo ( count_lines( $$variable{Payment}->memo() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Payment}->memo() ) ?></textarea>
         </li>
+				<? if ( $$variable{Payment}->id() ) ?>
+        <li><label>Entered</label><?echo(format_datetime($$variable{Payment}->created_on()))?></li>
+        <li><label>Updated</label><?echo(format_datetime($$variable{Payment}->updated_on()))?></li>
+        <? endif ( $$variable{Payment}->id() ) ?>
 			</ul>
 		</div>
 		<br class="spacer"/>
