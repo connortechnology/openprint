@@ -517,8 +517,8 @@ sub signature_calc {
     my $pretrim_sides = $Stitcher->specification('Pre-trimmed Edges '.$$sig_specs{txtSignatureType});
     $pretrim_sides = $Stitcher->specification('Pre-trimmed Edges') if ! $pretrim_sides;
     %pretrim_sides = map { $_, $_ } split(',', $pretrim_sides) if $pretrim_sides;
-    $stitching_imposition = 1 if ! defined $stitching_imposition;
   }
+  $stitching_imposition = 1 if ! defined $stitching_imposition;
 
   my $has_uv = $$services{UVCoating} and openprint::Estimating::UVCoating::signature_needs($Project, $sig_specs);
 
