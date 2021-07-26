@@ -1140,7 +1140,7 @@ sub _ul {
 			$variable{error} .= "Unable to find shift for $param{ul_id}";
 		} # end if
 	} else {
-$log->debug("No Shift specified!");
+    $log->error('No Shift specified!');
 	} # end if
 	if ( $variable{Shift} ) {
 		$log->debug("_ul for: $variable{Shift}{id} " . $variable{Shift}->to_string() );
@@ -1155,33 +1155,35 @@ sub _drop {
 		return;
 	}
 	my @order;
-	if ( $param{services} ) {
+	if (exists $param{services}) {
 		my $services = $param{services};
 		$services =~ s/$param{ul_id}\[\]=//g;
-		@order = split( '&', $services );
-	} else { 
+		@order = split('&', $services);
+	} elsif ($param{'item[]'}) { 
 		@order = @{$param{'item[]'}};
+	} else {
+		$log->error('no items in drop!');
 	} # end if
 	return if ! @order;
 	# First step, run through and see if we need to do a popup before actually applying
 
-	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Schedule IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	my $ac = sql::start_transaction($dbh);
+	$dbh->do('LOCK TABLE Schedule IN SHARE ROW EXCLUSIVE MODE') or $log->error(DBI->errstr);
 
-	my $Shift = openprint::Shift::get_from_ul_id( $param{ul_id} );
+	my $Shift = openprint::Shift::get_from_ul_id($param{ul_id});
 	my $Equipment = $Shift->Equipment(); # For efficiency
 
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
-	@{$variable{changed}} = ( $Shift->ul_id() );
-	openprint::ScheduledJob->find(id=>[map { $_ ? $_ : () } @order]);
-$log->debug("Order: @order");
-$log->debug("Order before coalesce: " . join(',', map { $_ . ' => ' .(new openprint::ScheduledJob($_)) ? new openprint::ScheduledJob($_)->docket() : 'undef' } @order ) );
-
+	@{$variable{changed}} = ($Shift->ul_id());
+	my %jobs = map { $$_{id} => $_ } openprint::ScheduledJob->find(id=>[map { $_ ? $_ : () } @order]);
+$log->debug("New Order (job ids): @order");
+$log->debug('Order(dockets) before coalesce: ' . join(',', map { $_ . ' => ' .($jobs{$_} ? $jobs{$_}->docket() : 'undef') } @order ) );
 
 	if ( ($param{action} ne 'add_services') and sets::isin('Bindery', [$Equipment->categories()]) ) {
+    $log->debug('Adding Bindery services');
 		# Detect whether we need to do a popup to ask which services to add
 		my @servicetypes_to_add;
-		foreach my $row_id ( @order ) {
+		foreach my $row_id (@order) {
 			my $Job = new openprint::ScheduledJob( $row_id );
 			next if ! $Job->project_id(); # Maintenance work, etc
 			next if ! $Job->servicetype_id();
@@ -1221,7 +1223,7 @@ $log->debug("Order before coalesce: " . join(',', map { $_ . ' => ' .(new openpr
 	my $previous;
 	for ( my $i = 0; $i < @order; $i += 1 ) {
 		my $row_id = $order[$i];
-		my $Job = new openprint::ScheduledJob( $row_id );
+		my $Job = $jobs{$row_id};
 
 		# If it's a bindery job but wasn't before, so printing -> bindery
 		if ( $Job->project_id() and sets::isin( 'Bindery', [$Equipment->categories()] ) and $Job->servicetype_id() and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
@@ -1323,29 +1325,25 @@ $log->debug('Sigs are the not same, ');
 		} # end if
 	} # end foreach row_id
 
-$log->debug("Order after coalesce: " . join(',', map { $_ . ' => ' .new openprint::ScheduledJob($_)->docket() } @order ) );
-$log->debug("Scheduling Mode: " . $Equipment->smartscheduling());
-	if ( ! $Equipment->smartscheduling() ) {
-		$log->debug("Old");
+$log->debug('Order after coalesce: ' . join(',', map { $_ . ' => ' .($jobs{$_} ? $jobs{$_}->docket() : 'undef') } @order));
+	if (!$Equipment->smartscheduling()) {
 
-		my ( $start_time, $end_time, $operator_ids ) = ( $Shift->starttime(), $Shift->endtime(), $Shift->operator_ids() );
+		my ($start_time, $end_time, $operator_ids) = ($Shift->starttime(), $Shift->endtime(), $Shift->operator_ids());
 		$operator_ids = [] if ! $operator_ids;
 
-		$log->debug("drop_project: @order");
-		while ( @order ) {
+		while (@order) {
 			my $row_id = shift @order;
-			$log->debug("drop_project: row_id: $row_id : @order");
 			$row_id =~ s/\D//g;
-			$log->debug("drop_project: row_id: $row_id : @order");
-			next if ! $row_id;
+			next if !$row_id;
 
-			my $Job = new openprint::ScheduledJob( $row_id );
-			if ( ! $Job->id() ) {
+			my $Job = $jobs{$row_id};
+			if (!$Job->id()) {
 # due to coalescing, a job could be deleted
-				$log->debug("drop_project: Job not found");
-				next ;
+				$log->debug('drop_project: Job not found');
+				next;
 			} # end if
-			if ( $Job->Shift()->id() != $$Shift{id} ) {
+			if ($Job->Shift()->id() != $$Shift{id}) {
+        $log->debug('Job was on '.$Job->Shift()->to_string().', moving to '.$Shift->to_string());
 				push @{$variable{changed}}, $Job->Shift()->ul_id();
 			} # end if
 
@@ -1356,9 +1354,10 @@ $log->debug("Scheduling Mode: " . $Equipment->smartscheduling());
 				$sql{equipment_id} = $$Shift{equipment_id};
 			} # end if
 
-			if ( keys %sql ) {
+			if (keys %sql) {
+        $log->debug("Updating job to $sql{starttime}");
 				$Job->save(\%sql);
-				if ( $Job->project_id() ) {
+				if ($Job->project_id()) {
 					my $Project = $Job->Project();
 					$Project->save({due_date=>$Project->get_due_date()}) if ! $Project->due_date();
 					my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); $$sig_specs{SignatureIndex}; } @{$Job->service_id()};
@@ -1372,7 +1371,6 @@ $log->debug("Scheduling Mode: " . $Equipment->smartscheduling());
 				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $row_id );
 			} # end if
 		} # end foreach
-		$log->debug("Old2");
 	} else {
 		$dbh->do( 'LOCK TABLE Shifts IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
