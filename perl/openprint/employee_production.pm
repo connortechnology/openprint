@@ -1223,7 +1223,7 @@ $log->debug('Order(dockets) before coalesce: ' . join(',', map { $_ . ' => ' .($
 	my $previous;
 	for ( my $i = 0; $i < @order; $i += 1 ) {
 		my $row_id = $order[$i];
-		my $Job = $jobs{$row_id};
+    my $Job = new openprint::ScheduledJob( $row_id );
 
 		# If it's a bindery job but wasn't before, so printing -> bindery
 		if ( $Job->project_id() and sets::isin( 'Bindery', [$Equipment->categories()] ) and $Job->servicetype_id() and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
@@ -1336,7 +1336,7 @@ $log->debug('Order after coalesce: ' . join(',', map { $_ . ' => ' .($jobs{$_} ?
 			$row_id =~ s/\D//g;
 			next if !$row_id;
 
-			my $Job = $jobs{$row_id};
+      my $Job = new openprint::ScheduledJob( $row_id );
 			if (!$Job->id()) {
 # due to coalescing, a job could be deleted
 				$log->debug('drop_project: Job not found');
