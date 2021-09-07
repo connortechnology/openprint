@@ -110,6 +110,10 @@
 				<? echo ( radio( 'has_manifest', [ '1','Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?has_manifest'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
 			</li>
 			<li>
+				<label>Has Attachments</label>
+				<? echo ( radio( 'has_attachments', [ '1','Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?has_attachments'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
+			</li>
+			<li>
 				<label>Is Paid</label>
 				<? echo ( radio( 'paid', [ '1','Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?paid'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
 			</li>

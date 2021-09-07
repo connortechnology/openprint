@@ -137,6 +137,14 @@
 				next if ! sets::isin( $session{$uri.'?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
 			} # end if
 
+      if ( $session{$uri.'?has_attachments'} ne '' ) {
+        if ( $PO->Assets() ) {
+          next if ! $session{$uri.'?has_attachments'};
+        } else {
+          next if $session{$uri.'?has_attachments'};
+        }
+      }
+
 			push @{$$variable{PurchaseOrders}}, $PO;
 			$POs{$$PO{id}} = $PO;
 		} # end foreach PO

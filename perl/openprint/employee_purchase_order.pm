@@ -856,7 +856,7 @@ sub _history {
 				( map { 'paid_on_end_'.$_ } ( 'year', 'month','day' ) ),
 				'authorized', 'supplier_id','created_by','authorized_by', 
 				'deleted','types', 'item_id', 'cancelled', 'vendor_category_id', 'department_id', 'docket',
-				'currency_id', 'has_manifest', 'paid',
+				'currency_id', 'has_manifest', 'has_attachments', 'paid',
 				) );
 } # end sub _purchase_orders
 
