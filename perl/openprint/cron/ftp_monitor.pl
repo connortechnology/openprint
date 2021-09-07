@@ -319,7 +319,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 				if ( ! defined $codes{$response_code} ) {
 					$log->error("Need to define the response code for $response_code");
 				}
-				$log->debug("data: client:$client remote_user:$remote_user username:$user_name time:$curr_time dir:$dir path:$path command:$command code:$response_code($codes{$response_code}) bytes:$nbytes");
+				$log->debug("data: client:$client remote_user:$remote_user username:$user_name time:$curr_time dir:$dir path:$path command:$command code:$response_code(".(exists($codes{$response_code})?$codes{$response_code}:'unknown code').") bytes:$nbytes");
 				if ( $response_code == 331 ) {
 #Username OK, need password
 					next;
