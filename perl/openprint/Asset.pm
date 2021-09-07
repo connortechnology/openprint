@@ -425,6 +425,7 @@ sub can_edit {
 
 sub can_view {
 	return 1 if $_[0]{public};
+  return 1 if $$openprint::User{type} eq 'A';
 
 	if ( $_[0]{created_by} == $$openprint::User{id} ) {
 		$openprint::log->debug('User is owner');
