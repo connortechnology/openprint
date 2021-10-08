@@ -1,9 +1,5 @@
 <script src="<?hash_link(/payment/edit.js)?>"></script>
-<? if ( $$variable{Payment}->id() ) ?>
-<script>
-	var payment_id = '<? echo ( $$variable{Payment}->id() ) ?>';
-</script>
-<? endif ( $$variable{Payment}->id() ) ?>
+<script> var payment_id = '<? echo ( $$variable{Payment}->id() ) ?>'; </script>
 <?include('/includes/error_reporting.html')?>
 <form name="f1" id="f1" action="edit.html" method="post">
 	<input type="hidden" name="btnFunction" />
