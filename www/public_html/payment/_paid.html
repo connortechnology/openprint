@@ -30,7 +30,7 @@
 			$html .= sprintf('<td class="buttons">%s</td>', button( 'del'.$IP->id(), {onclick=>'unpay_invoice('.$IP->invoice_id().');', text=>'-', title=>'Remove' } ) );
 			$html .= "</tr>\n";
 			$html .= '<script>';
-			$html .= sprintf(q`new Ajax.InPlaceEditor( 'amount_%1$d', '/payment/_edit_payment.html?id=%1$d&action=update&field=amount',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1,onComplete:load_paid});`, $IP->id() );
+        $html .= sprintf(q`window.addEventListener('DOMContentLoaded', function(){ new Ajax.InPlaceEditor( 'amount_%1$d', '/payment/_edit_payment.html?id=%1$d&action=update&field=amount',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1,onComplete:load_paid}); });`, $IP->id() );
 			$html .= "</script>\n";
 			$invoice_total += $Invoice->total();
       $paid_total = $IP->amount();
