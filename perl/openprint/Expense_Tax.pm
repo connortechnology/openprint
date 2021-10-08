@@ -71,7 +71,7 @@ sub charge {
 
   my $Expense = $self->Expense();
   if ( ! $Expense ) {
-    $openprint::log->error("No expense in " . $self->to_string());
+    $openprint::log->error('No expense in ' . $self->to_string());
   }
 	if ( $Expense->owner_id() and ( ! defined $$self{charge} ) ) {
 		if ( $self->Tax()->period_end() ) {
