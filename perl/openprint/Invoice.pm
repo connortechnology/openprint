@@ -306,9 +306,7 @@ sub send {
 	my ( $self, $To ) = @_;
 
   my @To = $To ? ($To) : $self->Invoicee()->AccountingContacts();
-  if ( ! @To ) {
-    return 'Noone to send to!';
-  }
+  return 'No one to send to!' if ! @To;
 
 	my $Email = new openprint::Email();
 
