@@ -1,9 +1,5 @@
 <script src="<?hash_link(/payment/edit.js)?>"></script>
-<? if ( $$variable{Payment}->id() ) ?>
-<script>
-	var payment_id = '<? echo ( $$variable{Payment}->id() ) ?>';
-</script>
-<? endif ( $$variable{Payment}->id() ) ?>
+<script> var payment_id = '<? echo ( $$variable{Payment}->id() ) ?>'; </script>
 <?include('/includes/error_reporting.html')?>
 <form name="f1" id="f1" action="edit.html" method="post">
 	<input type="hidden" name="btnFunction" />
@@ -73,6 +69,10 @@
           <label for="memo">Memo</label>
           <textarea id="memo" name="memo" rows="<? echo ( count_lines( $$variable{Payment}->memo() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Payment}->memo() ) ?></textarea>
         </li>
+				<? if ( $$variable{Payment}->id() ) ?>
+        <li><label>Entered</label><?echo(format_datetime($$variable{Payment}->created_on()))?></li>
+        <li><label>Updated</label><?echo(format_datetime($$variable{Payment}->updated_on()))?></li>
+        <? endif ( $$variable{Payment}->id() ) ?>
 			</ul>
 		</div>
 		<br class="spacer"/>

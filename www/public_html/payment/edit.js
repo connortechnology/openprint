@@ -40,6 +40,7 @@ function pay_invoice( invoice_id ) {
     dataType: 'html',
     success: function(html) {
       $j('#Paid').html(html);
+      TableKit.reloadTable('paid');
       load_unpaid();
     },
     error: function(e){
@@ -55,6 +56,7 @@ function unpay_invoice( invoice_id ) {
     dataType: 'html',
     success: function(html) {
       $j('#Unpaid').html(html);
+      TableKit.Sortable.init('unpaid');
       load_paid();
     },
     error: function(e){
@@ -70,6 +72,7 @@ function load_paid( ) {
     dataType: 'html',
     success: function(html) {
       $j('#Paid').html(html);
+      TableKit.Sortable.init('paid');
     },
     error: function(e){
       alert('failure to load paid');
@@ -84,6 +87,9 @@ function load_unpaid( ) {
     dataType: 'html',
     success: function(html) {
       $j('#Unpaid').html(html);
+      //TableKit.Sortable.init('Unpaid');
+      console.log('reaload Table');
+      TableKit.reloadTable('unpaid');
     },
     error: function(e){
       alert('failure to load unpaid');
