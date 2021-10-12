@@ -77,6 +77,7 @@ sub outputs {
 	} # end foreach;
 	return @v;
 }
+
 sub no_outputs {
 	my @v;
 	foreach my $k ( keys %variables ) {
@@ -130,14 +131,18 @@ sub calc {
 	} # end if
 
 	# Flat sheets or finished product?
-	if ( !$$specs{item_type} or !$$specs{item_type_lock}) {
-		if ( $$services{NoBindery} ) {
-			$$specs{item_type} = 'FlatSheets';
-		#} elsif ( ! map { $$services{$_} ? 1 : () } openprint::Service->find(category=>'Bindery') ) {
-			#$$specs{item_type} = 'FlatSheets';
-		} else {
-			$$specs{item_type} = 'FinishedProduct';
-		}
+  if ( !$$specs{item_type} or !$$specs{item_type_lock}) {
+    if ( $$services{NoBindery} ) {
+      $$specs{item_type} = 'FlatSheets';
+    } else {
+      my @bindery_services = map { $$services{$$_{name}} ? $$services{$$_{name}} : () } openprint::Service->find(category=>'Bindery');
+      $openprint::log->debug("Bindery Services: @bindery_services");
+      if (!@bindery_services) {
+        $$specs{item_type} = 'FlatSheets';
+      } else {
+        $$specs{item_type} = 'FinishedProduct';
+      }
+    }
 	}
 
 	@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
@@ -323,6 +328,7 @@ sub calc {
 				my $Stock = openprint::Paper::load_from_signature($Project, $sig_specs, $qty_index);
 				my $item_name;
 				my $item_qty = $$sig_specs{'hdnNetSheetCount'.$qty_index};
+        next if ! $item_qty;
 				#$item_qty = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
 				my $imposition = new openprint::Imposition();
 				$imposition->load($sig_specs, $qty_index, $Project);
