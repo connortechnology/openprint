@@ -204,5 +204,13 @@ sub wake {
 	return ($error, $info );
 }
 
+sub ipv6_link_local {
+  return '' if ! $_[0]{mac};
+  my @segments = split(/:/, $_[0]{mac});
+  $segments[0] = hex($segments[0]);
+  $segments[0] ^= 2;
+  return 'fe80::'.sprintf('%x',$segments[0])."$segments[1]:$segments[2]ff:fe$segments[3]:$segments[4]$segments[5]";
+}
+
 1;
 __END__

@@ -72,9 +72,8 @@ Deleted? :'.
 				<? echo ( 
 if ( 0 ) {
 					my %params = (
-							( $session{'/administrator/managerial/company_profiles.html?search_salesrep_id'} ? ( salesrep_id=>$session{'/administrator/managerial/company_profiles.html?search_salesrep_id'} ) : () ),
-							( $session{'/administrator/managerial/company_profiles.html?deleted'} ne '' ? ( 'deleted'=>$session{'/administrator/managerial/company_profiles.html?deleted'} ) : () ),
-							order=>'lower(name)',
+							( $session{$r->uri().'?search_salesrep_id'} ? ( salesrep_id=>$session{$r->uri().'?search_salesrep_id'} ) : () ),
+							( $session{$r->uri().'?deleted'} ne '' ? ( deleted=>$session{$r->uri().'?deleted'} ) : () ),
 					);
 					if ( $param{search_type} eq 'Suppliers' ) {
 						$params{supplier} ='Y';

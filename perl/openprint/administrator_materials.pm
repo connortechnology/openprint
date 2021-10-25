@@ -23,7 +23,7 @@ use vars qw( $r $log $dbh %param %variable );
 sub edit {
 	require openprint::Equipment;
 
-	my $Material = $variable{Material} = new openprint::Material( $param{ddmMaterial} );
+	my $Material = $variable{Material} = new openprint::Material( $param{material_id} );
 	ssi::save_params( $variable{uri}, ( 'ddmSearchCategory' ) );
 
 	if ( $param{btnFunction} ) {
@@ -217,7 +217,7 @@ sub edit {
 			(new openprint::Log())->save({action=>'Save Material', Object=>$Material, note=>join('<br/>', @changes)}) if @changes;
 			sql::end_transaction( $dbh, $ac );
 			if ( ! $variable{error} ) {
-				$variable{ExternalRedirect} = '/administrator/materials/edit.html?ddmMaterial='.$Material->id();
+				$variable{ExternalRedirect} = '/administrator/materials/edit.html?material_id='.$Material->id();
 				return;
 			} # end if
 

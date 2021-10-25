@@ -1873,7 +1873,7 @@ sub check_for_order {
 		$openprint::log->debug("Not Paper service in project $$Project{id}");
 	} # end if Stock Service Index
  
-	return $error ? $error : ();
+	return $error;
 } # end sub check_for_order
 
 sub allocate_for_order {

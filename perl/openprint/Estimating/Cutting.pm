@@ -517,8 +517,8 @@ sub signature_calc {
     my $pretrim_sides = $Stitcher->specification('Pre-trimmed Edges '.$$sig_specs{txtSignatureType});
     $pretrim_sides = $Stitcher->specification('Pre-trimmed Edges') if ! $pretrim_sides;
     %pretrim_sides = map { $_, $_ } split(',', $pretrim_sides) if $pretrim_sides;
-    $stitching_imposition = 1 if ! defined $stitching_imposition;
   }
+  $stitching_imposition = 1 if ! defined $stitching_imposition;
 
   my $has_uv = $$services{UVCoating} and openprint::Estimating::UVCoating::signature_needs($Project, $sig_specs);
 
@@ -1372,7 +1372,7 @@ sub calc {
     } else {
       $$specs{"txtPrice$qty_index"} = sprintf( $config{ProjectMoneyFormat}, Math::Round::nearest( 1, $price ) );
     } # end if
-    $$specs{"MPrice$qty_index"} = sprintf( $config{UnitPriceFormat}, $mprice );
+    $$specs{"MPrice$qty_index"} = sprintf( $config{UnitPriceFormat}, $mprice ? $mprice : 0 );
     $$specs{"txtUnitPrice$qty_index"} = sprintf( $config{UnitPriceFormat}, $price/$$specs{"txtQuantity$qty_index"});
 
   } # end foreach quantity
@@ -1408,7 +1408,7 @@ sub display {
     my $form = $$sig_specs{SignatureIndex};
     push @{$$variable{CuttingGroups}}, $signature_service_index, @$sig_specs{'SignatureIndex','txtServiceDescription'};
     foreach my $qty_index ( $Project->quantity_indexes() ) {
-      next if $$sig_specs{'StockType'.$qty_index} eq 'Roll';
+      next if $$sig_specs{'StockType'.$qty_index} and ($$sig_specs{'StockType'.$qty_index} eq 'Roll');
       @$variable{"txtSuppliedStockWidth-$form-$qty_index", "txtSuppliedStockHeight-$form-$qty_index",
         "txtSheetSizeWidth-$form-$qty_index", "txtSheetSizeHeight-$form-$qty_index"} =
           @$sig_specs{"hdnSuppliedStockWidth$qty_index","hdnSuppliedStockHeight$qty_index","StockWidth$qty_index","StockHeight$qty_index"};

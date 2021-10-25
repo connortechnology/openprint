@@ -137,6 +137,14 @@
 				next if ! sets::isin( $session{$uri.'?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
 			} # end if
 
+      if ( $session{$uri.'?has_attachments'} ne '' ) {
+        if ( $PO->Assets() ) {
+          next if ! $session{$uri.'?has_attachments'};
+        } else {
+          next if $session{$uri.'?has_attachments'};
+        }
+      }
+
 			push @{$$variable{PurchaseOrders}}, $PO;
 			$POs{$$PO{id}} = $PO;
 		} # end foreach PO
@@ -230,7 +238,7 @@
 			} # end if
 
 			my $qty = misc::sum( map { ( (!($$variable{types} and %{$$variable{types}})) or $$variable{types}{$_->type_id()} ) ? $_->qty() : 0 } $PO->Contents() );
-			my %statuses = ( cancelled => 'Cancelled', do_not_pay=>'Do Not Pay', is_paid=>'Paid' );
+			my %statuses = ( cancelled => 'Cancelled', do_not_pay=>'Do Not Pay', is_paid=>'Paid', deleted=>'Deleted' );
 
 			$html .= sprintf( q`
 				<td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td>

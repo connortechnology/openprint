@@ -213,15 +213,15 @@ sub save {
 	my ( $self, $data, $force_insert ) = @_;
 
 	my $type = ref $self;
-	if ( ! $type ) {
-		my ( $caller, undef, $line ) = caller;
+	if (!$type) {
+		my ($caller, undef, $line) = caller;
 		$log->error('No type in Object::save. self:'.$self.' from '.$caller.':'.$line);
 	}
 	my $local_dbh = eval '$'.$type.'::dbh';
 	$local_dbh = $openprint::dbh if ! $local_dbh;
 	$self->set($data ? $data : {});
-	if ( $debug or DEBUG_ALL ) {
-		if ( $data ) {
+	if ($debug or DEBUG_ALL) {
+		if ($data) {
 			foreach my $k ( keys %$data ) {
 				$log->debug('Object::save after set '.join(' ', $k, '=>',
 							(defined($$data{$k})?$$data{$k}:'undef'),

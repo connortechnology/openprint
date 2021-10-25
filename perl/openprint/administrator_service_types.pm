@@ -17,7 +17,6 @@ use vars qw( $r $log $dbh %variable %param );
 *param = \%openprint::param;
 
 sub edit {
-
 	my $ServiceType = new openprint::ServiceType( $param{ServiceType_id} );
 
   if ( $param{btnFunction} ) {
@@ -47,7 +46,6 @@ sub edit {
         $variable{ExternalRedirect} = '/administrator/service_types/index.html';
       }
     } elsif ( $param{btnFunction} eq 'Save' ) {
-
       if ( $param{new_category} ) {
         if ( my $Category = openprint::ServiceType_Category->find_one( name=>$param{new_category} ) ) {
           $param{category_id} = $Category->id();
@@ -66,13 +64,12 @@ sub edit {
       my $ac = sql::start_transaction( $dbh );
 
       my @changes = $ServiceType->changes(\%param);
-      if ( @changes ) {
-        if ( $_ = $ServiceType->save(\%param) ) {
-          $variable{error} .= "Error saving Service Type $$ServiceType{name} : $_<br/>";
-        } # end if
+      if (@changes) {
+        $_ = $ServiceType->save(\%param);
+        $variable{error} .= "Error saving Service Type $$ServiceType{name} : $_<br/>" if $_;t
       }
 
-      if ( ! $variable{error} ) {
+      if (!$variable{error}) {
 
         foreach my $SD ( $ServiceType->Defaults() ) {
           if ( ! $param{'name-'.$$SD{id}} ) {
@@ -105,7 +102,7 @@ sub edit {
         } # end if
 
       } # end if changes
-      if ( ! $variable{error} ) {
+      if (!$variable{error}) {
         (new openprint::Log())->save({ Object=>$ServiceType, action=>'Edit Service Type', note => join('<br/>', @changes ) });
         $variable{ExternalRedirect} = '/administrator/service_types/index.html';
       } else {

@@ -166,7 +166,7 @@ sub information {
 		my @company_fields = ('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
 		@variable{@company_fields} = @$Order{@company_fields};
 
-		if ( $variable{company_name} eq '' ) {
+		if ( !defined($variable{company_name}) or ($variable{company_name} eq '')) {
 			@variable{'company_name',
 				'address1',
 				'address2',
@@ -178,7 +178,7 @@ sub information {
 				'fax'} = $openprint::Company->get('name','address1','address2','city','state','postalcode','country','phone','fax');
 		} # end if
 
-		if ( $variable{email} eq '' ) {
+		if ( !defined($variable{email}) or ($variable{email} eq '')) {
 			my $User = $openprint::User;
 			# Assume that we are acting on someone else's behalf
 			if ( sets::isin( $session{user_type}, [ 'A','E'] ) ) {
@@ -644,7 +644,8 @@ sub check_for_errors {
 			push @errors, "Please select a shipping type for project $$OP{project_id}<br/>";
 		} # end if
 		my $Project = $OP->Project();
-		push @errors, $Project->check_for_order( $OP );
+		my $project_error = $Project->check_for_order( $OP );
+		push @errors, $project_error if $project_error;
 
 		if ( ! $Project->reference() ) {
 			push @errors, "Please give project $$Project{id} a reference";

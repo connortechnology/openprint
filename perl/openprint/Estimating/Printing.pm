@@ -649,10 +649,13 @@ $log->debug("Setting washed colours $$Colour{name}.'-'.$$sig_specs{'ddmPress'.$q
 			#$colour =~ s/\D//g;
 		} elsif ( $$real_colour{name} =~ /^(\w+) Spot Colour$/ ) {
 			$colour = $1;
-		#} elsif ( $$real_colour{name} =~ /PMS/ ) {
-			#$colour = $$real_colour{name};
 		} elsif ( $$real_colour{name} =~ /Aqueous/ ) {
 			next;
+		} elsif ( $$real_colour{name} =~ /(Spot|Overall)/ ) {
+			$colour = $$real_colour{name};
+			$colour =~ s/ (Spot|Overall)//ig;
+		#} elsif ( $$real_colour{name} =~ /PMS/ ) {
+			#$colour = $$real_colour{name};
 		} else { 
 			$colour = $$real_colour{name};
 		} # end if
@@ -3309,12 +3312,24 @@ sub breakdown {
 	$breakdown .= $$price{'Setup Breakdown'};
 	$breakdown .= sprintf('Roll2Sheet Charge: $%.2f<br/>', $$price{Roll2SheetMakeReady} ) if $$price{Roll2SheetMakeReady};
 	$breakdown .= sprintf('Stock Setup: $%1$.2f<br/>', $$price{StockSetup} ) if $$price{StockSetup};
-	if ( $$price{SuppliedPaperPrice} and ($$openprint::User{type} ne 'C' ) ) {
-		my $SuppliedPaperPrice = $$price{SuppliedPaperPrice};
-		$breakdown .= sprintf('Supplied Stock Handling Charge: $%1$.2f%2$s = $%3$.2f<br/>', @$SuppliedPaperPrice{'Price','units','Total'});
-	}
-	if ( $$Imposition{versions} ) {
-		my $VersionPrice = $$price{'Version Price'};	
+  if ( $$price{SuppliedPaperPrice} and ($$openprint::User{type} ne 'C' ) ) {
+    my $SuppliedPaperPrice = $$price{SuppliedPaperPrice};
+    if ( $$SuppliedPaperPrice{units} eq 'per 100lbs' ) {
+      $breakdown .= sprintf('Supplied Stock Handling Charge: $%1$.2f%2$s * %4$d/100 = $%3$.2f<br/>',
+        @$SuppliedPaperPrice{'Price','units','Total'}, $$price{'Stock Weight'});
+    } elsif ( $$SuppliedPaperPrice{units} eq 'per sheet' ) {
+      $breakdown .= sprintf('Supplied Stock Handling Charge: $%1$.2f%2$s * %4$d = $%3$.2f<br/>',
+        @$SuppliedPaperPrice{'Price','units','Total'}, $$price{'Gross Sheet Count'});
+    } elsif ( $$SuppliedPaperPrice{units} eq 'per m' ) {
+      $breakdown .= sprintf('Supplied Stock Handling Charge: $%1$.2f%2$s * %4$d/1000 = $%3$.2f<br/>',
+        @$SuppliedPaperPrice{'Price','units','Total'}, $$price{'Gross Sheet Count'});
+    } elsif ( $$SuppliedPaperPrice{units} eq 'total' ) {
+      $breakdown .= sprintf('Supplied Stock Handling Charge: $%1$.2f%2$s = $%3$.2f<br/>',
+        @$SuppliedPaperPrice{'Price','units','Total'});
+    } # end if
+  }
+  if ( $$Imposition{versions} ) {
+    my $VersionPrice = $$price{'Version Price'};	
 		$breakdown .= sprintf('Version Charge: $%1$.2f %2$s for %4$d versions = $%3$.2f<br/>', @$VersionPrice{'Price','units','Total'}, $$Imposition{versions} );
 	} # end if
 	$breakdown .= openprint::Estimating::Imposition::signature_summary( $Imposition, $$price{'Imposition Price'} ) if $$price{'Imposition Price'} and ! $ImpositionServiceType;
@@ -5000,31 +5015,7 @@ $imp->display('[warn]');
 					$$price{'Comparison Log'} .= 'cutting: +'.$cutting_results{Price}.' total: ' . $$price{ComparisonCost} . '<br/>' if COMPARISON_LOG;
 				} # end if
 
-				if ( $sig_specs{rdbSuppliedStock} eq 'Y' ) {
-					if ( my $SuppliedService = $Services{'Supplied'.$$Paper{type}} ) {
-						if ( my %SuppliedPaperPrice = $SuppliedService->get_price( undef, undef ) ) {
-							#$openprint::log->debug("Supplied Service units $SuppliedPaperPrice{units} : " . join(',', map { $_.'=>'.$SuppliedPaperPrice{$_} } keys %SuppliedPaperPrice));
-							if ( $SuppliedPaperPrice{range_units} and ($SuppliedPaperPrice{range_units} eq 'per 100lbs') ) {
-								%SuppliedPaperPrice = $SuppliedService->get_price($$price{'Stock Weight'}/100, undef);
-							#$openprint::log->debug("Supplied Service units for " . ($$price{'Stock Weight'}/100)." $SuppliedPaperPrice{units} : " . join(',', map { $_.'=>'.$SuppliedPaperPrice{$_} } keys %SuppliedPaperPrice));
-							}
-							if ( $SuppliedPaperPrice{units} eq 'per 100lbs' ) {
-								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Stock Weight'} / 100;
-							} elsif ( $SuppliedPaperPrice{units} eq 'per sheet' ) {
-								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Gross Sheet Count'};
-							} elsif ( $SuppliedPaperPrice{units} eq 'per m' ) {
-								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Gross Sheet Count'}/1000;
-							} elsif ( $SuppliedPaperPrice{units} eq 'total' ) {
-								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price};
-							} # end if
-							$$price{SuppliedPaperPrice} = \%SuppliedPaperPrice;
-							$$price{ComparisonCost} += $SuppliedPaperPrice{Total};
-							$$price{'Comparison Log'} .= 'SuppliedPaper: +'.$SuppliedPaperPrice{Total} . '<br/>' if COMPARISON_LOG;
-							$$price{'Total Cost'} += $SuppliedPaperPrice{Total};
-					#@$price{'Stock Total'} = $SuppliedPaperPrice{Total};
-						} # end if
-					} # end if
-				} elsif ( ! $PaperServiceType ) {
+        if ( ! $PaperServiceType ) {
 
 					my $paper_string = $Paper->id_string();
 
@@ -6222,6 +6213,32 @@ if ( 1 ) {
 	$price{'Stock Qty'} = $$Paper{type} eq 'Sheet' ? $sheet_qty{'Gross Sheet Count'} : $sheet_qty{Weight};
 
 	$$specs{"txtPressSheetQty$qty_index"} = $gross_sheets;
+
+  if ( $$specs{rdbSuppliedStock} eq 'Y' ) {
+    if ( my $SuppliedService = $Services{'Supplied'.$$Paper{type}} ) {
+      if ( my %SuppliedPaperPrice = $SuppliedService->get_price( undef, undef ) ) {
+        #$openprint::log->debug("Supplied Service units $SuppliedPaperPrice{units} : " . join(',', map { $_.'=>'.$SuppliedPaperPrice{$_} } keys %SuppliedPaperPrice));
+        if ( $SuppliedPaperPrice{range_units} and ($SuppliedPaperPrice{range_units} eq 'per 100lbs') ) {
+          %SuppliedPaperPrice = $SuppliedService->get_price($price{'Stock Weight'}/100, undef);
+          #$openprint::log->debug("Supplied Service units for " . ($$price{'Stock Weight'}/100)." $SuppliedPaperPrice{units} : " . join(',', map { $_.'=>'.$SuppliedPaperPrice{$_} } keys %SuppliedPaperPrice));
+        }
+        if ( $SuppliedPaperPrice{units} eq 'per 100lbs' ) {
+          $SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $price{'Stock Weight'} / 100;
+        } elsif ( $SuppliedPaperPrice{units} eq 'per sheet' ) {
+          $SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $price{'Gross Sheet Count'};
+        } elsif ( $SuppliedPaperPrice{units} eq 'per m' ) {
+          $SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $price{'Gross Sheet Count'}/1000;
+        } elsif ( $SuppliedPaperPrice{units} eq 'total' ) {
+          $SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price};
+        } # end if
+        $price{SuppliedPaperPrice} = \%SuppliedPaperPrice;
+        $price{ComparisonCost} += $SuppliedPaperPrice{Total};
+        $price{'Comparison Log'} .= 'SuppliedPaper: +'.$SuppliedPaperPrice{Total} . '<br/>' if COMPARISON_LOG;
+        $price{'Total Cost'} += $SuppliedPaperPrice{Total};
+        #@$price{'Stock Total'} = $SuppliedPaperPrice{Total};
+      } # end if
+    } # end if
+  }
 	# Remarked it out because colours is the mix of the colours... so sheet work, it will appear in there twice...w&t, just once
 	#$impressions /= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 #$log->debug("Colours: @colours");
@@ -6250,8 +6267,7 @@ $log->debug("Colour: $real_colour impressions $colour_impressions $$Imposition{r
 			$colour = $real_colour;
 			if ( $$Imposition{runstyle} eq 'Web' ) {
 				$colour =~ s/ (Spot|Overall)//g;
-			}
-			if ( $is_wt ) {
+			} elsif ( $is_wt ) {
 				if ( ($real_colour =~ /Overall/) and ! (
 							sets::isin($real_colour, $$project{side_one_colour_names})
 							and
@@ -6260,6 +6276,7 @@ $log->debug("Colour: $real_colour impressions $colour_impressions $$Imposition{r
 					$real_colour =~ s/Overall/Spot/;
 				} # end if
 			} # end if
+
 $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			if ( $real_colour =~ /Spot/ ) {
 				# Add Blanket Cut
@@ -6297,7 +6314,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 
 		my $Ink;
 
-		foreach my $C ( @{$special_colours{$real_colour}} ) {
+		foreach my $C ( @{$special_colours{$colour}} ) {
 			if ( ( ! ( $$C{grades} and scalar @{$$C{grades}} ) ) or sets::isin($grade, $C->grades()) ) {
 				$Ink = $C;
 				last;
