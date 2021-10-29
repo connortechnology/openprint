@@ -131,7 +131,7 @@ sub calc {
 
 	# Flat sheets or finished product?
   if (!$$specs{item_type} or !$$specs{item_type_lock}) {
-    if ($$services{NoBindery}) {
+    if (!$$services{Cutting} and !$$services{Folding}) {
       $$specs{item_type} = 'FlatSheets';
     } else {
       my @bindery_services = map { $$services{$$_{name}} ? $$services{$$_{name}} : () } openprint::Service->find(category=>'Bindery');
@@ -221,12 +221,12 @@ sub calc {
 							# It is unlikely to do more than 2out on a skid
 							my $imp = ($$setup{imposition} > 2) ? 2 : $$setup{imposition};
 							$items_by_size = int($depth/$item_calliper) * $imp;
-							$$results{breakdown} .= sprintf('%ss by size: %s/%s = %d high %dout sheets = %d per package<br/>',
-									$item_name, $depth, $item_calliper, int($depth/$item_calliper), $imp, $items_by_size*$imp);
+							$$results{breakdown} .= sprintf('%ss by size: %sx%s on %sx%s=%dout %s/%s = %d high %dout sheets = %d per package<br/>',
+									$item_name, $item_width, $item_height, $width, $height, $imp, $depth, $item_calliper, int($depth/$item_calliper), $imp, $items_by_size*$imp);
 						} else {
 							$items_by_size = int($depth/$item_calliper) * $$setup{imposition};
-							$$results{breakdown} .= sprintf('%ss by size: %s/%s = %d high * %dout = %d per package<br/>',
-									$item_name, $depth, $item_calliper, int($depth/$item_calliper), $$setup{imposition}, $items_by_size);
+							$$results{breakdown} .= sprintf('%ss by size: %sx%s on %sx%s=%dout %s/%s = %d high * %dout = %d per package<br/>',
+									$item_name, $item_width, $item_height, $width, $height, $$setup{imposition}, $depth, $item_calliper, int($depth/$item_calliper), $$setup{imposition}, $items_by_size);
 						}
 					} else {
 # Try Rolling
@@ -342,7 +342,7 @@ sub calc {
 				if (!$item_weight) {
 					$$specs{alert} .= 'Unable to load sheet weight<br/>';
 				}
-        $item_qty /= 2 if $imposition->sides() == 2;
+        $item_qty /= 2 if $imposition->sides() == 2 and $$imposition{runstyle} ne 'Web';
 				$item_name = 'Flat Sheet';
 				my $results = calc_signature($sig_specs, $item_qty, $item_width, $item_height, $item_calliper, $item_weight, $imposition, $item_name);
 				$package_qty += $$results{package_qty};
