@@ -199,7 +199,7 @@ function validate_form(form) {
     if (upper_company_name) {
       const summary = form.elements['reference'].value.toUpperCase();
 
-      if (upper_company_name.indexOf('REPRINT') || form.summary.indexOf('REPRINT')) {
+      if ((upper_company_name.indexOf('REPRINT') >=0) || (summary.indexOf('REPRINT') >= 0)) {
         if (confirm("This appears to be a reprint but you haven't marked it as such.  Is this a reprint?")) {
           set_value(form.elements['reprint'], 'Y');
           setReason('Y', $('reprintReasonSection'));
