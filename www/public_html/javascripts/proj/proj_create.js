@@ -68,20 +68,17 @@ function validate_data (form) {
 		return false;
 	} // end if
 
-  return true;
-  console.log(form);
-  console.log(form.elements['company_id']);
-
   if (form.elements['reprint'] && (get_value(form.elements['reprint']) != 'Y')) {
     const upper_company_name = form.elements['company_id'] ? get_ddm_text(form.elements['company_id']).toUpperCase() : company_name.toUpperCase();
     if (upper_company_name) {
-    const summary = form.elements['reference'].value.toUpperCase();
-    console.log(upper_company_name);
-    if (upper_company_name.IndexOf('REPRINT') || form.summary.IndexOf('REPRINT')) {
-      if(confirm("This appears to be a reprint but you haven't marked it as such.  Is this a reprint?")) {
-        set_value(form.elements['reprint'], 'Y');
+      const summary = form.elements['reference'].value.toUpperCase();
+      if (upper_company_name.indexOf('REPRINT') || form.summary.indexOf('REPRINT')) {
+        if (confirm("This appears to be a reprint but you haven't marked it as such.  Is this a reprint?")) {
+          set_value(form.elements['reprint'], 'Y');
+          setReason('Y', $('reprintReasonSection'));
+          return false;
+        }
       }
-    }
     }
   }
 	return true;
