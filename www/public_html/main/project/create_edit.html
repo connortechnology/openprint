@@ -2,8 +2,6 @@
 <h1>PROJECTS</h1>
 <h2><? echo ( $$variable{ProjectIndex} ? 'Edit' : 'Create' ) ?> Project <?ProjectIndex?></h2>
 </div>
-<script src="<?hash_link(/javascripts/service.js)?>"></script>
-<script src="<?hash_link(/javascripts/proj/proj_create.js)?>"></script>
 <form id="f1" name="f1" method="post" action="/main/project/view.html">
 	<?include('/includes/error_reporting.html') ?>
 	<div class="ProjectCreateEdit">
@@ -38,3 +36,5 @@ var tinymce_options = {
   };
 tinyMCE.init(tinymce_options);
 </script>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script src="<?hash_link(/javascripts/proj/proj_create.js)?>"></script>
