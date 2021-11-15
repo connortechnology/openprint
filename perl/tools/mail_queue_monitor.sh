@@ -30,7 +30,7 @@ MAILPROTO=smtp
 DOMAIN=`cat /etc/mailname`
 
 # From address
-MAILFROM=postfix@`cat /etc/hostname`
+MAILFROM=postfix@`cat /etc/mailname`
 
 # Recipient (this address should not route to the local postfix installation, for obvious reasons)
 MAILTO="support@connortechnology.com"
