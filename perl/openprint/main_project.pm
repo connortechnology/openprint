@@ -193,12 +193,7 @@ sub calc {
 	if ( $param{ProjectIndex} ) {
 		$Project = openprint::Project->find_one( id=>$param{ProjectIndex} );
 	}
-	if ( ! $Project ) {
-		$Project = new openprint::Project();
-		#$Project->save();
-	} else {
-		$log->debug("Found proejct $$Project{id}" . $Project->to_string() );
-	}
+  $Project = new openprint::Project() if !$Project;
 	my $Service;
 	if ( $param{ServiceIndex} ) {
 		my $Service = $Project->Service( $param{ServiceIndex} );

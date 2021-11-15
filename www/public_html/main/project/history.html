@@ -81,15 +81,15 @@
 			<ul>
 			<li>
 				<label>Creation Date</label>
-<? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+        <? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
 					to 
-<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+          <? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Last Updated</label>
-<? echo ( date_select_session( $r->uri(), 'updated_on_start', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+        <? echo ( date_select_session( $r->uri(), 'updated_on_start', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
 					to 
-<? echo ( date_select_session( $r->uri(), 'updated_on_end', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+          <? echo ( date_select_session( $r->uri(), 'updated_on_end', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 			<li><label>Company</label>
