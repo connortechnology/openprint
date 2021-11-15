@@ -21,7 +21,7 @@ use POSIX qw(ceil);
 
 require openprint::service;
 
-use constant DEBUG=>1;
+use constant DEBUG=>0;
 
 my %variables = (
 	'txtFinalWidth'=>['output'],'txtFinalHeight'=>['output'],
@@ -67,7 +67,6 @@ sub has_overrides {
 	} # end if
 
 	return @v;
-
 } # end sub has_overrides
 
 sub outputs {
@@ -77,6 +76,7 @@ sub outputs {
 	} # end foreach;
 	return @v;
 }
+
 sub no_outputs {
 	my @v;
 	foreach my $k ( keys %variables ) {
@@ -108,7 +108,7 @@ sub calc {
 
 	$$specs{Status} = 'calculated';
 
-	$log->debug("********************** START OF CALC SKIDS type:($$specs{ServiceType})**********************");
+	$log->debug("********************** START OF CALC SKIDS type:($$specs{ServiceType})**********************") if DEBUG;
 	my $Project = new openprint::Project($project_index);
 	my $services = $Project->services();
 	my $ServiceType = $Project->ServiceType($service_index);
@@ -130,15 +130,20 @@ sub calc {
 	} # end if
 
 	# Flat sheets or finished product?
-	if ( !$$specs{item_type} or !$$specs{item_type_lock}) {
-		if ( $$services{NoBindery} ) {
-			$$specs{item_type} = 'FlatSheets';
-		#} elsif ( ! map { $$services{$_} ? 1 : () } openprint::Service->find(category=>'Bindery') ) {
-			#$$specs{item_type} = 'FlatSheets';
-		} else {
-			$$specs{item_type} = 'FinishedProduct';
-		}
+  if (!$$specs{item_type} or !$$specs{item_type_lock}) {
+    if (!$$services{Cutting} and !$$services{Folding}) {
+      $$specs{item_type} = 'FlatSheets';
+    } else {
+      my @bindery_services = map { $$services{$$_{name}} ? $$services{$$_{name}} : () } openprint::Service->find(category=>'Bindery');
+      $openprint::log->debug("Bindery Services: @bindery_services");
+      if (!@bindery_services) {
+        $$specs{item_type} = 'FlatSheets';
+      } else {
+        $$specs{item_type} = 'FinishedProduct';
+      }
+    }
 	}
+  $openprint::log->debug("Item type $$specs{item_type}") if DEBUG;
 
 	@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	if ( ! ( $$specs{txtFinalWidth} and $$specs{txtFinalHeight} ) ) {
@@ -216,12 +221,12 @@ sub calc {
 							# It is unlikely to do more than 2out on a skid
 							my $imp = ($$setup{imposition} > 2) ? 2 : $$setup{imposition};
 							$items_by_size = int($depth/$item_calliper) * $imp;
-							$$results{breakdown} .= sprintf('%ss by size: %s/%s = %d high %dout sheets = %d per package<br/>',
-									$item_name, $depth, $item_calliper, int($depth/$item_calliper), $imp, $items_by_size*$imp);
+							$$results{breakdown} .= sprintf('%ss by size: %sx%s on %sx%s=%dout %s/%s = %d high %dout sheets = %d per package<br/>',
+									$item_name, $item_width, $item_height, $width, $height, $imp, $depth, $item_calliper, int($depth/$item_calliper), $imp, $items_by_size*$imp);
 						} else {
 							$items_by_size = int($depth/$item_calliper) * $$setup{imposition};
-							$$results{breakdown} .= sprintf('%ss by size: %s/%s = %d high * %dout = %d per package<br/>',
-									$item_name, $depth, $item_calliper, int($depth/$item_calliper), $$setup{imposition}, $items_by_size);
+							$$results{breakdown} .= sprintf('%ss by size: %sx%s on %sx%s=%dout %s/%s = %d high * %dout = %d per package<br/>',
+									$item_name, $item_width, $item_height, $width, $height, $$setup{imposition}, $depth, $item_calliper, int($depth/$item_calliper), $$setup{imposition}, $items_by_size);
 						}
 					} else {
 # Try Rolling
@@ -322,8 +327,11 @@ sub calc {
 
 				my $Stock = openprint::Paper::load_from_signature($Project, $sig_specs, $qty_index);
 				my $item_name;
-				my $item_qty = $$sig_specs{'hdnNetSheetCount'.$qty_index};
-				#$item_qty = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
+				my $item_qty = $$sig_specs{"hdnImpressionQuantity$qty_index"};
+        if (!$item_qty) {
+					$$specs{alert} .= 'Unable to load impression count!<br/>';
+          next;
+        }
 				my $imposition = new openprint::Imposition();
 				$imposition->load($sig_specs, $qty_index, $Project);
 				my ($item_width, $item_height, $item_calliper, $item_weight ) = (
@@ -334,6 +342,7 @@ sub calc {
 				if (!$item_weight) {
 					$$specs{alert} .= 'Unable to load sheet weight<br/>';
 				}
+        $item_qty /= 2 if $imposition->sides() == 2 and $$imposition{runstyle} ne 'Web';
 				$item_name = 'Flat Sheet';
 				my $results = calc_signature($sig_specs, $item_qty, $item_width, $item_height, $item_calliper, $item_weight, $imposition, $item_name);
 				$package_qty += $$results{package_qty};
@@ -342,7 +351,7 @@ sub calc {
 				$package_weight = $$results{package_weight};
 				$total_weight += $$results{total_weight};
 				$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>Form '.$$sig_specs{SignatureIndex}.'</legend>'.
-					sprintf('%d sheets size %dx%d @ %.3flbs<br/>', $$sig_specs{'hdnNetSheetCount'.$qty_index}, $item_width, $item_height, $item_weight).
+					sprintf('%d sheets size %dx%d @ %.3flbs<br/>', $item_qty, $item_width, $item_height, $item_weight).
 					$$results{breakdown}.'</fieldset>';
 				$status = 'uncalculated' if !$$results{package_qty};
 				$$specs{'txtItemsPerPackage'.$qty_index} = $$results{items_per_package};#if $$specs{'txtItemsPerPackage'.$qty_index} > $$results{items_per_package};

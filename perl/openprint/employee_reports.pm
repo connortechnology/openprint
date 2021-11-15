@@ -401,8 +401,8 @@ sub _order_history_results {
 			ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 			ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
 			( $session{$uri.'?status'} ? ( status_id => [ split(',', $session{$uri.'?status'} ) ] ) : () ),
-			( $session{$uri.'?total_start'} ? ( 'total >=' => $session{$uri.'?total_start'} ) : () ),
-			( $session{$uri.'?total_end'} ? ( 'total <=' => $session{$uri.'?total_end'} ) : () ),
+			( $session{$uri.'?total_start'} ne '' ? ( 'total >=' => $session{$uri.'?total_start'} ) : () ),
+			( $session{$uri.'?total_end'} ne '' ? ( 'total <=' => $session{$uri.'?total_end'} ) : () ),
 			( $session{$uri.'?currency_id'} ? ( currency_id=>$session{$uri.'?currency_id'} ) : () ),
 			order => ($param{order} ? $openprint::Order::fields{$param{order}} : 'id'),
 		);
