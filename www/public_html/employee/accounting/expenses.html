@@ -68,10 +68,10 @@
 				<ul>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 			<li><label>Company</label>
-				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
-				<select id="company_id" name="company_id" onchange="stop_filter_companies();load_expenses();">
+				<input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+				<select id="owner_id" name="owner_id" onchange="stop_filter_companies();load_expenses();">
 					<option value="">All</option>
-<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(), offers_credit=>1}), $session{$r->uri().'?company_id'}, {encode=>1} ) ) ?>
+<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(), offers_credit=>1}), $session{$r->uri().'?owner_id'}, {encode=>1} ) ) ?>
 				</select>
       </li>
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
@@ -80,14 +80,18 @@
 						<label>Currency</label>
 						<select name="currency_id" id="currency_id" onchange="load_expenses(this.form);">
 							<option value="">all</option>
-              <? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)'), $session{$r->uri().'?currency_id'} ); ) ?>
+              <? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)'), 
+              [split(',', $session{$r->uri().'?currency_id'})]
+              ); ) ?>
 						</select>
 					</li>
 					<li>
 						<label>Category</label>
 						<select name="category_id" id="category_id" onchange="load_expenses(this.form);">
 							<option value="">all</option>
-              <? echo ( make_drop_down( openprint::Expense_Category->dropdown('order'=>'lower(name)'), $session{$r->uri().'?category_id'} ); ) ?>
+              <? echo ( make_drop_down( openprint::Expense_Category->dropdown(order=>'lower(name)'),
+              [ split(',', $session{$r->uri().'?category_id'})],
+              ); ) ?>
 						</select>
 					</li>
 					<li>
@@ -101,15 +105,26 @@
                    order=>'lower(name)',
                    'last_expense_on >=' => DateTime::Format::Pg->format_datetime(
                      DateTime->now()->subtract(years=>2)
-                     )), $session{$r->uri().'?recipient_id'} ); ) ?>
+                     )),
+                     [split(',', $session{$r->uri().'?recipient_id'})],
+                     ); ) ?>
 						</select>
 					</li>
 					<li>
 						<label>Account</label>
-						<select name="account_id" id="account_id" onchange="load_expenses(this.form);">
-							<option value="">all</option>
-              <? echo ( make_drop_down( openprint::Expense_Account->dropdown('order'=>'lower(name)'), $session{$r->uri().'?account_id'} ); ) ?>
-						</select>
+              <? echo ( 
+              my @values = split(',', $session{$r->uri().'?account_id'});
+
+              ssi::select( openprint::Expense_Account->dropdown(order=>'lower(name)'),
+              \@values,
+              {
+                name=>'account_id',
+                id=>'account_id',
+                onchange=>'load_expenses(this.form);',
+                prepend=>['', 'all'],
+                ( @values > 1 ? ( multiple=>'multiple' ) : () ),
+              },
+              ); ) ?>
 					</li>
 					<li>
 						<label>Attention</label>
