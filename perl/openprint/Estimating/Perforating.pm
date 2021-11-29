@@ -140,8 +140,7 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $Signature_Service = $Project->Service( $signature_service_index );
-
-            my $sig_specs = $Signature_Service->specs();
+      my $sig_specs = $Signature_Service->specs();
 
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -222,18 +221,6 @@ sub signature_calc {
 
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref($Project, $$services{''}[0]) if $$services{''};
-
-	my $qty = $$specs{"txtQuantity$qty_index"};
-	if ( $$printing_specs{PageQuantity} ) {
-		# Padding
-		$qty *= $$printing_specs{PageQuantity};
-	} # end if
-
-	# This is deprecated.. because you could have a pad where the pages change.  So need to get it from the project
-	if ( $$sig_specs{PageQuantity} ) {
-		# Padding
-		$qty *= $$sig_specs{PageQuantity};
-	} # end if
 
 	my $form = $$sig_specs{SignatureIndex};
 
@@ -495,6 +482,11 @@ sub signature_calc {
 				next;
 			} # end if
 
+      my $qty = $$sig_specs{"hdnImpressionQuantity$qty_index"} * ($$imposition{imposition} / $$I{imposition});
+      #$Results{Breakdown} .=$$sig_specs{"hdnImpressionQuantity$qty_index"}." * ($$imposition{imposition} / $$I{imposition}) = $qty<br/>";
+      if ( $$imposition{runstyle} eq 'Sheet Work' and $imposition->sides() == 2 ) {
+        $qty /= 2;
+      }
 			my %servicePrice;
 
 			if ( $scor_equipment and ( $scor_equipment eq $$Equipment{strid} ) and ( $scor_imposition == $$I{imposition} ) ) {
@@ -505,6 +497,7 @@ sub signature_calc {
 # I don't know if we should be multiplying by this or not.. how many perfs can a given piece of equipment do in an impression?
 #$servicePrice *= $$specs{"txtQty-$signature_index"};
 			} # end if
+
 
 			my $runspeed = 0;
 
@@ -521,8 +514,8 @@ sub signature_calc {
 			} # end if
 
 			if ( $servicePrice{units} eq 'per m' ) {
-				$servicePrice{Total} = $servicePrice{Price} * ($qty/$$I{imposition})/ 1000;
-				$Results{Breakdown} .= sprintf('Service: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $qty/$$I{imposition} );
+				$servicePrice{Total} = $servicePrice{Price} * $qty / 1000;
+				$Results{Breakdown} .= sprintf('Service: $%1$.2f%2$s * %4$d/1000 = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $qty);
 			} elsif ( $servicePrice{units} eq 'per hour' ) {
 				if ( $runspeed ) {
 					my $hours = Math::Round::nearest( 0.01, ( $qty / $$I{imposition} ) / $runspeed );

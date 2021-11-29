@@ -51,22 +51,23 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 				$csr_commission = $Currency->convert_from($Order->csr_commission());
 				$credit_card_fee = $Currency->convert_from($Order->credit_card_fee());
 			}
+      my $url = (($Order->status() eq 'Cancelled') ? '/main/order/history_details.html?order_id=' : '/employee/project/view.html?order_id=').$Order->id();
 			$html .= sprintf(q`
 				<tr%1$s>
-					<td class="order_id"><a href="/employee/project/view.html?order_id=%2$d">%2$d</a></td>
-					<td class="Docket"><a href="/employee/project/view.html?order_id=%2$d">%3$d</a></td>
-					<td class="invoice_id"><a href="/employee/project/view.html?order_id=%2$d">%4$s</a></td>
-					<td class="Company"><a href="/employee/project/view.html?order_id=%2$d">%5$s</a></td>
-					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%6$s</a></td>
-					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%7$s</a></td>
-					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%8$s</a></td>
-					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%9$s</a></td>
-					<td class="status"><a href="/employee/project/view.html?order_id=%2$d">%10$s</a></td>
-					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%11$s</a></td>
+					<td class="order_id"><a href="%16$s">%2$d</a></td>
+					<td class="Docket"><a href="%16$s">%3$d</a></td>
+					<td class="invoice_id"><a href="%16$s">%4$s</a></td>
+					<td class="Company"><a href="%16$s">%5$s</a></td>
+					<td class="DateTime"><a href="%16$s">%6$s</a></td>
+					<td class="DateTime"><a href="%16$s">%7$s</a></td>
+					<td class="DateTime"><a href="%16$s">%8$s</a></td>
+					<td class="DateTime"><a href="%16$s">%9$s</a></td>
+					<td class="status"><a href="%16$s">%10$s</a></td>
+					<td class="Price"><a href="%16$s">%11$s</a></td>
 					%12$s
-					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%13$s</a></td>
-					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%14$s</a></td>
-					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%15$s</a></td>
+					<td class="Price"><a href="%16$s">%13$s</a></td>
+					<td class="Price"><a href="%16$s">%14$s</a></td>
+					<td class="Price"><a href="%16$s">%15$s</a></td>
 				</tr>
 				`, $rowclass, $Order->id(), $Order->docket(),
 				join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ),
@@ -82,6 +83,7 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 				openprint::Currency::format($price),
 				openprint::Currency::format($csr_commission),
 				openprint::Currency::format($credit_card_fee),
+        $url,
 			);
 			foreach my $Project ( $Order->Projects() ) {
 

@@ -237,13 +237,14 @@ function get_ddm_value ( ddm ) {
 	} // end if
 	return value;
 } // end function
+
 function get_ddm_text ( ddm ) {
 	if ( ddm ) {
 		if ( ddm.selectedIndex != -1 && ddm.options[ddm.selectedIndex] ) {
 			return ddm.options[ddm.selectedIndex].text;
 		} // end if
 	} else {
-		alert("null ddm passed to get_ddm_value : " + ddm);
+		console.log("null ddm passed to get_ddm_value : " + ddm);
 	} // end if
 } // end function
 

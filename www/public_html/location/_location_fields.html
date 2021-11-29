@@ -9,9 +9,9 @@
 		<div id="location_autocomplete" class="autocomplete" style="display:none;"></div>
 		<script>
 $j(document).ready(function() {
-var loc = $j('#location');
-if (loc)
-  loc.autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/location/_locations.html?type=place' } );
+  var loc = $j('#location');
+  if (loc)
+    loc.autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/location/_locations.html?type=place' } );
 });
 		</script>
 `, $$variable{Location}->name() );
