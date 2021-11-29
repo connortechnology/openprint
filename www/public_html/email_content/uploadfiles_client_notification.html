@@ -6,7 +6,7 @@ OR:
 	have txtCustomerName and txtContactName
 -->
 <? eval (
-	if ( $session{'user_id'} ) {
+	if ( $session{user_id} ) {
 		# load txtCompanyName and ContactName
 		my $User = new openprint::User( $session{'user_id'} );
 		my $Company = new openprint::Company( $session{'company_id'} );
@@ -22,7 +22,7 @@ OR:
 	} # end if
 ) ?>
 <? if ( $$variable{'txtContactName'} ) ?><?txtContactName?>,<br /><br /><? endif ( $$variable{'txtContactName'} ) ?>
-This email is a confirmation of your upload to <?SiteTitle?>. Please review the information below.<br /><br />
+This email is a confirmation of your upload to <?echo($config{SiteTitle})?>. Please review the information below.<br /><br />
 
 <fieldset>
    <legend>Contact Information</legend>
