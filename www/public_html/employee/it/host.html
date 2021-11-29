@@ -1,4 +1,3 @@
-<script type="text/javascript" src="<?hash_link(/employee/it/host.js)?>"></script>
 <div class="Host"><div class="Edit">
 <?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" method="post" action="/employee/it/host.html" enctype="multipart/form-data">
@@ -167,7 +166,6 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 <fieldset class="Where"><legend>Where</legend>
 <? echo ( 
     $$variable{Location} = $$variable{Host}->Location();
-
     return include('/location/_location_fields.html');
 ) ?>
 <?echo (
@@ -183,3 +181,4 @@ return ssi::select(
 <? echo ( include_logs( $$variable{Host} ); ) ?>
 <? endif ( $$variable{Host}->id() ) ?>
 </div></div>
+<script src="<?hash_link(/employee/it/host.js)?>"></script>
