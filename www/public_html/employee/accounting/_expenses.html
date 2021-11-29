@@ -14,7 +14,7 @@
 	} else {
 	$$variable{Expenses} = [ openprint::Expense->find( 
 			( map { 
-        ( exists $session{$uri.'?'.$_} and $session{$uri.'?'.$_} ne '' ) ? ( $_ => $session{$uri.'?'.$_} ) : ()
+        ( exists $session{$uri.'?'.$_} and $session{$uri.'?'.$_} ne '' ) ? ( $_ => [split(',',$session{$uri.'?'.$_})] ) : ()
         } ( 'category_id', 'recipient_id', 'account_id','attention','amount','total', 'currency_id', 'business_use' ) ),
 			date_filter( $uri.'?invoiced_on_end', 'invoiced_on <=' ),
 			date_filter( $uri.'?invoiced_on_start', 'invoiced_on >=' ),
@@ -24,7 +24,7 @@
 			date_filter( $uri.'?paid_on_start', 'paid_on >=' ),
 			date_filter( $uri.'?entered_on_end', 'created_on <=' ),
 			date_filter( $uri.'?entered_on_start', 'created_on >=' ),
-      ($openprint::User->type() eq 'A' ? ( $session{$uri.'?company_id'} ? (owner_id=>$session{$uri.'?company_id'}):()) : (owner_id=>$session{company_id})),
+      ($openprint::User->type() eq 'A' ? ( $session{$uri.'?owner_id'} ? (owner_id=>$session{$uri.'?owner_id'}):()) : (owner_id=>$session{owner_id})),
 			order			=> 'paid_on,due_on',
       deleted   => ($session{$uri.'?deleted'} eq '' ? [0,1] : $session{$uri.'?deleted'}),
 			) ];
