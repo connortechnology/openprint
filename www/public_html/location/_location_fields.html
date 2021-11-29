@@ -8,10 +8,11 @@
 	$html .= sprintf(q`<input type="text" id="location" name="location" value="%1$s"/>
 		<div id="location_autocomplete" class="autocomplete" style="display:none;"></div>
 		<script>
-		//Ajax.Autocompleter('location','location_autocomplete', '/location/_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectedLocation } );
+$j(document).ready(function() {
 var loc = $j('#location');
-if ( loc )
+if (loc)
   loc.autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/location/_locations.html?type=place' } );
+});
 		</script>
 `, $$variable{Location}->name() );
 	$html .= '</li>';
