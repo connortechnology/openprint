@@ -465,7 +465,7 @@ sub _expenses {
 				'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 				'paid_on_end_year','paid_on_end_month','paid_on_end_day',
 				'category_id', 'recipient_id', 'account_id','attention', 'currency_id',
-				'amount','total','business_use', 'company_id','deleted',
+				'amount','total','business_use', 'owner_id','deleted',
 				) );
 } # end sub _expenses
 
@@ -545,9 +545,16 @@ sub expense {
 		$variable{ExternalRedirect} = '/employee/accounting/expenses.html';
 
 # Now update the session for expenses so that we always show the entry we just saved.
-		foreach my $key ( 'company_id', 'recipient_id', 'account_id', 'category_id' ) {
-			if ( $session{'/employee/accounting/expenses.html?'.$key} and ( $session{'/employee/accounting/expenses.html?'.$key} != $$Expense{$key} ) ) {
-				delete $session{'/employee/accounting/expenses.html?'.$key};
+		foreach my $key ( 'owner_id', 'recipient_id', 'account_id', 'category_id' ) {
+      if (
+        $session{'/employee/accounting/expenses.html?'.$key}
+          and
+        $$Expense{$key}
+          and
+        ! sets::isin( split(',', $session{'/employee/accounting/expenses.html?'.$key}), $$Expense{$key})
+      ) {
+        $session{'/employee/accounting/expenses.html?'.$key} .= ','.$$Expense{$key};
+        #delete $session{'/employee/accounting/expenses.html?'.$key};
 			} # end if
 		} # end foreach
 
