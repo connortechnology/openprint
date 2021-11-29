@@ -1063,23 +1063,23 @@ sub companies {
 		if ( $param{btnFunction} eq 'Download' ) {
 			my $uri = $r->uri();
 
-			my %filters = (
-					order =>  'lower(name)',
-					( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
-					( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
-					( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
-					( $session{$uri.'?country'} ne '' ? ( country => $session{$uri.'?country'} ) : () ),
-					( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
+      my %filters = (
+        order =>  'lower(name)',
+        ( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
+        ( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
+        ( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+        ( $session{$uri.'?country'} ne '' ? ( country => $session{$uri.'?country'} ) : () ),
+        ( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
 
-					ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
-					ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
-					ssi::date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
-					ssi::date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
-					);
-  if ( $session{$uri.'?country_id'} ) {
-    my $Country = new openprint::Location( $session{$uri.'?country_id'} );
-    $filters{country} = $Country->short();
-  }
+        ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
+        ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+        ssi::date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+        ssi::date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
+      );
+      if ( $session{$uri.'?country_id'} ) {
+        my $Country = new openprint::Location( $session{$uri.'?country_id'} );
+        $filters{country} = $Country->short();
+      }
 
 			if ( $session{$uri.'?salesrep_id_exclude'} ) {
 				my @csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
@@ -1104,14 +1104,13 @@ sub companies {
 						 (@Orders ? ssi::format_date( $Orders[0]->created_on() ) : '' ),
 			} # end foreach Company
 			misc::export_csv( $r, $log, \%variable, 'customers.csv', \@header, \@data );
-
-
 		}
 	}
 } # end sub companies
+
 sub _companies {
 	ssi::save_params( '/administrator/managerial/companies.html', (
-				'salesrep_id', 'marketing_category_id', 'company_name', 'country',
+				'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),
 				) );
