@@ -1,0 +1,3 @@
+[submodule "www/public_html/javascripts/jQuery-in-place-editor"]
+	path = www/public_html/javascripts/jQuery-in-place-editor
+	url = https://github.com/cblage/jQuery-in-place-editor.git
