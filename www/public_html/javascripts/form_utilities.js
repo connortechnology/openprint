@@ -1649,3 +1649,14 @@ function stop_filter_companies() {
 		filter_ajax = null;
 	}
 } 
+
+function load_logs_form() {
+  const form = jQuery('#logs_form');
+  if (form.length) {
+    jQuery('#Logs').load('/includes/_logs_contents.html',
+            jQuery('#logs_form').serialize()
+            );
+  } else {
+    console.error('No form found');
+  }
+}
