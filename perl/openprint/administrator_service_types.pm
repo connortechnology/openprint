@@ -66,7 +66,7 @@ sub edit {
       my @changes = $ServiceType->changes(\%param);
       if (@changes) {
         $_ = $ServiceType->save(\%param);
-        $variable{error} .= "Error saving Service Type $$ServiceType{name} : $_<br/>" if $_;t
+        $variable{error} .= "Error saving Service Type $$ServiceType{name} : $_<br/>" if $_;
       }
 
       if (!$variable{error}) {
