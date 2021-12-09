@@ -542,7 +542,7 @@ sub button {
 	} # end if
 	$$options{text} = $name if ! exists $$options{text};
 	my $html = 
-		qq`<button id="Button$name" class="button $$options{class}" type="$$options{type}"` ;
+		qq`<button id="Button$name" class="button $$options{class}"` ;
 	$html .= qq`name="$$options{name}" ` if $$options{name};
 	$html .= qq`value="$$options{value}" ` if $$options{value};
 	$html .= qq`title="$$options{title}" ` if $$options{title};
