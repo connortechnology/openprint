@@ -1112,9 +1112,18 @@ sub _companies {
 	ssi::save_params( '/administrator/managerial/companies.html', (
 				'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'updated_on_end_' . $_ } ( 'year','month','day' ) ),
+				( map { 'last_project_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'last_project_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+  if ($param{action} eq 'Delete') {
+    foreach my $Company ( openprint::Company->find( id=> (ref $param{'company_id[]'} eq 'ARRAY') ? $param{'company_id[]'} : [$param{'company_id[]'}]) ) {
+      $Company->delete();
+    }
+  }
 } # end sub _companies
 
 sub folds {

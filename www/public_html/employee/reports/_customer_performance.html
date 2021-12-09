@@ -28,22 +28,24 @@
 		@csr_ids = map { $_->id() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
 	} # end if
 
-my $company_sql = openprint::Company->find_sql(
-				salesrep_id=>\@csr_ids, order=>'lower(name)',
+  my $company_sql = openprint::Company->find_sql(
+				(@csr_ids ? (salesrep_id=>\@csr_ids) : () ),
+        order=>'lower(name)',
 				( $session{$uri.'?country'} ? ( country=>$session{$uri.'?country'} ) : () ),
 				);
-$$company_sql{sql} =~ s/\*/id/;
+  $$company_sql{sql} =~ s/\*/id/;
 
 	my @Companies = openprint::Company->find(
-				salesrep_id=>\@csr_ids, order=>'lower(name)',
+				(@csr_ids ? (salesrep_id=>\@csr_ids) : () ),
+        order=>'lower(name)',
 				( $session{$uri.'?country'} ? ( country=>$session{$uri.'?country'} ) : () ),
 				);
-my @company_ids = map { $$_{id} } @Companies;
+  my @company_ids = map { $$_{id} } @Companies;
   my %Companies_By_CSR = misc::make_hash_from_array('salesrep_id', @Companies);
 			my %admin_users = map { $$_{company_id}, $_ } openprint::User->find(
 					'company_id in'	=>	$company_sql,
-#company_id=>\@company_ids,
-administrator=>'Y',order=>'id DESC',limit=>1);
+        #company_id=>\@company_ids,
+        administrator=>'Y',order=>'id DESC',limit=>1);
 			my %active_users = map { $$_{company_id}, $_ } openprint::User->find(
 					'company_id in'	=>	$company_sql,
 #company_id=>\@company_ids,
