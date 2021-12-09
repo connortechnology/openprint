@@ -205,6 +205,7 @@ sub load {
 	} # end if
 	if ( $data and %$data ) {
 		my %keys = map { (defined $$fields{$_} ? ($_=>$$fields{$_}) : (exists $$data{$_} ? ($_=>$_) : ()) ) } keys %$fields;
+    #$log->debug(join(',', map { $_ .'=>'.$keys{$_} } sort { $a cmp $b} keys %keys));
 		@$self{keys %keys} = @$data{ values %keys };
 	} # end if
 } # end sub load
@@ -788,10 +789,10 @@ sub get_fields_values {
 			if ( $and_ref eq 'HASH' ) {
 				my @keys = keys %{$$search{and}};
 				if ( @keys ) {
-				my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$search{and},  \@keys );
+          my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$search{and},  \@keys );
 
-				push @where, '('.join(' AND ', @{$where} ).')';
-				push @values, @{$values};
+          push @where, '('.join(' AND ', @{$where} ).')';
+          push @values, @{$values};
 				} else {
 					$log->error("No keys in and");
 				}
@@ -1028,7 +1029,7 @@ sub find {
 
 	my $sql = find_sql($object_type, $params);
 
-	my $do_cache = $$sql{columns} ne '*' ? 0 : 1;
+	my $do_cache = (index($$sql{columns}, '*') != -1) ? 0 : 1;
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
 	if ( ( 1 == scalar keys %{$$sql{used_fields}} ) and $$params{id} ) {
 		if ( $cache{$config{db_name}}{$object_type}{$$params{id}} ) {
