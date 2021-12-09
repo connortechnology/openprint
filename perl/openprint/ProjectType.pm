@@ -42,7 +42,7 @@ sub save {
 	if ( ( my $error = $self->SUPER::save( $params ) ) ) {
 		return $error;
 	} else {
-		# self->equired_services is guaranteed to populate $$self{erquired_services}
+		# self->required_services is guaranteed to populate $$self{required_services}
 		$self->required_services( $$params{required_services} );
 		sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{id} );
 		# The union gets rid of duplicates
@@ -50,7 +50,6 @@ sub save {
 			next if ! $servicetype_id;
 			sql::insert( undef, undef, 'ProjectType_RequiredServices', ['ProjectType_id', $$self{id}, 'ServiceType_id', $servicetype_id ] );
 		} # end foreach
-		# self->equired_services is guaranteed to populate $$self{erquired_services}
 		$self->blocked_services( $$params{blocked_services} );
 		sql::execute( undef, undef, q{DELETE FROM ProjectType_BlockedServices WHERE projecttype_id=?}, $$self{id} );
 		# The union gets rid of duplicates
