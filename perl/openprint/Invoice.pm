@@ -295,6 +295,7 @@ sub email_html {
   } else {
     $openprint::log->debug('Have no skinpath at ' . $openprint::config{SkinPath}.'/'.$self->Invoicer()->name());
   }
+  $data{SkinPath} = $skin_path;
   my $invoice_template = ssi::slurp_content($skin_path.'/invoice_template.html');
   $invoice_template = ssi::slurp_content('/invoice_template.html') if ! $invoice_template;
   $data{ReplacementText} = ssi::include('/email_content/invoice.html', \%data);
@@ -314,6 +315,7 @@ sub send {
 			Invoice => $self,
 			uri => 'invoice',
 			Currency	=>	$self->Currency(),
+
 	);
 
   my $skin_path = '';
@@ -323,6 +325,7 @@ sub send {
   } else {
     $openprint::log->debug("Have no skinpath at " . $openprint::config{SkinPath}.'/'.$self->Invoicer()->name() );
   }
+  $data{SkinPath} = $skin_path;
 
 	my $email_template = ssi::slurp_content($skin_path.'/email_template.html');
 	$email_template = ssi::slurp_content('/email_template.html') if ! $email_template;
