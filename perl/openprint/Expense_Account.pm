@@ -1,8 +1,9 @@
 package openprint::Expense_Account;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults $default_sort);
 $debug = 0;
+$default_sort = 'lower(name)';
 $table = 'expense_accounts';
 $serial = 'expense_accounts_id_seq';
 %fields = (
