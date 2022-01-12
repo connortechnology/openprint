@@ -5,12 +5,14 @@
         <ul>
 				<li class="form-group">
 					<label for="email" class="col-form-label">E-mail</label>
-					<input type="email" id="email" name="email" value="<? echo ( $param{email} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" /><br/>
+					<input type="email" id="email" name="email" value="<? echo ( $param{email} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" autocomplete="username"/><br/>
 					<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt=""/> Please enter your email address.</span>
 				</li>
 				<li class="form-group">
 					<label for="password" class="col-form-label">Password</label>
-					<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
+					<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" autocomplete="current-password"/>
+          <span onclick="$j('#password').attr('type', $j('#password').attr('type') ? 'password' : 'text' : 'password');">Show</span>
+          <br/>
 					<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt=""/> Please enter your password.</span>
 				</li>
 				<li class="form-group">
