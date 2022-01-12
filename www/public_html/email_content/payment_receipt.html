@@ -40,7 +40,7 @@ $Invoice->link_to( format_date( $Invoice->posted_on() ) ),
 $Invoice->link_to( format_date( $Invoice->due_on() ) ),
 $Invoice->link_to( $Invoice->Currency()->format( $Invoice->total() ) ),
 $Invoice->link_to( $Invoice->Currency()->format( $Invoice->interest() ) ),
-$Invoice->link_to( $Invoice->Currency()->format( $Invoice->owing() ) ),
+$Invoice->link_to( $Invoice->Currency()->format( $Invoice->is_early() ? $Invoice->early_owing() : $Invoice->owing() ) ),
 );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 
