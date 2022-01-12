@@ -124,15 +124,18 @@ sub owing {
 
 sub owing_early {
   my $self = shift;
-	my $owing = $self->total() + $self->interest() - $self->paid();
+	my $owing = $self->total() + $self->interest();
+  my $owing_early;
 	if ( $$self{early_payment_units} eq 'amount' ) {
-		return Math::Round::nearest(1/(10**$self->Currency()->precision()), $owing + $$self{early_payment_amount});
+		$owing_early = Math::Round::nearest(1/(10**$self->Currency()->precision()), $$self{early_payment_amount} - $self->paid());
 	} elsif ( $$self{early_payment_units} eq 'percent' ) {
-		return Math::Round::nearest(1/(10**$self->Currency()->precision()), $owing * ( 1 - $$self{early_payment_amount}/100 ));
+    $owing_early = Math::Round::nearest(1/(10**$self->Currency()->precision()), ($owing * ( 1 - $$self{early_payment_amount}/100) - $self->paid()));
 	} else {
     $openprint::log->error('Unknown units for early_payment ('.$$self{early_payment_units}.')');
-		return Math::Round::nearest(1/(10**$self->Currency()->precision()), $owing);
+		$owing_early = Math::Round::nearest(1/(10**$self->Currency()->precision()), $owing);
 	} # end if
+  $openprint::log->debug("owing_early = $owing_early = owing: $owing = $$self{total} + $$self{interest} - $$self{paid}");
+  return $owing_early;
 } # end sub owing
 
 sub Invoicee {
@@ -632,6 +635,14 @@ sub sent_on {
       LIMIT 1`, $_[0]{id});
   }
   return $_[0]{sent_on};
+}
+
+sub is_early {
+  return 0 if ! $_[0]->early_payment_amount();
+  my $early_payment_time = Date::Parse::str2time($_[0]->early_payment_date());
+  my $today = Date::Calc::Date_to_Time(Date::Calc::Today(), (0,0,0));
+  $openprint::log->debug("is_early: early_time $early_payment_time, today $today : " . ($early_payment_time > $today));
+  return ($early_payment_time > $today);
 }
 
 1;
