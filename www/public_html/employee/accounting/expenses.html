@@ -60,6 +60,10 @@
 						<label>Deleted</label>
             <? echo ( radio(deleted=>[ '1', 'Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, { onclick=>'load_expenses(this.form);' } ); ) ?>
 					</li>
+          <li>
+            <label>Description</label>
+            <? echo ( input(type=>'text', name=>'description', value=>$session{$r->uri().'?description'}) )?>
+          </li>
 				</ul>
 			</div>
 		</div>
