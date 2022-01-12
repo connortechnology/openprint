@@ -26,7 +26,7 @@
 			$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->tax() ) );
 			$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->interest() ) );
 			$html .= sprintf('<td class="Price"><span id="amount_%d">%s</span></td>', $IP->id(), openprint::Currency::format( $IP->amount() ) );
-			$html .= sprintf('<td class="Price" id="remaining_%d">%s%s</td>', $IP->id(), openprint::Currency::format($Invoice->owing()) );
+      $html .= sprintf('<td class="Price" id="remaining_%d">%s%s</td>', $IP->id(), openprint::Currency::format($Invoice->is_early() ? $Invoice->owing_early() : $Invoice->owing()) );
 			$html .= sprintf('<td class="buttons">%s</td>', button( 'del'.$IP->id(), {onclick=>'unpay_invoice('.$IP->invoice_id().');', text=>'-', title=>'Remove' } ) );
 			$html .= "</tr>\n";
 			$html .= '<script>';
