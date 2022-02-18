@@ -8,10 +8,11 @@
 		<div class="leftColumn">
 			<ul>
 			<li><label for="recipient_id">Recipient</label>
+				<input type="text" onkeyup="filter_companies('recipient_id', {name:this.value, offers_credit:'1', selected_id:get_ddm_value($('recipient_id'))});" class="filter" />
 				<select id="recipient_id" name="recipient_id" onchange="load_unpaid();">
 					<option value=""> select </option>
 					<? echo ( make_drop_down(
-             openprint::Company->dropdown(supplier=>'Y'),
+             openprint::Company->dropdown(offers_credit=>'1'),
              $$variable{Payment}->recipient_id() ? $$variable{Payment}->recipient_id() : $session{company_id}
              ); ) ?>
 				</select>
