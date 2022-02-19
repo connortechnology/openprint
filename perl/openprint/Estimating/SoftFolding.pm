@@ -92,8 +92,15 @@ sub calc {
 
 			my %ServicePrice = openprint::service::get_price_object( 'SoftFolding'.$$project_specs{'txtTotalPageQuantity'}.'Page', $finished_calliper, $Equipment ); 
 			if ( ! %ServicePrice ) {
-				%ServicePrice = openprint::service::get_price_object( 'SoftFolding', $finished_calliper, $Equipment ); 
+				%ServicePrice = openprint::service::get_price_object('SoftFolding', undef, $Equipment); 
 			} # end if
+			if ( %ServicePrice ) {
+				if ( $ServicePrice{range_units} eq 'calliper' ) {
+					%ServicePrice = openprint::service::get_price_object('SoftFolding', $finished_calliper, $Equipment); 
+				} else {
+					%ServicePrice = openprint::service::get_price_object('SoftFolding', $$specs{'txtQuantity'.$qty_index}, $Equipment); 
+				}
+			}
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
 			} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {

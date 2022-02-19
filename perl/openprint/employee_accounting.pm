@@ -12,7 +12,6 @@ require openprint::Order_Invoice;
 require openprint::Ledger;
 require openprint::Expenditure;
 require openprint::Expense;
-require openprint::Payment;
 require misc;
 require sql;
 

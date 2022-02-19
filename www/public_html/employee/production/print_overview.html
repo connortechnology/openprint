@@ -1,130 +1,7 @@
-<script type="text/javascript">
-	tinyMCE.init( {
-            mode: "none",
-            plugins: "paste",
-            theme : "advanced",
-            theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,bullist,numlist,outdent,indent,cleanup,html",
-            theme_advanced_buttons2 : '',
-            theme_advanced_buttons3 : ''
-        } );
-
-	var current_editor;
-	function tinymce_on( id ) {
-		if ( current_editor ) {
-			tinymce.execCommand( 'mceToggleEditor', false, current_editor );
-		} // end if
-		current_editor = id;
-		tinymce.execCommand( 'mceToggleEditor', true, id );
-	} // end function tinymce_on
-
-	function job_popup( job_id ) {
-		popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:575, height:525,closeCallback: job_popup_close} );
-	} // end function job_popup
-
-	function job_popup_close() {
-		tinymce.EditorManager.execCommand( 'mceRemoveControl', true, 'comment' );
-		tinymce.EditorManager.execCommand( 'mceRemoveControl', true, 'stock' );
-		current_editor = null;
-		return true;
-	} // end function job_popup_close
-
-    var job_popup_options = {
-		mode: "textareas",
-		editor_selector : "mce",
-        plugins: "paste",
-        theme : "advanced",
-            theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,bullist,numlist,outdent,indent,cleanup,html",
-            theme_advanced_buttons2 : '',
-            theme_advanced_buttons3 : ''
-    };
-
-<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
-	var dropfunction = function(el){
-		new Ajax.Request( '_drop.json', { method: 'post', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
-	}
-
-	var drops = new Array();
-	function setup_drops( ) {
-		for ( var i = 0; i < drops.length; i += 1 ) {
-			if ( $(drops[i]) ) {
-				Sortable.create(drops[i], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
-			} // end if
-		} // end foreach id in drops
-	} // end function setup_drops
-
-	function setup_dates( ) {
-		var re = /^JumpToDate(\d*)$/;
-		var dates = $$('span.DueDate');
-		for ( var i = 0; i < dates.length; i+= 1 ) {
-			var match = dates[i].id.match(re);
-			if ( match.length ) {
-					Calendar.setup({
-					inputField	:	"ScheduleDate-"+match[1],		// id of the input field
-					ifFormat		:	"%Y-%m-%d",		// format of the input field
-					daFormat		:	"%b %d",
-					align			:	"Tl",
-					showsTime		:	false,			// will display a time selector
-					displayArea :	'JumpToDate'+match[1],
-					singleClick :	false,			// double-click mode
-					onClose	 :	setduedate
-					});
-			} // end if match
-		} // end for each date id
-	} // end function setup_dates()
-
-	function toggle_lock( id, img ) {
-		if(img.src=='/images/small-locked.gif'){
-			img.src='/images/small-unlocked.gif';
-			new Ajax.Request('_li_change.json', { parameters: { id: id, locked: false } } );
-		}else{
-			img.src='/images/small-locked.gif';
-			new Ajax.Request('_li_change.json', { parameters: { id: id, locked: true } } );
-		};
-	}
-
-	function setduedate( date ) {
-		var form = date.params.inputField.form;
-		var name = date.params.inputField.name;
-		var reg = /ScheduleDate-(\d*)/;
-		var ar = reg.exec( name );
-		new Ajax.Request( '_li_change.json', { parameters: { action: 'setduedate', schedule_id: ar[1], duedate: date.params.inputField.value } } );
-		calendar.hide();
-	}
-
-	function approve_job( ul_id, job_id ) {
-		new Ajax.Updater( ul_id, '_ul.html', { parameters: { schedule_id: job_id, action:'approve'}, evalScripts: true } );
-	} // end function approve_job(job_id)
-	function remove_job( job_id ) {
-		if(confirm('Are you sure?')){
-			new Ajax.Request('_li_change.json', {parameters: {schedule_id:job_id, action: 'RemoveJob'}, evalScripts: true } );
-		} // end if
-	} // end function remove_job
-	function split_job( ul_id, job_id ) {
-		new Ajax.Updater( ul_id, '_ul.html', { parameters: { schedule_id: job_id, action:'split'}, evalScripts: true } );
-	} // end function split_job
-	function up_job( job_id ) {
-		new Ajax.Request( '/employee/production/_li_change.json', {parameters: { schedule_id:job_id, action: 'Up' }, evalScripts: true } );
-	} // end function up_job
-	function down_job( job_id ) {
-		new Ajax.Request( '/employee/production/_li_change.json', {parameters: { schedule_id:job_id, action: 'Down' }, evalScripts: true } );
-	} // end function up_job
-
-	function update_runtime( ddm ) {
-		ddm.form.runtime.value = ddm.form.runtime_hours.value + ':' + ddm.form.runtime_minutes.value + ':' + ddm.form.runtime_seconds.value;
-	}
-
-<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
-	function start_job( job_id ) {
-		new Ajax.Request('_li_change.json', { parameters: { schedule_id: job_id, action: 'start' } } );
-	} // end function start_job
-	function stop_job( job_id ) {
-		new Ajax.Request('_li_change.json', { parameters: { schedule_id: job_id, action: 'stop' } } );
-	} // end function stop_job
-</script>
 <? eval (
 	my ( $starttime, $endtime );
-	if ( $session{'/employee/production/print_overview.html?Equipment'} ) {
-		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(',', $session{'/employee/production/print_overview.html?Equipment'} ) ).')' );
+	if ( $session{$r->uri().'?Equipment'} ) {
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(',', $session{$r->uri().'?Equipment'} ) ).')' );
 	} else {
 		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
 	} # end if
@@ -135,24 +12,28 @@
 			$endtime = Date::Format::time2str( '%Y-%m-%d', $endtime_seconds );
 		}
 	} # end if
-	if ( ! $session{'/employee/production/print_overview.html?schedule_start_year'} ) {
+	if ( ! $session{$r->uri().'?schedule_start_year'} ) {
 		@session{
-				'/employee/production/print_overview.html?schedule_start_year',
-				'/employee/production/print_overview.html?schedule_start_month',
-				'/employee/production/print_overview.html?schedule_start_day'}
+				$r->uri().'?schedule_start_year',
+				$r->uri().'?schedule_start_month',
+				$r->uri().'?schedule_start_day'}
 				= $starttime ? split('-', $starttime ) : Date::Calc::Today();
 	} # end if
 
-	if ( ! $session{'/employee/production/print_overview.html?schedule_end_year'} ) {
+	if ( ! $session{$r->uri().'?schedule_end_year'} ) {
 		@session{
-				'/employee/production/print_overview.html?schedule_end_year',
-				'/employee/production/print_overview.html?schedule_end_month',
-				'/employee/production/print_overview.html?schedule_end_day'}
+				$r->uri().'?schedule_end_year',
+				$r->uri().'?schedule_end_month',
+				$r->uri().'?schedule_end_day'}
 				= $endtime ? split('-', $endtime ) : Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
 	} # end if
 ) ?>
 <?include('/includes/error_reporting.html')?>
-<form id="f1" name="f1" method="post" action="/employee/production/print_overview.html">
+<script>
+
+var drops = new Array();
+</script>
+<form id="f1" name="f1" method="get" action="/employee/production/print_overview.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="ProjectIndex" />
 	<input type="hidden" name="ServiceIndex" />
@@ -165,7 +46,7 @@
 				<select name="category_id" id="category_id" onchange="f1.submit();">
 					<option value="">All</option>
 				<? echo (
-	make_drop_down( openprint::Equipment_Category->dropdown( order=>'lower(name)'), $session{'/employee/production/print_overview.html?category_id'} );
+	make_drop_down( openprint::Equipment_Category->dropdown( order=>'lower(name)'), $session{$r->uri().'?category_id'} );
 	) ?>
 				</select>
 			</li>
@@ -173,15 +54,15 @@
 <? echo ( 
 	@{$$variable{Equipment}} = ();
 	my @presses = openprint::Equipment->find(
-		( $session{'/employee/production/print_overview.html?category_id'} ? 
-		  ( 'category_id @>' => [ split(',', $session{'/employee/production/print_overview.html?category_id'} ) ] ) : ()
+		( $session{$r->uri().'?category_id'} ? 
+		  ( 'category_id @>' => [ split(',', $session{$r->uri().'?category_id'} ) ] ) : ()
 		),
 		 useinscheduling=>1, order=>'sorting,lower(strname)'
 		);
-	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/print_overview.html?Equipment'} ) );
+	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{$r->uri().'?Equipment'} ) );
 	if ( ! @selected_equipment ) {
 		@selected_equipment = map { $_->id() } @presses;
-		$session{'/employee/production/print_overview.html?Equipment'} = join(',', @selected_equipment );
+		$session{$r->uri().'?Equipment'} = join(',', @selected_equipment );
 	}
 
 	foreach (@presses) {
@@ -200,11 +81,11 @@
 			<li>
 				<label>Date Range</label>
 					<? echo ( 
-						date_select_session( '/employee/production/print_overview.html', 'schedule_start', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
+						date_select_session( $r->uri(), 'schedule_start', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
 					) ?>
 				to
 					<? echo ( 
-						date_select_session( '/employee/production/print_overview.html', 'schedule_end', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
+						date_select_session( $r->uri(), 'schedule_end', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
 					) ?>
 			</li>
 			<li>
@@ -218,22 +99,22 @@
 							'30'	=>	'30px / hour',
 							'40'	=>	'40px / hour',
 						);
-						return make_drop_down( \@options, $session{'/employee/production/print_overview.html?scale'} );
+						return make_drop_down( \@options, $session{$r->uri().'?scale'} );
 					) ?>
 				</select>
 			</li>
 			<li>
 				<label>Views</label>
 				<? echo ( join("\n",
-					button( 'Today', { href=>'/employee/production/print_overview.html?action=Today', text=>'Today' } ),
-					button( 'twoday', { href=>'/employee/production/print_overview.html?action=2day', text=>'2day' } ),
-					button( 'threeday', { href=>'/employee/production/print_overview.html?action=3day', text=>'3day' } ),
-					button( '1week', { href=>'/employee/production/print_overview.html?action=1week', text=>'1week' } ),
+					button( 'Today', { href=>$r->uri().'?action=Today', text=>'Today' } ),
+					button( 'twoday', { href=>$r->uri().'?action=2day', text=>'2day' } ),
+					button( 'threeday', { href=>$r->uri().'?action=3day', text=>'3day' } ),
+					button( '1week', { href=>$r->uri().'?action=1week', text=>'1week' } ),
 					);
 				) ?>
 			</li>
 			<li><label>Show Production</label>
-			<? echo ( radio( 'show_feedback', [ 1, 'Yes', 0, 'No', ], $session{'/employee/production/print_overview.html?show_feedback'} ); ) ?>
+			<? echo ( radio( 'show_feedback', [ 1, 'Yes', 0, 'No', ], $session{$r->uri().'?show_feedback'} ); ) ?>
 			</li>
 			</ul>
 		</div>
@@ -259,7 +140,7 @@
 			<? echo ( button( 'AddMaintenance', { onclick=>"popup_window('_add_maintenance.html', '', { width: 600, height: 400 } );", text=>'Add Maintenance' } ); ) ?>
 			<? echo (
 				if ( @{$$variable{Equipment}} == 1 ) {
-					return button( 'ReFlow', { href=>'/employee/production/print_overview.html?Equipment='.$$variable{Equipment}[0]->id().'&amp;btnFunction=Reflow', text=>'Reflow Jobs' } );
+					return button( 'ReFlow', { href=>$r->uri().'?Equipment='.$$variable{Equipment}[0]->id().'&amp;btnFunction=Reflow', text=>'Reflow Jobs' } );
 				} # end if
 				return;
 			) ?>
@@ -269,37 +150,32 @@
 	<div class="unprintable">
 		Please click on the <b>Docket #</b> to view details.<br/>
 	</div><!--unprintable-->
+<div class="schedule">
 	<div class="PressScheduleHeader">
 		Press Schedule For 
-		<? echo ( Date::Calc::Date_to_Text( 
-					@session{'/employee/production/print_overview.html?schedule_start_year',
-					'/employee/production/print_overview.html?schedule_start_month',
-					'/employee/production/print_overview.html?schedule_start_day'} ); ) ?>
+		<? echo (
+			my $html = Date::Calc::Date_to_Text( 
+					@session{$r->uri().'?schedule_start_year',
+					$r->uri().'?schedule_start_month',
+					$r->uri().'?schedule_start_day'} );
 
-		<? if ( Date::Calc::Date_to_Days( @session{'/employee/production/print_overview.html?schedule_end_year', '/employee/production/print_overview.html?schedule_end_month', '/employee/production/print_overview.html?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
-		to <? echo ( Date::Calc::Date_to_Text( 
-					@session{'/employee/production/print_overview.html?schedule_end_year',
-					'/employee/production/print_overview.html?schedule_end_month',
-					'/employee/production/print_overview.html?schedule_end_day'} ); ) ?>
-		<? endif ( Date::Calc::Date_to_Days( @session{'/employee/production/print_overview.html?schedule_end_year', '/employee/production/print_overview.html?schedule_end_month', '/employee/production/print_overview.html?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
+			my @end_date = @session{map{$r->uri().'?schedule_end_'.$_} ('year','month','day') };
+			if ( Date::Calc::Date_to_Days(@end_date) > Date::Calc::Date_to_Days(Date::Calc::Today()) ) {
+				$html .= ' to '. Date::Calc::Date_to_Text(@end_date);
+			}
+			return $html;
+) ?>
 		<br/>
 	</div>
 	Projects highlighted in yellow have forms on other presses.<br/>
-<table class="schedule"><thead>
-<tr>
 	<? echo (
 		my $html;
-		foreach my $E ( @{$$variable{Equipment}} ) {
-			$html .= '<th class="PressColumn ' . join(' ', $E->categories() ) . '"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'('.$E->strid().')</a>';
-			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
-				$html .= button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`', { width: 500, height: 400 } );`, text=>'E', title=>'Edit' } );
-			} # end if
-			$html .= '<br/><div id="message'.$E->id().'" class="message">';
-			$html .= $E->message();
-			$html .= '</div>';
-			$html .= '</th>';
-		} # end foreach
-		$html .= '</tr></thead><tbody><tr>';
+$html .= '<style type="text/css">
+	.PressColumn {
+		width: '.int(100/@{$$variable{Equipment}}).'%;
+	}
+</style>
+';
 		@{$$variable{drops}} = ();
 
 		my $parser = 'DateTime::Format::Pg';
@@ -315,7 +191,6 @@
 
 		my $ac = sql::start_transaction( $dbh );
 
-		$log->debug("Get all jobs");
 		my @Jobs = openprint::ScheduledJob->find( 
 			equipment_id=>[ map { $_->id() } @{$$variable{Equipment}} ],
 			'starttime <='	=> $parser->format_datetime( $end_dt ),
@@ -326,26 +201,40 @@
 		my @Projects = openprint::Project->find( id=>\@project_ids ) if @project_ids;
 		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} ? $$_{company_id} : () } @Projects ) ] ) if @Projects;
 
-		# Why does this need to be ACCESS exclusive?  SOmething that changes it should be.... perhaps the idea is that i any canges are in progress, we want to wait for them to finish, but if changes are happening, then any lock we try to get will hol... so this just prevent concurrent views
+		# Why does this need to be ACCESS exclusive?  Something that changes it should be.... 
+		# perhaps the idea is that if any canges are in progress, we want to wait for them to finish,
+ 		# but if changes are happening, then any lock we try to get will hol... so this just prevent concurrent views
 		# However, the problem is that this can implement shifts.. perhaps we should wait until we need to implement shifts...
 		# Ok, but we actually only create shifts, not adjust jobs... so only need to lock the shifts	
 		$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
-#$log->debug("Have lock");
 
 		foreach my $E ( @{$$variable{Equipment}} ) {
-			$html .= '<td class="PressColumn ' . join(' ', $E->categories() ). '">';
+			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ). '">';
 
-			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
-					'/employee/production/print_overview.html?schedule_start_month',
-					'/employee/production/print_overview.html?schedule_start_day'};
+			$html .= '<a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'('.$E->strid().')</a>';
+			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
+				$html .= button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`', { width: 500, height: 400 } );`, text=>'E', title=>'Edit' } );
+			} # end if
+			$html .= '<br/><div id="message'.$E->id().'" class="message">';
+			$html .= $E->message();
+			$html .= '</div>';
+		  $html .= '</div>';
+		}
+	  $html .= '<br class="spacer"/>';
+
+		foreach my $E ( @{$$variable{Equipment}} ) {
+			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ). '">';
+			my ( $year, $month, $day ) = @session{$r->uri().'?schedule_start_year',
+					$r->uri().'?schedule_start_month',
+					$r->uri().'?schedule_start_day'};
 			my $end = Date::Calc::Delta_Days( 
 				@session{
-				'/employee/production/print_overview.html?schedule_start_year',
-				'/employee/production/print_overview.html?schedule_start_month',
-				'/employee/production/print_overview.html?schedule_start_day',
-				'/employee/production/print_overview.html?schedule_end_year',
-				'/employee/production/print_overview.html?schedule_end_month',
-				'/employee/production/print_overview.html?schedule_end_day'}
+				$r->uri().'?schedule_start_year',
+				$r->uri().'?schedule_start_month',
+				$r->uri().'?schedule_start_day',
+				$r->uri().'?schedule_end_year',
+				$r->uri().'?schedule_end_month',
+				$r->uri().'?schedule_end_day'}
 				) + 1;
 
 
@@ -504,22 +393,33 @@ $log->debug("LastShift $$LastShift{endtime} < $et");
 				$html .= $Shift->get_ul( );
 			} # end foreach Shift
 
-			$html .= '</td>';
+			$html .= '</div>';
 		} # end foreach press
 		sql::end_transaction( $dbh, $ac );
-		$html .= '</tr></tbody></table>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html', $('f1') );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
+		$html .= '</div><!--end schedule-->';
+		$html .= q`
+<div class="unprintable">
+  <hr class="spacer"/>
+  <div class="PendingApproved">
+    <div id="PendingApproved">`;
 		$html .= include( '/employee/production/_pending_approved.html' );
-		$html .= '</tr></table></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $('f1'));">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
-		$html .= include( '/employee/production/_pending.html' );
-		$html .= '</tr></table></div>';
+		$html .= '</div></div></div>';
+		$html .= q`
+<div class="unprintable">
+	<hr class="spacer"/>
+	<div class="Pending"><div id="Pending">
+`
+	. include( '/employee/production/_pending.html' ).
+		'</div>
+  </div>
+</div>';
 		return $html;
 	) ?>
 </form>
 <br class="spacer"/>
+<script src="<?hash_link(/employee/production/print_overview.js)?>"></script>
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
-<script type="text/javascript">
+<script>
 	drops.push("<? echo ( join('","', @{$$variable{drops}} ) ) ?>");
 	setup_drops();
 	setup_dates();

@@ -6,42 +6,45 @@
 	<p class="buttons">
 <? echo ( 
 	my $html = '';
-	if ( ( ! $$variable{PurchaseOrder}->authorized() ) and $$variable{PurchaseOrder}->can_authorize() ) {
-		$html .= button( 'Authorize', { onclick=>q`f2.btnFunction.value='Authorize';f2.submit();` } );
-		$html .= button( 'AuthorizeSend', { onclick=>q`f2.btnFunction.value='AuthorizeAndSend';f2.submit();`, text=>'Authorize and Send' } );
-	} # end if
-	$html .= button( 'Print', { onclick=>'window.print();' } );
-	if ( $openprint::User->email() =~ /iconnor/ ) {
-	$html .= button( 'Debug', { onclick=>q`f2.btnFunction.value='Debug';f2.submit();`, text=>'Debug' } );
-	}
-	if ( $$variable{PurchaseOrder}->can_send() ) {
-		$html .= button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
-		if ( $$variable{PurchaseOrder}->authorized() ) {
-			$html .= button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email' } );
-		} else {
-			$html .= 'This PO has not yet been approved.';
-			$html .= button( 'AuthRequest', { onclick=>q`f2.btnFunction.value='AuthRequest';f2.submit();`, text=>'Send Authorization Request' } );
+	if ( !$$variable{PurchaseOrder}->deleted()) {
+		if ( ( ! $$variable{PurchaseOrder}->authorized() ) and $$variable{PurchaseOrder}->can_authorize() ) {
+			$html .= button( 'Authorize', { onclick=>q`f2.btnFunction.value='Authorize';f2.submit();` } );
+			$html .= button( 'AuthorizeSend', { onclick=>q`f2.btnFunction.value='AuthorizeAndSend';f2.submit();`, text=>'Authorize and Send' } );
 		} # end if
-	} # end if
-	if ( $$variable{PurchaseOrder}->can_edit() ) {
-		$html .= button( 'Edit', { href=>'/employee/purchase_order/edit.html?po_id='.$$variable{PurchaseOrder}->id() } );
-		if ( $$variable{PurchaseOrder}->cancelled() eq '1' ) {
-			if ( $$variable{PurchaseOrder}->deleted() ) {
-				$html .= button( 'UnDelete', { onclick=>q`f2.btnFunction.value='Undelete';f2.submit();` } );
+		$html .= button( 'Print', { onclick=>'window.print();' } );
+		if ( $openprint::User->email() =~ /iconnor/ ) {
+		  $html .= button( 'Debug', { onclick=>q`f2.btnFunction.value='Debug';f2.submit();`, text=>'Debug' } );
+		}
+		if ( $$variable{PurchaseOrder}->can_send() ) {
+			$html .= button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
+			if ( $$variable{PurchaseOrder}->authorized() ) {
+				$html .= button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email',
+						( ( (Date::Parse::str2time($$variable{PurchaseOrder}->created_on()) ) < time-(365*24*60*60) ) ? (disabled=>'disabled', class=>"disabled", title=>'Disabled because too old') : () ),
+						} );
 			} else {
-				$html .= button( 'Delete', { onclick=>q`if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};` } );
+				$html .= 'This PO has not yet been approved.';
+				$html .= button( 'AuthRequest', { onclick=>q`f2.btnFunction.value='AuthRequest';f2.submit();`, text=>'Send Authorization Request' } );
 			} # end if
-			$html .= button( 'UnCancel', { onclick=>q`f2.btnFunction.value='UnCancel';f2.submit();` } );
-		} elsif ( $$variable{PurchaseOrder}->cancelled() eq '0' ) {
-			$html .= button( 'Cancel', { onclick=>q`f2.btnFunction.value='Cancel';f2.submit();` } );
 		} # end if
-		if ( $$variable{PurchaseOrder}->do_not_pay() ) {
-			$html .= button( 'UnDoNotPay', { onclick=>q`f2.btnFunction.value='UnDoNotPay';f2.submit();`, text=>'Remove Do Not Pay' } );
-		} else {
-			$html .= button( 'DoNotPay', { onclick=>q`f2.btnFunction.value='DoNotPay';f2.submit();`, text=>'Do Not Pay' } );
-		} # end if
-	} # end if can edit
-	$html .= button( 'Copy', { onclick=>q`f2.action='view.html';f2.btnFunction.value='Copy';f2.submit();` } );
+		if ( $$variable{PurchaseOrder}->can_edit() ) {
+			$html .= button( 'Edit', { href=>'/employee/purchase_order/edit.html?po_id='.$$variable{PurchaseOrder}->id() } );
+			if ( $$variable{PurchaseOrder}->cancelled() eq '1' ) {
+				$html .= button( 'Delete', { onclick=>q`if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};` } );
+				$html .= button( 'UnCancel', { onclick=>q`f2.btnFunction.value='UnCancel';f2.submit();` } );
+			} elsif ( $$variable{PurchaseOrder}->cancelled() eq '0' ) {
+				$html .= button( 'Cancel', { onclick=>q`f2.btnFunction.value='Cancel';f2.submit();` } );
+			} # end if
+			if ( $$variable{PurchaseOrder}->do_not_pay() ) {
+				$html .= button( 'UnDoNotPay', { onclick=>q`f2.btnFunction.value='UnDoNotPay';f2.submit();`, text=>'Remove Do Not Pay' } );
+			} else {
+				$html .= button( 'DoNotPay', { onclick=>q`f2.btnFunction.value='DoNotPay';f2.submit();`, text=>'Do Not Pay' } );
+			} # end if
+		} # end if can edit
+		$html .= button( 'Copy', { onclick=>q`f2.action='view.html';f2.btnFunction.value='Copy';f2.submit();` } );
+		$html .= button( 'Record Payment', { onclick=> 'popup_window(\'/employee/purchase_order/_pay_popup.html?po_id='.$$variable{PurchaseOrder}->id().'\');', text=>'Record Payment' } );
+	} else {
+		$html .= button( 'UnDelete', { onclick=>q`f2.btnFunction.value='Undelete';f2.submit();` } );
+	}
 	return $html;
 ) ?>
 	</p>
@@ -81,7 +84,7 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 <? echo (
 	my $html = '';
 	$html .= $$variable{PurchaseOrder}->vendor_contact().'<br/>' if $$variable{PurchaseOrder}->vendor_contact();
-	$html .= $$variable{PurchaseOrder}->vendor_name().'<br/>' if $$variable{PurchaseOrder}->vendor_name();
+	$html .= $$variable{PurchaseOrder}->Supplier()->link_to($$variable{PurchaseOrder}->vendor_name()).'<br/>' if $$variable{PurchaseOrder}->vendor_name();
 	$html .= $$variable{PurchaseOrder}->vendor_address1().'<br/>' if $$variable{PurchaseOrder}->vendor_address1();
 	$html .= $$variable{PurchaseOrder}->vendor_address2().'<br/>' if $$variable{PurchaseOrder}->vendor_address2();
 	$html .= sprintf('%s %s, %s', $$variable{PurchaseOrder}->get('vendor_city','vendor_state', 'vendor_postalcode')) . '<br/>';
@@ -303,6 +306,12 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 <? if ( $$variable{PurchaseOrder}->cancelled() ) ?>
 <div id="cancelled"><img src="/images/cancelled.png"/></div>
 <? endif ( $$variable{PurchaseOrder}->cancelled() ) ?>
+<? if ( $$variable{PurchaseOrder}->deleted() ) ?>
+<div id="deleted"><img src="/images/deleted.png"/></div>
+<? endif ( $$variable{PurchaseOrder}->deleted() ) ?>
+<? if ( $$variable{PurchaseOrder}->is_paid() ) ?>
+<div id="paid"><img src="/images/paid.png"/></div>
+<? endif ( $$variable{PurchaseOrder}->is_paid() ) ?>
 	</div><!--PO-->
 	<br class="spacer"/>
 <? else ( $$variable{PurchaseOrder}->can_view() ) ?>

@@ -202,17 +202,25 @@ function howdidyouhearaboutus_onchange(e) {
 				<li><?include('/includes/password_requirements.html')?></li>
 				<li class="password<? echo ( $$variable{RequiredFields}{password} ? ' required' : '' ) ?>">
 					<label for="password">Password</label>
-					<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( htmlize($param{password}); ) ?>" />
+					<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( htmlize($param{password}); ) ?>" autocomplete="new-password"/>
 					<span id="password_strength">Strength <span id="psContainer"><span id="psStrength"></span></span></span>
 				</li>
 				<li class="verifypassword<? echo ( $$variable{RequiredFields}{verifypassword} ? ' required' : '' ) ?>">
 					<label for="verifypassword">Verify Password</label>
-					<input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( htmlize($param{verifypassword}); ) ?>" />
+					<input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( htmlize($param{verifypassword}); ) ?>" autocomplete="new-password"/>
 					<span id="password_alert"></span>
 				</li>
 			</ul>
 <? if ( (!$session{user_id}) and ($config{UseCaptchaOnRegistration} eq 'Y') ) ?>
-			<div id="Captcha"><?include('/includes/_captcha.html')?></div>
+  <? if ( $config{reCAPTCHA_site_key} ) ?>
+    <?echo(
+         require Captcha::reCAPTCHA;
+         my $c = Captcha::reCAPTCHA->new;
+         return $c->get_html_v2($config{reCAPTCHA_site_key});
+         ) ?>
+  <? else ( $config{reCAPTCHA_site_key} ) ?>
+        <div id="Captcha"><?include('/includes/_captcha.html')?></div>
+  <? endif ( $config{reCAPTCHA_site_key} ) ?>
 <? endif ( (!$session{user_id}) and ($config{UseCaptchaOnRegistration} eq 'Y') ) ?>
 			</div>
 <? if ( $config{RegistrationDisclaimer} ) ?>

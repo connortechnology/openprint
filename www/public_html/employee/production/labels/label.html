@@ -20,7 +20,7 @@
 		$$variable{Label}->notify_csr();
 	} # end if
 ) ?>
-<?echo($$variable{Label}{reference}?>
+<?echo($$variable{Label}{reference})?>
 <div class="buttons">
 	<? echo ( join("\n",
 		button( 'PDF', { href=>'/employee/production/labels/label.html?action=pdf&amp;id='.$$variable{Label}->id() } ),

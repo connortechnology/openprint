@@ -69,7 +69,7 @@ my %db_connect_info = (
 	password	=> $config{db_pass},
 );
 
-$dbh = sql::open_sql( $log, %db_connect_info );
+$openprint::dbh = sql::open_sql( $log, %db_connect_info );
 die "Couldn't connect to db: $$dbh{errstr}" if ! $dbh;
 configuration::init();
 configuration::from_file($$opts{config});
@@ -87,7 +87,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for (illegal user root|[\._a-zA-Z0-9\-]+) from (?<IP>[\._a-zA-Z0-9\-]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (error: )?PAM: [[:digit:]]+ more authentication failures?; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)(\s+user=\w+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting: Too many authentication failures for (invalid user )?[^[:space:]]* from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (Connection closed by|Disconnected from) (invalid user [.@[:alnum:]]+ )?(?<IP>[.[:digit:]]+)( port [[:digit:]]+ \[preauth\])?$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (Connection closed by|Disconnected from) ((authenticating|invalid) user [.@[:alnum:]]+ )?(?<IP>[.[:digit:]]+)( port [[:digit:]]+ \[preauth\])?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting invalid user [[:alnum:]]+ (?<IP>[.[:digit:]]+) port [[:digit:]]+: Change of username or service not allowed:',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: maximum authentication attempts exceeded for (invalid user )?[[:alnum:]]+ from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user [.\?|@[:alnum:]-]+ from (?<IP>[0-9.]+)',
@@ -101,13 +101,14 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: (imap|pop3)\-login: Disconnected (Too many bad commands )?\(auth failed, [0-9]+ attempts( in [0-9]+ secs)?\): user=<[^>]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+(, session=<[^>]+>)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: (imap|pop3)\-login: Disconnected \(((auth failed, [0-9]+|no) attempts in|client didn\'t finish SASL auth, waited) [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, (method=PLAIN, )?rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, (TLS handshaking: SSL_accept\(\) failed: Unknown error, )?session=<[^>]+>$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3\-login: Aborted (l|L)ogin \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: imap\-login: Aborted (l|L)ogin \(client didn\'t finish SASL auth, waited 0 secs\): user=<[a-zA-Z@\.0-9]*>, method=[[:alnum:]-]+, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client (?<IP>[0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '[./[:alnum:]]+' denied$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pam\-abl\[[0-9]+\]: Blocking access from (?<IP>[0-9.]+) to service sshd, user root$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/(submission\/)?smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL (CRAM\-MD5|Login|LOGIN|PLAIN) authentication fail`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/(submission\/)?smtpd\[[0-9]+\]: warning: non\-SMTP command from unknown\[(?<IP>[0-9.]+)\]:`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: Connection rate limimt exceeded: [[:digit:]]+ from unknown \[(?<IP>[0-9.]+)\] for service smtp$`,
-		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns\[[0-9]+\]: Received a malformed qdomain from (?<IP>[0-9.]+), '[^']+': sending servfail$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns(_server)?\[[0-9]+\]: Received a malformed qdomain from (?<IP>[0-9.]+), '[^']+': sending servfail$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ ovpn\-server\[[0-9]+\]: (?<IP>[0-9.]+):[0-9]+ WARNING Bad encapsulated packet length from peer \([[:digit:]]+\), which must be > 0 and <= 1547 \-\- please ensure that \-\-tun\-mtu or \-\-link\-mtu is equal on both peers \-\- this condition could also indicate a possible active attack on the TCP link \-\- \[Attempting restart\.\.\.\]$`,
-		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ ovpn\-server\[[0-9]+\]: (?<IP>[0-9.]+):[0-9]+ Expected Remote Options String`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ ovpn\-server\[[0-9]+\]: (?<IP>[0-9.]+):[0-9]+ TLS Error: TLS handshake failed$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ kernel: \[[0-9]+\.[0-9]+\] Shorewall:logflags:DROP:IN=[a-z]+[0-9] OUT= MAC= SRC=(?<IP>[0-9.]+) DST=[0-9\.]+ LEN=40 TOS=0x00 PREC=0x00 TTL=[0-9]+ ID=[0-9]+ DF PROTO=TCP SPT=443 DPT=21 WINDOW=8192 RES=0x00 URGP=0$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ kernel: \[[0-9]+\.[0-9]+\] Shorewall:logflags:DROP:IN=[a-z]+[0-9] OUT= MAC= SRC=(?<IP>[0-9.]+)`,
@@ -125,7 +126,7 @@ my $parser = 'DateTime::Format::Pg';
 my $MAXLEN = 1524;
 
 # Start Listening on UDP port 514
-$log->debug("Opening $config{protocol} socket on port $config{port}") if $config{debug};
+$log->debug("Opening $config{protocol} socket on port $config{port}") if $openprint::config{debug};
 my $sock = IO::Socket::INET->new( LocalPort=>$config{port}, Proto=>$config{protocol} )||die("Socket: $@");
 
 if ( $config{'pid_file'} ) {
@@ -155,8 +156,8 @@ while(1) {
 	} elsif ( $hup ) {
 		$log->hup();
 $log->debug("# of entries in host_counts: " . keys %host_counts);
-$log->debug("# of entries in Object_cache: " . keys %{$openprint::Object::cache{$config{db_name}}} );
-$log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::name_cache{$config{db_name}}} );
+#$log->debug("# of entries in Object_cache: " . keys %{$openprint::Object::cache{$config{db_name}}} );
+#$log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::name_cache{$config{db_name}}} );
 		configuration::init( );
 		configuration::from_file($$opts{config});
 		configuration::merge($opts);

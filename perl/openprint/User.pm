@@ -100,6 +100,7 @@ $default_sort	=	'lower(firstname),lower(lastname)';
 	password_changed_on		=>	undef,
 	password				=>	'',
 	email_valid				=>	undef,
+	mailinglist		=>	undef,
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
@@ -475,8 +476,12 @@ sub link_to {
 			);
 } # end sub link_to
 
+sub admin_url_to {
+	return '/administrator/managerial/user_profiles.html?user_id='.$_[0]{id};
+}
+
 sub admin_link_to {
-    return sprintf('<a href="/administrator/managerial/user_profiles.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+	return sprintf('<a href="/administrator/managerial/user_profiles.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
 } # end sub admin_link_to
 
 sub html {
@@ -577,6 +582,7 @@ sub can_edit {
 	my $Company = new openprint::Company( $_[0]{company_id} );
 	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
 	return 1 if openprint::usergroup::exists('UserManagement') and openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{user_id} );
+	return 1 if $openprint::User->in_Group('Estimating') and ($_[0]{company_id} != $openprint::User{company_id});
 	return 0;
 } # end sub can_edit
 
@@ -586,9 +592,10 @@ sub can_view {
 	return 1 if ( $openprint::User->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
 	my $Company = new openprint::Company( $_[0]{company_id} );
 	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
+	return 1 if $_[0]->in_Group('Estimating') and ($_[0]{company_id} != $openprint::session{company_id});
 	require openprint::Blocklist;
 	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{id});
-	return 1;
+	return 0;
 } # end sub can_view
 
 sub Location {

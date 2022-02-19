@@ -38,17 +38,32 @@ function load_customers( ) {
 				) ?>
 			</select>
 		</li>
-<? if ( @{$$variable{SalesReps}} = openprint::User->find( id=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')], deleted=>[0,1]) ) ?>
+<? echo (
+		@{$$variable{SalesReps}} = openprint::User->find(
+			id=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],
+			deleted=>exists($session{$r->uri().'?deleted_salresrep_id'}) ? $session{$r->uri().'?deleted_salresrep_id'} : 0
+			);
+		if ( @{$$variable{SalesReps}} ) {
+			return '
 		<li>
 			<label>Sales Rep</label>
-			<select name="search_salesrep_id" onchange="load_customers();">
-				<option value=""> All </option>
-				<? echo ( make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{SalesReps}} ], $session{'/administrator/managerial/company_profiles.html?search_salesrep_id'} ); ) ?>
-			</select>
-		</li>
-<? endif ( @{$$variable{SalesReps}} = openprint::User->find( id=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')], deleted=>[0,1]) ) ?>
-		<li><label>Deleted?</label>
-		<? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{deleted}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;load_customers();"} ); ) ?></li>
+'.ssi::select(
+		[ map { $_->id(),$_->name() } @{$$variable{SalesReps}} ],
+		$session{$r->uri().'?search_salesrep_id'},
+		{name=>'search_salesrep_id', id=>'search_salesrep_id', onchange=>'load_customers();', prepend=>['','All'] }
+		).  '
+Deleted? :'.
+          radio('deleted_salesrep_id',
+            [ 1, 'Yes', 0, 'No' ],
+            ( exists($session{$r->uri().'?deleted_salresrep_id'}) ? $session{$r->uri().'?deleted_salresrep_id'} : 0 ),
+            { onclick=>q`LoadContent('search_salesrep_id', '/includes/_users.html', { 'type':'E,A', 'usergroup':'Sales', 'deleted':this.value});console.log(this);` } ).'
+</li>
+';
+	}
+	return '';
+) ?>
+		<li><label>Company Deleted?</label>
+		<? echo ( radio('deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;load_customers();"} ); ) ?></li>
 		<li> 
 			<label>Company</label>
 			<input type="text" name="search_company_filter" id="search_company_filter" oninput="load_customers();" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" class="filter" />
@@ -57,9 +72,8 @@ function load_customers( ) {
 				<? echo ( 
 if ( 0 ) {
 					my %params = (
-							( $session{'/administrator/managerial/company_profiles.html?search_salesrep_id'} ? ( salesrep_id=>$session{'/administrator/managerial/company_profiles.html?search_salesrep_id'} ) : () ),
-							( $session{'/administrator/managerial/company_profiles.html?deleted'} ne '' ? ( 'deleted'=>$session{'/administrator/managerial/company_profiles.html?deleted'} ) : () ),
-							order=>'lower(name)',
+							( $session{$r->uri().'?search_salesrep_id'} ? ( salesrep_id=>$session{$r->uri().'?search_salesrep_id'} ) : () ),
+							( $session{$r->uri().'?deleted'} ne '' ? ( deleted=>$session{$r->uri().'?deleted'} ) : () ),
 					);
 					if ( $param{search_type} eq 'Suppliers' ) {
 						$params{supplier} ='Y';
@@ -186,6 +200,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 					<option value="">select</option>
 					<? echo ( make_drop_down( openprint::User->dropdown(type=>['E','A']), $$variable{Company}->salesrep_id() ); ) ?>
 				</select>
+<?echo(button('CSRGo', { href=>$$variable{Company}->CSR()->admin_url_to(), text=>'Go'});)?>
 			</li>
 		</ul>
 	</div>

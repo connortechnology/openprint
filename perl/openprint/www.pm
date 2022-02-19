@@ -378,47 +378,33 @@ sub parse_page {
 				}
 			}
 			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $param{ServiceIndex} and $filename ne 'multipage_signatures.html';
-			if ( $third eq 'prin' ) {	
-				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{ProjectIndex} );
-				if ( $filename eq '_production_feedback.html' ) {
-					openprint::employee_project::_production_feedback( );
-				} elsif ( $filename eq 'prin_multi.html' ) {
-					if ( $param{action} eq 'SendPPF' ) {
-						my $Project = new openprint::Project( $param{ProjectIndex} );
-						require openprint::CIP3_PPF;
-						my $PPF = new openprint::CIP3_PPF( $param{ppf_id} );
 
-						my $Equipment;
-						foreach my $sig_id ( $Project->signatures() ) {
-							my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-							if ( $$sig_specs{SignatureIndex} == $$PPF{signature} ) {
-$log->debug("Found sig");
-								my @Equipment = openprint::Equipment->find('strid'=>$$sig_specs{UsePress} ? $$sig_specs{UsePress} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
-								if ( @Equipment ) {
-									$Equipment = $Equipment[0];
-									last;
-								} 	
-							} # end if
-						} # end foreach
-						if ( ! $Equipment ) {
-							$log->debug("Looking it up from Schedule");
-							my @rows = openprint::press_schedule->find('project_id'=>$param{ProjectIndex},'service_id'=>$param{ServiceIndex});
-							if ( @rows == 1 ) {
-								$Equipment = new openprint::Equipment( $rows[0]{equipment_id} );
-							} 
-						} # end if
-						if ( ! $Equipment ) {
-$log->error("Unable to load equipment.	No PPF for you for signature $$PPF{signature}.");
+			#if ( $third eq 'prin' ) {	
+				my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+				if ( $proc ) {
+					my $module = join('_',@path);
+					eval {
+						require "openprint/$module.pm";
+						if ( my $function = ('openprint::'.$module)->can('init') ) {
+							$log->debug("Running openprint::$module->init") if Debug;
+							$function->($r, $log, $dbh, \%variable);
 						} else {
-						$PPF->send_ppf( $Equipment );
-						} # end if
-					} # end if
-				} # end if
-			} # end if
+							$log->debug('No function for init') if Debug;
+						}
+						if ( my $function = ('openprint::'.$module)->can($proc) ) {
+							$log->debug("Running openprint::$module->$proc") if Debug;
+							$function->($r, $log, $dbh, \%variable );
+						} else {
+							$log->warn("No function for $proc");
+						}
+					}; # end eval
+					$log->error("Eval error of require $module :: $proc, Reason: $@") if $@;
+				} # end if proc
+			#} # end if prin
 		} else {
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 			if ( $proc ) {
-				my $module = join('_',@path);
+				my $module = join('_', @path);
 				require "openprint/$module.pm";
 				if ( my $function = ('openprint::'.$module)->can($proc) ) {
 $log->debug("Running openprint::$module->$proc") if Debug;
@@ -620,7 +606,7 @@ $log->debug("No proc found for $filename");
 				}
 			} # end if
 		} else {
-			$log->debug($ENV{DOCUMENT_ROOT}.$uri . ' does not exist.');
+			$log->debug($ENV{DOCUMENT_ROOT}.$uri.' does not exist.');
 		} # end if main:$second
 
 	} else {
@@ -629,16 +615,15 @@ $log->debug("No proc found for $filename");
 			if ( $proc ) {
 				my $module = lc $first;
 				$module .= '_'.$second if $second;
-					require "openprint/$module.pm"; 
-					if ( my $function = ('openprint::'.$module)->can($proc) ) {
-						$function->($r, $log, $dbh, \%variable );
-						$log->debug( "calling of require $module :: $proc, Reason: " );
-					} else {
-						$log->error( "Eval error of require $module :: $proc, Reason: " );
-					}
-						$log->error( "Eval error of require $module :: $proc, Reason: $!" ) if $!;
+				require "openprint/$module.pm"; 
+				if ( my $function = ('openprint::'.$module)->can($proc) ) {
+					$function->($r, $log, $dbh, \%variable);
+					$log->debug("calling of require $module :: $proc");
+				} else {
+					$log->error("Eval error of require $module :: $proc");
+				}
 			} else {
-						$log->error( "No proc Eval error of require $proc, $filename Reason: " );
+				$log->error("No proc in filename $filename");
 			} # end if
 		} else {
 			$log->debug("No firstSo or non-existant $uri first: $first ");

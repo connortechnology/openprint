@@ -178,7 +178,9 @@ sub destroy {
 
 sub to_string {
 	my $self = shift;
-	return '';
+	return sprintf('%d %s %s %s %s', $$self{id},
+			$self->Company()->name(), $self->Currency()->format($self->total()),
+			ssi::format_date($self->created_on()), $self->status());
 } # end sub
 
 # Approve is acknowledging the prices, etc and giving the go ahead. So this function updates all the prices, taxes, statuses, etc.
@@ -639,7 +641,7 @@ sub send_admin_emails {
 	my @project_dockets = ();
 
 	# Add a project summary and docket sheet for each project in the order
-	my $docket_content = ssi::slurp_content( '/email_content/order_docket_sheet.html' );
+	my $docket_content = ssi::slurp_content('/email_content/order_docket_sheet.html');
 	my $summary_content = ssi::slurp_content( '/email_content/project_summary.html' );
 	foreach my $Project ($self->Projects()) {
 		my %data = (
@@ -759,11 +761,13 @@ sub Payments {
 }
 
 sub paid {
-	$_[0]{paid} = $_[1] if ( @_ == 2 );
-	if ( $_[0]{id} and ! defined $_[0]{paid} ) {
-		$_[0]{paid} = misc::sum( map { $_->amount() } $_[0]->Payments() );
+	my $self = shift;
+
+	$$self{paid} = shift if @_;
+	if ( $$self{id} and ! defined $$self{paid} ) {
+		$$self{paid} = misc::sum( map { $_->Currency()->convert_from($_->amount(), $self->Currency()) } $self->Payments() );
 	} # end if
-	return $_[0]{paid};
+	return $$self{paid};
 } # end sub paid
 
 sub payment_days {
@@ -1043,6 +1047,57 @@ sub address_html {
     join(', ', map { $self->$_() ? $self->$_() : () } ( 'city','state','postalcode' ) ),
     ( map { $self->$_() ? $countries::countries{$$self{$_}} : () } ( 'country' ) ),
   );
+}
+
+sub deposit_due {
+	my $Order = shift;
+
+	if (
+			($Order->status() ne 'Cancelled')
+			and
+			$Order->downpayment()
+			and
+			( $Order->paid() < $Order->downpayment())
+		 ) {
+    return Math::Round::nearest(0.01, $Order->downpayment() - $Order->paid());
+  } # end if
+	return 0;
+} # end sub deposit_due
+
+sub close {
+	my $Order = shift;
+	$Order->subtotal(undef);
+	foreach my $Tax ( $Order->Taxes() ) {
+		$Tax->save({ amount => undef });
+	} # end foreach Tax
+	$Order->total(undef);
+	$Order->status('In Production');
+	$Order->save();
+	$Order->add_log('Close Order');
+	foreach my $OP ( $Order->Ordered_Projects() ) {
+		my $Project = $OP->Project();
+		sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+		if ( $Project->docket() != $Order->docket() ) {
+			$Project->save({docket=>$Order->docket()});
+		}
+		$Project->update_status();
+	}
+	foreach my $Product ( $Order->Products() ) {
+		if ( $$Product{project_id} ) {
+			my $Project = $Product->Project();
+			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+			$Project->update_status();
+		}
+	}
+	$Order->update_status();
+} # end sub close
+
+sub is_fsc {
+	my $self = shift;
+	foreach my $Project ( $self->Projects() ) {
+		return 1 if $Project->is_fsc();
+	}
+	return 0;
 }
 
 1;

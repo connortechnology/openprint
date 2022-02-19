@@ -102,7 +102,8 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 			my $Host = $HI->Host();
 			my $username = $Host->info('username');
 			my $password = $Host->info('password');
-			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password args: " . ($args ? join(',',map { "$_=>$$args{$_}" } keys %{$args}) :'none'));
+			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password args: ".
+					($args ? join(',',map { $_.'=>'.$$args{$_} } keys %{$args}) :'none'));
 			$browser->credentials(
 					$HI->ip().':'.$port,
 					$tokens{realm},
@@ -114,7 +115,7 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 
 			if ( $response->is_success and ( ($method ne 'get') or $args ) ) {
 $openprint::log->debug("Sending actual url $method ");
-				$response = $browser->$method($url, $args );
+				$response = $browser->$method($url, ($args and %{$args}) ? $args : () );
 			}
 		} else {
 			$openprint::log->error("No realm");
@@ -189,6 +190,14 @@ sub wake {
 		$error .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
 	}
 	return ($error, $info );
+}
+
+sub ipv6_link_local {
+  return '' if ! $_[0]{mac};
+  my @segments = split(/:/, $_[0]{mac});
+  $segments[0] = hex($segments[0]);
+  $segments[0] ^= 2;
+  return 'fe80::'.sprintf('%x',$segments[0])."$segments[1]:$segments[2]ff:fe$segments[3]:$segments[4]$segments[5]";
 }
 
 1;

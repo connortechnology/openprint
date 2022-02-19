@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script>
 	function delete_confirm(form) {
 		var number_of_deleted_quotes = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -52,7 +52,6 @@
                 <option value="">All Employees</option>
             <? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales']), $session{$r->uri().'?salesrep_id'} ); ) ?>
             </select></li>
-<? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 <? eval ( 
   $$variable{Users} = [ openprint::User->find(
     # Defaults to currently logged in company, if company is all, then list users in OUR company

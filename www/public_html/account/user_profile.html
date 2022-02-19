@@ -2,7 +2,7 @@
 <h1>ACCOUNT</h1>
 <h2>User Profile</h2>
 </div>
-<script type="text/javascript" src="<?hash_link(/javascripts/passwordmeter.js)?>"></script>
+<script src="<?hash_link(/javascripts/passwordmeter.js)?>"></script>
 <?include('/includes/error_reporting.html') ?>
 <? if ( $session{user_id} ) ?>
 	<form id="f1" name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
@@ -97,10 +97,7 @@
    				</li>
    				<li class="mailinglist notrequired">
    					<label>Add to our Mailing List</label>
-					<input type="radio" id="MailingListY" name="mailinglist" <? echo ( checked( $$variable{User}->mailinglist() eq 'Y' ); ) ?> value="Y" />
-					<label class="radio" for="MailingListY">Yes</label>
-					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( checked( $$variable{User}->mailinglist() ne 'Y' ); ) ?> value="N" />
-					<label class="radio" for="MailingListN">No</label>
+						<?echo( radio('mailinglist', [ 'Y', 'Yes', 'N', 'No', '', 'Unset' ], $$variable{User}->mailinglist() ); ) ?>
    				</li>
 			<? if ( $$variable{Me}->administrator() eq 'Y' or $$variable{User}->Company()->can_edit() ) ?>
    				<li class="web_active notrequired">

@@ -11,7 +11,7 @@ use vars qw( $debug $log $dbh %config %session $table $serial %fields %find_fiel
 *config = \%openprint::config;
 *session = \%openprint::session;
 
-$debug = 1;
+$debug = 0;
 
 require sql;
 require ssi;
@@ -50,6 +50,7 @@ $serial = 'purchaseorders_id_seq';
 	authorized_on				=>	'authorized_on',
 	delivered_on				=>	'delivered_on',
 	delivered_on_switch	=>	'delivered_on_switch',
+	paid_on							=>	'paid_on',
 	total								=>	'total',
 	subtotal						=>	'subtotal',
 	deleted							=>	'deleted',
@@ -502,7 +503,7 @@ sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
 	@$New{keys %fields} = @$self{keys %fields};
-	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled', 'manifest_id', 'Taxes' ) {
+	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled', 'manifest_id', 'Taxes', 'deleted' ) {
 		delete $$New{$_};
 	} # end foreach
 	my @Taxes;
@@ -665,7 +666,7 @@ sub can_view {
 	foreach my $C ( $_[0]->Contents() ) {
 		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
 		if ( @contains ) {
-			$log->debug("can see because @contains in order salesreps") if $debug;
+			$log->debug("can view because @contains in order salesreps") if $debug;
 			return 1;
 		} # end if
 	} # end foreach C
@@ -749,33 +750,21 @@ sub can_see_pricing {
 		return 1;
 	} # end if
 
-# Now Ahmed wants everything to not show pricing
-	return 0;
+  my @Contents = $_[1] ? ( $_[1] ) : $_[0]->Contents();
 
-	if ( $_[1] ) {
-		if ( $_[1]->Type()->type() eq 'Sheet Stock' or $_[1]->Type()->type() eq 'Roll Stock' ) {
-			# Ahmed doesn't want people to see stock pricing
-		} else {
-			my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] );
-			if ( @contains ) {
-				$log->debug("can see pricing because @contains in orders") if $debug;
-				return 1;
-			} # end if
-		} # end if
-	} else {
-		foreach my $C ( $_[0]->Contents() ) {
-		if ( $C->Type()->type() eq 'Sheet Stock' or $C->Type()->type() eq 'Roll Stock' ) {
-			# Ahmed doesn't want people to see stock pricing
-		} else {
+  foreach my $C (@Contents) {
+    my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
+    if ( @contains ) {
+      $log->debug("can see pricing because @contains in orders") if $debug;
+      return 1;
+    } elsif ($debug) {
+      my @people = ( $$User{id}, $User->assistant_ids(), $User->csr_ids() );
+      my @sales_reps = map { $_->salesrep_id() } $_[1]->Orders();
+      $log->debug("People @people, reps @sales_reps");
+    } # end if
+  } # end foreach C
 
-			my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
-			if ( @contains ) {
-				$log->debug("can see pricing because @contains in orders") if $debug;
-				return 1;
-			} # end if
-			} # end if
-		} # end foreach C
-	} # end if
+  return 0;
 
 	if ( my @notifications = $_[0]->notifications() ) {
 		if ( sets::isin( $$User{id}, \@notifications ) ) {
@@ -835,6 +824,11 @@ sub dockets {
 
 sub Created_By {
 	return new openprint::User( $_[0]{created_by} );
+}
+
+sub is_paid {
+	return 1 if $_[0]->payments_total() >= $_[0]->total();
+	return 0;
 }
 
 1;

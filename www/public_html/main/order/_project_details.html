@@ -30,7 +30,7 @@
 					$summary = $function->($Project, $$services{''}[0], $printing_specs );
 				} # end if
 
-				if ( $$services{'Signature'} ) {
+				if ( $$services{Signature} ) {
 					my @printing_totals;
 					foreach my $service_id ( @{$$services{'Signature'}} ) {
 						my $service_specs = openprint::service::get_specs_ref( $Project, $service_id );
@@ -83,7 +83,7 @@
 						foreach my $qty_index ( @quantity_indexes ) {
 							my $price = $ProjectCurrency->convert_to( $Currency, $$service_specs{'txtPrice'.$qty_index});
 							$totals[$qty_index] += $price;
-							$html .= '<td class="price">' . openprint::Currency::format( $price ) . '</td>';
+							$html .= '<td class="price">'.openprint::Currency::format($price).'</td>';
 						}
 						$html .= '</tr>';
 						$rowclass = $rowclass ? '' : ' class="colRow"';

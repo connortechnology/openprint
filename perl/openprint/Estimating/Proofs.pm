@@ -29,7 +29,7 @@ require openprint::Estimating::Printing;
 use Data::Dumper;
 
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -270,10 +270,10 @@ sub signature_calc {
 	   ) ) {
 		$$indexes{$form}[3] = 3;
 	} # end if
+	$log->debug('Proof indexes '.join(',', map { $_ ? $_ : () } @{$$indexes{$form}})) if DEBUG;
 
 	%ProofServices = map { $_->name(), $_ } openprint::Service->find(category=>'Proofs') if !%ProofServices;
 
-	$log->debug('Proof indexes '.join(',', map { $_ ? $_ : () } @{$$indexes{$form}})) if DEBUG;
 	foreach my $proof_index ( @{$$indexes{$form}} ) {
 		next if ! ($proof_index and $$indexes{$form}[$proof_index]);
 		if (
@@ -757,22 +757,22 @@ sub signature_summary {
 						my $desc = sprintf('%s&quot;x%s&quot;</td><td class="type">%s', @$specs{
 								"txtProofWidth-$form-$proof_index-$qty_index",
 								"txtProofHeight-$form-$proof_index-$qty_index"}, $Service->description() );
-						$proof_totals{$desc} += $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
+						$proof_totals{$desc} += $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"} if $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
 					} # end if
 				} # end if
 			} # end if
 		} # end foreach key
-        if ( ! %proof_totals ) {
-            return '';
-        } # end if
-        my $summary = '<table class="ProofsSummary">';
-        foreach my $k ( keys %proof_totals ) {
-            next if ! $proof_totals{$k};
-            $summary .= '<tr><td class="quantity">'.$proof_totals{$k}.'</td><td class="size">'.$k.'</td></tr>';
-        } # end foreach
-        return $summary.'</table>';
-    } # end if qty_index
-    return '';
+		if ( ! %proof_totals ) {
+			return '';
+		} # end if
+		my $summary = '<table class="ProofsSummary">';
+		foreach my $k ( keys %proof_totals ) {
+			next if ! $proof_totals{$k};
+			$summary .= '<tr><td class="quantity">'.$proof_totals{$k}.'</td><td class="size">'.$k.'</td></tr>';
+		} # end foreach
+		return $summary.'</table>';
+		} # end if qty_index
+		return '';
 } # end sub signature_summary
 
 sub breakupsummary {

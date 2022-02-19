@@ -147,10 +147,10 @@ sub destroy {
 sub ping {
 	require Net::Ping;
 	my $p = Net::Ping->new();
-my $rc;
+	my $rc;
 	foreach my $HI ( $_[0]->Interfaces() ) {
 		next if ! $$HI{ip};
-	 $rc = $p->ping($$HI{ip});
+		$rc = $p->ping($$HI{ip});
 		return $rc if $rc;
 	}
 	$p->close();
@@ -163,7 +163,7 @@ sub Type {
 
 sub type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::Host_Type->find_one('name lc'=> lc openprint::Host_Type->transform('name',$_[1]) );
+		my $Type = openprint::Host_Type->find_one('name lc'=> lc openprint::Host_Type->transform(name=>$_[1]) );
 		if ( ! $Type ) {
 			$Type = new openprint::Host_Type();
 			$Type->save({name=>$_[1]});
@@ -244,7 +244,7 @@ sub reboot {
 	my $success = 0;
 
 	foreach my $HI ( $Host->Interfaces() ) {
-		next if ! $HI->ip();
+		next if !$HI->ip();
 		my $url;
 		my $initial_url; # in case we need to hit a different url first.
 		my $method = 'get';
@@ -254,26 +254,33 @@ sub reboot {
 		my $port = 80;
 		my $protocol = 'http';
 
-		if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
+		if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 			$url = $HI->ip().'/admin/reboot.cgi?type=0';
-		} elsif ( $_[0]->type() eq 'AIC250W' ) {
+		} elsif ( $Host->type() eq 'AIC250W' ) {
 			$url = $HI->ip().'/Reply.htm?Reset=Yes';
-		} elsif ( $_[0]->type() eq 'M8640' ) {
+		} elsif ( $Host->type() eq 'M8640' ) {
 			$url = $HI->ip().'/cgi-bin/reboot.cgi';
-		} elsif ( $_[0]->type() eq 'TL-WPA4220' ) {
+		} elsif ( $Host->type() eq 'TL-WPA4220' ) {
 			$url = $HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
-		} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
+		} elsif( $Host->type() eq 'D-Link DAP1522' ) {
 			$url = $HI->ip().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
-		} elsif( $_[0]->type() eq 'DGS-1224T' ) {
+		} elsif( $Host->type() eq 'DGS-1224T' ) {
 			$initial_url = $HI->ip();
 			$url = '/cgi_device';
 			$args = {
 			post_url => 'cgi_reboot.',
 			};
 			$method = 'post';
-    } elsif( $_[0]->type() eq 'Grandview' ) {
+    } elsif( $Host->type() eq 'Grandview' ) {
       $initial_url = $HI->ip();
-      $url = '/goform/maintenance?cmd=set&restart=yes';
+      $url = $HI->ip().'/goform/maintenance?cmd=set&restart=yes';
+    } elsif( $Host->type() eq 'Vivotek' ) {
+      $initial_url = $HI->ip();
+      $url = $HI->ip().'/cgi-bin/admin/setparam.cgi';
+			$method = 'post';
+			$args = {
+				system_reset => 1
+			};
 		} elsif( $_[0]->type() eq 'DLink DCS-910' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/ReplyF.htm';
@@ -283,7 +290,7 @@ sub reboot {
 			};
 			$expect = 'Device has been rebooted';
 
-		} elsif ( $_[0]->type() eq 'TP-Link Archer C7' ) {
+		} elsif ( $Host->type() eq 'TP-Link Archer C7' ) {
 			require JSON;
 
 			my $username = $Host->info('username');
@@ -315,7 +322,11 @@ sub reboot {
 			$req->content($json);
 			$response = $browser->request($req);
 			if ( !$response->is_success ) {
-				$openprint::log->error("Failed to reboot:\n".$response->content.":\n".$response->status_line());
+				$openprint::log->error(join("\n",
+							'Failed to reboot:',
+							$response->content,
+							$response->status_line()
+							));
 				next;
 			}
 
@@ -327,39 +338,39 @@ sub reboot {
 			$success = 1;
 			last;
 
-		} elsif( $_[0]->type() eq 'DCS-932L' ) {
+		} elsif( $Host->type() eq 'DCS_932L' ) {
 			$url = $HI->ip().'/setSystemReboot';
-    } elsif ( $_[0]->type() eq 'DCS-942L' ) {
+    } elsif ( $Host->type() eq 'DCS-942L' ) {
       $url = $HI->ip().'/eng/admin/export.cgi';
       $method = 'post';
       $args = {
         reboot => 'true'
       };
-		} elsif( $_[0]->type() eq 'DCS-933L' ) {
+		} elsif( $Host->type() eq 'DCS-933L' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/setSystemReboot';
 			$method = 'post';
 			$args = {
-				ReplySuccessPage=>'reboot.htm',
-				ReplyErrorPage	=>	'reboot.htm',
-				Reset => 'Reboot the Device',
+				ReplySuccessPage=> 'reboot.htm',
+				ReplyErrorPage	=> 'reboot.htm',
+				Reset						=> 'Reboot the Device',
 			};
-		} elsif ( $_[0]->type() eq 'WG602v3' ) {
+		} elsif ( $Host->type() eq 'WG602v3' ) {
 			$url = $HI->ip().'/cgi-bin/reboot.cgi';
 			$args = {
 				reboot_ap => 1,
 			};
 			$do_not_expect = 'SORRY';
 		} else {
-			$openprint::log->error("Unknown host type $_[0]{type}");
+			$openprint::log->error("Unknown host type $$Host{type}");
 			return 0;
 		}
 
 		my $response = $browser->get($protocol.'://'.($initial_url ? $initial_url : $url));
-		$openprint::log->debug("Sending initial url: " . $protocol.'://'.($initial_url ? $initial_url : $url) );
+		$openprint::log->debug('Sending initial url: '.$protocol.'://'.($initial_url ? $initial_url : $url));
 		my $headers = $response->headers();
 		if ( $$headers{'client-ssl-cipher'} ) {
-$openprint::log->debug("Switching to https");
+$openprint::log->debug('Switching to https');
 			$protocol = 'https';
 			$port = 443;
 		}
@@ -467,48 +478,130 @@ sub Owner {
 }
 
 sub can_reboot {
-  if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W','M8640','TL-WPA4220','D-Link DAP1522','DGS-1224T','DLink DCS-910','TP-Link Archer C7',
-        'DCS932L','DCS-933L','DCS-942L', 'WG602v3' ] ) ) {
+  if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [
+				'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W',
+				'M8640',
+				'TL-WPA4220', 'TP-Link Archer C7',
+				'D-Link DAP1522','DGS-1224T','DLink DCS-910',
+        'DCS_932L','DCS-933L','DCS-942L', 'WG602v3',
+				'Vivotek' ] ) ) {
     return !undef;
   }
   return undef;
 } # end sub can_reboot
 
 sub get_config {
-	my $Host = shift;
-	require LWP;
-	my $browser = LWP::UserAgent->new();
-	if ( $Host->type() eq 'DCS-932L' ) {
-		my $protocol = 'http';
-		my $path = '/Config.CFG';
-		my $method = 'get';
-		my $port = 80;
-		my $args;
-		foreach my $HI ( $Host->Interfaces() ) {
+	my $self = shift;
+	my %config;
 
-			my $url = $protocol.'://'.$HI->ip().$path;
-			my $response = $browser->get($url);
-			$openprint::log->debug("Sending initial url: $url");
-			my $headers = $response->headers();
-			if ( $$headers{'client-ssl-cipher'} ) {
-				$openprint::log->debug("Swtiching to https");
-				$protocol = 'https';
-				$port = 443;
-			}
-			$response = $HI->authenticate( $browser, $response, $method, $port, $url, $args);
-			#$openprint::log->debug($response->content());
-			if ( !$response->is_success ) {
-			} else {
-				return $response->content();
-				last;
-			}
+	if ( !($$self{type_id} and $self->type()) ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->debug("get_config called when can_get_config should have been checked from $caller:$line");
+		return;
+	}
 
-		} # end foreach HI
-	} # end if type
+	eval {
+		require 'openprint/Host/'.$self->type().'.pm';
+		my $Host = ('openprint::Host::'.$self->type())->new($self);
+		%config = $Host->get_config();
+	};
+	$openprint::log->error('Eval error of require Reason: '.$@) if $@;
+	return %config;
 } # end sub get_config
 
+sub get_status {
+	my $self = shift;
+	my %status;
+	if ( !($$self{type_id} and $self->type()) ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->debug("get_status called when can_get_status should have been checked from $caller:$line");
+		return;
+	}
+
+	eval {
+		require 'openprint/Host/'.$self->type().'.pm';
+		my $Host = ('openprint::Host::'.$self->type())->new($self);
+		%status = $Host->get_status();
+	};
+	$openprint::log->error('Eval error of require Reason: '.$@) if $@;
+	return %status;
+} # end sub get_status
+
+sub can_get_status {
+	return 0;
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'Vivotek' ] ) );
+}
+
 sub can_get_config {
-	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L' ] ) );
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L'] ) );
+}
+
+sub get_and_store_config {
+	my $self = shift;
+	if ( $self->can_get_config() ) {
+	} else {
+		Error("Host type $$self{type} doesn't have support for getting config.");
+	}
+}
+
+sub can_get_image {
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS_932L','Vivotek' ] ) );
+}
+
+sub get_image {
+	my $self = shift;
+	my $url;
+
+	eval {
+		require 'openprint/Host/'.$self->type().'.pm';
+		my $Host = ('openprint::Host::'.$self->type())->new($self);
+		$url = $Host->get_image(@_);
+	};
+	$openprint::log->error('Eval error of require Reason: '.$@) if $@;
+	return $url;
+}
+
+sub check {
+	my $self = shift;
+	my @check;	
+	return if ! ( $$self{type_id} and sets::isin($self->type(), ['Vivotek']) );
+	eval {
+		require 'openprint/Host/'.$self->type().'.pm';
+		my $Host = ('openprint::Host::'.$self->type())->new($self);
+		@check = $Host->check();
+	};
+	return @check;
+}
+#sub new {
+	#my $parent = shift;
+	#my $self = $parent->SUPER::new(@_);
+	#if ( $self->type() eq 'Vivotek' ) {
+		#bless $self, 'openprint::Host::Vivotek';
+	#}
+	#return $self;
+#}
+
+sub thumbnail_html {
+	my $self = shift;
+	my $size = @_ ? shift : 'small';
+	if ( $self->can_get_image() ) {
+		my @dimensions = openprint::Asset::get_dimensions('Landscape', $size);
+		return '<img src="'.$self->get_image(@dimensions).'" alt=""/>';
+	}
+	my @Assets = $self->Assets();
+	$openprint::log->debug("Assets: $size " . @Assets);
+	return ( @Assets ? $Assets[0]->Asset()->sized_html($size) : '' );
+}
+
+sub thumbnail_url {
+	my $self = shift;
+	my $size = @_ ? shift : 'small';
+	if ( $self->can_get_image() ) {
+		my @dimensions = openprint::Asset::get_dimensions('Landscape', $size);
+		return $self->get_image(@dimensions);
+	}
+	my @Assets = $self->Assets();
+	return ( @Assets ? $Assets[0]->Asset()->sized_url($size) : '' );
 }
 
 1;

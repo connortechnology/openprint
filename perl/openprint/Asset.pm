@@ -113,6 +113,37 @@ sub is_photo {
 	return sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp','pdf' ] );
 } # end sub is_photo
 
+sub get_dimensions {
+	my ( $layout, $size ) = @_;
+
+	my ( $width, $height );
+	if ( $layout eq 'Landscape' ) {
+		if ( $size eq 'medium' ) {
+			$height = $openprint::config{Medium_Asset_Height};
+			$width = $openprint::config{Medium_Asset_Width} if ! $height;
+		} elsif ( $size eq 'large' ) {
+			$height = $openprint::config{Large_Asset_Height};
+			$width = $openprint::config{Large_Asset_Width} if ! $height;
+		} elsif ( $size eq 'thumbnail' ) {
+			$height = $openprint::config{Small_Asset_Height};
+			$width = $openprint::config{Small_Asset_Width} if ! $height;
+		} elsif ( $size eq 'small' ) {
+			$height = $openprint::config{Small_Asset_Height};
+			$width = $openprint::config{Small_Asset_Width} if ! $height;
+		} # end if
+	} else {
+		if ( $size eq 'medium' ) {
+			$width = $openprint::config{Medium_Asset_Width};
+		} elsif ( $size eq 'large' ) {
+			$width = $openprint::config{Large_Asset_Width};
+		} elsif ( $size eq 'thumbnail' ) {
+			$width = $openprint::config{Small_Asset_Width};
+		} elsif ( $size eq 'small' ) {
+			$width = $openprint::config{Small_Asset_Width};
+		} # end if
+	} # end if	
+} # end sub get_dimensions
+
 sub sized_url {
 	my $size = $_[1];
 	if ( ! $_[0]{id} ) {
@@ -147,41 +178,12 @@ sub sized_url {
 		if ( $openprint::config{AssetPath} ) {
 			my $dest = $path.$dest_filename;
 			if ( ! -e $dest ) {
-				my ( $width, $height );
-				if ( $_[0]->layout() eq 'Landscape' ) {
-					if ( $size eq 'medium' ) {
-						$height = $openprint::config{Medium_Asset_Height};
-						$width = $openprint::config{Medium_Asset_Width} if ! $height;
-					} elsif ( $size eq 'large' ) {
-						$height = $openprint::config{Large_Asset_Height};
-						$width = $openprint::config{Large_Asset_Width} if ! $height;
-					} elsif ( $size eq 'thumbnail' ) {
-						$height = $openprint::config{Small_Asset_Height};
-						$width = $openprint::config{Small_Asset_Width} if ! $height;
-					} elsif ( $size eq 'small' ) {
-						$height = $openprint::config{Small_Asset_Height};
-						$width = $openprint::config{Small_Asset_Width} if ! $height;
-					} # end if
-					if ( ! ( $width or $height ) ) {
-						my ( $caller, undef, $line ) = caller;
-						$openprint::log->error("No asset size in config for size($size) called from $caller:$line");
-						return '/assets/'.$filename;
-					} # end if	
-				} else {
-					if ( $size eq 'medium' ) {
-						$width = $openprint::config{Medium_Asset_Width};
-					} elsif ( $size eq 'large' ) {
-						$width = $openprint::config{Large_Asset_Width};
-					} elsif ( $size eq 'thumbnail' ) {
-						$width = $openprint::config{Small_Asset_Width};
-					} elsif ( $size eq 'small' ) {
-						$width = $openprint::config{Small_Asset_Width};
-					} # end if
-					if ( ! $width ) {
-						my ( $caller, undef, $line ) = caller;
-						$openprint::log->error("No asset size in config for size($size) called from $caller:$line");
-						return '/assets/'.$filename;
-					} # end if	
+				
+				my ( $width, $height ) = get_dimensions($_[0]->layout(), $size);
+				if ( ! ( $width or $height ) ) {
+					my ( $caller, undef, $line ) = caller;
+					$openprint::log->error("No asset size in config for size($size) called from $caller:$line");
+					return '/assets/'.$filename;
 				} # end if	
 				my ( $stderr, $stdout );
 				require IPC::Run3;
@@ -423,6 +425,14 @@ sub can_edit {
 
 sub can_view {
 	return 1 if $_[0]{public};
+  return 1 if $$openprint::User{type} eq 'A';
+
+	if ( $_[0]{created_by} == $$openprint::User{id} ) {
+		$openprint::log->debug('User is owner');
+		return 1;
+	} else {
+		$openprint::log->debug('User is not owner :'.$$openprint::User{id} .' != ' . $_[0]{created_by});
+	}
 
 	my @Albums = openprint::Photo_in_Album->find(asset_id=>$_[0]{id});
 	if ( ! @Albums ) {

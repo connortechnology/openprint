@@ -83,6 +83,7 @@ $serial = 'companies_id_seq';
 	profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id=?)',
 	last_article_id	=>	'(SELECT MAX(id) FROM Articles WHERE company_id=companies.id)',
 	last_timetrack_id	=>	'(SELECT MAX(id) FROM timetracks WHERE company_id=companies.id)',
+	is_invoiced=> 'id IN (SELECT invoicee_id FROM invoices)',
 );
 %transforms = (
 	address1					=>	[ 's/^\s+//', 's/\s+$//' ],
@@ -346,8 +347,18 @@ sub can_edit {
 	return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
 	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
 	return 1 if $_[0]{id} == $$openprint::User{company_id} and $$openprint::User{administrator} eq 'Y';
+	return 1 if $openprint::User->in_Group('Estimating') and ( $_[0]{id} != $$openprint::User{company_id} );
 	return 0;
 } # end sub can_edit
+
+sub can_delete {
+	return 0 if ! $_[0]{id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
+	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
+	return 1 if $_[0]{id} == $$openprint::User{company_id} and $$openprint::User{administrator} eq 'Y';
+	return 0;
+}
 
 sub taxexempt1 {
 	if ( @_ > 1 ) {
@@ -536,6 +547,8 @@ sub can_become {
 			( $$User{id} == $$C{salesrep_id} )
 			or
 			sets::isin( $$User{id}, $C->CSR()->assistant_ids() )
+			or
+			$User->in_Group('Estimating')
 		 ) {
 		return 1;
 	}

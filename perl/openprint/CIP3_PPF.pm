@@ -13,7 +13,7 @@ use Image::Magick;
 
 use vars qw( $debug $log $dbh %config $table $serial %fields %find_fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -21,35 +21,34 @@ $debug = 0;
 $table = 'CIP3_PPF';
 $serial = 'CIP3_PPF_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'created_on'	=>	'created_on',
-	'data'			=>	'data',
-	'front_preview'	=>	'front_preview',
-	'back_preview'	=>	'back_preview',
-	'signature'		=>	'signature',
-	'side'			=>	'side',
-	'docket'		=>	'docket',
-	'version'		=>	'version',
-	'deleted'		=>	'deleted',
-	'compressed'	=>	'compressed',
+	id						=>	'id',
+	created_on		=>	'created_on',
+	data					=>	'data',
+	front_preview	=>	'front_preview',
+	back_preview	=>	'back_preview',
+	signature			=>	'signature',
+	side					=>	'side',
+	docket				=>	'docket',
+	version				=>	'version',
+	deleted				=>	'deleted',
+	compressed		=>	'compressed',
 );
 %find_fields = (
-		'status'		=>	'(SELECT strstatus from tbl_Projects WHERE lngdocketnumber=docket)',
-		);
+	status		=>	'(SELECT strstatus from tbl_Projects WHERE lngdocketnumber=docket)',
+);
 %defaults = (
-		'created_on'	=>	q`'NOW()'`,
-		'deleted'		=>	0,
-		);
+	created_on	=>	q`'NOW()'`,
+	deleted			=>	0,
+);
 %transforms = (
-		'signature'		=> [ 's/\D//g' ],
-		);
+	signature		=> [ 's/\D//g' ],
+);
 
 my %WorkStyles = (
-		'Perfecting'	=>	'Perfecting',
-		'WorkAndTurn'	=>	'Work & Turn',
-		'WorkAndBack'	=>	'Work & Tumble',
-
-		);
+	Perfecting	=>	'Perfecting',
+	WorkAndTurn	=>	'Work & Turn',
+	WorkAndBack	=>	'Work & Tumble',
+);
 
 sub runstyle {
 	my ( $self ) = @_;
@@ -179,7 +178,6 @@ sub parse {
 	my ( $self ) = @_;
 
 	$$self{parsed} = 1;
-
 	$_ = decode_base64($$self{data});
 	$openprint::log->error("Unable to decode") if $$self{data} and ! $_;
 	$_ = Compress::Zlib::uncompress($_) if $$self{compressed};
@@ -199,30 +197,52 @@ sub parse {
 
 sub previews {
 	my ( $self, $side ) = @_;
-
 	if ( ! $$self{parsed} ) {
 		$self->parse();
 	} # end if
-	my @previews;
 
-	if ( $$self{sheets} ) {
+	if ( $$self{sheets} and ! $$self{previews} ) {
+		my $previews = $$self{previews} = {};
+
 		foreach my $sheet ( @{$$self{sheets}} ) {
-			if ( $$sheet{Front} and ( (!$side) or ($side eq 'Front') ) ) {
-				if ($$sheet{Front}{previews} ) {
-					push @previews, @{$$sheet{Front}{previews}} 
-				} else {
-					$log->debug("No previews for Front");
-				} # end if
-			} # end if
-			if ( $$sheet{Back} and ( (!$side) or ($side eq 'Back') ) ) {
-				push @previews, @{$$sheet{Back}{previews}} if $$sheet{Back}{previews};
-			} # end if
+			$$previews{Front} = $$sheet{Front}{previews} if $$sheet{Front} and $$sheet{Front}{previews};
+			$$previews{Back} = $$sheet{Back}{previews} if $$sheet{Back} and $$sheet{Back}{previews};
 		} # end foreach sheet
-	} else {
-		$log->debug("No sheets in CIP3_PPF::previews");
-	} # end if sheets
-	return @previews;
+	}
+	my $previews = $$self{previews};
+
+	if ( $side ) {
+		if ( wantarray ) {
+			return $$previews{$side} ? @{$$previews{$side}} : ();
+		} 
+		return $$previews{$side};
+	}
+	if ( wantarray ) {
+		return (
+			( $$previews{Front} ? @{$$previews{Front}} : () ),
+			( $$previews{Back} ? @{$$previews{Back}} : () ),
+				);
+	}
+	return $previews;
 } # end sub previews
+
+sub side {
+	my $self = shift;
+	$$self{side} = shift if @_;
+	if ( !$$self{side} ) {
+		my $previews = $self->previews();
+		if ( $$previews{Front} and $$previews{Back} ) {
+			$$self{side} = 'M';
+		} elsif ( $$previews{Front} ) {
+			$$self{side} = 'Front';
+		} elsif ( $$previews{Back} ) {
+			$$self{side} = 'Back';
+		} else {
+			$openprint::log->error("No side");
+		}
+	} # end if ! side
+	return $$self{side};
+}
 
 sub generate_previews {
 	my ( $self, $path, $force ) = @_;
@@ -286,7 +306,6 @@ sub generate_previews {
 
 				my $orientation;
 				my $s = $$preview{separations}[0];
-#$log->debug("Matrix: $$s{matrix}");
 				if ( $$s{matrix} eq "$$s{width} 0 0 $$s{height} 0 0" ) {
 					$orientation = 'left-bottom';
 				} elsif ( $$s{matrix} eq "$$s{width} 0 0 -$$s{height} 0 $$s{height}" ) {
@@ -368,8 +387,8 @@ sub generate_previews {
 			if ( $$self{lc($side).'_preview'} ) {
 				$_ = misc::save_file( $log, $filename, decode_base64($$self{lc($side).'_preview'}) );
 				$log->error( $_ ) if $_;
-			} elsif ( $self->previews($side) ) {
-				$log->error( "No data in the preview for $filename" );
+			} elsif ( ! $self->previews($side) ) {
+				$log->error("No data in the preview for $filename");
 			} # end if
 		} else {
 			$log->error("No path");
@@ -383,7 +402,6 @@ sub generate_previews {
 
 sub send_ppf {
 	my ( $self, $Equipment ) = @_;
-
 	my $data = decode_base64($$self{data});
 	if ( ! $data ) {
 		$log->error('No data in send_ppf '.$self->to_string());
@@ -474,6 +492,28 @@ sub convert_sheet_name {
 sub to_string {
 	return sprintf('%d Sig: %d Side: %s', $_[0]{docket}, $_[0]{signature}, $_[0]{side});
 } # end sub to_string
+
+sub upload {
+	my ( $self, $filename, $param ) = @_;
+  my $upload = $openprint::r->upload($filename);
+  if ( ! $upload ) {
+    return "There was no upload for $filename<br/>";
+  } # end if
+  my $data;
+  $upload->slurp($data);
+	
+	my $compressed_data = Compress::Zlib::compress($data);
+	$log->debug('Compressed PPF from ' . (length $data) . ' to ' . (length $compressed_data) ) if $debug;
+  $self->save({
+      docket      =>  $$param{docket},
+      signature   =>  $$param{signature},
+      side        =>  $$param{side},
+      version  		=>  $$param{version},
+      data        =>  encode_base64($compressed_data ? $compressed_data : $data),
+      compressed  =>  ($compressed_data ? 1 : 0),
+      });
+
+} # end sub upload
 
 1;
 __END__

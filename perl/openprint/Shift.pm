@@ -55,22 +55,21 @@ sub starttime_dt {
 	if ( $_[0]{starttime} ) {
 		return $parser->parse_datetime( $_[0]{starttime} );
 	} else {
-		$openprint::log->error("tried to get a dt for " . $_[0]{starttime} );
-Carp::cluck("Loadi?! ");
+		$openprint::log->error('tried to get a dt for '.$_[0]{starttime});
 		return;
 	}
 }
 sub starttime_seconds {
-	if ( @_ == 2 ) {
+	if (@_ == 2) {
 		$_[0]{starttime} = $parser->format_datetime( DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ ) );
 	} # end if
-	return $parser->parse_datetime( $_[0]{starttime} )->epoch();
+	return $parser->parse_datetime($_[0]{starttime})->epoch();
 } # endsub
 
 sub startdate_seconds {
 	my ( $self ) = @_;
 	my $time = $self->starttime_seconds();
-	return Date::Parse::str2time( Date::Format::time2str( '%Y-%m-%d', $time ) );
+	return Date::Parse::str2time(Date::Format::time2str('%Y-%m-%d', $time));
 } # end sub startdate_seconds
 
 sub endtime_dt {
@@ -262,11 +261,10 @@ sub get_from_ul_id {
 sub get_ul {
 	my ( $Shift, $filters ) = @_;
 
-	my $html = '<div id="'.$Shift->ul_id().'_div">';
+	my $html;
 	my $total_impressions = 0;
 
 	my @Jobs = $Shift->Schedule();
-#$log->debug("Have schedule" . @Jobs );
 	openprint::Project->find(id=>[ map { $$_{project_id} } @Jobs ]) if @Jobs;
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
@@ -291,7 +289,7 @@ sub get_ul {
 			if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{user_id} ) ) {
 				$html .= sprintf(
 						q`
-<div class="When" onclick="popup_window('_shift_popup.html','shift_id=%d', {width:475});">
+<div class="When" onclick="popup_window('_shift_popup.html','shift_id=%d', {width:475});" title="`.$$Shift{id} . ': '.$$Shift{starttime} . ' to ' . $$Shift{endtime}.q`">
   <span class="Interval">%s %d %.3s %s %s to %s</span>
   <span class="TotalImpressions">(%d)</span>
   <span class="%s">%s</span>
@@ -299,7 +297,7 @@ sub get_ul {
 						$$Shift{id}, 
 						Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day) ), 
 						$day, 
-						Date::Calc::Month_to_Text( $month ), $Shift->name(), 
+						Date::Calc::Month_to_Text($month), $Shift->name(), 
 						Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
 						Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
 						$total_impressions, (@Operators ? 'operator' : 'assign' ), 
@@ -320,8 +318,13 @@ sub get_ul {
 	#} else {
 		#$openprint::log->debug("Shift does not have a name");
 	} # end if Shift->name
+# See if we are the last shift with jobs.
 	my $content = $Shift->get_lis($filters);
-	$html .= sprintf('<ul id="%s" class="shift%s">', $Shift->ul_id(), ($content ? '' : ' Empty') );
+	my @after_jobs = openprint::ScheduledJob->find(equipment_id=>$$Shift{equipment_id}, 'starttime >'=>$Shift->endtime()) if ! $content;
+	$html = '<div id="'.$Shift->ul_id().'_div"'.((!($content or @after_jobs)) ? ' class="last"' : '').'>'.$html;
+	$html .= sprintf('<ul id="%s" class="shift%s">', $Shift->ul_id(),
+			($content ? '' : ' Empty'),
+			);
 	$html .= $content;
 	$html .= '</ul></div>';
 	return $html;

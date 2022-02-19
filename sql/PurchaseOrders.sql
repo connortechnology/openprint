@@ -16,6 +16,7 @@ CREATE TABLE PurchaseOrders (
 	authorized BOOLEAN,
 	delivered_on	TIMESTAMP WITH TIME ZONE,
 	delivered_on_switch	TEXT,
+	paid_on				TIMESTAMP WITH TIME ZONE,
 	deleted		BOOLEAN NOT NULL default false,
 	shipping_terms	TEXT,
 	shipping_method	TEXT,

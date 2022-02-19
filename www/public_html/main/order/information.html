@@ -60,7 +60,7 @@
 					# If there is only 1 thing in the order, then we can condense
 					$$variable{Project} = $$variable{Contents}[0]->Project();
 					my $html;
-					if ( $$variable{Project}->quantity_indexes() > 1 ) {
+					if ( ($$variable{Project}->quantity_indexes() > 1 ) or ! $$variable{Project}->ordered_quantity_index() ) {
 						$html .= '<fieldset><legend>Select Quantity</legend><div class="content"><ul>';
 						$html .= include( '/main/order/_quantity_select.html' ).'</ul></div></fieldset>';
 					} else {
@@ -124,9 +124,12 @@
 				} # end if
 				$html .= button( 'AddProject', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $config{OrderMode} ne 'Simple';
 				if ( $$variable{Order}->status() eq 'Re-Opened' ) {
-				$html .= button( 'Close', { href=>'/main/order/confirmation.html?btnFunction=Close&order_id='.$$variable{Order}->id(), text=>'Close' } );
+          if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
+            $html .= button( 'Close', { href=>'/main/order/confirmation.html?btnFunction=Close&amp;order_id='.$$variable{Order}->id(), text=>'Close' } );
+          }
 				}
 				$html .= button( 'SaveAndContinue', { onclick=>'f1.submit();', text=>'Save And Continue' } ); 
+  
 				return $html;
 			) ?>
 		</p>

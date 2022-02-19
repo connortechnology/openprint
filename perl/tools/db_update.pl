@@ -2080,6 +2080,10 @@ if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 			$dbh->do('ALTER TABLE purchaseorders add company_id INTEGER');
 			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (company_id) REFERENCES companies (id)');
 		} # end if
+		if ( ! exists $$data{paid_on} ) {
+			$log->debug('Adding paid_on to Purchase Orders');
+			$dbh->do('ALTER TABLE PurchaseOrders add paid_on TIMESTAMP WITH TIME ZONE') or die $dbh->errstr();
+		}
 		$dbh->do('ALTER TABLE PurchaseOrders ALTER delivered_on DROP NOT NULL');
 		sql::end_transaction( $dbh, $ac );
 } # end if
@@ -2967,6 +2971,10 @@ if ( ! sets::isin( 'skid_contents', \@tables ) ) {
 		$dbh->do('alter table skid_contents add primary key (id)');
 		$dbh->do('create index skid_contents_skid_id_idx on skid_contents (skid_id)');
 	} # end if
+	if ( ! exists $$data{needs_verification} ) {
+		$log->debug("Adding needs_verification to skid_contents");
+		$dbh->do('ALTER TABLE skid_contents ADD needs_verification BOOLEAN NOT NULL DEFAULT false') or die $dbh->errstr();
+	}
 } # end if
 foreach my $ServiceType ( openprint::ServiceType->find() ) {
 	if ( $ServiceType->name() eq 'PerfectBound' ) {
@@ -3492,6 +3500,12 @@ if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
 
 if ( ! sets::isin( 'host_config', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Host_Config.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='host_config'", 'column_name');
+	if ( exists $$data{data} and ! exists $$data{data_json} ) {
+		$log->debug("Converting Host_Config::data to Host_Config::data_json");
+		$dbh->do('ALTER TABLE Host_Config RENAME data to data_json') or die $dbh->errstr();
+	}
 }
 if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Host_Interfaces.sql}) );

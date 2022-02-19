@@ -42,7 +42,9 @@ my @all_equipment;
 my $Rule;
 my $Wheel;
 my $ScoringService;
+my $ScoringWithoutFoldingService;
 my $ScoringMakeReadyService;
+my $ScoringMakeReadyWithoutFoldingService;
 
 my $folding_service_index;
 
@@ -108,7 +110,11 @@ sub init {
 	$Wheel = openprint::Material->find_one( name=>'ScoringWheel');
 
 	$ScoringService = openprint::Service->find_one(name=>'Scoring');
+	$ScoringWithoutFoldingService = openprint::Service->find_one(name=>'ScoringWithoutFolding');
 	$ScoringMakeReadyService = openprint::Service->find_one(name=>'ScoringMakeReady');
+	$ScoringMakeReadyWithoutFoldingService = openprint::Service->find_one(name=>'ScoringMakeReadyWithoutFolding');
+	my $services = $Project->services();
+	$folding_service_index = ( $$services{Folding} and $$services{Folding}[0] ) ? $$services{Folding}[0] : 0;
 }
 sub signature_needs {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
@@ -385,8 +391,8 @@ sub signature_calc {
 
 # Get the impositions to consider
 	if ( ! $$SignatureImposition{imposition} ) {
-		$openprint::log->error("Scoring passed an invalid imposition");
-		$Results{alert} .= "Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>";
+		$openprint::log->error('Scoring passed an invalid imposition');
+		$Results{alert} .= 'Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>';
 		return $Results{Status};
 	} # end if
 
@@ -401,11 +407,11 @@ sub signature_calc {
 	my @All_Impositions;
 
 	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
-		$openprint::log->debug("Overriding impositions");
+		$openprint::log->debug('Overriding impositions');
 
 		my @override_impos;
 		foreach my $index ( 1 .. 4 ) {
-			my $imp_qty =$$specs{join('-','ImpQty', $form,$qty_index,$index)};
+			my $imp_qty =$$specs{join('-','ImpQty',$form,$qty_index,$index)};
 			next if ! $imp_qty;
 			my $I = $SignatureImposition->copy();
 			$I->quantity( $imp_qty );
@@ -550,7 +556,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 next ;
 			 } 
 		 } elsif ( $type eq 'Press' ) {
-			 if ( $$sig_specs{'ddmRunStyle'.$qty_index} eq  'Work & Turn' or $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Work & Tumble' ) {
+			 if ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Work & Turn' or $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Work & Tumble' ) {
 				 $Results{Breakdown} .= 'Cant do an inline score when W&T.<br/>';
 				 next;
 			 } # end if
@@ -626,7 +632,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 					 $Results{Breakdown} .= $$Price{Breakdown};
 				 } # end foreach imposition I
 				 next if ! $complete;
-				 $Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice );
+				 $Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice);
 
 				 if ( (! exists $Results{Price}) or ($totalPrice < $Results{Price}) ) {
 					 $Results{Price} = $totalPrice;
@@ -679,17 +685,30 @@ sub get_price {
 	} # end if
 	my $score_qty = $horizontal_rule + $vertical_rule;
 	my %setupPrice;
+	my $UseScoringMakeReadyService;
+	my $UseScoringService;
+	my %servicePrice;
+
 	if ( ( $type eq 'Folder' ) and ! $folding_service_index ) {
-		%setupPrice = openprint::service::get_price_object( 'ScoringMakeReadyWithoutFolding', $score_qty, $Equipment );
-		%setupPrice = $ScoringMakeReadyService->get_price( $score_qty, $Equipment ) if ( ! %setupPrice ) and $ScoringMakeReadyService;
+		$UseScoringService = $ScoringWithoutFoldingService ? $ScoringWithoutFoldingService : $ScoringService;
+		$UseScoringMakeReadyService = $ScoringMakeReadyWithoutFoldingService ? $ScoringMakeReadyWithoutFoldingService : $ScoringMakeReadyService;
 	} else {
-		%setupPrice = $ScoringMakeReadyService->get_price( $score_qty, $Equipment ) if $ScoringMakeReadyService;
-	} # end if
+		$UseScoringService = $ScoringService;
+		$UseScoringMakeReadyService = $ScoringMakeReadyService;
+	} 
+
+	%setupPrice = $UseScoringMakeReadyService->get_price(undef, $Equipment);
+	if ( $setupPrice{range_units} eq 'scores' ) {
+		$score_qty = $vertical + $horizontal;
+		%setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
+	} else {
+		%setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
+	}
 
 	$Results{Breakdown} .= sprintf('MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice{Price}) if %setupPrice;
 	$Results{Breakdown} .= "Imposition: $$I{columns}x$$I{rows}=$$I{imposition}: ";
 
-	my $Overs = $Equipment->Specification( 'Scoring Overs', $qty );
+	my $Overs = $Equipment->Specification('Scoring Overs', $qty);
 	if ( $$Overs{units} ) {
 		if ( $$Overs{units} eq 'Sheets' ) {
 			my $overs = $$Overs{value};
@@ -697,16 +716,19 @@ sub get_price {
 			$Results{Overs} = $overs;
 			$Results{Breakdown} .= 'Overs: ' . $overs . '<br/>';
 		} else {
-			$openprint::log->error("unknown units on Scoring Overs on $$Equipment{strid}");
+			$openprint::log->error('unknown units on Scoring Overs on '.$$Equipment{strid});
 		} # end if
 	} # end if
 
-	my %servicePrice;
-	if ( ( $type eq 'Folder' ) and ! $folding_service_index ) {
-		%servicePrice = openprint::service::get_price_object( 'ScoringWithoutFolding', $qty, $Equipment );
-		%servicePrice = $ScoringService->get_price( $qty, $Equipment ) if ( ! %servicePrice ) and $ScoringService;
+	if ( $UseScoringService ) {
+		%servicePrice = $UseScoringService->get_price(undef, $Equipment);
+		if ( $servicePrice{range_units} eq 'scores' ) {
+			%servicePrice = $UseScoringService->get_price($score_qty, $Equipment);
+		} else {
+			%servicePrice = $UseScoringService->get_price($qty, $Equipment);
+		}
 	} else {
-		%servicePrice = $ScoringService->get_price( $qty, $Equipment ) if $ScoringService;
+		$openprint::log->warn('No Scoring price!');
 	} # end if
 	$servicePrice{Total} = 0;
 
@@ -739,7 +761,7 @@ sub get_price {
 
 #$openprint::log->debug("Horizontal: $horizontal_rule");
 	if ( $horizontal_rule and $Rule ) {
-		%horizontal_price = $Rule->get_price( $horizontal_rule, $Equipment );
+		%horizontal_price = $Rule->get_price($horizontal_rule, $Equipment);
 		if ( %horizontal_price ) {
 			if ( $horizontal_price{units} eq 'per rule' or $horizontal_price{units} eq 'each' or $horizontal_price{units} eq 'per score' ) {
 				$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_rule;
@@ -782,7 +804,7 @@ sub get_price {
 				} # end if
 			} # end if
 		} else {
-			$Results{Breakdown} .= "No material found for ScoringWheel<br/>";
+			$Results{Breakdown} .= 'No material found for ScoringWheel<br/>';
 		} # end if
 	} else {
 		$vertical_price{Total} = 0;

@@ -166,6 +166,9 @@ sub view_services {
 						if ( $$services{UVCoating} ) {
 							openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{UVCoating}[0], 'UVCoating' );
 						} # end if
+						if ( $$services{BulkSkids} ) {
+							openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{BulkSkids}[0], 'Skids' );
+						} # end if
 					} # end if
 				} # end if
 			} elsif ( $param{btnFunction} eq 'Recalculate Project' ) {
@@ -215,6 +218,9 @@ sub view_services {
 					if ( $$services{UVCoating} ) {
 						openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{UVCoating}[0], 'UVCoating' );
 					} # end if
+          if ( $$services{BulkSkids} ) {
+            openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{BulkSkids}[0], 'Skids' );
+          } # end if
 				} # end if
 			} # end foreach s_id
 			$session{project_id} = $project_index;
