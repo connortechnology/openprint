@@ -51,13 +51,13 @@ sub verify_login {
 		
 	# convert the email address to lower case. All email addresses stored in DB will be lower case.
 	my $email = openprint::User->transform('email', $openprint::param{email} );
-	if ( ! $email ) {
+	if (!$email) {
 		$$variable{details} = "\"$email\" is not a valid account.	Please try again.";
 		$$variable{error} = 'Authentication Failed.';
 		return;
 	} # end if
 
-	$log->debug("** Verifying Login for Email Adress: $email **");
+	$log->debug("** Verifying Login for Email Address: $email **");
 
 	my $password = $openprint::param{password};
 
@@ -66,9 +66,9 @@ sub verify_login {
 	# attribute on the strEmail field.
 	my @Users = openprint::User->find( email=>$email );
 
-	if ( ! @Users ) {
+	if (!@Users) {
 		# user not found.	Let's see if we got the password wrong, or the email wrong.
-		if ( @Users = openprint::User->find(email=>$email,deleted=>1) ) {
+		if ( @Users = openprint::User->find(email=>$email, deleted=>1) ) {
 			foreach my $U ( @Users ) {
 				$$variable{information} = "\"$email\" Has been deleted.  Please contact us to have your account re-instated.";
 				(new openprint::Log())->save({Object=>$U, action=>'Login Failed', note=>'Account Deleted', user_id=>$U->id(), company_id=>$U->company_id() } );
@@ -80,7 +80,8 @@ sub verify_login {
 		$$variable{error} = 'Authentication Failed.';
 		return;
 	} # end if
-	my $User;
+
+	my $User = undef;
 	foreach my $U ( @Users ) {
 		if ( $config{encrypt_passwords} ) {
 			eval {
@@ -88,16 +89,38 @@ sub verify_login {
 				my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($U->password());
 				if ( $ppr->match($password) ) {
 					$User = $U;
+          $openprint::log->debug("User $$U{email}'s password matched: $$U{password} == $password");
 					last;
         } else {
           $openprint::log->debug("User $$U{email}'s password did not match: $$U{password} != $password");
 				} # end if
 			};
-			$log->error( "Eval error of Authen::Passphrase::BlowfishCrypt Reason: " . $@ ) if $@;
+			$log->error('Eval error of Authen::Passphrase::BlowfishCrypt Reason: '.$@) if $@;
+
+      # Failed, could be error, could be that the password is stored in plaintext
+      if ($U->password() eq $password) {
+        $User = $U;
+        $openprint::log->debug("User $$U{email}'s password matched plaintext: $$U{password} == $password");
+        eval {
+          require Authen::Passphrase::BlowfishCrypt;
+          my $ppr = Authen::Passphrase::BlowfishCrypt->new(
+            cost => 8, salt_random => 1,
+            passphrase => $password);
+
+          $variable{error} .= $User->save({ password => $ppr->as_rfc2307() });
+        };
+        $log->error('Eval error of Authen::Passphrase::BlowfishCrypt Reason: '.$@) if $@;
+        last;
+      } else {
+        $openprint::log->debug("User $$U{email}'s password did not match: $$U{password} != $password");
+      }
 		} else {
 			if ( $password eq $U->password() ) {
+        $openprint::log->debug("User $$U{email}'s password matched: $$U{password} == $password");
 				$User = $U;
 				last;
+      } else {
+        $openprint::log->debug("User $$U{email}'s password did not match: $$U{password} != $password");
 			} # end if
 		} # end if
 	} # end foreach
