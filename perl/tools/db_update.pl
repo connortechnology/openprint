@@ -2511,6 +2511,12 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 		$dbh->do('ALTER TABLE quotes DROP column strcurrencyname') if ( exists $$data{strcurrencyname} );
 		$dbh->do('ALTER TABLE quotes DROP column strcurrencysymbol') if ( exists $$data{strcurrencysymbol} );
 		$dbh->do('ALTER TABLE quotes ADD deleted BOOLEAN NOT NULL DEFAULT FALSE') if ! exists $$data{deleted};
+
+		if ( ! exists $$data{for_company_id} ) {
+			$dbh->do('ALTER TABLE quotes add for_company_id INTEGER');
+			$dbh->do('ALTER TABLE quotes add FOREIGN KEY (for_company_id) REFERENCES Companies (id)');
+			$dbh->do('UPDATE TABLE Quotes set for_company_id = companyindex');
+		} # end if
 	} # end if
 
 if ( ! sets::isin( 'tbl_quote_details', \@tables ) ) {
