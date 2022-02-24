@@ -68,6 +68,7 @@ sub history {
         $subtotal += $Invoice->subtotal();
         $owing_total += $Invoice->owing();
         foreach my $Tax ( @Taxes ) {
+          $Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()};
           $tax_totals{$Tax->id()} += $Invoice->Tax($Tax)->amount();
         }
         $total += $Invoice->total();
