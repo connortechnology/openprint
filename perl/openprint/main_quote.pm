@@ -314,6 +314,7 @@ sub information {
     $variable{error} .= $Quote->save({
       user_id 		=>  $session{user_id},
       company_id	=>  $session{company_id},
+      for_company_id=>  $session{company_id},
       status 		 	=>  'Incomplete',
       Currency  	=>  openprint::Currency::get_current(),
     });
@@ -389,7 +390,7 @@ sub information {
     $quote_id = $NewQuote->id();
     $variable{ExternalRedirect} = '/main/quote/information.html?quote_id='.$quote_id;
     return;
-  } elsif ( $param{btnFunction} eq 'Continue' or $param{remove} ) {
+  } elsif (($param{btnFunction} eq 'Continue') or $param{remove} ) {
     $quote_id = $param{quote_id};
 # this should only happen if there was an error creating the quote
 
@@ -525,6 +526,7 @@ sub submit {
     } # end if
 
     $Quote->save({
+        for_company_id=>$param{for_company_id},
         reference=>$param{reference},
         comments=>$param{comments},
         status=>'Incomplete',
