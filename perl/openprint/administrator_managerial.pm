@@ -85,11 +85,16 @@ sub configuration {
         if ( $$C{value} ne $new_value ) {
           if ( $$C{name} eq 'encrypt_passwords' ) {
             if ( (!$$C{value}) and $new_value ) {
-              # Special case need to update everyone's passwords
-              foreach my $User ( openprint::User->find() ) {
-                my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $$User{password} );
-                $variable{error} .= $User->save({ password => $ppr->as_rfc2307() });
-              } # end foreach User
+              if ( 0 ) {
+                eval {
+                  # Special case need to update everyone's passwords
+                  foreach my $User ( openprint::User->find() ) {
+                    my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $$User{password} );
+                    $variable{error} .= $User->save({ password => $ppr->as_rfc2307() });
+                  } # end foreach User
+                };
+                $openprint::log->error("Eval errors updating everyone's passwords." . $@) if $@;
+              }
               $variable{error} .= $C->save({ value=>$new_value });
             } else {
               $variable{error} .= "Turning off encryption is a manual process.<br/>";
