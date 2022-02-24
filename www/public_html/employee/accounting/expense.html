@@ -86,6 +86,15 @@ function select_category( recipient_id ) {
 	<fieldset><legend>Editing Expense</legend>
 		<div class="leftColumn">
 			<ul>
+<? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+      <li><label>Company</label>
+        <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+        <select id="owner_id" name="owner_id" onchange="stop_filter_companies();load_expenses();">
+          <option value="">All</option>
+          <? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(), offers_credit=>1}), $$variable{Expense}->owner_id(), {encode=>1} ) ) ?>
+        </select>
+      </li>
+<? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 				<li><label onclick="toggle_input( $('recipient_id'), $('recipient') );">Recipient</label>
 					<input type="text" name="recipient" id="recipient" style="display:none;" onkeyup="$('recipient_id').selectedIndex=0;" />
 					<select name="recipient_id" id="recipient_id" onchange="$('recipient').value='';select_category(this.value);">
@@ -179,6 +188,7 @@ function select_category( recipient_id ) {
 			</ul>
 		</div>
 		<br class="spacer"/>
+<?include(/employee/accounting/_expense_matched_rules.html)?>
 <?if ( $$variable{Expense}->id() ) ?>
 <?eval( $$variable{Object} = $$variable{Expense} )?>
 <?include(/employee/assets/_asset_upload.html)?>

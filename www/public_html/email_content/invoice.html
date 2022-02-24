@@ -1,7 +1,8 @@
 <div class="Invoice">
-	<div class="PageTitle">
-		<h1>Invoice #<? echo ( $$variable{Invoice}->num() ) ?></h1>
-	</div>
+  <div class="Header">
+    <div class="PageTitle">
+      <h1>Invoice #<? echo ( $$variable{Invoice}->num() ) ?></h1>
+    </div>
 		<div class="Invoicer">
 	<fieldset>
 			<? echo (
@@ -47,7 +48,8 @@
 				return $html;
 			) ?>
 	</fieldset>
-		</div>
+      </div>
+    </div>
     <div class="Services">
 	<? echo (
 		my @Timetracks = openprint::Timetrack->find(invoice_id=>$$variable{Invoice}->id(), order=>'starting');
@@ -135,26 +137,26 @@ $html .= '
 			) ?>
     </div>
 	<?include(/invoice/_products_view.html)?>
-<div class="Notes">
-	<fieldset><legend>Notes</legend>
-    <table class="List">
-      <tr><td class="Date">Posted On</td><td><? echo ( format_date( $$variable{Invoice}->posted_on() ); ) ?></td></tr>
-      <tr><td><b>Due On</b></td><td><b><? echo ( format_date( $$variable{Invoice}->due_on() ); ) ?></b></td></tr>
-      <tr><td>Notes</td><td><? echo ( $$variable{Invoice}->external_notes() ) ?></td></tr>
-      <tr><td><b>Invoice Terms</b></td>
-			<td class="terms">
-<?echo(
-my $Credit = $$variable{Invoice}->Invoicee()->Credit( $$variable{Invoice}{invoicer_id} );
-my $html = 'Net ' . $$Credit{terms}. ' days';
-if ( $$variable{Invoice}->monthly_interest() > 0 ) {
- $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
-}
-return $html;
-)?>
-</td></tr>
-        </table>
+  <div class="Notes">
+    <fieldset><legend>Notes</legend>
+      <table class="List">
+        <tr><td class="Date">Posted On</td><td><? echo ( format_date( $$variable{Invoice}->posted_on() ); ) ?></td></tr>
+        <tr><td><b>Due On</b></td><td><b><? echo ( format_date( $$variable{Invoice}->due_on() ); ) ?></b></td></tr>
+        <tr><td>Notes</td><td><? echo ( $$variable{Invoice}->external_notes() ) ?></td></tr>
+        <tr><td><b>Invoice Terms</b></td>
+        <td class="terms">
+  <?echo(
+  my $Credit = $$variable{Invoice}->Invoicee()->Credit( $$variable{Invoice}{invoicer_id} );
+  my $html = 'Net ' . $$Credit{terms}. ' days';
+  if ( $$variable{Invoice}->monthly_interest() > 0 ) {
+   $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
+  }
+  return $html;
+  )?>
+  </td></tr>
+      </table>
     </fieldset>
-</div>
+  </div>
 <?include('/invoice/_totals.html')?>
 <? if ( $$variable{Invoice}->owing() ) ?>
 	<? if ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>

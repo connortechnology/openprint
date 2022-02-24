@@ -10,13 +10,13 @@ $table = 'tbl_service_defaults';
 $serial = 'tbl_Service_Defaults_lngId_seq';
 
 %fields = (
-	id				=>	'lngindex',
+	id		      		=>	'lngindex',
 	projecttype_id	=>	'projecttype_id',
-	projecttype		=>	undef,
+	projecttype	  	=>	undef,
 	servicetype_id	=>	'lngservicetypeindex',
-	servicetype		=>	undef,
-	name			=>	'strfieldname',
-	value			=>	'strdefaultvalue',
+	servicetype		  =>	undef,
+	name			      =>	'strfieldname',
+	value	      		=>	'strdefaultvalue',
 );
 %find_fields = (
 	projecttype	=>	'(SELECT name FROM project_types WHERE project_types.id=projecttype_id)',
@@ -27,8 +27,8 @@ $serial = 'tbl_Service_Defaults_lngId_seq';
 	id				=>	[ 's/\D//g' ],
 	servicetype_id	=>	[ 's/\D//g' ],
 	projecttype_id	=>	[ 's/\D//g' ],
-    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    value => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+  name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+  value => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (
@@ -48,6 +48,7 @@ $openprint::log->error("Unknown projecttype");
 	} # end if
 	return $_[0]{projecttype};
 } # end sub projecttype
+
 sub servicetype {
 	if ( @_ > 1 ) {
 		my $ServiceType = openprint::ServiceType->find_one('name lc'=> lc openprint::ServiceType->transform('name',$_[1]) );

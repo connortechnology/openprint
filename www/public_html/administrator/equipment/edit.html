@@ -1,6 +1,6 @@
 <?include('/includes/error_reporting.html')?>
-<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script>
 var equipment_id='<?echo($$variable{Equipment}->id())?>';
 
 function add_stock_setting( stock_id ) {
@@ -79,7 +79,7 @@ function filter_onChange( element, id, selected ) {
           <option value="">Select Equipment</option>
   <? echo (
     my @Equipment = openprint::Equipment->find( 
-      ( $param{ddmEquipment} ? ( or=>{deleted=>0, id=>$param{ddmEquipment} } ) : () ),
+    ( $param{ddmEquipment} ? ( or=>{deleted=>0, id=>$param{ddmEquipment}}, deleted=>[0,1] ) : () ),
       order => 'lower(strID)',
       );
       make_drop_down( [ map { $_->id(), join(': ', $_->strid(), $_->name() ) } @Equipment ], $$variable{Equipment}->id() );

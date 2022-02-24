@@ -20,6 +20,9 @@ use vars qw( $r $log $dbh %variable %param %session );
 *session = \%openprint::session;
 
 sub edit {
+  require openprint::Paper;
+  require openprint::PaperPrice;
+
 	my $ProjectType = new openprint::ProjectType( $param{ddmProjectType} );
 
 	if ( $param{btnFunction} eq 'Previous' ) {
@@ -55,14 +58,16 @@ sub edit {
 		}
 		my @changes = $ProjectType->changes( \%param );
 		$variable{error} .= $ProjectType->save( \%param );
-		(new openprint::Log())->save({ object_type=>(ref $ProjectType), object_id=>$$ProjectType{id}, action=>($param{ddmProjectType}?'Edited ProjectType':'Saved ProjectType'), note=>join('<br/>', @changes) });
 
 		sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() ) if $param{ddmProjectType};
 		foreach my $key ( keys %param ) {
 			if ( $key =~ /^Paper\d*$/ ) {
 				sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$param{$key},'lngProjectTypeIndex', $ProjectType->id() );
+
 			} # end if
 		} # end foreach
+		(new openprint::Log())->save({
+        Object=>$ProjectType, action=>($param{ddmProjectType}?'Edited ProjectType':'Saved ProjectType'), note=>join('<br/>', @changes) });
 		$variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
 	} elsif ( $param{btnFunction} eq 'Import' ) {
 		my $error = '';

@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script>
 	function page_load( div_id, form ) {
 		LoadContent( div_id, '/employee/purchase_order/_history.html', form.serialize() );
 	} // end function load
@@ -80,14 +80,22 @@
 				</select>
 			</li>
 			<li>
-				<label>Date</label>
-	<? echo ( date_select_session( $r->uri(), 'starting_start',  { onchange=> "page_load('Results',\$('f1'));", with_today=>1 } ); ) ?>
+				<label>Created On</label>
+	<? echo ( date_select_session( $r->uri(), 'starting_start',  { onchange=> "page_load('Results',\$('f1'));", with_today=>1, with_clear=>1 } ); ) ?>
 				to
-	<? echo ( date_select_session( $r->uri(), 'starting_end', { onchange=>"page_load('Results',\$('f1'));", with_today=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'starting_end', { onchange=>"page_load('Results',\$('f1'));", with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Paid On</label>
+	<? echo ( date_select_session( $r->uri(), 'paid_on_start',  { onchange=> "page_load('Results',\$('f1'));", with_today=>1, with_clear=>1 } ); ) ?>
+				to
+	<? echo ( date_select_session( $r->uri(), 'paid_on_end', { onchange=>"page_load('Results',\$('f1'));", with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Authorization</label>
-				<? echo ( radio( 'authorized', [ 'Y','Authorized', 'N', 'Declined', 'U', 'Unauthorized', '', 'All' ], $session{$r->uri().'?authorized'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
+				<? echo ( radio( 'authorized', [ 'Y','Authorized', 'N', 'Declined', 'U', 'Unauthorized', '', 'All' ],
+							$session{$r->uri().'?authorized'},
+							{ onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
 			</li>
 			<li>
 				<label>Deleted</label>
@@ -100,6 +108,14 @@
 			<li>
 				<label>Has Manifest</label>
 				<? echo ( radio( 'has_manifest', [ '1','Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?has_manifest'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
+			</li>
+			<li>
+				<label>Has Attachments</label>
+				<? echo ( radio( 'has_attachments', [ '1','Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?has_attachments'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
+			</li>
+			<li>
+				<label>Is Paid</label>
+				<? echo ( radio( 'paid', [ '1','Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?paid'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
 			</li>
 			<li><label>Department</label>
 				<select name="department_id" onchange="page_load('Results',$('f1'));">
@@ -123,7 +139,7 @@
 			</li>
 			<li>
 				<label>Contains</label>
-				<input type="text" id="contains" name="contains" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" />
+				<input type="text" id="contains" name="contains" oninput="if(event.keyCode == 13){page_load('Results', $('f1') );}" />
 			</li>
 		</ul>
 		<p class="buttons">

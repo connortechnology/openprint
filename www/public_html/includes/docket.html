@@ -87,8 +87,8 @@
 	<tr> 
 		<td class="headerText" width="25%"><b>Flat Size</b>&nbsp;<?txtWidth?>&quot; x <?txtHeight?>&quot;</td>
 		<td class="headerText" width="25%"><b>Folded To</b>&nbsp;<?txtFinalWidth?>&quot; x <?txtFinalHeight?>&quot;</td>
-		<td class="headerText" width="25%"><b># of Pages</b>&nbsp;<?txtTotalPageQuantity?></td>
-		<td class="headerText" width="25%"><b>Cover Type</b>&nbsp;<?rdbCover?></td>
+		<td class="headerText" width="25%"><b># of Pages</b>&nbsp;<?echo( $$variable{txtTotalPageQuantity}? $$variable{txtTotalPageQuantity} : 'n/a')?></td>
+		<td class="headerText" width="25%"><b>Cover Type</b>&nbsp;<?echo( $$variable{rdbCover} ? $$variable{rdbCover} : 'unknown')?></td>
 	</tr>
 </table>
 <br/>
@@ -191,40 +191,14 @@
 			if ( $$sig_specs{rdbSuppliedStock} eq 'Y' ) {
 				$html .= '<b>Customer Supplied</b> ';
 			} # end if
-			my $type = 'unknown';
-			
-			if ( $$sig_specs{rdbSpecificStock} ne 'Y' ) {
-				if ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['gloss','enamel','coated','cast coated'] ) ) {
-					$type = 'GLOSS';
-				} elsif ( $$sig_specs{ddmStockFinish} =~ /gloss/i ) {
-					$type = 'GLOSS';
-				} elsif ( $$sig_specs{ddmStockFinish} =~ /c2s/i ) {
-					$type = 'GLOSS';
-				} elsif ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['dull','silk','matte','satin'] ) ) {
-					$type = 'MATTE';
-				} elsif ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['uncoated','offset','smooth','opaque','vellum','tag','bristol','felt','linen','laid','double thick'] ) ) {
-					$type = 'UNCOATED';
-				} elsif ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['c1s','ccnb','litho label'] ) ) {
-					$type = 'COATED 1 SIDE';
-				} # end if
+			$html .= 'Custom: ' if $$Paper{custom};
+      $html .= sprintf('%s, <b>%s</b>, <b>%s</b> %s',
+          $Paper->brand(),
+          uc $Paper->finish(),
+          (uc($Paper->colour()) eq 'WHITE' ? '' : $Paper->colour()),
+          $Paper->weight()
+          );
 
-				$html .= sprintf('%s, <b>%s</b>, %s', $$sig_specs{ddmStockBrand}, uc $$sig_specs{ddmStockFinish}, $$sig_specs{ddmStockWeight} );
-			} else {
-				if ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['gloss','enamel','coated','cast coated'] ) ) {
-					$type = 'GLOSS';
-				} elsif ( $$sig_specs{txtSpecificStockFinish} =~ /gloss/i ) {
-					$type = 'GLOSS';
-				} elsif ( $$sig_specs{txtSpecificStockFinish} =~ /c2s/i ) {
-					$type = 'GLOSS';
-				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['dull','silk','matte','satin'] ) ) {
-					$type = 'MATTE';
-				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['uncoated','offset','smooth','opaque','vellum','tag','bristol','felt','linen','laid','double thick'] ) ) {
-					$type = 'UNCOATED';
-				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['c1s','ccnb','litho label'] ) ) {
-					$type = 'COATED 1 SIDE';
-				} # end if
-				$html .= sprintf('Custom: %s, <b>%s</b>, %s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
-			} # end if
 			if ( $Paper->type() eq 'Roll' ) {
 				$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$qty_index} );
 				if ( $$sig_specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
@@ -242,12 +216,10 @@
 			$html .='
 				<hr/>
 				';
-			if ( $$sig_specs{ddmStockFinish} eq 'Coated 1 Side' or $$sig_specs{ddmStockFinish} eq 'C1S' ) {
+			if ( $Paper->finish() eq 'Coated 1 Side' or $Paper->finish() eq 'C1S' ) {
 				$html .= '<br/><b>Please Verify Uncoated Side Image</b>
 ';
 			} # end if
-
-
 
 			$html .= '</td><td class="docketText">';
 			$html .= $$sig_specs{'PageQuantity'.$qty_index}. 'pp ' if $$sig_specs{txtSignatureType} ne '';
@@ -256,7 +228,7 @@
 				$html .= '<br/>Grain Overriden';
 			} # end if
 
-			my $Press = openprint::Equipment->find_one('strid'=>$$sig_specs{UsePress});
+			my $Press = openprint::Equipment->find_one(strid=>$$sig_specs{UsePress});
 			if ( sets::isin( 'Folding', split(',',$$variable{BinderyServices})) ) {
 				my $FoldingService = $$variable{Project}->Service( $$variable{Services}{Folding}[0] );
 				my $specs = $FoldingService->specs();
@@ -406,13 +378,32 @@ $log->debug("Getting sheets from $lbs / " . $Imposition->sheet_area() . ' * ' . 
 <table width="100%" border="1" cellspacing="0" cellpadding="0" style="table-layout: fixed;">
 	<tr> 
          <td class="headerText"><b>Special Press Instructions</b>
-			<? echo ( 
-				my $services = $$variable{Project}->services();
-				if ( $$services{PerfectBound} ) {
-					my $specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{PerfectBound}[0] );
-					return 'Spine: ' . $$specs{txtCalliper}.' inches<br/>';
-				} # end if
-			) ?>
+<? echo ( 
+	my $html = '';
+	my $services = $$variable{Project}->services();
+	if ( $$services{PerfectBound} ) {
+		my $specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{PerfectBound}[0] );
+		$html .= 'Spine: ' . $$specs{txtCalliper}.' inches<br/>';
+	} # end if
+	if ($$services{Scoring}) {
+	my $qty_index = $$variable{Project}->ordered_quantity_index();
+		my $scoring_html = 'Scoring <b>';
+		my $specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{Scoring}[0] );
+		my @signatures = $$variable{Project}->signatures();
+		foreach my $signature_service_index ( @signatures ) {
+			my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $signature_service_index );
+			my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} );
+			next if $Equipment->specification('Type') ne 'Press';
+			next if ! ($$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"});
+			$scoring_html .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' vertical score' . ($$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} ? 's' : '') if $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"};
+			$scoring_html .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' horizontal score' . ($$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ? 's' : '') if $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"};
+$scoring_html .= ' on form ' . $$sig_specs{SignatureIndex} . ', ';
+		} # end foreach
+		$scoring_html .= '</b><br/>';
+		$html .= $scoring_html;
+	} # end if
+	return $html;
+) ?>
 		</td>
     </tr>
     <tr>
@@ -524,10 +515,9 @@ $log->debug("Getting sheets from $lbs / " . $Imposition->sheet_area() . ' * ' . 
 		my @BinderyServiceNames = map { $_->ServiceType()->name() } @BinderyServices;
 $log->debug("Binder: @BinderyServiceNames");
 
-
 		my @bindery_text;
 
-		if ( ( ! @BinderyServiceNames ) or ( $BinderyServiceNames[0] eq 'No Bindery' ) ) {
+		if ( (!@BinderyServiceNames) or ($BinderyServiceNames[0] eq 'No Bindery') ) {
 			push @bindery_text, 'Ship Flat';
 		} elsif ( sets::isin( 'SaddleStitching', @BinderyServiceNames ) ) {
 			push @bindery_text, 'Stitch';
@@ -541,26 +531,52 @@ $log->debug("Binder: @BinderyServiceNames");
 
 		my $services = $$variable{Project}->services();
 
+	my $qty_index = $$variable{Project}->ordered_quantity_index();
+
 		if ( ! sets::intersection( 'SaddleStitching', 'LoopStitching', @BinderyServiceNames ) ) {
 			if ( sets::isin( 'Cutting', \@BinderyServiceNames ) ) {
 				push @bindery_text, ( ' Trim ' . (  ! sets::isin( 'Folding', \@BinderyServiceNames) ? $$variable{txtFinalWidth} . '&quot; x '.$$variable{txtFinalHeight} . '&quot;' : '' ) );
 			} # end if
-			if ( sets::isin( 'Scoring', @BinderyServiceNames ) ) {
-				my $scoring_html = ' with <b>';
-				my $specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{Scoring}[0] );
-				my @signatures = $$variable{Project}->signatures();
-				foreach my $signature_service_index ( @signatures ) {
-					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $signature_service_index );
-					next if ! $$specs{"txtQty-$$sig_specs{SignatureIndex}"};
-					$scoring_html .= $$specs{"txtQty-$$sig_specs{SignatureIndex}"} . ' Score' . ($$specs{"txtQty-$$sig_specs{SignatureIndex}"} ? 's' : '') . ' on form ' . $$sig_specs{SignatureIndex} . '<br/>';
-				} # end foreach
-				$scoring_html .= '</b>';
-				push @bindery_text, $scoring_html;
-			} # end if
-
 			if ( sets::isin( 'Folding', @BinderyServiceNames) ) {
-				push @bindery_text, sprintf(' Fold %s&quot; x %s&quot;-&gt;%s&quot; x %s&quot;', @$variable{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'} );
-			} # end if
+				my $folding_html = sprintf(' Fold %s&quot; x %s&quot;-&gt;%s&quot; x %s&quot;', @$variable{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'} );
+
+				if ( sets::isin( 'Scoring', @BinderyServiceNames ) ) {
+					my $scoring_html = ' with <b>';
+					my $specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{Scoring}[0] );
+					my @signatures = $$variable{Project}->signatures();
+					foreach my $signature_service_index ( @signatures ) {
+						my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $signature_service_index );
+						my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} );
+						next if $Equipment->specification('Type') eq 'Press';
+
+						next if ! ($$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"});
+						$scoring_html .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' vertical score' . ($$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} ? 's' : '') if $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"};
+						$scoring_html .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' horizontal score' . ($$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ? 's' : '') if $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"};
+	$scoring_html .= ' on form ' . $$sig_specs{SignatureIndex} . ', ';
+					} # end foreach
+					$scoring_html .= '</b>';
+					$folding_html .= $scoring_html;
+				} # end if
+				push @bindery_text,$folding_html;
+			} else {
+				if ( sets::isin( 'Scoring', @BinderyServiceNames ) ) {
+					my $scoring_html = 'Scoring <b>';
+					my $specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{Scoring}[0] );
+					my @signatures = $$variable{Project}->signatures();
+					foreach my $signature_service_index ( @signatures ) {
+						my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $signature_service_index );
+						my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} );
+						next if $Equipment->specification('Type') eq 'Press';
+						next if ! ($$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"});
+						$scoring_html .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' vertical score' . ($$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} ? 's' : '') if $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"};
+						$scoring_html .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' horizontal score' . ($$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ? 's' : '') if $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"};
+	$scoring_html .= ' on form ' . $$sig_specs{SignatureIndex} . ', ';
+					} # end foreach
+					$scoring_html .= '</b>';
+					push @bindery_text, $scoring_html;
+				} # end if
+			} # end if Folding
+
 		} # end if no stitching
 		if ( sets::isin( 'Drilling', @BinderyServiceNames) ) {
 			my $drill_specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{Drilling}[0] );

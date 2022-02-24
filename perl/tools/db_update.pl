@@ -90,6 +90,10 @@ if ( ! sets::isin( 'currencies', \@tables ) ) {
 	$dbh->do('UPDATE currencies set sy=symbol');
 	$dbh->do('ALTER TABLE currencies DROP COLUMN symbol');
 	$dbh->do('ALTER TABLE currencies RENAME COLUMN sy TO symbol');
+  if ( ! exists $$data{precision} ) {
+    $log->debug("Add precision to currencies");
+    $dbh->do('ALTER TABLE currencies ADD precision smallint NOT NULL default 2');
+  }
 } # end if
 
 if ( ! sets::isin( 'annualsales', \@tables ) ) {
@@ -2106,6 +2110,10 @@ if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 			$dbh->do('ALTER TABLE purchaseorders add company_id INTEGER');
 			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (company_id) REFERENCES companies (id)');
 		} # end if
+		if ( ! exists $$data{paid_on} ) {
+			$log->debug('Adding paid_on to Purchase Orders');
+			$dbh->do('ALTER TABLE PurchaseOrders add paid_on TIMESTAMP WITH TIME ZONE') or die $dbh->errstr();
+		}
 		$dbh->do('ALTER TABLE PurchaseOrders ALTER delivered_on DROP NOT NULL');
 		sql::end_transaction( $dbh, $ac );
 } # end if
@@ -2997,6 +3005,10 @@ if ( ! sets::isin( 'skid_contents', \@tables ) ) {
 		$dbh->do('alter table skid_contents add primary key (id)');
 		$dbh->do('create index skid_contents_skid_id_idx on skid_contents (skid_id)');
 	} # end if
+	if ( ! exists $$data{needs_verification} ) {
+		$log->debug("Adding needs_verification to skid_contents");
+		$dbh->do('ALTER TABLE skid_contents ADD needs_verification BOOLEAN NOT NULL DEFAULT false') or die $dbh->errstr();
+	}
 } # end if
 foreach my $ServiceType ( openprint::ServiceType->find() ) {
 	if ( $ServiceType->name() eq 'PerfectBound' ) {
@@ -4712,6 +4724,7 @@ if ( ! sets::isin( 'timetracks', \@tables ) ) {
     $log->debug("Adding date_associated to timetracks");
 		$dbh->do('ALTER TABLE timetracks ADD date_associated BOOLEAN NOT NULL DEFAULT TRUE');
 	} # end if
+  $dbh->do('alter table timetracks alter rate type numeric(10,3)');
 } # end if
 
 if ( sets::isin('users', \@tables ) ) {

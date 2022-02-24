@@ -529,6 +529,11 @@ sub button {
 		} # end if
 		my $PageSetting = openprint::Page_Setting::get($href);
 		return if $PageSetting and ! $PageSetting->can_view();
+    if ( ! $$options{onclick} ) {
+      $$options{onclick} = 'window.location.href=\''.$$options{href}.'\';return false;';
+      undef $$options{href};
+      $$options{type} = 'button';
+    }
 	#} else {
 		#$$options{href} = '#';
   } elsif ( ! $$options{type} ) {
@@ -536,9 +541,8 @@ sub button {
     $$options{type} = 'button';
 	} # end if
 	$$options{text} = $name if ! exists $$options{text};
-	my $html = $$options{type} ?
-		qq`<button id="Button$name" class="button $$options{class}" type="$$options{type}"` :
-		qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
+	my $html = 
+		qq`<button id="Button$name" class="button $$options{class}"` ;
 	$html .= qq`name="$$options{name}" ` if $$options{name};
 	$html .= qq`value="$$options{value}" ` if $$options{value};
 	$html .= qq`title="$$options{title}" ` if $$options{title};
@@ -830,16 +834,17 @@ sub save_params {
 	my ( $url, @keys ) = @_;
 
 	foreach ( @keys ) {
-		$openprint::log->debug("save_params: key $_") if Debug;
-		if ( ! exists $param{$_} ) {
-			$openprint::log->debug("save_params: does not exist in param key $_") if Debug;
+		$openprint::log->debug('save_params: key '.$_) if Debug;
+		if ( !exists $param{$_} ) {
+			$openprint::log->debug('save_params: does not exist in param key '.$_) if Debug;
 			next;
-		} 
+		}
 		if ( ref $param{$_} eq 'ARRAY' ) {
 			$session{"$url?$_"} = join(',', @{$param{$_}} );
 $openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if Debug;
 		} else {
-			$session{"$url?$_"} = $param{$_};
+      s/^\s+//, s/\s+$// for $param{$_};
+			$session{$url.'?'.$_} = $param{$_};
 $openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")") if Debug;
 		} # end if
 		$session{$url.'?lastupdated'} = time;
@@ -1082,7 +1087,8 @@ sub input {
 	$html .= ' readonly="readonly"' if $options{readonly};
 	$html .= '/>';
 	if ( $options{with_clear} ) {
-		$html .= qq`<span class="input-clear" onclick="jQuery('[name\$=$options{name}]').val('').focus();">x</span>`;
+		$html .= qq`<span class="input-clear" onclick="console.log(this.previousSibling);this.previousSibling.value='';this.previousSibling.focus();">x</span>`;
+		#$html .= qq`<span class="input-clear" onclick="this.parentNode.value='';this.parentNode.focus();\$j('[name=$options{name}]').val('').focus();">x</span>`;
 	}
 	return $html;
 } # end sub input

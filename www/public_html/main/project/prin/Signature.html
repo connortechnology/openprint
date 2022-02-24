@@ -33,7 +33,10 @@
 			<? if ( $$variable{txtSignatureType} ) ?>
       <div class="<? echo ( my $type = $$variable{txtSignatureType}; $type =~ s/\s//g; return $type; ) ?>">
 				<ul>
-					<li class="Description"><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></li>
+					<li class="Description">
+            <label>Description</label>
+            <input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>"/>
+          </li>
 					<li class="Dimensions">
 						<label>Spread dimensions</label>
 					<? echo (
@@ -63,7 +66,7 @@
 				</ul>
             </div>
 	<? if ( $$variable{Group} == 1 ) ?>
-            <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( sets::isin( $$variable{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? '' : 'style="display:none;"' ) ?> >
+            <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ($$variable{rdbTemplateType} and sets::isin( $$variable{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket']) ) ? '' : 'style="display:none;"' ) ?> >
             <?include('/includes/main/proj/presentation_folder_printing.html')?>
             </div>
 	<? endif ( $$variable{Group} == 1 ) ?>
@@ -79,7 +82,7 @@
 				include('/includes/main/proj/templates/cards.html'),
 				include('/includes/main/proj/dimensions.html'),
 				);
-		} elsif ( sets::isin( $$variable{ProjectType}->name(),['Banners'] ) )  {
+		} elsif ( $$variable{ProjectType}->name() eq 'Banners' ) {
 			return join("\n",
 					include('/includes/main/proj/templates/generic.html'),
 					include('/includes/main/proj/dimensions.html'),

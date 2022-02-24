@@ -40,7 +40,7 @@ sub save {
 	my $ac = sql::start_transaction( $openprint::dbh );
 	my $error = $self->SUPER::save( $data );
 	$error .= $self->Object()->save({ payments_total=>undef});
-	$error .= $self->Payment()->save({'remaining'=>undef});
+	$error .= $self->Payment()->save({ remaining=>undef});
 	sql::end_transaction( $openprint::dbh, $ac );
 	return $error;
 } # end sub save
@@ -52,7 +52,6 @@ sub delete {
 	my $error = $self->SUPER::delete();
 	$openprint::dbh->rollback() if $error;
 	$self->Object()->Payments( undef );
-$openprint::log->debug("After payments");
 	sql::end_transaction( $openprint::dbh, $ac );
 	return $error;
 } # end sub delete

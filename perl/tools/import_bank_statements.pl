@@ -5,6 +5,8 @@ use warnings;
 use 5.10.0;
 use utf8;
 use File::Basename qw(basename);
+use Data::Dumper;
+use Encode qw(decode encode);
 
 require configuration;
 require sets;
@@ -44,6 +46,11 @@ if ( $opts->{help} ) {
   exit 0;
 }
 
+if ( ! $$opts{file} and @ARGV ) {
+  $$opts{file} = $ARGV[0];
+  #print "Setting file to $$opts{file}\n";
+}
+
 open(FH, $$opts{file}) or die "Can't open $$opts{file} : $!";
 
 if ( $opts->{debug}) {
@@ -75,21 +82,32 @@ configuration::merge($opts);
 openprint::session_init();
 
 while ( !($$opts{account} and openprint::Expense_Account->find_one(name=>$$opts{account})) ) {
+  my $guessed_account = '';
   my @accounts = openprint::Expense_Account->find(order=>'lower(name)');
   if ( @accounts == 1 ) {
     $$opts{account} = $accounts[0]{name};
     print "Selecting $$opts{account} for the account:\n";
     last;
+  } else {
+
+    if ( $$opts{file} =~ /Transactions(.*)\.csv$/ ) {
+      $guessed_account = 'CDT Mastercard 9122 3629';
+    } elsif ( $$opts{file} =~ /report(.*)\.csv$/ ) {
+      $guessed_account = 'PC Mastercard 6369';
+      print "Guessing account to " . $guessed_account. "\n";
+    }
   }
   my %accounts = map { $$_{id} => $_ } @accounts;
   print "Please select the account:\n";
-  foreach ( sort keys %accounts ) {
-    print '['.$_.'] '.$accounts{$_}{name}."\n";
+  foreach ( @accounts ) {
+    print '['.$$_{id}.'] '.$$_{name}.($$_{name} eq $guessed_account ? ' < ':'')."\n";
   }
   my $response = <STDIN>;
   chomp $response;
   if ( $response and $accounts{$response} ) {
     $$opts{account} = $accounts{$response}{name};
+  } elsif ( (! $response) and $guessed_account ) {
+    $$opts{account} =  $guessed_account;
   } else {
     print "Invalid entry\n";
   }
@@ -106,17 +124,22 @@ if ( ! $openprint::Owner->id() ) {
 }
 
 my $guessed_format='';
-if ( $$opts{file} =~ /^Transactions(.*)\.csv$/ ) {
+if ( $$opts{file} =~ /Transactions(.*)\.csv$/ ) {
   $guessed_format = 'CDNTire';
-} elsif ( $$opts{file} =~ /^accountactivity(.*)\.csv$/ ) {
+} elsif ( $$opts{file} =~ /accountactivity(.*)\.csv$/ ) {
   $guessed_format = 'TD';
-} elsif ( $$opts{file} =~ /^cibc(.*)\.csv$/ ) {
+} elsif ( $$opts{file} =~ /cibc(.*)\.csv$/ ) {
   $guessed_format = 'CIBC';
-} elsif ( $$opts{file} =~ /^download\.csv$/ ) {
+} elsif ( $$opts{file} =~ /download\.csv$/ ) {
   $guessed_format = 'Meridian';
+} elsif ( $$opts{file} =~ /report(.*)\.csv$/ ) {
+  $guessed_format = 'PC';
+} elsif ( $$opts{file} =~ /Download\.CSV$/ ) {
+  $guessed_format = 'Paypal';
 }
+print "Guessed format is $guessed_format\n";
 
-my @formats = ('CDNTire', 'CIBC', 'PC', 'TD', 'Meridian');
+my @formats = ('CDNTire', 'CIBC', 'PC', 'TD', 'Meridian','Paypal');
 while ( !( $$opts{format} and sets::isin($$opts{format}, \@formats) ) ) {
   print "Please select the format:\n";
   for ( my $i = 0; $i < @formats; $i += 1 ) {
@@ -143,17 +166,31 @@ my %Expenses_Added;
 my @columns;
 
 my $csv = Text::CSV_XS->new();
-if ( $$opts{format} eq 'CDNTire' ) {
+if ($$opts{format} eq 'CDNTire') {
   <FH>;
   <FH>;
   <FH>;
-  $_ = <FH>;
-  $csv->parse($_);
+  my $line = <FH>;
+  #if ( ! utf8::is_utf8($line) ) {
+    utf8::encode($line);
+    print "was unicode $line\n";
+    #}
+  $csv->parse($line);
+  @columns = $csv->fields();
+} elsif ($$opts{format} eq 'Paypal') {
+  my $line = <FH>;
+  $line =~ s/[^[:ascii:]]//g;
+  my $status = $csv->parse($line);
+  die $csv->error_diag() if !$status;
   @columns = $csv->fields();
 }
 
-LINE: while ( <FH> ) {
-  my $status = $csv->parse($_);
+LINE: while ( my $line = <FH> ) {
+  if ( ! utf8::is_utf8($line) ) {
+    utf8::decode($line);
+    print "was unicode $line\n";
+  }
+  my $status = $csv->parse($line);
 
   # Create an object with the data from the line
   my $Expense = new openprint::Expense();
@@ -165,30 +202,30 @@ LINE: while ( <FH> ) {
     ($date, $desc, $debit, $credit, $card) = misc::trim($csv->fields());
 
     $paid_on = $date,
-    $amount = $debit;
+    $amount = $debit ? $debit : -1*$credit;
 
     $Expense->set_no_defaults({
       description => $desc,
       account_id  => $$Account{id},
-      total       => $debit,
+      total       => $amount,
       paid_on     => $paid_on,
     });
-} elsif ( $$opts{format} eq 'TD' ) {
+  } elsif ( $$opts{format} eq 'TD' ) {
     ($date, $desc, $debit, $credit, $balance) = misc::trim($csv->fields());
 
     my ($month, $day, $year) = split('/', $date);
     $paid_on = join('-', $year, $month, $day);
-    $amount = $debit;
+    $amount = ($debit ? $debit : -1*$credit);
 
     $Expense->set_no_defaults({
       description => $desc,
       account_id  => $$Account{id},
-      total       => $debit,
+      total       => $amount,
       paid_on     => $paid_on,
     });
-} elsif ( $$opts{format} eq 'Meridian' ) {
-  #my  ID, Date, Account Name, Description1, Description2, Description3, Amount, Balance
-  #653656564,2019-11-20 12:00:00 AM,2471118-Maximiser - 0,"Cheque 27",,,-3100,37.49
+  } elsif ( $$opts{format} eq 'Meridian' ) {
+    #my  ID, Date, Account Name, Description1, Description2, Description3, Amount, Balance
+    #653656564,2019-11-20 12:00:00 AM,2471118-Maximiser - 0,"Cheque 27",,,-3100,37.49
     ( $ref, $date, $card, $desc1, $desc2, $desc3, $amount, $balance ) = misc::trim($csv->fields());
     next if $date eq 'Date';
     ($paid_on) = $date =~ /^(\d{4}\-\d{2}\-\d{2})/;
@@ -204,13 +241,13 @@ LINE: while ( <FH> ) {
 
   } elsif ( $$opts{format} eq 'PC' ) {
     #( $desc, $card, $date, $time, $amount) = misc::trim($csv->fields()); OLD
-    ( $desc, $type, $card, $date, $time, $amount) = misc::trim($csv->fields());
-    next if $desc eq "Merchant Name";
-    next if $desc eq "Description";
-    $debit = $amount;
+    ( $desc, $type, $card, $date, $time, $credit) = misc::trim($csv->fields());
+    next if $desc eq 'Merchant Name';
+    next if $desc eq 'Description';
 
     my ($month, $day, $year) = split('/', $date);
     $paid_on = join('-', $year, $month, $day);
+    $amount = $debit = -1*$credit;
 
     $Expense->set_no_defaults({
       description => $desc,
@@ -237,12 +274,34 @@ LINE: while ( <FH> ) {
       total_locked=> 1,
       paid_on     => $date,
     });
+  } elsif ( $$opts{format} eq 'Paypal' ) {
+    my %data;
+    print "columns: @columns\n";
+    print "data: ". join(' ', misc::trim($csv->fields()));
+    @data{@columns} = misc::trim($csv->fields());
+    #"Date","Time","TimeZone","Name","Type","Status","Currency","Gross","Fee","Net","From Email Address","To Email Address","Transaction ID","Shipping Address","Address Status","Item Title","Item ID","Shipping and Handling Amount","Insurance Amount","Sales Tax","Option 1 Name","Option 1 Value","Option 2 Name","Option 2 Value","Reference Txn ID","Invoice Number","Custom Number","Quantity","Receipt ID","Balance","Address Line 1","Address Line 2/District/Neighborhood","Town/City","State/Province/Region/County/Territory/Prefecture/Republic","Zip/Postal Code","Country","Contact Phone Number","Subject","Note","Country Code","Balance Impact"
+    print Data::Dumper::Dumper(\%data);
+
+    $debit = $amount;
+
+    my ( $d, $m, $y ) = split(/\//, $data{Date});
+    $paid_on = join('-', ( $y, $m, $d ));
+    $desc = join("\n", map { $_ . ' = '. $data{$_} } sort { $a cmp $b } keys %data);
+    $amount = $data{Net};
+
+    $Expense->set_no_defaults({
+      description => $desc,
+      account_id  => $$Account{id},
+      total       => $amount,
+      total_luocked=> 1,
+      paid_on     => $paid_on,
+    });
 
   } else {
     die "Unknown format $$opts{format}";
   } # end if format
 
-  if ( $amount > 0 ) {
+  if ( $Expense->{total} ) {
 
     my $response;
 
@@ -328,9 +387,9 @@ LINE: while ( <FH> ) {
           }
         }
       } 
-      $log->info("No expenses found to match $date, $desc, $debit, $credit, $balance, rules? " . @Rules . "\n" . $Expense->to_string());
+      $log->info("No expenses found to match $date, $desc, $debit, $credit, (".(defined $balance ? $balance : 'undef').', rules? ' . @Rules . "\n" . $Expense->to_string());
 
-      print "Add record for? [Y|n|R]";
+      print 'Add record for? [Y|n|R]';
       $response = <STDIN>;
       chomp $response;
       if ( (!$response) or ($response =~ /[Yy]/) ) {
@@ -361,8 +420,10 @@ LINE: while ( <FH> ) {
       }
     } # end while 1
   } else {
-    $log->error("No credit or debit? ");
+    $log->error("No credit or debit? $line\n".join(',',$csv->fields()).'Press any key to continue');
+    $_ = <STDIN>;
   }
+  #sleep(1);
 } # end while
 close(FH);
 

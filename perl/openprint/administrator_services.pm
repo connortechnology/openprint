@@ -138,12 +138,12 @@ sub edit {
             price			=>	$param{"price-$$Price{id}"},
             discountable	=>	$param{"discountable-$$Price{id}"},
             mode			=>	$param{"mode-$$Price{id}"},
-            supplier_id		=>	$param{"supplier_id-$$Price{id}"},
+            supplier_id		=>	$param{"supplier_id-$$Price{id}"} ? $param{"supplier_id-$$Price{id}"} : undef,
           };
           my @price_changes = $Price->changes( $new_values );
           if ( @price_changes ) {
             $variable{error} .= $Price->save( $new_values );
-            push @changes, ( 'Change price for ' .$Price->id_string() . ': ' .  join(', ', map { $_ } @price_changes ) );
+            push @changes, ('Change price for ' .$Price->id_string() . ': ' .  join(', ', map { $_ } @price_changes));
           } # end if
         } # end foreach 
         (new openprint::Log())->save({object_id=>$$Service{id},object_type=>ref$Service, action=>'Edit Service', note=>join('<br/>', @changes) }) if @changes;

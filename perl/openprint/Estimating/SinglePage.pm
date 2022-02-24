@@ -58,6 +58,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $Project->signatures() ) {
+    $openprint::log->debug('No signatures in SinglePage::calc so add one:'.$Project->to_string()) if DEBUG;
 		$Project->add_signature( );
 	} # end if
 	foreach my $qty_index ( $Project->quantity_indexes() ) {

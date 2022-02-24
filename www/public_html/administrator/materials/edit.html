@@ -1,5 +1,5 @@
 <?include(/includes/error_reporting.html)?>
-<script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
 <form name="f1" id="f1" method="post" action="edit.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search</legend>
@@ -19,7 +19,7 @@
         <select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
           <option value="">All</option>
           <? echo ( 
-            $variable{Equipment} = [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find( order=>'lower('.$openprint::Equipment::fields{name}.')') ];
+            $variable{Equipment} = [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find( order=>'lower('.$openprint::Equipment::fields{strid}.')') ];
             make_drop_down( $variable{Equipment}, $param{equipment_id} ); ) ?>
         </select>
       </li>	
@@ -40,7 +40,7 @@
 	</fieldset>
 </form>
 <form name="f2" id="f2" method="post" enctype="multipart/form-data" action="edit.html">
-	<input type="hidden" name="ddmMaterial" value="<?echo($$variable{Material}->id())?>"/>
+	<input type="hidden" name="material_id" value="<?echo($$variable{Material}->id())?>"/>
 	<p class="buttons">
 		<? echo ( join("\n",
 			button( 'New', { href=>'/administrator/materials/edit.html', text=>'New' } ),

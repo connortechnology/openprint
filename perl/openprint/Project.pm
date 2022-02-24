@@ -1010,7 +1010,7 @@ sub ordered_price {
 		$openprint::log->error('No OP in ordered_price');
 	} else {
 		return $$OP{price} if $$OP{price};
-		return $_[0]{'price'.$$OP{quantity_index}};
+		return $_[0]{'price'.$$OP{quantity_index}} if $$OP{quantity_index};
 	} # end if
 	return 0;
 } # end sub ordered_price
@@ -1169,16 +1169,16 @@ sub add_signature {
 	my ( $self, $sig_index, $status, $data ) = @_;
 	
 	$self->lock();
-	my $print_service_index = $self->add_service( 'Signature', $data );
-	if ( ! $print_service_index ) {
-		$log->error("Error adding Signature!");
+	my $print_service_index = $self->add_service('Signature', $data);
+	if ( !$print_service_index ) {
+		$log->error('Error adding Signature!');
 		$self->unlock();
 		return;
 	} # end if
-	openprint::service::status( $self->id(), $print_service_index, $status ) if $status;
-	if ( ! $sig_index ) {
+	openprint::service::status($self->id(), $print_service_index, $status) if $status;
+	if ( !$sig_index ) {
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-		( $sig_index ) = sql::execute( undef, undef, $_, $self->id() );
+		( $sig_index ) = sql::execute(undef, undef, $_, $self->id());
 		$sig_index += 1;
 	} # end if
 	openprint::service::insert_service_spec( $log, $dbh, $self->id(), $print_service_index, 'SignatureIndex', $sig_index );
@@ -1276,6 +1276,7 @@ sub Ordered_Project {
 # don't need to lock project_contents... cuz it's just an insert....
 sub add_service {
 	my ( $self, $type, $data, $options ) = @_;
+  $data = {} if !$data;
 
 	my $ServiceType;
 	if ( ref $type ne 'openprint::ServiceType' ) {
@@ -1288,60 +1289,55 @@ sub add_service {
 	} # end if
 
 	$self->lock();
-if ( $debug ) {
-$log->debug("Project: $$self{id} $self");
-foreach my $k ( keys %{$$self{Services}} ) {
-	$log->debug(" Services: $k => " . join( ',', @{$$self{Services}{$k}} ) );
-} # end ofreach
-}
 
 	my $Service = new openprint::Project_Service();
-	$Service->save({ project_id=>$$self{id}, ( status=>$$options{status} ? $$options{status} : 'uncalculated' ), servicetype_id=>$ServiceType->id()});
+	$Service->save({
+      project_id=>$$self{id},
+      ( status=>$$options{status} ? $$options{status} : 'uncalculated' ),
+      servicetype_id=>$ServiceType->id()
+    });
 	my $service_index = $$Service{service_id};
 	$openprint::log->debug("Added Service $$ServiceType{name} at $service_index");
+	$openprint::log->error("Adding Service $$ServiceType{name} at $service_index with no project type") if ! $$self{type_id};
 
 	# Do this so that it doesn't try to load the specs, saving 1 db call.
 	$openprint::service::specs_cache{$service_index} = {};
-	openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, 'ServiceType', $ServiceType->name(), 1 );
-	#$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex NULLS FIRST};
-	my @Defaults = openprint::ServiceType_Default->find( 'projecttype_id is null or =' => $$self{type_id}, servicetype_id=>$ServiceType->id(), order=>'projecttype_id NULLS FIRST' );
+	openprint::service::insert_service_spec($log, $dbh, $$self{id}, $service_index, 'ServiceType', $ServiceType->name(), 1);
+	my @Defaults = openprint::ServiceType_Default->find(
+    'projecttype_id is null or =' => $$self{type_id},
+    servicetype_id=>$ServiceType->id(),
+    order=>'projecttype_id NULLS FIRST'
+  );
+	foreach my $n ( @Defaults ) {
+    $openprint::log->debug('Setting initial default '.$n->to_string());
+  }
 	my %defaults = map { $_->name(), $_->value() } @Defaults;
-	#$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
-	#push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{user_id} );
 	foreach my $n ( keys %defaults ) {
-	#while ( my ( $n, $v ) = splice @defaults, 0, 2 ) {
-		my $v = $defaults{$n};
-		if ( $data and exists $$data{$n} ) {
-		} else {
-			openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, $n, $v, 1 );
-		} # end if
-	} # end while
-
+    $openprint::log->debug('Setting initial default '.$n.'=>'.$defaults{$n});
+  }
 	
 	my $module = 'openprint::Estimating::'.$ServiceType->type();
-	if ( my $function = $module->can( 'setup_defaults' ) ) {
-		%defaults = $function->( $self );
-		foreach my $n ( keys %defaults ) {
-			my $v = $defaults{$n};
-			if ( $data and exists $$data{$n} ) {
-			} else {
-				openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, $n, $v, 1 );
-			} # end if
-		} # end while
-
+	if ( my $function = $module->can('setup_defaults') ) {
+		my %setup_defaults = $function->( $self );
+    foreach my $n ( keys %setup_defaults ) {
+      $openprint::log->debug('Setting initial setup default '.$n.'=>'.$setup_defaults{$n});
+    }
+    @defaults{keys %setup_defaults} = values %setup_defaults;
 	} # end if
 
 	foreach my $qty_index ( $self->quantity_indexes() ) {
-		openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, "txtQuantity$qty_index", 
-		( ( $data and exists $$data{"txtQuantity$qty_index"} ) ? $$data{"txtQuantity$qty_index"} : $self->quantity($qty_index) ), 1 );
+    $defaults{'txtQuantity'.$qty_index} = $self->quantity($qty_index);
 	} # end foreach
-	if ( $data ) {
-		foreach my $n ( keys %$data ) {
-			openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, $n, $$data{$n} );
-		} # end foreach 
-	}
 
-	#delete $$self{Services};
+  @defaults{keys %{$data}} = values %{$data};
+	foreach my $n ( keys %{$data} ) {
+    $openprint::log->debug('Setting data default '.$n.'=>'.$$data{$n});
+  }
+	foreach my $n ( keys %defaults ) {
+    $openprint::log->debug('Setting default '.$n.'=>'.$defaults{$n});
+		openprint::service::insert_service_spec($log, $dbh, $$self{id}, $service_index, $n, $defaults{$n}, 1);
+	} # end foreach default
+
 	if ( ! $$self{Services}{$ServiceType->name()} ) {
 		$$self{Services}{$ServiceType->name()} = [ $$Service{service_id} ];
 	} else {
@@ -1349,6 +1345,8 @@ foreach my $k ( keys %{$$self{Services}} ) {
 	}
 	delete $$self{service_types};
 	delete $$self{signatures};
+
+  # FIXME Why are we saving here? prices would only change if there eas a default price
 	foreach my $qty_index ( $self->quantity_indexes() ) {
 		$self->price($qty_index,undef);
 	} # end foreach
@@ -1610,7 +1608,7 @@ sub recalculate {
 	my $services = $self->services();
 	if ( $$services{''} ) {
 		my $Type = $self->Type();
-		$openprint::log->debug("Project::recalculate $$Type{type}");
+		$openprint::log->debug('Project::recalculate '.$$Type{type});
 		my $specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable,
 				$$self{id}, $$services{''}[0], $$Type{type} );
 		my $status = $$specs{Status};
@@ -1790,40 +1788,38 @@ sub change_ProjectType {
 		} # end if
 	} # end if $$project{type_id}
 
+  # Have to set it first because Service defaults depend upon it.
+  $$Project{type_id} = $ProjectType->id();
+
 	if ( $$Project{id} ) {
 		if ( ! $$services{''} ) {
 			my $printing_service_index = openprint::print_project::insert_project_type( $openprint::r, $openprint::log, $openprint::dbh, $$Project{id}, $ProjectType->name() );
 			push @{$$services{''}}, $printing_service_index;
 		} # end if
-		my @oldRequiredServiceTypes = $OldProjectType->required_ServiceTypes();
-		my @newRequiredServiceTypes = $ProjectType->required_ServiceTypes();
+		my %oldRequiredServiceTypes = map { $$_{name} => $_ } $OldProjectType->required_ServiceTypes();
+		my %newRequiredServiceTypes = map { $$_{name} => $_ } $ProjectType->required_ServiceTypes();
 
 	# Remove no longer needed services
-		foreach my $ServiceType ( @oldRequiredServiceTypes ) {
-#FIXME I don't think we should use sets on Objects
-			if ( ! sets::isin( $ServiceType, \@newRequiredServiceTypes ) ) {
-				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
+		foreach my $service_type_name ( keys %oldRequiredServiceTypes ) {
+			if ( ! $newRequiredServiceTypes{$service_type_name} ) {
+				foreach my $s_id ( @{$$services{$service_type_name}} ) {
 					openprint::print_project::delete_service($Project, $s_id);
 				} # end foreach
-				delete $$services{$ServiceType->name()};
+				delete $$services{$service_type_name};
 			} # end if
 		} # end foreach
 
 	# add needed services
-		foreach my $ServiceType ( @newRequiredServiceTypes ) {
-			if ( ! $$services{$ServiceType->name()} ) {
-				my $s_id = $Project->add_service( $ServiceType );
-				push @{$$services{$ServiceType->name()}}, $s_id;
-				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity1', $Project->quantity1() );
-				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity2', $Project->quantity2() );
-				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity3', $Project->quantity3() );
+		foreach my $service_type_name ( keys %newRequiredServiceTypes ) {
+			if ( ! $$services{$service_type_name} ) {
+				my $s_id = $Project->add_service($newRequiredServiceTypes{$service_type_name});
+				push @{$$services{$service_type_name}}, $s_id;
 			} # endif
 		} # end foreach
-$log->debug("Saving project type_id $$ProjectType{id}");
-		$error .= $Project->save( { type_id => $ProjectType->id() } );
+    $log->debug("Saving project type_id $$ProjectType{id}");
+		$error .= $Project->save();
 	} else {
-		$log->debug("Do not have project id, just setting type_id");
-		$$Project{type_id} = $ProjectType->id();
+		$log->debug('Do not have project id, just setting type_id');
 	} # end if
 	return $error;
 } # end sub change_ProjectType
@@ -1877,7 +1873,7 @@ sub check_for_order {
 		$openprint::log->debug("Not Paper service in project $$Project{id}");
 	} # end if Stock Service Index
  
-	return $error ? $error : ();
+	return $error;
 } # end sub check_for_order
 
 sub allocate_for_order {
@@ -1955,9 +1951,11 @@ sub can_view {
 		return 1;
 	}
 
-	if ( sets::isin( $_[0]{user_id}, [ $openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
-		$log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
+	if ( sets::isin( $_[0]{user_id}, [ $$openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
+		$log->debug("$$openprint::User{firstname} Either created it or is an assistant") if $debug;
 		return 1;
+	} else {
+		$log->debug("$_[0]{user_id} != $$openprint::User{id}") if $debug;
 	} # end if
 	if ( openprint::usergroup::is_user_in( ['Accounting', 'Estimating'], $openprint::session{user_id} ) ) {
 		return 1;
@@ -2061,6 +2059,18 @@ sub get_book_type {
   } # end if
   return;
 } # end sub get_book_type
+
+sub is_fsc {
+	my $self = shift;	
+	foreach my $sig_id ( $self->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $self, $sig_id );
+		my $Paper = openprint::Paper::load_from_signature( $self, $sig_specs );
+		if ( $Paper->is_fsc() ) {
+			return 1;
+		}
+	}
+	return 0;
+}
 
 1;
 __END__

@@ -1,4 +1,4 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
 <div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
         <fieldset><legend><?ServiceTypeName?></legend>
@@ -12,7 +12,7 @@
 					
 					$html .= '<div class="Signature">';
 					$html .= 'Information for ' . $$sig_specs{txtServiceDescription} .':' if $$sig_specs{txtServiceDescription};
-					$html .= '<ul><li><label>Perforation Quantity</label>';
+					$html .= '<ul><li><label>Perforation Quantity</label><br/>';
 					$html .= '<div class="Vertical"><label>Vertical</label>';
 					$html .= input( 
 						id		=> "txtVerticalQty-$signature_index",
@@ -22,22 +22,22 @@
 						oninput	=> 'calc(this.form.name);',
 						);
 	
-					$html .= qq`<select name="VerticalTeeth-$signature_index" onchange="calc(this.form.name);">
-							<option value="">select</option>`;
-					$html .= make_drop_down( \@tooth_options, $$variable{'VerticalTeeth-'.$signature_index} );
-					$html .= '</select></div><div class="Horizontal"><label>Horizontal</label>';
+					$html .= ssi::select( \@tooth_options, $$variable{'VerticalTeeth-'.$signature_index}, {
+							name=>'VerticalTeeth-'.$signature_index, onchange=>'calc(this.form.name);', prepend=>['','select']
+							} );
+					$html .= '</div><div class="Horizontal"><label>Horizontal</label>';
 					$html .= input( 
-						id		=> "txtHorizontalQty-$signature_index",
-						name	=> "txtHorizontalQty-$signature_index",
+						id		=> 'txtHorizontalQty-'.$signature_index,
+						name	=> 'txtHorizontalQty-'.$signature_index,
 						value	=> $$variable{"txtHorizontalQty-$signature_index"},
 						type	=> 'cardinal',
 						oninput	=> 'calc(this.form.name);',
 						);
 		
-					$html .= qq`<select name="HorizontalTeeth-$signature_index" onchange="calc(this.form.name);">
-							<option value="">select</option>`;
-					$html .= make_drop_down( \@tooth_options, $$variable{'HorizontalTeeth-'.$signature_index} );
-					$html .= '</select></div></li></ul></div>';
+					$html .= ssi::select( \@tooth_options, $$variable{'HorizontalTeeth-'.$signature_index}, {
+							name=>'HorizontalTeeth-'.$signature_index, onchange=>'calc(this.form.name);', prepend=>['','select']
+							});
+					$html .= '</div></li></ul></div>';
 				} # end foreach signature
 				return $html;
 			) ?>

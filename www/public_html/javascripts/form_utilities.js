@@ -237,13 +237,14 @@ function get_ddm_value ( ddm ) {
 	} // end if
 	return value;
 } // end function
+
 function get_ddm_text ( ddm ) {
 	if ( ddm ) {
 		if ( ddm.selectedIndex != -1 && ddm.options[ddm.selectedIndex] ) {
 			return ddm.options[ddm.selectedIndex].text;
 		} // end if
 	} else {
-		alert("null ddm passed to get_ddm_value : " + ddm);
+		console.log("null ddm passed to get_ddm_value : " + ddm);
 	} // end if
 } // end function
 
@@ -1648,3 +1649,14 @@ function stop_filter_companies() {
 		filter_ajax = null;
 	}
 } 
+
+function load_logs_form() {
+  const form = jQuery('#logs_form');
+  if (form.length) {
+    jQuery('#Logs').load('/includes/_logs_contents.html',
+            jQuery('#logs_form').serialize()
+            );
+  } else {
+    console.error('No form found');
+  }
+}

@@ -198,7 +198,6 @@ sub taxes {
 
 sub currency {
 	if ( $param{btnFunction} eq 'Save' ) {
-		# Add record to audit log - action "Update Currency".
 		(new openprint::Log())->save({action=>'Update Currency'});
 
 		if ( $param{name} ) {
@@ -207,6 +206,7 @@ sub currency {
 				name	=>	$param{name},
 				short	=>	$param{short},
 				symbol	=>	$param{symbol},
+        precision => $param{precision},
 				});
 		} # end if
 
@@ -216,6 +216,7 @@ sub currency {
 						name	=>	$param{'name-'.$$Currency{id}},
 						short	=>	$param{'short-'.$$Currency{id}},
 						symbol	=>	$param{'symbol-'.$$Currency{id}},
+						precision	=>	$param{'precision-'.$$Currency{id}},
 						});
 			} # end if
 		} # end foreach
@@ -445,7 +446,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 	} # end if
 
 	if ( ! $User->id() ) {
-		if ( sets::isin( $session{user_id}, map { $_->id() } @Users ) ) {
+		if ( $session{user_id} and sets::isin( $session{user_id}, map { $_->id() } @Users ) ) {
 			$User = new openprint::User( $session{user_id} );
 		} else {
 			$User = $Users[0] if @Users;
@@ -662,12 +663,10 @@ sub company_profiles {
 			} # end if $index
 		} # end if input checks
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		$Company = new openprint::Company( $param{company_id} );
 		$index = $Company->next();
 		$Company->delete();
 		$Company = new openprint::Company( $index );
 	} elsif ( $param{btnFunction} eq 'Destroy' ) {
-		$Company = new openprint::Company( $param{company_id} );
 		if ( ! $Company->destroy() ) {
 			$index = $Company->next();
 		} # end if
@@ -1064,23 +1063,23 @@ sub companies {
 		if ( $param{btnFunction} eq 'Download' ) {
 			my $uri = $r->uri();
 
-			my %filters = (
-					order =>  'lower(name)',
-					( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
-					( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
-					( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
-					( $session{$uri.'?country'} ne '' ? ( country => $session{$uri.'?country'} ) : () ),
-					( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
+      my %filters = (
+        order =>  'lower(name)',
+        ( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
+        ( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
+        ( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+        ( $session{$uri.'?country'} ne '' ? ( country => $session{$uri.'?country'} ) : () ),
+        ( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
 
-					ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
-					ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
-					ssi::date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
-					ssi::date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
-					);
-  if ( $session{$uri.'?country_id'} ) {
-    my $Country = new openprint::Location( $session{$uri.'?country_id'} );
-    $filters{country} = $Country->short();
-  }
+        ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
+        ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+        ssi::date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+        ssi::date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
+      );
+      if ( $session{$uri.'?country_id'} ) {
+        my $Country = new openprint::Location( $session{$uri.'?country_id'} );
+        $filters{country} = $Country->short();
+      }
 
 			if ( $session{$uri.'?salesrep_id_exclude'} ) {
 				my @csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
@@ -1105,18 +1104,26 @@ sub companies {
 						 (@Orders ? ssi::format_date( $Orders[0]->created_on() ) : '' ),
 			} # end foreach Company
 			misc::export_csv( $r, $log, \%variable, 'customers.csv', \@header, \@data );
-
-
 		}
 	}
 } # end sub companies
+
 sub _companies {
 	ssi::save_params( '/administrator/managerial/companies.html', (
-				'salesrep_id', 'marketing_category_id', 'company_name', 'country',
+				'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'updated_on_end_' . $_ } ( 'year','month','day' ) ),
+				( map { 'last_project_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'last_project_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+  if ($param{action} eq 'Delete') {
+    foreach my $Company ( openprint::Company->find( id=> (ref $param{'company_id[]'} eq 'ARRAY') ? $param{'company_id[]'} : [$param{'company_id[]'}]) ) {
+      $Company->delete();
+    }
+  }
 } # end sub _companies
 
 sub folds {
@@ -1145,6 +1152,27 @@ sub _user_logs {
 
 sub users {
 	$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
+	_users();
+
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Download in CSV format' ) {
+			my @header = ( 'Id', 'Company', 'First Name', 'Last Name',
+					'Email', 'Phone', 'Extension', 'Fax', 'Created On', 'Last Update'
+					);
+			my @data;
+			my @Users = @{$variable{Users}};
+			my %companies_by_id = misc::make_hash_from_array(id=>openprint::Company->find(id=>[map{$$_{company_id}} @Users])) if @Users;
+			foreach my $User ( @Users ) {
+				push @data, $User->id(), 
+						 ($companies_by_id{$$User{company_id}} ? $companies_by_id{$$User{company_id}}[0]->name() : ''), 
+						 $User->firstname(), $User->lastname(), $User->email(), $User->phone(),
+						 $User->extension(), $User->fax(),
+						 ssi::format_csv_date( $User->created_on() ),
+						 ssi::format_csv_date( $User->updated_on() ),
+			}
+			misc::export_csv( $r, $log, \%variable, 'users.csv', \@header, \@data );
+		} # end if Download
+	} # end if btnFunction
 }
 sub _users {
 	my $uri = '/administrator/managerial/users.html';
@@ -1155,7 +1183,50 @@ sub _users {
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );
 	$session{$uri.'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
-}
+
+	my $uri = '/administrator/managerial/users.html';
+	if ( $session{$uri.'?email'} ) {
+		my %filters = (
+				'email ilike' => '%'.$session{$uri.'?email'}.'%',
+				deleted => [0,1],
+				);
+		$variable{Users} = [ openprint::User->find( %filters ) ];
+	} else {
+		my %filters = (
+				( map { $session{join('?', $uri, $_)} ? ( $_ => $session{join('?', $uri, $_) } ) : () } ( 'company_id','type' ) ),
+				ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
+				ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+				);
+		if ( $session{$uri.'?deleted'} eq '' ) {
+			$filters{deleted} = [0,1];
+		} else {
+			$filters{deleted} = $session{$uri.'?deleted'};
+		}
+		if ( $session{$uri.'?administrator'} ne '' ) {
+			$filters{administrator} => $session{$uri.'?administrator'};
+		}
+		if ( $session{$uri.'?salesrep_id_exclude'} ) {
+			my @csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
+			@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};
+			$filters{'salesrep_id not in'} = \@csr_ids;
+		} elsif ( $session{$uri.'?salesrep_id'} ) {
+			$filters{salesrep_id} = $session{$uri.'?salesrep_id'};
+		} # end if
+		if ( $session{$uri.'?usergroup_id'} ) {
+			$filters{usergroup_id} = $session{$uri.'?usergroup_id'};
+		} # end if
+
+		my @Users = openprint::User->find( %filters );
+		my @Companies = openprint::Company->find(id=>[ map { $$_{company_id} } @Users ]) if @Users;
+
+		if ( $session{$uri.'?notification_type_id'} ) {
+			my %Notifications = map { $$_{user_id}, $_ } openprint::User_Notification->find( type_id=>$session{$uri.'?notification_type_id'} );
+			@{$variable{Users}} = map { $Notifications{$$_{id}} ? $_ : () } @Users;
+		} else {
+			$variable{Users} = \@Users;
+		}
+	}
+} # end sub _users
 
 sub mailqueue {
 use Data::Dumper;

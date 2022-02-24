@@ -49,7 +49,7 @@
 				<? echo ( make_drop_down( openprint::ServiceType_Category->dropdown( order=>'sorting,name'), $$variable{ServiceType}->category_id() ); ) ?>
 			</select>
 		</li>
-<? if ( new openprint::User( $session{user_id} )->email() =~ /iconnor/ ) ?>
+<? if ( $openprint::User->email() =~ /iconnor/ ) ?>
 		<li> 
 			<label>Type</label>
 			<input type="text" name="type" value="<? echo ( $$variable{ServiceType}->type() ) ?>" /> 
@@ -58,7 +58,7 @@
 			<label>URL</label>
 			<input type="url" name="url" value="<? echo ( $$variable{ServiceType}->url() ) ?>" /> 
 		</li>
-<? endif ( new openprint::User( $session{user_id} )->email() =~ /iconnor/ ) ?>
+<? endif ( $openprint::User->email() =~ /iconnor/ ) ?>
 		<li>
 			<label>Visible in Project Create</label>
 			<? echo ( radio( 'create_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->create_visible() ); ) ?>
@@ -88,3 +88,7 @@
 		</div>
 	</fieldset>
 </form>
+<? if ( $$variable{ServiceType}->id() ) ?>
+<? echo ( include_logs( $$variable{ServiceType} ); ) ?>
+<? endif ( $$variable{ServiceType}->id() ) ?>
+

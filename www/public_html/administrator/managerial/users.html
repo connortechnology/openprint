@@ -97,12 +97,20 @@ return '<option value="">Use the filter to populate this dropdown</option>';
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
-				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
-				#button( 'DownloadCSV', { onclick=>"f1.action='users.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
-				button( 'New', { href=>'/administrator/managerial/user_profiles.html' } ),
-				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+				button('ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
+				button('DownloadCSV', { onclick=>"f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' }),
+				#button('DownloadCSV', { onclick=>"f1.action='users.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' }),
+				button('New', { href=>'/administrator/managerial/user_profiles.html' } ),
+				button('Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
 		</p>
+  <p class="buttons">
+      <input type="file" name="file"/>
+      <? echo ( join("\n",
+      button( 'Import', { onclick=>"f1.btnFunction.value='import';f1.submit();", text=>'Import' } ),
+      #button( 'Export', { onclick=>"f1.btnFunction.value='Export Specifications';f1.submit();", text=>'Export' } ),
+      ); ) ?>
+    </p> 
 	</fieldset>
 	<div id="Results">Click Show Results</div>
 	<input type="hidden" name="btnFunction"/>

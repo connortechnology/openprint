@@ -155,7 +155,16 @@ sub history {
 						);
 			$variable{information} .= 'Account statement sent to ' . join('<br/>',
 					map { sprintf('&quot;%s %s&quot; &lt;%s&gt;',$_->get('firstname','lastname','email')) } @Recipients);
-		} # end if
+		} elsif ( $param{btnFunction} eq 'Calculate Interest' ) {
+			_history();
+      foreach my $Invoice ( @{$variable{Invoices}} ) {
+        next if $Invoice->is_paid();
+        next if $Invoice->bad_debt();
+        $variable{error} .= $Invoice->calculate_interests();
+      }
+      $variable{ExternalRedirect} = '/invoice/history.html';
+		} # end if btnfunction
+
 	} # end if btnFunction
 	ssi::setup_date_select($uri, 'created_on_start', -60);
 	ssi::setup_date_select($uri, 'created_on_end', '');
@@ -179,7 +188,7 @@ sub _history {
       ( map { 'due_on_end_'.$_ } ( 'year','month','day' ) ),
       ( map { 'paid_on_start_'.$_ } ( 'year','month','day' ) ),
       ( map { 'paid_on_end_'.$_ } ( 'year','month','day' ) ),
-      'paid','invoicee_id','bad_debt','product_id', 'invoicer_id' ) );
+      'paid','invoicee_id','bad_debt','product_id', 'invoicer_id', 'currency_id' ) );
 
   $variable{subtotal} = $variable{total} = $variable{interest_total} = $variable{owing_total} = 0;
   $variable{Taxes} = [ openprint::Tax->find(
@@ -226,6 +235,7 @@ sub _history {
           ) ),
         ( $session{$uri.'?product_id'} ? ( 'product_id any' => $session{$uri.'?product_id'} ) : () ),
         ( $session{$uri.'?bad_debt'} ne '' ? ( bad_debt=>$session{$uri.'?bad_debt'} ) :() ),
+        ( $session{$uri.'?currency_id'} ? ( currency_id=>$session{$uri.'?currency_id'} ) : () ),
         order => 'created_on',
       ) ) {
       if ( $session{$uri.'?paid'} ne '' ) {
@@ -347,65 +357,7 @@ sub view {
 		return;
 	} 
 	if ( $param{btnFunction} eq 'Calculate Interest' ) {
-		if ( ! $Invoice->monthly_interest() ) {
-			$variable{error} .= 'Invoice has no monthly interest rate!';
-		} elsif ( ! $Invoice->due_on() ) {
-			$variable{error} .= 'Invoice has no due date!';
-		} # end if
-
-		my $changed = 0;
-
-		my ( $year, $month, $day ) = $Invoice->due_on() =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
-		my $last_period;
-		my $paid = 0;
-		#( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
-		while ( Date::Calc::Date_to_Time( $year, $month, $day,0, 0, 0 ) <= time ) {
-
-			my $date_string = sprintf('%4d-%.2d-%.2d', $year, $month, $day);
-
-			# The point is to calculate howmuch has beenpaidby this point
-			foreach my $P ( openprint::Invoice_Payment->find(invoice_id=>$Invoice->id(), 'received_on >'=>$last_period, 'received_on <='=>$date_string )) {
-				$paid += $P->amount();
-			} # end foreach
-			# Includes tax
-			my $total = $Invoice->total();
-			foreach my $I ( openprint::Invoice_Interest->find(invoice_id=>$Invoice->id(), 'compounded_on <'=>$date_string )) {
-				$total += $I->amount();
-			} # end foreach InvoiceInterest
-
-			if ( $total - $paid > 0 ) {
-				if ( ! openprint::Invoice_Interest->find(invoice_id=>$Invoice->id(), 'compounded_on'=>$date_string ) ) {
-					my $I = new openprint::Invoice_Interest();
-					$_ = $I->save({
-							invoice_id		=>	$Invoice->id(),
-							amount			=>	Math::Round::nearest( .01, ($total - $paid) * $Invoice->monthly_interest()/100),
-							compounded_on	=>	sprintf('%.4d-%.2d-%.2d', $year, $month, $day ),
-							});
-					if ( ! $_ ) {
-            my $note = sprintf('Added %s%.2f interest for %s', $Invoice->Currency()->symbol(), $I->amount(), $date_string);
-						(new openprint::Log())->save({
-							Object	=>	$Invoice,
-							note	=>	$note,
-							action	=>	'Invoice Interest Added'});
-            $variable{information} .= $note.'<br/>';
-					} else {
-						$variable{error} .= $_;
-						last;
-					} # end if
-					$changed = 1;
-				} # end if No interest for this date.
-			} else {
-				last;
-			} # end if No interest for this date.
-			$last_period = $date_string;
-			($year,$month,$day) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
-		} # end while
-
-		if ( $changed ) {
-			delete $$Invoice{interest};
-			$Invoice->interest();
-			$Invoice->save();
-		} # end if
+    $variable{error} = $Invoice->calculate_interests();
     $variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
 	} elsif ( $param{btnFunction} eq 'Post' ) {
 		if ( ! ( $variable{error} .= $Invoice->save({posted=>1,posted_on=>'NOW()'}) ) ) {
@@ -513,13 +465,13 @@ sub _invoiced_products {
 } # end sub _invoiced_products
 
 sub _interests {
-
 	if ( $param{action} eq 'delete' ) {
 		my $Interest = new openprint::Invoice_Interest( $param{interest_id} );
 		$variable{Invoice} = $Interest->Invoice();
 		$variable{error} .= $Interest->delete();	
 		$variable{Invoice}->interest(undef);
 		$variable{error} = $variable{Invoice}->save();
+    (new openprint::Log())->save({Object=>$variable{Invoice}, action=>'delete', note=>$Interest->to_string()});
 	} # end if
 } # end sub _interests
 

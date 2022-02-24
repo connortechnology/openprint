@@ -101,7 +101,7 @@
 			<td>Totals</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{subtotal} ); ) ?></td>	
 			<? echo (
-				return join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{tax_totals}{$_->id()} ) ) : () } @{$$variable{Taxes}} );
+				return join("\n", map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{tax_totals}{$_->id()} ) ) : () } @{$$variable{Taxes}} );
 			) ?>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?></td>	
 			<td class="Interest Price"><? echo ( openprint::Currency::format( $$variable{interest_total} ); ) ?></td>	

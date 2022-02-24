@@ -87,132 +87,167 @@ $serial = 'car_id_seq';
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User->find( type=>['E','A'], 'usergroup any'=>'Quality Control Notifications');
+	my @Users = openprint::User->find(type=>['E','A'], 'usergroup any'=>'Quality Control Notifications',
+			'id NOT IN'=>[$openprint::User->id(), $$self{issued_to_id}],
+			);
 
 	if ( @Users ) {
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
+		my $email_template = misc::load_file($log, $config{SkinPath}.'/email_template.html');
 		my %info = (
 			CAR	=>	$self,
 		);
-		$info{ReplacementText} = ssi::include('/email_content/iso_car_notification.html', \%info );
+		$info{ReplacementText} = ssi::include('/email_content/iso_car_notification.html', \%info);
 		my $Email = new openprint::Email();
-		$Email->send(
+		$Email->html_body(ssi::variable_substitution(\$email_template, \%info));
+		my $results = $Email->send(
 				FROM    => $openprint::User,
 				TO      => \@Users,
 				SUBJECT => 'A new CAR has been generated requiring your attention.',
-				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
 				);
-
+		(new openprint::Log())->save({
+				Object	=>	$self,
+				action 	=> 'Notification',
+				note		=>	$results,
+				});
 	} # end if to
-
 } # end sub send_notification
 
 sub send_assignee_notification {
-	my ($self) = @_;
+	my $self = shift;
 
-	my $From = new openprint::User( $session{'user_id'} );
-	my $To = new openprint::User( $$self{'issued_to_id'} );
-	if ( $To->id() == $session{'user_id'} ) {
-		$log->debug("Not Sending CAR Notifications becuase I am ME to " . $To->email());
-	} else {
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-		my %info = (
-				'CAR'	=>	$self,
-				'To'    =>  $To,
-				'From'  =>  $From,
-				);
-		$info{ReplacementText} = ssi::include('/email_content/iso_car_assignee_notification.html', \%info );
-		my $Email = new openprint::Email();
-		$Email->send(
-				FROM    => $From,
-				TO      => $To,
-				SUBJECT => 'NEW CAR',
-				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
-				);
-	} # end if
+	my $From = new openprint::User( $session{user_id} );
+	my $To = new openprint::User( $$self{issued_to_id} );
+	if ( $To->id() == $session{user_id} ) {
+		$log->debug('Not Sending CAR Notifications becuase I am ME to ' . $To->email());
+		return;
+	} 
+	my $email_template = misc::load_file($log, $config{SkinPath}.'/email_template.html');
+	my %info = (
+			CAR	=>	$self,
+			To    =>  $To,
+			From  =>  $From,
+			);
+	$info{ReplacementText} = ssi::include('/email_content/iso_car_assignee_notification.html', \%info);
+	my $Email = new openprint::Email();
+	$Email->html_body(ssi::variable_substitution(\$email_template, \%info));
+	my $results = $Email->send(
+			FROM    => $From,
+			TO      => $To,
+			SUBJECT => 'NEW CAR',
+			);
+	(new openprint::Log())->save({
+			Object	=>	$self,
+			action 	=> 'Notification',
+			note		=>	$results,
+			});
 } # end sub send_assignee_notification
 
 sub send_reprint_request_notification {
 	my ($self) = @_;
-	my $From = new openprint::User( $session{'user_id'} );
+	my $From = $openprint::User;
 
-	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{SkinPath}.'/email_template.html' );
 	my %info = (
-			'CAR'   =>  $self,
-			'From'  =>  $From,
+			CAR   =>  $self,
+			From  =>  $From,
 			);
 	$info{ReplacementText} = ssi::include('/email_content/iso_car_reprint_request.html', \%info );
 
-	my $Email = new openprint::Email();
-	$Email->send(
-			FROM    => $From,
-			TO      => [ openprint::User->find( type=>['E','A'], 'usergroup any'=>'Reprint Approvals') ],
-			SUBJECT => 'CAR Reprint Request',
-			ATTACHMENTS => ['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
-			);
+	my @Users = openprint::User->find( type=>['E','A'], 'usergroup any'=>'Reprint Approvals', 'id !='=>$openprint::User->id());
+	if ( @Users ) {
+		my $Email = new openprint::Email();
+		$Email->html_body(ssi::variable_substitution(\$email_template, \%info));
+		my $results = $Email->send(
+				FROM    => $From,
+				TO      => \@Users, 
+				SUBJECT => 'CAR Reprint Request',
+				);
+		(new openprint::Log())->save({
+				Object=>$self,
+				action => 'Notification',
+				note=>	$results,
+				});
+	}
 } # end sub send_reprint_request_notification
 
 sub send_reprint_approval_notification {
 	my ($self) = @_;
 
-	my $From = new openprint::User( $session{'user_id'} );
-	my $To = new openprint::User( $$self{'issued_by_id'} );
-	if ( $To->id() == $session{'user_id'} ) {
-		$log->debug("Not Sending Reprint Approval because I am ME to " . $To->email());
-	} else {
-		$log->debug("Sending Reprint Approval because I am ME to " . $To->email());
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-		my %info = (
-				'CAR'   =>  $self,
-				'To'    =>  $To,
-				'From'  =>  $From,
-				);
-		$info{ReplacementText} = ssi::include('/email_content/iso_car_reprint_approval.html', \%info );
-		my $Email = new openprint::Email();
-		$Email->send(
-				FROM    => $From,
-				TO      => sprintf( '"%s" <%s>', $To->name(), $To->email() ),
-				SUBJECT => 'Reprint ' . ($$self{'reprint_approval'} eq 'Yes' ? 'approved' : 'not approved' ) . ' for CAR ' . $$self{id},
-				ATTACHMENTS => ['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
-				);
-	} # end if
-
+	my $From = $openprint::User;
+	my $To = new openprint::User( $$self{issued_by_id} );
+	if ( $To->id() == $session{user_id} ) {
+		$log->debug('Not Sending Reprint Approval because I am ME to ' . $To->email());
+		return;
+	}
+	my $email_template = misc::load_file( $log, $config{SkinPath}.'/email_template.html' );
+	my %info = (
+			CAR   =>  $self,
+			To    =>  $To,
+			From  =>  $From,
+			);
+	$info{ReplacementText} = ssi::include('/email_content/iso_car_reprint_approval.html', \%info );
+	my $Email = new openprint::Email();
+	$Email->html_body(ssi::variable_substitution(\$email_template, \%info));
+	my $results = $Email->send(
+			FROM    => $From,
+			TO      => $To,
+			SUBJECT => 'Reprint ' . ($$self{reprint_approval} eq 'Yes' ? 'approved' : 'not approved' ) . ' for CAR ' . $$self{id},
+			);
+	(new openprint::Log())->save({
+			Object	=>	$self,
+			action 	=>	'Notification',
+			note		=>	$results,
+			});
 } # end sub send_reprint_approval_notification
 
 sub send_changed_notification {
-    my ($self) = @_;
+	my ($self) = @_;
 
-    my $From = new openprint::User( $session{'user_id'} );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-	my %info = (
-			'CAR'   =>  $self,
-			'From'  =>  $From,
-			);
-	$info{ReplacementText} = ssi::include('/email_content/iso_car_changed_notification.html', \%info );
-	my $Email = new openprint::Email();
-	$Email->send(
-			FROM    => $From,
-			TO      => [ new openprint::User( $$self{'issued_by_id'} ), openprint::User->find( 'type'=>['E','A'], 'usergroup any'=>['Quality Control Notifications']) ],
-			SUBJECT => 'CAR ' . $$self{id} . ' has been changed.',
-			ATTACHMENTS => ['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
-			);
+	my $From = $openprint::User;
 
-} # end sub send_part2
+	my %To = map { ($$_{id} != $$openprint::User{id}) ? ($$_{id} => $_) : () } (
+			new openprint::User($$self{issued_by_id}),
+			openprint::User->find(type=>['E','A'], 'usergroup any'=>['Quality Control Notifications'])
+			);
+	my @To = values %To;
+	if ( @To ) {
+		my $email_template = misc::load_file( $log, $config{SkinPath}.'/email_template.html' );
+		my %info = (
+				CAR   =>  $self,
+				From  =>  $From,
+				);
+		$info{ReplacementText} = ssi::include('/email_content/iso_car_changed_notification.html', \%info);
+		my $Email = new openprint::Email();
+$Email->html_body(ssi::variable_substitution( \$email_template, \%info ));
+		my $results = $Email->send(
+				FROM    => $From,
+				TO      => \@To,
+				SUBJECT => 'CAR ' . $$self{id} . ' has been changed.',
+				);
+		(new openprint::Log())->save({
+				Object	=>	$self,
+				action 	=> 	'Notification',
+				note		=>	$results,
+				});
+	} # end if To
+} # end sub send_changed_notification
 
 sub Area {
 	return new openprint::CAR_Area( $_[0]{area_id} );
 } # end sub Area
+
 sub Reason {
 	return new openprint::CAR_Reason( $_[0]{reason_id} );
 } # end sub Reason
+
 sub issued_to {
 	return new openprint::User( $_[0]{issued_to_id} );
 } # end sub issued_to
 
 sub can_edit {
-	return 1 if $openprint::session{'user_type'} eq 'A';
-	return 1 if $openprint::session{'user_id'} == $_[0]{'issued_by_id'};
-	return 1 if openprint::usergroup::is_user_in( ['Reprint Approvals','Quality Control'], $openprint::session{'user_id'} );
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $openprint::session{user_id} == $_[0]{issued_by_id};
+	return 1 if openprint::usergroup::is_user_in( ['Reprint Approvals','Quality Control'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_edit
 

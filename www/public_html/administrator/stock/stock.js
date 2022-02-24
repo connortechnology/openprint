@@ -53,6 +53,11 @@ function mweight_to_gsm( form ) {
 	var gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
 	form.elements['gsm'].value = gsm;
 	form.elements['wpsi'].value = gsm / 703064.5;
+
+	var mweight = Math.round(wpsi*(width*height)*100000)/100;
+	var basis_width = parseFloat(1*form.elements['basis_width'].value);
+	var basis_height = parseFloat(1*form.elements['basis_height'].value);
+	form.elements['basis_mweight'].value = Math.round( (gsm / 703064.5) * basis_width *basis_height *1000);
 	recalc_prices( form );
 }
 

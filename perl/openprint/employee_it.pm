@@ -236,8 +236,13 @@ sub host {
         $variable{error} .= 'Failed to get content. ';
       }
     } elsif ( $param{action} eq 'Wake' ) {
+      my @Interfaces = $Host->Interfaces();
+      $variable{error} .= 'There are no interfaces to wake on<br/>' if ! @Interfaces;
       foreach my $I ( $Host->Interfaces() ) {
-        next if ! $I->mac();
+        if (! $I->mac() ) {
+          $variable{information} .= 'Not waking by '.$I->ip().' because no mac address<br/>';
+          next;
+        }
 				my ( $error, $info ) = $I->wake();
 				$variable{error} .= $error;
 				$variable{information} .= $info;
@@ -801,21 +806,12 @@ sub _host_actions {
 } # end sub _host_actions
 
 sub backups {
-  _hosts();
+  _backups();
   my $uri = $r->uri();
   ssi::setup_date_select( $uri, 'created_on_start', '' );
   ssi::setup_date_select( $uri, 'created_on_end', '' );
   ssi::setup_date_select( $uri, 'updated_on_start', '' );
   ssi::setup_date_select( $uri, 'updated_on_end', '' );
-  if ( ! exists $session{$uri.'?has_hostname'} ) {
-    $session{$uri.'?has_hostname'} = 1;
-  } # end if
-  if ( ! exists $session{$uri.'?assigned'} ) {
-    $session{$uri.'?assigned'} = 1;
-  } # end if
-  if ( ! exists $session{$uri.'?notassigned'} ) {
-    $session{$uri.'?notassigned'} = 1;
-  } # end if
 }
 
 sub _backups {
@@ -828,7 +824,7 @@ sub _backups {
       %param = ();
     } # end if
   } # end if
- ssi::save_params( '/employee/it/backups.html',
+  ssi::save_params( '/employee/it/backups.html',
       'created_on_start_year', 'created_on_start_month', 'created_on_start_day',
       'created_on_end_year', 'created_on_end_month', 'created_on_end_day',
       'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day',
@@ -837,8 +833,8 @@ sub _backups {
       'name','type',
       'order', 'deleted', 'owner_id',
       );
-
 }
+
 sub backup {
   my $Backup = $variable{Backup} = new openprint::Backup( $param{backup_id} );
   if ( $param{action} ) {
@@ -923,53 +919,56 @@ sub _interface {
       $$I{host_id} = $param{host_id};
     } elsif ($param{action} eq 'dhcp' ) {
       if ( ! $param{mac} ) {
-        $openprint::log->error("Need mac when doing dhcp update");
+        $openprint::log->error('Need mac when doing dhcp update');
         return;
       }
+
       my @HIs = openprint::Host_Interface->find(mac=>$param{mac});
       if ( ! @HIs ) {
         my $Host = new openprint::Host();
         $Host->save({ hostname=>($param{hostname} ? $param{hostname} : $param{mac} ) } );
         my $Interface = new openprint::Host_Interface();
         $Interface->save({ ip=>$param{ip}, mac => $param{mac}, host_id=>$$Host{id}, dhcp=>1 });
-      }
-      foreach my $Interface (@HIs) {
-        my $Host = $Interface->Host();
-        if ( 
-          (
-            (!$$Interface{ip})
-              or
-            (is_ipv4($Interface->ip()) and is_ipv4($param{ip}))
-              or
-            (is_ipv6($Interface->ip()) and is_ipv6($param{ip}))
-          )
-            and ( $Interface->ip() ne $param{ip} )
-        ) {
-          (new openprint::Log())->save( {
-              Object  =>  $Host,
-              note    =>  "IP Address changed from $$Interface{ip} to $param{ip}",
-              action  =>  'IP Changed',
-            } );
-          $Interface->save({ip=>$param{ip}});
-        } else {
-          $log->debug("Not updating HI from $$Interface{ip} to $param{ip} because is_ipv($$Interface{ip})=".is_ipv4($Interface->ip())." is_ipv4($param{ip})=".is_ipv4($param{ip}));
-        }
-        if ( $param{hostname} and is_mac($Host->hostname()) ) {
-          (new openprint::Log())->save( { Object => $Host, note=>"Name changed from $$Host{hostname} to $param{hostname}", action=>'Changed' } );
-          $Host->save({hostname=>$param{hostname}});
-        } else {
-          $log->debug("Not updating hostname from $$Host{hostname} to $param{hostname}");
-        }
-      } # end foreach HI
-
+        @HIs = ( $Interface );
+      } else {
+        foreach my $Interface (@HIs) {
+          my $Host = $Interface->Host();
+          if ( 
+            (
+              (!$$Interface{ip})
+                or
+              (is_ipv4($Interface->ip()) and is_ipv4($param{ip}))
+                or
+              (is_ipv6($Interface->ip()) and is_ipv6($param{ip}))
+            )
+              and ( $Interface->ip() ne $param{ip} )
+          ) {
+            (new openprint::Log())->save( {
+                Object  =>  $Host,
+                note    =>  "IP Address changed from $$Interface{ip} to $param{ip}",
+                action  =>  'IP Changed',
+              } );
+            $Interface->save({ip=>$param{ip}});
+          } else {
+            $log->debug("Not updating HI from $$Interface{ip} to $param{ip} because is_ipv($$Interface{ip})=".is_ipv4($Interface->ip())." is_ipv4($param{ip})=".is_ipv4($param{ip}));
+          }
+          if ( $param{hostname} and is_mac($Host->hostname()) ) {
+            (new openprint::Log())->save( { Object => $Host, note=>"Name changed from $$Host{hostname} to $param{hostname}", action=>'Changed' } );
+            $Host->save({hostname=>$param{hostname}});
+          } else {
+            $log->debug("Not updating hostname from $$Host{hostname} to $param{hostname}");
+          }
+        } # end foreach HI
+      } # end if @His
       foreach my $I ( openprint::Host_Interface->find( 'mac !='=>$param{mac}, ip=>$param{ip} ) ) {
-        $I->save({ip=>undef});
         (new openprint::Log())->save({
             Object => $I->Host(),
-            note   =>'IP Address removed because it is taken by host ' . $I->Host()->link_to(),
+            note   =>'IP Address '.$I->ip().' removed because it is taken by host ' . $HIs[0]->Host()->link_to(),
             action =>'IP Changed',
           });
+        $I->save({ip=>undef});
       } # end foreach I
+
       $variable{PageContent} = "{result:'ok'}";
     } #endif action
   } # end if action

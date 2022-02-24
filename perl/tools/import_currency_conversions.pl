@@ -56,10 +56,10 @@ my $from_id=2;
 my $to_id=1;
 
 my $csv = Text::CSV_XS->new();
-open ( FH, "$$opts{file}" ) or die "Can't open $$opts{file} : $!";
+open ( FH, $$opts{file} ) or die "Can't open $$opts{file} : $!";
 while ( <FH> ) {
   my $status = $csv->parse($_);
-  my ($period, $rate) = misc::trim($csv->fields());
+  my ($period, $usd, $rate) = misc::trim($csv->fields());
   next if $period eq 'date';
   my ($year, $month, $day) = split('-', $period);
   my $period_start = sprintf('%.4d-%.2d-%.2d 12:00:00', $year, $month, $day);

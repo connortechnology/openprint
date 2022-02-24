@@ -220,7 +220,7 @@ sub Taxes {
       push @{$$self{Taxes}}, $T;
     } # end foreach Tax
   } else {
-    $openprint::log->debug('Not loading taxes: ' . (scalar @{$$self{Taxes}}) . ' country: ' . $self->Company()->country() . ' state: ' . $self->Company()->state() . ' invoiced_on: ' . $$self{invoiced_on});
+    $openprint::log->debug('Not loading taxes: ' . (scalar @{$$self{Taxes}}) . ' country: ' . $self->Company()->country() . ' state: ' . $self->Company()->state() . ' invoiced_on: ' . ($$self{invoiced_on}?$$self{invoiced_on}:'never'));
   } # end if
   return @{$$self{Taxes}};
 } # end sub Taxes

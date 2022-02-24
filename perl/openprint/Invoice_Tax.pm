@@ -28,6 +28,10 @@ sub Tax {
 	return new openprint::Tax( $_[0]{tax_id} );
 } # end sub Tax
 
+sub Invoice {
+  return new openprint::Invoice($_[0]{invoice_id});
+}
+
 sub name {
 	return $_[0]->Tax()->name();
 } # end sub name
@@ -41,7 +45,7 @@ sub amount {
 	if ( $$self{invoice_id} and ! defined $$self{amount} ) {
 		$$self{amount} = ($$self{rate}/100) * $self->Invoice()->subtotal();
 	} # end if
-	return Math::Round::nearest( 0.01, $$self{amount} );
+	return Math::Round::nearest( 1/(10**$self->Invoice()->Currency()->precision()), $$self{amount} );
 } # end sub amount
 
 1;

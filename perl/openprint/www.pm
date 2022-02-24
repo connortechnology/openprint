@@ -107,7 +107,7 @@ sub handler {
 		if ( ref $param{$key} eq 'ARRAY' ) {
 			$log->debug('Parameter '.$key.' is ARRAY(' . join(',', @{$param{$key}}) . ')');
 		} else {
-			$log->debug('Parameter '.$key.' is (' . $param{$key} . ')' . (utf8::is_utf8($param{$key})||0) );
+			$log->debug('Parameter '.$key.' is ('.$param{$key}.')');# . (utf8::is_utf8($param{$key})||0) );
 			#$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
 		} # end if
 	}	# end foreach
@@ -115,9 +115,9 @@ sub handler {
 	$dbh = sql::open_sql( $log, 
 			database	=> $r->dir_config('db_name'),
 			driver		=> $r->dir_config('db_driver'), 
-			host		=> $r->dir_config('db_host'),
-			port		=> $r->dir_config('db_port'),
-			login		=> $r->dir_config('db_user'),
+			host		  => $r->dir_config('db_host'),
+			port		  => $r->dir_config('db_port'),
+			login		  => $r->dir_config('db_user'),
 			password	=> $r->dir_config('db_password'),
 			);
 
@@ -173,7 +173,7 @@ sub handler {
 			$variable{uri} = $page;
 			parse_page($page);
 			if ( (exists $variable{Redirect}) and $variable{Redirect} ) {
-				$openprint::log->debug("Reirect: $variable{Redirect}");
+				$openprint::log->debug("Redirect: $variable{Redirect}");
 				$page = $variable{Redirect};
 				$variable{Redirect} = '';
 			} # end if
@@ -201,7 +201,7 @@ sub handler {
 		$r->headers_out->set(Location=>$variable{ExternalRedirect});
 		$r->status(Apache2::Const::REDIRECT);
 		#$r->send_http_header;
-		$log->debug("Redirecting to " . $variable{ExternalRedirect} );
+		$log->debug('Redirecting to ' . $variable{ExternalRedirect} );
 	} elsif ( exists $variable{Download} and $variable{Download} ) {
 		if ( ref $variable{Download} eq 'ARRAY' ) {
 			foreach ( @{$variable{Download}} ) {
@@ -242,28 +242,27 @@ $log->error("Deprecated SkinPath layout! $path");
 $log->debug("PageContent is $variable{PageContent}");
 		} # end if
 		my $template;
-		my @page_path = split('/', $page );
+		my @page_path = split('/', $page);
 		my $filename = pop @page_path;
 		# _ signifies a page fragment, so don't load layout
-		if ( substr($filename, 0, 1 ) ne '_' ) {
-			my $file = join( '/', $config{SkinPath}, 'layouts', @page_path, $filename );
+		if ( substr($filename, 0, 1) ne '_' ) {
+			my $file = join('/', $config{SkinPath}, 'layouts', @page_path, $filename);
 			#$log->debug("Looking for $file");
 			if ( -e $file ) {
 				$template = misc::load_file( $log, $file );
-$log->debug("Foudn template at $file") if Debug;
+        $log->debug('Found template at '.$file) if Debug;
 			} else {
-			while ( @page_path ) {
-				$file = join( '/', $config{SkinPath}, 'layouts', @page_path, 'default.html' );
-				#$log->debug("Looking for $file");
-				if ( -e $file ) {
-					$template = misc::load_file( $log, $file );
-					last;
-				} # end if
-				pop @page_path;
-			} # end while
+        while ( @page_path ) {
+          $file = join('/', $config{SkinPath}, 'layouts', @page_path, 'default.html');
+          if ( -e $file ) {
+            $template = misc::load_file($log, $file);
+            last;
+          } # end if
+          pop @page_path;
+        } # end while
 			} # end if
 		} # end if _
-		$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if Debug;
+		$log->debug("After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs') if Debug;
 		local $|=1;
 		if ( ! $r->connection()->aborted() ) {
 			if ( $template ) {
@@ -279,11 +278,11 @@ $log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_inte
 $log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if Debug;
 			} # end if
 		} else {
-			$log->debug("Aborted");
+			$log->debug('Aborted');
 		} # end if
 	} # end if
 
-	$log->debug( 'Elapsed seconds: ' . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+	$log->debug('Elapsed seconds: ' . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs');
 	return Apache2::Const::OK;
 } # end sub handler
 
@@ -588,13 +587,13 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 						my $module = join('_', ($first, $second));
 						require "openprint/$module.pm"; 
 						if ( my $function = ('openprint::'.$module)->can($proc) ) {
-	$log->debug("Running openprint::$module->$proc") if Debug;
+              $log->debug("Running openprint::$module->$proc") if Debug;
 							$function->();
 						} else {
-							$log->error( "No function def for $module :: $proc!" );
+							$log->error("No function def for $module :: $proc!");
 						}
 					} else {
-$log->debug("No proc found for $filename");
+            $log->debug("No proc found for $filename");
 					} # end if
 				} # end if -e $ENV{DOCUMENT_ROOT}.$uri 
 

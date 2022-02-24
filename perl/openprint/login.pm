@@ -227,20 +227,21 @@ sub email_password {
 		return misc::error( $log, $dbh, $variable, 'Account doesn\'t exist.', 'The account you entered does not exist.' );
 	} # end if
 
-	if ( my $email_template = misc::load_file( $log, $config{SkinPath}. '/email_template.html' ) ) {
+	if ( my $email_template = ssi::slurp_content('/email_template.html') ) {
 		
-		my $content = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . '/email_content/forgotten_password.html' );
+		my $content = ssi::slurp_content('/email_content/forgotten_password.html');
 		foreach my $User ( @Users ) {
 			my %info;
 			$info{ReplacementText} = ssi::variable_substitution( \$content, \%info );
 			$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-			new openprint::Email()->send(
+			my $email = new openprint::Email();
+      $email->html_body(ssi::variable_substitution( \$email_template, \%info ));
+      my $results = $email->send(
 					FROM 	=> $config{AdministratorEmail},
 					TO	=> @Users,
 					SUBJECT	=> 'Forgotten Password',
-					ATTACHMENTS	=> ['', $_, 'text/html', 'quoted-printable'],
 					);
-			(new openprint::Log())->save({Object=>$User, action=>'Forgotten Password sent.'});
+			(new openprint::Log())->save({Object=>$User, action=>'Forgotten Password sent.', note=>$results});
 		} # end foreach $User
 	} else {
 		return misc::error( $log, $dbh, $variable, 'System Error.', 'We were unable to email your password to you.	Please contact support.' );
@@ -411,19 +412,20 @@ sub forgotten_password {
 		return;
 	} # end if
 
-	if ( my $email_template = misc::load_file( $log, $config{SkinPath} . '/email_template.html' ) ) {
+	if ( my $email_template = ssi::slurp_content('/email_template.html') ) {
 		my %info = (
-				'User' =>$User,
+				User =>$User,
 				);
 
-		$info{ReplacementText} = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . '/email_content/forgotten_password.html' );
+		$info{ReplacementText} = ssi::slurp_content('/email_content/forgotten_password.html');
 		$info{ReplacementText} = ssi::variable_substitution( \$info{ReplacementText}, \%info );
 
-		$_ = (new openprint::Email())->send(
+    my $email = new openprint::Email();
+    $email->html_body(ssi::variable_substitution(\$email_template, \%info));
+		$_ = $email->send(
 				FROM    => $config{AdministratorEmail},
 				TO      => $User,
 				SUBJECT => 'Forgotten Password',
-				ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
 				);
 		$variable{information} = 'Your password has been e-mailed to you.';
 	} else {

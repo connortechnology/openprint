@@ -1,4 +1,3 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <form id="f1" name="f1" method="post" action="edit.html" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search Information</legend>
@@ -126,16 +125,16 @@
 	</fieldset><!-- Column -->
 <? if ( $$variable{ProjectType}->id() ) ?>
 	<div class="PaperRecommendations">
-	<fieldset><legend>Paper Recommendations</legend>
-		<div class="leftColumn">
-			<ul>
-		<li>
+    <fieldset><legend>Paper Recommendations</legend>
+      <div class="leftColumn">
+        <ul>
+          <li>
             <label>Brand</label>
             <select id="brand_id" name="brand_id" onchange="filter_onChange(this,'');">
                 <option value="">select</option>
                 <? echo ( make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $session{$r->uri().'?brand_id'} );) ?>
             </select>
-        </li>
+          </li>
 <? echo (
     my $html;
     my @options = ( 'Finish', 'Colour', 'Weight', 'Quality', 'Material' );
@@ -151,29 +150,36 @@
     my @Stocks = openprint::Paper->find(\%find);
 
     foreach my $Stock ( @Stocks ) {
-        foreach my $option ( @options ) {
-            $results{$option}{$$Stock{$options{$option}.'_id'}} = $Stock->$option();
-        } # end foreach Stock
+      foreach my $option ( @options ) {
+        $results{$option}{$$Stock{$options{$option}.'_id'}} = $Stock->$option();
+      } # end foreach Stock
     }# end foreach option
 
     foreach my $option ( @options ) {
-        my @sorted = ('openprint::Stock'.$option)->sort( map { $results{$option}{$_} } keys %{$results{$option}} );
-        my $lc_option = $options{$option};
+      my @sorted = ('openprint::Stock'.$option)->sort( map { $results{$option}{$_} } keys %{$results{$option}} );
+      my $lc_option = $options{$option};
 
-        $html .= sprintf(q`
+      $html .= sprintf(q`
         <li>
-            <label>%3$s</label>
-            <select id="%1$s_id" name="%1$s_id" size="1" onchange="filter_onChange(this,'');"><option value=""> select one </option>%2$s</select>
+          <label>%3$s</label>
+          <select id="%1$s_id" name="%1$s_id" size="1" onchange="filter_onChange(this,'');">
+            <option value=""> select one </option>
+            %2$s
+          </select>
         </li>`, $lc_option, make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{$r->uri().'?'.$lc_option.'_id'} ), $option );
-        $find{$lc_option.'_id'} = $session{$r->uri().'?'.$lc_option.'_id'} if $session{$r->uri().'?'.$lc_option.'_id'};
+      $find{$lc_option.'_id'} = $session{$r->uri().'?'.$lc_option.'_id'} if $session{$r->uri().'?'.$lc_option.'_id'};
     }# end foreach option
     return $html;
 ) ?>
-
+      </ul>
 		</div>
 		<div class="rightColumn">
-		<ul><li><? echo ( radio( 'Recommended', [ '1', 'Yes', '0', 'No', '', 'All' ], $param{Recommended}, { onclick=>qq`new Ajax.Updater( 'PaperRecommendations', '_paper_recommendations.html', { parameters: { projecttype_id: $param{ddmProjectType}, recommended: this.value } } );` } ); ) ?></li>
-		</ul>
+      <ul>
+        <li>
+          <label>Recommended</label>
+          <? echo ( radio( 'Recommended', [ '1', 'Yes', '0', 'No', '', 'All' ], $param{Recommended}, {
+          onclick=>qq`update_recommendations(this);` } ); ) ?></li>
+      </ul>
 		</div>
 		<br class="spacer"/>
 		<div id="PaperRecommendations">
@@ -181,7 +187,20 @@
 		</div>	
 	</fieldset>
 	</div>
-	<? echo ( include_logs( $$variable{ProjectType} ); ) ?>
 <? endif ( $$variable{ProjectType}->id() ) ?>
 	<br class="spacer"/>
 </form>
+<? if ( $$variable{ProjectType}->id() ) ?>
+	<? echo ( include_logs( $$variable{ProjectType} ); ) ?>
+<? endif ( $$variable{ProjectType}->id() ) ?>
+<script src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script>
+  function update_recommendations(r) {
+    new Ajax.Updater( 'PaperRecommendations', '_paper_recommendations.html', {
+        parameters: {
+            projecttype_id: '<?echo($param{ddmProjectType})?>',
+            recommended: r.value
+          }
+      });
+    }
+</script>

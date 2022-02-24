@@ -119,20 +119,23 @@ sub is_paid {
 
 sub owing {
 #$log->debug("Owing total: " . $_[0]->total() . ' int: ' . $_[0]->interest() . ' paid: ' . $_[0]->paid() );
-	return Math::Round::nearest( .01, $_[0]->total() + $_[0]->interest() - $_[0]->paid() );
+	return Math::Round::nearest( 1/(10**$_[0]->Currency()->precision()), $_[0]->total() + $_[0]->interest() - $_[0]->paid() );
 } # end sub owing
 
 sub owing_early {
-#$log->debug("Owing total: " . $_[0]->total() . ' int: ' . $_[0]->interest() . ' paid: ' . $_[0]->paid() );
-	my $owing = $_[0]->total() + $_[0]->interest() - $_[0]->paid();
-	if ( $_[0]{early_payment_units} eq 'amount' ) {
-		return Math::Round::nearest( .01, $owing + $_[0]{early_payment_amount} );
-	} elsif ( $_[0]{early_payment_units} eq 'percent' ) {
-		return Math::Round::nearest( .01, $owing * ( 1 - $_[0]{early_payment_amount}/100 ) );
+  my $self = shift;
+	my $owing = $self->total() + $self->interest();
+  my $owing_early;
+	if ( $$self{early_payment_units} eq 'amount' ) {
+		$owing_early = Math::Round::nearest(1/(10**$self->Currency()->precision()), $$self{early_payment_amount} - $self->paid());
+	} elsif ( $$self{early_payment_units} eq 'percent' ) {
+    $owing_early = Math::Round::nearest(1/(10**$self->Currency()->precision()), ($owing * ( 1 - $$self{early_payment_amount}/100) - $self->paid()));
 	} else {
-$openprint::log->error('Unknown units for early_payment '. $_[0]{early_payment_units} );
-		return Math::Round::nearest( .01, $owing );
+    $openprint::log->error('Unknown units for early_payment ('.$$self{early_payment_units}.')');
+		$owing_early = Math::Round::nearest(1/(10**$self->Currency()->precision()), $owing);
 	} # end if
+  $openprint::log->debug("owing_early = $owing_early = owing: $owing = $$self{total} + $$self{interest} - $$self{paid}");
+  return $owing_early;
 } # end sub owing
 
 sub Invoicee {
@@ -162,18 +165,18 @@ $log->debug("Recalculating subtotal") if $debug;
 		$$self{subtotal} = 0;
 		foreach my $T ( openprint::Timetrack->find( invoice_id=>$$self{id} ) ) {
 			$$self{subtotal} += $T->value();
-$log->debug("T value: " . $T->value() . " subtotal: $$self{subtotal}");
+$log->debug('T value: ' . $T->value() . ' subtotal: '.$$self{subtotal}) if $debug;
 		} # end foreach
 		foreach my $P ( $self->Products() ) {
 			$$self{subtotal} += $P->total();
-$log->debug("P value: " . $P->total() . " subtotal: $$self{subtotal}" );
+$log->debug('P value: ' . $P->total() . ' subtotal: '.$$self{subtotal} ) if $debug;
 		}# end foreach P
 		foreach my $O ( $self->Orders() ) {
 			$$self{subtotal} += $O->Order()->subtotal();
-$log->debug("O value: " . $O->Order()->subtotal() . " subtotal: $$self{subtotal}" );
+$log->debug('O value: ' . $O->Order()->subtotal() . ' subtotal: '.$$self{subtotal});
 		}# end foreach P
 	} # end if
-	return Math::Round::nearest( .01, $$self{subtotal} );
+	return Math::Round::nearest(1/(10**$self->Currency()->precision()), $$self{subtotal});
 } # end sub subtotal
 
 sub total {
@@ -194,7 +197,7 @@ sub total {
 $log->debug("tax $$Tax{amount} toal: $$self{total}");
 		} # end foreach Tax
 	} # end if
-	return Math::Round::nearest( .01, $$self{total} );
+	return Math::Round::nearest( 1/(10**$self->Currency()->precision()), $$self{total} );
 } # end sub total
 
 sub interest {
@@ -295,6 +298,7 @@ sub email_html {
   } else {
     $openprint::log->debug('Have no skinpath at ' . $openprint::config{SkinPath}.'/'.$self->Invoicer()->name());
   }
+  $data{SkinPath} = $skin_path;
   my $invoice_template = ssi::slurp_content($skin_path.'/invoice_template.html');
   $invoice_template = ssi::slurp_content('/invoice_template.html') if ! $invoice_template;
   $data{ReplacementText} = ssi::include('/email_content/invoice.html', \%data);
@@ -305,12 +309,16 @@ sub email_html {
 sub send {
 	my ( $self, $To ) = @_;
 
+  my @To = $To ? ($To) : $self->Invoicee()->AccountingContacts();
+  return 'No one to send to!' if ! @To;
+
 	my $Email = new openprint::Email();
 
 	my %data = (
 			Invoice => $self,
 			uri => 'invoice',
 			Currency	=>	$self->Currency(),
+
 	);
 
   my $skin_path = '';
@@ -320,6 +328,7 @@ sub send {
   } else {
     $openprint::log->debug("Have no skinpath at " . $openprint::config{SkinPath}.'/'.$self->Invoicer()->name() );
   }
+  $data{SkinPath} = $skin_path;
 
 	my $email_template = ssi::slurp_content($skin_path.'/email_template.html');
 	$email_template = ssi::slurp_content('/email_template.html') if ! $email_template;
@@ -377,14 +386,93 @@ sub Interests {
 } # end sub Interests
 
 sub calculate_interests {
-	my $self = shift;
+	my $Invoice = shift;
+  my $error = '';
+
+  if ( ! $Invoice->monthly_interest() ) {
+    $error .= 'Invoice has no monthly interest rate!';
+  } elsif ( ! $Invoice->due_on() ) {
+    $error .= 'Invoice has no due date!';
+  } # end if
+
+  my $changed = 0;
+
+  my ( $year, $month, $day ) = $Invoice->due_on() =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
+  my $last_period;
+  my $paid = 0;
+  #( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
+  while ( Date::Calc::Date_to_Time($year, $month, $day, 0, 0, 0) <= time ) {
+
+    my $date_string = sprintf('%4d-%.2d-%.2d', $year, $month, $day);
+
+    # The point is to calculate how much has been paid by this point
+    foreach my $P ( openprint::Invoice_Payment->find(
+        invoice_id=>$Invoice->id(),
+        ($last_period ? ('received_on >'=>$last_period) : () ),
+        'received_on <='=>$date_string )) {
+      $paid += $P->amount();
+    } # end foreach
+
+    # Includes tax
+    my $total = $Invoice->total();
+    foreach my $I ( openprint::Invoice_Interest->find(invoice_id=>$Invoice->id(), 'compounded_on <'=>$date_string )) {
+      $total += $I->amount();
+    } # end foreach InvoiceInterest
+
+    if ( ($total - $paid) > 0 ) {
+      if ( ! openprint::Invoice_Interest->find(invoice_id=>$Invoice->id(), compounded_on=>$date_string) ) {
+        # If not interest already applied for this period, apply it
+        my $I = new openprint::Invoice_Interest();
+        $_ = $I->save({
+            invoice_id    =>  $Invoice->id(),
+            amount        =>  Math::Round::nearest(.01, ($total - $paid) * $Invoice->monthly_interest()/100),
+            compounded_on =>  $date_string,
+            });
+        if ( ! $_ ) {
+          my $note = sprintf('Added %s%.2f interest for %s', $Invoice->Currency()->symbol(), $I->amount(), $date_string);
+          (new openprint::Log())->save({
+            Object  =>  $Invoice,
+            note    =>  $note,
+            action  =>  'Invoice Interest Added'});
+          $error .= $note.' for invoice ' . $Invoice->id().'<br/>';
+        } else {
+          $error .= $_;
+          last;
+        } # end if
+        $changed = 1;
+      } # end if No interest for this date.
+    } else {
+      last;
+    } # end if No interest for this date.
+    $last_period = $date_string;
+    ($year, $month, $day) = Date::Calc::Add_Delta_Days($year, $month, $day, Date::Calc::Days_in_Month($year, $month));
+  } # end while
+
+  if ( $changed ) {
+    delete $$Invoice{interest};
+    $Invoice->interest();
+    $Invoice->save();
+  } # end if
+
+  return $error;
+
 } # end sub calculate_interests
+
+sub tax {
+  my $self = shift;
+  if ( ! $$self{tax} ) {
+    $$self{tax} = 0;
+    foreach my $T ( $self->Taxes() ) {
+      $$self{tax} += $T->amount();
+    }
+  }
+  return $$self{tax};
+}
 
 sub Taxes {
 	my ( $self ) = @_;
 
 	if ( @_ > 1 and ! defined $_[1] ) {
-$log->debug("Getting rid of taxes") if $debug;
 		if ( $$self{id} ) {
 			foreach ( openprint::Invoice_Tax->find( invoice_id=>$$self{id} ) ) {
 				$_->destroy();
@@ -394,12 +482,10 @@ $log->debug("Getting rid of taxes") if $debug;
 	} # end if
 
 	if ( ( ! $$self{Taxes} ) and $$self{posted} ) {
-		$log->debug("Loading taxes");
 		@{$$self{Taxes}} = openprint::Invoice_Tax->find( invoice_id=>$$self{id} );
 	} # end if
 
 	if ( ! ( $$self{Taxes} and @{$$self{Taxes}} ) ) {
-$log->debug("Generating taxes");
 		$$self{Taxes} = [];
 		foreach my $Tax ( openprint::Tax->find(
 					'period_start null_or_<='	=>	$$self{created_on},
@@ -549,6 +635,14 @@ sub sent_on {
       LIMIT 1`, $_[0]{id});
   }
   return $_[0]{sent_on};
+}
+
+sub is_early {
+  return 0 if ! $_[0]->early_payment_amount();
+  my $early_payment_time = Date::Parse::str2time($_[0]->early_payment_date());
+  my $today = Date::Calc::Date_to_Time(Date::Calc::Today(), (0,0,0));
+  $openprint::log->debug("is_early: early_time $early_payment_time, today $today : " . ($early_payment_time > $today));
+  return ($early_payment_time > $today);
 }
 
 1;

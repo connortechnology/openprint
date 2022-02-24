@@ -14,10 +14,8 @@
 			}
 			return;
 		) ?>
-		
-		<? endif ( $openprint::Company->notes() ) ?>
 		<br/>
-		Prices will be displayed in <? echo ( new openprint::Currency( $session{Currency_id} )->name() ) ?>.<br/>
+		Prices will be displayed in <? echo ( $openprint::Currency->name() ) ?>.<br/>
 		<br/>
 		<div id="LoginLog">
 		<fieldset><legend>Last 10 Login Attempts</legend>

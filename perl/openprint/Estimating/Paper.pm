@@ -25,15 +25,16 @@ require openprint::service;
 require openprint::Currency;
 require openprint::Paper;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant MAX_STOCK_INDEX => 10;
 
 my @variables = (
-        'txtPrice1', 'txtPrice2', 'txtPrice3',
-		'MPrice1','MPrice2','MPrice3',
-        'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
-		'hdnBreakdown1','hdnBreakdown2','hdnBreakdown3',
-	'alert',
+  'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+  'txtPrice1', 'txtPrice2', 'txtPrice3',
+  'MPrice1','MPrice2','MPrice3',
+  'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
+  'hdnBreakdown1','hdnBreakdown2','hdnBreakdown3',
+  'alert',
 );
 
 sub variables {
@@ -69,33 +70,33 @@ sub variables {
 } # end sub variables
 
 sub has_overrides {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-    my @v;
-    if ( $qty_index ) {
-        foreach my $s_s_id ( $Project->signatures() ) {
-            my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-			my $form = $$sig_specs{SignatureIndex};
-			#foreach my $stock_index ( 1 .. MAX_STOCK_INDEX ) {
-				push @v, map { $$specs{$_} ? $_ : () } (
-					"overrideqty-form$form-$qty_index",
-                    );
-			#} # end fireach stock_index
-		} # end foreach sig
-		foreach my $stock_index ( 1 .. MAX_STOCK_INDEX ) {
-			push @v, map { $$specs{$_} ? $_ : () } (
-					"overridecost-$stock_index-$qty_index",
-					);
-		} # end fireach stock_index
-    } # end if
+  my @v;
+  if ( $qty_index ) {
+    foreach my $s_s_id ( $Project->signatures() ) {
+      my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+      my $form = $$sig_specs{SignatureIndex};
+      #foreach my $stock_index ( 1 .. MAX_STOCK_INDEX ) {
+      push @v, map { $$specs{$_} ? $_ : () } (
+        "overrideqty-form$form-$qty_index",
+      );
+      #} # end fireach stock_index
+    } # end foreach sig
+    foreach my $stock_index ( 1 .. MAX_STOCK_INDEX ) {
+      push @v, map { $$specs{$_} ? $_ : () } (
+        "overridecost-$stock_index-$qty_index",
+      );
+    } # end fireach stock_index
+  } # end if
 
-    return @v;
-
+  return @v;
 } # end sub has_overrides
 
 sub outputs {
 }
+
 sub no_outputs {
 }
 
@@ -110,18 +111,18 @@ sub signature_needs {
 sub neccessary {
 	my ( $Project ) = @_;
 
-    my $ServiceType = openprint::ServiceType->find_one( type=>'Paper' );
-    return 0 if ( ! $ServiceType ) or sets::isin( $ServiceType->id(), $Project->Type()->blocked_services() );
+  my $ServiceType = openprint::ServiceType->find_one( type=>'Paper' );
+  return 0 if ( ! $ServiceType ) or sets::isin( $ServiceType->id(), $Project->Type()->blocked_services() );
 
 	my $services = $Project->services();
 	return 0 if $$services{NoPrinting};
 
-    foreach my $signature_service_index ( $Project->signatures() ) {
-        my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-        if ( signature_needs( $Project, $sig_specs ) ) {
-            return 1;
-        } # end if
-    } # end foreach
+  foreach my $signature_service_index ( $Project->signatures() ) {
+    my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+    if ( signature_needs( $Project, $sig_specs ) ) {
+      return 1;
+    } # end if
+  } # end foreach
 	return 0;
 } # end sub neccessary
 
@@ -132,9 +133,11 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		delete $$specs{'txtPrice'.$qty_index};
-		delete $$specs{'MPrice'.$qty_index};
-	} # end foreach qty_index
+    if (!$$specs{'OverridePrice'.$qty_index} or $$specs{'OverridePrice'.$qty_index} ne 'Y') {
+      delete $$specs{'txtPrice'.$qty_index};
+      delete $$specs{'MPrice'.$qty_index};
+    }
+  } # end foreach qty_index
 
 	# Totals is storing the native qty, ie lbs for rolls, sheets for sheets
 	my %totals;
@@ -341,17 +344,19 @@ $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 		} # end foreach qty_index
 	} # end foreach Stock
 
-
-
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{"txtPrice$qty_index"} = 0;
-		foreach my $Stock_Entry ( @Stocks ) {
-			my $stock_index = $$Stock_Entry{index};
-			$$specs{"txtPrice$qty_index"} += $$specs{"price-$stock_index-$qty_index"};
-		} # end foreach Stock
-		$$specs{"MPrice$qty_index"} = sprintf($openprint::config{UnitPriceFormat}, $$specs{"MPrice$qty_index"} * (1+$Project->markup()/100) );
-		$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} * (1+$Project->markup()/100) );
-$openprint::log->debug("Price $qty_index " . $$specs{"txtPrice$qty_index"} ) if DEBUG;
+    if (!$$specs{'OverridePrice'.$qty_index} or $$specs{'OverridePrice'.$qty_index} ne 'Y') {
+      $$specs{"txtPrice$qty_index"} = 0;
+      foreach my $Stock_Entry ( @Stocks ) {
+        my $stock_index = $$Stock_Entry{index};
+        $$specs{"txtPrice$qty_index"} += $$specs{"price-$stock_index-$qty_index"};
+      } # end foreach Stock
+      $$specs{"MPrice$qty_index"} = sprintf($openprint::config{UnitPriceFormat},
+        $$specs{"MPrice$qty_index"} * (1+$Project->markup()/100) );
+      $$specs{"txtPrice$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat},
+        $$specs{"txtPrice$qty_index"} * (1+$Project->markup()/100) );
+      $openprint::log->debug("Price $qty_index " . $$specs{"txtPrice$qty_index"} ) if DEBUG;
+    } # end if override
 	} # end foreach qty_index
 
 	return $$specs{Status};

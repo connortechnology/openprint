@@ -24,10 +24,12 @@
 			company_id	=>	$openprint::User->company_id(),
 			date_filter( $uri.'?starting_end', 'created_on <=' ),
 			date_filter( $uri.'?starting_start', 'created_on >=' ),
+			date_filter( $uri.'?paid_on_end', 'paid_on <=' ),
+			date_filter( $uri.'?paid_on_start', 'paid_on >=' ),
 			order		=>	'id desc',
 		);
-		$search{deleted} = $session{$uri.'?deleted'} if exists $session{'/employee/purchase_order/history.html?deleted'};
-		$search{supplier_id} = $session{$uri.'?supplier_id'} if $session{'/employee/purchase_order/history.html?supplier_id'};
+		$search{deleted} = $session{$uri.'?deleted'} if exists $session{$uri.'?deleted'};
+		$search{supplier_id} = $session{$uri.'?supplier_id'} if $session{$uri.'?supplier_id'};
 		if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $session{user_id} ) ) { 
 			if ( $session{$uri.'?created_by'} ) {
 				$search{created_by} = $session{$uri.'?created_by'};
@@ -41,8 +43,8 @@
 		if ( $session{$uri.'?has_manifest'} ne '' ) {
 			$search{'manifest_id is null'} = $session{$uri.'?has_manifest'} eq '1' ? 0 : 1;
 		}
-		$search{cancelled} = $session{$uri.'?cancelled'} if $session{'/employee/purchase_order/history.html?cancelled'} ne '';
-		$search{'item_id any'} = $session{$uri.'?item_id'} if $session{'/employee/purchase_order/history.html?item_id'};
+		$search{cancelled} = $session{$uri.'?cancelled'} if $session{$uri.'?cancelled'} ne '';
+		$search{'item_id any'} = $session{$uri.'?item_id'} if $session{$uri.'?item_id'};
 
 		@{$$variable{PurchaseOrders}} = ();
 		my $ac = sql::start_transaction( $dbh );
@@ -68,6 +70,11 @@
 			if ( ( ! $PO->authorized() ) and ( $PO->created_by() == $session{user_id} ) and ( $PO->can_authorize() ) ) {
 				$PO->save({authorized=>1,authorized_on=>'NOW()',authorized_by=>$session{user_id}});
 			} # end if
+
+			if ( defined($session{$uri.'?paid'}) and $session{$uri.'?paid'} ne '' ) {
+				next if $session{$uri.'?paid'} eq '1' and ! $PO->is_paid();
+				next if $session{$uri.'?paid'} eq '0' and $PO->is_paid();
+			}
 
 			if ( $session{$uri.'?authorized'} eq 'Y' and $PO->authorized() ne '1' ) {
 				$log->debug("Next want authd but isn't");
@@ -129,6 +136,14 @@
 			if ( $session{$uri.'?department_id'} ) {
 				next if ! sets::isin( $session{$uri.'?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
 			} # end if
+
+      if ( $session{$uri.'?has_attachments'} ne '' ) {
+        if ( $PO->Assets() ) {
+          next if ! $session{$uri.'?has_attachments'};
+        } else {
+          next if $session{$uri.'?has_attachments'};
+        }
+      }
 
 			push @{$$variable{PurchaseOrders}}, $PO;
 			$POs{$$PO{id}} = $PO;
@@ -223,6 +238,7 @@
 			} # end if
 
 			my $qty = misc::sum( map { ( (!($$variable{types} and %{$$variable{types}})) or $$variable{types}{$_->type_id()} ) ? $_->qty() : 0 } $PO->Contents() );
+			my %statuses = ( cancelled => 'Cancelled', do_not_pay=>'Do Not Pay', is_paid=>'Paid', deleted=>'Deleted' );
 
 			$html .= sprintf( q`
 				<td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td>
@@ -239,7 +255,7 @@
 				$PO->cancelled() ? 'CANCELLED' : ( $PO->can_see_pricing() ? openprint::Currency::format($total) : '' ), 
 				( ( $PO->authorized() and ! $PO->authorized_by() ) ? 'Authorized' : $PO->Authorized_By()->name() ),
 				$PO->Manifest()->name(),
-				join(' ', map { $PO->$_() ? $_ : () } ( 'cancelled','do_not_pay' ) ),
+				join(' ', map { $PO->$_() ? $statuses{$_} : () } keys %statuses ),
 				join('<br/>', sets::exclude( [''], [ sets::union( map { $_->docket() } $PO->Contents() ) ] ) ),
 				Number::Format::format_number( $qty ),
 				);

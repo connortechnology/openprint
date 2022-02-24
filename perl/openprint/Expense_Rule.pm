@@ -51,19 +51,21 @@ sub match {
   my ( $self, $line ) = @_;
   foreach my $rule ( $self->rules() ) {
     foreach my $key ( keys %{$rule} ) {
-    $openprint::log->debug("rule: $key $$rule{$key}");
+      #$openprint::log->debug("rule: $key $$rule{$key}");
       my @matches;
-      if ( $$rule{$key} =~ /^\/(.*)\/$/ ) {
-        @matches = $$line{$key} =~ /$1/;
-        $openprint::log->debug("testing $key $$line{$key} =~ $$rule{$key} @matches $?");
-        if ( @matches ) {
-          #$openprint::log->debug("Have matches ".%+);
-          foreach my $p ( keys %+ ) {
-            $$self{matches}{$p} = $+{$p};
-            $openprint::log->debug("Have matches $p => " . $$self{matches}{$p});
+      if ( $$rule{$key} =~ /^\/(.*)\/\w*$/ ) {
+        if ( $$line{$key} ) {
+          @matches = $$line{$key} =~ /$1/i;
+          #$openprint::log->debug("testing $key $$line{$key} =~ $$rule{$key} @matches $?");
+          if ( @matches ) {
+            #$openprint::log->debug("Have matches ".%+);
+            foreach my $p ( keys %+ ) {
+              $$self{matches}{$p} = $+{$p};
+              $openprint::log->debug("Have matches $p => " . $$self{matches}{$p});
+            }
+            return scalar @matches;
           }
-          return scalar @matches;
-        }
+        }  # end if $$line{key}
       } else {
         $openprint::log->error("Unknown test $key $$rule{$key}");
       } # end if rule type
@@ -92,7 +94,7 @@ sub apply {
         $Expense->$key($action{$key});
       }
     }
-    $openprint::log->debug("Applied actoin $key $action{$key} = $$Expense{$key}\n".$Expense->to_string());
+    $openprint::log->debug("Applied action $key $action{$key}, result: ".(defined($$Expense{$key})?$$Expense{$key}:'undef')."\n".$Expense->to_string());
   } # end foreach key
 } # end sub apply
 

@@ -17,21 +17,25 @@ require openprint::Invoice_Payment;
 require openprint::Expense_Account;
 
 sub history {
-	if ( $param{btnFunction} eq 'Delete' ) {
-		my $Payment = new openprint::Payment( $param{payment_id} );
-		$variable{error} .= $Payment->delete();
-	} elsif ( $param{btnFunction} eq 'UnDelete' ) {
-		my $Payment = new openprint::Payment( $param{payment_id} );
-		$variable{error} .= $Payment->undelete();
-	} elsif ( $param{btnFunction} eq 'Destroy' ) {
-		my $Payment = new openprint::Payment( $param{payment_id} );
-		$variable{error} .= $Payment->destroy();
-	} elsif ( $param{btnFunction} eq 'Send Receipt' ) {
-		my $Payment = new openprint::Payment( $param{payment_id} );
-		$variable{error} .= $Payment->send_receipt();
-	} elsif ( $param{btnFunction} eq 'Send Receipt To Me' ) {
-		my $Payment = new openprint::Payment( $param{payment_id} );
-		$variable{error} .= $Payment->send_receipt( $openprint::User );
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Delete' ) {
+			my $Payment = new openprint::Payment( $param{payment_id} );
+			$variable{error} .= $Payment->delete();
+		} elsif ( $param{btnFunction} eq 'UnDelete' ) {
+			my $Payment = new openprint::Payment( $param{payment_id} );
+			$variable{error} .= $Payment->undelete();
+		} elsif ( $param{btnFunction} eq 'Destroy' ) {
+			my $Payment = new openprint::Payment( $param{payment_id} );
+			$variable{error} .= $Payment->destroy();
+		} elsif ( $param{btnFunction} eq 'Send Receipt' ) {
+			my $Payment = new openprint::Payment( $param{payment_id} );
+			$variable{error} .= $Payment->send_receipt();
+		} elsif ( $param{btnFunction} eq 'Send Receipt To Me' ) {
+			my $Payment = new openprint::Payment( $param{payment_id} );
+			$variable{error} .= $Payment->send_receipt( $openprint::User );
+		} else {
+			$log->error("Unknonwn function in payment_history $param{btnFunction}");
+		}
 	} else {
 		_history();
 		ssi::setup_date_select( '/payment/history.html', 'received_on_start', -31 );

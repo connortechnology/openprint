@@ -4,6 +4,7 @@ use strict;
 require ssi;
 require openprint::Company;
 require openprint::Project;
+require openprint::Quote;
 require openprint::Project_Log;
 require openprint::Order_Status;
 require openprint::OrderedProduct;
@@ -352,7 +353,7 @@ sub _order_history_results {
 		( map { 'printed_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'printed_on_end_'.$_ } ( 'year','month','day' ) ),
 		'status', 'company_id', 'CSR', 'reprint', 'currency_id', 'total_start', 'total_end',
-		'servicetype_id', 'servicetype_category_id',
+		'servicetype_id', 'servicetype_category_id', 'pos', 'fsc',
 	);
 
 	my @ServiceTypes = @{$variable{ServiceTypes}} = openprint::ServiceType->find(order=>'lower(description)');
@@ -401,8 +402,8 @@ sub _order_history_results {
 			ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 			ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
 			( $session{$uri.'?status'} ? ( status_id => [ split(',', $session{$uri.'?status'} ) ] ) : () ),
-			( $session{$uri.'?total_start'} ? ( 'total >=' => $session{$uri.'?total_start'} ) : () ),
-			( $session{$uri.'?total_end'} ? ( 'total <=' => $session{$uri.'?total_end'} ) : () ),
+			( $session{$uri.'?total_start'} ne '' ? ( 'total >=' => $session{$uri.'?total_start'} ) : () ),
+			( $session{$uri.'?total_end'} ne '' ? ( 'total <=' => $session{$uri.'?total_end'} ) : () ),
 			( $session{$uri.'?currency_id'} ? ( currency_id=>$session{$uri.'?currency_id'} ) : () ),
 			order => ($param{order} ? $openprint::Order::fields{$param{order}} : 'id'),
 		);
@@ -452,6 +453,11 @@ sub _order_history_results {
 				next if ( $param{reprint} eq 'Y' ) and ! $reprint;
 				next if ( $param{reprint} eq 'N' ) and $reprint;
 			} # end if reprint
+
+			if ( $param{fsc} ne '' ) {
+				next if ( $param{fsc} == 1 ) and ! $Order->is_fsc();
+				next if ( $param{fsc} == 0 ) and $Order->is_fsc();
+			}
 
 			my @printed_on_start = map{ @session{$uri.'?printed_on_start_'.$_} } ( 'year','month','day' );
 			my $printed_on_start = join('-', @printed_on_start) if Date::Calc::check_date(@printed_on_start);

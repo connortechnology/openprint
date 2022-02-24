@@ -27,6 +27,7 @@ STAT=/usr/bin/stat;
 FIND=/usr/bin/find;
 NICE="/usr/bin/nice -n19";
 IONICE="/usr/bin/ionice -c3";
+NOCACHE=`/usr/bin/which nocache`
 
 CP="$NICE $IONICE $CP";
 RSYNC="$NICE $IONICE $RSYNC";
@@ -128,10 +129,10 @@ fi
 echo "Size of last backup: $OLDDU"
 if [[ $SOURCE =~ : ]]; then
 	if [ DEBUG ]; then echo "$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file=$DEST$TYPE.new.log $@ -e ssh -T -x $SOURCE $DEST$TYPE.new"; fi;
-	$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file="$DEST$TYPE.new.log" $@ -e "ssh -T -c aes128-ctr -o Compression=no -x" "$SOURCE" "$DEST$TYPE.new"
+	$TIME$NOCACHE$RSYNC -aHx --delete-delay --delete-excluded --log-file="$DEST$TYPE.new.log" $@ -e "ssh -T -c aes128-ctr -o Compression=no -x" "$SOURCE" "$DEST$TYPE.new"
 else
 if [ DEBUG ]; then echo "$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file=$DEST$TYPE.new.log $@ $SOURCE $DEST$TYPE.new"; fi;
-	$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file="$DEST$TYPE.new.log" $@ "$SOURCE" "$DEST$TYPE.new"
+	$TIME$NOCACHE $RSYNC -aHx --delete-delay --delete-excluded --log-file="$DEST$TYPE.new.log" $@ "$SOURCE" "$DEST$TYPE.new"
 fi
 if [ $? != 0 -a $? != 24 ]; then
     echo "rsync return non-zero code. ($?)"

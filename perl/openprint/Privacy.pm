@@ -28,61 +28,61 @@ $serial = 'privacy_id_seq';
 %defaults = (
 );
 sub Object {
-	return $_[0]->object_type()->new( $_[0]{'object_id'} );
+	return $_[0]->object_type()->new( $_[0]{object_id} );
 } # end sub Object
 
 sub privacy_mode {
 $openprint::log->debug("Privacy mode! $_[1]");
-	$_[0]{'mode'} = $_[1] if @_ > 1;
-	return $_[0]{'mode'};
+	$_[0]{mode} = $_[1] if @_ > 1;
+	return $_[0]{mode};
 }
 
 sub user_id {
 	my $self = shift;
 	if ( @_ > 1 ) {
 		# passing in an array
-		$$self{'user_id'} = [@_];
+		$$self{user_id} = [@_];
 	} elsif ( @_ == 1 ) {
 		if ( ref $_[0] eq 'ARRAY' ) {
-			$$self{'user_id'} = @{$_[0]} ? $_[0] : undef;
+			$$self{user_id} = @{$_[0]} ? $_[0] : undef;
 		} else {
-			$$self{'user_id'} = $_[0] ? [ $_[0] ] : undef;
+			$$self{user_id} = $_[0] ? [ $_[0] ] : undef;
 		} # end if
 	} # end if
-	if ( ! $$self{'user_id'} ) {
-		$$self{'user_id'} = [];
+	if ( ! $$self{user_id} ) {
+		$$self{user_id} = [];
 	} 
-	return $$self{'user_id'};
+	return $$self{user_id};
 }
 
 sub usergroup_id {
 	my $self = shift;
 	if ( @_ > 1 ) {
 		# passing in an array
-		$$self{'usergroup_id'} = [@_];
+		$$self{usergroup_id} = [@_];
 	} elsif ( @_ == 1 ) {
 		if ( ref $_[0] eq 'ARRAY' ) {
-			$$self{'usergroup_id'} = @{$_[0]} ? $_[0] : undef;
+			$$self{usergroup_id} = @{$_[0]} ? $_[0] : undef;
 		} else {
-			$$self{'usergroup_id'} = $_[0] ? [ $_[0] ] : undef;
+			$$self{usergroup_id} = $_[0] ? [ $_[0] ] : undef;
 		} # end if
 	} # end if
-	return $$self{'usergroup_id'} ? $$self{'usergroup_id'} : [];
+	return $$self{usergroup_id} ? $$self{usergroup_id} : [];
 }
 
 sub relationship_type_id {
 	my $self = shift;
 	if ( @_ > 1 ) {
 		# passing in an array
-		$$self{'relationship_type_id'} = [@_];
+		$$self{relationship_type_id} = [@_];
 	} elsif ( @_ == 1 ) {
 		if ( ref $_[0] eq 'ARRAY' ) {
-			$$self{'relationship_type_id'} = @{$_[0]} ? $_[0] : undef;
+			$$self{relationship_type_id} = @{$_[0]} ? $_[0] : undef;
 		} else {
-			$$self{'relationship_type_id'} = $_[0] ? [ $_[0] ] : undef;
+			$$self{relationship_type_id} = $_[0] ? [ $_[0] ] : undef;
 		} # end if
 	} # end if
-	return $$self{'relationship_type_id'} ? $$self{'relationship_type_id'} : [];
+	return $$self{relationship_type_id} ? $$self{relationship_type_id} : [];
 }
 
 sub can_view {
@@ -91,13 +91,13 @@ $openprint::log->debug("Privacy: Object: " . $_[0]->to_string() ) if $debug;
 	my $User = new openprint::User( $user_id );
 	return 1 if $$User{type} eq 'A';
 $openprint::log->debug("Prinvacu::can_view; not admin") if $debug;
-	if ( $_[0]{'mode'} eq 'public' ) {
+	if ( $_[0]{mode} eq 'public' ) {
 $openprint::log->debug("Prinvacu::can_view; public") if $debug;
 		return 1;
-	} elsif ( $_[0]{'mode'} eq 'logged_in' ) {
+	} elsif ( $_[0]{mode} eq 'logged_in' ) {
 $openprint::log->debug("Prinvacu::can_view; logged in") if $debug;
 		return 1 if $user_id;
-	} elsif ( $_[0]{'mode'} eq 'specific' ) {
+	} elsif ( $_[0]{mode} eq 'specific' ) {
 $openprint::log->debug("Prinvacu::can_view; specfic") if $debug;
 		if ( @{$_[0]->usergroup_id()} ) {
 			my @Groups = openprint::UserGroup->find('user_id any'=>$user_id );
@@ -112,13 +112,13 @@ $openprint::log->debug("Prinvacu::can_view; specfic") if $debug;
 
 			return 1 if sets::intersection( @{$_[0]->relationship_type_id()}, @type_ids );
 		} # end if
-		if ( $_[0]->user_id() and sets::isin( $user_id, $_[0]->user_id() ) ) {
+		if ( $user_id and $_[0]->user_id() and sets::isin( $user_id, $_[0]->user_id() ) ) {
 			return 1;
 		} # end if
-	} elsif ( $_[0]{'mode'} eq 'onlyyou' ) {
+	} elsif ( $_[0]{mode} eq 'onlyyou' ) {
 		return 1 if $_[0]->Object()->created_by() == $user_id;
 	} else {
-		$openprint::log->warn("Unknown value for privacy mode: ".$_[0]{'mode'} );
+		$openprint::log->warn("Unknown value for privacy mode: ".$_[0]{mode} );
 	} # end if
 	return 0;
 } # end sub can_view
