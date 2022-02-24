@@ -114,6 +114,12 @@ if ( ! sets::isin( 'company_categories', \@tables ) ) {
 	} # end if
 } # endif
 
+if ( ! sets::isin( 'quotelevels', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../../sql/QuoteLevels.sql}) );
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
+} # end if
+
 if ( ! sets::isin( 'companies', \@tables ) ) {
 	if ( ! sets::isin( 'company', \@tables ) ) {
 		$dbh->do( misc::load_file( $log, q{../../sql/Companies.sql}) );
@@ -284,11 +290,6 @@ if ( ! sets::isin( 'quotes', \@tables ) ) {
 } # end if
 
 
-if ( ! sets::isin( 'quotelevels', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/QuoteLevels.sql}) );
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
-	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
-} # end if
 
 if ( ! sets::isin( 'user_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/User_Types.sql}) );
@@ -541,10 +542,6 @@ if ( ! sets::isin( 'invoices_id_seq', \@sequences ) ) {
 	$dbh->do('CREATE SEQUENCE invoices_id_seq');
 } # en dif
 
-if ( !sets::isin('invoices_payments', \@tables) ) {
-	load_sql('Invoices_Payments');
-}
-
 if ( ! sets::isin( 'order_statuses', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Order_Statuses.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -579,6 +576,51 @@ if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
 
 if ( ! sets::isin( 'orders', \@tables ) ) {
 	load_sql( 'Orders' );
+}
+
+if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+}
+
+if ( ! sets::isin( 'expenses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../../sql/Expenses.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	$dbh->do('ALTER TABLE expenses ALTER category_id DROP NOT NULL');
+
+  my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='expenses'", 'column_name');
+  if ( ! exists $$data{amount_locked} ) {
+    $dbh->do('ALTER TABLE expenses add amount_locked BOOLEAN NOT NULL default false');
+  }
+  if ( ! exists $$data{total_locked} ) {
+    $dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
+  }
+  if ( ! exists $$data{attention} ) {
+    $dbh->do('ALTER TABLE expenses add attention BOOLEAN NOT NULL default false');
+  }
+  if ( ! exists $$data{business_use_amount} ) {
+    $dbh->do('ALTER TABLE expenses add business_use_amount float');
+  }
+  if ( ! exists $$data{account_id} ) {
+    $dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+    $dbh->do('ALTER TABLE expenses add account_id INTEGER');
+    $dbh->do('ALTER TABLE expenses add FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)');
+  }
+  if ( ! exists $$data{deleted} ) {
+    $dbh->do('ALTER TABLE expenses ADD deleted BOOLEAN NOT NULL default false');
+  }
+  if ( ! exists $$data{transaction_id} ) {
+    print "Add transaction_id to expenses\n";
+    $dbh->do('ALTER TABLE expenses ADD  transaction_id text');
+  }
+}
+
+if ( ! sets::isin( 'expense_taxes', \@tables ) ) {
+  print "Adding Expense Taxes\n";
+	$dbh->do( misc::load_file( $log, '../../sql/Expense_Taxes.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
 }
 
 if ( ! sets::isin('payments', \@tables) ) {
@@ -685,6 +727,10 @@ if ( ! sets::isin('payments', \@tables) ) {
     $dbh->do('ALTER TABLE Payments ADD FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)') or die $dbh->errstr();
   }
 } # end if
+
+if ( !sets::isin('invoices_payments', \@tables) ) {
+	load_sql('Invoices_Payments');
+}
 
 	# Check orders structure, don't have to check for existence because we did that twice above
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
@@ -4737,50 +4783,6 @@ if ( sets::isin('users', \@tables ) ) {
 	$dbh->do('ALTER TABLE Users ALTER firstname DROP NOT NULL');
 } # end if
 
-if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
-	die $dbh->errstr() if $dbh->errstr();
-}
-
-if ( ! sets::isin( 'expenses', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../../sql/Expenses.sql' ) );
-	die $dbh->errstr() if $dbh->errstr();
-} else {
-	$dbh->do('ALTER TABLE expenses ALTER category_id DROP NOT NULL');
-
-  my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='expenses'", 'column_name');
-  if ( ! exists $$data{amount_locked} ) {
-    $dbh->do('ALTER TABLE expenses add amount_locked BOOLEAN NOT NULL default false');
-  }
-  if ( ! exists $$data{total_locked} ) {
-    $dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
-  }
-  if ( ! exists $$data{attention} ) {
-    $dbh->do('ALTER TABLE expenses add attention BOOLEAN NOT NULL default false');
-  }
-  if ( ! exists $$data{business_use_amount} ) {
-    $dbh->do('ALTER TABLE expenses add business_use_amount float');
-  }
-  if ( ! exists $$data{account_id} ) {
-    $dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-    $dbh->do('ALTER TABLE expenses add account_id INTEGER');
-    $dbh->do('ALTER TABLE expenses add FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)');
-  }
-  if ( ! exists $$data{deleted} ) {
-    $dbh->do('ALTER TABLE expenses ADD deleted BOOLEAN NOT NULL default false');
-  }
-  if ( ! exists $$data{transaction_id} ) {
-    print "Add transaction_id to expenses\n";
-    $dbh->do('ALTER TABLE expenses ADD  transaction_id text');
-  }
-}
-
-if ( ! sets::isin( 'expense_taxes', \@tables ) ) {
-  print "Adding Expense Taxes\n";
-	$dbh->do( misc::load_file( $log, '../../sql/Expense_Taxes.sql' ) );
-	die $dbh->errstr() if $dbh->errstr();
-}
 
 if ( ! sets::isin( 'host_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Host_Types.sql' ) );
@@ -5807,6 +5809,10 @@ if ( sets::isin('product_specifications', \@tables ) ) {
 	$dbh->do('DROP TABLE product_specifications');
 }
 
+if ( sets::isin('backup_types', \@tables ) ) {
+  $dbh->do('DROP TABLE Backup_Types') or die $dbh->errstr();
+}
+
 if ( ! sets::isin('backups', \@tables ) ) {
   $log->debug("Adding Backups");
   $dbh->do( misc::load_file( $log, q{../../sql/Backups.sql}) );
@@ -5835,9 +5841,6 @@ if ( ! sets::isin('backups', \@tables ) ) {
 		$dbh->do('ALTER TABLE Backups add owner_id INTEGER') or die $dbh->errstr();
 		$dbh->do('ALTER TABLE Backups add FOREIGN KEY (owner_id) REFERENCES Companies (id)') or die $dbh->errstr();
   }
-}
-if ( sets::isin('backup_types', \@tables ) ) {
-  $dbh->do('DROP TABLE Backup_Types') or die $dbh->errstr();
 }
 
 if ( ! sets::isin('operator_roles', \@tables ) ) {
