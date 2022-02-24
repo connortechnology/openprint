@@ -129,8 +129,12 @@ sub handler {
 	openprint::usergroup::init_cache();
 	if ( $dbh ) {
 
-		if ( !$session{user_id} and !openprint::User->find_one(type=>'A') ) {
-			$page = '/administrator/managerial/user_profiles.html';
+    if ( !$session{user_id} and !openprint::User->find_one(type=>'A') ) {
+      if (!openprint::Company->find_one()) {
+        $page = '/administrator/managerial/company_profiles.html';
+      } else {
+        $page = '/administrator/managerial/user_profiles.html';
+      }
 			$session{user_type} = 'A';
 		} else {
 
