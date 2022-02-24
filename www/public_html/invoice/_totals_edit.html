@@ -10,7 +10,9 @@
 						); ) ?>
 					</span>
 				</li>
+        <?include(_taxes_edit.html)?>
 				<? echo ( 
+            return;
 					my $html;
 					foreach my $Tax ( $$variable{Invoice}->Taxes() ) {
 						$html .= sprintf('<li class="tax"><label>%s (%d%)</label>%s</li>', 

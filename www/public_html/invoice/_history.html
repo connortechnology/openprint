@@ -49,8 +49,8 @@
               htmlize( $Invoice->Invoicee()->name() ),
             4 + scalar @{$$variable{Taxes}},
               );
-				}  else {
-				$html .= sprintf(q`<tr%1$s title="%4$s"> 
+				} else {
+          $html .= sprintf(q`<tr%1$s title="%4$s"> 
 						<td class="invoice_id"><a href="/invoice/view.html?invoice_id=%2$d">%2$d</a></td>
 						<td class="invoice_num"><a href="/invoice/view.html?invoice_id=%2$d">%3$s</a></td>
 						<td class="Date created_on"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>

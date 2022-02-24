@@ -133,3 +133,23 @@ function invoicee_change(ddm) {
 		} );
 	} // end if invoice_id
 } // end function invoicee_change(ddm)
+
+function add_tax( tax_id ) {
+  new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: {
+    invoice_id: invoice_id,
+    action: 'add',
+    tax_id: tax_id
+    }, evalScripts: true } );
+}
+function delete_tax( tax_id ) {
+  new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: {
+    invoice_id: invoice_id,
+    action: 'delete',
+    tax_id: tax_id
+    }, evalScripts: true } );
+}
+function update_taxes( form ) {
+  if ( invoice_id ) {
+    new Ajax.Updater( 'Taxes', '_taxes_edit.html?action=reset&invoice_id='+invoice_id, { parameters: form.serialize() } );
+  }
+} // end function update_taxes
