@@ -382,10 +382,12 @@ sub view {
 							compounded_on	=>	sprintf('%.4d-%.2d-%.2d', $year, $month, $day ),
 							});
 					if ( ! $_ ) {
+            my $note = sprintf('Added %s%.2f interest for %s', $Invoice->Currency()->symbol(), $I->amount(), $date_string);
 						(new openprint::Log())->save({
 							Object	=>	$Invoice,
-							note	=>	sprintf('Added %s%.2f interest for %s', $Invoice->Currency()->symbol(), $I->amount(), $date_string),
+							note	=>	$note,
 							action	=>	'Invoice Interest Added'});
+            $variable{information} .= $note.'<br/>';
 					} else {
 						$variable{error} .= $_;
 						last;
@@ -403,7 +405,8 @@ sub view {
 			delete $$Invoice{interest};
 			$Invoice->interest();
 			$Invoice->save();
-		} # e,nd if
+		} # end if
+    $variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
 	} elsif ( $param{btnFunction} eq 'Post' ) {
 		if ( ! ( $variable{error} .= $Invoice->save({posted=>1,posted_on=>'NOW()'}) ) ) {
 			(new openprint::Log())->save({ Object=>$Invoice, action => 'Invoice Posted'});
