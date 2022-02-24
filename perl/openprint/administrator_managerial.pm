@@ -1179,11 +1179,12 @@ sub users {
 		} # end if Download
 	} # end if btnFunction
 }
+
 sub _users {
 	my $uri = '/administrator/managerial/users.html';
 	ssi::save_params($uri,(
 				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email','type','administrator',
-				'notification_type_id',
+				'notification_type_id', 'web_active', 'ftp_active',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );
@@ -1198,7 +1199,7 @@ sub _users {
 		$variable{Users} = [ openprint::User->find( %filters ) ];
 	} else {
 		my %filters = (
-				( map { $session{join('?', $uri, $_)} ? ( $_ => $session{join('?', $uri, $_) } ) : () } ( 'company_id','type' ) ),
+				( map { $session{join('?', $uri, $_)} ? ( $_ => $session{join('?', $uri, $_) } ) : () } ( 'company_id','type', 'web_active', 'ftp_active' ) ),
 				ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
 				ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 				);
@@ -1230,7 +1231,7 @@ sub _users {
 		} else {
 			$variable{Users} = \@Users;
 		}
-	}
+	} # end if filtering by email or other
 } # end sub _users
 
 sub mailqueue {

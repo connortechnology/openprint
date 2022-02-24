@@ -60,17 +60,18 @@ foreach my $required ( qw( db_host db_name ) ) {
 $config{db_user} = $config{db_name} if ! $config{db_user};
 $config{db_pass} = $config{db_name} if ! $config{db_pass};
 
-$dbh = sql::open_sql( $log,
+my %sql_config = (
 		host      => $config{db_host},
 		database  => $config{db_name},
 		driver    => 'Pg',
 		login     => $config{db_user},
 		password  => $config{db_pass},
 		);
-die 'Error opening db' if ! $dbh;
+
+$dbh = sql::open_sql($log, %sql_config) or die 'Error opening db';
 configuration::from_db( );
-configuration::from_file( $$opts{config} );
-configuration::merge( $opts );
+configuration::from_file($$opts{config});
+configuration::merge($opts);
 $config{log_level} = 'debug' if ! $config{log_level};
 $log = logger->new( {file=>$config{log_file}, level=>$config{log_level}} );
 
@@ -103,6 +104,8 @@ foreach my $Equipment ( @Equipment ) {
 		print "Cannot open input hotfolder for $$Equipment{name} at $$Equipment{cip3_in}";
 		next;
 	} # end if
+	my @filenames = readdir DIRHANDLE;
+	closedir DIRHANDLE;
 
 	if ( $$Equipment{cip3_merge} ) {
 		#$log->warn("Merging..." ) if $debug;
@@ -112,7 +115,7 @@ foreach my $Equipment ( @Equipment ) {
 
 		foreach my $file ( @Bs ) {
 			# Will ignore ., .., any hidden file
-			next if $file =~ /^\./; 
+			next if $file =~ /^\./;
 			next if -d $Equipment->cip3_in().'/'.$file;
 			my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
 $log->debug("Parsed to $file_base, $side, $extension from $file") if $debug;
@@ -131,54 +134,37 @@ $log->debug('Not a B') if $debug;
 			$sig = 0 if ! $sig;
 			my $data;
 			$side = 'M';
-#$log->warn("FIlenames before: @filenames");
-			if ( ! sets::isin( $file_base.'A.'.$extension, \@filenames ) ) {
-				$log->warn( "A file not found " . $$Equipment{'cip3_in'}.'/'.$file_base."A.$extension ignoring B\n" );
+			if ( ! sets::isin($file_base.'A.'.$extension, \@filenames) ) {
+				$log->warn('A file not found '.$$Equipment{cip3_in}.'/'.$file_base.'A.'.$extension.' ignoring B');
 				next;
 			} # end if
-			@filenames = sets::exclude( [$file_base.'A.'.$extension,$file_base.'B.'.$extension], \@filenames );	
-#$log->warn("FIlenames after: @filenames");
+			@filenames = sets::exclude( [$file_base.'A.'.$extension,$file_base.'B.'.$extension], \@filenames );
 
-			if ( ! open ( FH, '< ' . $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension ) ) {
-				$log->error( "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."B.$extension\n" );
+			if ( ! open(FH, '< '.$$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension) ) {
+				$log->error('Error opening '.$$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension);
 				next;
 			} # end if
 			if ( ! flock(FH, LOCK_EX) ) {
-				$log->error("Unable to lock B!");
+				$log->error('Unable to lock B!');
 				close(FH);
 				next;
 			} # end if
 
 			my @Back;
-			my $back_flag = 0;	
+			my $back_flag = 0;
 			while ( <FH> ) {
 				my $line = $_;
 				$back_flag = 1 if ( $line =~ /CIP3BeginBack/ );
-if ( $mangle ) {
-				if ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
-					my $job_name = $1;
-					if ( length $job_name > 16 ) {
-						if ( my ( $pre, $j_name, $sig ) = ( $job_name =~ /(\d+\w\w)(.+)SIG(\d\d\d)/ ) ) {
-							$line = '/CIP3AdmJobName ('.$pre.(substr($j_name,0,4)).'Sg'.$sig."SdB) def\r\n";
-						} else {
-							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
-						} # end if
-					} # end if
-				} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
-					if ( ! $1 ) {
-						$line = "/CIP3AdmJobCode ($docket) def\r\n";
-					} # end if
-				} # end if
-} # end if
-				push @Back, $line if ( $back_flag );
+				push @Back, $line if $back_flag;
 				last if $line =~ /CIPEndBack/;
 			} # end while FH
 			close(FH);
-			if ( ! @Back ) {
+			if ( !@Back ) {
 				$log->error('No Back found in B file!');
-				rename $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension, $$Equipment{'cip3_in'}.'/'.$file_base.'E.'.$extension;
+				rename $$Equipment{cip3_in}.'/'.$file_base.'B.'.$extension, $$Equipment{cip3_in}.'/'.$file_base.'E.'.$extension;
 				next;
 			} # end if
+			@Back = $PPF->convert_job_name(@Back) if $mangle;
 
 			my $A;
 			my $A_filename = $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
@@ -194,16 +180,23 @@ if ( $mangle ) {
 			my $fileA = $file_base.'A';
 			my $fileM = $file_base.'M';
 			my $complete = 0;
+
+			my @data;
 			while ( <$A> ) {
 				my $line = $_;
 				next if $line =~ /^CIP3EndSheet/;
 				if ( $line =~ /%%CIP3EndOfFile/ ) {
 					$complete = 1;
+					push @data, @Back;
+				} else {
+					$line =~ s/$fileA/$fileM/g;
+					$PPF->convert_sheet_name( $line );
+					$PPF->convert_job_name( $line ) if $mangle;
 				} # end if
 				$line =~ s/$fileA/$fileM/g;
 				if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1);
-				} 
+				}
 				if ( $mangle ) {
 					if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def(.*)/ ) {
 						if ( ! $1 ) {
@@ -237,26 +230,19 @@ if ( $mangle ) {
 				next;
 			} # end if
 
-			$dbh = sql::open_sql( $log,
-					host      => $config{db_host},
-					database  => $config{db_name},
-					driver    => 'Pg',
-					login     => $config{db_user},
-					password  => $config{db_pass},
-					);
-			die 'Error opening db' if ! $dbh;
+			$dbh = sql::open_sql($log, %sql_config) or die 'Error opening db';
 			my $PPF = store_PPF($docket, $name, $sig, $side, $Equipment, $data);
 			$PPF->send_ppf($Equipment) if ! $$Equipment{cip3_hold};
 			$dbh->disconnect();
 
 			if ( $debug ) {
-				File::Copy::move($$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension,
-						$$Equipment{'cip3_in'}.'/done/'.$file_base.'A.'.$extension);
-				File::Copy::move($$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension,
-						$$Equipment{'cip3_in'}.'/done/'.$file_base.'B.'.$extension);
+				File::Copy::move($$Equipment{cip3_in}.'/'.$file_base.'A.'.$extension,
+						$$Equipment{cip3_in}.'/done/'.$file_base.'A.'.$extension);
+				File::Copy::move($$Equipment{cip3_in}.'/'.$file_base.'B.'.$extension,
+						$$Equipment{cip3_in}.'/done/'.$file_base.'B.'.$extension);
 			} else {
-				unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
-				unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
+				unlink $$Equipment{cip3_in}.'/'.$file_base.'A.'.$extension;
+				unlink $$Equipment{cip3_in}.'/'.$file_base.'B.'.$extension;
 			}
 		} # end foreach file in input hotfolder
 	} # end if cip3_merge
@@ -264,7 +250,7 @@ if ( $mangle ) {
 #$log->warn("Remaining FIlenames before: @filenames");
 	foreach my $file ( @filenames ) {
 		# Will ignore ., .., any hidden file
-		next if $file =~ /^\./; 
+		next if $file =~ /^\./;
 		next if -d ($Equipment->cip3_in().'/'.$file);
 
 		if ( $file =~ /\.TIF$/i ) {
@@ -281,10 +267,9 @@ if ( $mangle ) {
 		} # end if
 
 		my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
-$log->warn("SINGLE SIDE Parsed to $file_base, $side, $extension from $file") if $debug;
+$log->debug("SINGLE SIDE Parsed to $file_base, $side, $extension from $file") if $debug;
 		my $out_base = $file_base;
 		$out_base =~ s/\./_/g;
-		my $data;
 
 		my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d+)(\w\w)?_?(.+?)S?g?(\d+)/i;
 
@@ -298,14 +283,15 @@ $log->warn("SINGLE SIDE Parsed to $file_base, $side, $extension from $file") if 
 			next;
 		} # end if
 		my $complete = 0;
+		my @data;
 		while ( <IN> ) {
 			my $line = $_;
 			if ( $line =~ /%%CIP3EndOfFile/ ) {
 				$complete = 1;
-			} 
+			}
 			if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 				$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1);
-			} 
+			}
 			if ( $mangle ) {
 				if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
 					if ( ! $1 ) {
@@ -322,23 +308,21 @@ $log->warn("SINGLE SIDE Parsed to $file_base, $side, $extension from $file") if 
 						} # end if
 					} # end if
 				} # end if
-			} # end if mangle
-			$data .= $line;
+			} # end if
+			push @data, $line;
 		} # end while
 		close IN;
 		if ( ! $complete ) {
 			$log->error('File was not complete! '.$Equipment->cip3_in().'/'.$file);
 			next;
 		} # end if
-		$dbh = sql::open_sql( $log,
-				host      => $config{db_host},
-				database  => $config{db_name},
-				driver    => 'Pg',
-				login     => $config{db_user},
-				password  => $config{db_pass},
-				);
-		die 'Error opening db' if ! $dbh;
-		my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
+
+# NOt sure if these should be here
+		@data = $PPF->convert_sheet_name( @data );
+		@data = $PPF->convert_job_name( @data );
+
+		$dbh = sql::open_sql($log, %sql_config) or die 'Error opening db';
+		my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, join('', @data));
 		$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 		if ( $debug ) {
 			File::Copy::move($$Equipment{cip3_in}.'/'.$file, $$Equipment{cip3_in}.'/done/'.$file);
@@ -391,7 +375,7 @@ sub store_PPF {
 			} # end foreach sig
 			if ( ! $found ) {
 				print "Adding new signature for $docket $sig $side\n";
-				$Project->add_signature( $sig, 'Ordered', { 
+				$Project->add_signature( $sig, 'Ordered', {
 						'txtPrice'.$Project->ordered_quantity_index()	=> 0,
 						txtSignatureType		=>	'Interior Pages',
 						txtServiceDescription	=>	'Interior Pages',
@@ -411,8 +395,8 @@ sub usage {
 usage: $program [--help] [--db_name \$db_name] [--db_host \$db_host] [--db_user \$db_user] [--db_pass \$db_pass]
 
 The purpose of this script is to monitor the hotfolders configured for each
-press for PPF files and perform conversions for Heidelberg JDF, Merge front 
-and backs for presses that require it, and to import the PPF previews and 
+press for PPF files and perform conversions for Heidelberg JDF, Merge front
+and backs for presses that require it, and to import the PPF previews and
 other data into the IntelligentQuote system.
 
 Command-line options:
@@ -422,7 +406,7 @@ Command-line options:
 	--db_host	The hostname of the machine on which the database resides.
 
 	--db_name	The name of the database.
-	
+
 	--db_user	The name of the user to use when connecting to the database.
 
 	--db_pass	The password to use when connecting to the database.

@@ -2498,9 +2498,9 @@ sub get_overrides {
 #$log->error("NO ddm Stock SheetSize for $qty_index sig $index !");
 				} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
 
-					if ( @$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?\s*$/ ) {
-				} elsif (
-						@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x\s*([\d\.]+)"?\s*$/ ) {
+          if ( @$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?x?\s*$/ ) {
+          } elsif (
+            @$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x\s*([\d\.]+)"?\s*$/ ) {
 				} else {
 					$log->error( "Failure to parse ".$$sig_specs{"ddmStockSheetSize$qty_index"});
 					$$sig_specs{'chkOverrideSheetSize'.$qty_index} = '';
@@ -3435,17 +3435,15 @@ $log->debug("Using overriden page quantity $needed_pages");
 			return ();
 		}
 	} # end if
-	$log->debug("Needed pages: $needed_pages") if DEBUG;
+	$log->debug("calculate _impositions: Needed pages: $needed_pages") if DEBUG;
 
-	my $filter_press;
-	$log->error("Have filter press $filter_press") if $filter_press;
-	$filter_press = '';
+	my $filter_press = '';
 	if ( $$sig_specs{"chkOverridePress$qty_index"} ) {
 		$filter_press = $$sig_specs{"ddmPress$qty_index"};
-		#$log->debug("Have Override Press " . $$sig_specs{"ddmPress$qty_index"} . " from $$sig_specs{SignatureIndex}");
+		$log->debug("Have Override Press " . $$sig_specs{"ddmPress$qty_index"} . " from $$sig_specs{SignatureIndex}");
 	} elsif ( $$sig_specs{PreviousPress} ) {
 		$filter_press = $$sig_specs{PreviousPress};
-		#$log->debug("Have PreviousPress $$sig_specs{PreviousPress} from $$sig_specs{SignatureIndex}");
+		$log->debug("Have PreviousPress $$sig_specs{PreviousPress} from $$sig_specs{SignatureIndex}");
 	}
 
 	foreach my $strid ( $filter_press ? $filter_press : keys %{$impositions} ) {
@@ -3825,9 +3823,9 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 
 	%imps = ();
 	if ( DEBUG_FILTERING ) {
-		$log->debug("Afgter filtering by Press");
+		$log->debug('After filtering by Press');
 		foreach my $I ( @results ) {
-			$I->display("After filtering by Press");
+			$I->display('After filtering by Press');
 		}
 	}
 
@@ -3901,7 +3899,7 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 				if ( ! exists $$PaperCounts{$Paper->id_string()} ) {
 					$lookup_stock_qty = $stock_qty;
 					if ( DEBUG ) {
-						$log->error("No stock in papercounts for " . $Paper->id_string());
+						$log->debug("No stock in papercounts for " . $Paper->id_string());
 						foreach my $k ( keys %{$PaperCounts} ) {
 							$log->debug("PaperCounts: $k => $$PaperCounts{$k}");
 						}
@@ -3959,11 +3957,11 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 #} # end foreach
 
 		my $SmallerPrice;
-if ( ! int($$imp{stock_qty}) ) {
-$log->error("Noo stock qty: ($$imp{stock_qty}) " . $Paper->to_string() );
-$imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} );
-}
-		#if ( $$imp{PaperPrice} ) {
+    if ( ! int($$imp{stock_qty}) ) {
+      $log->error("Noo stock qty: ($$imp{stock_qty}) " . $Paper->to_string() );
+      $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} );
+    }
+    #if ( $$imp{PaperPrice} ) {
 			#$SmallerPrice = $$imp{PaperPrice};
 		#} else {
 		$$imp{PaperPrice} = $SmallerPrice = $Paper->get_price( weight=>$$imp{stock_qty}, lookup_qty => $$imp{lookup_stock_qty}, service=>'Material' ) if (!$$imp{old_stock_qty}) or $$imp{old_stock_qty} != $$imp{stock_qty};

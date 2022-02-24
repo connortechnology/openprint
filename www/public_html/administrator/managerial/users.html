@@ -31,11 +31,15 @@ function load_page() {
 			<select name="company_id" id="company_id" onchange="load_page();">
 				<option value="">All</option>
 				<? echo ( 
-my $companies = openprint::Company->dropdown();
-if ( @{$companies} < 10000 ) {
-return make_drop_down( $companies, $session{$r->uri().'?company_id'} );
+                my $companies = openprint::Company->dropdown(limit=>1000);
+if ( @{$companies} < 1000 ) {
+return make_drop_down($companies, $session{$r->uri().'?company_id'});
 }
-return '<option value="">Use the filter to populate this dropdown</option>';
+my $html = '';
+if ($session{$r->uri().'?company_id'}) {
+$html .= '<option value="'.$session{$r->uri().'?company_id'}.'" selected="selected">'.(new openprint::Company($session{$r->uri().'?company_id'}))->name().'</option>';
+}
+return $html.'<option value="">Use the filter to populate this dropdown</option>';
 ) ?>
 			</select>
 		</li>
@@ -94,6 +98,8 @@ return '<option value="">Use the filter to populate this dropdown</option>';
 		</li>
 		<li><label>Company Admin?</label><? echo ( radio( 'administrator', [ 'Y','Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?administrator'}, {onclick=>"load_page();"} ); ) ?></li>
 		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"load_page();"} ); ) ?></li>
+		<li><label>Web Active?</label><? echo ( radio( 'web_active', [ 'Y','Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?web_active'}, {onclick=>'load_page();'} ); ) ?></li>
+		<li><label>FTP Active?</label><? echo ( radio( 'ftp_active', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?ftp_active'}, {onclick=>'load_page();'} ); ) ?></li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
