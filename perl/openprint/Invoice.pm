@@ -118,6 +118,9 @@ sub is_paid {
 } # end sub is_paid
 
 sub owing {
+  if ( $_[0]->paid_early() >= $_[0]->owing_early() ) {
+    return 0;
+  }
 #$log->debug("Owing total: " . $_[0]->total() . ' int: ' . $_[0]->interest() . ' paid: ' . $_[0]->paid() );
 	return Math::Round::nearest( 1/(10**$_[0]->Currency()->precision()), $_[0]->total() + $_[0]->interest() - $_[0]->paid() );
 } # end sub owing
@@ -216,14 +219,29 @@ sub paid {
 	my $self = shift;
 	if ( @_ ) {
 		$$self{paid} = $_[0];
+    $openprint::log->debug("Setting paid to $_[0]");
 	} # end if
-	if ( (!$$self{posted}) or !defined $$self{paid} ) {
+	if ( (!$$self{posted}) or !defined($$self{paid})) {
     # Amount is stored both in the invoice_payment and in the payment
     # Maybe the value in the invoice_payment record should be currency adjusted
 		$$self{paid} = misc::sum( map { $_->amount() } openprint::Invoice_Payment->find( invoice_id=>$$self{id}) );
+    $openprint::log->debug("Loaded $$self{paid}");
+  } else {
+    $openprint::log->debug("Posted: $$self{posted} or defined $$self{paid}");
 	} # end if
 	return $$self{paid};
 } # end sub paid
+
+sub paid_early {
+  my $self = shift;
+  $$self{paid_early} = misc::sum(
+    map { $_->amount() } openprint::Invoice_Payment->find(
+      invoice_id=>$$self{id},
+      'received_on <=' => $$self{early_payment_date}.' 23:59:59',
+    )
+  );
+  return $$self{paid_early};
+}
 
 sub paid_value {
 	my $self = shift;
