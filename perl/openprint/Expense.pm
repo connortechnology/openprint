@@ -280,7 +280,7 @@ sub total {
       foreach my $Tax ( $_[0]->Taxes() ) {
         $_[0]{total} += $Tax->amount();
       } # end foreach Tax
-      $_[0]{total} = Math::Round::nearest( 0.01, $_[0]{total} );
+      $_[0]{total} = $_[0]{total} ? Math::Round::nearest(0.01, $_[0]{total}) : '0.00';
     }
 	} # end if
 	return $_[0]{total};
@@ -325,7 +325,7 @@ sub business_use_amount {
 		$_[0]{business_use_amount} = $_[1];
 	} # end if
 	if ( ! defined $_[0]{business_use_amount} ) {
-		$_[0]{business_use_amount} = Math::Round::nearest( 0.01, $_[0]{amount} * ( $_[0]{business_use} / 100 ) );
+		$_[0]{business_use_amount} = $_[0]{amount} ? Math::Round::nearest( 0.01, $_[0]{amount} * ( $_[0]{business_use} / 100 ) ) : '0.00';
 	} # end if
 	return $_[0]{business_use_amount};
 } # end sub business_use_amount
@@ -340,7 +340,7 @@ sub amount {
   my $self = shift;
   if ( !defined $$self{amount} ) {
     if ( defined $$self{total} ) {
-      $openprint::log->debug("Getting amount from total");
+      $openprint::log->debug('Getting amount from total');
       my $amount = $$self{total};
       foreach my $Tax ( $self->Taxes() ) {
         $amount -= $Tax->amount();
