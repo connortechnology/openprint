@@ -1,9 +1,9 @@
-<? if ( $$variable{'Quote'}->Products() ) ?>
+<? if ( $$variable{Quote}->Products() ) ?>
 <table>
 	<thead>
 		<tr>
 			<th class="thumbnail">&nbsp;</th>
-			<th class="description">Product</th>
+			<th class="description">Product / Service</th>
 			<th class="quantity">Quantity</th>
 			<th class="price">Price</th>
 		</tr>
@@ -13,7 +13,7 @@
 			my $html;
 			my $rowclass;
 			my $subtotal = 0;
-			foreach my $Product ( $$variable{'Quote'}->Products() ) {
+			foreach my $Product ( $$variable{Quote}->Products() ) {
 				$html .= sprintf('<tr%1$s>
 									<td class="thumbnail">%6$s</td>
 									<td class="description">%3$s</td>
@@ -36,4 +36,4 @@
 		) ?>
 	</tbody>
 </table>
-<? endif ( $$variable{'Quote'}->Products() ) ?>
+<? endif ( $$variable{Quote}->Products() ) ?>
