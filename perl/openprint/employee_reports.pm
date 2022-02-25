@@ -1967,12 +1967,13 @@ sub customer_performance {
           );
 		$$sql{sql} =~ s/\*/id/;
 
-		my %Companies_By_CSR = misc::make_hash_from_array('salesrep_id',
-				openprint::Company->find(
+    my @Companies = openprint::Company->find(
 					( $param{salesrep_id} ? ( salesrep_id=>$param{salesrep_id} ) : () ),
 					order=>'lower(name)',
 					( $session{$uri.'?country'} ? ( country=>$session{$uri.'?country'} ) : () ),
-					) );
+					);
+		my %Companies_By_CSR = misc::make_hash_from_array('salesrep_id', @Companies);
+    my @quote_ids = map { $$_{last_quote_id} } @Companies;
 
 		my $do_not_ordered_since = 1 if Date::Calc::check_date( @session{
 							$uri.'?not_ordered_on_start_year',
@@ -1982,6 +1983,15 @@ sub customer_performance {
 								$uri.'?not_ordered_on_end_year',
 								$uri.'?not_ordered_on_end_month',
 								$uri.'?not_ordered_on_end_day'
+								} );
+		my $do_ordered_since = 1 if Date::Calc::check_date( @session{
+							$uri.'?ordered_on_start_year',
+							$uri.'?ordered_on_start_month',
+							$uri.'?ordered_on_start_day'
+							} ) or Date::Calc::check_date( @session{
+								$uri.'?ordered_on_end_year',
+								$uri.'?ordered_on_end_month',
+								$uri.'?ordered_on_end_day'
 								} );
 		my @status_ids = map { $$_{id} } openprint::Order_Status->find(name=>['Complete','Picked Up','Shipped','Waiting For QA Approval','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ]);
 
@@ -1997,18 +2007,25 @@ sub customer_performance {
 		} # end if
 
 		my @Orders = openprint::Order->find( 
-		'company_id in' => $sql,
-				ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
-				ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
-				status_id => \@status_ids,
-				);
+      'company_id in' => $sql,
+      ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
+      ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
+      status_id => \@status_ids,
+    );
+    my ($min_order_id, $max_order_id ) = (undef,undef);
+    foreach my $Order ( @Orders ) {
+      $min_order_id = $$Order{id} if (!defined($min_order_id)) or ($min_order_id > $$Order{id});
+      $max_order_id = $$Order{id} if (!defined($max_order_id)) or ($max_order_id < $$Order{id});
+    }
+    my @order_ids = map { $$_{id} } @Orders;
 		my %orders_by_company = misc::make_hash_from_array('company_id', @Orders);
-		my @Quotes = openprint::Quote->find( 
-		'company_id in' => $sql,
-				ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
-				ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
-				);
-		my %quotes_by_company = misc::make_hash_from_array('company_id', @Quotes);
+		my @Quotes = openprint::Quote->find( id=>\@quote_ids,
+    #'company_id in' => $sql,
+      ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
+      ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
+      limit => 10000,
+    );
+    my %quotes_by_company = misc::make_hash_from_array('company_id', @Quotes);
 
 		my %not_ordered_since;
 		my @Orders_Since = openprint::Order->find(
@@ -2016,11 +2033,62 @@ sub customer_performance {
 				ssi::date_filter( $uri.'?not_ordered_on_start', 'created_on >=' ),
 				ssi::date_filter( $uri.'?not_ordered_on_end', 'created_on <=' ),
 				status_id => \@status_ids,
-				);
+				) if $do_not_ordered_since;
 		foreach my $Order ( @Orders_Since ) {
 			$not_ordered_since{$$Order{company_id}} = 1;
 		}
-	
+
+    my @invoice_ids;
+    my %OI_By_Invoice_Id;
+    my %OI_By_Order_Id;
+    my ( $min_invoice_id, $max_invoice_id ) = ( undef, undef );
+
+    foreach ( openprint::Order_Invoice->find(
+        order_id=>\@order_ids,
+        #'order_id <=' => $max_order_id,
+        #'order_id >=' => $min_order_id,
+        order=>'order_id') ) {
+
+      $OI_By_Invoice_Id{$$_{invoice_id}} = [] if !$OI_By_Invoice_Id{$$_{invoice_id}};
+      push @{$OI_By_Invoice_Id{$$_{invoice_id}}}, $_;
+
+      $OI_By_Order_Id{$$_{order_id}} = [] if !$OI_By_Order_Id{$$_{order_id}};
+      push @{$OI_By_Order_Id{$$_{order_id}}}, $_;
+
+      push @invoice_ids, $$_{invoice_id};
+      $min_invoice_id = $$_{invoice_id} if (!defined($min_invoice_id)) or ($min_invoice_id > $$_{invoice_id});
+      $max_invoice_id = $$_{invoice_id} if (!defined($max_invoice_id)) or ($max_invoice_id < $$_{invoice_id});
+    } # end foreach Order_Invoice
+
+    my @Invoices = openprint::Invoice->find(
+        'id <=' => $max_invoice_id,
+        'id >=' => $min_invoice_id,
+        #id=>\@invoice_ids
+      );
+    die if !@Invoices;
+
+    foreach my $Invoice (@Invoices) {
+      if ( $OI_By_Invoice_Id{$$Invoice{id}} ) {
+        foreach my $OI ( @{$OI_By_Invoice_Id{$$Invoice{id}}} ) {
+          $$OI{Invoice} = $Invoice;
+          #$log->debug("Setting invoice for $$OI{invoice_id} order $$OI{order_id} = $$OI{Invoice}");
+        } # end foreach OI
+      } else {
+        #$log->debug("NO OI_BY_INVOICE_ID for $$Invoice{id}");
+      } # end if have ois for this invoice
+    }
+
+     my %Payments = misc::make_hash_from_array('order_id',
+          openprint::Payment->find(
+            'order_id <=' => $max_order_id,
+            'order_id >=' => $min_order_id,
+            order=>$openprint::Payment::fields{received_on}.' DESC'),
+          );
+
+    foreach my $Order ( @Orders ) {
+      $$Order{Invoices} = $OI_By_Order_Id{$$Order{id}} ? $OI_By_Order_Id{$$Order{id}} : [];
+      $$Order{Payments} = $Payments{$$Order{id}} ?$Payments{$$Order{id}} : [];
+    }
 
 		foreach my $csr_id ( @csr_ids ) {
 			my $CSR = new openprint::User($csr_id);
@@ -2031,16 +2099,8 @@ sub customer_performance {
 				my $order_total;
 				my $payment_cycle;
 
-				next if (!$orders_by_company{$$Company{id}})
-					and (
-							Date::Calc::check_date(@session{map { $uri.'?ordered_on_start_'.$_ } ( 'year','month','day' )})
-							or
-							Date::Calc::check_date(@session{map { $uri.'?ordered_on_end_'.$_ } ( 'year','month','day' ) })
-							);
-
-				if ( $do_not_ordered_since ) {
-					next if $not_ordered_since{$$Company{id}};
-				} # end if
+				next if $do_ordered_since and !$orders_by_company{$$Company{id}};
+        next if $do_not_ordered_since and $not_ordered_since{$$Company{id}};
 
 				if ( $session{$uri.'?has_discount'} ne '' ) {
 					next if $session{$uri.'?has_discount'} eq 'Y' and ! $Company->discount();
