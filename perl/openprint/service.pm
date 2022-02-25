@@ -172,7 +172,6 @@ sub insert_service_spec {
 	if ( defined $specs_cache{$service_index}{$name} and defined $value and $specs_cache{$service_index}{$name} eq $value ) {
 		$log->debug("insert_service_spec: return because no change in value: ($name)($value)") if Debug;
 		return;
-
 	} # end if
 
 	#if ( exists $specs_cache{$service_index}{$name} ) {
@@ -508,8 +507,8 @@ sub internal_calc {
 	$Project->save({status=>'Calculating'}) if $Project->status() ne 'Calculating';
 	my $Service = $Project->Service($service_index) if $service_index;
 	my $specs;
-	if ( ! $Service ) {
-		$openprint::log->error('Doing internal calc without service_index or, not found');
+	if ( !$Service ) {
+		$openprint::log->error('Doing internal calc without service_index or, not found service_index:'.$service_index.' '.$service_type);
 		$Service = new openprint::Project_Service();
 		$Service->set({ project_id=>$project_index, service_id=>$service_index, service_type=>$service_type });
 	} else {
@@ -544,12 +543,12 @@ sub internal_calc {
 	my $package = 'openprint::Estimating::'.$service_type;
 	#require $package;
 	# We are doing this in an eval because we don't actually want to die.
-	eval 'require openprint::Estimating::'.$service_type;
+	eval 'require '.$package;
 	$log->error("Error in requiring $package $@") if $@;
-	my @variables = eval('openprint::Estimating::'.$service_type.'::variables($project_index, $service_index, $specs, \%specs)');
-$log->debug("Variables: @variables");
+	my @variables = eval($package.'::variables($project_index, $service_index, $specs, \%specs)');
 
 	if ( Debug ) {
+    $log->debug("Variables: @variables");
 		foreach my $key ( @variables ) {
 			$log->debug("Internal Calc:: before calc $key $specs{$key} :". $specs_cache{$service_index}{$key});
 		} # end foreach

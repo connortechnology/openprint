@@ -50,13 +50,11 @@ $log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
 					} # end if
 				} # end if
 				# Store this, will be useful
-				$session{ip} = $ENV{REMOTE_ADDR};
-				$session{lastupdated} = time;
-				$session{HTTP_USER_AGENT} = $ENV{HTTP_USER_AGENT};
 			} # end if
 
+
 			if ( (!$cookie) or ( $cookie ne $session{_session_id} ) ) {
-$log->debug("Generating new cookie $session{_session_id}") if Debug;
+$log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 				my $Cookie = Apache2::Cookie->new($r,
 						-name	=> '_session_id',
 						-value => $session{_session_id},
@@ -74,7 +72,9 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 		} # end if
 	} # end if $r
 
-	$session{ip} = $ENV{REMOTE_ADDR} if $ENV{REMOTE_ADDR} and ! $session{ip};
+  $session{ip} = $ENV{REMOTE_ADDR};
+  $session{lastupdated} = time;
+  $session{HTTP_USER_AGENT} = $ENV{HTTP_USER_AGENT};
 
 # Now set some defaults right away, if we can, FIXME namespace colision
 	if ( $param{Country} ) {
@@ -87,9 +87,8 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 
 	$User = new openprint::User($session{user_id});
 
-# This probably shouldn't be here
 	if ( $param{btnFunction} and $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) {
-		if ( $param{btnFunction} eq 'SelectCompany' ) {
+		if ( ( $param{btnFunction} eq 'SelectCompany' ) and $param{ddmCompany} ) {
 			if ( $param{ddmCompany} != $session{company_id} ) {
 
 				my $C = new openprint::Company( $param{ddmCompany} );
@@ -160,19 +159,23 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 	$Pricelist = new openprint::Pricelist( $session{Pricelist_id} ) if $session{Pricelist_id};
 
 	if ( $ENV{REMOTE_ADDR} ) {
+    openprint::Host_Interface->lock();
 		my @Interfaces = openprint::Host_Interface->find(ip=>$ENV{REMOTE_ADDR});
 		if ( !@Interfaces ) {
+      $log->debug('No HI found for '.$ENV{REMOTE_ADDR});
 			$Host = openprint::Host->find_one(hostname=>$ENV{REMOTE_ADDR});
 			if ( !$Host ) {
 				$Host = new openprint::Host();
 				$Host->save({hostname=>$ENV{REMOTE_ADDR}});
 			}
+      # The logging of the creation of the Host entry will save the host_interface
 		} else { 
 			if ( @Interfaces > 1 ) {
-				$log->error("More than 1 Host with ip $ENV{REMOTE_ADDR}");
+				$log->error("More than 1 Interface with ip $ENV{REMOTE_ADDR}");
 			}
 			$Host = $Interfaces[0]->Host();
 		}
+    openprint::Host_Interface->unlock();
 	}
 
 } # end sub session_init

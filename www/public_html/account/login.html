@@ -4,7 +4,7 @@
 </div>
 <?include('/includes/error_reporting.html')?>
 <br/>
-<? if ( $session{user_type} ) ?>	
+<? if ( $session{user_id} ) ?>
 	<p><? include(/includes/_greeting.html) ?></p>
 	<? if ( $session{Destination} ) ?>
 	<b><? echo ( $session{Destination} ) ?></b><br/><br/>
@@ -73,6 +73,6 @@ $Log->User()->link_to(),
 		return;
 	)?>
 
-<? else ( $session{user_type} ) ?>	
+<? else ( $session{user_id} ) ?>
 	<? include(/includes/customer_login.html) ?>
-<? endif ( $session{user_type} ) ?>	
+<? endif ( $session{user_id} ) ?>

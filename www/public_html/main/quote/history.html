@@ -28,11 +28,11 @@
 	<form id="f1" name="f1" method="post" action="history.html">
 		<input type="hidden" name="btnFunction"/>
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
-			<ul>
-			<li>
-				<label for="QuoteID">Quote ID</label>
-				<? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeydown=>q`if(event.keyCode == 13){load_quotes(this.form);};` ); ) ?>
-			</li>
+			<ul class="leftColumn">
+        <li>
+          <label for="QuoteID">Quote ID</label>
+          <? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeydown=>q`if(event.keyCode == 13){load_quotes(this.form);};` ); ) ?>
+        </li>
 <? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label>Quoted By Company</label>
@@ -85,6 +85,8 @@
 						my @options = ( 'Incomplete','Complete','Re-Opened' );
 						ssi::select( [ map { $_, $_ } @options ], $session{$r->uri().'?status'}, { name=>'status', onchange=>'load_quotes();', prepend=>['','All'] } );) ?>
 			</li>
+      </ul>
+      <ul class="rightColumn">
 			<li><label>Ordered</label>
 				<?echo(
 						radio(

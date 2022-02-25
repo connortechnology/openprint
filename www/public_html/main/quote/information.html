@@ -2,10 +2,12 @@
 <script src="/javascripts/tiny_mce/tiny_mce.js"></script>
 
 <script>
-  tinyMCE.init({
-		mode : "specific_textareas",
-		editor_selector : "mce",
-    theme : "simple"
+  window.addEventListener('DOMContentLoaded',function(){
+    tinyMCE.init({
+      mode : "specific_textareas",
+      editor_selector : "mce",
+      theme : "simple"
+    });
   });
 	function company_onchange( e ) {
 		new Ajax.Request( '_company_information.json', { parameters: { company_id: e.value } } );
@@ -133,20 +135,35 @@
 <? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 			<li class="company_id"> 
 				<label>Company</label>
-				<input type="text"
-oninput="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});"
- onkeydown="if(event.keyCode == 13){company_onchange($('company_id'));}" />
-				<select id="company_id" name="company_id" onchange="company_onchange(this);">
+				<input type="text" class="filter"
+               oninput="filter_companies('for_company_id', {name:this.value,selected_id:get_ddm_value($('for_company_id'))});"
+               onkeydown="if(event.keyCode == 13){company_onchange($('for_company_id'));}" />
+				<select id="for_company_id" name="for_company_id" onchange="company_onchange(this);">
 					<option value="">select</option>
 					<? echo ( 
-	my $Selected = openprint::Company->find_one( name =>$$variable{Quote}->for_companyname() ) if $$variable{Quote}->for_companyname();
-	make_drop_down( openprint::Company->dropdown('last_quote_id is null'=>0), $Selected ? $Selected->id() : $session{company_id});
- ) ?>
+                  my $selected_id = $$variable{Quote}->for_company_id();
+                  if (!$selected_id and $$variable{Quote}->for_companyname()) {
+                    my $Selected = openprint::Company->find_one( name =>$$variable{Quote}->for_companyname() );
+                    $selected_id = $Selected->id() if $Selected;
+                  }
+                  if (!$selected_id) {
+                    $selected_id = $session{company_id};
+                  }
+                  my %parameters = (
+                    or => {
+                      'last_quote_id is null'=>0,
+                      id => $selected_id,
+                      });
+
+                  make_drop_down( openprint::Company->dropdown(%parameters), $selected_id);
+          ) ?>
 				</select>	
 			</li>
 			<li class="contact"> 
 				<label>Contact</label>
-				<input type="text" oninput="if(filterDDM(this, this.form.user_id))user_onchange($('user_id'));;" onkeydown="if(event.keyCode == 13){user_onchange($('user_id'));}" />
+				<input type="text" class="filter"
+        oninput="if(filterDDM(this, this.form.user_id))user_onchange($('user_id'));"
+        onkeydown="if(event.keyCode == 13){user_onchange($('user_id'));}" />
 				<select id="user_id" name="user_id" onchange="user_onchange(this);">
 					<option value="">select</option>
 					<? echo ( 

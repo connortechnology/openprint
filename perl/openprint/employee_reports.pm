@@ -4,6 +4,7 @@ use strict;
 require ssi;
 require openprint::Company;
 require openprint::Project;
+require openprint::Quote;
 require openprint::Project_Log;
 require openprint::Order_Status;
 require openprint::OrderedProduct;

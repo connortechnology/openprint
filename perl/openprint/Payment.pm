@@ -10,6 +10,7 @@ require openprint::Invoice_Payment;
 require openprint::Currency;
 require openprint::Company;
 require openprint::Order;
+require openprint::Expense_Account;
 
 $debug = 0;
 $table = 'payments';
@@ -36,6 +37,7 @@ $serial = 'payments_id_seq';
   exchange  =>  'exchange',
   value     =>  'value',
   value_locked  =>  'value_locked',
+  account_id  =>  'account_id',
 );
 
 %transforms = (
@@ -54,9 +56,10 @@ $serial = 'payments_id_seq';
 	amount		=>	undef,
 	value		=>	undef,
 	remaining	=>	undef,
-  exchange  =>  1,
+  exchange  =>  undef,
   value_locked  =>  0,
   amount_locked =>  0,
+  account_id    =>  undef,
 );
 
 sub save {
@@ -136,12 +139,12 @@ sub send_receipt {
 	my @attachments;
 	$data{ReplacementText} = ssi::include( '/email_content/payment_receipt.html', \%data );
 
-	@To = map { $_->User() } $self->Payor()->AccountingContacts() if ! @To;
+	@To = $self->Payor()->AccountingContacts() if ! @To;
 
 	my $Email = new openprint::Email();
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
 	my $results = $Email->send(
-		TO			=>	\@To,
+    TO			=>	\@To,
 		BCC			=>	$openprint::User,
 		FROM		=>	$data{User},
 		#'ATTACHMENTS'	=>	\@attachments,
@@ -168,7 +171,7 @@ sub value {
 
 sub exchange {
   if ( !$_[0]{exchange} ) {
-    if ( $_[0]{currency_id} != $$openprint::Currency{id} ) {
+    if ( $_[0]{currency_id} and ( $_[0]{currency_id} != $$openprint::Currency{id} ) ) {
       my $Conversion = openprint::Currency_Conversion->find_one(
         from_id=>$_[0]{currency_id}, to_id=>$$openprint::Currency{id},
         'period_start null_or_<=' => $_[0]{received_on},
@@ -186,7 +189,12 @@ sub exchange {
   return $_[0]{exchange};
 }
 
-
+sub Account {
+  if ( !$_[0]{Account} ) {
+    $_[0]{Account} = new openprint::Expense_Account( $_[0]{account_id} );
+  }
+  return $_[0]{Account};
+}
 
 1;
 __END__

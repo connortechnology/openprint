@@ -253,31 +253,40 @@ sub _prices_table_body {
 }
 
 sub category_view {
-	my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
-	if ( $param{btnFunction} eq 'Destroy' ) {
-		$variable{error} .= $Category->destroy();
-		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/product/categories.html';
-		}
-	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		$variable{error} .= $Category->delete();
-		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/product/categories.html';
-		}
-	} # end if
-}
-sub category_edit {
-	my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
-	if ( $param{btnFunction} eq 'Save' ) {
-		my @changes = $Category->changes( \%param );
-		if ( @changes ) {
-			$variable{error} = $Category->save( \%param );
-		}
+  $param{category_id} = openprint::Product_Category->transform(id=>$param{category_id});
 
-		my @spec_changes = openprint::Object_Specification::save_changes( $Category, \%param );
-		push @changes, 'specification changes: ' . join(', ', @spec_changes ) if @spec_changes;
-		( new openprint::Log())->save({Object=>$Category, action=>'Edit', note=>join('<br/>', @changes ) } );
-		$variable{ExternalRedirect} = '/product/categories.html' if ! $variable{error};
+	my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
+  if ( $param{btnFunction} and $Category->can_edit() ) {
+    if ( $param{btnFunction} eq 'Destroy' ) {
+      $variable{error} .= $Category->destroy();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/product/categories.html';
+      }
+    } elsif ( $param{btnFunction} eq 'Delete' ) {
+      $variable{error} .= $Category->delete();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/product/categories.html';
+      }
+    } # end if
+  } # end if
+}
+
+sub category_edit {
+	my $Category = $variable{Category} = new openprint::Product_Category($param{category_id});
+	return if ! $param{btnFunction};
+
+	if ( $param{btnFunction} eq 'Save' ) {
+    $param{parent_ids} = $openprint::Product_Category::defaults{parent_ids} if ! exists $param{parent_ids};
+		my @changes = $Category->changes(\%param);
+		if ( @changes ) {
+			$variable{error} = $Category->save(\%param);
+		}
+		if ( !$variable{error} ) {
+			my @spec_changes = openprint::Object_Specification::save_changes( $Category, \%param );
+			push @changes, 'specification changes: ' . join(', ', @spec_changes ) if @spec_changes;
+			(new openprint::Log())->save({Object=>$Category, action=>'Edit', note=>join('<br/>', @changes) });
+			$variable{ExternalRedirect} = '/product/categories.html' if ! $variable{error};
+		}
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		my $New = $Category->copy();
 		$New->save();

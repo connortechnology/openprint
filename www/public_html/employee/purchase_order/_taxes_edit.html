@@ -25,7 +25,7 @@
 	$html .= '</label></div>';
 	if ( $param{action} ) {
 		$html .= '
-	<script type="text/javascript">
+	<script>
 	tax_ids = ['.join(',', keys %tax_ids).'];
 	update_totals($(\'f1\'));
 	update_logs();

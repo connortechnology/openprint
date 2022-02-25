@@ -33,16 +33,17 @@ sub inks {
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $id ( sql::execute( undef, undef, q{SELECT id FROM Inks} ) ) {
 			if ( $param{"pmsid-$id"} ) {
-			sql::update( undef, undef, 'Inks', ['id=?', $id], [
-				'pmsid', $param{"pmsid-$id"},
-				'material_id', $param{"material_id-$id"} ? $param{"material_id-$id"} : undef,
-				'service_id', $param{"service_id-$id"} ? $param{"service_id-$id"} : undef,
-				'washups', $param{"washups-$id"} ? $param{"washups-$id"} : undef,
-			] );
+        sql::update( undef, undef, 'Inks', ['id=?', $id], [
+          pmsid => $param{"pmsid-$id"},
+          material_id => $param{"material_id-$id"} ? $param{"material_id-$id"} : undef,
+          service_id => $param{"service_id-$id"} ? $param{"service_id-$id"} : undef,
+          washups => $param{"washups-$id"} ? $param{"washups-$id"} : undef,
+        ] );
 			} else {
-				sql::execute(undef,undef,q{DELETE FROM Inks WHERE Id=?}, $id );
+				sql::execute(undef,undef,q{DELETE FROM Inks WHERE Id=?}, $id);
 			} # end if
 		} # end foreach id
+
 		if ( $param{"pmsid-New"} ) {
 			sql::insert( undef, undef, 'Inks', [
 					'pmsid', $param{"pmsid-New"},
@@ -53,14 +54,14 @@ sub inks {
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
-        my $ac = sql::start_transaction( $dbh );
-        foreach my $id ( ref $param{colours} eq 'ARRAY' ? @{$param{colours}} : $param{colours} ) {
-            my $Ink = new openprint::Ink( $id );
-            if ( ! $Ink->id() ) {
-                $variable{error} .= "Error deleting ink $id : not found.<br/>";
-                next;
-            } # end if
-            $Ink->delete();
+    my $ac = sql::start_transaction( $dbh );
+    foreach my $id ( ref $param{colours} eq 'ARRAY' ? @{$param{colours}} : $param{colours} ) {
+      my $Ink = new openprint::Ink( $id );
+      if ( ! $Ink->id() ) {
+        $variable{error} .= "Error deleting ink $id : not found.<br/>";
+        next;
+      } # end if
+      $Ink->delete();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 
@@ -142,12 +143,16 @@ $log->error( $variable{error} );
 
 				next if ! @data;
 				my ( $equipment, $service_cost, $service_units,$service_markup, $material_cost, $material_units, $material_markup, $gloss_coverage, $matte_coverage, $uncoated_coverage ) = @data;
-				
+
 				if ( $Service and ( $service_cost or $service_markup or $service_units ) ) {
 					foreach my $e_id ( misc::trim( split(',', $equipment ) ) ) {
 						if ( my $Equipment = openprint::Equipment->find_one('strid'=>$e_id) ) {
 							foreach my $Pricelist ( @Pricelists ) {
-								my @Prices = openprint::ServicePrice->find('service_id'=>$services{$service}, 'equipment_id'=>$Equipment->id(), 'pricelist_id'=>$Pricelist->id() );
+								my @Prices = openprint::ServicePrice->find(
+                  service_id=>$services{$service},
+                  equipment_id=>$Equipment->id(),
+                  pricelist_id=>$Pricelist->id(),
+                );
 								if ( ! @Prices ) {
 									my $Price = new openprint::ServicePrice();
 									$Price->set({'service_id'=>$services{$service}, 'equipment_id'=>$Equipment->id(), 'pricelist_id'=>$Pricelist->id() } );
@@ -329,7 +334,7 @@ sub pricelists {
 		my $New = $Pricelist->copy();
 		$param{name} = 'Copy of '.$param{name};
 		$variable{error} .= $New->save( \%param );
-		openprint::logs::insertLogRecord('32', "Price List: " . $param{name},);
+		(new openprint::Log())->save({action=>'Save', Object=>$Pricelist});
 		my $ac = sql::start_transaction( $dbh );
 		foreach ( $Pricelist->getPrices() ) {
 			my $Price = $_->copy();
@@ -361,22 +366,22 @@ sub pricelists {
 		my @header = ( 'Material ID', 'Equipment ID','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable', 'Interpolate' );
 		my @data = map {
 			$_->Material()->name(), $_->Equipment()->strid(), $_->min(), $_->max(), $_->units(), $_->cost(), $_->markup(), $_->price(), $_->discountable(), $_->interpolate()
-		} openprint::MaterialPrice->find('pricelist_id'=>$Pricelist->id(), 'order'=>join(',',@openprint::MaterialPrice::fields{'min','max'}));
+		} openprint::MaterialPrice->find(pricelist_id=>$Pricelist->id(), order=>join(',',@openprint::MaterialPrice::fields{'min','max'}));
 		misc::export_csv( $r, $log, \%variable, $Pricelist->name() . 'MaterialPrices.csv', \@header, \@data );
 
 	} elsif ( $param{btnFunction} eq 'Export Paper Prices' ) {
 		if ( ! $Pricelist->id() ) {
 			return misc::error( $log, $dbh, \%variable, 'No pricelist selected.', 'You must select a pricelist before exporting.');
 		} # end if
-	
+
 		my @header = ( 'Paper ID', 'Paper Brand', 'Finish','Colour','Weight','Type', 'Width','Height','Pricelist', 'Service', 'Equipment', 'Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
 		my @data;
 		foreach my $Paper (openprint::Paper->find( ) ) {
 #order=>'brand,finish,colour,weight,width,height' ) ) {
-            foreach my $Price ( openprint::PaperPrice->find( paper_id=>$$Paper{id}, pricelist_id=>$$Pricelist{id}, order=>'lnglistindex, lngmin NULLS FIRST, lngmax NULLS FIRST') ) {
-				push @data, $Paper->id(), $Paper->brand(), $Paper->finish(),$Paper->colour(), $Paper->weight(), $Paper->type(), $Paper->width(), $Paper->height();
+      foreach my $Price ( openprint::PaperPrice->find( paper_id=>$$Paper{id}, pricelist_id=>$$Pricelist{id}, order=>'lnglistindex, lngmin NULLS FIRST, lngmax NULLS FIRST') ) {
+				push @data, $Paper->id(), $Paper->brand(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->type(), $Paper->width(), $Paper->height();
 				push @data, $$Pricelist{name}, $Price->service(), $Price->Equipment()->strid(), $Price->min(), $Price->max(), $Price->units(), $Price->cost(), $Price->markup(), $Price->price(), $Price->discountable();
-			} # end foreach
+			} # end foreach Price
 		} # end foreach Paper
 		misc::export_csv( $r, $log, \%variable, $Pricelist->name() . 'PaperPrices.csv', \@header, \@data );
 
@@ -423,7 +428,7 @@ sub pricelists {
 			$name = openprint::Service->transform( name => $name );
 			next if $name eq '';
 
-			
+
 			my $Service = openprint::Service->find_one( name=>$name );
 
 			my $prod_index = $Service->id() if $Service;
@@ -432,7 +437,7 @@ sub pricelists {
 				next;
 			} # end if
 
-			foreach my $equip_id ( split(',', $equip_ids ) ) {	
+			foreach my $equip_id ( split(',', $equip_ids ) ) {
 				$equip_id = openprint::Equipment->transform( strid => $equip_id );
 				if ( ! $equipment{$equip_id} ) {
 					$error .= "No Equipment found for $equip_id<br>";
@@ -458,7 +463,7 @@ sub pricelists {
 				}
 
 			} # end foreach equipment_id
-				
+
 		} # end while IO
 		sql::end_transaction( $openprint::dbh, $ac );
 
@@ -473,7 +478,7 @@ sub pricelists {
 			$variable{error} = 'No file given.';
 			$variable{information} = 'You must select a file to import.';
 			return;
-		} 
+		}
 
 		my $error = '';
 
@@ -494,7 +499,7 @@ sub pricelists {
 			my ( $name, $equip_ids, $min,$max,$units, $cost, $markup, $price, $discountable ) = $csv->fields();
 			$name = openprint::Material->transform( name => $name );
 			next if $name eq '';
-			
+
 			if ( ! $materials{$name} ) {
 				$error .= "No Material found for $name<br>";
 				next;
@@ -535,13 +540,13 @@ sub pricelists {
 			$variable{error} = 'No pricelist selected';
 			$variable{information} = 'You must select a pricelist before importing.';
 			return;
-		} 
+		}
 
 		if ( ! $param{filePrices} ) {
 			$variable{error} = 'No file given.';
 			$variable{information} = 'You must select a file to import.';
-			return 
-		} # en dif
+			return
+		} # end if
 
 		my $error = '';
 
@@ -562,9 +567,15 @@ sub pricelists {
 
 		while ( <$io> ) {
 			my $status = $csv->parse($_);
-			my ( $id, $brand, $finish, $colour, $weight, $type, $width, $height, $pricelist, $service, @data ) = misc::trim( $csv->fields());
+			my ( $id, $brand, $finish, $colour, $weight, $type, $width, $height, $pricelist, $service, @data ) = misc::trim($csv->fields());
 			$line_count += 1;
-			my $Paper;
+
+      $brand = openprint::StockBrand->transform(name=>$brand);
+      $finish = openprint::StockFinish->transform(name=>$finish);
+      $colour = openprint::StockColour->transform(name=>$colour);
+      $weight = openprint::StockWeight->transform(name=>$weight);
+
+      my $Paper;
 			if ( 0 and $id ) {
 				if ( $Papers{$id} ) {
 					$Paper = $Papers{$id};
@@ -577,19 +588,11 @@ sub pricelists {
 				$Paper = undef;
 			}
  			if ( ! $Paper ) {
-				my @Papers = openprint::Paper->find(brand=>$brand, finish=>$finish, colour=>$colour, weight=>$weight, type=>$type, 
-				( $width ? (width=>$width ) : ( width=>undef) ), 
-				( $height ? ( height=>$height ) : (height=>undef) ) );
-				
-				if ( ! @Papers ) {
-					$brand = openprint::StockBrand->transform(name=>$brand);
-					$finish = openprint::StockFinish->transform(name=>$finish);
-					$colour = openprint::StockColour->transform(name=>$colour);
-					$weight = openprint::StockWeight->transform(name=>$weight);
-					@Papers = openprint::Paper->find(brand=>$brand, finish=>$finish, colour=>$colour, weight=>$weight, type=>$type, 
-							( $width ? (width=>$width ) : ( width=>undef) ), 
-							( $height ? ( height=>$height ) : (height=>undef) ) );
-				}
+				my @Papers = openprint::Paper->find(
+          brand=>$brand, finish=>$finish, colour=>$colour, weight=>$weight, type=>$type,
+          ( $width ? (width=>$width ) : ( width=>undef) ),
+          ( $height ? ( height=>$height ) : (height=>undef) )
+        );
 
 				if ( ! @Papers ) {
 					$error .= "No Paper found for $brand, $finish, $colour, $weight, $type, $width, $height<br/>";
@@ -600,7 +603,7 @@ sub pricelists {
 				} # end if
 				$Paper = $Papers[0];
 			} # end if
-			$import_count += 1;	
+			$import_count += 1;
 			if ( ! @data ) {
 				$error .= 'No pricing data for ' . $Paper->to_string() . '<br/>';
 			}
@@ -618,7 +621,7 @@ sub pricelists {
 					price		=>	$data[$i+6],
 					discountable	=>	$data[$i+7],
 				});
-				
+
 			} # end for
 		} # end foreach CSV line
 

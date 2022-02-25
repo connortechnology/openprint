@@ -1,23 +1,25 @@
 <div class="Login">
 	<fieldset><legend>Please login</legend>
 		<div class="content">
-			<div class="instruction">Please enter your e-mail address and password.<br/><br/></div>
-			<ul>
-				<li>
-					<label for="email">E-mail</label>
-					<input type="email" id="email" name="email" value="<? echo ( $param{email} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" /><br/>
+			<div class="instruction">Please enter your e-mail address and password.</div>
+        <ul>
+				<li class="form-group">
+					<label for="email" class="col-form-label">E-mail</label>
+					<input type="email" id="email" name="email" value="<? echo ( $param{email} ) ?>" autocomplete="username"/><br/>
 					<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt=""/> Please enter your email address.</span>
 				</li>
-				<li>
-					<label for="password">Password</label>
-					<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
+				<li class="form-group">
+					<label for="password" class="col-form-label">Password</label>
+					<input type="password" id="password" name="password" autocomplete="current-password"/>
+          <span id="showpassword">Show</span>
+          <br/>
 					<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt=""/> Please enter your password.</span>
 				</li>
-				<li>
-					<label>Remember me</label>
-					<? echo ( radio( 'rdbRememberMe', ['Y','Yes','N','No'], ( $param{rdbRememberMe} || $config{rdbRememberMe} || 'N' ) ); ) ?>
+				<li class="form-group">
+					<label class="col-form-label">Remember me</label>
+					<? echo ( radio( 'rdbRememberMe', ['Y','Yes','N','No'], ( $param{rdbRememberMe} || $config{rdbRememberMe} || 'N' ), { inline=>1 } ); ) ?>
 				</li>
-			</ul>
+        </ul>
 		</div>
 		<p class="buttons">
 			<? echo ( join("\n",
@@ -27,4 +29,18 @@
 		</p>
 	</fieldset>
 </div>
-<script type="text/javascript">document.LoginForm.email.focus();</script>
+<script>
+  window.addEventListener('DOMContentLoaded', function() {
+    document.LoginForm.email.focus();
+    $j('#email').on('keydown', function(e) {
+      console.log(e);
+      if(e.keyCode == 13){checkLoginData( e.target, LoginForm.password );}
+    });
+    $j('#password').on('keydown', function(e) {
+      if (e.keyCode == 13){checkLoginData(LoginForm.email, e.target);}
+    });
+    $j('#showpassword').on('click', function(e) {
+      $j('#password').attr('type', $j('#password').attr('type') == 'password' ? 'text' : 'password');
+    });
+  });
+</script>

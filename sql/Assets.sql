@@ -23,6 +23,7 @@ CREATE TABLE Assets (
 	width		INTEGER,
 	height		INTEGER,
 	source		TEXT,
+  public    BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (id)
 );
 alter table Users add foreign key (asset_id) REFERENCES assets (id);

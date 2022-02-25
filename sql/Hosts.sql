@@ -18,5 +18,7 @@ CREATE TABLE hosts (
 	notify_frequency	INTEGER,
 	location_id			INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
 	owner_id			INTEGER, FOREIGN KEY (owner_id) REFERENCES Companies (id),
+  min_ping_frequency  INTEGER,
+  max_ping_time       INTEGER,
 	PRIMARY KEY (id)
 );

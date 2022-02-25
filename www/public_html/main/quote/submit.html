@@ -18,6 +18,11 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 		<div class="Header">
 			<?include(/includes/quote_header.html)?>
 			<?include(/includes/quote_information.html)?>
+				<? if ( $$variable{Quote}->comments() ) ?>
+				<div class="comments"><label>Comments</label>
+				<? echo ( $$variable{Quote}->comments() ) ?>
+				</div>
+				<? endif ( $$variable{Quote}->comments() ) ?>
 		</div>
 		<?include(_projects.html)?>
 		<?include(_products_view.html)?>

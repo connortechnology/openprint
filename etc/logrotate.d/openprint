@@ -10,7 +10,7 @@
 	delaycompress
 	compress
 }
-/var/log/ip_monitor*.log 
+/var/log/openprint/ip_monitor*.log 
 {
 	rotate 7
 	daily
@@ -19,6 +19,6 @@
 	delaycompress
 	compress
 	postrotate
-		[ ! -f /var/run/ip_monitor.pid ] || kill -HUP `cat /var/run/ip_monitor.pid`
+		[ ! -f /run/ip_monitor.pid ] || kill -HUP `cat /run/ip_monitor.pid`
 	endscript
 }

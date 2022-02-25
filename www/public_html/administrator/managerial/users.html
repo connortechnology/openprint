@@ -43,21 +43,42 @@ return $html.'<option value="">Use the filter to populate this dropdown</option>
 ) ?>
 			</select>
 		</li>
-		<li>
-			<label>Sales Rep</label>
-			<select name="salesrep_id" size="1" onchange="load_page();"> 
-				<option value="">All</option>
-				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
-			</select>
-			<? echo ( checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ); ) ?>
-		</li>
-		<li>
-			<label>Group</label>
-			<select name="usergroup_id" size="1" onchange="load_page();"> 
-				<option value="">All</option>
-				<? echo ( make_drop_down( openprint::UserGroup->dropdown(), $session{$r->uri().'?usergroup_id'} ); ) ?>
-			</select>
-		</li>
+<?echo(
+		my @CSRs = openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales' );
+		return if ! @CSRs;
+
+		join("\n",
+					'<li><label>Sales Rep</label>',
+					ssi::select(
+				[ map { $$_{id}, $_->name() } @CSRs ],
+				$session{$r->uri().'?salesrep_id'},
+				{
+				name=>'salesrep_id',
+				onchange=>'load_page();',
+				prepend=>['','All'],
+				}
+				),
+			checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ), 
+'</li>',
+			);
+ ) ?>
+<?echo(
+	my @Groups = openprint::UserGroup->find();
+	return if ! @Groups;
+	join("\n",
+		'<li><label>Group</label>',
+		ssi::select(
+			[ map { $$_{id}, $$_{name} } @Groups ],
+			$session{$r->uri().'?usergroup_id'},
+			{
+				name=>'usergroup_id',
+				onchange=>'load_page();',
+				prepend=>['','All'],
+			},
+),
+'</li>',
+);
+) ?>
 		<li><label>Notifications</label>
 			<? echo ( ssi::select( openprint::User_Notification_Type->dropdown(), $session{$r->uri().'?notification_type_id'}, {
 						name=>'notification_type_id',
@@ -89,6 +110,13 @@ return $html.'<option value="">Use the filter to populate this dropdown</option>
 				button('Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
 		</p>
+  <p class="buttons">
+      <input type="file" name="file"/>
+      <? echo ( join("\n",
+      button( 'Import', { onclick=>"f1.btnFunction.value='import';f1.submit();", text=>'Import' } ),
+      #button( 'Export', { onclick=>"f1.btnFunction.value='Export Specifications';f1.submit();", text=>'Export' } ),
+      ); ) ?>
+    </p> 
 	</fieldset>
 	<div id="Results">Click Show Results</div>
 	<input type="hidden" name="btnFunction"/>

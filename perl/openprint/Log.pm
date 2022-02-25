@@ -27,7 +27,8 @@ $serial = 'logs_id_seq';
 	Object		=>	undef,
 );
 %find_fields = (
-	action		=>	'(SELECT name FROM log_actions WHERE log_actions.id = logs.action_id)',
+  #action		=>	'(SELECT name FROM log_actions WHERE log_actions.id = logs.action_id)',
+	action		=>	'action_id = (SELECT id FROM log_actions WHERE name = ?)',
 	object_type	=>	'(SELECT name FROM Object_Types WHERE object_types.id=logs.object_type_id)',
 	ip_address	=>	'(SELECT ip FROM Host_Interfaces where host_interfaces.host_id=host_id)',
 );
@@ -98,11 +99,11 @@ sub Host {
 	if ( ( ! $_[0]{host_id} ) and ( $_[0]{ip_address} ) ) {
 		my $Interface = openprint::Host_Interface->find_one( ip=>$_[0]{ip_address} );
 		my $Host;
-		if ( ! $Interface ) {
+		if ( !$Interface ) {
 			$Host = new openprint::Host();
 			$Host->save();
 			$Interface = new openprint::Host_Interface();
-			$Interface->save({host_id=>$$Host{id}, ip=>$_[0]{ip_address} });
+			$Interface->save({ host_id=>$$Host{id}, ip=>$_[0]{ip_address} });
 		} else {
 			$Host = $Interface->Host();
 		} 

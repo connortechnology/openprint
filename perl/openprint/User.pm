@@ -137,7 +137,7 @@ sub save {
 		my %info;
 		$info{User} = $self;
 		$_ = $$params{web_active} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
-		$info{ReplacementText} = ssi::include( $_, \%info );
+		$info{ReplacementText} = ssi::include( '/email_content/'.$_, \%info );
 		my $email_template = ssi::include( '/email_template.html', \%info  );
 
 		new openprint::Email()->send(
@@ -564,7 +564,7 @@ $openprint::log->debug("Autoload User $name $_[0]") if $debug;
 				$$Profile{fields}{$name} = $_[1];
 			} # end if
 			return $$Profile{fields}{$name};
-		} else {
+		} elsif ( $debug ) {
 			my ( $caller, undef, $line ) = caller;
 			$openprint::log->error("Unknown field in User::AUTOLOAD $name from $caller:$line");
 		} # end if

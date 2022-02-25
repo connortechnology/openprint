@@ -1,25 +1,25 @@
 <? eval (
+  my $uri = '/administrator/project_types/index.html';
 	@{$$variable{Project_Types}} = ();
 	foreach my $Project_Type ( openprint::ProjectType->find( 
-		#ssi::date_filter( '/administrator/project_types/index.html?created_on_end','created_on <=' ),
+		#ssi::date_filter( $uri.'?created_on_end','created_on <=' ),
 		#ssi::date_filter( '/administrator/project_types/index.html?created_on_start','created_on >=' ),
-			( $session{'/administrator/project_types/index.html?category_id'} ? ( category_id => $session{'/administrator/project_types/index.html?category_id'} ) : () ),
+			( $session{$uri.'?category_id'} ? ( category_id => $session{$uri.'?category_id'} ) : () ),
 			order				=> 'sorting,lower(name)',
 		) ) {
 		push @{$$variable{Project_Types}}, $Project_Type;
 	} # end foreach Project_Types
 ) ?>
-
 <? if ( @{$$variable{Project_Types}} == 0 ) ?>
-	There are no service types which match your search criteria. 
+	There are no project types matching your search criteria. 
 <? else ( @{$$variable{Project_Types}} == 0 ) ?>
 		<? echo ( 
 			my $html;
 $html .= '<div class="Project_Type header"> 
-                        <div class="Name">Name</div>
-                        <div class="Description">Description</div>
-                        <div class="Category">Category</div>
-                    </div>';
+              <div class="Name">Name</div>
+              <div class="Description">Description</div>
+              <div class="Category">Category</div>
+          </div>';
 
 			foreach my $Project_Type ( @{$$variable{Project_Types}} ) {
 

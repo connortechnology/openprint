@@ -6,38 +6,38 @@
 var load_page_ajax = null;
 function load_page() {
 	if ( load_page_ajax ) load_page_ajax.abort();
-	 load_page_ajax = jQuery('#Folds').load( '_folds.html',
+	  load_page_ajax = $j('#Folds').load( '_folds.html',
 		{	
-			equipment_id: jQuery('#equipment_id').val(),
-			type: jQuery('#type').val() 
+			equipment_id: $j('#equipment_id').val(),
+			type: $j('#type').val() 
 		},
 		function() {
 			load_page_ajax = null;
 		}
-
 	);
 } 
 </script>
 <form id="f1" name="f1" method="post" action="folds.html">
   <input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Report Criteria</legend>
-		<ul>
-		<li>
-			<label>Equipment</label>
-			<select id="equipment_id" name="equipment_id" onchange="load_page();">
-				<option value="">All Equipment</option>
-<? echo (
-    make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)', 'servicetype any'=>'Folding' ) ], $param{equipment_id} );
-) ?>
-			</select>
-		</li>
-		<li><label>Type</label>
-			<select id="type" name="type" onchange="load_page();">
-				<option value="">All</option>
-<? echo ( 
-	make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types ] );
-) ?>
-			</select>
+      <ul>
+      <li>
+        <label>Equipment</label>
+        <select id="equipment_id" name="equipment_id" onchange="load_page();">
+          <option value="">All Equipment</option>
+  <? echo (
+      make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)', 'servicetype any'=>'Folding' ) ], $param{equipment_id} );
+  ) ?>
+        </select>
+      </li>
+      <li><label>Type</label>
+        <select id="type" name="type" onchange="load_page();">
+          <option value="">All</option>
+  <? echo ( 
+    make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types ] );
+  ) ?>
+        </select>
+      </li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",

@@ -13,10 +13,10 @@ sub new {
 
 	my $self = {};
 	bless $self, $parent;
-	$$self{'user_id'} = $user_id;
+	$$self{user_id} = $user_id;
 #$openprint::log->debug("new User_Profile");
 	if ( $user_id ) {
-		%{$$self{'fields'}} = map { $_->field(), $_ } openprint::User_Profile_Entry->find('user_id'=>$user_id);
+		%{$$self{fields}} = map { $_->field(), $_ } openprint::User_Profile_Entry->find(user_id=>$user_id);
 	} # end if
 #$openprint::log->debug("new User_Profile now listing fields and values");
 #foreach my $f ( keys %{$$self{'fields'}} ) {

@@ -3,7 +3,7 @@ package openprint::www;
 use utf8;
 use open ( ":encoding(UTF-8)", ":std" );
 
-use constant Debug => 0;
+use constant Debug => 1;
 
 #use Benchmark;
 #use diagnostics;
@@ -41,16 +41,16 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *r = \$openprint::r;
 
 sub warn {
-	$log->error("Warning: $_[0]");
+	$log->error('Warning: '.$_[0]);
 }
 
 $SIG{__WARN__} = \&warn;
 
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
-		$log->debug("Was aborted");
+		$log->debug('Was aborted');
 	} elsif ( Debug ) {
-		$log->debug("cleanup");
+		$log->debug('cleanup');
 	} # end if
 	%openprint::variable = ();
 	%openprint::param = ();
@@ -63,13 +63,13 @@ sub cleanup {
 		$session{lastupdated} = time;
 		untie %session;
 		if ( ! $dbh->{AutoCommit} ) {
-			$log->error("Uncommited transaction");
+			$log->error('Uncommited transaction');
 		} elsif ( Debug ) {
-			$log->debug("Finished cleanup");
+			$log->debug('Finished cleanup');
 		} # end if
 		$dbh->disconnect();
 	} else {
-		$log->debug("No dbh at cleanup");
+		$log->debug('No dbh at cleanup');
 	} # end if
 } # end sub cleanup
 
@@ -87,7 +87,7 @@ sub handler {
 	$log	= $r->log;
 	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 	my $page = $r->uri();
-	$log->debug( "Beginning of Request: Page: " . $page );
+	$log->debug('Beginning of Request: Page: '.$page);
 
 	%param = ();
 	# Here we copy the param data into a hash that is sligthly more useful to use.	Wish we didn't have to do this.
@@ -98,16 +98,16 @@ sub handler {
 			#$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = $values[0];
-			utf8::decode($param{$key});
+      #utf8::decode($param{$key});
 #utf8::encode($values[0]);
 			#$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
 		} # end if
 	} # end foreach
 	foreach my $key ( sort keys %param ) {
 		if ( ref $param{$key} eq 'ARRAY' ) {
-			$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
+			$log->debug('Parameter '.$key.' is ARRAY(' . join(',', @{$param{$key}}) . ')');
 		} else {
-			$log->debug("Parameter $key is (" . $param{$key} . ')' . (utf8::is_utf8($param{$key})||0) );
+			$log->debug('Parameter '.$key.' is ('.$param{$key}.')');# . (utf8::is_utf8($param{$key})||0) );
 			#$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
 		} # end if
 	}	# end foreach
@@ -115,9 +115,9 @@ sub handler {
 	$dbh = sql::open_sql( $log, 
 			database	=> $r->dir_config('db_name'),
 			driver		=> $r->dir_config('db_driver'), 
-			host		=> $r->dir_config('db_host'),
-			port		=> $r->dir_config('db_port'),
-			login		=> $r->dir_config('db_user'),
+			host		  => $r->dir_config('db_host'),
+			port		  => $r->dir_config('db_port'),
+			login		  => $r->dir_config('db_user'),
 			password	=> $r->dir_config('db_password'),
 			);
 
@@ -128,28 +128,39 @@ sub handler {
 	openprint::session_init();
 	openprint::usergroup::init_cache();
 	if ( $dbh ) {
-		my $PageSetting = openprint::Page_Setting::get( $page );
-		$PageSetting = new openprint::Page_Setting() if ! $PageSetting;
-		$variable{PageSetting} = $PageSetting;
 
-		# if not logged in, determine if they are allowed to see this page or not.
-		if ( ! $PageSetting->can_view() ) {
-			openprint::login::save_destination();
-			$log->debug('No good, need login');
-			if ( $page =~ /^.*\/_/ ) {
-				$r->content_type(q{text/javascript; charset=utf-8});
-				$r->print( q`window.location='/error/error_login.html';` );
-				return Apache2::Const::OK;
-			} else {
-				if ( $page =~ /employee/ ) {
-				$page = '/employee/account/login.html';
+    if ( !$session{user_id} and !openprint::User->find_one(type=>'A') ) {
+      if (!openprint::Company->find_one()) {
+        $page = '/administrator/managerial/company_profiles.html';
+      } else {
+        $page = '/administrator/managerial/user_profiles.html';
+      }
+			$session{user_type} = 'A';
+		} else {
+
+			my $PageSetting = openprint::Page_Setting::get( $page );
+			$PageSetting = new openprint::Page_Setting() if ! $PageSetting;
+			$variable{PageSetting} = $PageSetting;
+
+# if not logged in, determine if they are allowed to see this page or not.
+			if ( ! $PageSetting->can_view() ) {
+        openprint::login::save_destination();
+				$log->debug("No good, need login");
+				if ( $page =~ /^.*\/_/ ) {
+					$r->content_type(q{text/javascript; charset=utf-8});
+					$r->print( q`window.location='/error/error_login.html';` );
+					return Apache2::Const::OK;
 				} else {
-				$page = '/error/error_login.html';
+					if ( $page =~ /employee/ ) {
+						$page = '/employee/account/login.html';
+					} else {
+						$page = '/error/error_login.html';
+					} # end if
 				} # end if
+				$variable{Destination} = misc::get_destination( $r, $r->uri() );
+#$r->headers_out->set(Location=>'/error/error_login.html');
+#$r->status(Apache2::Const::REDIRECT);
 			} # end if
-			$variable{Destination} = misc::get_destination( $r, $r->uri() );
-				#$r->headers_out->set(Location=>'/error/error_login.html');
-				#$r->status(Apache2::Const::REDIRECT);
 		} # end if
 
 		foreach my $o ( split(',',$config{Cached_Objects} ) ) {
@@ -166,7 +177,7 @@ sub handler {
 			$variable{uri} = $page;
 			parse_page($page);
 			if ( (exists $variable{Redirect}) and $variable{Redirect} ) {
-				$openprint::log->debug("Reirect: $variable{Redirect}");
+				$openprint::log->debug("Redirect: $variable{Redirect}");
 				$page = $variable{Redirect};
 				$variable{Redirect} = '';
 			} # end if
@@ -194,7 +205,7 @@ sub handler {
 		$r->headers_out->set(Location=>$variable{ExternalRedirect});
 		$r->status(Apache2::Const::REDIRECT);
 		#$r->send_http_header;
-		$log->debug("Redirecting to " . $variable{ExternalRedirect} );
+		$log->debug('Redirecting to ' . $variable{ExternalRedirect} );
 	} elsif ( exists $variable{Download} and $variable{Download} ) {
 		if ( ref $variable{Download} eq 'ARRAY' ) {
 			foreach ( @{$variable{Download}} ) {
@@ -235,28 +246,27 @@ $log->error("Deprecated SkinPath layout! $path");
 $log->debug("PageContent is $variable{PageContent}");
 		} # end if
 		my $template;
-		my @page_path = split('/', $page );
+		my @page_path = split('/', $page);
 		my $filename = pop @page_path;
 		# _ signifies a page fragment, so don't load layout
-		if ( substr($filename, 0, 1 ) ne '_' ) {
-			my $file = join( '/', $config{SkinPath}, 'layouts', @page_path, $filename );
+		if ( substr($filename, 0, 1) ne '_' ) {
+			my $file = join('/', $config{SkinPath}, 'layouts', @page_path, $filename);
 			#$log->debug("Looking for $file");
 			if ( -e $file ) {
 				$template = misc::load_file( $log, $file );
-$log->debug("Foudn template at $file") if Debug;
+        $log->debug('Found template at '.$file) if Debug;
 			} else {
-			while ( @page_path ) {
-				$file = join( '/', $config{SkinPath}, 'layouts', @page_path, 'default.html' );
-				#$log->debug("Looking for $file");
-				if ( -e $file ) {
-					$template = misc::load_file( $log, $file );
-					last;
-				} # end if
-				pop @page_path;
-			} # end while
+        while ( @page_path ) {
+          $file = join('/', $config{SkinPath}, 'layouts', @page_path, 'default.html');
+          if ( -e $file ) {
+            $template = misc::load_file($log, $file);
+            last;
+          } # end if
+          pop @page_path;
+        } # end while
 			} # end if
 		} # end if _
-		$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if Debug;
+		$log->debug("After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs') if Debug;
 		local $|=1;
 		if ( ! $r->connection()->aborted() ) {
 			if ( $template ) {
@@ -272,11 +282,11 @@ $log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_inte
 $log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if Debug;
 			} # end if
 		} else {
-			$log->debug("Aborted");
+			$log->debug('Aborted');
 		} # end if
 	} # end if
 
-	$log->debug( 'Elapsed seconds: ' . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+	$log->debug('Elapsed seconds: ' . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs');
 	return Apache2::Const::OK;
 } # end sub handler
 
@@ -306,7 +316,7 @@ sub parse_page {
 		$status = Apache2::Const::OK;
 
 		# This needs special treatment.
-		if ( $filename eq 'login_confirmation.html') {
+		if ( $filename eq 'login_confirmation.html' ) {
 			openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'A' );
 			return $status if $variable{Redirect};	
 		} # end if
@@ -581,13 +591,13 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 						my $module = join('_', ($first, $second));
 						require "openprint/$module.pm"; 
 						if ( my $function = ('openprint::'.$module)->can($proc) ) {
-	$log->debug("Running openprint::$module->$proc") if Debug;
+              $log->debug("Running openprint::$module->$proc") if Debug;
 							$function->();
 						} else {
-							$log->error( "No function def for $module :: $proc!" );
+							$log->error("No function def for $module :: $proc!");
 						}
 					} else {
-$log->debug("No proc found for $filename");
+            $log->debug("No proc found for $filename");
 					} # end if
 				} # end if -e $ENV{DOCUMENT_ROOT}.$uri 
 

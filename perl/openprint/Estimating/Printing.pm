@@ -659,11 +659,15 @@ $log->debug("Setting washed colours $$Colour{name}.'-'.$$sig_specs{'ddmPress'.$q
 		} else { 
 			$colour = $$real_colour{name};
 		} # end if
+$log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if DEBUG_INKS;
 
 		if ( ! $special_colours{$colour} ) {
 			my $Ink = openprint::Ink->find_one(name=>$colour);
-$log->debug("Adding special colour for $colour");
-
+			$log->debug("Adding special colour for $colour") if DEBUG_INKS;
+			if ( !$Ink and ($$real_colour{type} eq 'PMS') ) {
+				$Ink = openprint::Ink->find_one(name=>'PMSInk');
+					$log->debug("Adding PMS special colour for $colour have: $Ink") if DEBUG_INKS;
+			}
 			if ( !$Ink ) {
 				# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
 				$Ink = new openprint::Ink();
@@ -677,7 +681,7 @@ $log->debug("Adding special colour for $colour");
 					$Material = $Materials{PMSInk} if ! $Material and $$real_colour{type} eq 'PMS';
 					$$Ink{material_id} = $Material->id() if $Material;
 				} # end if
-			} # end if foudn Ink
+			} # end if found Ink
 			$special_colours{$colour} = [ $Ink ];
 		} # end if
 	} # end foreach
@@ -699,7 +703,7 @@ $log->debug("Adding special colour for $colour");
 	} # end foreach
 
 	@project{'NoBindery','NoOfflineBindery'} = @$services{'NoBindery','NoOfflineBindery'};
-	$project{Binding} = openprint::print::get_book_type( $Project );
+	$project{Binding} = $Project->get_book_type();
 	if ( !$$services{NoBindery} ) {
 		$project{NeedFolding} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
 		if ( $$services{DieCutting} ) {
@@ -6327,13 +6331,13 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			$log->debug('Got INK: '.$Ink->to_string());
 		} # end if
 
-		my $InkService = $Ink->Service() ?  $Ink->Service() : $Services{$real_colour};
+		my $InkService = $Ink->Service() ? $Ink->Service() : $Services{$real_colour};
 		my %InkService;
 		if ( $InkService and %InkService = $InkService->get_price( $colour_impressions, $Press ) ) {
 			if ( $InkService{units} eq 'per m' ) {
 				$InkService{Total} = $InkService{Price} * $colour_impressions/1000;
 			} else {
-				$price{'Ink breakdown'} .= 'unknown units for '.$real_colour;
+				$price{'Ink breakdown'} .= 'unknown units for mix service for '.$real_colour.' ' . $InkService{units} .'<br/>';
 				$log->error('unknown units for ' . $real_colour );
 			} # end if
 			$ink_price{ServicePrice} = \%InkService;
@@ -6410,6 +6414,15 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $qty );
 					$ink_price{Total} += $material_price{Total};
 					$price{'Ink breakdown'} .= sprintf(' mileage: %d sq in per cartridge, %.2fsq in means %.4f * $%s%s=$%.2f = $%.2f', $$Coverage{value}, $area, $qty, @material_price{'Price','units','Total'}, $ink_price{Total});
+        } elsif ( $material_price{units} eq 'per can' ) {
+					my $Coverage = $Ink->Coverage($Press, $grade);
+					my $qty = POSIX::ceil($area/$$Coverage{value}) if $Coverage and $$Coverage{value};
+					%material_price = $InkMaterial->get_price( $qty, $Press );
+					$ink_price{Material} = \%material_price;
+					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $qty );
+					$ink_price{Total} += $material_price{Total};
+					$price{'Ink breakdown'} .= sprintf(' %d%% = %d square inches, mileage: %dsquare inches/can = %d cans * $%s%s=$%.2f = $%.2f',
+            $coverage*100, $area, $$Coverage{value}, $qty, @material_price{'Price','units','Total'}, $ink_price{Total});
 				} elsif ( $material_price{units} eq 'per kg' ) {
 					my $Coverage = $Ink->Coverage($Press, $grade);
 					if ( ( ! $Coverage ) or ! $$Coverage{value} ) {

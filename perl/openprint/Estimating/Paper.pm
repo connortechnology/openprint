@@ -133,7 +133,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-    if (!$$specs{'OverridePrice'.$qty_index}) {
+    if (!$$specs{'OverridePrice'.$qty_index} or $$specs{'OverridePrice'.$qty_index} ne 'Y') {
       delete $$specs{'txtPrice'.$qty_index};
       delete $$specs{'MPrice'.$qty_index};
     }
@@ -345,7 +345,7 @@ $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 	} # end foreach Stock
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-    if (!$$specs{'OverridePrice'.$qty_index}) {
+    if (!$$specs{'OverridePrice'.$qty_index} or $$specs{'OverridePrice'.$qty_index} ne 'Y') {
       $$specs{"txtPrice$qty_index"} = 0;
       foreach my $Stock_Entry ( @Stocks ) {
         my $stock_index = $$Stock_Entry{index};

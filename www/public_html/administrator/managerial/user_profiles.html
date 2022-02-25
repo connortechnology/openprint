@@ -67,7 +67,7 @@ Please select a company or user to obtain login information.<br/>
 						<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $param{ddmUserRole} ); ) ?>
 					</select>
 				</li>
-				<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{deleted}, {onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
+				<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{deleted}, {onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();",inline=>1} ); ) ?></li>
 				<li>
 					<label>User Name</label>
 					<select name="ddmUser" onchange="f1.btnFunction.value='';f1.submit();">
@@ -144,7 +144,7 @@ Please select a company or user to obtain login information.<br/>
 					</li>
 					<li class="salutation">
 						<label>Salutation</label>
-						<? echo ( radio( 'salutation', [ 'Mr.','Mr.','Mrs.','Mrs.','Ms.','Ms.','Miss','Miss' ], $$variable{User}->salutation() ); ) ?>
+						<? echo ( radio( 'salutation', [ 'Mr.','Mr.','Mrs.','Mrs.','Ms.','Ms.','Miss','Miss' ], $$variable{User}->salutation(), {inline=>1} ); ) ?>
 					</li>
 					<li> 
 						<label>First Name</label>
@@ -160,7 +160,7 @@ Please select a company or user to obtain login information.<br/>
 					</li>
 					<li class="phone"> 
 						<label>Phone</label>
-						<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" />x
+						<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" /> x
 						<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{User}->extension() ) ?>" />
 					</li>
 					<li class="mobile"> 
@@ -181,29 +181,34 @@ Please select a company or user to obtain login information.<br/>
 				<ul>
 					<li class="mailinglist"> 
 						<label>Add to our Mailing List</label>
-						<? echo( radio('mailinglist', [ 'Y', 'Yes', 'N', 'No', '', 'Unset' ], $$variable{User}->mailinglist()); ) ?>
+						<? echo( radio(
+              'mailinglist',
+              [ 'Y', 'Yes', 'N', 'No', '', 'Unset' ],
+              $$variable{User}->mailinglist(),
+              { inline=>1 }
+              ); ) ?>
 					</li>
 					<li class="administrator"> 
 						<label>Is this account a company administrator?</label>
-						<? echo ( radio( 'administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator() ); ) ?>
+						<? echo ( radio( 'administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator(),{ inline=>1} ); ) ?>
 					</li>
 					<li class="web_active"> 
 						<label>Can this account login to the web site?</label>
-						<? echo ( radio( 'web_active', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->web_active() ); ) ?>
+						<? echo ( radio( 'web_active', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->web_active(),{ inline=>1} ); ) ?>
 					</li>
 					<li class="ftp_active">
 						<label>Can this account login to the ftp site?</label>
-						<? echo ( radio( 'ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active() ); ) ?>
+						<? echo ( radio( 'ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active(),{ inline=>1} ); ) ?>
 					</li>
 					<li class="ftp_root">
 						<label>Limit FTP access to this folder</label>
 						<? echo ( input( type=>'text', name=>'ftp_root', id=>'ftp_root', value=>$$variable{User}->ftp_root() ); ) ?>
 					</li>
-					<li> 
+					<li class="greeting"> 
 						<label>Custom Greeting</label>
 						<textarea id="greeting" name="greeting" rows="<? echo ( count_lines( $$variable{User}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->greeting() ) ?></textarea>
 					</li>
-					<li>
+					<li class="notes">
 						<label>Notes</label>
 						<textarea id="notes" name="notes" rows="<? echo ( count_lines( $$variable{User}->notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->notes() ) ?></textarea>
 					</li>
@@ -213,7 +218,6 @@ Please select a company or user to obtain login information.<br/>
 					<li><label>Updated</label>
 						<? echo ( format_datetime( $$variable{User}->updated_on() ); ) ?>
 					</li>
-		
 				</ul>
 			</div>
 			<br class="spacer"/>
@@ -225,10 +229,10 @@ Please select a company or user to obtain login information.<br/>
 							<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{User}->type() ); ) ?>
 						</select>
 					</li>
-					<? if ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
+					<? if ( $$variable{User}->type() eq 'E' or $$variable{User}->type() eq 'A' ) ?>
 					<li class="commission">
 						<label>Commission Rate</label>
-						<? echo ( input( type=>'float', name=>'commission', value=>$$variable{User}->commission() ); ) ?>%
+						<? echo ( input( type=>'float', name=>'commission', value=>$$variable{User}->commission() ); ) ?> %
 					</li>
 					<li class="wage"> 
 						<label>Wage</label>
@@ -253,9 +257,9 @@ Please select a company or user to obtain login information.<br/>
 				</ul>
 			</div>
 		</fieldset>
-		<fieldset><legend>Assistants</legend>
-				<ul class="Assistants">
-					<? if ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
+		<fieldset class="Assistants"><legend>Assistants</legend>
+				<ul>
+					<? if ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), ($config{owner_id} ? (company_id=>$config{owner_id}) : () ), type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
 					<li class="csr_ids">
 						<label>Assistant to</label>
 						<select name="csr_ids" size="4" multiple="multiple">
@@ -268,38 +272,35 @@ Please select a company or user to obtain login information.<br/>
 							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{csr_ids}} ], [$$variable{User}->assistant_ids()] ); ) ?>
 						</select>
 					</li>
-					<? endif ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
-					<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
+					<? endif ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), ($config{owner_id} ? (company_id=>$config{owner_id}) : () ), type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
+					<? endif ( $$variable{User}->type() eq 'E' or $$variable{User}->type() eq 'A' ) ?>
 				</ul>
 			</fieldset>
 
 			<div class="rightColumn">
 				<ul>
-					<? if ( @{$$variable{user_categories}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>
+					<? if ( @{$$variable{user_categories}} = openprint::MarketingCategory->find(order=>'lower(name)') ) ?>
 					<li class="user_categories">
 						<label>User Category</label>
-						<select name="selectUserCategories" size="4" multiple="multiple">
+						<select name="selectUserCategories" multiple="multiple">
 						<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{user_categories}} ], [ openprint::MarketingCategory->find('user_id any'=>$$variable{User}->id()) ] ); ) ?>
 						</select>
 					</li>
-					<? endif ( @{$$variable{user_categories}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>
-					<li class="email_quotes notrequired">
-							<label>Email my quotes to myself?</label>
-							<input type="radio" id="email_quotes_to_myself1" name="email_quotes_to_myself" <? echo ( checked( $$variable{User}->email_quotes_to_myself() ); ) ?> value="1" />
-							<label class="radio" for="email_quotes_to_myself1">Yes</label>
-							<input type="radio" id="email_quotes_to_myself0" name="email_quotes_to_myself" <? echo ( checked( ! $$variable{User}->email_quotes_to_myself() ); ) ?> value="0" />
-							<label class="radio" for="email_quotes_to_myself0">No</label>
-					</li>
-<? eval ( @{$$variable{QuoteLevels}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
-<? if ( @{$$variable{QuoteLevels}} > 1 ) ?>
-					<li class="notrequired">
-							<label>Quote Level</label>
-							<select id="quote_level" name="quote_level">
-									<option value="">select</option>
-									<? echo ( make_drop_down( $$variable{QuoteLevels}, $$variable{User}->quote_level() ) ) ?>
-							</select>
-					</li>
-<? endif ( @{$$variable{QuoteLevels}} > 1 ) ?>
+					<? endif ( @{$$variable{user_categories}} = openprint::MarketingCategory->find(order=>'lower(name)') ) ?>
+          <li class="email_quotes notrequired">
+            <label>Email my quotes to myself?</label>
+            <?echo( radio('email_quotes_to_myself', [ 1, 'Yes', 0, 'No' ], $$variable{User}->email_quotes_to_myself() ); ) ?>
+          </li>
+          <? eval ( @{$$variable{QuoteLevels}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
+          <? if ( @{$$variable{QuoteLevels}} > 1 ) ?>
+          <li class="notrequired">
+            <label>Quote Level</label>
+            <select id="quote_level" name="quote_level">
+                <option value="">select</option>
+                <? echo ( make_drop_down( $$variable{QuoteLevels}, $$variable{User}->quote_level() ) ) ?>
+            </select>
+          </li>
+          <? endif ( @{$$variable{QuoteLevels}} > 1 ) ?>
 				</ul>
 			</div>
 		</fieldset>
@@ -329,12 +330,12 @@ Please select a company or user to obtain login information.<br/>
 					</li>
 					<li> 
 						<label>Password</label>
-						<input type="text" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( ( sets::isin( $$variable{User}->type(), ['C','E'] ) and ! $config{encrypt_passwords} ) ? $$variable{User}->password() : '' ) ?>" />
+						<input type="text" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( (($$variable{User}->type() ne 'A') and !$config{encrypt_passwords}) ? $$variable{User}->password() : '' ) ?>" />
 						<span id="psContainer"><span id="psStrength"></span></span>
 					</li>
 					<li>
 						<label for="verifypassword">Verify Password</label>
-						<input type="text" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( ( sets::isin( $$variable{User}->type(), ['C','E'] ) and ! $config{encrypt_passwords} ) ? $$variable{User}->password() : '' ) ?>"/>
+						<input type="text" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( (($$variable{User}->type() ne 'A') and !$config{encrypt_passwords}) ? $$variable{User}->password() : '' ) ?>"/>
 						<span id="password_alert"></span>
 					</li>
 					<li><label>Password Last Changed</label>
@@ -342,10 +343,7 @@ Please select a company or user to obtain login information.<br/>
 					</li>
 					<li> 
 						<label>User must change password on next login?</label>
-						<input type="radio" id="change_passwordY" name="change_password" <? echo ( checked( $$variable{User}->change_password() eq 'Y' ); ) ?> value="Y"/>
-						<label for="change_passwordY" class="radio">Yes</label>
-						<input type="radio" id="change_passwordN" name="change_password" <? echo ( checked( $$variable{User}->change_password() ne 'Y' ); ) ?> value="N"/>
-						<label for="change_passwordN" class="radio">No</label>
+						<?echo(radio('change_password', ['Y','Yes','N','No'], $$variable{User}->change_password() ); ) ?>
 					</li>
 				</ul>
 			</fieldset>

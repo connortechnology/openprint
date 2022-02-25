@@ -11,6 +11,11 @@ use openprint ();
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
+use openprint ();
+*session = \%openprint::session;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
 foreach my $Service ( 'UVCoating' ) {
 	eval "
 		my \@keys = keys %openprint::Estimating::${Service}::ServicePrices;

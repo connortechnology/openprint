@@ -20,6 +20,9 @@ use vars qw( $r $log $dbh %variable %param %session );
 *session = \%openprint::session;
 
 sub edit {
+  require openprint::Paper;
+  require openprint::PaperPrice;
+
 	my $ProjectType = new openprint::ProjectType( $param{ddmProjectType} );
 
 	if ( $param{btnFunction} eq 'Previous' ) {
@@ -55,26 +58,32 @@ sub edit {
 		}
 		my @changes = $ProjectType->changes( \%param );
 		$variable{error} .= $ProjectType->save( \%param );
-		(new openprint::Log())->save({ object_type=>(ref $ProjectType), object_id=>$$ProjectType{id}, action=>($param{ddmProjectType}?'Edited ProjectType':'Saved ProjectType'), note=>join('<br/>', @changes) });
 
 		sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() ) if $param{ddmProjectType};
 		foreach my $key ( keys %param ) {
 			if ( $key =~ /^Paper\d*$/ ) {
 				sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$param{$key},'lngProjectTypeIndex', $ProjectType->id() );
+
 			} # end if
 		} # end foreach
+		(new openprint::Log())->save({
+        Object=>$ProjectType, action=>($param{ddmProjectType}?'Edited ProjectType':'Saved ProjectType'), note=>join('<br/>', @changes) });
 		$variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
 	} elsif ( $param{btnFunction} eq 'Import' ) {
 		my $error = '';
 		if ( $param{fileImport} ) {
-			my $upload = $r->upload( 'fileImport' );
+			my $upload = $r->upload('fileImport');
+      if ( ! $upload ) {
+        $variable{error} .= "No upload for file $param{fileImport}<br/>";
+        return;
+      }
 			my $io = $upload->io();
 			$_ = <$io>;
 
 			my $csv = Text::CSV_XS->new();
 			my %cache = map { $_->name(), $_ } openprint::ProjectType->find();
-			
-      	
+
+
 			my $ac = sql::start_transaction( $dbh );
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
@@ -88,7 +97,7 @@ sub edit {
 				my %changes = (
 						name        =>  $name,
 						description =>  $desc,
-						category	=>	$category,
+						category	  =>	$category,
 						url         =>  $url,
 						sorting     =>  $sort,
 						);
@@ -99,15 +108,16 @@ sub edit {
 					$variable{information} .= "No changes for $$PT{name}<br/>";
 					next;
 				}
-				
+
 				if ( $_ .= $PT->save( \%changes ) ) {
 					$error .= "Error saving Project Type $name : $_<br/>";
 				} else {
-					$variable{information} .= 
+					$variable{information} .=
 					(new openprint::Log())->save({ Object=>$PT, action=>'Edit Project Type', note => join('<br/>', @changes ) });
 				} # end if
 			} # end foreach
 			sql::end_transaction( $dbh, $ac );
+      $variable{ExternalRedirect} = '/administrator/project_types/index.html';
 		} else {
 			$log->warn( "No file given to upload." );
 		} # end if
@@ -273,7 +283,7 @@ sub templates {
 				if ( ! $projecttype_id ) {
 					$variable{error} .= "Unknown Project Type $id<br/>";
 					next;
-				} # end if	
+				} # end if
 				my @params = (
 						'ProjectType_id',		$projecttype_id,
 						'type',					$type,
@@ -290,7 +300,7 @@ sub templates {
 			} # for each
 			sql::end_transaction( $dbh, $ac );
 			$variable{ExternalRedirect} = '/administrator/project_types/templates.html?ddmProjectType='.$param{ddmProjectType};
-			
+
 		} else {
 			$log->warn( "No file given to upload." );
 		} # end if
@@ -380,139 +390,137 @@ sub index {
 			#ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_start', 0 );
 			#ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_end', '' );
 	 #} # end if
-	if ( $param{btnFunction} eq 'Export' ) {
-		 my @header = ( 'Name', 'Description', 'Category', 'Type', 'URL', 'Sort Value' );
-		 my @data = map { $_->get( qw(
-					name 
-					description	
-					category		
-					type			
-					url			
-					sorting		
-					) )
-		} openprint::ProjectType->find( order=>$openprint::ProjectType::fields{name});
-	 	misc::export_csv( $r, $log, \%variable, 'ProjectTypes.csv', \@header, \@data );
-	} elsif ( $param{btnFunction} eq 'Import' ) {
-		my $error = '';
-		if ( $param{fileImport} ) {
-			my $upload = $r->upload( 'fileImport' );
-			my $io = $upload->io();
-			$_ = <$io>;
+  if ( $param{btnFunction} ) {
+    if ( $param{btnFunction} eq 'Export' ) {
+       my @header = ( 'Name', 'Description', 'Category', 'Type', 'URL', 'Sort Value' );
+       my @data = map { $_->get( qw(
+            name
+            description
+            category
+            type
+            url
+            sorting
+            ) )
+      } openprint::ProjectType->find( order=>$openprint::ProjectType::fields{name});
+      misc::export_csv( $r, $log, \%variable, 'ProjectTypes.csv', \@header, \@data );
+    } elsif ( $param{btnFunction} eq 'Import' ) {
+      my $error = '';
+      if ( $param{fileImport} ) {
+        my $upload = $r->upload('fileImport');
+        my $io = $upload->io();
+        $_ = <$io>;
 
-			my $csv = Text::CSV_XS->new();
-			my %cache = map { $_->name(), $_ } openprint::ServiceType->find();
-			
-			my $ac = sql::start_transaction( $dbh );
-			while ( <$io> ) {
-				my $status = $csv->parse($_);
-				my ( $name, $desc, $category, $type, $url, $visible_in_project_create, $visible_in_project_view, $visible_in_project_summary, $allow_removal, $sort ) = misc::trim( $csv->fields() );
+        my $csv = Text::CSV_XS->new();
+        my %cache = map { $_->name(), $_ } openprint::ProjectType->find();
 
-				if ( ! $cache{$name} ) {
-					$cache{$name} = new openprint::ServiceType();
-				}
-				my $ST = $cache{$name};
+        my $ac = sql::start_transaction( $dbh );
+        while ( <$io> ) {
+          my $status = $csv->parse($_);
+          my ( $name, $desc, $category, $url, $sort ) = misc::trim( $csv->fields() );
 
-				my %changes = (
-						name			=>	$name,
-						description 	=>	$desc,
-						category		=>	$category,
-						type			=>	$type,
-						url				=>	$url,
-						create_visible	=>	$visible_in_project_create,
-						view_visible	=>	$visible_in_project_view,
-						summary_visible	=>	$visible_in_project_summary,
-						allow_delete	=>	$allow_removal,		
-						sorting			=>	$sort,
-						);
+          if ( ! $cache{$name} ) {
+            $cache{$name} = new openprint::ProjectType();
+          }
+          my $PT = $cache{$name};
 
-				my @changes = $ST->changes( \%changes );
+          my %changes = (
+              name		  	=>	$name,
+              description =>	$desc,
+              category		=>	$category,
+              url				  =>	$url,
+              sorting			=>	$sort,
+              );
 
-				if ( ! @changes ) {
-					$variable{information} .= "No changes for $$ST{name}<br/>";
-					next;
-				}
-				
-				if ( $_ .= $ST->save( \%changes ) ) {
-					$error .= "Error saving Service Type $name : $_<br/>";
-				} else {
-					$variable{information} .= "ServiceType $name imported<br/>";
-					(new openprint::Log())->save({ Object=>$ST, action=>'Edit Service Type', note => join('<br/>', @changes ) });
-				} # end if
-			} # end foreach
-			sql::end_transaction( $dbh, $ac );
-		} else {
-			$log->warn( "No file given to upload." );
-		} # end if
-		if ( $error ne '' ) {
-			$variable{error} = $error;
-		} # end if
-	} elsif ( $param{btnFunction} eq 'Export Defaults' ) {
-		my @header = ( 'Service Type', 'Project Type', 'Name', 'Value' );
-		my @data;
-		foreach my $ServiceType ( openprint::ServiceType->find(order=>'name') ) {
-			push @data, map { $ServiceType->name(), $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{name});
-		}
-		misc::export_csv( $r, $log, \%variable, 'All_ServiceTypeDefaults.csv', \@header, \@data );
-	} elsif ( $param{btnFunction} eq 'Import Defaults' ) {
-		my $error = '';
-		if ( $param{fileImport} ) {
-			my $upload = $r->upload( 'fileImport' );
-			my $io = $upload->io();
-			$_ = <$io>;
+          my @changes = $PT->changes( \%changes );
 
-			my $csv = Text::CSV_XS->new();
-			my %servicetype_cache = map { $_->name(), $_ } openprint::ServiceType->find();
-			my %projecttype_cache = map { $_->name(), $_ } openprint::ProjectType->find();
-			
-			my $ac = sql::start_transaction( $dbh );
-			while ( <$io> ) {
-				my $status = $csv->parse($_);
-				my ( $service_type, $project_type, $name, $value ) = misc::trim( $csv->fields() );
+          if ( ! @changes ) {
+            $variable{information} .= "No changes for $$PT{name}<br/>";
+            next;
+          }
 
-				if ( ! $servicetype_cache{$service_type} ) {
-					$variable{error} .= "ServiceType $service_type not found $project_type $name $value<br/>";
-					next;
-				}
-				if ( $project_type and ! $projecttype_cache{$project_type} ) {
-					$variable{error} .= "ProjectType $service_type not found $project_type $name $value<br/>";
-					next;
-				}
-				my $cache = { map { $_->projecttype().$_->name() => $_ } $servicetype_cache{$service_type}->Defaults() };
-				if ( ! $$cache{$project_type.$name} ) {
-					$$cache{$project_type.$name} = new openprint::ServiceType_Default();
-				}
-				my $Default = $$cache{$project_type.$name};
+          if ( $_ .= $PT->save( \%changes ) ) {
+            $error .= "Error saving Service Type $name : $_<br/>";
+          } else {
+            $variable{information} .= "ProjectType $name imported<br/>";
+            (new openprint::Log())->save({ Object=>$PT, action=>'Edit Project Type', note => join('<br/>', @changes ) });
+          } # end if
+        } # end foreach
+        sql::end_transaction( $dbh, $ac );
+      } else {
+        $log->warn( "No file given to upload." );
+      } # end if
+      if ( $error ne '' ) {
+        $variable{error} = $error;
+      } # end if
+    } elsif ( $param{btnFunction} eq 'Export Defaults' ) {
+      my @header = ( 'Service Type', 'Project Type', 'Name', 'Value' );
+      my @data;
+      foreach my $ServiceType ( openprint::ServiceType->find(order=>'name') ) {
+        push @data, map { $ServiceType->name(), $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{name});
+      }
+      misc::export_csv( $r, $log, \%variable, 'All_ServiceTypeDefaults.csv', \@header, \@data );
+    } elsif ( $param{btnFunction} eq 'Import Defaults' ) {
+      my $error = '';
+      if ( $param{fileImport} ) {
+        my $upload = $r->upload( 'fileImport' );
+        my $io = $upload->io();
+        $_ = <$io>;
 
-				my %changes = (
-						projecttype_id	=> $project_type ? $projecttype_cache{$project_type}->id() : undef,
-						servicetype_id	=> $servicetype_cache{$service_type}->id(),
-						name			=> $name,
-						value			=> $value,
-						);
+        my $csv = Text::CSV_XS->new();
+        my %servicetype_cache = map { $_->name(), $_ } openprint::ServiceType->find();
+        my %projecttype_cache = map { $_->name(), $_ } openprint::ProjectType->find();
 
-				my @changes = $Default->changes( \%changes );
+        my $ac = sql::start_transaction( $dbh );
+        while ( <$io> ) {
+          my $status = $csv->parse($_);
+          my ( $service_type, $project_type, $name, $value ) = misc::trim( $csv->fields() );
 
-$log->debug("changes @changes");
-				if ( ! @changes ) {
-					$variable{information} .= "No changes for $$Default{name}<br/>";
-$log->debug("No changes");
-					next;
-				}
-				
-				if ( $_ = $Default->save( \%changes ) ) {
-					$error .= "Error saving Service Type Default $name : $_<br/>";
-				} else {
-					$variable{information} .= "Service Type Default $service_type $project_type $name $value imported<br/>";
-					(new openprint::Log())->save({ Object=>$servicetype_cache{$service_type}, action=>'Edit', note => join('<br/>', @changes ) });
-				} # end if
-			} # end while io
-			sql::end_transaction( $dbh, $ac );
-			$variable{error} = $error;
-		} else {
-			$log->warn( "No file given to upload." );
-		} # end if
-	} # end if param{btnFunction}
+          if ( ! $servicetype_cache{$service_type} ) {
+            $variable{error} .= "ServiceType $service_type not found $project_type $name $value<br/>";
+            next;
+          }
+          if ( $project_type and ! $projecttype_cache{$project_type} ) {
+            $variable{error} .= "ProjectType $service_type not found $project_type $name $value<br/>";
+            next;
+          }
+          my $cache = { map { $_->projecttype().$_->name() => $_ } $servicetype_cache{$service_type}->Defaults() };
+          if ( ! $$cache{$project_type.$name} ) {
+            $$cache{$project_type.$name} = new openprint::ServiceType_Default();
+          }
+          my $Default = $$cache{$project_type.$name};
+
+          my %changes = (
+              projecttype_id	=> $project_type ? $projecttype_cache{$project_type}->id() : undef,
+              servicetype_id	=> $servicetype_cache{$service_type}->id(),
+              name			=> $name,
+              value			=> $value,
+              );
+
+          my @changes = $Default->changes( \%changes );
+
+  $log->debug("changes @changes");
+          if ( ! @changes ) {
+            $variable{information} .= "No changes for $$Default{name}<br/>";
+  $log->debug("No changes");
+            next;
+          }
+
+          if ( $_ = $Default->save( \%changes ) ) {
+            $error .= "Error saving Service Type Default $name : $_<br/>";
+          } else {
+            $variable{information} .= "Service Type Default $service_type $project_type $name $value imported<br/>";
+            (new openprint::Log())->save({ Object=>$servicetype_cache{$service_type}, action=>'Edit', note => join('<br/>', @changes ) });
+          } # end if
+        } # end while io
+        sql::end_transaction( $dbh, $ac );
+        $variable{error} = $error;
+      } else {
+        $log->warn( "No file given to upload." );
+      } # end if
+    } # end if param{btnFunction}
+  } # end if param{btnFunction}
 } # end sub search
+
 sub _index {
 	 if ( ! $param{btnFunction} ) {
 			ssi::save_params( '/administrator/project_types/index.html', (
@@ -522,9 +530,6 @@ sub _index {
 					) );
 	 } # end if
 }
-
-1;
-__END__
 
 1;
 __END__

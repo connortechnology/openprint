@@ -234,7 +234,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			<? eval (
 				@{$$variable{Orders}} = openprint::Order->find('company_id'=>$$variable{CustomerIndex},'order'=>'id DESC');
 			) ?>
-			<li><label># of Orders</label>
+			<li class="orders"><label># of Orders</label>
 				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Orders}} ) ?></a>
 				<? if ( @{$$variable{Orders}} ) ?>
 				Last on
@@ -242,14 +242,14 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<? endif ( @{$$variable{Orders}} ) ?>
 			</li>
 			<? eval ( @{$$variable{Projects}} = openprint::Project->find('company_id'=>$$variable{CustomerIndex},'order'=>'id DESC'); ) ?>
-			<li><label># of Projects</label>
+			<li class="projects"><label># of Projects</label>
 				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Projects}} ) ?></a>
 				<? if ( @{$$variable{Projects}} ) ?>
 				Last on
 				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Projects}[0]->created_on() ) ); ) ?></a>
 				<? endif ( @{$$variable{Projects}} ) ?>
 			</li>
-			<li>
+			<li class="accounting_contacts">
 				<label>Accounting Contacts</label>
 				<span id="AccountingContacts"><?include('_company_accounting_contacts.html')?></span>
 			</li>
@@ -348,27 +348,21 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<label>President/Owner/CEO</label>
 				<input type="text" name="president_owner" value="<? echo ( $$variable{Company}->president_owner() ) ?>" />
 			</li>
-			<li> 
+			<li class="federal_tax"> 
 				<label>Federal/GST #</label>
 				<input type="text" name="gst_number" value="<? echo ( $$variable{Company}->gst_number() ) ?>" />
 			</li>
-			<li> 
+			<li class="federal_tax_exempt"> 
 				<label>Federal/GST Tax Exempt?</label>
-				<input type="radio"	name="gst_exempt" id="gst_exemptY" value="Y" <? echo ( ssi::checked( $$variable{Company}->gst_exempt() eq 'Y' ); ) ?> />
-				<label class="radio" for="gst_exemptY">Yes</label>
-				<input type="radio"	name="gst_exempt" id="gst_exemptN" value="N" <? echo ( ssi::checked( $$variable{Company}->gst_exempt() ne 'Y' ); ) ?> />
-				<label class="radio" for="gst_exemptN">No</label>
+        <?echo(radio('gst_exempt', [ 'Y','Yes','N','No' ], $$variable{Company}->gst_exempt(), { default=>'N' } );)?>
 			</li>
-			<li> 
+			<li class="state_tax"> 
 				<label>Prov/State #</label>
 				<input type="text" name="pst_number" value="<? echo ( $$variable{Company}->pst_number() ) ?>" />
 			</li>
-			<li> 
+			<li class="state_tax_exempt"> 
 				<label>State/Provincial Tax Exempt?</label>
-				<input type="radio"	name="pst_exempt" id="pst_exemptY" value="Y" <? echo ( ssi::checked( $$variable{Company}->pst_exempt() eq 'Y' ); ) ?> />
-				<label class="radio" for="pst_exemptY">Yes</label>
-				<input type="radio"	name="pst_exempt" id="pst_exemptN" value="N" <? echo ( ssi::checked( $$variable{Company}->pst_exempt() ne 'Y' ); ) ?> />
-				<label class="radio" for="pst_exemptN">No</label>
+        <?echo(radio('pst_exempt', [ 'Y','Yes','N','No' ], $$variable{Company}->pst_exempt(), { default=>'N' } );)?>
 			</li>
 		</ul>
 	</fieldset>
@@ -398,10 +392,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			</li>
 			<li>
 				<label>Salutation</label>
-				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMr." value="Mr." <? echo ( ssi::checked( $$variable{rdbShippingSalutation} eq 'Mr.' ); ) ?> /><label class="radio" for="rdbShippingSalutationMr.">Mr.</label>
-				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMrs." value="Mrs." <? echo ( ssi::checked( $$variable{rdbShippingSalutation} eq 'Mrs.' ); ) ?> /><label class="radio" for="rdbShippingSalutationMrs.">Mrs.</label>
-				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMs." value="Ms." <? echo ( ssi::checked( $$variable{rdbShippingSalutation} eq 'Ms.' ); ) ?> /><label class="radio" for="rdbShippingSalutationMs.">Ms.</label>
-				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMiss" value="Miss" <? echo ( ssi::checked( $$variable{rdbShippingSalutation} eq 'Miss' ); ) ?> /><label class="radio" for="rdbShippingSalutationMiss">Miss</label>
+        <?echo(radio('rdbShippingSalutation', [ map { $_, $_ } ( 'Mr.','Mrs.','Ms.','Miss' ) ], $$variable{rdbShippingSalutation});)?>
 			</li>
 			<li> 
 				<label>First Name</label>

@@ -85,11 +85,16 @@ sub configuration {
         if ( $$C{value} ne $new_value ) {
           if ( $$C{name} eq 'encrypt_passwords' ) {
             if ( (!$$C{value}) and $new_value ) {
-              # Special case need to update everyone's passwords
-              foreach my $User ( openprint::User->find() ) {
-                my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $$User{password} );
-                $variable{error} .= $User->save({ password => $ppr->as_rfc2307() });
-              } # end foreach User
+              if ( 0 ) {
+                eval {
+                  # Special case need to update everyone's passwords
+                  foreach my $User ( openprint::User->find() ) {
+                    my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $$User{password} );
+                    $variable{error} .= $User->save({ password => $ppr->as_rfc2307() });
+                  } # end foreach User
+                };
+                $openprint::log->error("Eval errors updating everyone's passwords." . $@) if $@;
+              }
               $variable{error} .= $C->save({ value=>$new_value });
             } else {
               $variable{error} .= "Turning off encryption is a manual process.<br/>";
@@ -198,7 +203,6 @@ sub taxes {
 
 sub currency {
 	if ( $param{btnFunction} eq 'Save' ) {
-		# Add record to audit log - action "Update Currency".
 		(new openprint::Log())->save({action=>'Update Currency'});
 
 		if ( $param{name} ) {
@@ -207,6 +211,7 @@ sub currency {
 				name	=>	$param{name},
 				short	=>	$param{short},
 				symbol	=>	$param{symbol},
+        precision => $param{precision},
 				});
 		} # end if
 
@@ -216,6 +221,7 @@ sub currency {
 						name	=>	$param{'name-'.$$Currency{id}},
 						short	=>	$param{'short-'.$$Currency{id}},
 						symbol	=>	$param{'symbol-'.$$Currency{id}},
+						precision	=>	$param{'precision-'.$$Currency{id}},
 						});
 			} # end if
 		} # end foreach
@@ -445,7 +451,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 	} # end if
 
 	if ( ! $User->id() ) {
-		if ( sets::isin( $session{user_id}, map { $_->id() } @Users ) ) {
+		if ( $session{user_id} and sets::isin( $session{user_id}, map { $_->id() } @Users ) ) {
 			$User = new openprint::User( $session{user_id} );
 		} else {
 			$User = $Users[0] if @Users;
@@ -606,10 +612,9 @@ sub company_profiles {
 
 				sql::execute( $log, $dbh, q{DELETE FROM Companies_in_Marketing_Categories WHERE company_Id =?}, $index );
 				if ( $param{selectCustomerCategories} ) {
-# add them back in
 					my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
 					foreach my $cat ( $param{selectCustomerCategories} ) {
-						if ( sets::isin( $cat, \@customercategories ) ) {
+						if ( $cat and sets::isin( $cat, \@customercategories ) ) {
 							$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
 						} # end if
 					} # end foreach
@@ -620,9 +625,9 @@ sub company_profiles {
 				foreach my $field ( keys %shipping_fields ) {
 					$params{$shipping_fields{$field}} = $param{$field} if defined $param{$field};
 				} # end foreach
-				$Company->save_shipping( \%params );
+				$Company->save_shipping(\%params);
 
-				$Company->save_tradereferences( \%param );
+				$Company->save_tradereferences(\%param);
 
 				$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
@@ -663,12 +668,10 @@ sub company_profiles {
 			} # end if $index
 		} # end if input checks
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		$Company = new openprint::Company( $param{company_id} );
 		$index = $Company->next();
 		$Company->delete();
 		$Company = new openprint::Company( $index );
 	} elsif ( $param{btnFunction} eq 'Destroy' ) {
-		$Company = new openprint::Company( $param{company_id} );
 		if ( ! $Company->destroy() ) {
 			$index = $Company->next();
 		} # end if
@@ -678,11 +681,6 @@ sub company_profiles {
 		$Company = new openprint::Company( $param{company_id} );
 		$Company->undelete();
 	} # end if btnFunction
-
-	if ( ! $index ) {
-		$index = $session{company_id};
-		$Company = new openprint::Company($index);
-	} # end if
 
 	my @customers_categories;
 	if ( $index ) {
@@ -1070,23 +1068,23 @@ sub companies {
 		if ( $param{btnFunction} eq 'Download' ) {
 			my $uri = $r->uri();
 
-			my %filters = (
-					order =>  'lower(name)',
-					( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
-					( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
-					( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
-					( $session{$uri.'?country'} ne '' ? ( country => $session{$uri.'?country'} ) : () ),
-					( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
+      my %filters = (
+        order =>  'lower(name)',
+        ( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
+        ( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
+        ( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+        ( $session{$uri.'?country'} ne '' ? ( country => $session{$uri.'?country'} ) : () ),
+        ( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
 
-					ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
-					ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
-					ssi::date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
-					ssi::date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
-					);
-  if ( $session{$uri.'?country_id'} ) {
-    my $Country = new openprint::Location( $session{$uri.'?country_id'} );
-    $filters{country} = $Country->short();
-  }
+        ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
+        ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+        ssi::date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+        ssi::date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
+      );
+      if ( $session{$uri.'?country_id'} ) {
+        my $Country = new openprint::Location( $session{$uri.'?country_id'} );
+        $filters{country} = $Country->short();
+      }
 
 			if ( $session{$uri.'?salesrep_id_exclude'} ) {
 				my @csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
@@ -1111,18 +1109,26 @@ sub companies {
 						 (@Orders ? ssi::format_date( $Orders[0]->created_on() ) : '' ),
 			} # end foreach Company
 			misc::export_csv( $r, $log, \%variable, 'customers.csv', \@header, \@data );
-
-
 		}
 	}
 } # end sub companies
+
 sub _companies {
 	ssi::save_params( '/administrator/managerial/companies.html', (
-				'salesrep_id', 'marketing_category_id', 'company_name', 'country',
+				'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'updated_on_end_' . $_ } ( 'year','month','day' ) ),
+				( map { 'last_project_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'last_project_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+  if ($param{action} eq 'Delete') {
+    foreach my $Company ( openprint::Company->find( id=> (ref $param{'company_id[]'} eq 'ARRAY') ? $param{'company_id[]'} : [$param{'company_id[]'}]) ) {
+      $Company->delete();
+    }
+  }
 } # end sub _companies
 
 sub folds {

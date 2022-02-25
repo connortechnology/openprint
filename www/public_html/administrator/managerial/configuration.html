@@ -6,7 +6,19 @@
 					button( 'ResetTop', { onclick=>'f1.reset();',text => 'Reset' } ),
 					button( 'New', { onclick=>q`popup_window('_configuration_popup.html');` } )
 		); ) ?>
-</p>
+  </p>
+<fieldset class="filters"><legend>Filter</legend>
+  <ul>
+    <li><label>Category</label>
+      <?echo(ssi::select([sql::execute(undef,undef,'SELECT DISTINCT category,category FROM Configuration ORDER BY category')],
+          $param{category_filter}, 
+          { name=>'category_filter', prepend=>['','All'], onchange=>'this.form.submit();' }
+          );
+          )?>
+    </li>
+  </ul>
+</fieldset>
+
 <div id="Configuration">
 <? echo (
 	my $html;
@@ -14,7 +26,9 @@
 	my $Pricelists = openprint::Pricelist->dropdown(order=>'lower(name)');
 
 	my $cat;
-	foreach my $C ( Configuration->find(order=>'lower(category),lower(name)') ) {
+	foreach my $C ( Configuration->find(
+    ( $param{category_filter} ? (category=>$param{category_filter}) : () ),
+    order=>'lower(category),lower(name)') ) {
 
 		if ( ! defined $cat ) {
 			$html .= "<fieldset><legend>$$C{category}</legend><ul>";
@@ -44,8 +58,8 @@
 			$html .= input( type=>'text', name=>$name, value=>$$C{value} );
         } # end if
 		$html .= '<span class="buttons">';
-		$html .= button( 'Delete'.$$C{name}, { onclick =>qq`new Ajax.Request('_configuration.json', { parameters: { name: '$$C{name}', action: 'delete' }, evalScripts: true } );`, 'text'=>'Delete' } );
-		$html .= button( 'Edit'.$$C{name}, { onclick =>qq`popup_window('_configuration_popup.html','name=$$C{name}');`, 'text'=>'Edit' } );
+		$html .= button( 'Delete'.$$C{name}, { onclick =>qq`new Ajax.Request('_configuration.json', { parameters: { name: '$$C{name}', action: 'delete' }, evalScripts: true } );`, text=>'Delete' } );
+		$html .= button( 'Edit'.$$C{name}, { onclick =>qq`popup_window('_configuration_popup.html','name=$$C{name}');`, text=>'Edit' } );
 		$html .= '</span>';
         $html .= "</li>\n";
 		$cat = $$C{category};

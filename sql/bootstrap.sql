@@ -1,3 +1,4 @@
+start transaction
 \i database_info.sql
 \i AnnualSales.sql
 \i EmployeeNumbers.sql
@@ -5,6 +6,7 @@
 \i Currencies.sql
 \i Currency_Conversions.sql
 \i Marketing_Categories.sql
+\i Company_Categories.sql
 \i Companies.sql
 \i companies_in_marketing_categories.sql
 \i Company_Credit.sql
@@ -67,9 +69,11 @@
 \i User_Profiles.sql
 \i ServiceType_Categories.sql
 \i Service_Types.sql
+\i Photo_Albums.sql
 \i Locations.sql
 \i Equipment.sql
 \i Services.sql
 \i Service_Prices.sql
 \i RMA.sql
 \i Complaints.sql
+end transaction

@@ -16,18 +16,19 @@ $default_sort	=	'lower(name)';
 %defaults = (
 );
 %transforms = (
-		name  => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-		human => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/^openprint:://' ],
+  name  => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+  human => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/^openprint:://' ],
 );
 
 sub Object {
 	if ( $_[0]{name} ) {
-		my $file = $_[0]{name};
-		$file =~ s/::/\//g;
-		$file .= '.pm';
-		eval { require $file; };
-		$openprint::log->error("failed requiring $file $@") if $@;
-		return $_[0]{name}->new($_[1]);
+    my $name = $_[0]{name};
+    $name =~ s/::/\//g;
+    eval {
+      require $name.'.pm';
+    };
+		$openprint::log->error("failed requiring $name $@") if $@;
+  	return $_[0]{name}->new($_[1]);
 	}
 	my ($caller, undef, $line) = caller;
 	$openprint::log->error("Unknown object from $caller:$line");

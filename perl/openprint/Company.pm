@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -66,8 +66,11 @@ $serial = 'companies_id_seq';
 		category_id				=>	'category_id',
 		offers_credit				=>	'offers_credit',
 		last_project_id			=>	'last_project_id',
+		last_project_on			=>	undef,
 		last_order_id				=>	'last_order_id',
+		last_order_on				=>	undef,
 		last_quote_id				=>	'last_quote_id',
+		last_quoted_on				=>	undef,
 		last_invoice_id			=>	'last_invoice_id',
 		);
 %find_fields = (
@@ -170,7 +173,7 @@ sub destroy {
 } # end sub destroy
 
 sub save {
-    my ($self, $param, $force ) = @_;
+  my ($self, $param, $force ) = @_;
 	
 	$self->set( $param ? $param : {} );
 	require Text::Unidecode;
@@ -504,6 +507,20 @@ sub link_to {
 	}
 	return sprintf('<a href="/account/company_profile.html?company_id=%d">%s</a>', $_[0]{id}, $_[0]{name} );
 } # end sub link_to
+
+sub last_project_on {
+	if ( ! exists $_[0]{last_project_on} ) {
+		(  $_[0]{last_project_on} ) = sql::execute( undef, undef, 'SELECT MAX(dtmCreationDate) FROM Projects WHERE company_id=?', $_[0]{id} );
+	}
+	return $_[0]{last_project_on};
+} # end sub last_project_on
+
+sub last_quoted_on {
+	if ( ! exists $_[0]{last_quoted_on} ) {
+		(  $_[0]{last_quoted_on} ) = sql::execute( undef, undef, 'SELECT MAX(dtmQuoteDate) FROM Quotes WHERE companyindex=?', $_[0]{id} );
+	}
+	return $_[0]{last_quoted_on};
+} # end sub last_quoted_on
 
 sub last_ordered_on {
 	if ( ! exists $_[0]{last_ordered_on} ) {

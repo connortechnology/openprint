@@ -1,5 +1,5 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/passwordmeter.js)?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link(/javascripts/passwordmeter.js)?>"></script>
+<script>
 function howdidyouhearaboutus_onchange(e) {
 	if ( e.value == 'Other' ) {
 		$('Other').show();
@@ -19,10 +19,10 @@ function howdidyouhearaboutus_onchange(e) {
 </div>
 <? if ( ( ! $$variable{error} ) and $param{btnFunction} ) ?>
 
-	<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+	<? if ( $session{user_type} and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 	Registration was successful.<br/><br/>
 	You are now representing <? echo ( $param{name} ) ?><br/>
-	<? else ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+	<? else ( $session{user_type} and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 	<p>Thank you for registering!</p>
 	<p><? echo ( $config{RegistrationMessage} ) ?></p>
 	<? if ( $session{user_id} ) ?>
@@ -32,7 +32,7 @@ function howdidyouhearaboutus_onchange(e) {
 		<br/>
 		You will be notified via email when your account is activated.<br/>
 	<? endif ( $session{user_id} ) ?>
-	<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+	<? endif ( $session{user_type} and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 	<br/>
 	<b><? echo ( $session{Destination}; ) ?></b><br/>
 
@@ -199,17 +199,7 @@ function howdidyouhearaboutus_onchange(e) {
                     } # end foreach Field
                     return $html;
                 ) ?>
-				<li><?include('/includes/password_requirements.html')?></li>
-				<li class="password<? echo ( $$variable{RequiredFields}{password} ? ' required' : '' ) ?>">
-					<label for="password">Password</label>
-					<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( htmlize($param{password}); ) ?>" autocomplete="new-password"/>
-					<span id="password_strength">Strength <span id="psContainer"><span id="psStrength"></span></span></span>
-				</li>
-				<li class="verifypassword<? echo ( $$variable{RequiredFields}{verifypassword} ? ' required' : '' ) ?>">
-					<label for="verifypassword">Verify Password</label>
-					<input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( htmlize($param{verifypassword}); ) ?>" autocomplete="new-password"/>
-					<span id="password_alert"></span>
-				</li>
+                <?include('/includes/_password_part.html')?>
 			</ul>
 <? if ( (!$session{user_id}) and ($config{UseCaptchaOnRegistration} eq 'Y') ) ?>
   <? if ( $config{reCAPTCHA_site_key} ) ?>

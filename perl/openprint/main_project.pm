@@ -122,10 +122,12 @@ sub view {
 		$session{ShowAllSignatures} = $param{ShowAllSignatures};
 	} # end if
 	$variable{ProjectIndex} = $project_id;
-	my $Project = $variable{Project} = new openprint::Project( $project_id );
+	my $Project = $variable{Project} = new openprint::Project($project_id);
 	my $save = 0;
+  # A new project will have no quantities, so no quantity_indexes, so this is an error check
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $$Project{'price'.$qty_index} != $Project->price($qty_index,undef) ) {
+      $log->error("Prices have changed in project $project_id");
 			$save = 1;
 			last;
 		} # end if
@@ -168,21 +170,20 @@ sub _calc {
 			$log->debug("No project $param{ProjectIndex} found");
 		}
 		if ( $param{action} eq 'add_service' ) {
-        my $services = $Project->services();
-        foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : $param{service_name} ) {
-
-            next if $$services{$service_name};
-            $Project->add_service( $service_name );
-        } # end foreach service_name
+      my $services = $Project->services();
+      foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : $param{service_name} ) {
+        next if $$services{$service_name};
+        $Project->add_service( $service_name );
+      } # end foreach service_name
     } elsif ( $param{action} eq 'del service' ) {
-        my $services = $Project->services();
-        foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : $param{service_name} ) {
-            next if ! $$services{$service_name};
-            foreach ( @{$$services{$service_name}} ) {
-                my $Service = new openprint::Project_Service( { project_id=>$$Project{id}, service_id=>$_ } );
-                $Service->delete();
-            } # end foreach service_id
-        } # end foreach service_name
+      my $services = $Project->services();
+      foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : $param{service_name} ) {
+        next if ! $$services{$service_name};
+        foreach ( @{$$services{$service_name}} ) {
+          my $Service = new openprint::Project_Service( { project_id=>$$Project{id}, service_id=>$_ } );
+          $Service->delete();
+        } # end foreach service_id
+      } # end foreach service_name
     } # end if
   } # end if
 } # end sub _calc
