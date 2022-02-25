@@ -146,10 +146,10 @@ sub email_campaign {
 		$variable{information} = $Campaign->test();
 		$variable{ExternalRedirect} = $Campaign->url_to();
 	} elsif ( $param{btnFunction} eq 'Download Recipients' ) {
-		my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
+		my @header = ( 'Company','First Name','Last Name', 'Email','Phone','Last Sent On','Number of Times Sent');
 		my @data;
 		foreach my $User ( $Campaign->Recipients() ) {
-			push @data, $User->Company()->name(), $User->name(), $User->email(), $User->phone();
+			push @data, $User->Company()->name(), $User->firstname(), $User->lastname(), $User->email(), $User->phone();
 			my ( $last_sent, $num_times ) = sql::execute( undef, undef, 'SELECT emailsenton, numemailsent FROM emailcampaign_sent WHERE campaign_id=? AND user_id=? ORDER BY emailsenton DESC LIMIT 1', $Campaign->id(), $User->id() );
 			push @data, $last_sent, $num_times;
 		} # end foreach
