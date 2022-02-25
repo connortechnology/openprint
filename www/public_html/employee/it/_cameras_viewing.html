@@ -8,9 +8,9 @@ Click on the image to stop streaming.
 
 		@{$$variable{Monitors}} = openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence', 'function !=' => 'None', enabled=>1 );
 		my $html;
-		my @monitor_ids = split(',', $session{cameras_viewing} );
+		my %monitor_ids = map { $_ => $_ } split(',', $session{cameras_viewing} );
 		foreach my $Monitor ( @{$$variable{Monitors}} ) {
-			next if ! sets::isin( $Monitor->id(), \@monitor_ids );
+			next if ! $monitor_ids{$$Monitor{id}} );
 			next if ! $Monitor->can_view();
 
 			my @size_options = ( '320x240', '352x240', '384x288', '640x480', '800x600', '1024x768' );
