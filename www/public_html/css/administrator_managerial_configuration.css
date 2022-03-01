@@ -1,22 +1,22 @@
-#Configuration fieldset p {
-	padding-left: 400px;
+#Configuration fieldset li {
+	padding: 0 115px 0 405px;
+	position: relative;
+}
+#Configuration fieldset li label:not(.radio-inline) {
+	width: 400px;
+	margin-left: -405px;
+}
+#Configuration label.radio {
+	width: auto;
+	margin: 0;
+	padding: 0;
+}
+#Configuration li .buttons {
+	position: absolute;
+	top: 0;
+	right: 0;
 }
 	
-#Configuration fieldset p label {
-	width: 395px;
-	margin-left: -400px;
-	text-align: left;
+#Configuration input[type="text"], #Configuration textarea, #Configuration select {
+	width: 100%;
 }
-
-#Configuration fieldset p label.radio, fieldset p label.radio {
-	width: auto;
-	margin: 0px;
-}
-
-#Configuration select {
-	width: auto;
-}
-#Configuration input[type="text"] {
-	width: 80%;
-}
-
