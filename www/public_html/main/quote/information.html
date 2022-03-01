@@ -167,8 +167,10 @@
 				<select id="user_id" name="user_id" onchange="user_onchange(this);">
 					<option value="">select</option>
 					<? echo ( 
-my @Users = openprint::User->find( company_id=>$session{company_id},order=>'lower(firstname),lower(lastname)' );
- return make_drop_down( [ map { $_->id(), $_->name() } @Users ], @Users == 1 ? $Users[0]{id} : $session{user_id} ); ) ?>
+            my @Users = openprint::User->find(
+              company_id=>($$variable{Quote}->for_company_id() ? $$variable{Quote}->for_company_id() : $session{company_id}),
+              );
+            return make_drop_down( [ map { $_->id(), $_->name() } @Users ], @Users == 1 ? $Users[0]{id} : $session{user_id} ); ) ?>
 				</select>	
 			</li>
 <? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
