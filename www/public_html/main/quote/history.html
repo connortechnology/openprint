@@ -79,12 +79,6 @@
 				to
 				<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>'load_quotes();' } ); ) ?>
 			</li>
-			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{$r->uri().'?deleted'}, { onclick=>'load_quotes();' } ); ) ?></li>
-			<li><label>Status</label>
-				<? echo ( 
-						my @options = ( 'Incomplete','Complete','Re-Opened' );
-						ssi::select( [ map { $_, $_ } @options ], $session{$r->uri().'?status'}, { name=>'status', onchange=>'load_quotes();', prepend=>['','All'] } );) ?>
-			</li>
       </ul>
       <ul class="rightColumn">
 			<li><label>Ordered</label>
@@ -96,6 +90,12 @@
 							{ onclick=>'load_quotes();', default=>'' },
 							);
 						) ?>
+			</li>
+			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{$r->uri().'?deleted'}, { onclick=>'load_quotes();' } ); ) ?></li>
+			<li><label>Status</label>
+				<? echo ( 
+						my @options = ( 'Incomplete','Complete','Re-Opened' );
+						ssi::select( [ map { $_, $_ } @options ], $session{$r->uri().'?status'}, { name=>'status', onchange=>'load_quotes();', prepend=>['','All'] } );) ?>
 			</li>
 			<li>
 				<label>Press</label>
