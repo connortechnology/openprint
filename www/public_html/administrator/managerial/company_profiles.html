@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script nonce="<?echo($config{CSP_NONCE})?>>
 function load_customers( ) {
   var form = $j('#f1');
   if ( ! form ) {
@@ -66,7 +66,7 @@ Deleted? :'.
 		<? echo ( radio('deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;load_customers();"} ); ) ?></li>
 		<li> 
 			<label>Company</label>
-			<input type="text" name="search_company_filter" id="search_company_filter" oninput="load_customers();" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" class="filter" />
+			<input type="text" name="search_company_filter" id="search_company_filter" class="filter" />
 			<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();f1.submit();}">
 				<option value=""> select </option>
 				<? echo ( 
@@ -494,4 +494,8 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 <? echo ( include_logs( $$variable{Company} ); ) ?>
 <? endif ( $$variable{CustomerIndex} ) ?>
 </div>
-<script type="text/javascript">load_customers();</script>
+<script nonce="<?echo($config{CSP_NONCE})?>">
+  load_customers();
+  $j('#search_company_filter').on('input', load_customers);
+  $j('#search_company_filter').on('keydown', function(e){if(e.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}});
+</script>
