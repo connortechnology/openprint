@@ -1,0 +1,21 @@
+.Equipment {
+	background-color: none;
+	text-align: left;
+}
+.Pages, .Folds, .Angles {
+	width: 50px;
+	text-align: center;
+}
+.Fold, .Type {
+	text-align: left;
+}
+.Speed {
+	width: 180px;
+}
+
+.MRMinutes,
+.MinImposition,
+.MaxImposition {
+	width: 50px;
+	text-align: center;
+}

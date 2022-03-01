@@ -1,0 +1,7 @@
+.BlockedServices li,
+.RequiredServices li {
+	float: left;
+	width: 150px;
+	padding: 0;
+	
+}

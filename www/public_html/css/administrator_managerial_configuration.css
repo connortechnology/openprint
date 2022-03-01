@@ -1,0 +1,22 @@
+#Configuration fieldset p {
+	padding-left: 400px;
+}
+	
+#Configuration fieldset p label {
+	width: 395px;
+	margin-left: -400px;
+	text-align: left;
+}
+
+#Configuration fieldset p label.radio, fieldset p label.radio {
+	width: auto;
+	margin: 0px;
+}
+
+#Configuration select {
+	width: auto;
+}
+#Configuration input[type="text"] {
+	width: 80%;
+}
+
