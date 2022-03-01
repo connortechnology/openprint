@@ -103,4 +103,6 @@ return $html;
 	</fieldset>
 	<input type="hidden" name="btnFunction" value="SelectCompany"/>
 </form>
-<script type="text/javascript">document.f1.CompanyFilter.focus();</script>
+<script nonce="<?echo($config{CSP_NONCE})?>">
+  document.f1.CompanyFilter.focus();
+</script>
