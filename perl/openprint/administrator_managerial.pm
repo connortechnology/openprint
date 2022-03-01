@@ -110,6 +110,7 @@ sub configuration {
 
 		# Add record to audit log - action "Update Configuration".
 		new openprint::Log()->save({action=>'Update Configuration'});
+    $variable{ExternalRedirect} = '/administrator/managerial/configuration.html';
 	} elsif ( $param{action} eq 'delete' ) {
 		sql::execute( undef, undef, 'DELETE FROM Configuration WHERE name=?', $param{name} );
 	} # end if
