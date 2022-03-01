@@ -1,7 +1,7 @@
 use strict;
 package openprint::www;
 use utf8;
-use open ( ":encoding(UTF-8)", ":std" );
+use open ( ':encoding(UTF-8)', ':std' );
 
 use constant Debug => 1;
 
