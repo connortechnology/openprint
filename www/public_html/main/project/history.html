@@ -118,10 +118,15 @@
 	<? endif ( openprint::Product->find_one() ) ?>
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 <? eval ( 
-	$$variable{Users} = [ openprint::User->find(
-		# Defaults to currently logged in company, if company is all, then list users in OUR company
-		company_id => ( $session{$r->uri().'?company_id'} ? $session{$r->uri().'?company_id'} : $session{company_id} ),
- ) ] ) ?>
+  if ($session{user_type} eq 'C') {
+    $$variable{User} = [ $openprint::User ];
+  } else {
+    $$variable{Users} = [ openprint::User->find(
+      # Defaults to currently logged in company, if company is all, then list users in OUR company
+      company_id => ( $session{$r->uri().'?company_id'} ? $session{$r->uri().'?company_id'} : $session{company_id} ),
+   ) ];
+ }
+) ?>
 <? if ( @{$$variable{Users}} > 1 ) ?>
 			<li><label>Created By</label>
 				<select name="user_id" onchange="load_projects();">

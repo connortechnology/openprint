@@ -1660,3 +1660,36 @@ function load_logs_form() {
     console.error('No form found');
   }
 }
+
+window.addEventListener("DOMContentLoaded", function() {
+  // 
+  document.querySelectorAll("select[data-on-change], input[data-on-change]").forEach(function attachOnChangeThis(el) {
+    var fnName = el.getAttribute("data-on-change");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    }
+    el.onchange = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll("input[data-on-input]").forEach(function(el) {
+    var fnName = el.getAttribute("data-on-input");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    }
+    el.oninput = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll("i[data-on-click], a[data-on-click], button[data-on-click], input[data-on-click]").forEach(function attachOnClick(el) {
+    var fnName = el.getAttribute("data-on-click");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName + " on element " + el.name);
+      return;
+    }
+
+    el.onclick = function(ev) {
+      window[fnName](ev);
+    };
+  });
+});

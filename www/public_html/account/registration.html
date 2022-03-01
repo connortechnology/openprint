@@ -1,5 +1,5 @@
 <script src="<?hash_link(/javascripts/passwordmeter.js)?>"></script>
-<script>
+<script nonce="<?echo($config{CSP_NONCE})?>">
 function howdidyouhearaboutus_onchange(e) {
 	if ( e.value == 'Other' ) {
 		$('Other').show();

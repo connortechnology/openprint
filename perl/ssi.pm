@@ -1,7 +1,7 @@
 use strict;
 package ssi;
 
-use constant Debug => 0;
+use constant Debug => 1;
 
 require Date::Calc;
 
@@ -542,7 +542,7 @@ sub button {
 	} # end if
 	$$options{text} = $name if ! exists $$options{text};
 	my $html = 
-		qq`<button id="Button$name" class="button $$options{class}"` ;
+		qq`<button id="Button$name" class="btn button $$options{class}" `;
 	$html .= qq`name="$$options{name}" ` if $$options{name};
 	$html .= qq`value="$$options{value}" ` if $$options{value};
 	$html .= qq`title="$$options{title}" ` if $$options{title};
@@ -551,9 +551,9 @@ sub button {
 	$html .= 'type="'.$$options{type}.'" ' if $$options{type};
 	if ( $$options{href} and $$options{type} ) {
 		$html .= qq`onclick="window.location='$$options{href}'" `;
-  } elsif ( $$options{onclick} and ! $$options{disabled} ) {
-		$html .= 'onclick="';
-		$html .= $$options{onclick}."return false;\" ";
+    #} elsif ( $$options{onclick} and ! $$options{disabled} ) {
+    #$html .= 'onclick="';
+    #$html .= $$options{onclick}."return false;\" ";
 	} # end if
 	if ( $$options{ontouch} ) {
 		$html .= 'ontouch="'.$$options{ontouch}.'" ';
@@ -579,6 +579,16 @@ sub button {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
 	}
 	$html .= $$options{type} ? '</button>' : '</a>';
+  if ( $$options{onclick} ) {
+    $html .= '<script nonce="'.$config{CSP_NONCE}.qq`">
+    window.addEventListener('DOMContentLoaded', function() {
+    \$j('#Button$name').on('click', function(){
+    $$options{onclick};
+    });
+    });
+    </script>
+    `;
+  } # end if
 	return $html;
 } # end sub button
 
@@ -1248,22 +1258,31 @@ sub include_logs_view {
 }
 
 sub do_css_links {
-    my @html;
-    my $css = shift;
-    $css =~ s/^\///;
-    $css =~ s/\..+$//;
-    my @parts = split '/', $css;
-    
-    while ( @parts ) {
-        $css = join('_', @parts ) . '.css';
-        if ( -e $config{SkinPath}.'/css/'.$css ) {
-            push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
-        } elsif ( Debug ) {
-          $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
-        } # end if
-        pop @parts;
-    } # end while
-    return join("\n", reverse @html );
+  my @html;
+  my $css = shift;
+  $css =~ s/^\///;
+  $css =~ s/\..+$//;
+  my @parts = split '/', $css;
+  $log->debug("Parts: @parts");
+
+  while ( @parts ) {
+    $css = join('_', @parts ) . '.css';
+    $log->debug("$css");
+    if ( -e $config{SkinPath}.'/css/'.$css ) {
+      $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
+      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
+    } elsif ( Debug ) {
+      $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
+    } # end if
+    if ( -e $ENV{DOCUMENT_ROOT}.'/css/'.$css ) {
+      $log->debug("xist at " . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
+      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/base_css/'.$css).'"/>';
+    } elsif ( Debug ) {
+      $log->debug("Does not exist at " . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
+    }
+    pop @parts;
+  } # end while
+  return join("\n", reverse @html);
 }
 
 sub bootstrap_navmenu {

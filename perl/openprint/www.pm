@@ -267,6 +267,14 @@ $log->debug("PageContent is $variable{PageContent}");
 			} # end if
 		} # end if _
 		$log->debug("After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs') if Debug;
+
+    if ($config{CSP}) {
+      $config{CSP_NONCE} = '';
+      my @chars = ('A'..'Z', 'a'..'z', '0' .. '9');
+      $config{CSP_NONCE} .= $chars[rand @chars] for 1 .. 16;
+      $r->headers_out->{'Content-Security-Policy'} = "script-src 'unsafe-inline' 'self' 'nonce-$config{CSP_NONCE}' $config{CSP}";
+    }
+
 		local $|=1;
 		if ( ! $r->connection()->aborted() ) {
 			if ( $template ) {
