@@ -4,7 +4,7 @@ use sets;
 use strict;
 use Date::Calc ();
 
-use constant DAYS_TO_KEEP_TRASH => 60*60*24*90;
+use constant DAYS_TO_KEEP_TRASH => 60*60*24*30;
 use constant DEBUG => 0;
 
 my $amavis_home = '/var/lib/amavis';
