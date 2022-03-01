@@ -1,0 +1,93 @@
+
+#UserProfile ul {
+    list-style: none;
+	width: auto;
+	float: left;
+}
+
+.groups li {
+	width: 25%;
+	min-width: 200px;
+	text-align: left;
+	padding: 0;
+	float: left;
+}
+.groups label {
+	float: none;
+	margin: 0;
+}
+.groups label:after {
+content: '';
+}
+.ServiceDefaults {
+	display: none;
+}
+.Notifications {
+	float: right;
+	width: 50%;
+}
+.Notifications fieldset,
+.Email .Vacation fieldset {
+	margin-left: 5px;
+}
+.LoginCredentials {
+	float: left;
+	width: 50%;
+}
+.LoginCredentials fieldset,
+.Email .Settings fieldset {
+	margin-right: 5px;
+}
+.Email {
+	clear: both;
+}
+.Email .Settings {
+	float: left;
+	width: 50%;
+}
+.Email .Vacation {
+	float: right;
+	width: 50%;
+}
+#UserProfile ul:after, .Email:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+    clear: both; 
+    visibility: hidden;
+}
+
+#company_id {
+	max-width: 80%;
+}
+.buttons {
+	text-align: left;
+}
+.buttons label {
+	margin: 0;
+}
+.buttons label:after {
+	content: '';
+}
+#phone {
+	width: 67%;
+}
+.wage input[type="number"],
+.wage input[type="text"],
+.commission input[type="text"],
+.commission input[type="number"] {
+	width: 33%;
+ }
+.mailinglist label,
+.web_active label,
+.ftp_active label,
+.administrator label {
+	width: 300px;
+}
+#extension {
+	width: 40px;
+}
+.Assistants li {
+float: left;
+	
+}

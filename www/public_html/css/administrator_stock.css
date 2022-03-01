@@ -1,0 +1,59 @@
+.Recommendations ul {
+}
+.Recommendations ul li {
+    padding:0;
+    width: 25%;
+    float: left;
+	text-align: left;
+}
+.Recommendations label.radio {
+	margin-left: 2px;
+}
+p.full_packages, p.minimum_order, p.fsc_code, p.inventory_number, p.message, p.cuttable, p.parts_div, p.doublesided, p.multipart, p.perfecting, p.scoring, p.diescoring, p.digital, p.bladecleaning, p.taxexempt1, p.taxexempt2, .available_to_order {
+    text-align: right;
+
+}
+p.full_packages label, p.fsc_code label, p.inventory_number label, p.message label, p.cuttable label, p.parts_div label, p.doublesided label,p.multipart label, p.perfecting label, p.scoring label, p.diescoring label, p.digital label, p.bladecleaning label, p.taxexempt1 label, p.taxexempt2 label {
+    width: auto;
+    text-align: left;
+}
+p.minimum_order, p.fsc_code, p.inventory_number, p.message, p.available_to_order {
+	padding-left: 200px;
+}
+p.minimum_order label, p.fsc_code label, p.inventory_number label, p.message label, p.available_to_order label {
+    width: 200px;
+	margin-left: -200px;
+    text-align: left;
+}
+
+.manufacturer, .brand, .finish, .colour, .weight {
+	text-align: left;
+}
+.size, .calliper, .mweight, .gsm {
+	width: 60px;
+	text-align: right;
+}
+.pricing, .spp_min {
+	width: 90px;
+	text-align: right;
+}
+
+#calliper_mm, #calliper, #size, #mweight, #width, #height {
+width: 60px;
+}
+#BasisSize input {
+	width: 60px;
+}
+#message {
+	width: 100%;
+}
+#Prices .Equipment {
+	display: none;
+}
+.dialog table .Range input[type="text"],
+.dialog table .Range input[type="number"] {
+	width: 40%;
+}
+.SetupPrices, .SupplyPrices {
+	display: none;
+}

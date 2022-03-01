@@ -1,0 +1,39 @@
+.changes {
+	text-align: right;
+	width: 100px;
+}
+.Quote .Information li input[type="text"],
+.Quote .Information li input[type="email"],
+.Quote .Information li input[type="tel"],
+.Quote .Information li textarea {
+    width: 92%;
+	resize: vertical;
+}
+div.Quote div.Information fieldset ul li select {
+    width: 92%;
+}
+div.Quote div.Information fieldset ul li select#company_id, div.Quote div.Information fieldset ul li select#user_id {
+	width: 75%;
+}
+.company_id input,
+.contact input {
+	width: 40px;
+}
+.quote_id {
+	width: 75px;
+}
+.Quote .Information li.company_id input[type="text"],
+.Quote .Information li.contact input[type="text"] {
+	width: 40px;
+}
+
+
+input#ByPhone, input#ForPhone {
+	width: 100px;
+}
+input#ByExtension, input#ForExtension {
+	width: 40px;
+}
+.History select#company_id {
+	width: auto;
+}

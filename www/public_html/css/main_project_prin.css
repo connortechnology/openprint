@@ -1,0 +1,18 @@
+.InteriorPages, .CoverPages {
+	width: 50%;
+	float: left;
+}
+.PressProofApprovals {
+	width: 50%;
+	float: left;
+}
+.CoverPages .Dimensions {
+	float: none;
+	width: auto;
+}
+
+.SignatureGroup .leftColumn ,
+.SignatureGroup .rightColumn {
+width: 50%;
+	float: left;
+}

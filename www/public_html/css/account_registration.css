@@ -1,0 +1,48 @@
+.Registration {
+	margin: 0px;
+	padding: 0px;
+}
+.Registration fieldset {
+	width: auto;
+	margin: 2px;
+	padding: 3px;
+}
+.Registration fieldset .content ul {
+}
+.Registration fieldset ul li {
+	padding-left: 175px;
+}
+.Registration fieldset ul li label {
+	width: 175px;
+	margin: 0px 0px 0px -175px;
+}
+.Registration fieldset ul li label.radio {
+	margin: 0px;
+	width: auto;
+}
+.Registration .Address {
+    float: right;
+    width: 49%;
+}
+.Registration .BillingInformation {
+    float: left;
+    width: 49%;
+	min-width: 400px;
+}
+.Registration .Miscellaneous {
+    float: left;
+    width: 49%;
+	min-width: 400px;
+}
+.Registration .Account {
+    float: left;
+    width: 49%;
+	min-width: 400px;
+}
+
+.Registration fieldset p.buttons {
+	width: 100%;
+}
+.Instructions {
+margin: 0px 0px 10px 0px;
+}

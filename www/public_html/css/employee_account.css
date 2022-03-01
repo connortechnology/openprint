@@ -1,0 +1,71 @@
+fieldset p,
+fieldset ul li {
+	padding-left: 170px;
+}
+#Login p.buttons {
+  margin-left: 170px;
+}
+fieldset p label,
+fieldset ul li label {
+	width: 170px;
+	margin-left: -170px;
+}
+.UserProfile ul.UserGroups,
+.UserProfile .AssistantTo ul ,
+.UserProfile .Assistants ul ,
+.UserProfile .marketing_categories ul {
+	width: 100%;
+}
+
+.UserProfile .AssistantTo li,
+.UserProfile .Assistants li,
+.UserProfile .marketing_categories li {
+	margin: 0;
+	padding: 0;
+	float: left;
+	width: 33%;
+}
+.UserProfile ul.UserGroups li,
+.UserProfile .marketing_categories li {
+	margin: 0;
+	padding: 0;
+	float: left;
+	width: 50%;
+}
+.UserProfile ul.UserGroups li label,
+.UserProfile .AssistantTo li label ,
+.UserProfile .Assistants li label ,
+.UserProfile .marketing_categories li label {
+	float: none;
+	width: auto;
+	margin: 0;
+	width: auto;
+}
+.UserProfile input#phone {
+	width: 49%;
+}
+.UserProfile input#extension {
+	width: 40px;
+}
+.UserProfile div.AdminOptions ,
+.UserProfile div.Assistants ,
+.UserProfile div.AssistantTo {
+	width: 50%;
+}
+.UserProfile div.AssistantTo {
+float: right;
+}
+.Notifications {
+	float: right;
+	width: 49%;
+}
+.PurchaseOrderLimits {
+	float: left;
+	width: 49%;
+}
+#commission {
+	width: 40px;
+}
+.wage {
+	display: none;
+}

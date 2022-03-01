@@ -1,0 +1,67 @@
+
+fieldset.leftColumn input[type="text"],
+fieldset .leftColumn input[type="text"] {
+	width: 80%;
+}
+fieldset.leftColumn p select, fieldset .leftColumn p select {
+	width: 80%;
+}
+#CompanyProfile,
+.CompanyInformation ,
+.BankInformation ,
+.MarketingInformation ,
+.BusinessInformation {
+	width: 50%;
+	float: left;
+}
+.SalesInformation {
+	width: 100%;
+	float: right;
+}
+.TradeReferences,
+.CreditInformation ,
+.ShippingInformation {
+	width: 50%;
+	float: right;
+}
+.CompanyProfiles fieldset li,
+.CompanyProfiles fieldset p {
+	padding-left: 160px;
+}
+.CompanyProfiles fieldset li label,
+.CompanyProfiles fieldset p label {
+	margin-left: -160px;
+	width: 155px;
+}
+.CompanyProfiles fieldset li label.radio ,
+.CompanyProfiles fieldset p label.radio {
+	margin: 0px;
+	width: auto;
+}
+.CompanyProfiles fieldset p input, div.CompanyProfiles fieldset p textarea {
+	width: 98%;
+}
+.CompanyProfiles fieldset.filters p input {
+	width: auto;
+}
+.CreditInformation input[type="number"] {
+	width: 40%;
+}
+.CreditInformation select {
+	width: 55%;
+}
+.Credit fieldset input[type="number"],
+.Credit fieldset input[type="text"] {
+	width: 50%;
+}
+#new_accounting_contact_id {
+	width: 75%;
+}
+.credit_card_fee input[type="number"],
+.credit_card_Fee input[type="text"],
+.csr_commission input[type="number"],
+.csr_commission input[type="text"],
+.discount input[type="text"] ,
+.discount input[type="number"] {
+	width: 100px;
+}
