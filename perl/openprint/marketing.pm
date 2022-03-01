@@ -76,7 +76,7 @@ sub categories {
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		$variable{error} .= $Category->save( \%openprint::param );
 		if ( ! $variable{error} ) {
-			$variable{Redirect} = '/marketing/categories.html?category_id='.$Category->id();
+			$variable{ExternalRedirect} = '/marketing/categories.html?category_id='.$Category->id();
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$Category->delete();
@@ -263,28 +263,62 @@ sub banners {
 } # end sub banners
 
 sub subscriptions {
-	if ( $param{user_id} and ( $param{user_id} != openprint::User->transform(id=>$param{user_id}) ) ) {
-		$variable{error} .= 'Invalid user specified.<br/>';
-		$log->error('Invalid user specified:'.$param{user_id});
-		$variable{User} = $openprint::User;
-		return;
-	}
+  my $User;
 
-	my $User = $variable{User} = new openprint::User($param{user_id} ? $param{user_id} : $session{user_id});
-	
-	$User = $variable{User} = new openprint::User($session{user_id}) if $session{user_id} and ! $$User{id};
-	# Either we are logged in and can edit, or the specified user id and that user's email address match.
-	if ( $session{user_id} ) {
-		if ( ! $User->can_edit() ) {
-			$log->error("Person $$openprint::User{name} does not have access to edit $$User{name}'s subscriptions");
-			$variable{error} .= 'You do not have access to edit this users subscriptions.';
-			return;
-		} # endif
-	} else {
-		if ( $param{email} and ($$User{email} ne $param{email}) ) {
-			$variable{error} .= "User email ($$User{email}) and provided email address ($param{email}) do not match.<br/>";
-			return;
-		}
+  if ($param{email}) {
+    # Only on subscribe?
+    if ($User = openprint::User->find(email=>$param{email})) {
+      if ($User->password() and ($User->id() != $openprint::User->id())) {
+        $variable{error} .= 'User has a password assigned. Please log in.';
+        $variable{ExternalRedirect} = '/account/login.html?email='.$param{email};
+      }
+    } else {
+      $User = $variable{User} = new openprint::User();
+      $User->email($param{email});
+      # not found, can create.
+    }
+  }
+
+  if ($param{user_id}) {
+    $param{user_id} == openprint::User->transform(id=>$param{user_id});
+    if (!$param{user_id}) {
+      $variable{error} .= 'Invalid user specified.<br/>';
+      $log->error('Invalid user specified:'.$param{user_id});
+      $variable{User} = $openprint::User;
+      return;
+    }
+
+    $User = $variable{User} = openprint::User->find_one(id=>$param{user_id});
+    if (!$User) {
+      $variable{error} .= 'Invalid user specified.<br/>';
+      $log->error('Invalid user specified:'.$param{user_id});
+      $User = $variable{User} = $openprint::User;
+      return;
+    }
+
+    if (!$User->can_edit()) {
+      $variable{error} .= 'You do not have rights to edit this user.<br/>';
+      $log->error('You do not have rights to edit this user.:'.$param{user_id});
+      $User = $variable{User} = $openprint::User;
+      return;
+    }
+  }
+    
+  if (!$User) {
+    $User = $variable{User} = $openprint::User;
+    # Either we are logged in and can edit, or the specified user id and that user's email address match.
+    if ( $session{user_id} ) {
+      if ( ! $User->can_edit() ) {
+        $log->error("Person $$openprint::User{name} does not have access to edit $$User{name}'s subscriptions");
+        $variable{error} .= 'You do not have access to edit this users subscriptions.';
+        return;
+      } # endif
+    } else {
+      if ( $param{email} and ($$User{email} ne $param{email}) ) {
+        $variable{error} .= "User email ($$User{email}) and provided email address ($param{email}) do not match.<br/>";
+        return;
+      }
+    } # end if
 	} # end if
 
 	if ( $param{action} eq 'Save' ) {
