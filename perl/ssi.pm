@@ -542,7 +542,7 @@ sub button {
 	} # end if
 	$$options{text} = $name if ! exists $$options{text};
 	my $html = 
-		qq`<button id="Button$name" class="button $$options{class}" `;
+		qq`<button id="Button$name" class="btn button $$options{class}" `;
 	$html .= qq`name="$$options{name}" ` if $$options{name};
 	$html .= qq`value="$$options{value}" ` if $$options{value};
 	$html .= qq`title="$$options{title}" ` if $$options{title};
@@ -551,9 +551,9 @@ sub button {
 	$html .= 'type="'.$$options{type}.'" ' if $$options{type};
 	if ( $$options{href} and $$options{type} ) {
 		$html .= qq`onclick="window.location='$$options{href}'" `;
-  } elsif ( $$options{onclick} and ! $$options{disabled} ) {
-		$html .= 'onclick="';
-		$html .= $$options{onclick}."return false;\" ";
+    #} elsif ( $$options{onclick} and ! $$options{disabled} ) {
+    #$html .= 'onclick="';
+    #$html .= $$options{onclick}."return false;\" ";
 	} # end if
 	if ( $$options{ontouch} ) {
 		$html .= 'ontouch="'.$$options{ontouch}.'" ';
@@ -579,6 +579,16 @@ sub button {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
 	}
 	$html .= $$options{type} ? '</button>' : '</a>';
+  if ( $$options{onclick} ) {
+    $html .= '<script nonce="'.$config{CSP_NONCE}.qq`">
+    window.addEventListener('DOMContentLoaded', function() {
+    \$j('#Button$name').on('click', function(){
+    $$options{onclick};
+    });
+    });
+    </script>
+    `;
+  } # end if
 	return $html;
 } # end sub button
 
