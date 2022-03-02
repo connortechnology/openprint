@@ -5,6 +5,20 @@
 	float: left;
 }
 
+fieldset p,
+fieldset li {
+  padding: 0 0 0 185px;
+  text-align: left;
+}
+fieldset label:not(.radio):not(.radio-inline) {
+  width: 180px;
+  margin-left: -185px;
+}
+
+.groups {
+  width: 100%;
+}
+
 .groups li {
 	width: 25%;
 	min-width: 200px;
@@ -22,7 +36,7 @@ content: '';
 .ServiceDefaults {
 	display: none;
 }
-.Notifications {
+.Notifications, .Permissions {
 	float: right;
 	width: 50%;
 }
@@ -31,8 +45,11 @@ content: '';
 	margin-left: 5px;
 }
 .LoginCredentials {
-	float: left;
+	float: right;
 	width: 50%;
+}
+.Miscellaneous::before {
+  clear: both;
 }
 .LoginCredentials fieldset,
 .Email .Settings fieldset {
@@ -41,7 +58,8 @@ content: '';
 .Email {
 	clear: both;
 }
-.Email .Settings {
+.Email .Settings,
+.Purchasing {
 	float: left;
 	width: 50%;
 }
@@ -87,7 +105,10 @@ content: '';
 #extension {
 	width: 40px;
 }
+.Assistants {
+  width: 50%;
+  float: left;
+}
 .Assistants li {
-float: left;
-	
+  float: left;
 }

@@ -191,18 +191,6 @@
 	display: none;
 }
 
-#Inks label:after {
-content: "";
-}
-.BleedsColourBars ,
-.Service .Overrides ,
-.Stock ,
-.InksFront,
-.InksBack {
-	float: left;
-	width: 50%;
-	min-width: 425px;
-}
 table .Override {
 	width: 25px;
 }
@@ -234,53 +222,10 @@ table .Override {
 	float: right;
 }
 
-.SpotColour {
-	width: 25%;
-display: inline-block;
-	min-height: 22px;
-/*
-	float: left;
-*/
-}
-.SpotColour label:not(.radio):not(.radio-inline),
-.Coverages label:not(.radio):not(.radio-inline) {
-	clear: none;
-	width: auto;
-	float: none;
-	margin: 0;
-	padding: 0 0 0 2px;
-	vertical-align: middle;
-}
-.SpotColour label:after {
-	content: "";
-}
 
 .checkOption {
 	float: left;
 	width: 30%;
-}
-.bleedOption {
-	float: left;
-	width: 100px;
-}
-.SpecialColour {
-	margin: 5px 0px;
-	padding-left: 135px;
-}
-.SpecialColour .checkOption {
-	float: left;
-	width: 135px;
-	margin-left: -135px;
-}
-.SpecialColour .Mileage,
-.SpecialColour .Price
-{
-display: inline-block;
-width: 49%;
-}
-.colourOption {
-	float: left;
-	width: 104px;
 }
 
 fieldset legend label:not(.radio):not(.radio-inline) {
