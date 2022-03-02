@@ -1191,13 +1191,15 @@ sub _users {
 				) );
 	$session{$uri.'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
 
+  my @Users;
+
 	my $uri = '/administrator/managerial/users.html';
 	if ( $session{$uri.'?email'} ) {
 		my %filters = (
 				'email ilike' => '%'.$session{$uri.'?email'}.'%',
-				deleted => [0,1],
+				deleted => $session{$uri.'?deleted'} eq '' ? [0,1] : $session{$uri.'?deleted'},
 				);
-		$variable{Users} = [ openprint::User->find( %filters ) ];
+		@Users = openprint::User->find(%filters);
 	} else {
 		my %filters = (
 				( map { $session{join('?', $uri, $_)} ? ( $_ => $session{join('?', $uri, $_) } ) : () } ( 'company_id','type', 'web_active', 'ftp_active' ) ),
@@ -1223,16 +1225,15 @@ sub _users {
 			$filters{usergroup_id} = $session{$uri.'?usergroup_id'};
 		} # end if
 
-		my @Users = openprint::User->find( %filters );
-		my @Companies = openprint::Company->find(id=>[ map { $$_{company_id} } @Users ]) if @Users;
+		@Users = openprint::User->find( %filters );
 
-		if ( $session{$uri.'?notification_type_id'} ) {
+		if ($session{$uri.'?notification_type_id'}) {
 			my %Notifications = map { $$_{user_id}, $_ } openprint::User_Notification->find( type_id=>$session{$uri.'?notification_type_id'} );
-			@{$variable{Users}} = map { $Notifications{$$_{id}} ? $_ : () } @Users;
-		} else {
-			$variable{Users} = \@Users;
+			@Users = map { $Notifications{$$_{id}} ? $_ : () } @Users;
 		}
 	} # end if filtering by email or other
+  my @Companies = openprint::Company->find(id=>[ map { $$_{company_id} } @Users ]) if @Users;
+  $variable{Users} = \@Users;
 } # end sub _users
 
 sub mailqueue {
