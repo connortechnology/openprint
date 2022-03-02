@@ -23,6 +23,7 @@
 <? echo (
 	my $html;
 	my @Suppliers = openprint::Company->find( supplier =>'Y', order =>'lower(name)');
+  my @Owners = openprint::Company->find( offers_credit=>1, order =>'lower(name)');
 	my $Pricelists = openprint::Pricelist->dropdown(order=>'lower(name)');
 
 	my $cat;
