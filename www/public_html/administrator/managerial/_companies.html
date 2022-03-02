@@ -1,6 +1,6 @@
 <? eval (
   my $uri = '/administrator/managerial/companies.html';
-    my %filters = (
+  my %filters = (
     columns => "*, $openprint::Company::find_fields{last_project_on} AS last_project_on, $openprint::Company::find_fields{last_quoted_on} AS last_quoted_on",
 		order	=>	'lower(name)',
 		( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
@@ -20,7 +20,7 @@
 
 	my @CSRs = openprint::User->find( company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
 	if ( $session{$uri.'?salesrep_id_exclude'} and $session{$uri.'?salesrep_id'} ) {
-		my @csr_ids = map { $_->id() } @CSRs;
+		my @csr_ids = map { $$_{id} } @CSRs;
 		@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};
 		$filters{'salesrep_id not in'} = \@csr_ids;
 	} elsif ( $session{$uri.'?salesrep_id'} ) {
