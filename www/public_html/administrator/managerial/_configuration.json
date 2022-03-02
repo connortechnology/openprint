@@ -6,7 +6,7 @@
 
 	if ( $param{'action'} eq 'delete' and ! $$variable{'error'} ) {
 		$html .= qq`
-			var div = \$('$param{name}');
+			var div = document.getElementById('$param{name}');
 			if ( div ) div.remove();
 			`;
 	} # end if
