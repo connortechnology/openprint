@@ -1,43 +1,23 @@
-<script nonce="<?echo($config{CSP_NONCE})?>>
-function load_customers( ) {
-  var form = $j('#f1');
-  if ( ! form ) {
-    alert("No form");
-  } else {
-    form = form[0];
-  }
-  $j('#ddmCustomer').load(
-    '/includes/_company_ddm.html',
-    {
-      salesrep_id: (form.search_salesrep_id ? get_ddm_value( form.search_salesrep_id ) : null),
-      name: form.search_company_filter.value,
-      type: get_value( form.search_type ),
-      deleted: get_value( form.deleted ),
-      selected_id: get_ddm_value( form.ddmCustomer )
-		}
-  );
-}
-</script>
 <div class="CompanyProfiles">
 <?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" method="post" action="/administrator/managerial/company_profiles.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
-		<li>
-			<label>Account #</label>
-			<input type="text" name="txtSearchAccountNum" />
-			<? echo ( button( 'Go', { onclick=>q`f1.btnFunction.value='Go';fmCheck(f1);` } ); ) ?>
-		</li>
-		<li>
-			<label>Type</label>
-			<select name="search_type" onchange="load_customers();">
-				<? echo ( 
-					my @options = ('All','Suppliers', 'Resellers', 'Customers');
-					return make_drop_down( [ map { $_, $_ } @options ], $param{search_type} );	
-				) ?>
-			</select>
-		</li>
+      <li>
+        <label>Account #</label>
+        <input type="text" name="txtSearchAccountNum" />
+        <? echo ( button( 'Go', { onclick=>q`f1.btnFunction.value='Go';fmCheck(f1);` } ); ) ?>
+      </li>
+      <li>
+        <label>Type</label>
+        <select name="search_type" data-on-change="load_customers">
+          <? echo ( 
+            my @options = ('All','Suppliers', 'Resellers', 'Customers');
+            return make_drop_down( [ map { $_, $_ } @options ], $param{search_type} );	
+          ) ?>
+        </select>
+      </li>
 <? echo (
 		@{$$variable{SalesReps}} = openprint::User->find(
 			id=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],
@@ -56,7 +36,7 @@ Deleted? :'.
           radio('deleted_salesrep_id',
             [ 1, 'Yes', 0, 'No' ],
             ( exists($session{$r->uri().'?deleted_salresrep_id'}) ? $session{$r->uri().'?deleted_salresrep_id'} : 0 ),
-            { onclick=>q`LoadContent('search_salesrep_id', '/includes/_users.html', { 'type':'E,A', 'usergroup':'Sales', 'deleted':this.value});console.log(this);` } ).'
+            { onclick=>q`LoadContent('search_salesrep_id', '/includes/_users.html', { 'type':'E,A', 'usergroup':'Sales', 'deleted':this.value});` } ).'
 </li>
 ';
 	}
@@ -67,7 +47,7 @@ Deleted? :'.
 		<li> 
 			<label>Company</label>
 			<input type="text" name="search_company_filter" id="search_company_filter" class="filter" />
-			<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();f1.submit();}">
+      <select id="ddmCustomer" name="ddmCustomer" data-on-change="ddmCustomer_onchange">
 				<option value=""> select </option>
 				<? echo ( 
 if ( 0 ) {
@@ -495,6 +475,31 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 <? endif ( $$variable{CustomerIndex} ) ?>
 </div>
 <script nonce="<?echo($config{CSP_NONCE})?>">
+
+function load_customers( ) {
+  var form = document.getElementById('f1');
+  if ( ! form ) {
+    alert('No form');
+  }
+  $j('#ddmCustomer').load(
+    '/includes/_company_ddm.html',
+    {
+      salesrep_id: (form.search_salesrep_id ? get_ddm_value( form.search_salesrep_id ) : null),
+      name: form.search_company_filter.value,
+      type: get_value( form.search_type ),
+      deleted: get_value( form.deleted ),
+      selected_id: get_ddm_value( form.ddmCustomer )
+		}
+  );
+}
+
+function ddmCustomer_onchange(ddm) {
+  if(ddm.options[ddm.selectedIndex].value != '') {
+    ddm.form.btnFunction.value='Go';
+    $j('#ButtonsTop').hide();
+    ddm.form.submit();
+  }
+}
   load_customers();
   $j('#search_company_filter').on('input', load_customers);
   $j('#search_company_filter').on('keydown', function(e){if(e.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}});
