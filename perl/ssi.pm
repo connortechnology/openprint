@@ -581,10 +581,8 @@ sub button {
 	$html .= $$options{type} ? '</button>' : '</a>';
   if ( $$options{onclick} ) {
     $html .= '<script nonce="'.$config{CSP_NONCE}.qq`">
-    window.addEventListener('DOMContentLoaded', function() {
     \$j('#Button$name').on('click', function(){
     $$options{onclick};
-    });
     });
     </script>
     `;
