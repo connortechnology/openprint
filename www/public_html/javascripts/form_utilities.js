@@ -237,13 +237,14 @@ function get_ddm_value ( ddm ) {
 	} // end if
 	return value;
 } // end function
+
 function get_ddm_text ( ddm ) {
 	if ( ddm ) {
 		if ( ddm.selectedIndex != -1 && ddm.options[ddm.selectedIndex] ) {
 			return ddm.options[ddm.selectedIndex].text;
 		} // end if
 	} else {
-		alert("null ddm passed to get_ddm_value : " + ddm);
+		console.log("null ddm passed to get_ddm_value : " + ddm);
 	} // end if
 } // end function
 
@@ -1648,3 +1649,47 @@ function stop_filter_companies() {
 		filter_ajax = null;
 	}
 } 
+
+function load_logs_form() {
+  const form = jQuery('#logs_form');
+  if (form.length) {
+    jQuery('#Logs').load('/includes/_logs_contents.html',
+            jQuery('#logs_form').serialize()
+            );
+  } else {
+    console.error('No form found');
+  }
+}
+
+window.addEventListener("DOMContentLoaded", function() {
+  // 
+  document.querySelectorAll("select[data-on-change], input[data-on-change]").forEach(function attachOnChangeThis(el) {
+    var fnName = el.getAttribute("data-on-change");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    }
+    el.onchange = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll("input[data-on-input]").forEach(function(el) {
+    var fnName = el.getAttribute("data-on-input");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    }
+    el.oninput = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll("i[data-on-click], a[data-on-click], button[data-on-click], input[data-on-click]").forEach(function attachOnClick(el) {
+    var fnName = el.getAttribute("data-on-click");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName + " on element " + el.name);
+      return;
+    }
+
+    el.onclick = function(ev) {
+      window[fnName](ev);
+    };
+  });
+});

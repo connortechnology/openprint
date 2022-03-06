@@ -46,7 +46,12 @@
 			<li>
 				<label>Project #</label>
 				<? echo ( join("\n",
-					input(type=>'cardinal', id=>'project_id', name=>'project_id', onkeydown=>'if(event.keyCode==13){load_projects();};', value=>$session{$r->uri().'?project_id'}),
+					input(
+						type=>'cardinal', id=>'project_id', name=>'project_id',
+						onkeydown=>'if(event.keyCode==13){load_projects();};',
+						value=>$session{$r->uri().'?project_id'},
+            with_clear=>1,
+						),
 					button('Go1', { onclick=>q`load_projects();`, text=>'Go' }), 
 				); ) ?>
 			</li>
@@ -76,15 +81,15 @@
 			<ul>
 			<li>
 				<label>Creation Date</label>
-<? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+        <? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
 					to 
-<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+          <? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Last Updated</label>
-<? echo ( date_select_session( $r->uri(), 'updated_on_start', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+        <? echo ( date_select_session( $r->uri(), 'updated_on_start', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
 					to 
-<? echo ( date_select_session( $r->uri(), 'updated_on_end', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+          <? echo ( date_select_session( $r->uri(), 'updated_on_end', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 			<li><label>Company</label>
@@ -113,10 +118,15 @@
 	<? endif ( openprint::Product->find_one() ) ?>
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 <? eval ( 
-	$$variable{Users} = [ openprint::User->find(
-		# Defaults to currently logged in company, if company is all, then list users in OUR company
-		company_id => ( $session{$r->uri().'?company_id'} ? $session{$r->uri().'?company_id'} : $session{company_id} ),
- ) ] ) ?>
+  if ($session{user_type} eq 'C') {
+    $$variable{User} = [ $openprint::User ];
+  } else {
+    $$variable{Users} = [ openprint::User->find(
+      # Defaults to currently logged in company, if company is all, then list users in OUR company
+      company_id => ( $session{$r->uri().'?company_id'} ? $session{$r->uri().'?company_id'} : $session{company_id} ),
+   ) ];
+ }
+) ?>
 <? if ( @{$$variable{Users}} > 1 ) ?>
 			<li><label>Created By</label>
 				<select name="user_id" onchange="load_projects();">

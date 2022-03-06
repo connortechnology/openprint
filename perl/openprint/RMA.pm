@@ -163,7 +163,8 @@ sub Invoice {
 sub Address {
 	require openprint::Address;
 	return new openprint::Address( $_[0]{shipto_address_id} );
-} # end sub Adress
+} # end sub Address
+
 sub add_log {
 	sql::insert( undef, undef, 'RMA_Logs',{
 			rma_id		=>	$_[0]{id},

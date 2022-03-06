@@ -100,6 +100,7 @@
 							 join(', ', $Supplier->city(), ($Supplier->country() eq 'US' ? $states::states{$Supplier->state()} : $provinces::provinces{$Supplier->state()}), $Supplier->postalcode() ),
 							 $countries::countries{$$Supplier{country}},
 							),
+              "The differences are @changes",
 							button('VendorUpdate', { onclick=>'update_vendor();', text=>'Update' } ),
 						'</div>');
 				}

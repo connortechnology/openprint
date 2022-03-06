@@ -119,13 +119,12 @@ sub get_current {
 
 	my $list_id;
 
-	my $Company = new openprint::Company( $openprint::session{'company_id'} );
-	if ( $Company->id() > 0 ) {
-		$list_id = $Company->pricelist_id();
-	} # end if
-
-	if ( (! $list_id) and $Company->country() ) {
-		$list_id = $openprint::config{'Default'.$Company->country().'Pricelist'};
+	if ( $openprint::Company ) {
+    if ( $openprint::Company->pricelist_id() ) {
+      $list_id = $openprint::Company->pricelist_id();
+    } elsif ( $openprint::Company->country() ) {
+      $list_id = $openprint::config{'Default'.$openprint::Company->country().'Pricelist'};
+    }
 	} # end if
 
 	if ( (! $list_id) and $openprint::session{'Country'} ) {
@@ -134,7 +133,7 @@ sub get_current {
 	if ( ! $list_id ) {
 		$list_id = $openprint::config{'DefaultPricelist'};
 	} # end if
-	if ( ! $list_id ) {
+	if ( (! $list_id) and $openprint::session{'Country'} ) {
 		$openprint::log->debug("No pricelist to be had! Country: $openprint::session{'Country'}" );
 	} # end if
 	

@@ -2,7 +2,7 @@
 <h1>Articles</h1>
 <h2>Search</h2>
 </div>
-<script type="text/javascript">
+<script>
 	function delete_confirm(form) {
 		var number_of_deleted_articles = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -34,7 +34,7 @@
 			<div class="content">
 			<div class="leftColumn">
 				<ul>
-<? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+<? if ( $session{user_type} and sets::isin($session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label><? translate ( company ) ?></label>
 				<select name="company_id" id="company_id" onchange="load_articles(this.form);">
@@ -42,38 +42,38 @@
 					<? echo ( openprint::Company::get_dropdown( $session{'/article/search.html?company_id'} ); ) ?>
 				</select>
 			</li>
-<? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
-<? if ( @{$$variable{'Categories'}} = openprint::Article_Category->find('order'=>'lower(name)') ) ?>
+<? endif ( $session{user_type} and sets::isin($session{user_type}, ['E','A'] ) ) ?>
+<? if ( @{$$variable{Categories}} = openprint::Article_Category->find('order'=>'lower(name)') ) ?>
 			<li><label>Category</label>
 				<select name="category_id" id="category_id" onchange="load_articles();">
 					<option value="">All</option>
-					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/article/search.html?category_id'} ); ) ?>
+					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{'/article/search.html?category_id'} ); ) ?>
 				</select>
 			</li>
-<? endif ( @{$$variable{'Categories'}} = openprint::Article_Category->find('order'=>'lower(name)') ) ?>
+<? endif ( @{$$variable{Categories}} = openprint::Article_Category->find('order'=>'lower(name)') ) ?>
 <? if ( 0 ) ?>
 			<li>
 				<label>Created</label>
-<? echo ( date_select_session( '/article/search.html', 'created_on_start', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
+<? echo ( date_select_session( '/article/search.html', 'created_on_start', {onchange=>'load_articles();',with_today=>1,with_clear=>1} ); ) ?>
 					to 
-<? echo ( date_select_session( '/article/search.html', 'created_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
+<? echo ( date_select_session( '/article/search.html', 'created_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear=>1} ); ) ?>
 			</li>
 <? endif ( 0 ) ?>
 			<li>
 				<label>Published</label>
-<? echo ( date_select_session( '/article/search.html', 'published_on_start', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
+<? echo ( date_select_session( '/article/search.html', 'published_on_start', {onchange=>'load_articles();',with_today=>1,with_clear=>1} ); ) ?>
 					to 
-<? echo ( date_select_session( '/article/search.html', 'published_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
+<? echo ( date_select_session( '/article/search.html', 'published_on_end', {onchange=>'load_articles();',with_today=>1,with_clear=>1} ); ) ?>
 			</li>
 			</ul>
 			</div>
 			<div class="rightColumn">
 				<ul>
-<? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+<? if ( $session{user_type} and sets::isin($session{user_type}, ['E','A'] ) ) ?>
 					<li><label>Published?</label>
 					<? echo ( radio( 'published', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/search.html?published'}, {onclick=>'load_articles();'} ); ) ?>
 					</li>
-<? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+<? endif ( $session{user_type} and sets::isin($session{user_type}, ['E','A'] ) ) ?>
 					<li>
 						<label>Author</label>
 						<select name="author_id" id="author_id" onchange="load_articles();">

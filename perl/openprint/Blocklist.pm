@@ -40,11 +40,11 @@ sub is_blocked {
 	if ( (! exists $block_cache{$user_id1} ) and $user_id1 ) {
 		@{$block_cache{$user_id1}} = map { $_->blockee() } openprint::Blocklist->find(blocker=>$user_id1);
 	} # end if
-	return 1 if $user_id1 and sets::isin( $user_id2, $block_cache{$user_id1} );
+	return 1 if $user_id1 and $user_id2 and sets::isin( $user_id2, $block_cache{$user_id1} );
 	if ( ( ! exists $block_cache{$user_id2} ) and $user_id2 ) {
 		@{$block_cache{$user_id2}} = map { $_->blockee() } openprint::Blocklist->find(blocker=>$user_id2);
 	} # end if
-	return 1 if $user_id2 and sets::isin( $user_id1, $block_cache{$user_id2} );
+	return 1 if $user_id2 and $user_id1 and sets::isin( $user_id1, $block_cache{$user_id2} );
 #$openprint::log->debug("Not blocked " . new openprint::User($user_id1)->name(). ' ' . new openprint::User( $user_id2)->name());
 	return 0;
 } # end sub is_blocked

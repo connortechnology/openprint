@@ -21,7 +21,7 @@
 		my $html = '';
 		$$variable{object_types} = openprint::Object_Type->dropdown() if ! $$variable{object_types};
 		
-		my $line = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.'/administrator/managerial/_authorization.html' );
+		my $line = slurp_content('/administrator/managerial/_authorization.html');
 
 		foreach my $Auth ( new openprint::Authorization(), @{$$variable{Authorizations}} ) {
 			$$variable{Auth} = $Auth;

@@ -84,16 +84,16 @@ $log->debug("Connected to db");
 
 require Net::Ping;
 # udp has less network traffic overhead
-my $p = Net::Ping->new('icmp',10);
+my $p = Net::Ping->new('icmp', 10);
 
 my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find(type=>[ 'WG602v3', 'WPN802', 'TP-Link Archer C7' ], monitored=>1);
-$log->debug( 'WAP polling ' . @Hosts . ' hosts.' );
+$log->debug('WAP polling ' . @Hosts . ' hosts.');
 foreach my $Host ( @Hosts ) {
 	foreach my $HI ( $Host->Interfaces() ) {
 		if ( ! $HI->ip() ) {
 			next;
 		} # end if
-		if ( ! $$HI{mac} ) {
+		if ( !$$HI{mac} ) {
 			$log->error("NO mac in HI for $$Host{id} $$Host{hostname}");
 			next;
 		}
@@ -116,6 +116,70 @@ foreach my $Host ( @Hosts ) {
 
 			if ( $Host->type() eq 'TP-Link Archer C7' ) {
 				use JSON;
+        my $auth_key = '';
+
+        my $rpc_sys_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/sys';
+        my $rpc_admin_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/admin';
+
+        my $rpc_auth_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/auth';
+				my $response = $browser->post( $rpc_auth_url, 
+          Content => JSON::encode_json( { method=>'login', params=>[ $Host->info('username'), $Host->info('password') ] }),
+        );
+				if ( ( ! $response->is_success ) and $response->status_line() ne '403 Forbidden' ) {
+					$log->error("Failed talking to $$Host{hostname} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
+					next;
+				}
+        $log->debug($response->content());
+        $response = decode_json($response->content());
+        if ( $$response{result} ) {
+          $auth_key = $$response{result};
+          $rpc_sys_url .= '?auth='.$auth_key;
+        }
+        $response = $browser->post($rpc_sys_url, Content => encode_json( { method=>'net.devices' } ));
+        $log->debug($response->content());
+        my @wlans;
+        $response = decode_json($response->content());
+        if ( $$response{result} ) {
+          @wlans = map { ( $_ =~ /^wlan/ ) ? $_ : () } @{$$response{result}};
+        }
+        foreach my $wlan ( @wlans ) {
+          $response = $browser->post($rpc_sys_url, Content => encode_json( { method=>'wifi.getiwinfo', params=>[$wlan] } ));
+          #$log->debug($response->content());
+          $response = decode_json($response->content());
+          $log->debug( 'assoclist' . Dumper($response) );
+          my $result = $$response{result};
+          if ( ! $result ) {
+            next;
+          }
+          my $assoclist = $$result{assoclist};
+          next if ref $assoclist ne 'HASH';
+
+          my $wap_HI;
+          $$result{bssid} = lc $$result{bssid};
+
+          if ( $$result{bssid} eq $$HI{mac} ) {
+            $wap_HI = $HI;
+          } else {
+            foreach ( $Host->Interfaces() ) {
+              if ( $$result{bssid} eq $$_{mac} ) {
+                $wap_HI = $_;
+                last;
+              }
+            }
+          }
+          if ( ! $wap_HI ) {
+            $log->error("Got no wap HI for mac $$result{bssid} for wlan $wlan of $$Host{hostname}");
+            next;
+          }
+          my @macs = keys %{$assoclist};
+          update_connections( $wap_HI, @macs );
+        }
+
+        # doesn't matter which interface we communicate on so if we communicated, stop scanning.
+        last;
+
+      } elsif ( 0 ) {
+				use JSON;
 				$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
 				$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/admin/status/overview?status=1';
 				$args = {
@@ -130,11 +194,11 @@ foreach my $Host ( @Hosts ) {
 					next;
 				}
 				my $headers = $response->headers();
-foreach my $k ( keys %{$headers} ) {
-$openprint::log->debug("Header $k => $$headers{$k}");
-}
-				if ( $$headers{'client-ssl-cipher'} ) {
-					$protocol = 'https';
+        foreach my $k ( keys %{$headers} ) {
+          $openprint::log->debug("Header $k => $$headers{$k}");
+        }
+        if ( $$headers{'client-ssl-cipher'} ) {
+          $protocol = 'https';
 					$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
 					$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/admin/status/overview?status=1&_=0.6478539785164518';
 				}
@@ -194,17 +258,6 @@ $log->debug("Getting assoclist from $url");
               push @{$networks{$$client{ifname}}{assoclist}}, $client;
             }
           }
-          #@macs = map { $$_{bssid} } @{$assoclist};
-          #} else {
-          #$assoclist = $$network{assoclist};
-          #if ( ref $assoclist eq 'ARRAY' ) {
-          #@macs = @{$assoclist};
-          #} elsif ( ref $assoclist eq 'HASH' ) {
-          #@macs = keys %{$assoclist};
-          #}
-          #}
-
-          #$log->debug( 'assoclist' . Dumper( $network ) );
           foreach my $network ( values %networks ) {
             my @macs = map { $$_{bssid} } @{$$network{assoclist}} if $$network{assoclist};
 
@@ -286,16 +339,17 @@ $log->debug("Getting assoclist from $url");
 				}
 				# Important to log out or else no one else can access the web ui
 				$response = $browser->get('http://'.$$HI{ip}.'/cgi-bin/logout.html');
-				update_connections( $HI, @macs );
+				update_connections($HI, @macs);
 
 			} else { 
 				$log->error("Unknown Host type ($$Host{type})");
 			} # end if
 		} else {
-			$log->debug("$$Host{hostname} is offline: ping $ping");
+			$log->debug($$Host{hostname}.' is offline: ping '.$ping);
 		} # end if online
 	} # end foreach HI
 } # end foreach $Host
+$log->debug('Shutting down');
 $p->close();
 $dbh->disconnect() if $dbh;
 exit 0;
@@ -304,10 +358,10 @@ sub update_connections {
 	my ( $wap_HI, @macs ) = @_;
 	openprint::Host_Interface->lock();
 	my %OldConnections = map { $$_{mac} ? ( uc $$_{mac}, $_ ) : ( ) } openprint::Host_Interface->find( connected_to=>$$wap_HI{mac} );
-$log->debug("Updating @macs");
-foreach my $k ( keys %OldConnections ) {
-  $log->debug("Old COnnections $k");
-}
+  $log->debug("Updating @macs");
+  foreach my $k ( keys %OldConnections ) {
+    $log->debug("Old COnnections $k");
+  }
 	foreach my $mac ( map { uc $_ } @macs ) {
 		if ( $OldConnections{$mac} ) {
 			# Already connected

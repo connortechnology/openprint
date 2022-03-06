@@ -3,8 +3,8 @@
 		@{$$variable{Assets}} = openprint::Asset->find( 
 			id=>$param{asset_id}, 
 			#'company_id'=>new openprint::User( $session{user_id} )->company_id(),
-			'deleted'=>[1,0],
-			'order' => 'id desc');
+			deleted=>[1,0],
+			order => 'id desc');
 	} else {
 		my %search = (
  #'company_id',		new openprint::User( $session{user_id} )->company_id(),
@@ -27,6 +27,7 @@
 		} # end foreach Asset
 	} # end if
 ) ?>
+<?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{Assets}} == 0 ) ?>
 	There are no assets matching your search criteria.
 <? else ( @{$$variable{Assets}} == 0 ) ?>
@@ -59,10 +60,10 @@
 					<td class="Filename"><a href="view.html?asset_id=%1$d">%5$s</a></td>
 					<td class="Public"><a href="view.html?asset_id=%1$d">%6$s</a></td>
 					<td class="thumbnail"><a href="view.html?asset_id=%1$d">%7$s</a></td>
-				</tr>`, $$Asset{id}, format_datetime( $Asset->created_on() ), 
+				</tr>`, $$Asset{id}, format_datetime($Asset->created_on()), 
 				$Asset->Creator()->name(), $Asset->name(), $Asset->filename(),
 				( $Asset->public() ? 'Yes' : 'No' ),
-				sprintf('<img src="%s" alt=""/>', $Asset->sized_url( 'small' ) ),
+				sprintf('<img src="%s" alt=""/>', $Asset->sized_url('small')),
 				);
 		} # end while
 		return $html;

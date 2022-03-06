@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -66,8 +66,11 @@ $serial = 'companies_id_seq';
 		category_id				=>	'category_id',
 		offers_credit				=>	'offers_credit',
 		last_project_id			=>	'last_project_id',
+		last_project_on			=>	undef,
 		last_order_id				=>	'last_order_id',
+		last_order_on				=>	undef,
 		last_quote_id				=>	'last_quote_id',
+		last_quoted_on				=>	undef,
 		last_invoice_id			=>	'last_invoice_id',
 		);
 %find_fields = (
@@ -83,6 +86,7 @@ $serial = 'companies_id_seq';
 	profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id=?)',
 	last_article_id	=>	'(SELECT MAX(id) FROM Articles WHERE company_id=companies.id)',
 	last_timetrack_id	=>	'(SELECT MAX(id) FROM timetracks WHERE company_id=companies.id)',
+	is_invoiced=> 'id IN (SELECT invoicee_id FROM invoices)',
 );
 %transforms = (
 	address1					=>	[ 's/^\s+//', 's/\s+$//' ],
@@ -169,7 +173,7 @@ sub destroy {
 } # end sub destroy
 
 sub save {
-    my ($self, $param, $force ) = @_;
+  my ($self, $param, $force ) = @_;
 	
 	$self->set( $param ? $param : {} );
 	require Text::Unidecode;
@@ -346,6 +350,7 @@ sub can_edit {
 	return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
 	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
 	return 1 if $_[0]{id} == $$openprint::User{company_id} and $$openprint::User{administrator} eq 'Y';
+	return 1 if $openprint::User->in_Group('Estimating') and ( $_[0]{id} != $$openprint::User{company_id} );
 	return 0;
 } # end sub can_edit
 
@@ -503,6 +508,20 @@ sub link_to {
 	return sprintf('<a href="/account/company_profile.html?company_id=%d">%s</a>', $_[0]{id}, $_[0]{name} );
 } # end sub link_to
 
+sub last_project_on {
+	if ( ! exists $_[0]{last_project_on} ) {
+		(  $_[0]{last_project_on} ) = sql::execute( undef, undef, 'SELECT MAX(dtmCreationDate) FROM Projects WHERE company_id=?', $_[0]{id} );
+	}
+	return $_[0]{last_project_on};
+} # end sub last_project_on
+
+sub last_quoted_on {
+	if ( ! exists $_[0]{last_quoted_on} ) {
+		(  $_[0]{last_quoted_on} ) = sql::execute( undef, undef, 'SELECT MAX(dtmQuoteDate) FROM Quotes WHERE companyindex=?', $_[0]{id} );
+	}
+	return $_[0]{last_quoted_on};
+} # end sub last_quoted_on
+
 sub last_ordered_on {
 	if ( ! exists $_[0]{last_ordered_on} ) {
 		(  $_[0]{last_ordered_on} ) = sql::execute( undef, undef, 'SELECT MAX(created_on) FROM Orders WHERE company_id=?', $_[0]{id} );
@@ -545,6 +564,8 @@ sub can_become {
 			( $$User{id} == $$C{salesrep_id} )
 			or
 			sets::isin( $$User{id}, $C->CSR()->assistant_ids() )
+			or
+			$User->in_Group('Estimating')
 		 ) {
 		return 1;
 	}

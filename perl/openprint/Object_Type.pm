@@ -16,12 +16,18 @@ $default_sort	=	'lower(name)';
 %defaults = (
 );
 %transforms = (
-		name  => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-		human => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/^openprint:://' ],
+  name  => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+  human => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/^openprint:://' ],
 );
 
 sub Object {
 	if ( $_[0]{name} ) {
+    my $name = $_[0]{name};
+    $name =~ s/::/\//g;
+    eval {
+      require $name.'.pm';
+    };
+		$openprint::log->error("failed requiring $name $@") if $@;
   	return $_[0]{name}->new($_[1]);
 	}
 	my ($caller, undef, $line) = caller;

@@ -1,10 +1,11 @@
-<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
-
-<script type="text/javascript">
+<script src="/javascripts/tiny_mce/tiny_mce.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded',function(){
 	tinyMCE.init({
 		mode : "textareas",
 		theme : "advanced"
 	});
+  });
 
 	function company_id_onchange( ddm ) {
 		ddm = $j(ddm);
@@ -61,7 +62,7 @@
 			<? echo ( datetime_select( 'starting', $$variable{Timetrack}->starting(), 
 						{
 						onchange	=>	q`check_time_starting($('f1'),'starting','ending'); update_duration($('f1'),'starting','ending');`,
-						showtime	=>	sets::isin( $$variable{Timetrack}->time_associated(), [ '', 1 ] ),
+						showtime	=>	( $$variable{Timetrack}->time_associated() == 1 or $$variable{Timetrack}->time_associated() eq '' ),
 						with_today	=>	1,
             with_time   =>  $$variable{Timetrack}{time_associated},
 						} ); ) ?>
@@ -70,7 +71,7 @@
 			<? echo ( datetime_select( 'ending', $$variable{Timetrack}->ending(), 
 						{
 						onchange	=>	q`update_duration(this.form,'starting','ending');`,
-						showtime	=>	sets::isin( $$variable{Timetrack}->time_associated(), [ '', 1 ] ),
+						showtime	=>	( $$variable{Timetrack}->time_associated() == 1 or $$variable{Timetrack}->time_associated() eq '' ),
 						with_today	=>	1,
             with_time   =>  $$variable{Timetrack}{time_associated},
 						} ); ) ?>
@@ -78,7 +79,11 @@
 			<li><label>Duration</label>
 				<input type="text" name="duration" id="duration" value="<?echo($$variable{Timetrack}->duration())?>"/>
 				<? echo ( write_override( 'duration_override', $$variable{Timetrack}->duration_override() ); ) ?>
-				<script type="text/javascript">update_duration(document.forms['f1'],'starting','ending');</script>
+				<script>
+          window.addEventListener('DOMContentLoaded', function(){
+            update_duration(document.forms['f1'],'starting','ending');
+          });
+        </script>
 			</li>
 			<li><label>Service</label>
 				<select id="service_id" name="service_id">
@@ -86,9 +91,10 @@
 					<? echo ( make_drop_down( openprint::Service->dropdown(order=>'lower(name)'), $$variable{Timetrack}->service_id() ); ) ?>
 				</select>
 			</li>
-			<li><label>Billable</label><? echo ( radio( 'billable', [1,'Yes',0,'No'], $$variable{Timetrack}->billable() ); ) ?></li>
+			<li><label>Billable</label><? echo ( radio('billable', [1,'Yes',0,'No'], $$variable{Timetrack}->billable()); ) ?></li>
 			<li><label for="rate">Override Rate</label>
 				<? echo (input( type=>'float', name=>'rate', id=>'rate', value=>$$variable{Timetrack}->rate() ); ) ?>
+        <? echo (ssi::select([ map { $_ => $_ } ( '/Hr', '/month', '/week', '/year' )], $$variable{Timetrack}->units(), { name=>'units' } ); ) ?>
 			</li>
 			<li><label>Currency</label><? echo ( 
 					my $default = $$variable{Timetrack}->currency_id();
@@ -99,7 +105,8 @@
 						$default = $session{Currency_id};
 					}
  
-					ssi::select( openprint::Currency->dropdown(), $default, { name=>'currency_id', id=>'currency_id', prepend=>['','select'] } ); ) ?></li>
+					ssi::select( openprint::Currency->dropdown(), $default, { name=>'currency_id', id=>'currency_id', prepend=>['','select'] } );
+          ) ?></li>
 			<li>
 				<label>Travel Associated</label>
 				<? echo ( radio( 'travel_associated', [ '1', 'Yes', '0', 'No' ], $$variable{Timetrack}->travel_associated() ); ) ?>
@@ -129,6 +136,10 @@
 					<? echo ( join('<br/>', map { sprintf('<a href="/paycheque/edit.html?paycheque_id=%1$d">%1$d</a>', $_ ); } $$variable{Timetrack}->Paycheques() ); ) ?>
 				</li>
 				<? endif ( $$variable{Timetrack}->Paycheques() ) ?>
+				<? if ( $$variable{Timetrack}->id() ) ?>
+        <li><label>Entered</label><?echo(format_datetime($$variable{Timetrack}->created_on()))?></li>
+        <li><label>Updated</label><?echo(format_datetime($$variable{Timetrack}->updated_on()))?></li>
+				<? endif ( $$variable{Timetrack}->id() ) ?>
 			</ul>
 		</div>
 		</div>

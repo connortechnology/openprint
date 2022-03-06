@@ -6,7 +6,7 @@ With just one click it is easy to reorder.<br/>
 <?if ( ! $$variable{Order}->terms_accepted() ) ?>
 Our terms & conditions have not yet been accepted.  The order will not go into production until they have been accepted. Please use the following link:<br/>
 <br/>
-<a href="<?echo($$variable{Order}->link_to()?>"><br/>
+<a href="<?echo($$variable{Order}->link_to(); )?>"><br/>
 <br/>
 <?endif ( ! $$variable{Order}->terms_accepted() ) ?>
 <br/>

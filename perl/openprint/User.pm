@@ -4,6 +4,7 @@ our @ISA = qw( openprint::Object );
 
 require openprint::Object;
 require openprint::User_in_UserGroup;
+require openprint::Company;
 
 use openprint ();
 use vars qw( $log $dbh %config $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD $default_sort );
@@ -116,7 +117,7 @@ sub save {
 
 	my @changes = $self->changes( $params );
 
-	if ( $params and $$params{type} and $$self{type} and ( $$params{type} ne $$self{type} ) and ( $$params{type} ne 'C' ) ) {
+	if ( 0 and $params and $$params{type} and $$self{type} and ( $$params{type} ne $$self{type} ) and ( $$params{type} ne 'C' ) ) {
 # Notify someone
 		my %info;
 		$info{User} = $self;
@@ -137,7 +138,7 @@ sub save {
 		my %info;
 		$info{User} = $self;
 		$_ = $$params{web_active} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
-		$info{ReplacementText} = ssi::include( $_, \%info );
+		$info{ReplacementText} = ssi::include( '/email_content/'.$_, \%info );
 		my $email_template = ssi::include( '/email_template.html', \%info  );
 
 		new openprint::Email()->send(
@@ -258,7 +259,7 @@ sub Prev {
 
 sub Company {
 	if ( ! $_[0]{Company} ) {
-		require openprint::Company;
+    $openprint::log->debug('Loading company');
 		$_[0]{Company} = new openprint::Company( $_[0]{company_id} );
 	} # end if
 	return $_[0]{Company};
@@ -564,7 +565,7 @@ $openprint::log->debug("Autoload User $name $_[0]") if $debug;
 				$$Profile{fields}{$name} = $_[1];
 			} # end if
 			return $$Profile{fields}{$name};
-		} else {
+		} elsif ( $debug ) {
 			my ( $caller, undef, $line ) = caller;
 			$openprint::log->error("Unknown field in User::AUTOLOAD $name from $caller:$line");
 		} # end if
@@ -579,9 +580,10 @@ sub can_edit {
 	return 1 if $openprint::session{user_id} == $_[0]{id};
 	return 1 if $openprint::session{user_type} eq 'A';
 	return 1 if ( $openprint::User->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
-	my $Company = new openprint::Company( $_[0]{company_id} );
+	my $Company = $_[0]->Company();
 	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
 	return 1 if openprint::usergroup::exists('UserManagement') and openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{user_id} );
+	return 1 if $openprint::User->in_Group('Estimating') and ($_[0]{company_id} != $openprint::User{company_id});
 	return 0;
 } # end sub can_edit
 
@@ -589,8 +591,9 @@ sub can_view {
 	return 1 if $openprint::session{user_id} == $_[0]{id};
 	return 1 if $openprint::session{user_type} eq 'A';
 	return 1 if ( $openprint::User->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
-	my $Company = new openprint::Company( $_[0]{company_id} );
+	my $Company = $_[0]->Company();
 	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
+	return 1 if $_[0]->in_Group('Estimating') and ($_[0]{company_id} != $openprint::session{company_id});
 	require openprint::Blocklist;
 	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{id});
 	return 0;

@@ -2,7 +2,7 @@ CREATE TABLE Service_Prices (
 	id	SERIAL,
 	pricelist_id	INTEGER NOT NULL, FOREIGN KEY (pricelist_id) REFERENCES Pricelists (id),
 	service_id		INTEGER NOT NULL, FOREIGN KEY (service_id) REFERENCES Services (id),
-	equipment_id	INTEGER NOT NULL, FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (id),
+	equipment_id	INTEGER, FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (id),
 	supplier_id		INTEGER, FOREIGN KEY (supplier_id) REFERENCES Companies (id),
 	min			float,
 	max			float,

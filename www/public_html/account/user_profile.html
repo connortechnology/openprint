@@ -2,7 +2,7 @@
 <h1>ACCOUNT</h1>
 <h2>User Profile</h2>
 </div>
-<script type="text/javascript" src="<?hash_link(/javascripts/passwordmeter.js)?>"></script>
+<script src="<?hash_link(/javascripts/passwordmeter.js)?>"></script>
 <?include('/includes/error_reporting.html') ?>
 <? if ( $session{user_id} ) ?>
 	<form id="f1" name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
@@ -10,9 +10,11 @@
 			<fieldset class="filters">
 			<? if ( $$variable{User}->Company()->can_edit() ) ?>
 			<? echo (
-				my @Users = @{$$variable{Users}} = openprint::User->find( company_id=>$$variable{User}->company_id()?$$variable{User}->company_id():$session{company_id}, order=>'lower(firstname),lower(lastname)' );
+				my @Users = @{$$variable{Users}} = openprint::User->find(
+        company_id=> ($$variable{User}->company_id() ? $$variable{User}->company_id() : $session{company_id}),
+        );
 				if ( @Users == 1 ) {
-					return sprintf('<input type="hidden" name="ddmUser" value="%d"/>', $Users[0]->id() );
+					return sprintf('<input type="hidden" name="ddmUser" value="%d"/>', $Users[0]->id());
 				} elsif ( @Users ) {
 					return q` 
 				<ul>
@@ -61,14 +63,7 @@
 					<ul>
    				<li class="salutation notrequired"> 
    					<label>Salutation</label>
-					<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( checked( $$variable{User}->salutation() eq 'Mr.' ); ) ?> />
-					<label class="radio" for="SalutationMr.">Mr.</label>
-					<input type="radio" id="SalutationMrs." name="salutation" value="Mrs." <? echo ( checked( $$variable{User}->salutation() eq 'Mrs.' ); ) ?> />
-					<label class="radio" for="SalutationMrs.">Mrs.</label>
-					<input type="radio" id="SalutationMs." name="salutation" value="Ms." <? echo ( checked( $$variable{User}->salutation() eq 'Ms.' ); ) ?> />
-					<label class="radio" for="SalutationMs.">Ms.</label>
-					<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( checked( $$variable{User}->salutation() eq 'Miss' ); ) ?> />
-					<label class="radio" for="SalutationMiss">Miss</label>
+            <?echo(radio('salutation', [ map { $_, $_ } ( 'Mr.','Mrs.','Ms.','Miss' ) ], $$variable{User}->salutation() ); ) ?>
    				</li>
    				<li class="required firstname">
    					<label for="firstname">First Name</label>
@@ -102,28 +97,19 @@
 			<? if ( $$variable{Me}->administrator() eq 'Y' or $$variable{User}->Company()->can_edit() ) ?>
    				<li class="web_active notrequired">
    					<label>Can login to the web site?</label>
-   					<input type="radio" id="web_activeY" name="web_active" <? echo ( checked( $$variable{User}->web_active() eq 'Y' ); ) ?> value="Y" />
-   					<label class="radio" for="web_activeY">Yes</label>
-   					<input type="radio" id="web_activeN" name="web_active" <? echo ( checked( $$variable{User}->web_active() ne 'Y' ); ) ?> value="N" />
-   					<label class="radio" for="web_activeN">No</label>
+            <?echo(radio('web_active', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->web_active() );)?>
    				</li>
 				<li class="ftp_active notrequired">
 					<label>Can login to the FTP site?</label>
-					<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( checked( $$variable{User}->ftp_active() ); ) ?> value="1" />
-					<label class="radio" for="ftp_active1">Yes</label>
-					<input type="radio" id="ftp_active0" name="ftp_active" <? echo ( checked( ! $$variable{User}->ftp_active() ); ) ?> value="0" />
-					<label class="radio" for="ftp_active0">No</label>
+            <?echo(radio('ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active() );)?>
 				</li>
    				<li class="administrator notrequired">
    					<label>Company administrator?</label>
-   					<input type="radio" id="AdministratorY" name="administrator" <? echo ( checked( $$variable{User}->administrator() eq 'Y' ); ) ?> value="Y" />
-   					<label class="radio" for="AdministratorY">Yes</label>
-   					<input type="radio" id="AdministratorN" name="administrator" <? echo ( checked( $$variable{User}->administrator() ne 'Y' ); ) ?> value="N" /> 
-   					<label class="radio" for="AdministratorN">No</label>
+            <?echo(radio('administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator() );)?>
    				</li>
    				<li class="email_quotes notrequired">
    					<label>Email my quotes to myself?</label>
-						<?echo( radio( 'email_quotes_to_myself', [ 1, 'Yes', 0, 'No' ], $$variable{User}->email_quotes_to_myself(), { default=>0 } ); )?>
+						<?echo( radio('email_quotes_to_myself', [ '1', 'Yes', '0', 'No' ], $$variable{User}->email_quotes_to_myself(), { default=>'0' }); )?>
    				</li>
 <? eval ( @{$$variable{QuoteLevels}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
 <? if ( @{$$variable{QuoteLevels}} > 1 ) ?>

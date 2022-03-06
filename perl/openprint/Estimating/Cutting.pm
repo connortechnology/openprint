@@ -517,8 +517,8 @@ sub signature_calc {
     my $pretrim_sides = $Stitcher->specification('Pre-trimmed Edges '.$$sig_specs{txtSignatureType});
     $pretrim_sides = $Stitcher->specification('Pre-trimmed Edges') if ! $pretrim_sides;
     %pretrim_sides = map { $_, $_ } split(',', $pretrim_sides) if $pretrim_sides;
-    $stitching_imposition = 1 if ! defined $stitching_imposition;
   }
+  $stitching_imposition = 1 if ! defined $stitching_imposition;
 
   my $has_uv = $$services{UVCoating} and openprint::Estimating::UVCoating::signature_needs($Project, $sig_specs);
 
@@ -640,7 +640,7 @@ sub signature_calc {
 				if ( $CuttingMakeReady ) {
 					my %setup = $CuttingMakeReady->get_price(undef, $Equipment);
 					if ( !%setup ) {
-						$log->error("No Cutting Makeready for $$Equipment{strid}");
+						$log->error('No Cutting Makeready for '.$$Equipment{strid});
 					} else {
 						if ( $setup{units} eq 'per cut' ) {
 							%setup = $CuttingMakeReady->get_price($folding_cuts, $Equipment);
@@ -648,7 +648,7 @@ sub signature_calc {
 							$results{Breakdown} .= sprintf('Make Ready: $%1$.2f%2$s * %4$d cuts = $%3$.2f<br/>',
 									@setup{'Price','units','Total'}, $folding_cuts);
 						} else {
-							$openprint::log->debug("unknown units on $$CuttingMakeReady{units}") if DEBUG;
+							$openprint::log->debug('unknown units on '.$$CuttingMakeReady{units}) if DEBUG;
 							$results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price});
 						} # end if
 						$price{MakeReady} = $setup{Total};
@@ -764,6 +764,7 @@ EQUIPMENT: foreach my $Equipment ( @my_equipment ) {
 
     my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
     $sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
+    $sheets *= $$sig_specs{'PageQuantity'.$qty_index} if ($$sig_specs{txtSignatureType} and ($$sig_specs{txtSignatureType} eq 'Pad Pages')) and $$sig_specs{'PageQuantity'.$qty_index};
 
     if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
       if ( $$Spec{units} eq 'Sheets' ) {
@@ -1371,7 +1372,7 @@ sub calc {
     } else {
       $$specs{"txtPrice$qty_index"} = sprintf( $config{ProjectMoneyFormat}, Math::Round::nearest( 1, $price ) );
     } # end if
-    $$specs{"MPrice$qty_index"} = sprintf( $config{UnitPriceFormat}, $mprice );
+    $$specs{"MPrice$qty_index"} = sprintf( $config{UnitPriceFormat}, $mprice ? $mprice : 0 );
     $$specs{"txtUnitPrice$qty_index"} = sprintf( $config{UnitPriceFormat}, $price/$$specs{"txtQuantity$qty_index"});
 
   } # end foreach quantity
@@ -1407,7 +1408,7 @@ sub display {
     my $form = $$sig_specs{SignatureIndex};
     push @{$$variable{CuttingGroups}}, $signature_service_index, @$sig_specs{'SignatureIndex','txtServiceDescription'};
     foreach my $qty_index ( $Project->quantity_indexes() ) {
-      next if $$sig_specs{'StockType'.$qty_index} eq 'Roll';
+      next if $$sig_specs{'StockType'.$qty_index} and ($$sig_specs{'StockType'.$qty_index} eq 'Roll');
       @$variable{"txtSuppliedStockWidth-$form-$qty_index", "txtSuppliedStockHeight-$form-$qty_index",
         "txtSheetSizeWidth-$form-$qty_index", "txtSheetSizeHeight-$form-$qty_index"} =
           @$sig_specs{"hdnSuppliedStockWidth$qty_index","hdnSuppliedStockHeight$qty_index","StockWidth$qty_index","StockHeight$qty_index"};

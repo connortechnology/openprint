@@ -20,7 +20,10 @@ Click on the image to start streaming
 		my @monitor_ids = split(',', $session{'cameras_viewing'} );
 		foreach my $Monitor ( @{$$variable{'Monitors'}} ) {
 			next if sets::isin( $Monitor->id(), \@monitor_ids );
-			next if ! $Monitor->can_view();
+      if (! $Monitor->can_view()) {
+      $log->debug("Can't view monitor $$Monitor{id} $$Monitor{name}");
+			next;
+      }
 			$Monitor::dbh = $zm_dbh;
 
 			$html .= sprintf('<li id="camera_%1$d" onclick="start_stream( %1$d );"><img src="%3$s" class="thumbnail" alt="%2$s" title="%2$s"/></li>

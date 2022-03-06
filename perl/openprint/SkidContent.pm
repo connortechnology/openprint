@@ -15,6 +15,7 @@ $debug = 0;
 	purpose_id		=>	'purpose_id',
 	units			=>	'units',
 	condition_id	=>	'condition_id',
+	needs_verification	=>	'needs_verification',
 );
 %find_fields = (
 # FIXME
@@ -29,6 +30,7 @@ $debug = 0;
 	quantity		=>	undef,
 	purpose_id		=>	undef,
 	condition_id	=>	undef,
+	needs_verification	=>	0,
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],
@@ -167,7 +169,7 @@ sub value {
 			if ( $Cost ) {
 				openprint::Currency::convert( $Cost );
 				$openprint::log->debug("cost for $$self{skid_id} $$Cost{units} $$Cost{cost}") if $debug;
-				if ( (!$$Cost{units}) or ($$Cost{units} eq '/100lbs' or $$Cost{units} eq '/cwt') ) {
+				if ( (!$$Cost{units}) or ($$Cost{units} eq '/100lbs' or $$Cost{units} eq '/100lb' or $$Cost{units} eq '/cwt') ) {
 					if ( ! defined $$Cost{cost} ) {
 						$openprint::log->error("Undefined cost in POC for skid $$self{skid_id}");
 					}

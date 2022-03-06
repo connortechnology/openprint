@@ -72,7 +72,8 @@
 		</dialog>
 	</div>
 </script>
-<script type="text/javascript">
+<script>
+  window.addEventListener('DOMContentLoaded', function(){
 	var uploader = new qq.FineUploader({
 		debug: true,
 		element: $('fine-uploader'),
@@ -102,6 +103,7 @@
  retry: {
        enableAuto: true // defaults to false
     }
+	});
 	});
 </script>
 <? else ( $$variable{Object}->can_edit() ) ?>

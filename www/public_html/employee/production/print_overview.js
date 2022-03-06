@@ -38,18 +38,19 @@ var job_popup_options = {
 };
 
 //var dropfunction = function(el){
-var dropfunction = function(e, ui) {
+var dropfunction = function(el, ui) {
+if ( 0 ) {
 	new Ajax.Request( '_drop.json', {
 			method: 'post',
 			parameters: 'ul_id='+this.id+'&'+$j(this).sortable('serialize'),
 			evalScripts: true
 			} );
-	//new Ajax.Request( '_drop.json', { method: 'post', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+}
+	new Ajax.Request( '_drop.json', { method: 'post', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 }
 
-var drops = new Array();
 function setup_drops( ) {
-if ( 1 ) {
+if ( 0 ) {
 	$j('.PressColumn ul').sortable({
 			items: '> li',
 			handle: '.Company',

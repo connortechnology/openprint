@@ -87,7 +87,7 @@ sub export_specs {
 } # end sub export_specs
 
 sub edit {
-	my $Equipment = $variable{Equipment} = openprint::Equipment->find_one( id=>$param{ddmEquipment} ) if $param{ddmEquipment};
+	my $Equipment = $variable{Equipment} = openprint::Equipment->find_one( id=>$param{ddmEquipment}, deleted=>[0,1] ) if $param{ddmEquipment};
 	if ( ! $Equipment ) {
 		$variable{error} .= "Equipment $param{ddmEquipment} not found.<br/>" if $param{ddmEquipment};
 		$Equipment = new openprint::Equipment();
@@ -117,7 +117,7 @@ sub edit {
 		$variable{ExternalRedirect} = '/administrator/equipment/list.html';
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$Equipment->delete();
-		$Equipment = $Equipment->Next();
+		$variable{ExternalRedirect} = '/administrator/equipment/list.html';
 	} elsif ( $param{btnFunction} eq 'Destroy' ) {
 		$Equipment->destroy();
 		$variable{ExternalRedirect} = '/administrator/equipment/list.html';
@@ -421,7 +421,7 @@ sub list {
 sub _list {
     ssi::save_params( '/administrator/equipment/list.html', (
                 ( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
-				'deleted', 'equipment_name', 'servicetype_id',
+				'deleted', 'equipment_name', 'servicetype_id', 'category_id',
                 ) );
 }
 

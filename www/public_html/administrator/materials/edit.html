@@ -1,46 +1,46 @@
 <?include(/includes/error_reporting.html)?>
-<script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
 <form name="f1" id="f1" method="post" action="edit.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
-		<li> 
-			<label>Category</label>
-			<select name="ddmSearchCategory" onchange="f1.btnFunction.value='';f1.submit();">
-				<option value="">All Categories</option>
-				<? echo ( make_drop_down( openprint::MaterialCategory->dropdown( order=>'lower(name)'), $session{$$variable{uri}.'?ddmSearchCategory'} ); ) ?>
-			</select>
-		</li>
-		<li>
-			<label>Activity Code</label>
-			<input type="text" name="search_activity_code" value="<?echo($session{'/administrator/materials/edit.html?search_activity_code'})?>" />
-		</li>
-		<li><label>Equipment</label>
-			<select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
-				<option value="">All</option>
-				<? echo ( 
-					$variable{Equipment} = [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find( order=>'lower('.$openprint::Equipment::fields{name}.')') ];
-					make_drop_down( $variable{Equipment}, $param{equipment_id} ); ) ?>
-			</select>
-		</li>	
-		<li> 
-			<label>Material</label>
-			<select name="ddmMaterial" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
-				<option value="">Select a Material</option>
-				<? echo ( 
-						make_drop_down( [ map { $_->id(), $_->name() . ' : ' . $_->description() } openprint::Material->find(
-								order=>'lower(name)', 
-								( $session{$$variable{uri}.'?ddmSearchCategory'} ? ( category_id=>$session{$$variable{uri}.'?ddmSearchCategory'} ) : () ),
-								( $param{equipment_id} ? ( 'equipment_id any' => $param{equipment_id} ) : () ),
-								) ], $$variable{Material}->id() );
-						) ?>
-			</select>
-		</li>
+      <li> 
+        <label>Category</label>
+        <select name="ddmSearchCategory" onchange="f1.btnFunction.value='';f1.submit();">
+          <option value="">All Categories</option>
+          <? echo ( make_drop_down( openprint::MaterialCategory->dropdown( order=>'lower(name)'), $session{$$variable{uri}.'?ddmSearchCategory'} ); ) ?>
+        </select>
+      </li>
+      <li>
+        <label>Activity Code</label>
+        <input type="text" name="search_activity_code" value="<?echo($session{'/administrator/materials/edit.html?search_activity_code'})?>" />
+      </li>
+      <li><label>Equipment</label>
+        <select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
+          <option value="">All</option>
+          <? echo ( 
+            $variable{Equipment} = [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find( order=>'lower('.$openprint::Equipment::fields{strid}.')') ];
+            make_drop_down( $variable{Equipment}, $param{equipment_id} ); ) ?>
+        </select>
+      </li>	
+      <li> 
+        <label>Material</label>
+        <select name="ddmMaterial" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
+          <option value="">Select a Material</option>
+          <? echo ( 
+              make_drop_down( [ map { $_->id(), $_->name() . ' : ' . $_->description() } openprint::Material->find(
+                  order=>'lower(name)', 
+                  ( $session{$$variable{uri}.'?ddmSearchCategory'} ? ( category_id=>$session{$$variable{uri}.'?ddmSearchCategory'} ) : () ),
+                  ( $param{equipment_id} ? ( 'equipment_id any' => $param{equipment_id} ) : () ),
+                  ) ], $$variable{Material}->id() );
+              ) ?>
+        </select>
+      </li>
 		</ul>
 	</fieldset>
 </form>
 <form name="f2" id="f2" method="post" enctype="multipart/form-data" action="edit.html">
-	<input type="hidden" name="ddmMaterial" value="<?echo($$variable{Material}->id())?>"/>
+	<input type="hidden" name="material_id" value="<?echo($$variable{Material}->id())?>"/>
 	<p class="buttons">
 		<? echo ( join("\n",
 			button( 'New', { href=>'/administrator/materials/edit.html', text=>'New' } ),
@@ -62,43 +62,50 @@
 		); ) ?>
 	</p>
 <? endif ( $openprint::User->email() =~ /^iconnor/ ) ?>
+<br class="spacer"/>
+<fieldset><legend>Editing Material <? echo ( $$variable{Material}->id() ) ?></legend>
 	<div class="leftColumn">
-	<fieldset><legend>Material Information (<? echo ( $$variable{Material}->id() ) ?>)</legend>
+	<fieldset><legend>Material Information</legend>
 		<ul>
-		<li> 
-			<label>Material Name</label>
-			<input type="text" name="name" value="<? hecho ( $$variable{Material}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>
-		</li>
-		<li> 
-			<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category</label>
-			<input style="display:none;" type="text" id="new_category" name="new_category" value=""/>	
-			<select id="category_id" name="category_id">
-				<option value="">Select a category</option>
-				<? echo ( make_drop_down( openprint::MaterialCategory->dropdown( order=>'lower(name)'), $$variable{Material}->category_id() ); ) ?>
-			</select>
-		</li>
-		<li> 
-			<label>Description</label>
-			<input type="text" id="description" name="description" value="<? hecho ( $$variable{Material}->description(); ) ?>" />
-		</li>
-		<li> 
-			<label>Activity Code</label>
-			<input type="text" id="activity_code" name="activity_code" value="<? echo ( $$variable{Material}->activity_code() ) ?>" />
-		</li>
+      <li> 
+        <label>Name</label>
+        <input type="text" name="name" value="<? hecho ( $$variable{Material}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>
+      </li>
+      <li> 
+        <label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category</label>
+        <input style="display:none;" type="text" id="new_category" name="new_category" value=""/>	
+        <select id="category_id" name="category_id">
+          <option value="">Select a category</option>
+          <? echo ( make_drop_down( openprint::MaterialCategory->dropdown( order=>'lower(name)'), $$variable{Material}->category_id() ); ) ?>
+        </select>
+      </li>
+      <li> 
+        <label>Description</label>
+        <input type="text" id="description" name="description" value="<? hecho ( $$variable{Material}->description(); ) ?>" />
+      </li>
+      <li> 
+        <label>Activity Code</label>
+        <input type="text" id="activity_code" name="activity_code" value="<? echo ( $$variable{Material}->activity_code() ) ?>" />
+      </li>
 		</ul>
 	</fieldset>
 </div><div class="rightColumn">
 	<fieldset><legend>Purchasing Information</legend>
 		<ul>
 		<li>
-			<label for="manufacturer" onclick="$('manufacturer_Id').toggle();$('manufacturer').toggle();">Manufacturer</label>
-			<select id="manufacturer_id" name="manufacturer_id" size="1">
-				<option value="">select</option>
-			<? echo (
-					make_drop_down( openprint::Manufacturer->dropdown(order=>'lower(name)'), $$variable{Material}->manufacturer_id() );
-					) ?>
-			</select>
-			<input style="display: none;" type="text" id="manufacturer" name="manufacturer" onfocus="if(!this.value){this.value=get_ddm_text(f1.manufacturer_id);}ddm_select_by_index( f1.manufacturer_id, 0 );" />
+			<label for="manufacturer" onclick="$('manufacturer_id').toggle();$('manufacturer').toggle();">Manufacturer</label>
+      <?echo(join("\n",
+
+			ssi::select(
+        openprint::Manufacturer->dropdown(order=>'lower(name)'),
+        $$variable{Material}->manufacturer_id(),
+        {
+          id=>'manufacturer_id', name=>'manufacturer_id', size=>1, prepend=>['','select'],
+        }
+      ),
+      input( style=>'display: none;', type=>'text', id=>'manufacturer', name=>'manufacturer', onfocus=>q`if(!this.value){this.value=get_ddm_text(f1.manufacturer_id);}ddm_select_by_index( f1.manufacturer_id, 0 );` ),
+      button('NewManufacturer', { onclick=>q`$('manufacturer_id').hide();$('manufacturer').show();`, text=>'New' } ),
+      );)?>
 		</li>
 		<li> 
 			<label>Supplier</label>
@@ -125,6 +132,7 @@
 		</div>
 		<?include(_specifications.html)?>
 	<? endif ( $$variable{Material}->id() ) ?>
+	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
 <? if ( $$variable{Material}->id() ) ?>

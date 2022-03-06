@@ -519,10 +519,10 @@ $openprint::log->debug("Types: @types") if DEBUG;
 								) ) {
 						$setupPrice = 0;
 					} else {
-						$setupPrice = openprint::service::get_price( 'UV'.$type.'MakeReady', $run_qty, $Equipment );
+						$setupPrice = openprint::service::get_price( $type.'MakeReady', $run_qty, $Equipment );
 						$setupPrice = openprint::service::get_price( 'UVCoatingMakeReady', $run_qty, $Equipment ) if ! $setupPrice;
 						if ( ! $setupPrice ) {
-							$openprint::log->debug("No setup price for $type");
+							$openprint::log->debug('No setup price for '.$type);
 							$setupPrice = 0;
 						} else {
 							$ImpositionPrice{MakeReady} += $setupPrice;
@@ -531,7 +531,7 @@ $openprint::log->debug("Types: @types") if DEBUG;
 
 						$MakeReadies{$Equipment->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index};
 					} # end if
-					$breakdown .= sprintf('<tr><td>%s</td></tr><tr><td>MR:</td><td class="Price">$%.2f</td></tr>', $type, $setupPrice );
+					$breakdown .= sprintf('<tr><td colspan="2">%s</td></tr><tr><td>MR:</td><td class="Price">$%.2f</td></tr>', $type, $setupPrice );
 
 					if ( $type =~ /Spot/ and $BlanketCutPrice ) {
 						$BlanketCutPrice = openprint::service::get_price( 'BlanketCut', undef, $Equipment ) if ! defined $BlanketCutPrice;
@@ -665,7 +665,7 @@ $log->debug("Complete: $breakdown");
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	$$variable{Equipment} = [ openprint::Equipment->find( Specifications => {'UVCoating Capable'=>'Y'}, useinestimating=>1, order=>'lower(strName)') ];
+	$$variable{Equipment} = [ openprint::Equipment->find( Specifications => {'UVCoating Capable'=>'Y'}, 'useinestimating is null or ='=>1, order=>'lower(strName)') ];
 } # end sub display
 
 # Copies the UV settings back into the printing service, because that is where we have chosen to store them.

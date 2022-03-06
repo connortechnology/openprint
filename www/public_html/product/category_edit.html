@@ -1,3 +1,4 @@
+<?if($$variable{Category}->can_edit())?>
 <form name="f1" id="f1" action="/product/category_edit.html?category_id=<? echo ( $$variable{Category}->id(); ) ?>" method="post">
 	<fieldset>
 		<legend>
@@ -7,7 +8,7 @@
 		</legend>
 		<div class="leftColumn">
 		<ul>
-			<li><label>Id</label><?echo( $$variable{Category}->id() ) ?></li>
+      <li><label>Id</label><?echo( $$variable{Category}->id() . ( $$variable{Category}->deleted() ? ' deleted' : '' )) ?></li>
 			<li>
 				<label>Name</label>
 				<input type="text" id="name" name="name" value="<? hecho ( $$variable{Category}->name(); ) ?>"  />
@@ -31,7 +32,6 @@
 				<? echo ( input( type=>"integer", id=>"sort", name=>"sort", value=>$$variable{Category}->sort() ); ) ?>
 			</li>
 		</ul>
-<? if ( $$variable{Category}->can_edit() ) ?>
 		<p class="buttons">
 			<? echo ( join("\n",
 ( $$variable{Category}->id() ? (
@@ -42,7 +42,6 @@
 			button( 'Reset', { onclick=>'f1.reset();' } ),
 			); ) ?>
 		</p>
-<? endif ( $$variable{Category}->can_edit() ) ?>
 		</div>
 		<div class="rightColumn" style="overflow: hidden;">
 		<?eval($$variable{Object}=$$variable{Category};)?>
@@ -67,3 +66,6 @@
 	</fieldset>
 	<input type="hidden" name="btnFunction" />
 </form>
+<?else($$variable{Category}->can_edit())?>
+<div class="error">You do not have permission to edit this category.</div>
+<?endif($$variable{Category}->can_edit())?>

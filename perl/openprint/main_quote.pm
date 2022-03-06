@@ -141,13 +141,15 @@ sub _history {
 					 );
 
 		my @quote_ids = map { $$_{id} } @Quotes;
+    return if ! @quote_ids;
+
 		my @Quoted_Projects = openprint::QuotedProject->find(quote_id=>\@quote_ids,order=>'project_id') if @quote_ids;
 		my @project_ids = map { $$_{project_id} } @Quoted_Projects;
 		my %Quoted_Projects = misc::make_hash_from_array('quote_id', @Quoted_Projects);
 		my @Projects = openprint::Project->find(id=>\@project_ids) if @project_ids;
 		my @company_ids = map { $$_{company_id} } @Quotes;
 		my @Companies = openprint::Company->find(id=>\@company_ids) if @company_ids > 1;
-		my @Ordered_Projects = openprint::OrderedProject->find(project_id=>\@project_ids);
+		my @Ordered_Projects = openprint::OrderedProject->find(project_id=>\@project_ids) if @project_ids;
 		my %Ordered_Projects_by_project_id = misc::make_hash_from_array('project_id', @Ordered_Projects);
 		foreach my $Project ( @Projects ) {
 			$Project->Ordered_Project($Ordered_Projects_by_project_id{$$Project{id}}[0]) if $Ordered_Projects_by_project_id{$$Project{id}};
@@ -312,6 +314,7 @@ sub information {
     $variable{error} .= $Quote->save({
       user_id 		=>  $session{user_id},
       company_id	=>  $session{company_id},
+      for_company_id=>  $session{company_id},
       status 		 	=>  'Incomplete',
       Currency  	=>  openprint::Currency::get_current(),
     });
@@ -387,7 +390,7 @@ sub information {
     $quote_id = $NewQuote->id();
     $variable{ExternalRedirect} = '/main/quote/information.html?quote_id='.$quote_id;
     return;
-  } elsif ( $param{btnFunction} eq 'Continue' or $param{remove} ) {
+  } elsif (($param{btnFunction} eq 'Continue') or $param{remove} ) {
     $quote_id = $param{quote_id};
 # this should only happen if there was an error creating the quote
 
@@ -523,6 +526,7 @@ sub submit {
     } # end if
 
     $Quote->save({
+        for_company_id=>$param{for_company_id},
         reference=>$param{reference},
         comments=>$param{comments},
         status=>'Incomplete',

@@ -35,7 +35,7 @@ use Encode ();
 use Data::Dumper;
 use Date::Parse;
 
-my @banned_files = ( 'ftpchk3.txt' );
+my @banned_files = ( 'ftpchk3' );
 my $program = basename($0);
 
 my $opts = {};
@@ -184,7 +184,7 @@ $log->debug("Opened fifo at $config{fifo}");
 
 				my $bad = 0;
 				foreach my $banned_re ( @banned_files ) {
-					if ( $path =~ /$banned_re/ ) {
+					if ( $path =~ /$banned_re/i ) {
 						# Detected bad file
 						$bad = 1;
 						last;
@@ -256,7 +256,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 
 				my $bad = 0;
 				foreach my $banned_re ( @banned_files ) {
-					if ( $path =~ /$banned_re/ ) {
+					if ( $path =~ /$banned_re/i ) {
 						# Detected bad file
 						$bad = 1;
 						last;
@@ -319,7 +319,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 				if ( ! defined $codes{$response_code} ) {
 					$log->error("Need to define the response code for $response_code");
 				}
-				$log->debug("data: client:$client remote_user:$remote_user username:$user_name time:$curr_time dir:$dir path:$path command:$command code:$response_code($codes{$response_code}) bytes:$nbytes");
+				$log->debug("data: client:$client remote_user:$remote_user username:$user_name time:$curr_time dir:$dir path:$path command:$command code:$response_code(".(exists($codes{$response_code})?$codes{$response_code}:'unknown code').") bytes:$nbytes");
 				if ( $response_code == 331 ) {
 #Username OK, need password
 					next;
@@ -372,7 +372,7 @@ $log->debug("Command was not an upload");
 
 				my $bad = 0;
 				foreach my $banned_re ( @banned_files ) {
-					if ( $path =~ /$banned_re/ ) {
+					if ( $path =~ /$banned_re/i ) {
 						# Detected bad file
 						$bad = 1;
 						last;
@@ -548,30 +548,21 @@ $log->debug("Processing upload $file");
 		$$upload{file_str} = $file_str;
 		$$upload{company_name} = $company_name;
 
+    #The purpose is to strip off the base path, leaving subdirs and actual file name
 		my $regexp = '^'.quotemeta($project_files_path).'\/'.quotemeta($company_name).'\/(.+)\$';
 $log->debug("regexp: $regexp");
 		@$upload{proper_file_path} = $file =~ /$regexp/;
 		if ( ! $$upload{proper_file_path} ) {
-			$log->debug("Trying a more generic regexp against $file");
 			$regexp = "^.*\\/\Q$company_name\E\\/(.+)\$";
+			$log->debug("Trying a more generic regexp $regexp against $file");
 			@$upload{proper_file_path} = $file =~ /$regexp/;
 		}
-		$$upload{proper_file_path} = $$upload{file_str} if ! $$upload{proper_file_path};
+    if ( ! $$upload{proper_file_path} ) {
+      $log->warning("Failed to match path. Setting to $$upload{file_str}");
+      $$upload{proper_file_path} = $$upload{file_str};
+    }
 
-		#if ( ! $company_name ) {
-			#my $new_file_path = $config{file_path};
-			#$new_file_path =~ s/ /_/g;
-			#$regexp = $new_file_path.'/(.+)/'.$file_str;
-			#( $company_name ) = $file =~ /^$regexp$/;
-			#$log->warn("Trying to match ( $regexp in $file, got $company_name");
-		#} # end if
-
-		#if ( $company_name ) {
-			#$company_name =~ s/^\/*//g;
-		   #my @parts = split('/', $company_name);
-		   #$$upload{company_name} = shift @parts if @parts;
-		#} # end if
-	   #$$upload{proper_file_path} = '/'.$$upload{company_name}.'/'.$file_str;
+    # Now that we have just the subdir and file, we should turn it into a regexp to convert _ to spaces
 	} # end foreach upload
 
 	my $subject;

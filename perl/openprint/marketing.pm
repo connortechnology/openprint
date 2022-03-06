@@ -76,7 +76,7 @@ sub categories {
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		$variable{error} .= $Category->save( \%openprint::param );
 		if ( ! $variable{error} ) {
-			$variable{Redirect} = '/marketing/categories.html?category_id='.$Category->id();
+			$variable{ExternalRedirect} = '/marketing/categories.html?category_id='.$Category->id();
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$Category->delete();
@@ -146,12 +146,16 @@ sub email_campaign {
 		$variable{information} = $Campaign->test();
 		$variable{ExternalRedirect} = $Campaign->url_to();
 	} elsif ( $param{btnFunction} eq 'Download Recipients' ) {
-		my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
+		my @header = ( 'Company','First Name','Last Name', 'Email','Phone','Last Sent On','Number of Times Sent','Order Value');
 		my @data;
-		foreach my $User ( $Campaign->Recipients() ) {
-			push @data, $User->Company()->name(), $User->name(), $User->email(), $User->phone();
+    my @Recipients = $Campaign->Recipients();
+    my @company_ids = map { $$_{company_id} } @Recipients;
+    my %Orders = misc::make_hash_from_array('company_id', openprint::Order->find(company_id=>\@company_ids));
+		foreach my $User ( @Recipients ) {
+			push @data, $User->Company()->name(), $User->firstname(), $User->lastname(), $User->email(), $User->phone();
 			my ( $last_sent, $num_times ) = sql::execute( undef, undef, 'SELECT emailsenton, numemailsent FROM emailcampaign_sent WHERE campaign_id=? AND user_id=? ORDER BY emailsenton DESC LIMIT 1', $Campaign->id(), $User->id() );
 			push @data, $last_sent, $num_times;
+      push @data, misc::sum( $Orders{$$User{company_id}} ? @{$Orders{$$User{company_id}} } : () );
 		} # end foreach
 
 		misc::export_csv( $r, $log, \%variable, $Campaign->name().' Recipients.csv', \@header, \@data );
@@ -262,80 +266,114 @@ sub email_templates {
 sub banners {
 } # end sub banners
 
+sub not_ok_to_takeover {
+  my $email = shift;
+  my @Users = openprint::User->find(email=>$email);
+  if (@Users > 1) {
+    return 'There are multiple entries in the system with this email address.  Please correct this.';
+  }
+  foreach (@Users) { return 'User already has a password assigned.' if $_->password(); };
+  return '';
+}
+
 sub subscriptions {
-	if ( $param{user_id} and ( $param{user_id} != openprint::User->transform(id=>$param{user_id}) ) ) {
-		$variable{error} .= 'Invalid user specified.<br/>';
-		$log->error('Invalid user specified:'.$param{user_id});
-		$variable{User} = $openprint::User;
-		return;
-	}
+  my $User;
 
-	my $User = $variable{User} = new openprint::User($param{user_id} ? $param{user_id} : $session{user_id});
-	
-	$User = $variable{User} = new openprint::User($session{user_id}) if $session{user_id} and ! $$User{id};
-	# Either we are logged in and can edit, or the specified user id and that user's email address match.
-	if ( $session{user_id} ) {
-		if ( ! $User->can_edit() ) {
-			$log->error("Person $$openprint::User{name} does not have access to edit $$User{name}'s subscriptions");
-			$variable{error} .= 'You do not have access to edit this users subscriptions.';
-			return;
-		} # endif
-	} else {
-		if ( $param{email} and ($$User{email} ne $param{email}) ) {
-			$variable{error} .= "User email ($$User{email}) and provided email address ($param{email}) do not match.<br/>";
-			return;
-		}
-	} # end if
+  if ($param{email}) {
+    my @Users = openprint::User->find(email=>$param{email});
+    if (@Users > 1) {
+      $variable{error} .= 'Multiple user records found.  Please contact support.';
+      return;
+    } elsif (!@Users) {
+      # NEW
+      $User = new openprint::User();
+      $User->email($param{email});
+    } else {
+      $User = $Users[0];
+    }
+  } elsif ($param{user_id}) {
+    $param{user_id} == openprint::User->transform(id=>$param{user_id});
+    if (!$param{user_id}) {
+      $variable{error} .= 'Invalid user id specified.<br/>';
+      $log->error('Invalid user id specified:'.$param{user_id});
+      $variable{User} = $openprint::User;
+      return;
+    }
+    $User = openprint::User->find_one(id=>$param{user_id});
+  } else {
+    $User = $openprint::User;
+  }
 
-	if ( $param{action} eq 'Save' ) {
-		if ( ! $openprint::session{user_id} ) {
-			if ( $config{reCAPTCHA_site_key} ) {
-				if ( ! $param{'g-recaptcha-response'} ) {
-					$variable{error} .= 'You must check the I\'m not a robot box';
-				} else {
-					eval {
-# Using Google recaptcha
-						require Captcha::reCAPTCHA;
-						my $c = Captcha::reCAPTCHA->new;
-						my $result = $c->check_answer_v2($config{reCAPTCHA_secret_key}, $param{'g-recaptcha-response'}, $ENV{REMOTE_ADDR});
-						if ( ! $result->{is_valid} ) {
-							$variable{error} .= 'Failed reCAPTCHA.';
-						}
-					};
-					if ( $@ ) {
-						$variable{error} .= "Failed reCAPTCHA: $@";
-					}
-				}
-			} else {
-				eval {
-					require Authen::Captcha;
-					my $Captcha = new Authen::Captcha(
-							data_folder => $config{SkinPath}.'/tmp',
-							output_folder => $config{SkinPath}.'/images/captcha'
-							);
-# Remove spaces, because some people want to put spaces between the characters, etc.
-					$param{Captcha} =~ s/\s//g;
-					if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
-						$variable{error} .= 'Captcha validation code incorrect.  Please try again.';
-					} # end if
-				};
-			}
-			if ( $variable{error} ) {
-$log->error($variable{error});
-				return;
-			}
-		} # end if not logged in
-		if ( ( $param{all} eq 'N' ) and ( $User->mailinglist() eq 'Y' ) ) {
-			$variable{error} .= $User->save({mailinglist=>$param{all}});
-			$variable{information} .= 'Unsubscribed from all email communications.<br/>' if ! $variable{error};
-		} elsif ( ( $param{all} eq 'Y' ) and ( $User->mailinglist() eq 'N' ) ) {
-			$variable{error} .= $User->save({mailinglist=>'Y'});
-			$variable{information} .= 'Subscribed to all email communications.<br/>' if ! $variable{error};
-		} else {
-			$variable{information} .= ' No changes made.';
-		} # end if
-	} # end if	
-$log->debug("information: $variable{information}");
+  if (!($User and $User->can_edit())) {
+    if ( ! $session{user_id} ) {
+      $log->error("Can't edit, need to login");
+      $variable{error} .= 'User has a password assigned. Please log in.';
+      $variable{ExternalRedirect} = '/account/login.html?email='.$param{email};
+    } else {
+      $variable{error} .= 'No permission to edit settings for this user.';
+    }
+    return;
+  }
+
+  if ($param{action}) {
+    if ($param{action} eq 'Save') {
+      if (!$openprint::session{user_id}) {
+        if ( $config{reCAPTCHA_site_key} ) {
+          if ( ! $param{'g-recaptcha-response'} ) {
+            $variable{error} .= 'You must check the I\'m not a robot box';
+          } else {
+            eval {
+              # Using Google recaptcha
+              require Captcha::reCAPTCHA;
+              my $c = Captcha::reCAPTCHA->new;
+              my $result = $c->check_answer_v2($config{reCAPTCHA_secret_key}, $param{'g-recaptcha-response'}, $ENV{REMOTE_ADDR});
+              if ( ! $result->{is_valid} ) {
+                $variable{error} .= 'Failed reCAPTCHA.';
+              }
+            };
+            if ( $@ ) {
+              $variable{error} .= "Failed reCAPTCHA: $@";
+            }
+          }
+        } else {
+          eval {
+            require Authen::Captcha;
+            my $Captcha = new Authen::Captcha(
+              data_folder => $config{SkinPath}.'/tmp',
+              output_folder => $config{SkinPath}.'/images/captcha'
+            );
+            # Remove spaces, because some people want to put spaces between the characters, etc.
+            $param{Captcha} =~ s/\s//g;
+            if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+              $variable{error} .= 'Captcha validation code incorrect.  Please try again.';
+            } # end if
+          };
+        }
+        if ( $variable{error} ) {
+          $log->error($variable{error});
+          return;
+        }
+      } # end if not logged in
+      if (!$User->id()) {
+        $variable{error} .= $User->save({email=>$param{email}});
+        $openprint::User = $User if !$variable{error};
+      }
+      if (!$User->password() and $param{password}) {
+        $User->set({password=>$param{password}});
+      }
+      if ( ( $param{all} eq 'N' ) and ( $User->mailinglist() eq 'Y' ) ) {
+        $variable{error} .= $User->save({mailinglist=>$param{all}});
+        $variable{information} .= 'Unsubscribed from all email communications.<br/>' if ! $variable{error};
+      } elsif ( ( $param{all} eq 'Y' ) and ( $User->mailinglist() eq 'N' ) ) {
+        $variable{error} .= $User->save({mailinglist=>'Y'});
+        $variable{information} .= 'Subscribed to all email communications.<br/>' if ! $variable{error};
+      } else {
+        $variable{information} .= ' No changes made.';
+      } # end if
+    } # end if save
+	} # end if action
+  $variable{User} = $User;
+  $log->debug("information: $variable{information}");
 } # end sub subscriptions
 
 sub sales_log {

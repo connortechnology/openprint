@@ -90,6 +90,10 @@ if ( ! sets::isin( 'currencies', \@tables ) ) {
 	$dbh->do('UPDATE currencies set sy=symbol');
 	$dbh->do('ALTER TABLE currencies DROP COLUMN symbol');
 	$dbh->do('ALTER TABLE currencies RENAME COLUMN sy TO symbol');
+  if ( ! exists $$data{precision} ) {
+    $log->debug("Add precision to currencies");
+    $dbh->do('ALTER TABLE currencies ADD precision smallint NOT NULL default 2');
+  }
 } # end if
 
 if ( ! sets::isin( 'annualsales', \@tables ) ) {
@@ -109,6 +113,12 @@ if ( ! sets::isin( 'company_categories', \@tables ) ) {
 		$dbh->do('ALTER TABLE company_categories ADD short text');
 	} # end if
 } # endif
+
+if ( ! sets::isin( 'quotelevels', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../../sql/QuoteLevels.sql}) );
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
+} # end if
 
 if ( ! sets::isin( 'companies', \@tables ) ) {
 	if ( ! sets::isin( 'company', \@tables ) ) {
@@ -280,11 +290,6 @@ if ( ! sets::isin( 'quotes', \@tables ) ) {
 } # end if
 
 
-if ( ! sets::isin( 'quotelevels', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/QuoteLevels.sql}) );
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
-	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
-} # end if
 
 if ( ! sets::isin( 'user_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/User_Types.sql}) );
@@ -397,6 +402,10 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{deleted} ) {
 		$dbh->do('ALTER TABLE Assets ADD deleted BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end if
+	if ( ! exists $$data{public} ) {
+    $log->debug("Adding public to Assets");
+		$dbh->do('ALTER TABLE Assets ADD public BOOLEAN NOT NULL DEFAULT FALSE');
 	} # end if
 	if ( ! exists $$data{license} ) {
 		$dbh->do('ALTER TABLE Assets ADD license TEXT');
@@ -520,6 +529,9 @@ if ( ! sets::isin( 'invoices', \@tables ) ) {
 	if ( ! exists $$data{subtotal_override} ) {
 		$dbh->do('ALTER TABLE Invoices ADD subtotal_override BOOLEAN NOT NULL default false');
 	} # end if
+	if ( ! exists $$data{total_override} ) {
+		$dbh->do('ALTER TABLE Invoices ADD total_override BOOLEAN NOT NULL default false');
+	} # end if
 } # end if
 if ( ! sets::isin( 'invoice_interests', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Invoice_Interests.sql' ) );
@@ -529,6 +541,7 @@ if ( ! sets::isin( 'invoice_interests', \@tables ) ) {
 if ( ! sets::isin( 'invoices_id_seq', \@sequences ) ) {
 	$dbh->do('CREATE SEQUENCE invoices_id_seq');
 } # en dif
+
 if ( ! sets::isin( 'order_statuses', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Order_Statuses.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -563,6 +576,51 @@ if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
 
 if ( ! sets::isin( 'orders', \@tables ) ) {
 	load_sql( 'Orders' );
+}
+
+if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+}
+
+if ( ! sets::isin( 'expenses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../../sql/Expenses.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	$dbh->do('ALTER TABLE expenses ALTER category_id DROP NOT NULL');
+
+  my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='expenses'", 'column_name');
+  if ( ! exists $$data{amount_locked} ) {
+    $dbh->do('ALTER TABLE expenses add amount_locked BOOLEAN NOT NULL default false');
+  }
+  if ( ! exists $$data{total_locked} ) {
+    $dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
+  }
+  if ( ! exists $$data{attention} ) {
+    $dbh->do('ALTER TABLE expenses add attention BOOLEAN NOT NULL default false');
+  }
+  if ( ! exists $$data{business_use_amount} ) {
+    $dbh->do('ALTER TABLE expenses add business_use_amount float');
+  }
+  if ( ! exists $$data{account_id} ) {
+    $dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+    $dbh->do('ALTER TABLE expenses add account_id INTEGER');
+    $dbh->do('ALTER TABLE expenses add FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)');
+  }
+  if ( ! exists $$data{deleted} ) {
+    $dbh->do('ALTER TABLE expenses ADD deleted BOOLEAN NOT NULL default false');
+  }
+  if ( ! exists $$data{transaction_id} ) {
+    print "Add transaction_id to expenses\n";
+    $dbh->do('ALTER TABLE expenses ADD  transaction_id text');
+  }
+}
+
+if ( ! sets::isin( 'expense_taxes', \@tables ) ) {
+  print "Adding Expense Taxes\n";
+	$dbh->do( misc::load_file( $log, '../../sql/Expense_Taxes.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
 }
 
 if ( ! sets::isin('payments', \@tables) ) {
@@ -663,7 +721,16 @@ if ( ! sets::isin('payments', \@tables) ) {
     $log->debug("Adding amount_locked to payments");
     $dbh->do('ALTER TABLE payments ADD amount_locked BOOLEAN NOT NULL DEFAULT FALSE');
   }
+  if ( ! $$data{account_id} ) {
+    $log->debug("Adding account_id to Payment");
+    $dbh->do('ALTER TABLE Payments ADD account_id    INTEGER') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE Payments ADD FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)') or die $dbh->errstr();
+  }
 } # end if
+
+if ( !sets::isin('invoices_payments', \@tables) ) {
+	load_sql('Invoices_Payments');
+}
 
 	# Check orders structure, don't have to check for existence because we did that twice above
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
@@ -1052,6 +1119,14 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 		$dbh->do('ALTER TABLE hosts add owner_id INTEGER');
 		$dbh->do('ALTER TABLE hosts add FOREIGN KEY (owner_id) REFERENCES Companies (id)');
 	} # end if
+  if ( !exists $$hosts_table{min_ping_frequency} ) {
+    $log->debug("Adding min_ping_frequency to hosts");
+    $dbh->do('ALTER TABLE hosts ADD min_ping_frequency INTEGER') or die $dbh->errstr();
+  }
+  if ( !exists $$hosts_table{max_ping_time} ) {
+    $log->debug("Adding max_ping_time to hosts");
+    $dbh->do('ALTER TABLE hosts ADD max_ping_time INTEGER') or die $dbh->errstr();
+  }
 }
 if ( sets::isin( 'tbl_projects', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_projects'", 'column_name');
@@ -1233,7 +1308,8 @@ if ( ! sets::isin( 'project_log', \@tables ) ) {
 	if ( ! exists $$data{id} ) {
 		$log->debug("Adding id to project_log");
 		$dbh->do('ALTER TABLE project_log add id SERIAL') or die $dbh->errstr();
-		$dbh->do('ALTER TABLE project_log DROP CONSTRAINT project_log_pkey') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE project_log DROP CONSTRAINT project_log_pkey');
+    #or die $dbh->errstr();
 		$dbh->do('ALTER TABLE project_log ADD PRIMARY KEY (id)') or die $dbh->errstr();
 		$dbh->do('CREATE INDEX project_log_project_id_timestamp_idx on project_log (project_id,dtmtimestamp)') or die $dbh->errstr();
   }
@@ -2080,6 +2156,10 @@ if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 			$dbh->do('ALTER TABLE purchaseorders add company_id INTEGER');
 			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (company_id) REFERENCES companies (id)');
 		} # end if
+		if ( ! exists $$data{paid_on} ) {
+			$log->debug('Adding paid_on to Purchase Orders');
+			$dbh->do('ALTER TABLE PurchaseOrders add paid_on TIMESTAMP WITH TIME ZONE') or die $dbh->errstr();
+		}
 		$dbh->do('ALTER TABLE PurchaseOrders ALTER delivered_on DROP NOT NULL');
 		sql::end_transaction( $dbh, $ac );
 } # end if
@@ -2289,12 +2369,16 @@ if ( ! sets::isin( 'product_categories', \@tables ) ) {
 	if ( ! exists $$data{deleted} ) {
 		$log->debug("Add deleted to Product_Categories");
 		$dbh->do('ALTER TABLE Product_Categories ADD deleted BOOLEAN NOT NULL default false') or die $dbh->errstr();
+  } elsif ( $$data{deleted}{is_nullable} ) {
+		$log->debug("Add deleted not null to Product_Categories");
+		$dbh->do('UPDATE Product_Categories SET deleted = false') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE Product_Categories ALTER deleted SET NOT NULL') or die $dbh->errstr();
 	}
 	if ( ! exists $$data{sorting} ) {
 		$log->debug("Add sorting to Product_Categories");
 		$dbh->do('ALTER TABLE Product_Categories ADD sorting INTEGER') or die $dbh->errstr();
 	}
-	if ( ! exists $$Data{album_id} ) {
+	if ( ! exists $$data{album_id} ) {
 		$log->debug("Add album_id to Product Categories");
 		$dbh->do('ALTER TABLE Product_Categories ADD album_id    INTEGER');
 		$dbh->do('ALTER TABLE Product_Categories ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
@@ -2427,6 +2511,12 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 		$dbh->do('ALTER TABLE quotes DROP column strcurrencyname') if ( exists $$data{strcurrencyname} );
 		$dbh->do('ALTER TABLE quotes DROP column strcurrencysymbol') if ( exists $$data{strcurrencysymbol} );
 		$dbh->do('ALTER TABLE quotes ADD deleted BOOLEAN NOT NULL DEFAULT FALSE') if ! exists $$data{deleted};
+
+		if ( ! exists $$data{for_company_id} ) {
+			$dbh->do('ALTER TABLE quotes add for_company_id INTEGER');
+			$dbh->do('ALTER TABLE quotes add FOREIGN KEY (for_company_id) REFERENCES Companies (id)');
+			$dbh->do('UPDATE TABLE Quotes set for_company_id = companyindex');
+		} # end if
 	} # end if
 
 if ( ! sets::isin( 'tbl_quote_details', \@tables ) ) {
@@ -2967,6 +3057,10 @@ if ( ! sets::isin( 'skid_contents', \@tables ) ) {
 		$dbh->do('alter table skid_contents add primary key (id)');
 		$dbh->do('create index skid_contents_skid_id_idx on skid_contents (skid_id)');
 	} # end if
+	if ( ! exists $$data{needs_verification} ) {
+		$log->debug("Adding needs_verification to skid_contents");
+		$dbh->do('ALTER TABLE skid_contents ADD needs_verification BOOLEAN NOT NULL DEFAULT false') or die $dbh->errstr();
+	}
 } # end if
 foreach my $ServiceType ( openprint::ServiceType->find() ) {
 	if ( $ServiceType->name() eq 'PerfectBound' ) {
@@ -4137,10 +4231,12 @@ if ( ! sets::isin( 'stockqualities_id_seq', \@sequences ) ) {
 	$dbh->do(q`ALTER TABLE stockqualities ALTER id SET default nextval('stockqualities_id_seq')`);
 	$dbh->do(q`SELECT setval('stockqualities_id_seq', (SELECT max(id) FROM stockqualities))`);
 } # end if
+
 if ( ! sets::isin( 'event_categories', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../../sql/Event_Categories.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} 
+  $dbh->do( misc::load_file( $log, '../../sql/Event_Categories.sql' ) );
+  die $dbh->errstr() if $dbh->errstr();
+  push @tables, 'event_categories';
+} # end if
 
 if ( ! sets::isin( 'events', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Events.sql' ) );
@@ -4228,10 +4324,26 @@ if ( sets::isin( 'emailcampaigns', \@tables ) ) {
 		print "Adding runnable to EmailCampaigns\n";
 		$dbh->do('alter table emailcampaigns add runnable boolean not null default false') or die $dbh->errstr();
 	}
+	if ( ! exists $$data{email_to} ) {
+		print "Adding email_to to EmailCampaigns\n";
+		$dbh->do('alter table emailcampaigns add email_to TEXT') or die $dbh->errstr();
+	}
+	if ( ! exists $$data{email_cc} ) {
+		print "Adding email_cc to EmailCampaigns\n";
+		$dbh->do('alter table emailcampaigns add email_cc TEXT') or die $dbh->errstr();
+	}
+	if ( ! exists $$data{email_bcc} ) {
+		print "Adding email_bcc EmailCampaigns\n";
+		$dbh->do('alter table emailcampaigns add email_bcc TEXT') or die $dbh->errstr();
+	}
 
 	if ( ! exists $$data{recipients_per_run} ) {
 		print "Adding recipients_per_run to EmailCampaigns\n";
 		$dbh->do('alter table emailcampaigns add recipients_per_run integer') or die $dbh->errstr();
+	}
+	if ( ! exists $$data{mailinglist} ) {
+		print "Adding mailinglist to EmailCampaigns\n";
+		$dbh->do('alter table emailcampaigns add mailinglist boolean not null default true') or die $dbh->errstr();
 	}
 } else {
 	$_ = misc::load_file( $log, q{../../sql/EmailCampaigns.sql});
@@ -4239,6 +4351,13 @@ if ( sets::isin( 'emailcampaigns', \@tables ) ) {
 		$dbh->do($st);
 	} # end foreach
 } # end if
+
+if ( ! sets::isin( 'emailcampaign_sent', \@tables ) ) {
+  $dbh->do( misc::load_file( $log, q{../../sql/EmailCampaign_Sent.sql}) ) or die $dbh->errstr();
+}
+if ( ! sets::isin( 'emailcampaign_destination', \@tables ) ) {
+  $dbh->do( misc::load_file( $log, q{../../sql/EmailCampaign_Destination.sql}) ) or die $dbh->errstr();
+}
 
 if ( sets::isin( 'trade_references', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='trade_references'", 'column_name');
@@ -4649,10 +4768,15 @@ if ( ! sets::isin( 'timetracks', \@tables ) ) {
 	if ( ! exists $$data{duration_override} ) {
 		$dbh->do('ALTER TABLE timetracks ADD duration_override BOOLEAN NOT NULL DEFAULT FALSE');
 	} # end if
+	if ( ! exists $$data{units} ) {
+    $log->debug("Adding units to timetracks");
+		$dbh->do('ALTER TABLE timetracks ADD units text');
+	} # end if
 	if ( ! exists $$data{date_associated} ) {
     $log->debug("Adding date_associated to timetracks");
 		$dbh->do('ALTER TABLE timetracks ADD date_associated BOOLEAN NOT NULL DEFAULT TRUE');
 	} # end if
+  $dbh->do('alter table timetracks alter rate type numeric(10,3)');
 } # end if
 
 if ( sets::isin('users', \@tables ) ) {
@@ -4665,37 +4789,6 @@ if ( sets::isin('users', \@tables ) ) {
 	$dbh->do('ALTER TABLE Users ALTER firstname DROP NOT NULL');
 } # end if
 
-if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
-	die $dbh->errstr() if $dbh->errstr();
-}
-if ( ! sets::isin( 'expenses', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../../sql/Expenses.sql' ) );
-	die $dbh->errstr() if $dbh->errstr();
-} else {
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='expenses'", 'column_name');
-if ( ! exists $$data{amount_locked} ) {
-	$dbh->do('ALTER TABLE expenses add amount_locked BOOLEAN NOT NULL default false');
-}
-if ( ! exists $$data{total_locked} ) {
-	$dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
-}
-if ( ! exists $$data{attention} ) {
-	$dbh->do('ALTER TABLE expenses add attention BOOLEAN NOT NULL default false');
-}
-if ( ! exists $$data{business_use_amount} ) {
-	$dbh->do('ALTER TABLE expenses add business_use_amount float');
-}
-if ( ! exists $$data{account_id} ) {
-	$dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
-	die $dbh->errstr() if $dbh->errstr();
-	$dbh->do('ALTER TABLE expenses add account_id INTEGER');
-	$dbh->do('ALTER TABLE expenses add FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)');
-}
-if ( ! exists $$data{deleted} ) {
-	$dbh->do('ALTER TABLE expenses ADD deleted BOOLEAN NOT NULL default false');
-}
-}
 
 if ( ! sets::isin( 'host_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Host_Types.sql' ) );
@@ -4876,10 +4969,6 @@ if ( ! sets::isin( 'par', \@tables ) ) {
     die $dbh->errstr() if $dbh->errstr();
 } # end if
 
-if ( ! sets::isin( 'event_categories', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../../sql/Event_Categories.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} # end if
 if ( ! sets::isin( 'photos_in_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Photos_in_Albums.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -5726,10 +5815,38 @@ if ( sets::isin('product_specifications', \@tables ) ) {
 	$dbh->do('DROP TABLE product_specifications');
 }
 
+if ( sets::isin('backup_types', \@tables ) ) {
+  $dbh->do('DROP TABLE Backup_Types') or die $dbh->errstr();
+}
+
 if ( ! sets::isin('backups', \@tables ) ) {
   $log->debug("Adding Backups");
   $dbh->do( misc::load_file( $log, q{../../sql/Backups.sql}) );
   die if $dbh->errstr();
+} else {
+	my $data = $dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='backups'", 'column_name');
+  if ( ! exists $$data{type} ) {
+    $dbh->do('ALTER TABLE Backups ADD type TEXT') or die $dbh->errstr();
+    if ( exists $$data{type_id} ) {
+      $dbh->do('UPDATE Backups SET type=(SELECT lc(name) FROM Backup_Types WHERE backup_types.id=backups.type_id)') or die $dbh->errstr();
+    }
+  }
+  if ( exists $$data{type_id} ) {
+    $dbh->do('ALTER TABLE Backups DROP type_id') or die $dbh->errstr();
+  }
+  if ( ! exists $$data{deleted} ) {
+    $log->debug("Adding deleted to Backups");
+    $dbh->do('ALTER TABLE Backups ADD deleted BOOLEAN NOT NULL DEFAULT FALSE') or die $dbh->errstr();
+  }
+  if ( ! exists $$data{enabled} ) {
+    $log->debug("Adding enabled to Backups");
+    $dbh->do('ALTER TABLE Backups ADD enabled BOOLEAN NOT NULL DEFAULT TRUE') or die $dbh->errstr();
+  }
+  if ( ! exists $$data{owner_id} ) {
+    $log->debug("Adding Owner_id to bakcups");
+		$dbh->do('ALTER TABLE Backups add owner_id INTEGER') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE Backups add FOREIGN KEY (owner_id) REFERENCES Companies (id)') or die $dbh->errstr();
+  }
 }
 
 if ( ! sets::isin('operator_roles', \@tables ) ) {
@@ -5749,6 +5866,56 @@ if ( ! sets::isin('project_service_operators', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Project_Service_Operators.sql}) );
 	die if $dbh->errstr();
 } # end if
+
+if ( ! sets::isin('sensor_types', \@tables) ) {
+	$log->debug("Adding sensor_types");
+	$dbh->do( misc::load_file( $log, q{../../sql/sensor_types.sql}) );
+	die if $dbh->errstr();
+} # end if
+
+if ( ! sets::isin('sensors', \@tables) ) {
+	$log->debug("Adding sensors");
+	$dbh->do( misc::load_file( $log, q{../../sql/sensors.sql}) );
+	die if $dbh->errstr();
+} # end if
+if ( ! sets::isin('sensor_inputs', \@tables) ) {
+	$log->debug("Adding sensor_inputs");
+	$dbh->do( misc::load_file( $log, q{../../sql/sensor_inputs.sql}) );
+	die if $dbh->errstr();
+} # end if
+if ( ! sets::isin('sensor_readings', \@tables) ) {
+	$log->debug("Adding sensor_readings");
+	$dbh->do( misc::load_file( $log, q{../../sql/sensor_readings.sql}) );
+	die if $dbh->errstr();
+} # end if
+if ( ! sets::isin('oui_vendors', \@tables ) ) {
+	$log->debug("Adding oui_vendors");
+	$dbh->do( misc::load_file( $log, q{../../sql/OUI_Vendors.sql}) );
+	die if $dbh->errstr();
+}
+if ( ! sets::isin('expense_rule_categories', \@tables ) ) {
+	$log->debug("Adding expense_rule_categories");
+	$dbh->do( misc::load_file( $log, q{../../sql/Expense_Rule_Categories.sql}) );
+	die if $dbh->errstr();
+}
+if ( ! sets::isin('expense_rules', \@tables ) ) {
+	$log->debug("Adding expense_rules");
+	$dbh->do( misc::load_file( $log, q{../../sql/Expense_Rules.sql}) );
+	die if $dbh->errstr();
+} else {
+  my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='expense_rules'", 'column_name');
+  if ( ! exists $$data{category_id} ) {
+    $log->debug("Adding category to expense_rules");
+    $dbh->do('ALTER TABLE expense_rules add category_id integer') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE expense_rules add FOREIGN KEY (category_id) REFERENCES Expense_Rule_Categories (id)') or die $dbh->errstr();
+  } # end if
+  foreach my $f ( 'created_on', 'updated_on' ) {
+  if ( ! exists $$data{$f} ) {
+    $log->debug("Adding $f to expense_rules");
+    $dbh->do("ALTER TABLE expense_rules add $f TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()") or die $dbh->errstr();
+  }
+  }
+}
 
 print "done.\n";
 $dbh->disconnect();

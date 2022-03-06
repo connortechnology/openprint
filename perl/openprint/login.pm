@@ -51,13 +51,13 @@ sub verify_login {
 		
 	# convert the email address to lower case. All email addresses stored in DB will be lower case.
 	my $email = openprint::User->transform('email', $openprint::param{email} );
-	if ( ! $email ) {
+	if (!$email) {
 		$$variable{details} = "\"$email\" is not a valid account.	Please try again.";
 		$$variable{error} = 'Authentication Failed.';
 		return;
 	} # end if
 
-	$log->debug("** Verifying Login for Email Adress: $email **");
+	$log->debug("** Verifying Login for Email Address: $email **");
 
 	my $password = $openprint::param{password};
 
@@ -66,21 +66,22 @@ sub verify_login {
 	# attribute on the strEmail field.
 	my @Users = openprint::User->find( email=>$email );
 
-	if ( ! @Users ) {
+	if (!@Users) {
 		# user not found.	Let's see if we got the password wrong, or the email wrong.
-		if ( @Users = openprint::User->find(email=>$email,deleted=>1) ) {
+		if ( @Users = openprint::User->find(email=>$email, deleted=>1) ) {
 			foreach my $U ( @Users ) {
 				$$variable{information} = "\"$email\" Has been deleted.  Please contact us to have your account re-instated.";
-				(new openprint::Log())->save({Object=>$U, 'action'=>'Login Failed', 'note'=>'Account Deleted', 'user_id'=>$U->id(), 'company_id'=>$U->company_id() } );
+				(new openprint::Log())->save({Object=>$U, action=>'Login Failed', note=>'Account Deleted', user_id=>$U->id(), company_id=>$U->company_id() } );
 			} # end foreach U
 		} else {
 			$$variable{information} = "\"$email\" is not a valid account.	Please try again.";
-			(new openprint::Log())->save({'action'=>'Login Failed', 'note'=>'Invalid login: ' . $email } );
+			(new openprint::Log())->save({action=>'Login Failed', note=>'Invalid login: ' . $email } );
 		} # end if
 		$$variable{error} = 'Authentication Failed.';
 		return;
 	} # end if
-	my $User;
+
+	my $User = undef;
 	foreach my $U ( @Users ) {
 		if ( $config{encrypt_passwords} ) {
 			eval {
@@ -88,18 +89,44 @@ sub verify_login {
 				my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($U->password());
 				if ( $ppr->match($password) ) {
 					$User = $U;
+          $openprint::log->debug("User $$U{email}'s password matched: $$U{password} == $password");
 					last;
+        } else {
+          $openprint::log->debug("User $$U{email}'s password did not match: $$U{password} != $password");
 				} # end if
-			}
+			};
+			$log->error('Eval error of Authen::Passphrase::BlowfishCrypt Reason: '.$@) if $@;
+
+      # Failed, could be error, could be that the password is stored in plaintext
+      if ($U->password() eq $password) {
+        $User = $U;
+        $openprint::log->debug("User $$U{email}'s password matched plaintext: $$U{password} == $password");
+        eval {
+          require Authen::Passphrase::BlowfishCrypt;
+          my $ppr = Authen::Passphrase::BlowfishCrypt->new(
+            cost => 8, salt_random => 1,
+            passphrase => $password);
+
+          $variable{error} .= $User->save({ password => $ppr->as_rfc2307() });
+        };
+        $log->error('Eval error of Authen::Passphrase::BlowfishCrypt Reason: '.$@) if $@;
+        last;
+      } else {
+        $openprint::log->debug("User $$U{email}'s password did not match: $$U{password} != $password");
+      }
 		} else {
 			if ( $password eq $U->password() ) {
+        $openprint::log->debug("User $$U{email}'s password matched: $$U{password} == $password");
 				$User = $U;
 				last;
+      } else {
+        $openprint::log->debug("User $$U{email}'s password did not match: $$U{password} != $password");
 			} # end if
 		} # end if
 	} # end foreach
+
 	if ( ! $User ) {
-		$$variable{information} = 'The password you entered was not correct.	Please try again.';
+		$$variable{information} = 'The credentials you entered were not correct.	Please try again.<br/>';
 		foreach my $U ( @Users ) {
 			(new openprint::Log())->save({Object=>$U, action=>'Login Failed', note=>'Invalid Password', user_id=>$U->id(), company_id=>$U->company_id() } );
 		} # end foreach U
@@ -120,7 +147,7 @@ sub verify_login {
 
 	# Have a valid user now.
 	if ( $User->web_active() eq 'N' ) {
-		$$variable{error} = "User not activated.";
+		$$variable{error} = 'User not activated.';
 		$$variable{information} = "Applications for existing corporate accounts must be approved by and administrator. You will be notified when you application had been approved.";
 		(new openprint::Log())->save({Object=>$User, action=>'Login Failed', note=>'User Account Not Activated', user_id=>$User->id(), company_id=>$User->company_id() } );
 		return;
@@ -191,6 +218,8 @@ sub verify_login {
 	} elsif ( $session{Destination} =~ /^Click <a href="(.*)">here<\/a> to continue the survey\./ ) {
      
 		$$variable{ExternalRedirect} = $1;
+  } elsif ( $User->homepage() ) {
+    $$variable{ExternalRedirect} = $User->homepage()->value();
 	} elsif ( (!$variable{error}) and ( $r->uri() =~ /\/account\/login.html/ ) ) {
 		# I think the redirect is to handle reloads
 		$$variable{ExternalRedirect} = $r->uri();
@@ -221,20 +250,21 @@ sub email_password {
 		return misc::error( $log, $dbh, $variable, 'Account doesn\'t exist.', 'The account you entered does not exist.' );
 	} # end if
 
-	if ( my $email_template = misc::load_file( $log, $config{SkinPath}. '/email_template.html' ) ) {
+	if ( my $email_template = ssi::slurp_content('/email_template.html') ) {
 		
-		my $content = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . '/email_content/forgotten_password.html' );
+		my $content = ssi::slurp_content('/email_content/forgotten_password.html');
 		foreach my $User ( @Users ) {
 			my %info;
 			$info{ReplacementText} = ssi::variable_substitution( \$content, \%info );
 			$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-			new openprint::Email()->send(
+			my $email = new openprint::Email();
+      $email->html_body(ssi::variable_substitution( \$email_template, \%info ));
+      my $results = $email->send(
 					FROM 	=> $config{AdministratorEmail},
 					TO	=> @Users,
 					SUBJECT	=> 'Forgotten Password',
-					ATTACHMENTS	=> ['', $_, 'text/html', 'quoted-printable'],
 					);
-			(new openprint::Log())->save({Object=>$User, action=>'Forgotten Password sent.'});
+			(new openprint::Log())->save({Object=>$User, action=>'Forgotten Password sent.', note=>$results});
 		} # end foreach $User
 	} else {
 		return misc::error( $log, $dbh, $variable, 'System Error.', 'We were unable to email your password to you.	Please contact support.' );
@@ -267,7 +297,7 @@ sub change_password {
 	} # end if
 
 
-	my $User = new openprint::User( $session{user_id} );
+	my $User = $openprint::User;
 
 	if ( my $reason = check_password( $openprint::param{txtNewPassword} ) ) {
 		$variable{error} = "The new password you entered was not good enough: $reason.<br/>";
@@ -275,39 +305,39 @@ sub change_password {
 		return;
 	} # end if
 
-	if ( $config{encrypt_passwords} ) {
-require Authen::Passphrase::BlowfishCrypt;
-		my $ppr = Authen::Passphrase::BlowfishCrypt->new(
-                cost => 8, salt_random => 1,
-                passphrase => $param{txtOldPassword} );
-		$param{txtOldPassword} = $ppr->as_rfc2307();
-		my $ppr = Authen::Passphrase::BlowfishCrypt->new(
-				cost => 8, salt_random => 1,
-				passphrase => $param{txtNewPassword} );
-		$param{txtNewPassword} = $ppr->as_rfc2307();
-	} # end if
-	
-	if ( $openprint::param{txtNewPassword} eq $User->password() ) {
+	if ( $param{txtNewPassword} eq $User->password() ) {
 		$variable{error} = 'The new password you entered was the same as your current password. Please try again.<br/>';
 		$variable{Redirect} = '/account/change_password.html';
 		return;
 	} # end if
 
-	if ( $User->password() eq $openprint::param{txtOldPassword} ) {
-		$variable{error} .= $User->save({
-				password => $param{txtNewPassword},
-				change_password => 'N',
-				password_changed_on => 'NOW()',
-				});
-		if ( $session{Destination} =~ /^Click <a href="(.*)\.html\??(.*)">here<\/a>/ ) {
-			$variable{ExternalRedirect} = $1.'.html?'.$2;
-			delete $session{Destination};
-		} # end if Destination
-	} else {
-		$variable{error} = 'You entered the wrong old password.<br/>';
-		$variable{Redirect} = '/account/change_password.html';
-		return;
-	} # end if
+  if ( $config{encrypt_passwords} ) {
+    require Authen::Passphrase::BlowfishCrypt;
+    my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($User->password());
+    if ( ! $ppr->match($param{txtOldPassword}) ) {
+      $variable{error} = 'You entered the wrong old password.<br/>';
+      $variable{Redirect} = '/account/change_password.html';
+      return;
+    } # end if
+    $ppr = Authen::Passphrase::BlowfishCrypt->new(
+      cost => 8, salt_random => 1,
+      passphrase => $param{txtNewPassword} );
+    $param{txtNewPassword} = $ppr->as_rfc2307();
+  } elsif ( $User->password() ne $openprint::param{txtOldPassword} ) {
+    $variable{error} = 'You entered the wrong old password.<br/>';
+    $variable{Redirect} = '/account/change_password.html';
+    return;
+  } # end if
+
+  $variable{error} .= $User->save({
+      password => $param{txtNewPassword},
+      change_password => 'N',
+      password_changed_on => 'NOW()',
+    });
+  if ( $session{Destination} =~ /^Click <a href="(.*)\.html\??(.*)">here<\/a>/ ) {
+    $variable{ExternalRedirect} = $1.'.html?'.$2;
+    delete $session{Destination};
+  } # end if Destination
 } # sub change_password
 
 # handles logout if timeout
@@ -390,9 +420,10 @@ sub password_strength {
 
 sub forgotten_password {
 	if ( $config{encrypt_passwords} ) {
-		$variable{error} = 'We cannot retrieve passwords.';
+		$variable{error} = 'We cannot retrieve passwords at this time. Please contact your CSR.';
 		return;
 	} # end if
+
 	if ( ! $param{email} ) {
 		$variable{error} = 'Please enter the email address of the account to retrieve.';
 		return;
@@ -404,19 +435,20 @@ sub forgotten_password {
 		return;
 	} # end if
 
-	if ( my $email_template = misc::load_file( $log, $config{SkinPath} . '/email_template.html' ) ) {
+	if ( my $email_template = ssi::slurp_content('/email_template.html') ) {
 		my %info = (
-				'User' =>$User,
+				User =>$User,
 				);
 
-		$info{ReplacementText} = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . '/email_content/forgotten_password.html' );
+		$info{ReplacementText} = ssi::slurp_content('/email_content/forgotten_password.html');
 		$info{ReplacementText} = ssi::variable_substitution( \$info{ReplacementText}, \%info );
 
-		$_ = (new openprint::Email())->send(
+    my $email = new openprint::Email();
+    $email->html_body(ssi::variable_substitution(\$email_template, \%info));
+		$_ = $email->send(
 				FROM    => $config{AdministratorEmail},
 				TO      => $User,
 				SUBJECT => 'Forgotten Password',
-				ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
 				);
 		$variable{information} = 'Your password has been e-mailed to you.';
 	} else {

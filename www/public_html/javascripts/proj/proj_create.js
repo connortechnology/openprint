@@ -1,16 +1,15 @@
-function submit_handler (form) {
-	var status = validate_data(form);
-	if (status) {
-		status = checkSelections(form);
+function submit_handler(form) {
+	var form_status = validate_data(form);
+	if (form_status) {
+		form_status = checkSelections(form);
 	} // end if
-	if (status) {
+	if (form_status) {
 		form.submit();
 	} // end if
-	return status;
+	return form_status;
 } // end function submit_handler
 
-
-function validate_data (form) {
+function validate_data(form) {
 	var text = '';
 
 	var ptype = false;
@@ -27,7 +26,7 @@ function validate_data (form) {
 		text += "Please select the type of project.\n";
 	} // end if
 
-	if ( form.rdbMode && form.rdbMode.type != 'hidden' ) {
+	if ( form.rdbMode && (form.rdbMode.type != 'hidden') ) {
 		var mode = false;
 		for ( var index = 0; index < form.rdbMode.length; index += 1 ) {
 			if ( form.rdbMode[index].checked ) {
@@ -67,6 +66,20 @@ function validate_data (form) {
 		alert(text);
 		return false;
 	} // end if
+
+  if (form.elements['reprint'] && (get_value(form.elements['reprint']) != 'Y')) {
+    const upper_company_name = form.elements['company_id'] ? get_ddm_text(form.elements['company_id']).toUpperCase() : company_name.toUpperCase();
+    if (upper_company_name) {
+      const summary = form.elements['reference'].value.toUpperCase();
+      if ((upper_company_name.indexOf('REPRINT') >=0) || (summary.indexOf('REPRINT') >= 0)) {
+        if (confirm("This appears to be a reprint but you haven't marked it as such.  Is this a reprint?")) {
+          set_value(form.elements['reprint'], 'Y');
+          setReason('Y', $('reprintReasonSection'));
+          return false;
+        }
+      }
+    }
+  }
 	return true;
 } //end function validate_data
 

@@ -1,5 +1,5 @@
 <?include(/includes/error_reporting.html)?>
-<script type="text/javascript">
+<script nonce="<?echo($config{CSP_NONCE})?>">
 	function load_results() {
 		$('Results').innerHTML = 'Please wait. Loading...';
 		new Ajax.Updater( 'Results', '/account/_search.html', { parameters: $('f1').serialize(), evalScripts: true } );

@@ -14,23 +14,28 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 require openprint::Payment;
 require openprint::Invoice;
 require openprint::Invoice_Payment;
+require openprint::Expense_Account;
 
 sub history {
-	if ( $param{btnFunction} eq 'Delete' ) {
-		my $Payment = new openprint::Payment( $param{payment_id} );
-		$variable{error} .= $Payment->delete();
-	} elsif ( $param{btnFunction} eq 'UnDelete' ) {
-		my $Payment = new openprint::Payment( $param{payment_id} );
-		$variable{error} .= $Payment->undelete();
-	} elsif ( $param{btnFunction} eq 'Destroy' ) {
-		my $Payment = new openprint::Payment( $param{payment_id} );
-		$variable{error} .= $Payment->destroy();
-	} elsif ( $param{btnFunction} eq 'Send Receipt' ) {
-		my $Payment = new openprint::Payment( $param{payment_id} );
-		$variable{error} .= $Payment->send_receipt();
-	} elsif ( $param{btnFunction} eq 'Send Receipt To Me' ) {
-		my $Payment = new openprint::Payment( $param{payment_id} );
-		$variable{error} .= $Payment->send_receipt( $openprint::User );
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Delete' ) {
+			my $Payment = new openprint::Payment( $param{payment_id} );
+			$variable{error} .= $Payment->delete();
+		} elsif ( $param{btnFunction} eq 'UnDelete' ) {
+			my $Payment = new openprint::Payment( $param{payment_id} );
+			$variable{error} .= $Payment->undelete();
+		} elsif ( $param{btnFunction} eq 'Destroy' ) {
+			my $Payment = new openprint::Payment( $param{payment_id} );
+			$variable{error} .= $Payment->destroy();
+		} elsif ( $param{btnFunction} eq 'Send Receipt' ) {
+			my $Payment = new openprint::Payment( $param{payment_id} );
+			$variable{error} .= $Payment->send_receipt();
+		} elsif ( $param{btnFunction} eq 'Send Receipt To Me' ) {
+			my $Payment = new openprint::Payment( $param{payment_id} );
+			$variable{error} .= $Payment->send_receipt( $openprint::User );
+		} else {
+			$log->error("Unknonwn function in payment_history $param{btnFunction}");
+		}
 	} else {
 		_history();
 		ssi::setup_date_select( '/payment/history.html', 'received_on_start', -31 );
@@ -54,16 +59,22 @@ sub edit {
 	my $Payment = $variable{Payment} = new openprint::Payment( $param{payment_id} );
 	if ( $param{btnFunction} eq 'Save' ) {
 		$param{recipient_id} = $session{company_id} if ! $param{recipient_id};
-		if ( Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
-			$param{received_on} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
-			$variable{error} .= $Payment->save(\%param);
-			if ( $param{payment_id} ) {
-				$variable{ExternalRedirect} = '/payment/history.html';
-			} else {
-				$variable{ExternalRedirect} = '/payment/edit.html?payment_id='.$Payment->id();
-			} # end if
-		} else {
+		if ( ! Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
 			$variable{error} .= 'Invalid received on date.<br/>';
+      return;
+    }
+    $param{received_on} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
+    my @changes = $Payment->changes(\%param);
+    if ( @changes ) {
+			$variable{error} .= $Payment->save(\%param);
+      if ( !$variable{error} ) {
+        (new openprint::Log())->save({Object=>$Payment, action=>'Edit', note=>join('<br/>', @changes)});
+        if ( $param{payment_id} ) {
+          $variable{ExternalRedirect} = '/payment/history.html';
+        } else {
+          $variable{ExternalRedirect} = '/payment/edit.html?payment_id='.$Payment->id();
+        } # end if
+			} # end if
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Send Receipt' ) {
 		$variable{error} .= $Payment->send_receipt();
@@ -236,9 +247,8 @@ sub make {
 
 sub _edit_payment {
 	if ( $param{action} eq 'update' ) {
-		my $IP = new openprint::Invoice_Payment( $param{id} );
+		my $IP = $variable{Invoice_Payment} = new openprint::Invoice_Payment($param{id});
 		$IP->save({$param{field}=>$param{value}}) if $IP->id();
-		return $IP->amount();
 	} # end if
 } # end sub_edit_payment
 

@@ -1,5 +1,5 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script>
 	var allocateWin;
 	function allocate_window( paper_id ) {
 		if ( allocateWin == null ) {
@@ -215,6 +215,7 @@ Please select a Paper to view/edit.<br>
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'ShowResults', { onclick=>"calc('f1');", text=>'Show Results' } ),
+				button( 'Download', { onclick=>q`$('f1').btnFunction.value='Download';$('f1').submit();` } ),
 				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 				); ) ?>
 		</p>

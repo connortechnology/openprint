@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script>
 	function delete_confirm(form) {
 		var number_of_deleted_quotes = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -28,11 +28,11 @@
 	<form id="f1" name="f1" method="post" action="history.html">
 		<input type="hidden" name="btnFunction"/>
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
-			<ul>
-			<li>
-				<label for="QuoteID">Quote ID</label>
-				<? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeydown=>q`if(event.keyCode == 13){load_quotes(this.form);};` ); ) ?>
-			</li>
+			<ul class="leftColumn">
+        <li>
+          <label for="QuoteID">Quote ID</label>
+          <? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeydown=>q`if(event.keyCode == 13){load_quotes(this.form);};` ); ) ?>
+        </li>
 <? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label>Quoted By Company</label>
@@ -52,7 +52,6 @@
                 <option value="">All Employees</option>
             <? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales']), $session{$r->uri().'?salesrep_id'} ); ) ?>
             </select></li>
-<? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 <? eval ( 
   $$variable{Users} = [ openprint::User->find(
     # Defaults to currently logged in company, if company is all, then list users in OUR company
@@ -80,12 +79,8 @@
 				to
 				<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>'load_quotes();' } ); ) ?>
 			</li>
-			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{$r->uri().'?deleted'}, { onclick=>'load_quotes();' } ); ) ?></li>
-			<li><label>Status</label>
-				<? echo ( 
-						my @options = ( 'Incomplete','Complete','Re-Opened' );
-						ssi::select( [ map { $_, $_ } @options ], $session{$r->uri().'?status'}, { name=>'status', onchange=>'load_quotes();', prepend=>['','All'] } );) ?>
-			</li>
+      </ul>
+      <ul class="rightColumn">
 			<li><label>Ordered</label>
 				<?echo(
 						radio(
@@ -95,6 +90,12 @@
 							{ onclick=>'load_quotes();', default=>'' },
 							);
 						) ?>
+			</li>
+			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{$r->uri().'?deleted'}, { onclick=>'load_quotes();' } ); ) ?></li>
+			<li><label>Status</label>
+				<? echo ( 
+						my @options = ( 'Incomplete','Complete','Re-Opened' );
+						ssi::select( [ map { $_, $_ } @options ], $session{$r->uri().'?status'}, { name=>'status', onchange=>'load_quotes();', prepend=>['','All'] } );) ?>
 			</li>
 			<li>
 				<label>Press</label>

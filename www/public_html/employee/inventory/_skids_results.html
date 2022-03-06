@@ -183,8 +183,8 @@
 			<? endif ( $$variable{can_see_pricing} ) ?>
 		</tr>
 		<? echo (
-				my $uri = '/employee/inventory/skids.html';
-				my $debug = 1;
+			my $uri = '/employee/inventory/skids.html';
+			my $debug = 1;
 			my $html;
 			my $rowclass;
 			my $total_rolls;
@@ -241,7 +241,7 @@
 				if ( $session{$uri.'?has_value'} ne '' ) {
 					my $has_value = 0;
 					foreach my $C (  $Skid->Contents() ) {
-						if ($C->cost()) {
+						if ( $C->cost() ) {
 							$has_value = 1;
 							last;
 						}

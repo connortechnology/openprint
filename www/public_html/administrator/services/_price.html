@@ -10,6 +10,7 @@
 	} # end if
 
 	my $Configuration = $openprint::Service::Configuration{$$variable{Service}{name}};
+  my $Currency = $$variable{Pricelist}->Currency();
 
 	$html .= sprintf('
 			<td class="Period">%1$s<br/>%2$s</td>
@@ -32,9 +33,9 @@
 :
 		input( type=>'text', name=>join('-', 'range_units', $$Price{id} ), value=>$Price->range_units() )
 ),
-		input( type=>'float', name=>join('-', 'cost', $$Price{id} ), value=>$Price->cost(), onkeyup=>'calc_from_cost(this);', oninput=>'this.onkeyup();' ),
+input( type=>'float', name=>join('-', 'cost', $$Price{id} ), value=>$Currency->format($Price->cost(),5,''), onkeyup=>'calc_from_cost(this);', oninput=>'this.onkeyup();' ),
 		input( type=>'float', name=>join('-', 'markup', $$Price{id} ), value=>$Price->markup(), onkeyup=>'calc_from_markup(this);', oninput=>'this.onkeyup();' ),
-		input( type=>'float', name=>join('-', 'price', $$Price{id} ), value=>$Price->price(), onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
+		input( type=>'float', name=>join('-', 'price', $$Price{id} ), value=>$Currency->format($Price->price(),5,''), onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
 ( $Configuration ? 
 	ssi::select( [ map { $_, $_ } @{$$Configuration{units}} ], $$Price{units}, { name=>join('-', 'units', $$Price{id}) } )
 :

@@ -192,37 +192,34 @@ sub choose_service {
 # As far as I can tell, it get's called if the ContinueProject param is Y, or if someone hits the continue project button on project view.	What it does is pick an uncalculated service using choose_service, and that's about it.	Just a little glue to hold things together.	Unfortunately the glue is ugly, and I'm not sure why it's needed.	It might not be needed anymore.
 # The glue basiscally makes it look like someone clicked on the service link on the project view page, so it sets params ProjectIndex,and ServiceIndex, and sets the redirect.
 sub continue_project {
-	my ( $log, $dbh, $variable, $project_index ) = @_;
+	my ( $Project ) = @_;
 	my $incoming_service_index = $param{ServiceIndex};
-			
 
-	if ( $$variable{Redirect} ne '' ) {
-		$log->debug("END PROJECT CONTINUE REDIRECT IS ALREADY  $$variable{Redirect}");
+	if ( $variable{Redirect} ne '' ) {
+		$log->debug('END PROJECT CONTINUE REDIRECT IS ALREADY '.$variable{Redirect});
 		return;
 	}
 	$log->debug('STARTING continue_project');
-	$project_index = $session{project_id} if ! $project_index;
 
-	my ( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
-# pick the next unfinished service.
+	my ( $service_index, $redirect ) = choose_service($log, $dbh, $$Project{id});
 
 	if ( ! $service_index ) {
-		my $Project = new openprint::Project( $project_index );
+			$log->debug('No service_index for '.$Project->to_string());
 		my $type = $Project->Type()->type();
-		if ( ! $type ) {
-			$log->debug("No type for " . $Project->to_string());
+		if ( !$type ) {
+			$log->debug('No type for '.$Project->to_string());
 			return;
 		} else {
 			my $module = 'openprint::Estimating::'.$type;
 			if ( my $function = $module->can('status') ) {
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
-					if ( $_ = $function->( $project_index, undef, $qty_index ) ) {
-						$log->debug($type. " status says we need another sig of type $_");
+					if ( $_ = $function->( $$Project{id}, undef, $qty_index ) ) {
+						$log->debug($type. ' status says we need another sig of type '.$_);
 						my @sigs = $Project->signatures({Group=>$_});
 						my $src_id = pop @sigs;
 						my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
 						$service_index = $Project->copy_signature( $src_specs );
-						( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
+						( $service_index, $redirect ) = choose_service( $log, $dbh, $$Project{id} );
 						last;
 					} else {
 						$log->debug("Multpage status says we ok for qty $qty_index");
@@ -236,10 +233,10 @@ sub continue_project {
 
 	if ( $redirect ne '' and $service_index != $incoming_service_index ) {
 #plugin new service.
-		$variable{ExternalRedirect} = $redirect . '?'.join('&','ProjectIndex='.$project_index, 'ServiceIndex='.$service_index);;
+		$variable{ExternalRedirect} = $redirect . '?'.join('&', 'ProjectIndex='.$$Project{id}, 'ServiceIndex='.$service_index);;
 	} # end if
 
-	$log->debug("END PROJECT CONTINUE REDIRECT IS $$variable{ExternalRedirect}");
+	$log->debug('END PROJECT CONTINUE REDIRECT IS '.$variable{ExternalRedirect});
 } # end sub continue_project 
 
 sub try_to_delete_project {
@@ -578,11 +575,8 @@ sub create_edit_process {
 		} # end if
 		if ( $param{'chkServices'.$ServiceType->name()} eq $ServiceType->name() ) {
 			if ( ! $$services{$ServiceType->name()} ) {	
-$log->debug("Adding $$ServiceType{name}");
 				push @{$$services{$ServiceType->name()}}, $Project->add_service($ServiceType->name());
 				$recalculate = 1;
-			} else {
-$log->debug("Already have $$ServiceType{name}");
 			} # end if
 		} else {
 			if ( $$services{$ServiceType->name()} ) {
@@ -601,10 +595,10 @@ $log->debug("Already have $$ServiceType{name}");
 		$recalculate = 1;
 	} # end if
 
-	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited: ' . join('<br/>', @changes) );
+	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited: '.join('<br/>', @changes) );
 
 	if ( $ProjectType->type() eq 'MultiPage' ) {
-		my $book_type = openprint::print::get_book_type($Project);
+		my $book_type = $Project->get_book_type();
 		if ( $book_type ) {
 			my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 			if ( $book_type ne $$project_specs{rdbTemplateType} ) {
@@ -613,16 +607,12 @@ $log->debug("Already have $$ServiceType{name}");
 				$recalculate = 1;	
 			} # end if
 		} # end if
-	} else {
-		$log->debug("Not a book");
 	}
 	
 # August 6 2019: Moved the unlock above the calc.  If we die during recalc our saved info wont be committed. 
 # I think the chance of two people working on the project at the same time is unlikely enough to allow this.
 	$Project->unlock();
-	if ( $recalculate ) {
-		$Project->recalculate();
-	} # end if
+  $Project->recalculate() if $recalculate;
 
 	return $Project->id();
 } # end sub create_edit_process

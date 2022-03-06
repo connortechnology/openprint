@@ -23,6 +23,8 @@ require openprint::Company;
 require sql;
 require sets;
 
+use constant DEBUG=>0;
+
 my %variables = (
 	txtPrice1=>['save','output'], txtPrice2=>['save','output'], txtPrice3=>['save','output'],txtPriceUsed=>['save'],
 	OverridePrice1	=>	['save'], OverridePrice2	=>	['save'], OverridePrice3	=>	['save'],
@@ -58,55 +60,55 @@ sub no_outputs {
 }
 
 sub has_overrides {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-    my @v;
-    if ( $qty_index ) {
-            push @v, map { $$specs{$_.$qty_index} ? $_ : () } (
-                    'OverridePrice','chkOverridePackageWeight',
-                    );
-	} else {
-            push @v, map { $$specs{$_} ? $_ : () } (
-					'chkOverridePackageQuantity',
-		);
-    } # end if
+  my @v;
+  if ( $qty_index ) {
+    push @v, map { $$specs{$_.$qty_index} ? $_ : () } (
+      'OverridePrice','chkOverridePackageWeight',
+    );
+  } else {
+    push @v, map { $$specs{$_} ? $_ : () } (
+      'chkOverridePackageQuantity',
+    );
+  } # end if
 
-    return @v;
-
+  return @v;
 } # end sub has_overrides
 
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
+	my $Project = new openprint::Project($project_index);
 	my $Project_Service = $Project->Service( $service_index );
 	my $services = $Project->services();
 	$$specs{alert} = '';
 	my $status = 'calculated';
 	my $carton_service_index = $$services{PlainCartons}[0] if $$services{PlainCartons} and @{$$services{PlainCartons}};
-	if ( ! $carton_service_index ) {
-		if( $openprint::config{NeedCartonsForShipping} ) {
+	if (!$carton_service_index) {
+		if ($openprint::config{NeedCartonsForShipping}) {
 			$$specs{alert} = 'Shipping requires that the project be packed in cartons.';
 			$$specs{NeedPlainCartons} = 1;
 			return 'uncalculated';
 		}
-		if ( $$services{BulkSkids} and @{$$services{BulkSkids}} ) {
+		if ($$services{BulkSkids} and @{$$services{BulkSkids}}) {
 			$carton_service_index = $$services{BulkSkids}[0];
-		} # en dif
+		} # end if
 	} else {
 		$$specs{NeedPlainCartons} = 0;
 	} # end if
 
+	my $carton_specs;
 	if ( $carton_service_index ) {
 		my $carton_status = openprint::service::status( $project_index, $carton_service_index );
-$openprint::log->debug("Status of cartons is $carton_status");
+    $openprint::log->debug("Status of cartons is $carton_status") if DEBUG;
 		if ( sets::isin( $carton_status,['', 'uncalculated'] ) ) {
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $carton_service_index, 'Skids' );
 		} # end if
+    $carton_specs = openprint::service::get_specs_ref($Project, $carton_service_index);
 	} # end if
-	my $carton_specs = openprint::service::get_specs_ref( $Project, $carton_service_index ) if $carton_service_index;
 
 	if ( ! $$specs{ToCity} ) {
 		$$specs{alert} .= 'Please enter To city<br/>';
@@ -133,13 +135,13 @@ $openprint::log->debug("Status of cartons is $carton_status");
 		$$specs{"txtQuantity$qty_index"} =~ s/\D//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} ) {
-			$log->debug("No qty");
+			$log->debug('No qty');
 		} # end if
 		my $carton_qty_index = $$specs{qty_index} ? $Project->ordered_quantity_index() : $qty_index;
 
 		if ( (!$$specs{'chkOverridePackageWeight'.$qty_index}) or ($$specs{'chkOverridePackageWeight'.$qty_index} ne 'Y') ) {
 	# Load from skids or cartons
-			$$specs{"txtPackageWeight".$qty_index} = $$carton_specs{"txtPackageWeight".$carton_qty_index};
+			$$specs{'txtPackageWeight'.$qty_index} = $$carton_specs{'txtPackageWeight'.$carton_qty_index};
 		} # end if
 		if ( $carton_service_index and ! $$carton_specs{'txtItemsPerPackage'.$carton_qty_index} ) {
 			# XXX DEPRECATE
@@ -155,7 +157,7 @@ $openprint::log->debug("Status of cartons is $carton_status");
 			my $service_specs = openprint::service::get_specs_ref( $Project, $sid );
 			$other_shipped_quantity += $$service_specs{'txtQuantity'.$qty_index};
 		} # end foreach sid
-		$openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
+		$openprint::log->debug('Other Shipped Quantity: '.$other_shipped_quantity);
 
 		if ( $$specs{'txtQuantity'.$qty_index} == $Project->quantity($qty_index) ) {
 			$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) - $other_shipped_quantity;
@@ -259,10 +261,10 @@ $openprint::log->debug("Status of cartons is $carton_status");
 												$log->error("unknown units on $$Service{name} $$Price{units}");
 											} # end if
 										} else {
-											$openprint::log->debug("No price found for $service_name");
+											$openprint::log->debug('No price found for '.$service_name);
 										} # end if
 									} else {
-										$openprint::log->debug("No service found for $service_name");
+										$openprint::log->debug('No service found for '.$service_name);
 									} # end if Service
 									$$specs{"hdnBreakdown$qty_index"} .= sprintf('<tr class="totals"><td></td><td class="Price">$%.2f</td></tr>', $total );
 									$$specs{"hdnBreakdown$qty_index"} .= '</table>';
@@ -276,7 +278,6 @@ $openprint::log->debug("Status of cartons is $carton_status");
 									$$specs{"txtPrice$qty_index"} = $$bestPrice{total};
 									$$specs{"Equipment$qty_index"} = $$bestPrice{Equipment}->id();
 								} # end if
-
 							} # end if ToCity
 						} # end if ToState
 					} # end if ToCoutnry

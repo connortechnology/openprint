@@ -178,11 +178,10 @@ sub parse {
 	my ( $self ) = @_;
 
 	$$self{parsed} = 1;
-	
 	$_ = decode_base64($$self{data});
-$openprint::log->error("Unable to decode") if $$self{data} and ! $_;
+	$openprint::log->error("Unable to decode") if $$self{data} and ! $_;
 	$_ = Compress::Zlib::uncompress($_) if $$self{compressed};
-$openprint::log->error("Unable to uncompress" . length $$self{data} ) if $$self{data} and ! $_;
+	$openprint::log->error("Unable to uncompress" . length $$self{data} ) if $$self{data} and ! $_;
 	my @data = split("\r\n", $_ );
 #$log->debug("# of lines: " . @data ) if $debug;
 	while ( @data ) {
@@ -198,7 +197,6 @@ $openprint::log->error("Unable to uncompress" . length $$self{data} ) if $$self{
 
 sub previews {
 	my ( $self, $side ) = @_;
-	
 	if ( ! $$self{parsed} ) {
 		$self->parse();
 	} # end if
@@ -264,7 +262,7 @@ sub generate_previews {
 			next;
 		} else {
 #$log->debug("Blah");
-			#$log->warn("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
+#$log->warn("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
 		} # end if
 
 		if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
@@ -274,7 +272,7 @@ sub generate_previews {
 
 			my @previews = $self->previews($side);
 			if ( ! @previews ) {
-				#$log->error("NO Previews for side $side");
+#$log->error("NO Previews for side $side");
 			} # end if
 
 			foreach my $preview ( @previews ) {
@@ -308,7 +306,6 @@ sub generate_previews {
 
 				my $orientation;
 				my $s = $$preview{separations}[0];
-	#$log->debug("Matrix: $$s{matrix}");
 				if ( $$s{matrix} eq "$$s{width} 0 0 $$s{height} 0 0" ) {
 					$orientation = 'left-bottom';
 				} elsif ( $$s{matrix} eq "$$s{width} 0 0 -$$s{height} 0 $$s{height}" ) {
@@ -326,8 +323,8 @@ sub generate_previews {
 				} elsif ( $$s{matrix} eq "0 -$$s{height} -$$s{width} 0 $$s{height} $$s{width}" ) {
 					$orientation = 'top-right';
 				} # end if
-	#$log->debug("Orientation: $orientation");
-				
+#$log->debug("Orientation: $orientation");
+
 				my %separations;
 				foreach my $s ( @{$$preview{separations}} ) {
 					$separations{$$s{ink}} = $s;
@@ -347,7 +344,7 @@ sub generate_previews {
 						} # end foreach w
 					} # end foreach h
 				} else {
-				# Just interleave
+# Just interleave
 					foreach my $pos ( 1 .. ($width*$height) ) {
 						foreach my $ink ( 'Cyan','Magenta','Yellow','Black' ) {
 							if ( $separations{$ink} ) {
@@ -358,23 +355,23 @@ sub generate_previews {
 						} # end foreach ink
 					} # end foreach
 				} # end if
-	#$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
-				
+#$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
+
 				my $Image = Image::Magick->new(magick=>'cmyk',depth=>$depth,size=>$width.'x'.$height,'debug'=>'Blob','colorspace'=>'CMYK','orientation'=>$orientation);
-	#$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
+#$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
 				$_ = $Image->BlobToImage($image_data);
 				$log->error( $_ ) if $_;
 				$_ = $Image->Negate('channel'=>'CMYK');
 				$log->error( $_ ) if $_;
-				#$_ = $Image->Quantize('colorspace'=>'RGB');
-				#$log->error( $_ ) if $_;
+#$_ = $Image->Quantize('colorspace'=>'RGB');
+#$log->error( $_ ) if $_;
 				$_ = $Image->Set('magick'=>'jpg','colorspace'=>'RGB','orientation'=>$orientation);
 				$log->error( $_ ) if $_;
-				#$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
+#$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
 				my @blobs = $Image->ImageToBlob();
 #$log->debug("# of blobs: " . @blobs );
 				if ( ! @blobs ) {
-						$log->debug("No blobs");
+					$log->debug("No blobs");
 				} else {
 					$$self{lc($side).'_preview'} = encode_base64($blobs[0]);
 					if ( ! $$self{lc($side).'_preview'} ) {
@@ -394,7 +391,7 @@ sub generate_previews {
 				$log->error("No data in the preview for $filename");
 			} # end if
 		} else {
-$log->error("No path");
+			$log->error("No path");
 		} # end if
 	} # end foreach side
 	if ( $changed ) {
@@ -405,15 +402,14 @@ $log->error("No path");
 
 sub send_ppf {
 	my ( $self, $Equipment ) = @_;
-	
 	my $data = decode_base64($$self{data});
 	if ( ! $data ) {
-		$log->error("No data in send_ppf" . $self->to_string() );
+		$log->error('No data in send_ppf '.$self->to_string());
 		return;
 	} # end if
 	$data = Compress::Zlib::uncompress($data) if $self->compressed();
 	if ( ! $data ) {
-		$log->error("No uncompressed data in send_ppf");
+		$log->error('No uncompressed data in send_ppf');
 		return;
 	} # end if
 
@@ -434,15 +430,15 @@ sub send_ppf {
 		} 
 	} 
 #$log->warn("Saving PPF: " . sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{cip3_out}, @$self{'docket','signature','side'}, ) );
-	my $error = misc::save_file( $log, sprintf('%s/%d_%sSg%dSd%s.ppf', $$Equipment{cip3_out}, @$self{'docket','version','signature','side'}, ), $data );
+	my $error = misc::save_file( $log, sprintf('%s/%d_%sSg%dSd%s.ppf', $$Equipment{cip3_out}, @$self{'docket','version','signature','side'}), $data);
 	if ( $error ) {
 		$log->error($error);
-	if ( $$self{docket} ) {
-		foreach my $Project ( openprint::Project->find(docket=>$$self{docket}) ) {
-			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Failed to send CIP Files for form $$self{signature} side $$self{side}. Reason: $error" );
-		} # end foreach $Project
-	} # end if
-		
+		if ( $$self{docket} ) {
+			foreach my $Project ( openprint::Project->find(docket=>$$self{docket}) ) {
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Failed to send CIP Files for form $$self{signature} side $$self{side}. Reason: $error");
+			} # end foreach $Project
+		} # end if
+
 		return $error;
 	} 
 	if ( $$self{docket} ) {
@@ -453,8 +449,48 @@ sub send_ppf {
 	return;
 } # end sub send_ppf
 
+sub convert_job_name {
+	my ( $self, @data ) = @_;
+	my @results;
+
+	for ( my $i = 0; $i < @data; $i += 1 ) {
+		my $line = $data[$i];
+		if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def(.*)/ ) {
+			if ( ! $1 ) {
+				$line = "/CIP3AdmJobCode ($$self{docket}) def$2\r\n";
+			} # end if
+		} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
+			my $job_name = $1;
+			if ( length $job_name > 16 ) {
+				if ( my ( $pre, $j_name, $sig ) = ( $job_name =~ /(\d+\w\w)(.+)SIG(\d\d\d)/ ) ) {
+					$line = '/CIP3AdmJobName ('.$pre.(substr($j_name,0,4)).'Sg'.$sig.'Sd'.$$self{side}.") def\r\n";
+				} else {
+					$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
+				} # end if
+			} # end if
+		} # end if
+		push @results, $line;
+	} # end foreach line
+	return @results;
+} # end sub convert_job_name
+
+sub convert_sheet_name {
+	my ( $self, @data ) = @_;
+
+	my @results;
+
+	for ( my $i = 0; $i < @data; $i += 1 ) {
+		my $line = $data[$i];
+		if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
+			$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1);
+		}
+		push @results, $line;
+	} # end foreach line
+	return @results;
+}
+
 sub to_string {
-	return sprintf('%d Sig: %d Side: %s', $_[0]{docket}, $_[0]{signature}, $_[0]{side} );
+	return sprintf('%d Sig: %d Side: %s', $_[0]{docket}, $_[0]{signature}, $_[0]{side});
 } # end sub to_string
 
 sub upload {

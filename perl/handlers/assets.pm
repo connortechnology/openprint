@@ -3,6 +3,7 @@ package handlers::assets;
 
 use Apache2::Request ();
 use Apache2::RequestRec ();
+use Apache2::Connection ();
 use Apache2::RequestUtil ();
 use Apache2::Const -compile => qw(REDIRECT HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
 use APR::Const   -compile => 'SUCCESS';
@@ -28,8 +29,6 @@ use constant DEBUG => 0;
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
 		$log->debug('Was aborted');
-	} else {
-#$log->debug("cleanup");
 	} # end if
 	if ( $dbh ) {
 		$session{lastupdated} = time;
@@ -51,21 +50,21 @@ sub handler {
 	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 
 	$dbh = sql::open_sql( $log, 
-			port		=> $r->dir_config('db_port'),
+			port		  => $r->dir_config('db_port'),
 			database	=> $r->dir_config('db_name'),
 			driver		=> $r->dir_config('db_driver'), 
-			host		=> $r->dir_config('db_host'),
-			login		=> $r->dir_config('db_user'),
+			host		  => $r->dir_config('db_host'),
+			login		  => $r->dir_config('db_user'),
 			password	=> $r->dir_config('db_password'),
 			);
 
 	my $return_code = Apache2::Const::OK;
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init( $r->dir_config() );
-	if ( $dbh ) {
+	if ($dbh) {
 
 		if ( $r->param('campaign_id') and $r->param('user_id') ) {
-			sql::update(undef,undef, 'EmailCampaign_Sent', [ 'campaign_id=? AND user_Id=?', $r->param('campaign_id'), $r->param('user_id') ], 'last_read', 'NOW()' );
+			sql::update(undef,undef, 'EmailCampaign_Sent', [ 'campaign_id=? AND user_id=?', $r->param('campaign_id'), $r->param('user_id') ], 'last_read', 'NOW()' );
 		}
 
 		# Need session, have to know who we are!
@@ -78,7 +77,7 @@ sub handler {
 		# The asset filename form is id_title.extension, path is either assets or thumbnails
 		my ( $path, $id, $filename ) = $r->uri() =~ /^\/(.*)\/(\d+)_(.+)$/;
 $log->debug("Path: $path id: $id uri:" . $r->uri());
-		$path =~ s/^assets//;
+		$path =~ s/^assets\///;
 $log->debug("Path: $path id: $id uri:" . $r->uri());
 		if ( $id ) {
 			my $can_view = undef;
