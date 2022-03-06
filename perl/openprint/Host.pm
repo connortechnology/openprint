@@ -347,7 +347,7 @@ sub reboot {
 		} elsif( $Host->type() eq 'DCS_932L' ) {
 			$url = $HI->ip().'/setSystemReboot';
     } elsif ( $Host->type() eq 'DCS-942L' ) {
-      $url = $HI->ip().'/eng/admin/export.cgi';
+      $url = $HI->ip().'/eng/admin/reboot.cgi';
       $method = 'post';
       $args = {
         reboot => 'true'
