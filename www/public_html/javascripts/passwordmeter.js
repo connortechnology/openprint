@@ -139,12 +139,28 @@ function updateStrength(passwd) {
 	$('psStrength').innerHTML = intScore;
 } // end function updateStrength
 
-function check_passwords( password, verify_password ) {
-	var password_alert = $('password_alert');
-	if ( ! password_alert ) return;
-	if ( password.value != verify_password.value ) {
+function password_oninput() {
+	var password_alert = document.getElementById('password_alert');
+	if (!password_alert) {
+    console.error('No password alert found!');
+    return;
+  }
+  const password_element = document.getElementById('password');
+	if (!password_element) {
+    console.error('No password element found!');
+    return;
+  }
+  const verify_element = document.getElementById('verify_password');
+	if (!verify_element) {
+    console.error('No password verify element found!');
+    return;
+  }
+
+	if ( password_element.value != verify_element.value ) {
 		password_alert.innerHTML = 'Passwords do not match.';
 	} else {
 		password_alert.innerHTML = '';
 	} // end if
+  updateStrength(password.value);
 }
+
