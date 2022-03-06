@@ -500,7 +500,9 @@ function ddmCustomer_onchange(ddm) {
     ddm.form.submit();
   }
 }
+window.addEventListener('DOMContentLoaded',function(){
   load_customers();
   $j('#search_company_filter').on('input', load_customers);
   $j('#search_company_filter').on('keydown', function(e){if(e.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}});
+  });
 </script>
