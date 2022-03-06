@@ -361,6 +361,11 @@ sub reboot {
 				ReplyErrorPage	=> 'reboot.htm',
 				Reset						=> 'Reboot the Device',
 			};
+		} elsif( $Host->type() eq 'DCS-942L' ) {
+			$initial_url = $HI->ip();
+			$url = $HI->ip().'/eng/admin/reboot.cgi';
+			$method = 'post';
+			$args = { reboot => 'true' };
 		} elsif ( $Host->type() eq 'WG602v3' ) {
 			$url = $HI->ip().'/cgi-bin/reboot.cgi';
 			$args = {
