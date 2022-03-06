@@ -118,17 +118,29 @@ foreach my $Host ( @Hosts ) {
 				use JSON;
         my $auth_key = '';
 
-        my $rpc_sys_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/sys';
-        my $rpc_admin_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/admin';
 
         my $rpc_auth_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/auth';
 				my $response = $browser->post( $rpc_auth_url, 
           Content => JSON::encode_json( { method=>'login', params=>[ $Host->info('username'), $Host->info('password') ] }),
         );
-				if ( ( ! $response->is_success ) and $response->status_line() ne '403 Forbidden' ) {
-					$log->error("Failed talking to $$Host{hostname} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
-					next;
+        if (!$response->is_success) {
+          if ($response->status_line() eq '307 Temporary Redirect') {
+            $protocol = 'https';
+            $rpc_auth_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/auth';
+            $response = $browser->post( $rpc_auth_url, 
+              Content => JSON::encode_json( { method=>'login', params=>[ $Host->info('username'), $Host->info('password') ] }),
+            );
+            if (!$response->is_success and ($response->status_line() ne '403 Forbidden')) {
+              $log->error("Failed talking to $$Host{hostname} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
+              next;
+            }
+          } elsif ($response->status_line() ne '403 Forbidden' ) {
+            $log->error("Failed talking to $$Host{hostname} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
+            next;
+          }
 				}
+        my $rpc_sys_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/sys';
+        my $rpc_admin_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/admin';
         $log->debug($response->content());
         $response = decode_json($response->content());
         if ( $$response{result} ) {
