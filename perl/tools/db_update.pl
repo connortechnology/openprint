@@ -4543,6 +4543,12 @@ if ( ! sets::isin( 'invoice_taxes', \@tables ) ) {
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
+} else {
+
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='invoice_taxes'", 'column_name');
+  if (!exists $$data{charge}) {
+    $dbh->do('ALTER TABLE Invoice_Taxes add charge boolean NOT NULL default false');
+  }
 } # end if
 
 $dbh->do("UPDATE companies set country='CA' WHERE country='Canada'");
