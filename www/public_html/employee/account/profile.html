@@ -1,9 +1,10 @@
 <? include('/includes/error_reporting.html') ?>
-<script type="text/javascript" src="<? hash_link(/javascripts/passwordmeter.js) ?>"></script>
+<script src="<? hash_link(/javascripts/passwordmeter.js) ?>"></script>
 <div class="UserProfile">
 	<form id="f1" name="f1" method="post" action="profile.html">
+		<fieldset class="filters">
 		<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
-		<fieldset class="filters"><legend>Choose User</legend>
+      <legend>Choose User</legend>
 			<ul>
 			<li>
 				<label>Company</label>
@@ -33,9 +34,7 @@ or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
 				<? echo ( button( 'Go2', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
 			</li>
 			</ul>
-		</fieldset>
 		<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
-		<fieldset>
 			<p class="buttons">
 				<? echo ( 
 					my $html;
@@ -72,7 +71,7 @@ or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
 			</li>
 			<li>
 				<label>Salutation</label>
-				<? echo ( radio( 'salutation', [ map { $_, $_ } ( 'Mr.', 'Mrs.', 'Ms.', 'Miss' ) ], $$variable{User}->salutation() ); ) ?>
+        <? echo ( radio( 'salutation', [ map { $_, $_ } ( 'Mr.', 'Mrs.', 'Ms.', 'Miss' ) ], $$variable{User}->salutation(), { inline=>1 } ); ) ?>
 			</li>
 			<li class="required"> 
 				<label for="phone">Phone</label>
