@@ -482,7 +482,7 @@ sub convert_sheet_name {
 	for ( my $i = 0; $i < @data; $i += 1 ) {
 		my $line = $data[$i];
 		if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
-			$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1);
+			$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$_[0]{signature}, $1);
 		}
 		push @results, $line;
 	} # end foreach line

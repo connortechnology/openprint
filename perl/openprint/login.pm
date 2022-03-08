@@ -284,28 +284,27 @@ sub login_password {
 
 sub change_password {
 
-	if ( $param{txtNewPassword} ne $param{txtConfirmPassword} ) {
+	if ( $param{password} ne $param{verify_password} ) {
 		$variable{error} = 'The new password, and the verification passwords you entered do not match.<br/>';
 		$variable{Redirect} = '/account/change_password.html';
 		return;
 	} # end if
 
-	if ( $openprint::param{txtNewPassword} eq '' ) {
+	if ( $param{password} eq '' ) {
 		$variable{error} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
 		$variable{Redirect} = '/account/change_password.html';
 		return;
 	} # end if
 
-
 	my $User = $openprint::User;
 
-	if ( my $reason = check_password( $openprint::param{txtNewPassword} ) ) {
+	if ( my $reason = check_password( $param{password} ) ) {
 		$variable{error} = "The new password you entered was not good enough: $reason.<br/>";
 		$variable{Redirect} = '/account/change_password.html';
 		return;
 	} # end if
 
-	if ( $param{txtNewPassword} eq $User->password() ) {
+	if ( $param{password} eq $User->password() ) {
 		$variable{error} = 'The new password you entered was the same as your current password. Please try again.<br/>';
 		$variable{Redirect} = '/account/change_password.html';
 		return;
@@ -321,8 +320,8 @@ sub change_password {
     } # end if
     $ppr = Authen::Passphrase::BlowfishCrypt->new(
       cost => 8, salt_random => 1,
-      passphrase => $param{txtNewPassword} );
-    $param{txtNewPassword} = $ppr->as_rfc2307();
+      passphrase => $param{password} );
+    $param{password} = $ppr->as_rfc2307();
   } elsif ( $User->password() ne $openprint::param{txtOldPassword} ) {
     $variable{error} = 'You entered the wrong old password.<br/>';
     $variable{Redirect} = '/account/change_password.html';
@@ -330,7 +329,7 @@ sub change_password {
   } # end if
 
   $variable{error} .= $User->save({
-      password => $param{txtNewPassword},
+      password => $param{password},
       change_password => 'N',
       password_changed_on => 'NOW()',
     });

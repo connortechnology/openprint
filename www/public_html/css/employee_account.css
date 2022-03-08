@@ -2,15 +2,15 @@
 /*
 fieldset p,
 fieldset ul li {
-	padding-left: 170px;
+	padding-left: 175px;
 }
 #Login p.buttons {
-  margin-left: 170px;
+  margin-left: 175px;
 }
-fieldset p label,
-fieldset ul li label {
+fieldset p label:not(.radio):not(.radio-inline),
+fieldset ul li label:not(.radio):not(.radio-inline) {
 	width: 170px;
-	margin-left: -170px;
+	margin-left: -175px;
 }
 */
 .UserProfile ul.UserGroups,
@@ -46,7 +46,7 @@ fieldset ul li label {
 	width: auto;
 }
 .UserProfile input#phone {
-	width: 49%;
+	width: 200px;
 }
 .UserProfile input#extension {
 	width: 40px;

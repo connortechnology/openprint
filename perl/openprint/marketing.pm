@@ -315,6 +315,7 @@ sub subscriptions {
     }
     return;
   }
+  $variable{User} = $User;
 
   if ($param{action}) {
     if ($param{action} eq 'Save') {
@@ -332,9 +333,7 @@ sub subscriptions {
                 $variable{error} .= 'Failed reCAPTCHA.';
               }
             };
-            if ( $@ ) {
-              $variable{error} .= "Failed reCAPTCHA: $@";
-            }
+            $variable{error} .= "Failed reCAPTCHA: $@" if $@;
           }
         } else {
           eval {
@@ -350,6 +349,17 @@ sub subscriptions {
             } # end if
           };
         }
+
+        if ($param{password}) {
+          if ($param{password} ne $param{verify_password}) {
+            $variable{error} .= 'The new password, and the verification passwords you entered do not match.<br/>';
+          } # end if
+
+          if ( my $reason = openprint::login::check_password($param{password}) ) {
+            $variable{error} .= "The new password you entered was not good enough: $reason.<br/>";
+          } # end if
+        } # end if password
+
         if ( $variable{error} ) {
           $log->error($variable{error});
           return;
@@ -357,19 +367,23 @@ sub subscriptions {
       } # end if not logged in
       if (!$User->id()) {
         $variable{error} .= $User->save({email=>$param{email}});
-        $openprint::User = $User if !$variable{error};
+        if (!$variable{error}) {
+          $openprint::User = $User;
+          $variable{information} .= 'Account created.<br/>';
+        }
       }
       if (!$User->password() and $param{password}) {
         $User->set({password=>$param{password}});
+        $variable{information} .= 'Password assigned.<br/>';
       }
-      if ( ( $param{all} eq 'N' ) and ( $User->mailinglist() eq 'Y' ) ) {
+      if ( ( $param{all} eq 'N' ) and ( $User->mailinglist() ne 'N' ) ) {
         $variable{error} .= $User->save({mailinglist=>$param{all}});
         $variable{information} .= 'Unsubscribed from all email communications.<br/>' if ! $variable{error};
-      } elsif ( ( $param{all} eq 'Y' ) and ( $User->mailinglist() eq 'N' ) ) {
+      } elsif ( ( $param{all} eq 'Y' ) and ( $User->mailinglist() ne 'Y' ) ) {
         $variable{error} .= $User->save({mailinglist=>'Y'});
         $variable{information} .= 'Subscribed to all email communications.<br/>' if ! $variable{error};
       } else {
-        $variable{information} .= ' No changes made.';
+        $variable{information} .= ' No changes made to subscriptions.';
       } # end if
     } # end if save
 	} # end if action

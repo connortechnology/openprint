@@ -1,5 +1,4 @@
 <? include('/includes/error_reporting.html') ?>
-<script src="<? hash_link(/javascripts/passwordmeter.js) ?>"></script>
 <div class="UserProfile">
 	<form id="f1" name="f1" method="post" action="profile.html">
 		<fieldset class="filters">
@@ -128,19 +127,7 @@ or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
 					<label for="email">E-mail Address</label>
 					<input type="email" id="email" name="email" value="<? hecho ( $$variable{User}->email() ) ?>" autocomplete="username"/>
 				</li>
-				<li>
-					<? include('/includes/password_requirements.html') ?>
-				</li>
-				<li class="required"> 
-					<label for="password">Password</label>
-					<input type="<?echo($session{user_type} eq 'A' ? 'text' : 'password' )?>" name="password" id="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" autocomplete="current-password"/>
-					<span id="psContainer"><span id="psStrength"></span></span>
-				</li>
-				<li class="required"> 
-					<label for="VerifyPassword">Verify Password</label>
-					<input type="password" name="VerifyPassword" id="VerifyPassword" onkeyup="check_passwords(this.form.password, this);" autocomplete="current-password"/>
-					<span id="password_alert"></span>
-				</li>
+        <?include(/includes/_password_part.html)?>
 				<li><label>Password Last Changed</label>
 					<? echo ( format_datetime( $$variable{User}->password_changed_on(), 'never'); ) ?>
 				</li>

@@ -346,12 +346,6 @@ sub reboot {
 
 		} elsif( $Host->type() eq 'DCS_932L' ) {
 			$url = $HI->ip().'/setSystemReboot';
-    } elsif ( $Host->type() eq 'DCS-942L' ) {
-      $url = $HI->ip().'/eng/admin/export.cgi';
-      $method = 'post';
-      $args = {
-        reboot => 'true'
-      };
 		} elsif( $Host->type() eq 'DCS-933L' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/setSystemReboot';
@@ -367,7 +361,8 @@ sub reboot {
 				reboot_ap => 1,
 			};
 			$do_not_expect = 'SORRY';
-    } elsif ( $Host->type() eq 'Trendnet TV-862IC' ) {
+    } elsif ( $Host->type() eq 'Trendnet TV-862IC' or $Host->type() eq 'DCS-942L') {
+      # Success looks for rebootOK
       $referer = 'http://'.$HI->ip().'/eng/admin/tools_default.cgi';
       $initial_url = $HI->ip().'/eng/admin/tools_default.cgi';
       $url = $HI->ip().'/eng/admin/reboot.cgi';
