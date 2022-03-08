@@ -31,15 +31,10 @@
 .CreditApplication fieldset ul li {
 	padding: 0px 0px 0px 200px;
 }
-.CreditApplication fieldset ul li label {
+.CreditApplication fieldset ul li label:not(.radio):not(.radio-inline) {
 	margin-left: -200px;
 	width: 195px;
 	float: left;
-}
-.CreditApplication fieldset ul li label.radio {
-	width: auto;
-	float: none;
-	margin: 0px;
 }
 .CreditApplication fieldset li select {
 	width: 92%;
