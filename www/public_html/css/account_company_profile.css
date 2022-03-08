@@ -30,6 +30,7 @@ div.CompanyProfile div.BusinessInformation, div.CompanyProfile div.BankInformati
 }
 div.CompanyProfile ul {
 }
+/*
 div.CompanyProfile ul li {
 	padding: 0 0 0 150px;
 }
@@ -37,6 +38,7 @@ div.CompanyProfile ul li label:not(.radio):not(.radio-inline) {
 	margin-left: -150px;
 	width: 145px;
 }
+*/
 .address2:after {
 	content '';
 }
