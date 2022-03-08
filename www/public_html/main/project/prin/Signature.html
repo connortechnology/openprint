@@ -1,21 +1,20 @@
 <div class="PageTitle">
 <h1>Printing</h1>
 </div>
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
-<script type="text/javascript" src="<?hash_link(/javascripts/printing.js)?>"></script>
-<script type="text/javascript" src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script src="<?hash_link(/javascripts/printing.js)?>"></script>
+<script src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
+<script nonce="<?echo($config{CSP_NONCE})?>">
 	var quantities = new Array();
 	<?QUANTITIES?>
 	var projectType = '<?ProjectTypeID?>';
-</script>
-<?include(/main/project/prin/_templates.html)?>
-
-<script type="text/javascript">
 	function calc( formName, force, options ) {
+  console.log("alcl");
 		calc_print( formName, force, options );
 	}
+  console.log("alcl1");
 </script>
+<?include(/main/project/prin/_templates.html)?>
 <div class="Service">
 <? if ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
     <div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>

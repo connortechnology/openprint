@@ -44,7 +44,7 @@ function submit_handler( formName ) {
 	if ( ! form ) {
 		return false;
 	}
-	var AlertDiv = $('AlertDiv');
+	var AlertDiv = document.getElementById('AlertDiv');
 	if ( AlertDiv && AlertDiv.innerHTML ) {
 		var alert_content = AlertDiv.innerHTML;
 		alert_content = alert_content.replace(/<br\/?>/g, "\n" );
@@ -98,12 +98,12 @@ function calc( formName, force, options ) {
 			}
 		} else {
 			timeout = null;
-			var AlertDiv = $('AlertDiv');
+			var AlertDiv = document.getElementById('AlertDiv');
 			if ( AlertDiv ) {
 				AlertDiv.innerHTML = '';
 				AlertDiv.hide();
 			} // end if
-			var div = $('InformationDiv');
+			var div = document.getElementById('InformationDiv');
 			if ( div ) {
 				div.innerHTML = 'Calculating';
 			} // end if

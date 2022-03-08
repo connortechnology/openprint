@@ -181,6 +181,12 @@ $serial	= 'paper_id_seq';
 		4	=>	'4 Uncoated, white stock', 
 		5	=>	'5 Uncoated, yellow stock'
 );
+
+sub new {
+  my $self = openprint::Object::new(@_);
+
+	@$self{'start_width','start_height','Supplied'} = ( @$self{'width','height'}, $self );
+}
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {

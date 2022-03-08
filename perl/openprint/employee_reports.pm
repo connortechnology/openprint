@@ -2135,7 +2135,7 @@ sub customer_performance {
 						$Company->country(), 
 						$Contact->name(), $Contact->phone(), $Contact->email(),
 						Number::Format::format_number( scalar @{ $orders_by_company{$$Company{id}} } ), 
-						openprint::Currency::format( $order_total ),
+						$order_total,
 						( $LastOrder ? ssi::format_csv_date($LastOrder->created_on()) : 'never' ),
 						( $LastQuote ? ssi::format_csv_date($LastQuote->created_on()) : 'never' ),
 						$payment_cycle . ' days',

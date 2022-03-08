@@ -140,7 +140,8 @@ sub email_campaign {
 		$variable{Results} = $Campaign->send();
 		(new openprint::Log())->save({Object=>$Campaign, action=>'Run', note=>$variable{Results} });
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
-		$Campaign = $Campaign->copy();
+    $log->debug("Copying");
+		$variable{Campaign} = $Campaign = $Campaign->copy();
 		$variable{error} .= $Campaign->save({name=>'Copy of '.$$Campaign{name}});
 	} elsif ( $param{btnFunction} eq 'Test' ) {
 		$variable{information} = $Campaign->test();
@@ -155,7 +156,7 @@ sub email_campaign {
 			push @data, $User->Company()->name(), $User->firstname(), $User->lastname(), $User->email(), $User->phone();
 			my ( $last_sent, $num_times ) = sql::execute( undef, undef, 'SELECT emailsenton, numemailsent FROM emailcampaign_sent WHERE campaign_id=? AND user_id=? ORDER BY emailsenton DESC LIMIT 1', $Campaign->id(), $User->id() );
 			push @data, $last_sent, $num_times;
-      push @data, misc::sum( $Orders{$$User{company_id}} ? @{$Orders{$$User{company_id}} } : () );
+      push @data, misc::sum( $Orders{$$User{company_id}} ? map { $$_{total} } @{$Orders{$$User{company_id}} } : () );
 		} # end foreach
 
 		misc::export_csv( $r, $log, \%variable, $Campaign->name().' Recipients.csv', \@header, \@data );

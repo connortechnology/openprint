@@ -58,7 +58,9 @@ sub html {
 	
 	my $Field = $_[0];
 
-	$html .= '<li class="'.$Field->type(). ( $Field->required() ? ' required' : '' ) . '"><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
+	$html .= '<li class="'.$Field->type(). ( $Field->required() ? ' required' : '' ) . '">
+    <label>'.$Field->description().'</label>
+    <div id="field-'.$Field->id().'_container">';
 	my $value = $_[1] ? $_[1] : ( $_[0]->defaults() ? join(',',@{$_[0]->defaults()}) : '' );
 
 	if ( $Field->type() eq 'checkbox' ) {
@@ -116,7 +118,7 @@ sub html {
 if ( 1 ) {
 		$html .= sprintf(q`<input type="text" id="field-%1$d" name="field-%1$d" value="%2$s"/>
 				<div id="field-%1$d_autocomplete" class="autocomplete" style="display:none;">
-				<script type="text/javascript">
+				<script>
 new Ajax.Autocompleter('field-%1$d','field-%1$d_autocomplete', '_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectionId } );
 </script>
 `, $Field->id(), new openprint::Location($value)->name() );
@@ -153,7 +155,7 @@ $openprint::log->debug("value in values: $value IN (@values)");
 	} elsif ( $Field->type() eq 'radio' ) {
 		$html .= ssi::radio( 'field-'.$Field->id(), $Field->values(), $value );
 	} # end if
-	$html .= "</span></li>\n";
+	$html .= "</div></li>\n";
 	return $html;
 } # end sub html
 1;
