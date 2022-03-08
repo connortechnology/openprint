@@ -25,8 +25,8 @@
 			<label>Application Date</label>
 			<? echo (
 				join(' to ',
-					date_select_session('/employee/accounting/credit_applications.html', 'created_on_start', { with_today=>1} ),
-					date_select_session('/employee/accounting/credit_applications.html', 'created_on_end', { with_today=>1} ),
+                date_select_session($r->uri(), 'created_on_start', { with_today=>1, with_clear=>1} ),
+                date_select_session($r->uri(), 'created_on_end', { with_today=>1, with_clear=>1} ),
 				);
 			) ?>
 	</li>
@@ -43,9 +43,9 @@
 <br/>
 <? eval (
 	@{$variable{'CreditApps'}} = openprint::Credit_Application->find(
-		date_filter( '/employee/accounting/credit_applications.html?created_on_end', 'created_on <=' ),
-		date_filter( '/employee/accounting/credit_applications.html?created_on_start', 'created_on >=' ),
-		( $session{'/employee/accounting/credit_applications.html?status'} ? ( status	=>	$session{'/employee/accounting/credit_applications.html?status'} ) : () ),
+  date_filter( $r->uri().'?created_on_end', 'created_on <=' ),
+  date_filter( $r->uri().'?created_on_start', 'created_on >=' ),
+  ( $session{$r->uri().'?status'} ? ( status	=>	$session{$r->uri().'?status'} ) : () ),
 		( $param{ddmCompany} ? ( company_id	=>	$param{ddmCompany} ) : () ),
 		order	=>	$openprint::Credit_Application::fields{created_on},
 	);
