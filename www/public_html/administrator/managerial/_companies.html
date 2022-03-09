@@ -47,7 +47,9 @@
 <? echo (
 	my $html;
 	my $rowclass;
+  my $can_destroy = 1;
 	foreach my $Company ( @{$$variable{Companies}} ) {
+    $can_destroy = 0 if ! $Company->deleted();
 		$html .= sprintf(q`
 <tr%1$s> 
   <td class="checkbox"><input type="checkbox" name="company_id" value="%2$d"/></td>
@@ -71,14 +73,17 @@
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach
+    $html .= '</table>
+<p class="button">
+'. join("\n",
+$can_destroy ? (
+      button( 'destroy', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_companies.html?action=destroy', { company_id: get_value( $('f2').company_id ) } );`, text=>'Destroy Checked' } ),
+      ) : (
+      button( 'delete', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_companies.html?action=delete', { company_id: get_value( $('f2').company_id ) } );`, text=>'Delete Checked' } ),
+      )
+).' </p>';
 		return $html;
 ) ?>
-</table>
-<p class="button">
-<? echo ( join("\n",
-      button( 'delete', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_companies.html?action=Delete', { company_id: get_value( $('f2').company_id ) } );`, text=>'Delete Checked' } ),
-); ) ?>
-</p>
 <? else ( @{$$variable{Companies}} ) ?>
 There were no results matching your criteria.<br>
 <? endif ( @{$$variable{Companies}} ) ?>

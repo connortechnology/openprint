@@ -11,7 +11,6 @@ input:invalid {
 }
 input, textarea {
 	font-size: small;
-	padding: 1px;
 }
 textarea {
   box-sizing: border-box;
@@ -29,10 +28,10 @@ input[type="password"],
 input[type="number"], 
 input[type="email"],
 input[type="tel"] {
-  /*
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
+  /*
 	-moz-appearance: textfield;
 	border-width: 2px;
   */
@@ -101,9 +100,6 @@ table.List {
 .totals td {
 }
 
-.List input {
-	width: expression(this.type=="text" || this.type=="password" ?'97%':'auto');
-}
 .List input[type="text"], .List input[type="number"] {
 	width: 92%;
 }
@@ -508,9 +504,6 @@ tr .mac {
 	color: #000088;
 	margin-top: 0;
 	font-size: 16px;
-}
-h3 {
-	color: #EE3E33;
 }
 #BugReport fieldset p {
 	padding-left: 75px;
