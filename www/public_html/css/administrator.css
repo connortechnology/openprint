@@ -64,14 +64,6 @@ fieldset.Fold p input {
 	width: auto;
 }
 
-#logactions {
-}
-#logactions li {
-	float: left;
-	width: 150px;
-	text-align: left;
-	padding: 0px;
-}
 #Prices table .buttons {
 	width: 80px;
 }

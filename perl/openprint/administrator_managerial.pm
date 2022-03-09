@@ -1125,11 +1125,25 @@ sub _companies {
 				( map { 'last_project_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
-  if ($param{action} eq 'Delete') {
+  if ($param{action} eq 'delete') {
     foreach my $Company ( openprint::Company->find( id=> (ref $param{'company_id[]'} eq 'ARRAY') ? $param{'company_id[]'} : [$param{'company_id[]'}]) ) {
       $Company->delete();
     }
-  }
+  } elsif ($param{action} eq 'destroy' ) {
+    $log->debug("Doing destory");
+    my @company_ids = (ref $param{'company_id[]'} eq 'ARRAY') ? @{$param{'company_id[]'}} : ($param{'company_id[]'});
+    while (@company_ids) {
+      foreach my $Company ( openprint::Company->find( id=> [ splice(@company_ids, 0, 100) ], deleted=>1) ) {
+        if (!$Company->deleted()) {
+          $log->debug("Not Destorying $$Company{name}");
+          $variable{error} .= $Company->name() . ' not destroyed because not deleted.<br/>';
+          next;
+        }
+        $log->debug("Destorying $$Company{name}");
+        $Company->destroy();
+      } # end foreach Company
+    } # end while company_ids
+  } # end if action
 } # end sub _companies
 
 sub folds {

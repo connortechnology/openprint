@@ -1,6 +1,6 @@
 
 #UserProfile ul {
-    list-style: none;
+  list-style: none;
 	width: auto;
 	float: left;
 }
@@ -105,10 +105,18 @@ content: '';
 #extension {
 	width: 40px;
 }
+#UserProfile,
 .Assistants {
   width: 50%;
   float: left;
 }
 .Assistants li {
   float: left;
+}
+.LoginCredentials input[type="email"],
+.LoginCredentials input[type="password"],
+.LoginCredentials input[name="password"],
+.LoginCredentials input[name="verifypassword"]
+{
+  width: 50%;
 }

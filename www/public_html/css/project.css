@@ -1,7 +1,7 @@
 
 .Project .Header {
-    border-bottom: 1px solid #000088;
-    margin-bottom: 5px;
+  border-bottom: 1px solid #000088;
+  margin-bottom: 5px;
 	width: 100%;
 }
 .Project .Header:after {
@@ -12,8 +12,8 @@
     visibility: hidden;
 }
 .Project .Header fieldset {
-	margin: 0px;
-    margin-bottom: 0px;
+	margin: 0;
+    margin-bottom: 0;
     padding: 6px;
     text-align: left;
 }
@@ -46,28 +46,28 @@
 }
 
 .Project .Header fieldset ul {
-	margin: 0px;
-	padding: 0px;
+	margin: 0;
+	padding: 0;
 	list-style: none;
 }
 .Project .Header fieldset li {
     text-align: right;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
 }
 .Project .Header fieldset li label:not(.radio):not(.radio-inline) {
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     float: left;
     font-weight: bold;
     text-align: left;
     width: auto;
 }
 .Service .row {
-    margin: 0px;
+    margin: 0;
     margin-bottom: 10px;
 	margin-right: 20px;
-    padding: 0px 400px 5px 0px;
+    padding: 0px 400px 5px 0;
     clear: none;
     width: auto;
 	max-width: 310px;
@@ -91,15 +91,15 @@
     text-align: left;
     float: left;
     display:inline;
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     height: 100%;
 	margin-right: 10px;
 }
 
 .Service .row span.value {
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     margin-left: 10px;
     width: 180px;
     text-align: left;
@@ -108,7 +108,7 @@
 }
 .Service .row span.input {
     width: 390px;
-    margin: 0px;
+    margin: 0;
     margin-right: -400px;
     margin-bottom: -15px;
     text-align: left;
@@ -122,12 +122,12 @@
 }
 .Service fieldset li,
 .Service fieldset p {
-	padding-left: 150px;
+	padding-left: 160px;
 }
 .Service fieldset li label:not(.radio):not(.radio-inline),
 .Service fieldset p label:not(.radio):not(.radio-inline) {
-	width: 145px;
-	margin-left: -150px;
+	width: 155px;
+	margin-left: -160px;
 	text-align: left;
 }
 .Service fieldset li select, .Service fieldset li input,
@@ -207,8 +207,8 @@ table .Override {
 	clear: none;
 	width: auto;
 	float: none;
-	margin: 0px;
-	padding: 0px;
+	margin: 0;
+	padding: 0;
 }
 .Service fieldset {
 	margin: 2px;
@@ -221,7 +221,6 @@ table .Override {
 .AddToProjectButtons {
 	float: right;
 }
-
 
 .checkOption {
 	float: left;
@@ -327,7 +326,6 @@ float: left;
 span.Digital {
 font-weight: bold;
 text-transform: uppercase;
-		
 }
 span.Overrides {
 font-weight: bold;
@@ -362,8 +360,4 @@ padding-bottom: 25px;
 }
 .category_totals td.description {
 	text-align: right;
-}
-
-table a:not(.button):link {
-	color: #22275e;
 }

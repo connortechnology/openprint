@@ -1,3 +1,5 @@
+
+/*
 fieldset p,
 fieldset ul li {
 	padding-left: 175px;
@@ -10,6 +12,7 @@ fieldset ul li label:not(.radio):not(.radio-inline) {
 	width: 170px;
 	margin-left: -175px;
 }
+*/
 .UserProfile ul.UserGroups,
 .UserProfile .AssistantTo ul ,
 .UserProfile .Assistants ul ,
@@ -36,6 +39,7 @@ fieldset ul li label:not(.radio):not(.radio-inline) {
 .UserProfile .AssistantTo li label ,
 .UserProfile .Assistants li label ,
 .UserProfile .marketing_categories li label {
+  padding: 0;
 	float: none;
 	width: auto;
 	margin: 0;
@@ -62,6 +66,13 @@ float: right;
 .PurchaseOrderLimits {
 	float: left;
 	width: 49%;
+}
+.PurchaseOrderLimits li {
+  padding-left: 205px;
+}
+.PurchaseOrderLimits li label:not(.radio):not(.radio-inline) {
+  margin-left: -205px;
+  width: 200px;
 }
 #commission {
 	width: 40px;

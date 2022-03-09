@@ -312,12 +312,13 @@ sub uploads {
 } # end sub uploads
 
 sub yearly_sales {
-	ssi::save_params('/administrator/reports/yearly_sales.html',  
+
+	ssi::save_params($r->uri(),
 			'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day',
 			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
 			'salesrep_id' );
-	ssi::setup_date_select( '/administrator/reports/yearly_sales.html', 'ordered_on_start', -365 );
-	ssi::setup_date_select( '/administrator/reports/yearly_sales.html', 'ordered_on_end', '' );
+	ssi::setup_date_select( $r->uri(), 'ordered_on_start', -365 );
+	ssi::setup_date_select( $r->uri(), 'ordered_on_end', '' );
 
 	if ( exists $param{Download} ) {
 		my @header = ( 'CSR', 'Company Name', 'Contact Name', 'Contact Phone', 'Contact Email' );
@@ -332,13 +333,13 @@ sub yearly_sales {
 		} # end if
 
 		my ( $y, $m, $d ) = Date::Calc::Today();
-		if ( ! $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} ) {
-			$session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} = $y;
+		if ( ! $session{$r->uri().'?ordered_on_start_year'} ) {
+			$session{$r->uri().'?ordered_on_start_year'} = $y;
 		} # end if
-		if ( ! $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ) {
-			$session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} = $y;
+		if ( ! $session{$r->uri().'?ordered_on_end_year'} ) {
+			$session{$r->uri().'?ordered_on_end_year'} = $y;
 		} # end if
-		foreach my $year ( $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} .. $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ) {
+		foreach my $year ( $session{$r->uri().'?ordered_on_start_year'} .. $session{$r->uri().'?ordered_on_end_year'} ) {
 			push @header, ( 'Orders ' . $year, 'Value ' . $year, 'Payment Cycle ' . $year );
 		} # end foreach year
 		push @header, 'Last Order';
@@ -347,16 +348,16 @@ sub yearly_sales {
 			my $CSR = new openprint::User( $csr_id );
 			my %totals;
 
-			my @Companies = openprint::Company->find('salesrep_id'=>$csr_id, 'order'=>'lower(name)');
+			my @Companies = openprint::Company->find(salesrep_id=>$csr_id, order=>'lower(name)');
 			foreach my $Company ( @Companies ) {
-				my $Contact = openprint::User->find_one( company_id=>$Company->id(), 'administrator'=>1, 'web_active'=>1,'order'=>'id');
-				$Contact = openprint::User->find_one('company_id'=>$Company->id(), 'web_active'=>1, 'order'=>'id') if ! $Contact;
-				$Contact = openprint::User->find_one('company_id'=>$Company->id(), 'order'=>'id') if ! $Contact;
+				my $Contact = openprint::User->find_one( company_id=>$Company->id(), administrator=>1, web_active=>1, order=>'id');
+				$Contact = openprint::User->find_one(company_id=>$Company->id(), web_active=>1, order=>'id') if ! $Contact;
+				$Contact = openprint::User->find_one(company_id=>$Company->id(), order=>'id') if ! $Contact;
 				$Contact = new openprint::User() if ! $Contact;
 
 				push @data, $CSR->name(), $Company->name(), $Contact->name(), $Contact->phone(), $Contact->email();
 
-				foreach my $year ( $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} .. $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ) {
+				foreach my $year ( $session{$r->uri().'?ordered_on_start_year'} .. $session{$r->uri().'?ordered_on_end_year'} ) {
 					my $order_total;
 					my $payment_cycle;
 
@@ -400,12 +401,14 @@ sub yearly_sales {
 		misc::export_csv( $r, $log, \%variable, 'yearly_sales.csv', \@header, \@data );
 	} # end if Download
 } # end sub yearly_sales
+
 sub _yearly_sales {
 	ssi::save_params('/administrator/reports/yearly_sales.html',  
 			'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day',
 			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
 			'salesrep_id' );
 } # end sub _yearly_sales
+
 sub bindery {
 } # end sub bindery
 

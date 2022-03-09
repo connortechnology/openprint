@@ -33,7 +33,6 @@
   window.addEventListener('DOMContentLoaded', function() {
     document.LoginForm.email.focus();
     $j('#email').on('keydown', function(e) {
-      console.log(e);
       if(e.keyCode == 13){checkLoginData( e.target, LoginForm.password );}
     });
     $j('#password').on('keydown', function(e) {

@@ -42,8 +42,11 @@ display: inline-block;
 	width: auto;
 	float: none;
 	margin: 0;
-	padding: 0 0 0 2px;
+	padding: 0 4px 0 4px;
 	vertical-align: middle;
+}
+.SpotColour label {
+	padding: 0 4px 0 4px;
 }
 .SpotColour label:after {
 	content: "";
@@ -54,12 +57,12 @@ display: inline-block;
 }
 .SpecialColour {
 	margin: 5px 0px;
-	padding-left: 135px;
+	padding-left: 155px;
 }
 .SpecialColour .checkOption {
 	float: left;
-	width: 135px;
-	margin-left: -135px;
+	width: 155px;
+	margin-left: -155px;
 }
 .SpecialColour .Mileage,
 .SpecialColour .Price
@@ -70,4 +73,13 @@ width: 49%;
 .colourOption {
 	float: left;
 	width: 104px;
+}
+
+.imposition input[name="txtLayoutWidth1"] ,
+.imposition input[name="txtLayoutWidth2"] ,
+.imposition input[name="txtLayoutWidth3"] ,
+.imposition input[name="txtLayoutHeight1"] ,
+.imposition input[name="txtLayoutHeight2"] ,
+.imposition input[name="txtLayoutHeight3"] {
+  width: 85px;
 }

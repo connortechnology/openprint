@@ -10,6 +10,7 @@ require openprint;
 require sql;
 require openprint::Object;
 require openprint::User;
+  require openprint::Quote;
 
 $debug = 1;
 $default_sort = 'lower(name)';
@@ -164,6 +165,7 @@ sub destroy {
 	foreach my $User ( openprint::User->find('company_id'=>$$self{id}, 'deleted'=>[0,1] ) ) {
 		$User->destroy();
 	} # end foreach
+	sql::execute( undef, undef, 'DELETE FROM Company_Profiles WHERE company_id=?',$$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{id} );
 
 	sql::end_transaction( $dbh, $ac );

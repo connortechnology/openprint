@@ -30,7 +30,7 @@
 .mprice input[type="text"],
 .serviceprice input[type="text"],
 .serviceprice input[type="number"] {
-	width: 75px;
+	width: 85px;
 	text-align: right;
 }
 .stockquantity input[type="text"] ,
@@ -61,21 +61,21 @@
 	width: auto;
 	float: none;
 }
-.Coverages label:not(.radio):not(.radio-inline) {
-	padding-right: 2px;
-}
 .Service .SpotColour input[type="number"],
 .Service .SpotColour input[type="text"],
 .Service .Coverages input[type="number"],
 .Service .Coverages input[type="text"],
 .SpecialColour input[type="number"] ,
 .SpecialColour input[type="text"] {
-	width: 30px;
+	width: 45px;
 }
 .SpecialColour input[type="text"] {
 	min-width: 50px;
 	max-width: 100px;
 	text-align: left;
+}
+.SpecialColour select {
+  min-width: 275px;
 }
 .SpecialColour .Price input {
 	width: 40%;
