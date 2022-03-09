@@ -25,6 +25,7 @@ $serial = 'invoice_taxes_id_seq';
 %defaults = (
   rate    =>  undef,
   amount  =>  undef,
+  charge => 0,
 );
 
 sub Tax {
@@ -44,6 +45,10 @@ sub amount {
 	if ( @_ == 2 ) {
 		$$self{amount} = $_[1];
 	} # end if
+
+  if (!$$self{charge}) {
+    return '0.00';
+  }
 
 	if ( $$self{invoice_id} and ! defined $$self{amount} ) {
 		$$self{amount} = ($$self{rate}/100) * $self->Invoice()->subtotal();
