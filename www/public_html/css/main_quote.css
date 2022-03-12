@@ -1,3 +1,5 @@
+@import 'quote.css';
+
 .changes {
 	text-align: right;
 	width: 100px;
@@ -29,7 +31,7 @@ div.Quote div.Information fieldset ul li select#company_id, div.Quote div.Inform
 
 
 input#ByPhone, input#ForPhone {
-	width: 100px;
+	width: 120px;
 }
 input#ByExtension, input#ForExtension {
 	width: 40px;

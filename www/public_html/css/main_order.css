@@ -1,4 +1,4 @@
-
+@import 'order.css';
 .History #order_id, .History #Docket, .History #invoice {
 	width: 120px;
 }
