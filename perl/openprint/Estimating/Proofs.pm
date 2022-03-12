@@ -842,7 +842,8 @@ sub project_summary {
 			} # end if
 		} # end foreach key
 	} # end foreach signature
-	return ' ' . join(',', keys %types) . '<br/>';
+	return ' ' . join(',', keys %types) . '<br/>' if %types;
+  return '';
 } # end sub project_summary
 
 sub has_overrides {
