@@ -7535,18 +7535,18 @@ if ( 0 ) {
 					) );
 
 			if ( $openprint::config{Show_Stock_Calliper} ne 'N' ) {
-			if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/ ) ) {
-				if ( $$specs{txtSpecificStockCalliper} ) {
-					$string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
-				} # end if
-			} else {
-				my $c = $$specs{txtSpecificStockCalliper}*1000;
-				if ( $1 ne $c ) {
-					$log->debug("$1 is !- $$specs{txtSpecificStockCalliper} c1($c)");
-					$string .= ' (' .$c.'PT)';
-				} # end if
-			} # end if
-			} # end if
+        if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/ ) ) {
+          if ( $$specs{txtSpecificStockCalliper} ) {
+            $string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
+          } # end if
+        } else {
+          my $c = $$specs{txtSpecificStockCalliper}*1000;
+          if ( $1 ne $c ) {
+            $log->debug("$1 is !- $$specs{txtSpecificStockCalliper} c1($c)");
+            $string .= ' (' .$c.'PT)';
+          } # end if
+        } # end if
+			} # end if show stock calliper
 			$string .= ' ' . $$specs{txtStockGSM}.'gsm' if $openprint::config{Show_Stock_GSM} ne 'N';
 		} # end if ! NoPrinting
 
@@ -7562,16 +7562,17 @@ if ( 0 ) {
 			my @pockets = map { $$specs{"chkPocket$_"} ? lc $_ : () } ( 'Left', 'Center', 'Right' );
 			$string .= '<br/>' . $$specs{rdbPanels} . ' panels ' . ( $$specs{PocketSize} ? $$specs{PocketSize} . '&quot; ' : '' ) . ' pocket'.(@pockets == 1 ? '' : 's').' on ' . join( ',', @pockets );
 		} # end if
-		$string .= '<br/>' . join(', ',
+		my $special_string = join(', ',
 				( $$specs{OverrideAddGrip} ? ' no image in grip or sides' : () ),
 				( ($$specs{rdbColourBar} and ( $$specs{rdbColourBar} eq 'N' ) ) ? ' no colour bar' : () ),
 				( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
 				( (exists $$specs{txtCropMarkSpace} ) ? () : 'no crop marks' ),
 		);
+    $string .= '<br/>' . $special_string if $special_string;
 		if ( $$specs{PressApproval} and ( $$specs{PressApproval} eq 'Y' ) ) {
-			$string .= ' Customer wants press approval';
+			$string .= '<br/>Customer wants press approval';
 		}
-		return $string;
+		return $string.'<br/>';
 	} # end if qty_index
 } # end sub summary
 
