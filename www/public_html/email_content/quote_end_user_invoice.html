@@ -1,7 +1,6 @@
+<!--Quote_End_User-->
 <div class="Quote">
-	<style type="text/css">
-		<?include('/css/quote.css')?>
-	</style>
+	<style><?include('/css/quote.css')?></style>
 	<div class="Header">
 		<?include('/includes/quote_header.html')?>
 		<?include('/includes/quote_prepared_by.html')?>
@@ -72,9 +71,11 @@
 		</table>
 	</div>
 <? endif ( $$variable{Quote}->Quoted_Projects() ) ?>
-	<? echo ( include('/email_content/_quote_products_for.html'); ) ?>
+	<?include('/email_content/_quote_products_for.html')?>
 	<br/>
 	<span class="Currency">All prices are in <b><? echo ( $$variable{Quote}->Currency()->name() ) ?></b> and are subject to applicable taxes.</span><br/>
 	<br/>
+  <div class="Disclaimer">
 	<? echo ( $config{QuoteViewDisclaimer} ) ?>
+  </div>
 </div>
