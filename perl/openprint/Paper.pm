@@ -186,6 +186,7 @@ sub new {
   my $self = openprint::Object::new(@_);
 
 	@$self{'start_width','start_height','Supplied'} = ( @$self{'width','height'}, $self );
+  return $self;
 }
 sub load {
 	my ( $self, $data ) = @_;
