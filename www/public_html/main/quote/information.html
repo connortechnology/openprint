@@ -301,7 +301,7 @@ $log->debug("Markup: $$variable{markup}");
 				$$variable{Project} = new openprint::Project( $$variable{project_index} );
 			) ?>
 			<tr<?rowclass?>> 
-				<td class="projects" rowspan="<? echo ( scalar $$variable{Project}->quantity_indexes() ) ?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><span class="reference"><?reference?></span><? echo ( $$variable{Project}->summary(); ) ?></a></td>
+        <td class="projects" rowspan="<? echo ( scalar $$variable{Project}->quantity_indexes() ) ?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><span class="reference"><?reference?></span><br/><? echo ( $$variable{Project}->summary(); ) ?></a></td>
 				<td class="markup"> 
 					<? echo ( input( type=>'float', name=>sprintf('markup-%d_%d', @$variable{'index','project_index'} ), value=>$$variable{markup}, oninput=>'calc_from_markup(this,2);' ); ) ?> 
 				</td>
