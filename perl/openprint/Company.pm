@@ -500,14 +500,14 @@ sub tax_code {
 } # end if
 
 sub admin_link_to {
-	return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ( @_ > 1 ? $_[1] : $_[0]{name} ) );
+	return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ssi::html_escape( @_ > 1 ? $_[1] : $_[0]{name} ) );
 } # end sub link_to
 
 sub link_to {
 	if ( $openprint::session{user_type} eq 'A' ) {
-		return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ( @_ > 1 ? $_[1] : $_[0]{name} ) );
+		return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ssi::html_escape( @_ > 1 ? $_[1] : $_[0]{name} ) );
 	}
-	return sprintf('<a href="/account/company_profile.html?company_id=%d">%s</a>', $_[0]{id}, $_[0]{name} );
+	return sprintf('<a href="/account/company_profile.html?company_id=%d">%s</a>', $_[0]{id}, ssi::html_escape($_[0]{name}) );
 } # end sub link_to
 
 sub last_project_on {
