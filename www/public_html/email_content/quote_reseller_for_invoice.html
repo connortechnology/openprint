@@ -40,7 +40,7 @@
 						my $specs = openprint::service::get_specs_ref( $Project, $$services{PlainCartons}[0] );
 						$weight = $$specs{'totalWeight'.$qty_index};
 					} else {
-						$weight = openprint::print::get_finished_weight( $Project->id() ) * $Project->quantity( $qty_index );
+          $weight = $Project->finished_weight() * $Project->quantity( $qty_index );
 					} # end if
 					my $g = $weight * 453.59237;
 					if ( $g > 1000 ) {
@@ -73,5 +73,7 @@
 	<?include('/email_content/_quote_products_for.html')?>
 	<span class="Currency">All prices are in <? echo ( $$variable{Quote}->Currency()->name() ) ?> and are subject to applicable taxes.</span><br/>
 	<br class="pagebreak"/>
+  <div class="Disclaimer">
 	<? echo ( $config{QuoteViewDisclaimer} ) ?>
+  </div>
 </div>
