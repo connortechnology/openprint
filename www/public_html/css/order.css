@@ -1,4 +1,5 @@
 
+/*
 .Order {
 	max-width: 1024px;
 }
@@ -12,11 +13,11 @@
 .Order li label:not(.radio):not(.radio-inline) {
 	padding: 0;
 	margin: 0 0 0 -130px;
-	font-weight: bold;
 	text-align: left;
 	width: 125px;
 	float: left;
 }
+*/
 .Order li input[type="tel"],
 .Order li input[type="email"],
 .Order li input[type="text"]:not(.filter) {
