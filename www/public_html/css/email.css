@@ -154,10 +154,11 @@ div.rightColumn {
 	padding: 5px;
 	border: 1px solid #000088;
 }
-.Disclaimers h1, .Disclaimer h2 {
-text-align: center;
+.Disclaimer h1,
+.Disclaimer h2 {
+  text-align: center;
 }
-.Disclaimers p {
+.Disclaimer p {
 	padding: 0;
 }
 td.Date, th.Date {
