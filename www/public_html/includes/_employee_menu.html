@@ -151,4 +151,7 @@ foreach my $category ( sort keys %menu ) {
 <li class="off"><a href="/session.html">SESSION</a></li>
 </ul>
 <? endif ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
+<ul>
+<li class="off"><a href="#" onclick="popup_window('/_bug_report.html');return false;">SEND BUG REPORT</a></li>
+</ul>
 <? endif ( $session{user_id} ) ?>
