@@ -303,6 +303,9 @@ input[type="checkbox"] {
 	width: auto;
 	max-width: 100%;
 }
+.filters p.buttons {
+  padding-left: 135px;
+}
 
 .row {
 	clear: both;
@@ -371,7 +374,7 @@ img {
 	padding-right: 3px;
 }
 .DateTime {
-	width: 150px;
+	width: 185px;
 	text-align: left;
 }
 td.Elapsed, th.Elapsed {
@@ -483,7 +486,6 @@ tr .mac {
 	font-size: 16px;
 }
 .PageTitle {
-  position: absolute;
   top: 0;
   right: 0;
 	text-align: right;
