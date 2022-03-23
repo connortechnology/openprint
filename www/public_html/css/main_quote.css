@@ -1,4 +1,5 @@
 @import 'quote.css';
+@import 'project.css';
 
 .changes {
 	text-align: right;
@@ -39,3 +40,4 @@ input#ByExtension, input#ForExtension {
 .History select#company_id {
 	width: auto;
 }
+

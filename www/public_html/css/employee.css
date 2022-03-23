@@ -25,6 +25,9 @@ fieldset ul li label:not(.radio):not(.radio-inline) {
     width: 95px;
     margin-left: -100px;
 }
+.dialog p.buttons {
+  margin-left: 0;
+}
 
 fieldset li p,
 .dialog fieldset li p {
