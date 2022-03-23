@@ -74,8 +74,13 @@ sub add_product {
 	return if check_credit( );
 
 	$order_id = get_unfinished_order( ) if ! $order_id;
-	$order_id = create_order( ) if ! $order_id;
-	my $Order = new openprint::Order( $order_id );
+  my $Order;
+  if (! $order_id) {
+    $Order = create_order();
+    $order_id = $Order->id();
+  } else {
+    $Order = new openprint::Order($order_id);
+  }
 
 	my $Ordered_Product;
 	if ( my @Products = openprint::OrderedProduct->find( order_id=>$order_id, product_id=>$product_id ) ) {
@@ -117,7 +122,7 @@ sub add_product {
 # We may or may not be logged in.
 # We may or may not be logged in as the owner of the project.
 # Project ownership will not change.
-# Order ownership shuold not change, instead we should create a new order.
+# Order ownership should not change, instead we should create a new order.
 
 sub add_project_to_order {
 	my ( $Project, $order_id ) = @_;
@@ -164,14 +169,16 @@ sub add_project_to_order {
 		} # end if
 	} # end if
 
-	if ( ( ! $order_id ) or $order_id eq 'New' ) {
-		$order_id = create_order();
+  my $Order;
+	if ( ( ! $order_id ) or ($order_id eq 'New') ) {
+		$Order = create_order();
+    $order_id = $Order->id();
 $log->debug("Creating order $order_id");
 	} else {
 $log->debug("NOT Creating order $order_id");
+    $Order = openprint::Order->find_one( id=>$order_id );
 	} # end if
-	my $Order = openprint::Order->find_one( id=>$order_id );
-	if ( ! $Order ) {
+	if (!($Order and $Order->id())) {
 		$log->error("Failure to load order $order_id");
 		return ( undef, "Failure to create order");
 	}
@@ -272,23 +279,34 @@ if ( 0 ) {
 sub make_order_from_quote {
 	my ( $quote_id ) = @_;
 	my $error = '';
-	my $order_id;
 
-	my @contents;
-	my @quote = sql::execute( $log, $dbh, q{SELECT project_id FROM tbl_Quote_Details WHERE quote_id=?}, $quote_id );
-	push @contents, @quote;
+  my $Quote = openprint::Quote->find_one(id=>$quote_id);
+  if (!$Quote) {
+    return (undef, 'Invalid quote specified');
+  }
 
-	if ( @quote > 0 ) {
-		foreach my $project_index ( @quote ) {
-			( $order_id, $_ ) =	add_project_to_order( new openprint::Project( $project_index ), $order_id );
-			$error .= $_;
-		} # end foreach
-	} # end if
+	my $Order = create_order();
+  my @contents;
 
-	$order_id = create_order() if ! $order_id;
-	my $Order = new openprint::Order( $order_id );
+  foreach my $QP ($Quote->Projects()) {
+		my $OP = new openprint::OrderedProject();
+		$error .= $OP->save({
+			order_id	=>	$Order->id(),
+			project_id	=>	$QP->project_id(),
+      #quantity	=>	$QP->quantity(),
+      #price		=>	$QP->price(),
+		});
+		push @contents, $OP;
+  }
+
+    #if ( @quote > 0 ) {
+    #foreach my $project_index ( @quote ) {
+    #( $order_id, $_ ) =	add_project_to_order( new openprint::Project( $project_index ), $order_id );
+    #$error .= $_;
+    #} # end foreach
+    #} # end if
+
 	
-	my $Quote = new openprint::Quote( $quote_id );
 	foreach my $QP ( $Quote->Products() ) {
 		my $OP = new openprint::OrderedProduct();
 		$error .= $OP->save({
@@ -300,7 +318,7 @@ sub make_order_from_quote {
 		push @contents, $OP;
 	}
 
-	if ( ! @contents ) {
+	if (!@contents) {
 		$error .= "make_order_from_quote: Empty quote specified: $quote_id";
 		$log->debug( "make_order_from_quote: Empty quote specified: $quote_id" );
 	}
@@ -357,9 +375,8 @@ sub add_to_order {
 } # end sub add_to_order
 
 sub create_order {
-# allocates an order, and ponuutocommit off so our locks stay active
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Orders IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do('LOCK TABLE Orders IN SHARE ROW EXCLUSIVE MODE') or $log->error(DBI->errstr);
 
 	my $Order = new openprint::Order();
 	$_ = $Order->save({
@@ -372,12 +389,12 @@ sub create_order {
 		currency_id	=>	$openprint::Currency->id(),
 		});
 
-	$Order->add_log( 'Created' ) if ! $_;
+	$Order->add_log('Created') if ! $_;
 
 # unlock database
-	sql::end_transaction( $dbh, $ac );
+	sql::end_transaction($dbh, $ac);
 
-	return $Order->id();
+	return $Order;
 } # end sub create_order 
 
 # the data array has the following row form: productindex, quantity, price
@@ -387,7 +404,8 @@ sub make_order {
 # this goes before get_order_id so we re-use order_id's
 	delete_unfinished_orders();
 
-	my $order_id = create_order( );
+	my $Order = create_order( );
+  my $order_id = $Order->id();
 # add items
 	add_to_order( $log, $dbh, $order_id, $variable, @data );
 	return $order_id;
