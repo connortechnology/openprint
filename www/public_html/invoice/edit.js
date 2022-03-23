@@ -1,22 +1,21 @@
 function update_totals( ) {
-	var total;
-	var timetrack_total = $('timetrack_total');
-	if ( timetrack_total ) {
-		timetrack_total = parseFloat(timetrack_total.innerHTML.replace(/[^\d\.]/g,'') );
-		total += timetrack_total;
+	let total;
+	const timetrack_total_element = document.getElementById('timetrack_total');
+	if (timetrack_total_element) {
+		total += parseFloat(timetrack_total_element.innerHTML.replace(/[^\d\.]/g, ''));
 	} // end if
-	var product_total = $('product_total');
-	if ( product_total ) {
-		product_total = parseFloat(product_total.innerHTML.replace(/[^\d\.]/g,'') );
-		total += product_total;
+	const product_total_element = document.getElementById('product_total');
+	if (product_total_element) {
+		total += parseFloat(product_total_element.innerHTML.replace(/[^\d\.]/g, ''));
 	} // end if
-	var order_total = $('order_total');
-	if ( order_total ) {
-		order_total = parseFloat(order_total.innerHTML.replace(/[^\d\.]/g,'') );
-		total += order_total;
+	const order_total_element = document.getElementById('order_total');
+	if (order_total_element) {
+		total += parseFloat(order_total_element.innerHTML.replace(/[^\d\.]/g,''));
 	} // end if
-	if ( $('subtotal') ) {
-		$('subtotal').innerHTML = do_decimals( total, 2 );
+
+  const subtotal_element = document.getElementById('subtotal');
+	if (subtotal_element) {
+		subtotal_element.innerHTML = do_decimals(total, 2);
 	} else {
 		alert('no subtotal');
 	} // end if
@@ -135,6 +134,7 @@ function invoicee_change(ddm) {
 } // end function invoicee_change(ddm)
 
 function add_tax( tax_id ) {
+  console.log(tax_id);
   new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: {
     invoice_id: invoice_id,
     action: 'add',
@@ -149,6 +149,7 @@ function delete_tax( tax_id ) {
     }, evalScripts: true } );
 }
 function update_taxes( form ) {
+  console.log(form);
   if ( invoice_id ) {
     new Ajax.Updater( 'Taxes', '_taxes_edit.html?action=reset&invoice_id='+invoice_id, { parameters: form.serialize() } );
   }

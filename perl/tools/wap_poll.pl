@@ -141,23 +141,24 @@ foreach my $Host ( @Hosts ) {
 				}
         my $rpc_sys_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/sys';
         my $rpc_admin_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/admin';
-        $log->debug($response->content());
-        $response = decode_json($response->content());
+        $response = get_from_json($response->content());
+        next if ! $response;
+
         if ( $$response{result} ) {
           $auth_key = $$response{result};
           $rpc_sys_url .= '?auth='.$auth_key;
         }
         $response = $browser->post($rpc_sys_url, Content => encode_json( { method=>'net.devices' } ));
-        $log->debug($response->content());
         my @wlans;
-        $response = decode_json($response->content());
+        $response = get_from_json($response->content());
+        next if ! $response;
         if ( $$response{result} ) {
           @wlans = map { ( $_ =~ /^wlan/ ) ? $_ : () } @{$$response{result}};
         }
         foreach my $wlan ( @wlans ) {
           $response = $browser->post($rpc_sys_url, Content => encode_json( { method=>'wifi.getiwinfo', params=>[$wlan] } ));
-          #$log->debug($response->content());
-          $response = decode_json($response->content());
+          $response = get_from_json($response->content());
+          next if ! $response;
           $log->debug( 'assoclist' . Dumper($response) );
           my $result = $$response{result};
           if ( ! $result ) {
@@ -428,6 +429,22 @@ usage: $program [--help]
 
 EOH
 } # end sub usage
+
+sub get_from_json {
+  if (!$_[0]) {
+    $log->error("No content to decode json from");
+    return undef;
+  }
+  $log->debug($_[0]);
+  my $hash;
+  eval {
+    $hash = JSON::decode_json($_[0]);
+  };
+  if ($@) {
+    $openprint::log->error($@);
+    return undef;
+  }
+}
 
 1;
 __END__

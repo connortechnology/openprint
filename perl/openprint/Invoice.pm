@@ -336,7 +336,6 @@ sub send {
 			Invoice => $self,
 			uri => 'invoice',
 			Currency	=>	$self->Currency(),
-
 	);
 
   my $skin_path = '';
@@ -553,10 +552,21 @@ sub can_edit {
 
 sub can_view {
 	if ( $openprint::session{user_type} eq 'A' ) {
-	return 1;
+    return 1;
 	}
+  my $self = shift;
+  if ( $openprint::User->company_id() == $$self{invoicer_id} ) {
+    return 1;
+  } else {
+    $openprint::log->debug("No invoicer: $$openprint::User{company_id} != $$self{invoicer_id}");
+  }
+  if ( $openprint::User->company_id() == $$self{invoicee_id} ) {
+    return 1;
+  } else {
+    $openprint::log->debug("Not invoicee: $$openprint::User{company_id} != $$self{invoicee_id}");
+  }
 	if ( $openprint::session{user_type} eq 'E' ) {
-		if ( $_[0]->Invoicee()->salesrep_id() == $openprint::session{user_id} ) {
+		if ( $self->Invoicee()->salesrep_id() == $openprint::session{user_id} ) {
 			return 1;
 		}
 	}

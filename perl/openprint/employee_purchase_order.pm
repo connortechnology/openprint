@@ -1192,7 +1192,7 @@ sub _taxes_edit {
 					});
 		} # end if action
 	} # end if action
-} # end sub payments_edit
+} # end sub taxes_edit
 
 sub _logs {
 	$variable{PurchaseOrder} = new openprint::PurchaseOrder( $param{po_id} );

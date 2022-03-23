@@ -400,6 +400,11 @@ table .Email {
 	width: 140px;
 	text-align: left;
 }
+/* Hostname is logs */
+table .From,
+table .Result{
+  text-align: left;
+}
 table .Company {
 	width: 200px;
 	text-align: left;
@@ -713,6 +718,7 @@ text-indent: -1000em;
     left: -0px;
     top: 5px;
 }
+
 .form-check-inline {
 display: inline;
 padding-left: 0;

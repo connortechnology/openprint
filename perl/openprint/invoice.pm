@@ -203,19 +203,28 @@ sub _history {
   if ( $param{invoice_id} ) {
     @Invoices = openprint::Invoice->find(
       id => $param{invoice_id},
-      ( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
+        or => [
+        invoicer_id=>$session{company_id},
+        ( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
+      ],
       order => 'num,id',
     );
   } elsif ( $param{invoice_num} ) {
     @Invoices = openprint::Invoice->find(
       'num ilike' => ( $param{invoice_num} =~ /%/ ? $param{invoice_num} : '%'.$param{invoice_num}.'%' ),
-      ( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
+        or => [
+        invoicer_id=>$session{company_id},
+        ( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
+      ],
       order => 'num,id',
     );
   } elsif ( $param{po_id} ) {
     @Invoices = openprint::Invoice->find(
       'po any'=>$param{po_id},
-      ( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
+        or => [
+        invoicer_id=>$session{company_id},
+        ( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
+      ],
       order => 'num,id',
     );
   } else {
@@ -224,6 +233,8 @@ sub _history {
         ssi::date_filter($uri.'?created_on_start', 'created_on >='),
         ssi::date_filter($uri.'?due_on_end', 'due_on is null or <='),
         ssi::date_filter($uri.'?due_on_start', 'due_on is null or >='),
+        or => [
+        invoicer_id=>$session{company_id},
         ( sets::isin($session{user_type}, ['E','A']) ? (
             ( $session{$uri.'?invoicee_id'} ? 
               ( invoicee_id => $session{$uri.'?invoicee_id'} ) : 
@@ -234,6 +245,7 @@ sub _history {
           ) : (
             ( invoicee_id => $session{company_id} ),
           ) ),
+      ],
         ( $session{$uri.'?product_id'} ? ( 'product_id any' => $session{$uri.'?product_id'} ) : () ),
         ( $session{$uri.'?bad_debt'} ne '' ? ( bad_debt=>$session{$uri.'?bad_debt'} ) :() ),
         ( $session{$uri.'?currency_id'} ? ( currency_id=>$session{$uri.'?currency_id'} ) : () ),
@@ -517,6 +529,73 @@ sub _view_email {
 		return;
 	} 
 }
+sub _taxes_edit {
+	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
+	if ( ! $Invoice->id() ) {
+		$variable{error} = "Invalid Invoice specified: $param{invoice_id}<br/>";
+		return;
+	} # end if
+
+	if ( $param{action} ) {
+		if ( $param{action} eq 'add' ) {
+			my $ac = sql::start_transaction( $openprint::dbh );
+			my $Tax = new openprint::Invoice_Tax();
+			$variable{error} .= $Tax->save( { invoice_id => $param{po_id}, tax_id=>$param{tax_id}, charge=>1, rate=>undef } );
+			if ( $variable{error} ) {
+				$openprint::dbh->rollback();
+				sql::end_transaction( $openprint::dbh, $ac );
+				return;
+			}
+			$variable{error} .= $Invoice->save( );
+			if ( $variable{error} ) {
+				$openprint::dbh->rollback();
+				sql::end_transaction( $openprint::dbh, $ac );
+				return;
+			}
+			$variable{error} .= $Invoice->save( );
+			my $L = new openprint::Log();
+			$L->save({ Object	=>	$Invoice, action=>'Edit', note	=>	'add tax ' . $Tax->name() });
+			sql::end_transaction( $openprint::dbh, $ac );
+		} elsif ( $param{action} eq 'delete' ) {
+			my $Tax = new openprint::Tax( $param{tax_id} );
+			my $Invoice_Tax;
+			foreach my $T ( $Invoice->Taxes() ) {
+				if ( $$T{tax_id} == $param{tax_id} ) {
+					$Invoice_Tax = $T;
+					last;
+				}
+			}
+			if ( ! $Invoice_Tax ) {
+				$variable{error} .= "Tax $$Tax{name} is not attached to Invoice $$Invoice{id}<br/>";
+				return;
+			} # end if
+			my $ac = sql::start_transaction( $openprint::dbh );
+			$variable{error} .= $Invoice_Tax->delete();
+			if ( $variable{error} ) {
+				$openprint::dbh->rollback();
+				sql::end_transaction( $openprint::dbh, $ac );
+				return;
+			}
+			$Invoice->Taxes( undef );
+			$variable{error} .= $Invoice->save();
+			if ( $variable{error} ) {
+				$openprint::dbh->rollback();
+				sql::end_transaction( $openprint::dbh, $ac );
+				return;
+			}
+			my $L = new openprint::Log();
+			$L->save({ Object => $Invoice, action=>'Edit', reason	=>	'delete tax ' . $Invoice_Tax->name() });
+			sql::end_transaction( $openprint::dbh, $ac );
+		} elsif ( $param{action} eq 'reset' ) {
+			$Invoice->set( \%param );
+			# Reload $Invoice->Taxes() with current set
+			$Invoice->default_Taxes();
+			$variable{error} .= $Invoice->save();
+			my $L = new openprint::Log();
+			$L->save({ Object=> $Invoice, action=>'Edit', reason	=>	'update taxes', });
+		} # end if action
+	} # end if action
+} # end sub taxes_edit
 
 1;
 __END__

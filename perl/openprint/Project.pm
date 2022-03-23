@@ -848,7 +848,7 @@ sub summary {
 		$$self{summary} = shift;
 	} # end if
 	if ( ! $$self{summary} ) {
-		my $summary = $self->Type()->description() . ' ';
+		my $summary = $self->Type()->description();
 
 		my $services = $self->services();
 		if ( $$services{''} and @{$$services{''}} ) {
@@ -886,7 +886,7 @@ sub summary {
 			} # end if
 			my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{id}, 'Group' );
 
-# I believe the point of this is to stick the Printed Web or Sheetfred into the summary.	Nastily executed.
+# I believe the point of this is to stick the Printed Web or Sheetfed into the summary.	Nastily executed.
 # The logic is, each group has to be either all sheetfed, or all web (or digital, etc).	
 			foreach my $group_id ( sort @groups ) {
 				my @sigs = $self->signatures({Group=>$group_id});
@@ -901,11 +901,11 @@ sub summary {
 				} # end if
 
 				my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
-				$summary .= openprint::Estimating::Printing::summary( $self, $sigs[0], $sig_specs );
+				my $group_html = openprint::Estimating::Printing::summary( $self, $sigs[0], $sig_specs );
 				if ( $$printing_specs{"PrintingType-$group_id"} ) { 
-					$summary .= ', '. '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span>,';
+					$group_html .= '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span><br/>';
 				} #endif Web
-				$summary .= '<br/>';
+				$summary .= $group_html if $group_html;
 			} # end foreach Group
 		} # end if
 
