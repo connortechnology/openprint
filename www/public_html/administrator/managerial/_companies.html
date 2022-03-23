@@ -78,6 +78,7 @@
 '. join("\n",
 $can_destroy ? (
       button( 'destroy', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_companies.html?action=destroy', { company_id: get_value( $('f2').company_id ) } );`, text=>'Destroy Checked' } ),
+      button( 'undelete', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_companies.html?action=undelete', { company_id: get_value( $('f2').company_id ) } );`, text=>'Undelete Checked' } ),
       ) : (
       button( 'delete', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_companies.html?action=delete', { company_id: get_value( $('f2').company_id ) } );`, text=>'Delete Checked' } ),
       )

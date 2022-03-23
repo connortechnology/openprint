@@ -110,6 +110,7 @@
 			<? echo ( input( type=>'float', name=>'total_end', value=>$session{$r->uri().'?total_end'}, oninput=>'load_quotes();' ); ) ?>
 			</li>
 			</ul>
+      <br class="spacer"/>
 			<p class="buttons">
 				<? echo ( join( "\n",
 					button( 'ShowResults', { onclick=>q`f1.btnFunction.value='';f1.submit();`, text=>'Show Results' } ),

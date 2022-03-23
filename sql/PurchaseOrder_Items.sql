@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS PurchaseOrder_Items;
 CREATE TABLE PurchaseOrder_Items (
 	id SERIAL,
 	company_id	INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
-	vendor_id	INTEGER NOT NULL, FOREIGN KEY (vendor_id) REFERENCES Companies (id),
+	vendor_id	INTEGER, FOREIGN KEY (vendor_id) REFERENCES Companies (id),
 	name		TEXT NOT NULL,
 	price		FLOAT,
 	type_id		INTEGER NOT NULL, FOREIGN KEY (type_id) REFERENCES PurchaseOrder_ContentTypes (id),

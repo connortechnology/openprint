@@ -482,7 +482,7 @@ sub update_notifications {
 sub Logs {
 	my ( $self ) = @_;
 
-	return openprint::PurchaseOrder_Log->find( 'po_id'=>$$self{id}, 'order'=>'created_on DESC' );
+	return openprint::PurchaseOrder_Log->find( po_id=>$$self{id}, order=>'created_on DESC' );
 } # end sub Logs
 
 sub is_FSC {
@@ -829,6 +829,16 @@ sub Created_By {
 sub is_paid {
 	return 1 if $_[0]->payments_total() >= $_[0]->total();
 	return 0;
+}
+
+sub destroy {
+  my $self = shift;
+  my $ac = sql::start_transaction( $openprint::dbh );
+  foreach ($self->Contents()) { $_->destroy(); };
+  foreach ($self->Logs()) { $_->destroy(); };
+  sql::execute(undef,undef, 'DELETE FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{id});
+  sql::end_transaction( $openprint::dbh, $ac );
+  return undef;
 }
 
 1;

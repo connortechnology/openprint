@@ -1,7 +1,7 @@
 use strict;
 package ssi;
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 require Date::Calc;
 
