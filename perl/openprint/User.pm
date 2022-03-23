@@ -174,7 +174,8 @@ sub destroy {
 	foreach my $Order ( openprint::Order->find(user_id=>$$self{id}) ) {
 		$Order->delete();
 	} # end foreach
-	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{id}], 'user_id', undef );
+	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{id}], user_id=> undef );
+	sql::update( undef, undef, 'order_notifications', ['user_id=?',$$self{id}], user_id=>undef );
 	foreach my $Project ( openprint::Project->find(user_id=>$$self{id}) ) {
 		$Project->delete();
 	} # end foreach
@@ -183,6 +184,7 @@ sub destroy {
 	sql::update( undef, undef, 'barcode_log', ['operator_id=?', $$self{id} ], 'operator_id', undef );
 	sql::update( undef, undef, 'barcode_log', ['user_id=?',$$self{id}], 'user_id', undef );
 	sql::update( undef, undef, 'skids', ['created_by_id=?',$$self{id}], 'created_by_id', undef );
+	sql::update( undef, undef, 'purchaseorders', ['contact_id=?',$$self{id}], contact_id=> undef );
 
 	sql::execute( $log, $dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{id} );
 	sql::execute( $log, $dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{id} );
