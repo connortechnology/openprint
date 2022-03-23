@@ -15,6 +15,9 @@
     margin-left: -100px;
     width: 95px;
 }
+.Order .History p.buttons {
+  margin: 0;
+}
 .Order .History #JumpTo {
     width: 30%;
     float: left;
@@ -42,4 +45,9 @@ div.navigation {
 
 .Payments table .buttons {
 	width: 60px;
+}
+
+p.buttons {
+  float: right;
+  margin: 10px 0;
 }

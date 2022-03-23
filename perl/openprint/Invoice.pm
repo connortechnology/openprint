@@ -133,9 +133,11 @@ sub owing_early {
 		$owing_early = Math::Round::nearest(1/(10**$self->Currency()->precision()), $$self{early_payment_amount} - $self->paid());
 	} elsif ( $$self{early_payment_units} eq 'percent' ) {
     $owing_early = Math::Round::nearest(1/(10**$self->Currency()->precision()), ($owing * ( 1 - $$self{early_payment_amount}/100) - $self->paid()));
-	} else {
+	} elsif ($$self{early_payment_units}) {
     $openprint::log->error('Unknown units for early_payment ('.$$self{early_payment_units}.')');
 		$owing_early = Math::Round::nearest(1/(10**$self->Currency()->precision()), $owing);
+  } else {
+    $owing_early = 0;
 	} # end if
   $openprint::log->debug("owing_early = $owing_early = owing: $owing = $$self{total} + $$self{interest} - $$self{paid}");
   return $owing_early;
@@ -234,6 +236,7 @@ sub paid {
 
 sub paid_early {
   my $self = shift;
+  return 0 if !$$self{early_payment_date};
   $$self{paid_early} = misc::sum(
     map { $_->amount() } openprint::Invoice_Payment->find(
       invoice_id=>$$self{id},
