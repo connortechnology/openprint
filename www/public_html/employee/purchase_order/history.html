@@ -45,6 +45,15 @@
 		</ul>
 		<hr/>
 		<ul>
+<? if ( $session{user_type} eq 'A' ) ?>
+			<li><label>Vendee</label>
+				<input type="text" onkeyup="filter_companies('vendee_id', {name:this.value,selected_id:get_ddm_value($('vendee_id'))});" class="filter" onkeydown="if(event.keyCode == 13){$('vendee_id').onchange();}"/>
+        <select name="vendee_id" id="vendee_id" onchange="stop_filter_companies();page_load('Results',$('f1'));">
+					<option value="">All</option>
+					<? echo ( make_drop_down(openprint::Company->dropdown(), $session{$r->uri().'?vendee_id'}); ) ?>
+				</select>
+			</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
 <? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $session{user_id} ) ) ?>
 			<li><label>Created By</label>
 				<select id="created_by" name="created_by" onchange="page_load('Results',$('f1'));">
