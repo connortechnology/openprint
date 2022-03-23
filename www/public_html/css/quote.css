@@ -48,7 +48,7 @@ div.Quote div.Information div.Header fieldset li label {
 }
 
 div.Quote div.Header div#Information {
-	width: 50%;
+	width: 100%;
 	float: left;
 }
 div.Quote div.Header div#PreparedFor {
@@ -125,7 +125,7 @@ div.reference {
 	margin-bottom: 10px;
 }
 div.Quote table .markup {
-	width: 65px;
+	width: 75px;
 	text-align: right;
 }
 div.Quote table .quantity {
