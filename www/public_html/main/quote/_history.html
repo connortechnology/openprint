@@ -148,7 +148,7 @@
 				</tr>
 				<tr%1$s>
 					<td>&nbsp;</td>
-					<td colspan="6">%10$s</td><td></td>
+					<td colspan="7">%10$s</td><td></td>
 				</tr>`, $rowclass, $Quote->id(), 
           html_escape( $Quote->by_name() ),
 					html_escape( $Quote->for_name() ),
@@ -188,7 +188,18 @@
 	return $html;
 ) ?>
 	</table>
-	<p class="buttons"><? echo ( button( 'Delete', { onclick=>q`f2.btnFunction.value='Delete';delete_confirm(f2);`, text=>'Delete Checked' } ); ) ?></p>
+	<p class="buttons">
+  <? echo ( return join("\n",
+     ( $session{'/main/quote/history.html?deleted'} eq '1' ) ? (
+       ($openprint::User->type() eq 'A' ? (
+         button( 'Destroy', { onclick=>q`f2.btnFunction.value='destroy';delete_confirm(f2);`, text=>'Destroy Checked' } ),
+        ) : () ),
+  button( 'Undelete', { onclick=>q`f2.btnFunction.value='undelete';f2.submit();`, text=>'Undelete Checked' } ),
+  ) : (
+  button( 'Delete', { onclick=>q`f2.btnFunction.value='Delete';delete_confirm(f2);`, text=>'Delete Checked' } ),
+  )
+  ); ) ?>
+  </p>
 	<input type="hidden" name="btnFunction" />
 </form>
 <span class="Currency">All prices listed in <? echo ( $$variable{Currency}->name(); ) ?>.</span>
