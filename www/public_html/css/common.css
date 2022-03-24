@@ -32,8 +32,9 @@ input[type="tel"] {
 */
 	vertical-align: top;
 }
-input.phone {
-	min-width: 82px;
+input.phone,
+input[type="tel"] {
+	width: 120px;
 }
 
 select {
@@ -226,6 +227,7 @@ fieldset p textarea, fieldset li textarea {
 	width: 70%;
 }
 fieldset p.buttons {
+  margin-left: 165px;
 	float: none;
 }
 input[type="radio"], input[type="checkbox"] {
