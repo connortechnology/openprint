@@ -1185,7 +1185,35 @@ sub users {
 	_users();
 
 	if ( $param{btnFunction} ) {
-		if ( $param{btnFunction} eq 'Download in CSV format' ) {
+    if ($param{btnFunction} eq 'destroy') {
+      foreach my $User ( openprint::User->find(
+          deleted => 1,
+          id=>[ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id})])) {
+          if (!$User->deleted()) {
+            $variable{error} .= 'User ' . $User->email() . ' not destroyed because not deleted<br/>';
+            next;
+          }
+          $variable{error} .= $User->destroy();
+      }
+    } elsif ($param{btnFunction} eq 'delete') {
+      foreach my $User ( openprint::User->find(id=>[ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id})])) {
+          if ($User->deleted()) {
+            $variable{error} .= 'User ' . $User->email() . ' not deleteed because already deleted<br/>';
+            next;
+          }
+          $variable{error} .= $User->delete();
+      }
+    } elsif ($param{btnFunction} eq 'undelete') {
+      foreach my $User ( openprint::User->find(
+          deleted => 1,
+          id=>[ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id})])) {
+          if (!$User->deleted()) {
+            $variable{error} .= 'User ' . $User->email() . ' not undeleted because already not deleted<br/>';
+            next;
+          }
+          $variable{error} .= $User->undelete();
+      }
+    } elsif ( $param{btnFunction} eq 'Download in CSV format' ) {
 			my @header = ( 'Id', 'Company', 'First Name', 'Last Name',
 					'Email', 'Phone', 'Extension', 'Fax', 'Created On', 'Last Update'
 					);
@@ -1201,6 +1229,8 @@ sub users {
 						 ssi::format_csv_date( $User->updated_on() ),
 			}
 			misc::export_csv( $r, $log, \%variable, 'users.csv', \@header, \@data );
+    } else {
+      $log->error("Unknown function $param{btnFunction}");
 		} # end if Download
 	} # end if btnFunction
 }
@@ -1214,6 +1244,42 @@ sub _users {
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );
 	$session{$uri.'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+
+	if ( $param{btnFunction} ) {
+    if ($param{btnFunction} eq 'destroy') {
+      foreach my $User ( openprint::User->find(
+          deleted => 1,
+          id=>[$param{'user_id[]'} ? @{$param{'user_id[]'}} : ($param{user_id})])) {
+          if (!$User->deleted()) {
+            $variable{error} .= 'User ' . $User->email() . ' not destroyed because not deleted<br/>';
+            next;
+          }
+          $variable{error} .= $User->destroy();
+      }
+    } elsif ($param{btnFunction} eq 'delete') {
+      foreach my $User ( openprint::User->find(id=>[ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id})])) {
+          if ($User->deleted()) {
+            $variable{error} .= 'User ' . $User->email() . ' not deleteed because already deleted<br/>';
+            next;
+          }
+          $variable{error} .= $User->delete();
+      }
+    } elsif ($param{btnFunction} eq 'undelete') {
+      foreach my $User ( openprint::User->find(
+          deleted => 1,
+          id=>[ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id})])) {
+          if (!$User->deleted()) {
+            $variable{error} .= 'User ' . $User->email() . ' not undeleted because already not deleted<br/>';
+            next;
+          }
+          $variable{error} .= $User->undelete();
+      }
+    } else {
+      $log->error("Unknown function");
+    }
+  } else {
+      $log->error("on function");
+  }
 
   my @Users;
 
