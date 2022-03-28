@@ -106,7 +106,8 @@ foreach my $Host ( @Hosts ) {
 			next;
 		} # end if
 
-		if ( $Host->online() and $ping ) {
+    #if ( $Host->online() and $ping ) {
+		if ( $ping ) {
 
 			my $initial_url;
 			my $url;
@@ -117,7 +118,6 @@ foreach my $Host ( @Hosts ) {
 			if ( $Host->type() eq 'TP-Link Archer C7' ) {
 				use JSON;
         my $auth_key = '';
-
 
         my $rpc_auth_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/auth';
 				my $response = $browser->post( $rpc_auth_url, 
@@ -150,10 +150,14 @@ foreach my $Host ( @Hosts ) {
         }
         $response = $browser->post($rpc_sys_url, Content => encode_json( { method=>'net.devices' } ));
         my @wlans;
-        $response = get_from_json($response->content());
-        next if ! $response;
-        if ( $$response{result} ) {
-          @wlans = map { ( $_ =~ /^wlan/ ) ? $_ : () } @{$$response{result}};
+        my $response_json = get_from_json($response->content());
+        if (! $response_json) {
+          $log->debug("No response from ".$response->content());
+          next ;
+        }
+        if ( $$response_json{result} ) {
+          @wlans = map { ( $_ =~ /^wlan/ ) ? $_ : () } @{$$response_json{result}};
+          $log->debug("Have wlans: @wlans");
         }
         foreach my $wlan ( @wlans ) {
           $response = $browser->post($rpc_sys_url, Content => encode_json( { method=>'wifi.getiwinfo', params=>[$wlan] } ));
@@ -444,6 +448,7 @@ sub get_from_json {
     $openprint::log->error($@);
     return undef;
   }
+  return $hash;
 }
 
 1;
