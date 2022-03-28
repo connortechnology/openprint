@@ -573,8 +573,16 @@ sub can_become {
 			$User->in_Group('Estimating')
 		 ) {
 		return 1;
-	}
-	return 0;
+  }
+  return 0;
+}
+
+sub accounting_contact_ids {
+  my $self = shift;
+  if ( !exists $$self{accounting_contact_ids}) {
+    $$self{accounting_contact_ids} = [ sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$self{id}) ];
+  }
+  return @{$$self{accounting_contact_ids} };
 }
 
 1;
