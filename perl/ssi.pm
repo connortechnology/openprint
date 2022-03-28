@@ -543,22 +543,14 @@ sub button {
 	$$options{text} = $name if ! exists $$options{text};
 	my $html = 
 		qq`<button id="Button$name" class="btn button $$options{class}" `;
-	$html .= qq`name="$$options{name}" ` if $$options{name};
-	$html .= qq`value="$$options{value}" ` if $$options{value};
-	$html .= qq`title="$$options{title}" ` if $$options{title};
-	$html .= 'target="'.$$options{target}.'" ' if $$options{target};
-	$html .= 'disabled="'.$$options{disabled}.'" ' if $$options{disabled};
-	$html .= 'type="'.$$options{type}.'" ' if $$options{type};
 	if ( $$options{href} and $$options{type} ) {
 		$html .= qq`onclick="window.location='$$options{href}'" `;
     #} elsif ( $$options{onclick} and ! $$options{disabled} ) {
     #$html .= 'onclick="';
     #$html .= $$options{onclick}."return false;\" ";
 	} # end if
-	if ( $$options{ontouch} ) {
-		$html .= 'ontouch="'.$$options{ontouch}.'" ';
-	} # end if
 	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
+  $html .= join(' ', map { $_.'="'.$$options{$_}.'"' } ( keys %$options ) );
 	$html .= '>';
 	if ( $$options{image} ) {
 		if ( $openprint::config{ButtonsUseImages} and ($openprint::config{ButtonsUseImages} eq 'true') ) {
