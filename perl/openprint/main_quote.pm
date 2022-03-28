@@ -22,13 +22,12 @@ require openprint::QuotedProject;
 require openprint::quote;
 
 sub try_to_delete {
-  my $quote_id = shift;
-  my $Quote = new openprint::Quote( $quote_id );
+  my $Quote = shift;
   if ( $Quote->can_delete() ) {
     $Quote->delete();
     $Quote->add_log('Deleted');
   } else {
-    return "Quote $quote_id does not belong to you.  Not deleted.<br>";
+    return "Quote $$Quote{id} does not belong to you.  Not deleted.<br>";
   } # end if
   return '';
 } # end sub try_to_delete
@@ -44,15 +43,21 @@ sub history {
 	return if ! $param{btnFunction};
 
   if ( $param{btnFunction} eq 'Delete' ) {
-    if ( ref $param{chkDelete} eq 'ARRAY' ) {
-      foreach my $quote_id ( @{$param{chkDelete}} ) {
-        $variable{error} .= try_to_delete($quote_id);
-      } # end foreach
-    } else {
-      $variable{error} .= try_to_delete($param{chkDelete});
-    } # end if
-  } elsif ( $param{btnFunction} eq 'Delete Quote' ) {
-    $variable{error} .= try_to_delete($param{quote_id});
+    foreach my $Quote (openprint::Quote->find(id=>[(ref $param{chkDelete} eq 'ARRAY') ?  @{$param{chkDelete}} : ($param{chkDelete})])) {
+      $variable{error} .= try_to_delete($quote_id);
+    } # end foreach
+  } elsif ( $param{btnFunction} eq 'Undelete' ) {
+    foreach my $Quote (openprint::Quote->find(id=>[(ref $param{chkDelete} eq 'ARRAY') ?  @{$param{chkDelete}} : ($param{chkDelete})])) {
+      $variable{error} .= $Quote->undelete();
+    } # end foreach
+  } elsif ( $param{btnFunction} eq 'destroy' ) {
+    foreach my $Quote (openprint::Quote->find(id=>[(ref $param{chkDelete} eq 'ARRAY') ?  @{$param{chkDelete}} : ($param{chkDelete})])) {
+      if (!$Quote->deleted()) {
+        $variable{error} .= 'Can\'t destroy quote '.$$Quote{id}.' since it isn\'t deleted.<br/>';
+        next;
+      }
+      $variable{error} .= $Quote->destroy();
+    } # end foreach
   } elsif ( $param{btnFunction} eq 'Download in CSV format' ) {
 
     my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Currency', 
@@ -88,6 +93,8 @@ sub history {
 		} # end foreach
 		push @data, '','','','','','', 'Totals:', $total1, $total2, $total3, '', '', '', '', '', '';
 		misc::export_csv( $r, $log, \%variable, 'quote_report.csv', \@header, \@data );
+  } else {
+    $log->error("Unknown btnFunction in quote history $param{btnFunction}");
 	} # end if
 } # end sub history
 

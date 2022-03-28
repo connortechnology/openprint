@@ -1,11 +1,3 @@
-html {
-}
-body { 	
-	padding: 0;
-	margin: 0;
-	font-size: small;
-}
-
 input:invalid {
 	color:red;
 }
@@ -98,6 +90,7 @@ table.List {
 	margin: 0;
 }
 .totals td {
+	border-top: 1px solid #000088;
 }
 
 .List input[type="text"], .List input[type="number"] {
@@ -210,6 +203,7 @@ fieldset .address2 label:after {
 fieldset label.radio {
 	float: none;
 	margin: 0;
+  padding: 2px 6px 2px 2px;
 	width: auto;
 	vertical-align: middle;
 }
@@ -303,6 +297,9 @@ input[type="checkbox"] {
 	width: auto;
 	max-width: 100%;
 }
+.filters p.buttons {
+  padding-left: 135px;
+}
 
 .row {
 	clear: both;
@@ -365,13 +362,13 @@ img {
 	border: none;
 }
 
-.Date {
+table .Date {
 	width: 127px;
 	text-align: right;
-	padding-right: 3px;
+	padding-right: 5px;
 }
 .DateTime {
-	width: 150px;
+	width: 185px;
 	text-align: left;
 }
 td.Elapsed, th.Elapsed {
@@ -390,7 +387,7 @@ table .Quantity {
 	text-align: right;
 }
 table .User {
-	width: 120px;
+	width: 150px;
 	text-align: left;
 }
 table .Email {
@@ -488,7 +485,6 @@ tr .mac {
 	font-size: 16px;
 }
 .PageTitle {
-  position: absolute;
   top: 0;
   right: 0;
 	text-align: right;

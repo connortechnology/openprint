@@ -10,18 +10,18 @@
 		} else {
 			$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
 				id			=>	$po_id, 
-				company_id	=>	$openprint::User->company_id(),
+        company_id	=> ($session{user_type} eq 'A' ? $session{$uri.'?vendee_id'} : $openprint::User->company_id()),
 				deleted		=>	[1,0],
 				order		=>	'id desc') ];
 		}
 	} elsif ( $param{manifest_id} ) {
 		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
 			manifest_id	=>	$param{manifest_id}, 
-			company_id	=>	$openprint::User->company_id(),
+      company_id	=> ($session{user_type} eq 'A' ? $session{$uri.'?vendee_id'} : $openprint::User->company_id()),
 			order		=>	'id desc') ];
 	} else {
 		my %search = (
-			company_id	=>	$openprint::User->company_id(),
+      company_id	=> ($session{user_type} eq 'A' ? $session{$uri.'?vendee_id'} : $openprint::User->company_id()),
 			date_filter( $uri.'?starting_end', 'created_on <=' ),
 			date_filter( $uri.'?starting_start', 'created_on >=' ),
 			date_filter( $uri.'?paid_on_end', 'paid_on <=' ),
@@ -216,11 +216,13 @@
 <tbody class="sortable"
 	<? echo ( 
 		my $html = '';
+    my $destroy = 1;
 		my $report_total = 0;
 		my $qty_total = 0;
 		my $Currency = openprint::Currency::get_current();
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $PO ( @{$$variable{PurchaseOrders}} ) {
+      $destroy = 0 if ! $PO->deleted();
 			$html .= sprintf(q`<tr id="tr-%1$d" class="%2$s" title="%3$s">`, 
 				$PO->id(), 
 				( ( ( ! $PO->authorized ) and $PO->can_authorize() ) ? 'unauthorized' : 'authorized' ),
@@ -267,17 +269,19 @@
 								<td colspan="'.( $session{user_type} eq 'A' ? 9 : 8 ) . '">Total (' . $Currency->name().') :</td>
 								<td class="Quantity">'.Number::Format::format_number($qty_total).'</td>
 								<td class="Price">'. openprint::Currency::format( $report_total ) . '</td></tr>';
-		return $html;
-	) ?>
+    $html .= '
 	</tfoot>	
 	</table>
 	<p class="buttons">
-		<? echo (
-			my $html;
+';
 			if ( $session{user_type} eq 'A' ) {
+        if ($destroy) {
+        $html .= button( 'Destroy', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy Selected' } );
+        } else {
 				$html .= button( 'Decline', { onclick=>'open_decline_window(f1);', text=>'Decline Selected' } );
 				$html .= button( 'Authorize', { onclick=>"f1.btnFunction.value='Authorize';f1.submit();", text=>'Authorize Selected' } );
-				$html .= button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Selected' } );
+        $html .= button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Selected' } );
+        }
 			} # end if
 			return $html;
 		) ?>

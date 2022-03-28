@@ -1,4 +1,5 @@
 @import 'quote.css';
+@import 'project.css';
 
 .changes {
 	text-align: right;
@@ -14,7 +15,8 @@
 div.Quote div.Information fieldset ul li select {
     width: 92%;
 }
-div.Quote div.Information fieldset ul li select#company_id, div.Quote div.Information fieldset ul li select#user_id {
+div.Quote div.Information fieldset ul li select#for_company_id,
+div.Quote div.Information fieldset ul li select#user_id {
 	width: 75%;
 }
 .company_id input,
@@ -38,4 +40,8 @@ input#ByExtension, input#ForExtension {
 }
 .History select#company_id {
 	width: auto;
+}
+.filters input[name="total_end"],
+.filters input[name="total_start"]{
+  width: 75px;
 }

@@ -1,7 +1,7 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
-<script type="text/javascript" src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
-<script type="text/javascript" src="<?hash_link(/javascripts/printing.js)?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
+<script src="<?hash_link(/javascripts/printing.js)?>"></script>
+<script nonce="<?echo($config{CSP_NONCE})?>">
 	function calc( formName, force ) {
 		var form = getFormObj( formName );
 		if ( gettingNewPrice && ! force ) {
@@ -74,8 +74,6 @@
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
 	}
-  
-  
 </script>
 <?include('/main/project/prin/_templates.html')?>
 <div class="Service">
@@ -90,7 +88,7 @@
 			<div class="BookSpecifications">
 			<fieldset><legend>Book Specifications</legend>
 				<ul>
-				<li><label>Dimensions</label>
+          <li><label>Dimensions</label>
             <select id="ddmProjectSize" name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(this.form);">
 <? if ( $$variable{ddmProjectSize} ) ?>
                 <option value="<?ddmProjectSize?>"><?ddmProjectSize?></option>
@@ -98,8 +96,8 @@
                 <option value="custom">custom</option>
 <? endif ( $$variable{ddmProjectSize} ) ?>
             </select>
-				</li>
-				<li><label>Finished</label>
+          </li>
+          <li><label>Finished</label>
             <? echo ( join( "\n",
                 input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Final Width in inches' ),
                 ' x ',
