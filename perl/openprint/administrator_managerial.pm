@@ -705,11 +705,19 @@ sub company_profiles {
 
 sub _company_accounting_contacts {
 	$variable{Company} = new openprint::Company( $param{company_id} );
-	if ( $param{new_accounting_contact_id} ) {
-		$variable{error} .= sql::insert( undef, undef, 'companies_accountingcontacts', 'company_id', $variable{Company}->id(), 'user_id', $param{new_accounting_contact_id} );
-	} # end if
-	if ( $param{action} eq 'delete' ) {
-		sql::execute( undef, undef, 'DELETE FROM companies_accountingcontacts WHERE company_id=? AND user_id=?', @param{'company_id','user_id'} );
+  if ($param{action}) {
+    if ($param{action} eq 'add') {
+      if ($param{user_id} and openprint::User->transform(id=>$param{user_id})) {
+        my $ac = sql::start_transaction();
+        sql::execute(undef, undef, 'DELETE FROM companies_accountingcontacts WHERE company_id=? AND user_id=?', @param{'company_id','user_id'});
+        $variable{error} .= sql::insert(undef, undef, 'companies_accountingcontacts', 'company_id', $variable{Company}->id(), 'user_id', $param{user_id});
+        sql::end_transaction(undef, $ac);
+      } else {
+        $variable{error} .= 'Invalid user id specified.<br>';
+      } # end if
+    } elsif ($param{action} eq 'delete') {
+      sql::execute(undef, undef, 'DELETE FROM companies_accountingcontacts WHERE company_id=? AND user_id=?', @param{'company_id','user_id'});
+    }
 	} # end if
 } # end sub
 
