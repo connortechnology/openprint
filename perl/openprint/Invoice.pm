@@ -92,15 +92,15 @@ sub save {
 	my $rc;
 	# none of these should be set by param ( however employee_accounting will pass in a total if specified.. FIXME
 	$$self{subtotal} = $self->subtotal( undef ) if $$self{id} and ! $$self{subtotal_override};
-	$self->Taxes( undef );
+  #$self->Taxes( undef );
 	$$self{total} = $self->total( undef ) if $$self{id} and ! $$self{total_override};
 
 	$rc .= $self->SUPER::save( );
-	if ( ! $rc ) {
-		foreach my $T ( $self->Taxes(undef) ) {
+	if (!$rc) {
+		foreach my $T ( $self->Taxes() ) {
 			$rc .= $T->save();
 		} # end foreach
-		$self->Invoicee()->save({last_invoice_id=>$$self{id}});
+		$self->Invoicee()->save({last_invoice_id=>$$self{id}}) if $self->Invoicee()->last_invoice_id != $$self{id};
 	} # end if
 	return $rc;
 } # end sub save
@@ -496,7 +496,7 @@ sub Taxes {
 		if ( $$self{id} ) {
 			foreach ( openprint::Invoice_Tax->find( invoice_id=>$$self{id} ) ) {
 				$_->destroy();
-			} # end foreach	 Tax
+			} # end foreach	Tax
 		}
 		$$self{Taxes} = [];
 	} # end if
@@ -515,7 +515,7 @@ sub Taxes {
 				) {
 			my $T = new openprint::Invoice_Tax();
 			$T->set({
-				tax_id		=>	$$Tax{id},
+				tax_id	=>	$$Tax{id},
 				rate 		=>	$$Tax{rate},
 			});
 			$T->save({ invoice_id	=>	$$self{id} } ) if $$self{id};
