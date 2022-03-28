@@ -285,17 +285,18 @@ sub calc {
 					$items_per_package = int $$specs{'txtItemsPerPackage'.$qty_index};
 				} # end if
 
-				my $package_qty = $items_per_package ? ceil($item_qty/$items_per_package) : 0;
-				my $package_weight = $items_per_package * $item_weight;
-				my $total_weight =
-					(int($item_qty/$items_per_package) * $package_weight)
-					+ (($item_qty % $items_per_package) * $item_weight) if $items_per_package;
-				$$results{breakdown} .= sprintf('Items per: %d, %d packages, max weight %dlbs, total weight %dlbs<br/>',
-						$items_per_package, $package_qty, $package_weight, $total_weight);
 				if (!$items_per_package) {
 					$$results{breakdown} .= '</fieldset>';
 					next;
 				} # end if
+
+				my $package_qty = ceil($item_qty/$items_per_package);
+				my $package_weight = $items_per_package * $item_weight;
+				my $total_weight =
+					(int($item_qty/$items_per_package) * $package_weight)
+					+ (($item_qty % $items_per_package) * $item_weight);
+				$$results{breakdown} .= sprintf('Items per: %d, %d packages, max weight %dlbs, total weight %dlbs<br/>',
+						$items_per_package, $package_qty, $package_weight, $total_weight);
 
 				my %MaterialPrice = $Material->get_price($package_qty, undef);
 				my $compare_price = $package_qty * $MaterialPrice{Price};
