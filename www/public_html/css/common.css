@@ -79,6 +79,10 @@ table {
 table.List {
 	table-layout: fixed;
 }
+
+table.List tr {
+  margin: 2px 0;
+}
 .List th {
 	border: none;
 	padding: 0;
