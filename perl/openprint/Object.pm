@@ -1220,7 +1220,7 @@ sub dropdown {
 		#$params{columns} = 'id,name';
 	#}
 
-	return [ map { $$_{id}, $_->name() } $self->find(%params) ];
+	return [ map { $$_{id}, ssi::html_escape($_->name()) } $self->find(%params) ];
 } # end sub dropdown
 
 sub sort_value {
