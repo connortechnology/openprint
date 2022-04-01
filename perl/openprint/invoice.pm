@@ -228,29 +228,32 @@ sub _history {
       order => 'num,id',
     );
   } else {
-    foreach my $Invoice ( openprint::Invoice->find(
+    my %filter = (
         ssi::date_filter($uri.'?created_on_end', 'created_on <='),
         ssi::date_filter($uri.'?created_on_start', 'created_on >='),
         ssi::date_filter($uri.'?due_on_end', 'due_on is null or <='),
         ssi::date_filter($uri.'?due_on_start', 'due_on is null or >='),
-        or => [
-        invoicer_id=>$session{company_id},
-        ( sets::isin($session{user_type}, ['E','A']) ? (
-            ( $session{$uri.'?invoicee_id'} ? 
-              ( invoicee_id => $session{$uri.'?invoicee_id'} ) : 
-              ( $company_ids ? ( invoicee_id => $company_ids ) : () ) 
-            ),
-
-            ( $session{$uri.'?invoicer_id'} ? ( invoicer_id => $session{$uri.'?invoicer_id'} ) : () ),
-          ) : (
-            ( invoicee_id => $session{company_id} ),
-          ) ),
-      ],
         ( $session{$uri.'?product_id'} ? ( 'product_id any' => $session{$uri.'?product_id'} ) : () ),
         ( $session{$uri.'?bad_debt'} ne '' ? ( bad_debt=>$session{$uri.'?bad_debt'} ) :() ),
         ( $session{$uri.'?currency_id'} ? ( currency_id=>$session{$uri.'?currency_id'} ) : () ),
         order => 'created_on',
-      ) ) {
+      );
+      $filter{or} = [
+        invoicer_id=>$session{company_id},
+        invoicee_id=>$session{company_id},
+      ];
+    if ( $session{user_type} eq 'E' or $session{user_type} eq 'A') {
+      # Our company must be either the invoicee or invoicer
+      if ( $session{$uri.'?invoicee_id'} ) {
+        $filter{invoicee_id} = $session{$uri.'?invoicee_id'};
+      }
+    } elsif ($session{user_type} eq 'A') {
+      if ( $session{$uri.'?invoicer_id'} ) {
+        $filter{invoicer_id} = $session{$uri.'?invoicer_id'};
+      }
+    }
+
+    foreach my $Invoice ( openprint::Invoice->find(%filter)) {
       if ( $session{$uri.'?paid'} ne '' ) {
         if ( $Invoice->is_paid() ) {
           next if $session{$uri.'?paid'} == 0;
