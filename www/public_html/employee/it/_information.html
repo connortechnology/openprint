@@ -7,7 +7,7 @@
 			foreach my $I ( @Information ) {
 				$html .= sprintf( q`<li id="information_%d"><span class="name">%s</span> = <span class="value">%s</span><span class="buttons">%s</span></li>`, 
 					$I->id(), $I->name(), $I->value(),
-					button( 'd'.$$I{id}, { onclick=>qq`jQuery('#information').load( '_information.html', { action: 'delete', host_id: '$$variable{Host}{id}', info_id: '$$I{id}'} );`, text=>'X', title=>'Delete' } ),
+          button( 'd'.$$I{id}, { 'data-on-click-this'=>'del_information', 'data-id'=>$I->id(), text=>'X', title=>'Delete' } ),
 					);
 			} # end foreach User in Information
 		} else {
@@ -19,8 +19,7 @@
 		<? echo ( join("\n",
 			input( type=>'text', name=>'new_info_name', id=>'new_info_name', placeholder=>'name' ),
 			input( type=>'text', name=>'new_info_value', id=>'new_info_value', placeholder=>'value' ),
-			button( 'AddInfo', { 
-					onclick=>qq`jQuery('#information').load( '_information.html', { action: 'add', host_id: '$$variable{Host}{id}', name: jQuery('#new_info_name').val(), value: jQuery('#new_info_value').val() } );`, text=>'Add' } ),
+			button( 'AddInfo', { 'data-on-click'=>'add_information', text=>'Add' } ),
 			); ) ?>
 	</li>
 </ul>
