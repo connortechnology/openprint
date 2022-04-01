@@ -44,7 +44,7 @@ sub history {
 
   if ( $param{btnFunction} eq 'Delete' ) {
     foreach my $Quote (openprint::Quote->find(id=>[(ref $param{chkDelete} eq 'ARRAY') ?  @{$param{chkDelete}} : ($param{chkDelete})])) {
-      $variable{error} .= try_to_delete($quote_id);
+      $variable{error} .= try_to_delete($Quote);
     } # end foreach
   } elsif ( $param{btnFunction} eq 'Undelete' ) {
     foreach my $Quote (openprint::Quote->find(id=>[(ref $param{chkDelete} eq 'ARRAY') ?  @{$param{chkDelete}} : ($param{chkDelete})])) {
