@@ -317,12 +317,13 @@ sub fill_select {
 } # sub customer_drop_down
 
 sub return_states_and_provinces {
+  my $selected_country = shift;
 	require provinces;
 	require states;
 	my @states_and_provinces = ();
-	push @states_and_provinces, @states::states;
-	push @states_and_provinces, @provinces::provinces;
-	return make_drop_down( \@states_and_provinces, \@_ );
+	push @states_and_provinces, @states::states if !$selected_country or $selected_country eq 'US';
+	push @states_and_provinces, @provinces::provinces if !$selected_country or $selected_country eq 'CA'; 
+	return make_drop_down(\@states_and_provinces, $selected_country);
 } # end sub return_states_and_provinces
 
 sub return_states {
