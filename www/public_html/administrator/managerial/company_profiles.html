@@ -180,7 +180,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 					<option value="">select</option>
 					<? echo ( make_drop_down( openprint::User->dropdown(type=>['E','A']), $$variable{Company}->salesrep_id() ); ) ?>
 				</select>
-<?echo(button('CSRGo', { href=>$$variable{Company}->CSR()->admin_url_to(), text=>'Go'});)?>
+        <?echo(button('CSRGo', { href=>$$variable{Company}->CSR()->admin_url_to(), text=>'Go'});)?>
 			</li>
 		</ul>
 	</div>
@@ -269,17 +269,23 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			</li>
 			<li> 
 				<label>Country</label>
-				<select name="country" onchange="Country_onchange(this,this.form.state);">
+				<select name="country" onchange="Country_onchange(this, this.form.state);">
 					<option value=""> select </option>
 					<? echo ( return_countries($$variable{Company}->country() ); ) ?>
 				</select>
 			</li>
 			<li> 
 				<label><span id="country_state">State/Province</span></label>
+        <span id="country_state_container">
+          <? if ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
 				<select name="state">
 					<option value=""> select </option>
-					<? echo ( return_states_and_provinces($$variable{Company}->state() ); ) ?> 
+					<? echo ( return_states_and_provinces($$variable{Company}->state()); ) ?> 
 				</select>
+          <? else ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
+            <input type="text" name="state" value="<?echo($$variable{Company}->state())?>"/>
+          <? endif ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
+        </span>
 			</li>
 			<li> 
 				<label>City</label>
