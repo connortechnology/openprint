@@ -6,13 +6,13 @@
 }
 
 fieldset p,
-fieldset li {
-  padding: 0 0 0 185px;
+fieldset ul li {
+  padding: 0 0 0 215px;
   text-align: left;
 }
-fieldset label:not(.radio):not(.radio-inline) {
-  width: 180px;
-  margin-left: -185px;
+fieldset ul li label:not(.radio):not(.radio-inline) {
+  width: 210px;
+  margin-left: -215px;
 }
 
 .groups {
@@ -44,7 +44,9 @@ content: '';
 .Email .Vacation fieldset {
 	margin-left: 5px;
 }
-.LoginCredentials {
+.LoginCredentials,
+.Miscellaneous,
+.groups {
 	float: right;
 	width: 50%;
 }
@@ -96,11 +98,12 @@ content: '';
 .commission input[type="number"] {
 	width: 33%;
  }
-.mailinglist label,
-.web_active label,
-.ftp_active label,
-.administrator label {
-	width: 300px;
+.mailinglist label:not(.radio):not(.radio-inline),
+.web_active label:not(.radio):not(.radio-inline),
+.ftp_active label:not(.radio):not(.radio-inline),
+.ftp_root label:not(.radio):not(.radio-inline),
+.administrator label:not(.radio):not(.radio-inline) {
+	width: 320px;
 }
 #extension {
 	width: 40px;
