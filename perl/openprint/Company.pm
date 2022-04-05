@@ -140,6 +140,10 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM Companies_in_Marketing_Categories WHERE Company_Id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Addresses WHERE company_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Locations WHERE company_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Uploads WHERE company_id=?', $$self{id} );
+  foreach (openprint::Asset->find(company_id=>$$self{id})) { $_->destroy(); }
+
+	sql::execute( undef, undef, 'DELETE FROM Assets WHERE company_id=?', $$self{id} );
 	foreach my $Payment ( openprint::Payment->find(recipient_id=>$$self{id}) ) {
 		$Payment->delete();
 	} # end foreach Payment
@@ -148,9 +152,10 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM logs WHERE company_id=?', $$self{id} );
   $openprint::log->error("Deleting purchaseorder_items");
   sql::update(undef, undef, 'purchaseorder_items', ['vendor_id=?', $$self{id}], vendor_id=>undef);
+  sql::update(undef, undef, 'manifests', ['supplier_id=?', $$self{id}], supplier_id=>undef);
 
 	foreach my $Paper ( openprint::Paper->find(owner_id=>$$self{id}) ) {
-		$Paper->delete();
+		$Paper->destroy();
 	} # end foreach
 
 	foreach my $Quote ( openprint::Quote->find(company_id=>$$self{id}) ) {
