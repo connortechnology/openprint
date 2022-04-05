@@ -376,6 +376,7 @@ sub send {
 		FROM		=>	$from,
 		ATTACHMENTS	=>	\@attachments,
 		SUBJECT		=>	sprintf('%1$s Invoice (%2$s) is now available.', $self->Invoicer()->name(), $self->num()),
+    'Return-Receipt-To' => $from,
 	);
 	(new openprint::Log())->save({Object=>$self, action=>'Invoice Sent', note=>$results});
 	return $results;
@@ -501,7 +502,7 @@ sub Taxes {
 		$$self{Taxes} = [];
 	} # end if
 
-	if ( ( ! $$self{Taxes} ) and $$self{posted} ) {
+	if (!$$self{Taxes}) {
 		@{$$self{Taxes}} = openprint::Invoice_Tax->find( invoice_id=>$$self{id} );
 	} # end if
 
@@ -517,6 +518,7 @@ sub Taxes {
 			$T->set({
 				tax_id	=>	$$Tax{id},
 				rate 		=>	$$Tax{rate},
+        charge  =>  1,
 			});
 			$T->save({ invoice_id	=>	$$self{id} } ) if $$self{id};
 			push @{$$self{Taxes}}, $T;
