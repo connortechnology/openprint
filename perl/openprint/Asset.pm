@@ -457,40 +457,43 @@ sub can_approve {
 } # end sub can_approve {
 
 sub destroy {
+  my $self = shift;
   my $result = '';
-	foreach ( openprint::User->find(asset_id=>$_[0]{id}) ) {
+	foreach ( openprint::User->find(asset_id=>$$self{id}) ) {
 		$result .= $_->save({asset_id=>undef});
     last if $result;
-	} # end foreach SRED_Asset
+	} # end foreach User
   return $result if $result;
-	foreach ( openprint::SRED_Asset->find(asset_id=>$_[0]{id}) ) {
+  require openprint::SRED_Asset;
+	foreach ( openprint::SRED_Asset->find(asset_id=>$$self{id}) ) {
 		$result .= $_->destroy();
     last if $result;
 	} # end foreach SRED_Asset
   return $result if $result;
-	foreach ( openprint::Claim_Asset->find(asset_id=>$_[0]{id}) ) {
+  require openprint::Claim_Asset;
+	foreach ( openprint::Claim_Asset->find(asset_id=>$$self{id}) ) {
 		$result .= $_->destroy();
     last if $result;
 	} # end foreach Claim_Asset
   return $result if $result;
-	foreach ( openprint::Photo_in_Album->find(asset_id=>$_[0]{id}) ) {
+	foreach ( openprint::Photo_in_Album->find(asset_id=>$$self{id}) ) {
 		$result .= $_->destroy();
     last if $result;
 	} # end foreach Claim_Asset
-	foreach ( openprint::Photo_Album->find(thumbnail_id=>$_[0]{id}) ) {
+	foreach ( openprint::Photo_Album->find(thumbnail_id=>$$self{id}) ) {
     $result .= $_->save({thumbnail_id=>undef});
     last if $result;
   }
   return $result if $result;
-	foreach ( openprint::Object_Asset->find(asset_id=>$_[0]{id}) ) {
+	foreach ( openprint::Object_Asset->find(asset_id=>$$self{id}) ) {
 		$result .= $_->destroy();
     last if $result;
 	} # end foreach Claim_Asset
   return $result if $result;
-	unlink $_[0]->sized_path('small');
-	unlink $_[0]->sized_path('medium');
-	unlink $_[0]->sized_path('large');
-	unlink $_[0]->on_disk_path();
+	unlink $self->sized_path('small');
+	unlink $self->sized_path('medium');
+	unlink $self->sized_path('large');
+	unlink $self->on_disk_path();
 	sql::execute(undef, undef, 'DELETE FROM Assets WHERE id=?', $_[0]{id});
   return $result;
 } # end sub destroy

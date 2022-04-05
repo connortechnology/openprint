@@ -92,15 +92,15 @@ sub save {
 	my $rc;
 	# none of these should be set by param ( however employee_accounting will pass in a total if specified.. FIXME
 	$$self{subtotal} = $self->subtotal( undef ) if $$self{id} and ! $$self{subtotal_override};
-	$self->Taxes( undef );
+  #$self->Taxes( undef );
 	$$self{total} = $self->total( undef ) if $$self{id} and ! $$self{total_override};
 
 	$rc .= $self->SUPER::save( );
-	if ( ! $rc ) {
-		foreach my $T ( $self->Taxes(undef) ) {
+	if (!$rc) {
+		foreach my $T ( $self->Taxes() ) {
 			$rc .= $T->save();
 		} # end foreach
-		$self->Invoicee()->save({last_invoice_id=>$$self{id}});
+		$self->Invoicee()->save({last_invoice_id=>$$self{id}}) if $self->Invoicee()->last_invoice_id != $$self{id};
 	} # end if
 	return $rc;
 } # end sub save
@@ -376,6 +376,7 @@ sub send {
 		FROM		=>	$from,
 		ATTACHMENTS	=>	\@attachments,
 		SUBJECT		=>	sprintf('%1$s Invoice (%2$s) is now available.', $self->Invoicer()->name(), $self->num()),
+    'Return-Receipt-To' => $from,
 	);
 	(new openprint::Log())->save({Object=>$self, action=>'Invoice Sent', note=>$results});
 	return $results;
@@ -496,12 +497,12 @@ sub Taxes {
 		if ( $$self{id} ) {
 			foreach ( openprint::Invoice_Tax->find( invoice_id=>$$self{id} ) ) {
 				$_->destroy();
-			} # end foreach	 Tax
+			} # end foreach	Tax
 		}
 		$$self{Taxes} = [];
 	} # end if
 
-	if ( ( ! $$self{Taxes} ) and $$self{posted} ) {
+	if (!$$self{Taxes}) {
 		@{$$self{Taxes}} = openprint::Invoice_Tax->find( invoice_id=>$$self{id} );
 	} # end if
 
@@ -515,8 +516,9 @@ sub Taxes {
 				) {
 			my $T = new openprint::Invoice_Tax();
 			$T->set({
-				tax_id		=>	$$Tax{id},
+				tax_id	=>	$$Tax{id},
 				rate 		=>	$$Tax{rate},
+        charge  =>  1,
 			});
 			$T->save({ invoice_id	=>	$$self{id} } ) if $$self{id};
 			push @{$$self{Taxes}}, $T;

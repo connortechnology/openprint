@@ -2,7 +2,7 @@
 	function delete_confirm(form) {
 		var number_of_deleted_quotes = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
-			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+			if ( form.elements[index].name == 'quote_id' && form.elements[index].checked ) {
 				number_of_deleted_quotes += 1;
 			} // end if
 
@@ -75,9 +75,9 @@
 			</li>
 			<li>
 				<label>Quote Date</label>
-				<? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>'load_quotes();' } ); ) ?>
+        <? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>'load_quotes();', with_today=>1, with_clear=>1 } ); ) ?>
 				to
-				<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>'load_quotes();' } ); ) ?>
+        <? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>'load_quotes();', with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
       </ul>
       <ul class="rightColumn">

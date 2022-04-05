@@ -228,29 +228,32 @@ sub _history {
       order => 'num,id',
     );
   } else {
-    foreach my $Invoice ( openprint::Invoice->find(
+    my %filter = (
         ssi::date_filter($uri.'?created_on_end', 'created_on <='),
         ssi::date_filter($uri.'?created_on_start', 'created_on >='),
         ssi::date_filter($uri.'?due_on_end', 'due_on is null or <='),
         ssi::date_filter($uri.'?due_on_start', 'due_on is null or >='),
-        or => [
-        invoicer_id=>$session{company_id},
-        ( sets::isin($session{user_type}, ['E','A']) ? (
-            ( $session{$uri.'?invoicee_id'} ? 
-              ( invoicee_id => $session{$uri.'?invoicee_id'} ) : 
-              ( $company_ids ? ( invoicee_id => $company_ids ) : () ) 
-            ),
-
-            ( $session{$uri.'?invoicer_id'} ? ( invoicer_id => $session{$uri.'?invoicer_id'} ) : () ),
-          ) : (
-            ( invoicee_id => $session{company_id} ),
-          ) ),
-      ],
         ( $session{$uri.'?product_id'} ? ( 'product_id any' => $session{$uri.'?product_id'} ) : () ),
         ( $session{$uri.'?bad_debt'} ne '' ? ( bad_debt=>$session{$uri.'?bad_debt'} ) :() ),
         ( $session{$uri.'?currency_id'} ? ( currency_id=>$session{$uri.'?currency_id'} ) : () ),
         order => 'created_on',
-      ) ) {
+      );
+      $filter{or} = [
+        invoicer_id=>$session{company_id},
+        invoicee_id=>$session{company_id},
+      ];
+    if ( $session{user_type} eq 'E' or $session{user_type} eq 'A') {
+      # Our company must be either the invoicee or invoicer
+      if ( $session{$uri.'?invoicee_id'} ) {
+        $filter{invoicee_id} = $session{$uri.'?invoicee_id'};
+      }
+    } elsif ($session{user_type} eq 'A') {
+      if ( $session{$uri.'?invoicer_id'} ) {
+        $filter{invoicer_id} = $session{$uri.'?invoicer_id'};
+      }
+    }
+
+    foreach my $Invoice ( openprint::Invoice->find(%filter)) {
       if ( $session{$uri.'?paid'} ne '' ) {
         if ( $Invoice->is_paid() ) {
           next if $session{$uri.'?paid'} == 0;
@@ -324,8 +327,17 @@ sub edit {
 			delete $param{invoicee};
 		} # end if
 		my @changes = $Invoice->changes(\%param);
+
+    # Store values before calculating taxes
+		$Invoice->set(\%param);
+    # This must happen before saving because charging or not for a tax alters the total.
+    foreach my $Tax ($Invoice->Taxes()) {
+      # Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
+      $Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()};
+    } # end foreach
+
 		$Invoice->subtotal_override($param{subtotal_override});
-		$variable{error} .= $variable{Invoice}->save(\%param);
+		$variable{error} .= $Invoice->save(\%param);
 		foreach my $Product ( $Invoice->Products() ) {
 			my %p_changes = (
 				description	=>	$param{'product-description-'.$Product->id()},
@@ -338,7 +350,7 @@ sub edit {
 
 			$variable{error} .= $Product->save( \%p_changes );
 		} # end foreach Product
-		(new openprint::Log())->save({ Object =>$Invoice, action=>'Invoice Edit', note=>join('<br/>', @changes)});
+		(new openprint::Log())->save({ Object =>$Invoice, action=>'Edit', note=>join('<br/>', @changes)});
 		if ( $param{invoice_id} and ! $variable{error} ) {
 			$variable{information} .= 'Invoice saved.<br/>';
 			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
