@@ -1128,7 +1128,7 @@ sub _companies {
 				) );
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
   if ($param{action} eq 'delete') {
-    foreach my $Company ( openprint::Company->find( id=> (ref $param{'company_id[]'} eq 'ARRAY') ? $param{'company_id[]'} : [$param{company_id}]) ) {
+    foreach my $Company ( openprint::Company->find( id=> (ref $param{'company_id[]'} eq 'ARRAY') ? $param{'company_id[]'} : $param{company_id}) ) {
       $Company->delete();
     }
   } elsif ($param{action} eq 'undelete' ) {
@@ -1143,7 +1143,7 @@ sub _companies {
       } # end foreach Company
     } # end while company_ids
   } elsif ($param{action} eq 'destroy' ) {
-    my @company_ids = (ref $param{'company_id[]'} eq 'ARRAY') ? @{$param{'company_id[]'}} : ($param{'company_id[]'});
+    my @company_ids = ($param{'company_id[]'} ? @{$param{'company_id[]'}} : ($param{company_id}));
     while (@company_ids) {
       foreach my $Company ( openprint::Company->find( id=> [ splice(@company_ids, 0, 100) ], deleted=>1) ) {
         if (!$Company->deleted()) {
