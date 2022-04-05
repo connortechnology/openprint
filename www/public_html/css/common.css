@@ -227,6 +227,7 @@ fieldset p textarea, fieldset li textarea {
 	width: 70%;
 }
 fieldset p.buttons {
+  padding: 0;
   margin-left: 165px;
 	float: none;
 }
@@ -284,12 +285,12 @@ input[type="checkbox"] {
 }
 
 .filters p, .filters li {
-	padding: 0 0 0 135px;
+	padding: 0 0 0 165px;
 	text-align: left;
 }
 .filters label:not(.radio):not(.radio-inline) {
-	width: 130px;
-	margin-left: -135px;
+	width: 160px;
+	margin-left: -165px;
 }
 .filters input[type="number"] ,
 .filters input[type="text"] {
@@ -300,7 +301,7 @@ input[type="checkbox"] {
 	max-width: 100%;
 }
 .filters p.buttons {
-  padding-left: 135px;
+  padding-left: 165px;
 }
 
 .row {
@@ -365,7 +366,7 @@ img {
 }
 
 table .Date {
-	width: 127px;
+	width: 135px;
 	text-align: right;
 	padding-right: 5px;
 }
