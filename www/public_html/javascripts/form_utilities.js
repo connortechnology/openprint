@@ -747,9 +747,9 @@ function addLoadEvent(func) {
 }
 
 function Country_onchange( country_ddm, state ) {
-	var country = get_ddm_value( country_ddm );
-	var state_label = $(country_ddm.name + '_state');
-	var postal_label = $(country_ddm.name + '_postal');
+	const country = get_ddm_value( country_ddm );
+	const state_label = $(country_ddm.name + '_state');
+	const postal_label = $(country_ddm.name + '_postal');
 	var onchange = state.getAttribute('onchange');
 	if ( country == 'US' ) {
 		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
@@ -1661,7 +1661,7 @@ function load_logs_form() {
   }
 }
 
-window.addEventListener("DOMContentLoaded", function() {
+function update_event_bindings() {
   // 
   document.querySelectorAll("select[data-on-change], input[data-on-change]").forEach(function attachOnChangeThis(el) {
     var fnName = el.getAttribute("data-on-change");
@@ -1681,6 +1681,25 @@ window.addEventListener("DOMContentLoaded", function() {
     el.oninput = window[fnName].bind(el, el);
   });
 
+  document.querySelectorAll('button[data-onclick-this]').forEach(function(el) {
+    var fnName = el.getAttribute('data-onclick-this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll('button[data-on-click-this]').forEach(function(el) {
+    var fnName = el.getAttribute('data-on-click-this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
   document.querySelectorAll("i[data-on-click], a[data-on-click], button[data-on-click], input[data-on-click]").forEach(function attachOnClick(el) {
     var fnName = el.getAttribute("data-on-click");
     if ( !window[fnName] ) {
@@ -1692,4 +1711,8 @@ window.addEventListener("DOMContentLoaded", function() {
       window[fnName](ev);
     };
   });
+}
+
+window.addEventListener("DOMContentLoaded", function() {
+  update_event_bindings();
 });

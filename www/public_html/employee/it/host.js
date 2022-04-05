@@ -30,7 +30,7 @@ function add_subnet( id ) {
 
 function add_interface( id ) {
   $j.get('_interface.html', { host_id: $j('#host_id').val(), action: 'add interface' }, function(data) {
-    $j('#Interfaces').append(data);
+    $j('#Interfaces tbody').append(data);
   });
 }
 
@@ -48,6 +48,21 @@ function check_inputs( form ) {
   }
   return true;
 } //  end function check_inputs
+
+function add_information() {
+  jQuery('#information').load( '_information.html', {
+    action: 'add',
+    host_id: $j('#host_id').val(),
+    name: jQuery('#new_info_name').val(),
+    value: jQuery('#new_info_value').val()
+    }, update_event_bindings );
+}
+function del_information(button) {
+  jQuery('#information').load( '_information.html', {
+    action: 'delete', host_id: $j('#host_id').val(),
+    info_id: button.getAttribute('data-id')
+  }, update_event_bindings);
+}
 
 function toggle_monitored(e) {
   if ( e.value == 1 ) {

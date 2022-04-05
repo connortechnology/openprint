@@ -82,9 +82,7 @@
 			<th class="quote_id">Quote ID</th>
 <? if ( ! $session{$$variable{uri}.'?company_id'} ) ?>
       <th class="CompanyName">Company</th>
-<? if ( ! $session{$$variable{uri}.'?salesrep_id'} ) ?>
 			<th class="CSR">Sales Rep</th>
-<? endif ( ! $session{$$variable{uri}.'?salesrep_id'} ) ?>
 <? endif ( ! $session{$$variable{uri}.'?company_id'} ) ?>
 			<th class="User QuotedBy">Quoted By</th>
 			<th class="User QuotedFor">Quoted For</th>
@@ -93,7 +91,7 @@
 			<th class="Price">Total1</th>
 			<th class="Price">Total2</th>
 			<th class="Price">Total3</th>
-			<th class="checkbox"><input type="checkbox" name="checkall" onclick="select_all(this.form,'chkDelete',this.checked);" /></th>
+			<th class="checkbox"><input type="checkbox" name="checkall" onclick="select_all(this.form,'quote_id',this.checked);" /></th>
 		</tr>
 <? echo (
 	my $html;
@@ -107,7 +105,7 @@
 				<tr%1$s>
 					<td class="quote_id"><a href="history_details.html?quote_id=%2$d">%2$d</a></td>
 					<td class="CompanyName"%4%s><a href="history_details.html?quote_id=%2$d">%3$s</a></td>
-					%13$s
+          <td class="User CSR">%13$s</td>
 					<td class="User QuotedBy"><a href="history_details.html?quote_id=%2$d">%5$s</a></td>
 					<td class="User QuotedFor"><a href="history_details.html?quote_id=%2$d">%6$s</a></td>
 					<td class="Reference"><a href="history_details.html?quote_id=%2$d">%7$s</a></td>
@@ -115,11 +113,11 @@
 					<td class="Price"><a href="history_details.html?quote_id=%2$d">%9$s</a></td>
 					<td class="Price"><a href="history_details.html?quote_id=%2$d">%10$s</a></td>
 					<td class="Price"><a href="history_details.html?quote_id=%2$d">%11$s</a></td>
-					<td class="checkbox"><input type="checkbox" name="chkDelete" value="%2$d" /></td>
+					<td class="checkbox"><input type="checkbox" name="quote_id" value="%2$d" /></td>
 				</tr>
 				<tr%1$s>
 					<td>&nbsp;</td>
-					<td colspan="7">%12$s</td><td></td>
+					<td colspan="9">%12$s</td><td></td>
 				</tr>`, $rowclass, $Quote->id(),
 					html_escape( $Quote->Company->name() ), ($session{$$variable{uri}.'?company_id'} ? ' style="display: none"' : ''),
 					html_escape( $Quote->for_name() ),
@@ -130,8 +128,7 @@
 					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
 					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),
 					$Quote->description(),
-					( $session{$$variable{uri}.'?salesrep_id'} ? '' : '<td class="User CSR">'.$Quote->Company()->CSR()->name().'</td>'), 
-		
+					html_escape($Quote->Company()->CSR()->name()),
 				);
 			} else {
 				$html .= sprintf(q`
@@ -144,11 +141,11 @@
 					<td class="Price"><a href="history_details.html?quote_id=%2$d">%7$s</a></td>
 					<td class="Price"><a href="history_details.html?quote_id=%2$d">%8$s</a></td>
 					<td class="Price"><a href="history_details.html?quote_id=%2$d">%9$s</a></td>
-					<td class="checkbox"><input type="checkbox" name="chkDelete" value="%2$d" /></td>
+					<td class="checkbox"><input type="checkbox" name="quote_id" value="%2$d" /></td>
 				</tr>
 				<tr%1$s>
 					<td>&nbsp;</td>
-					<td colspan="6">%10$s</td><td></td>
+					<td colspan="7">%10$s</td><td></td>
 				</tr>`, $rowclass, $Quote->id(), 
           html_escape( $Quote->by_name() ),
 					html_escape( $Quote->for_name() ),
@@ -188,7 +185,18 @@
 	return $html;
 ) ?>
 	</table>
-	<p class="buttons"><? echo ( button( 'Delete', { onclick=>q`f2.btnFunction.value='Delete';delete_confirm(f2);`, text=>'Delete Checked' } ); ) ?></p>
+	<p class="buttons">
+  <? echo ( return join("\n",
+     ( $session{'/main/quote/history.html?deleted'} eq '1' ) ? (
+       ($openprint::User->type() eq 'A' ? (
+         button( 'Destroy', { onclick=>q`f2.btnFunction.value='destroy';delete_confirm(f2);`, text=>'Destroy Checked' } ),
+        ) : () ),
+  button( 'Undelete', { onclick=>q`f2.btnFunction.value='undelete';f2.submit();`, text=>'Undelete Checked' } ),
+  ) : (
+  button( 'Delete', { onclick=>q`f2.btnFunction.value='Delete';delete_confirm(f2);`, text=>'Delete Checked' } ),
+  )
+  ); ) ?>
+  </p>
 	<input type="hidden" name="btnFunction" />
 </form>
 <span class="Currency">All prices listed in <? echo ( $$variable{Currency}->name(); ) ?>.</span>

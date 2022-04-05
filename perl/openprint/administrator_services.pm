@@ -225,5 +225,15 @@ sub _prices_per_equipment {
 	} # end if
 } # end sub _prices_per_equipment
 
+sub list {
+  _list();
+  $openprint::session{$r->uri().'?deleted'} = '0' if ! exists $openprint::session{$r->uri().'?deleted'};
+}
+sub _list {
+  ssi::save_params( '/administrator/services/list.html', (
+      'deleted', 'service_name', 'equipment_id', 'category_id',
+    ) );
+}
+
 1;
 __END__

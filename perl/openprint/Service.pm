@@ -6,6 +6,8 @@ use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %se
 require sql;
 require openprint::Object;
 require openprint::pricing;
+require openprint::ServiceCategory;
+require openprint::ServiceType;
 use openprint ();
 *session = \%openprint::session;
 *log = \$openprint::log;
@@ -246,9 +248,40 @@ sub category {
     return $$self{category};
 } # end sub category
 
+sub Category {
+  my $self = shift;
+  if ( !exists $$self{Category} ) {
+    $$self{Category} = new openprint::ServiceCategory($$self{category_id});
+  }
+  return $$self{Category};
+}
+
+sub ServiceType {
+  my $self = shift;
+  if ( !exists $$self{ServicType} ) {
+    $$self{ServiceType} = new openprint::ServiceType($$self{servicetype_id});
+  }
+  return $$self{ServiceType};
+}
+
+sub Supplier {
+  my $self = shift;
+  if ( !exists $$self{Supplier} ) {
+    $$self{Supplier} = new openprint::Company($$self{supplier_id});
+  }
+  return $$self{Supplier};
+}
+sub Owner {
+  my $self = shift;
+  if ( !exists $$self{Owner} ) {
+    $$self{Owner} = new openprint::Company($$self{owner_id});
+  }
+  return $$self{Owner};
+}
+
 sub link_to {
 	my $self = shift;
-	return '<a href="/administrator/services/edit.html?service_id='.$$self{id}.'">'.$$self{name}.'</a>';
+	return '<a href="/administrator/services/edit.html?service_id='.$$self{id}.'">'.(@_?$_[0]:$$self{name}).'</a>';
 }
 
 1;
