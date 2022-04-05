@@ -705,6 +705,13 @@ table .Object {
 #Login .buttons {
 text-align: left;
 }
+.Login input[type="email"],
+.Login input[type="text"],
+.Login input[type="password"] {
+	width: 75%;
+}
+.Login #showpassword {
+}
 input.input-clear {
 	margin-right: -14px;
 }
