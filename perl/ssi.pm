@@ -59,7 +59,7 @@ sub slurp_content {
 	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
 		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file, err_mode => 'carp' );
 	} else {
-		$content = File::Slurp::read_file($file,err_mode => 'carp' );
+		$content = File::Slurp::read_file($file, err_mode => 'carp');
 	} # end if
 	if ( ! $content ) {
 		$log->warn( "No content found for $file" );
