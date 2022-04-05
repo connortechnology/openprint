@@ -212,10 +212,7 @@ sub verify_login {
 
 	} # end if
 
-	@session{'company_id','user_id','email','user_type'} = $User->get('company_id','id','email','type');
-	openprint::usergroup::init_cache();
-	delete $session{Pricelist_id};
-	(new openprint::Log())->save({Object=>$User, action=>'Login', note=>'Successful Login' } );
+  login($User);
 
 	if ( $openprint::param{rdbRememberMe} eq 'Y' ) {
 		my $Cookie = Apache2::Cookie->new($r,
@@ -246,6 +243,14 @@ sub verify_login {
 		$$variable{ExternalRedirect} = $r->uri();
 	} # end if
 } # sub verify_login
+
+sub login {
+  my $User = shift;
+	@session{'company_id','user_id','email','user_type'} = $User->get('company_id','id','email','type');
+	openprint::usergroup::init_cache();
+	delete $session{Pricelist_id};
+	(new openprint::Log())->save({Object=>$User, action=>'Login', note=>'Successful Login' } );
+}
 
 sub logout {
 	(new openprint::Log())->save({Object=>$openprint::User, action=>'Logout'});
