@@ -289,6 +289,8 @@ sub subscriptions {
       # NEW
       $User = new openprint::User();
       $User->email($param{email});
+      $User->type('C');
+      $User->web_active($config{NewFirstUserAccountActivation});
     } else {
       $User = $Users[0];
     }
@@ -366,15 +368,18 @@ sub subscriptions {
         }
       } # end if not logged in
       if (!$User->id()) {
-        $variable{error} .= $User->save({email=>$param{email}});
+        my $Company = new openprint::Company();
+        $Company->save({name=>$User->email(), activation=>$config{NewCustomerAccountActivation}});
+        $variable{error} .= $User->save({email=>$param{email}, company_id=>$Company->id(), password=>$param{password}});
         if (!$variable{error}) {
-          $openprint::User = $User;
-          $variable{information} .= 'Account created.<br/>';
+          openprint::login::login($User);
+          $variable{information} .= 'Account created and logged in.<br/>';
         }
       }
       if (!$User->password() and $param{password}) {
-        $User->set({password=>$param{password}});
-        $variable{information} .= 'Password assigned.<br/>';
+        $User->save({password=>$param{password}});
+        openprint::login::login($User);
+        $variable{information} .= 'Password assigned and logged in.<br/>';
       }
       if ( ( $param{all} eq 'N' ) and ( $User->mailinglist() ne 'N' ) ) {
         $variable{error} .= $User->save({mailinglist=>$param{all}});
