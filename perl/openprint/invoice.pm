@@ -327,14 +327,17 @@ sub edit {
 			delete $param{invoicee};
 		} # end if
 		my @changes = $Invoice->changes(\%param);
+
+    # Store values before calculating taxes
+		$Invoice->set(\%param);
     # This must happen before saving because charging or not for a tax alters the total.
-    foreach my $Tax ( $Invoice->Taxes() ) {
+    foreach my $Tax ($Invoice->Taxes()) {
       # Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
       $Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()};
     } # end foreach
 
 		$Invoice->subtotal_override($param{subtotal_override});
-		$variable{error} .= $variable{Invoice}->save(\%param);
+		$variable{error} .= $Invoice->save(\%param);
 		foreach my $Product ( $Invoice->Products() ) {
 			my %p_changes = (
 				description	=>	$param{'product-description-'.$Product->id()},
@@ -347,7 +350,7 @@ sub edit {
 
 			$variable{error} .= $Product->save( \%p_changes );
 		} # end foreach Product
-		(new openprint::Log())->save({ Object =>$Invoice, action=>'Invoice Edit', note=>join('<br/>', @changes)});
+		(new openprint::Log())->save({ Object =>$Invoice, action=>'Edit', note=>join('<br/>', @changes)});
 		if ( $param{invoice_id} and ! $variable{error} ) {
 			$variable{information} .= 'Invoice saved.<br/>';
 			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
