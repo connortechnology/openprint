@@ -154,19 +154,21 @@ sub save {
 sub destroy {
 	my $self = shift;
 
-	if ( ! $$self{id} ) {
-		$log->error("Quote::delete called with no id");
+	if (!$$self{id}) {
+		$log->error('Quote::delete called with no id');
 		return;
 	}
 
+  my $error = '';
 	my $ac = sql::start_transaction( $dbh );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Details WHERE quote_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_By WHERE quote_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_For WHERE quote_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Quote_Log WHERE quote_id=?', $$self{id} );
-	sql::execute( undef, undef, 'DELETE FROM Quotes WHERE id=?', $$self{id} );
+  sql::execute( undef, undef, 'UPDATE Companies SET last_quote_id=NULL WHERE last_quote_id=?', $$self{id} );
+  $error .= $self->SUPER::destroy();
 	sql::end_transaction( $dbh, $ac );
-	openprint::logs::insertLogRecord('11', "Quote Index: " . $$self{id},);
+  return $error;
 } # end sub destroy
 
 sub status {

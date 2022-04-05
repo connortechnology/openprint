@@ -2,12 +2,16 @@
 <h1>Administrator Managerial</h1>
 <h2>Users</h2>
 </div>
-<script type="text/javascript">
+<script>
+	LoadContent('Results', '_users.html', $('f1'));
 var openprint_load_content_ajax = null;
 
 function load_page() {
+	LoadContent('Results', '_users.html', $('f1'));
+/*
 	if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
 	openprint_load_content_ajax = new Ajax.Updater( 'Results', '_users.html', { parameters: $('f1').serialize() } );
+*/
 } 
 </script>
 <form id="f1" name="f1" method="post" action="users.html">
@@ -118,6 +122,6 @@ return $html.'<option value="">Use the filter to populate this dropdown</option>
       ); ) ?>
     </p> 
 	</fieldset>
-	<div id="Results">Click Show Results</div>
 	<input type="hidden" name="btnFunction"/>
 </form>
+	<div id="Results">Click Show Results</div>

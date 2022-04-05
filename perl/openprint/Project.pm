@@ -165,6 +165,8 @@ sub destroy {
 		$Quote->add_log('Deleted Project ' . $$self{id} );
 	} # end foreach
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM PressActivities WHERE project_id=?}, $$self{id} );
+	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM productionfeedback WHERE project_id=?}, $$self{id} );
+	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM signaturecapture WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM projects WHERE id=?}, $$self{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub destroy

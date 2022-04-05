@@ -836,11 +836,11 @@ sub save_params {
 
 	foreach ( @keys ) {
 		$openprint::log->debug('save_params: key '.$_) if Debug;
-		if ( !exists $param{$_} ) {
+		if (!exists $param{$_}) {
 			$openprint::log->debug('save_params: does not exist in param key '.$_) if Debug;
 			next;
 		}
-		if ( ref $param{$_} eq 'ARRAY' ) {
+		if (ref $param{$_} eq 'ARRAY') {
 			$session{"$url?$_"} = join(',', @{$param{$_}} );
 $openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if Debug;
 		} else {

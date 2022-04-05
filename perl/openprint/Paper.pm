@@ -26,6 +26,7 @@ require openprint::StockGroup;
 require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 require openprint::PaperAllocation;
+require openprint::PaperInventory;
 require POSIX;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
@@ -1965,6 +1966,29 @@ sub is_fsc {
 	my $Paper = shift;
 	return $$Paper{fsc_code} || ($Paper->brand() =~ /fsc/i) || ($Paper->finish() =~ /fsc/i);
 }
+
+sub destroy {
+  my $self = shift;
+  my $error;
+  my $ac = sql::start_transaction( $openprint::dbh );
+  foreach (
+    openprint::PaperPrice->find( paper_id=>$$self{id} ),
+    openprint::PaperInventory->find( paper_id=>$$self{id} ),
+    openprint::PaperAllocation->find( paper_id=>$$self{id} ),
+  ) {
+    $error .= $_->destroy();
+    if ( $error ) {
+      $openprint::dbh->rollback();
+      return $error;
+    } # end if
+  } # end foreach
+  sql::execute(undef,undef, 'DELETE FROM Paper_recommendations WHERE lngPaperIndex=?', $$self{id});
+  sql::execute(undef,undef, 'DELETE FROM inventory_check_entries WHERE paper_id=?', $$self{id});
+  sql::update(undef,undef, 'manifest_content_types', ['paper_id=?', $$self{id}], paper_id=>undef);
+  $error .= $self->SUPER::destroy();
+  sql::end_transaction( $openprint::dbh, $ac );
+  return $error;
+} # end sub destroy
 
 1;
 __END__

@@ -638,6 +638,7 @@ sub destroy {
 	my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
 	sql::execute( undef, $local_dbh, 'DELETE FROM '.$table.' WHERE '.$where, @$self{@identified_by} );
 	return $local_dbh->errstr if $local_dbh->errstr;
+  (new openprint::Log())->save({action=>'Destroy', note=>$self->to_string()}) if $type ne 'openprint::Log';
 	delete $openprint::Object::cache{$config{db_name}}{$type}{join('-',@$self{@identified_by})};
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 	return '';
