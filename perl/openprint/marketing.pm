@@ -20,6 +20,7 @@ package openprint::marketing;
 require openprint::EmailCampaign;
 require openprint::EmailCampaign_Sent;
 require openprint::EmailCampaign_Destination;
+require openprint::EmailCampaign_Subscription;
 require openprint::MarketingCategory;
 require openprint::Company;
 require openprint::Company_in_Marketing_Category;
@@ -387,9 +388,23 @@ sub subscriptions {
       } elsif ( ( $param{all} eq 'Y' ) and ( $User->mailinglist() ne 'Y' ) ) {
         $variable{error} .= $User->save({mailinglist=>'Y'});
         $variable{information} .= 'Subscribed to all email communications.<br/>' if ! $variable{error};
-      } else {
-        $variable{information} .= ' No changes made to subscriptions.';
       } # end if
+      my %Subscriptions = map { $$_{campaign_id} => $_ } openprint::EmailCampaign_Subscription->find(user_id=>$User->id());
+      foreach my $Campaign (openprint::EmailCampaign->find(user_id=>undef, runnable=>1)) {
+        if ($param{'campaign_'.$$Campaign{id}} == '1') {
+          if (!$Subscriptions{$$Campaign{id}}) {
+            $Subscriptions{$$Campaign{id}} = new openprint::EmailCampaign_Subscription();
+            $Subscriptions{$$Campaign{id}}->save({user_id=>$User->id(), campaign_id=>$$Campaign{id}});
+            $variable{information} .= 'Subscribed to ' . $Campaign->name().'<br/>';
+          }
+        } else {
+          if ($Subscriptions{$$Campaign{id}}) {
+            $Subscriptions{$$Campaign{id}}->delete();
+            $variable{information} .= 'Unsubscribed from ' . $Campaign->name().'<br/>';
+          }
+        }
+      }
+      $variable{ExternalRedirect} = '/marketing/subscriptions.html';
     } # end if save
 	} # end if action
   $variable{User} = $User;
