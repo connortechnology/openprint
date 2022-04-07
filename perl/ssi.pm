@@ -532,18 +532,19 @@ sub button {
 		return if $PageSetting and ! $PageSetting->can_view();
     if ( ! $$options{onclick} ) {
       $$options{onclick} = 'window.location.href=\''.$$options{href}.'\';return false;';
-      undef $$options{href};
+      delete $$options{href};
       $$options{type} = 'button';
     }
-	#} else {
-		#$$options{href} = '#';
   } elsif ( ! $$options{type} ) {
     # Default non-a types to a button
     $$options{type} = 'button';
 	} # end if
 	$$options{text} = $name if ! exists $$options{text};
+  if ( $$options{text} and ! $$options{value}) {
+    $$options{value} = $$options{text};
+  }
 	my $html = 
-		qq`<button id="Button$name" class="btn button $$options{class}" `;
+		qq`<button id="Button$name" name="$name" class="btn button $$options{class}" `;
 	if ( $$options{href} and $$options{type} ) {
 		$html .= qq`onclick="window.location='$$options{href}'" `;
     #} elsif ( $$options{onclick} and ! $$options{disabled} ) {
@@ -551,7 +552,7 @@ sub button {
     #$html .= $$options{onclick}."return false;\" ";
 	} # end if
 	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
-  $html .= join(' ', map { $_.'="'.$$options{$_}.'"' } ( keys %$options ) );
+  $html .= join(' ', map { $_ eq 'onclick' ? () : $_.'="'.$$options{$_}.'"' } ( keys %$options ) );
 	$html .= '>';
 	if ( $$options{image} ) {
 		if ( $openprint::config{ButtonsUseImages} and ($openprint::config{ButtonsUseImages} eq 'true') ) {
