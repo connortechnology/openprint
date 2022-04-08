@@ -1,4 +1,5 @@
-<li id="MenuAccount" class="<? echo ( $$variable{uri} =~ /^\/account/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">Account</a>
+<li id="MenuAccount" class="<? echo ( $$variable{uri} =~ /^\/account/ ? 'on' : 'off' ) ?>" >
+  <a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">Account</a>
 	<ul>
 <? if ( $session{user_id} ) ?>
 		<li><a href="/account/company_profile.html"> Company Profile</a></li>
@@ -44,7 +45,6 @@
 <? endif ( $session{user_id} ) ?>
 <li id="MenuSupport" class="<? echo ( ( $$variable{uri} =~ /site_map/  or  $$variable{uri} =~ /support/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuSupport'), 'off', 'on');return false;">Support</a>
 	<ul>
-		<li><a href="/site_map.html"> Site Map</a></li>
 		<li><a href="/support/help_desk.html"> Help Desk</a></li>
 		<li><a href="/support/rma.html"> Returns</a></li>
 	</ul>

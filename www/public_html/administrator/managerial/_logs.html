@@ -51,10 +51,11 @@
 						$Log->User()->link_to(),
 						$Log->Company()->name(),
 						$link_to,
-( $session{user_type} eq 'A' ? 
 						join("\n",
-							button( 'X'.$Log->id(), { onclick=>qq`jQuery.ajax('_logs.json', { data: { action: 'delete', log_id: $$Log{id} } } ).done( function(){ jQuery('#log_$$Log{id}').remove() } );`, text=>'X' } ),
-) : '' )
+							( $session{user_type} eq 'A' ?
+								( button( 'X'.$Log->id(), { onclick=>qq`jQuery.ajax('_logs.json', { data: { action: 'delete', log_id: $$Log{id} } } ).done( function(){ jQuery('#log_$$Log{id}').remove() } );`, text=>'X' } ),
+) : () )
+						),
 						);
 				} # end foreach
 				return $html;

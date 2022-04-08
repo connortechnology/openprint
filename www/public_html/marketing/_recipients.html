@@ -15,6 +15,7 @@ $html .= '
 		<th class="Company">Company</th>
 		<th class="User">Name</th>
 		<th class="Email">Email</th>
+		<th class="Phone">Phone</th>
 		<th class="Password">Password?</th>
 		<th class="DateTime">Last Login</th>
 		<th class="TimesSent">Times Sent</th>
@@ -30,6 +31,7 @@ $html .=
 	<td class="Company">%s</td>
 	<td class="User">%s</td>
 	<td class="Email">%s</td>
+	<td class="Phone">%s</td>
 	<td class="Password">%s</td>
 	<td class="DateTime">%s</td>
 	<td class="TimesSent">%s</td>
@@ -41,6 +43,7 @@ $html .=
 			$User->Company()->link_to(),
 			$User->link_to($User->name()),
 			$User->link_to($User->email()),
+			$User->link_to($User->phone()),
 			( $User->password() ? 'yes' : 'no' ),
 			format_datetime($User->last_logged_in()),
 			join('<br/>', map { $$_{numemailsent} } ( $Sent_Info{$$User{id}} ? @{$Sent_Info{$$User{id}}} : () ) ),

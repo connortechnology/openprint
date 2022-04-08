@@ -2,7 +2,7 @@
 	function delete_confirm(form) {
 		var number_of_deleted_quotes = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
-			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+			if ( form.elements[index].name == 'quote_id' && form.elements[index].checked ) {
 				number_of_deleted_quotes += 1;
 			} // end if
 
@@ -28,11 +28,11 @@
 	<form id="f1" name="f1" method="post" action="history.html">
 		<input type="hidden" name="btnFunction"/>
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
-			<ul>
-			<li>
-				<label for="QuoteID">Quote ID</label>
-				<? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeydown=>q`if(event.keyCode == 13){load_quotes(this.form);};` ); ) ?>
-			</li>
+			<ul class="leftColumn">
+        <li>
+          <label for="QuoteID">Quote ID</label>
+          <? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeydown=>q`if(event.keyCode == 13){load_quotes(this.form);};` ); ) ?>
+        </li>
 <? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label>Quoted By Company</label>
@@ -75,16 +75,12 @@
 			</li>
 			<li>
 				<label>Quote Date</label>
-				<? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>'load_quotes();' } ); ) ?>
+        <? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>'load_quotes();', with_today=>1, with_clear=>1 } ); ) ?>
 				to
-				<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>'load_quotes();' } ); ) ?>
+        <? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>'load_quotes();', with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
-			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{$r->uri().'?deleted'}, { onclick=>'load_quotes();' } ); ) ?></li>
-			<li><label>Status</label>
-				<? echo ( 
-						my @options = ( 'Incomplete','Complete','Re-Opened' );
-						ssi::select( [ map { $_, $_ } @options ], $session{$r->uri().'?status'}, { name=>'status', onchange=>'load_quotes();', prepend=>['','All'] } );) ?>
-			</li>
+      </ul>
+      <ul class="rightColumn">
 			<li><label>Ordered</label>
 				<?echo(
 						radio(
@@ -94,6 +90,12 @@
 							{ onclick=>'load_quotes();', default=>'' },
 							);
 						) ?>
+			</li>
+			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{$r->uri().'?deleted'}, { onclick=>'load_quotes();' } ); ) ?></li>
+			<li><label>Status</label>
+				<? echo ( 
+						my @options = ( 'Incomplete','Complete','Re-Opened' );
+						ssi::select( [ map { $_, $_ } @options ], $session{$r->uri().'?status'}, { name=>'status', onchange=>'load_quotes();', prepend=>['','All'] } );) ?>
 			</li>
 			<li>
 				<label>Press</label>
@@ -108,6 +110,7 @@
 			<? echo ( input( type=>'float', name=>'total_end', value=>$session{$r->uri().'?total_end'}, oninput=>'load_quotes();' ); ) ?>
 			</li>
 			</ul>
+      <br class="spacer"/>
 			<p class="buttons">
 				<? echo ( join( "\n",
 					button( 'ShowResults', { onclick=>q`f1.btnFunction.value='';f1.submit();`, text=>'Show Results' } ),

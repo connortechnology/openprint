@@ -1,5 +1,5 @@
-<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
-<script type="text/javascript">
+<script src="/javascripts/tiny_mce/tiny_mce.js"></script>
+<script>
 /*
 	 tinyMCE.init({
 	 mode: "specific_textareas",
@@ -21,7 +21,7 @@
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
-				button( 'SaveTop', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+				button( 'SaveTop', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } ),
 				button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } ),
 				button( 'ResetTop', { onclick=>'f1.reset();',text=>'Reset' }),
         ( ($session{user_type} eq 'A' and $$variable{Campaign}->runnable() ) ? button('RunTop', { onclick=>"f1.btnFunction.value='Run';f1.submit();", text=>'Run' }) : ()),

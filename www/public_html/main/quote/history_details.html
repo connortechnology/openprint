@@ -3,7 +3,7 @@
 	<h1>QUOTE</h1>
 	<h2>View Quote <? echo ( $$variable{Quote}->id(); ) ?></h2>
 </div>
-<script type="text/javascript">
+<script>
 function delete_confirm(form) {
 	if ( confirm("Are you sure you wish to delete this quote from history?\nClicking OK will take you back to the quote history page.") ) {
 		form.btnFunction.value='Delete';
@@ -12,7 +12,7 @@ function delete_confirm(form) {
 }
 </script>
 <?include('/includes/error_reporting.html')?>
-
+<? if ( $$variable{Quote}->id() ) ?>
 <? if ( $$variable{Quote}->company_id() != $session{company_id} ) ?>
 	<div class="warning unprintable">
 		Warning: You are logged in as <? echo ( $openprint::Company->name() ) ?> but this order belongs to 
@@ -105,5 +105,8 @@ To save, process a new quote or process an order from this quotation, please cli
 <? else ( $$variable{Quote}->can_view() ) ?>
 <div class="warning">You may not view this quote.</div>
 <? endif ( $$variable{Quote}->can_view() ) ?>
+<? else ( $$variable{Quote}->id() ) ?>
+<div class="error">Quote <?echo( $param{quote_id} ) ?> not found.
+<? endif ( $$variable{Quote}->id() ) ?>
 </div><!--Quote-->
 </div></div>

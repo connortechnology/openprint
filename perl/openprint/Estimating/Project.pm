@@ -947,6 +947,7 @@ sub create_calc {
     my $ProjectType = openprint::ProjectType->find_one( name => $$specs{rdbProjectType} );
     if ( $ProjectType ) {
       my @required_servicetype_ids = $ProjectType->required_services();
+      $openprint::log->debug("required service types @required_servicetype_ids");
       if ( @required_servicetype_ids ) {
         foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 1, id=>\@required_servicetype_ids ) ) {
           $$specs{'chkServices'.$ServiceType->name()} = $ServiceType->name();

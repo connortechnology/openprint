@@ -26,7 +26,12 @@ function newField( ) {
 			data: { 
 				action: 'Add'
 			} } ).done( function( html ) {
-				$j('#fields').insert({top: html });
+        var fields = $j('#fields');
+        if ( fields) {
+          fields.append(html);
+        } else {
+          console.log("No fields");
+        }
 			});
 } // end function newField
 
@@ -39,7 +44,7 @@ function copyField( id ) {
 				required: get_value(form.elements['required-'+id])
 			} } ).done(
 			function( transport ) {
-				$j('#field_'+ id).insert({after: transport.responseText} );
+				$j('#field_'+ id).append(transport.responseText);
 			}
 	);
 }

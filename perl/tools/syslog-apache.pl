@@ -36,7 +36,7 @@ if ($opts->{help}) {
 	exit 0;
 } # end if
 
-$log = new logger('level'=>'debug');
+$log = new logger(level=>'debug');
 my %defaults = (
 	port	=>	10514,
 	config	=>	'/etc/openprint/syslog-apache.conf',
@@ -52,10 +52,10 @@ if (my $err = configuration::from_file($$opts{config})) {
 configuration::merge($opts);
 
 foreach my $param ( 'db_name','db_user','db_pass' ) {
-	die "$program: missing required --$param parameter" if ! $config{$param};
+	die "$program: missing required --$param parameter" if ! $openprint::config{$param};
 } # end foreach required-param
 
-$log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
+$log = logger->new( {file=>$config{log_file}, level=>$config{log_level}} );
 $log->info("Opening SQL connection $config{db_user} $config{db_name} on $config{db_host}");
 my %db_connect_info = (
 	port		=> $config{db_port},
@@ -65,13 +65,41 @@ my %db_connect_info = (
 	login	 	=> $config{db_user},
 	password	=> $config{db_pass},
 );
-$dbh = sql::open_sql( $log, %db_connect_info );
+$openprint::dbh = sql::open_sql( $log, %db_connect_info );
 die "Couldn't connect to db: $$dbh{errstr}" if ! $dbh;
 configuration::init();
 configuration::from_file($$opts{config});
 configuration::merge($opts);
 
+sub HupHandler {
+  # This idea at this time is to just exit, freeing up the memory.
+  TermHandler();
+  return;
+
+  $log->debug('Received HUP, reloading');
+}
+sub TermHandler {
+  $log->debug('Received TERM, exiting');
+  Term();
+}
+sub Term {
+  $dbh->disconnect() if $dbh and $dbh->ping();
+
+  closelog;
+
+  if ( $config{pid_file} ) {
+    unlink $config{pid_file};
+  } # end if
+  exit(0);
+}
+$SIG{HUP} = \&HupHandler;
+$SIG{TERM} = \&TermHandler;
+$SIG{INT} = \&TermHandler;
+
 my @re = (
+	q`/^\[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\] \[(?<IP>[^\]]+)\] script '[^']+' not found or unable to stat/`,
+	q`/^\[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\] \[client (?<IP>[\d\.]+):\d+\] script '[^']+' not found or unable to stat/`,
+  q`(?<IP>[0-9\.]+) \- \- \[([^\]]+)\] "[^"]+" 404 293$`
 );
 
 
@@ -81,13 +109,13 @@ my $last_update = 0;
 setlogsock('unix');
 openlog('apache', 'cons', 'pid', 'local2');
 
-if ( $config{'pid_file'} ) {
+if ( $config{pid_file} ) {
 	my $pidh;
-	if (open($pidh, '> '.$config{'pid_file'} ) ) {
+	if (open($pidh, '> '.$config{pid_file} ) ) {
 		print $pidh $$."\n";
 		close($pidh);
 	} else {
-		die "Unable to open pid file";
+		die 'Unable to open pid file';
 	} # end if
 } # end if
 
@@ -95,7 +123,7 @@ while (my $buf = <STDIN>) {
 	if ( ! $dbh->ping() ) {
 		$dbh = sql::open_sql( $log, %db_connect_info );
 		if ( ! $dbh ) {
-			$log->error("Cannot connect to db! Sleeping");
+			$log->error('Cannot connect to db! Sleeping');
 			sleep(10);
 			next;
 		} # end if
@@ -121,10 +149,10 @@ while (my $buf = <STDIN>) {
 
 		# If a blacklist is specified, update it on start
 		if ( $opts->{blacklist} ) {
-			if ( ! open( FH, '>'.$opts->{blacklist} ) ) {
+			if ( ! open(FH, '>'.$opts->{blacklist}) ) {
 				die 'Unable to open blacklist: ' . $opts->{blacklist} . "\n";
 			} else {
-				foreach my $Host ( openprint::Host->find( blacklist => 1) ) {
+				foreach my $Host ( openprint::Host->find(blacklist=>1) ) {
 					foreach my $Interface ( $Host->Interfaces() ) {
 						my $mac = $Interface->mac();
 						if ( $mac ) {
@@ -156,76 +184,74 @@ while (my $buf = <STDIN>) {
 		$log->debug("Done updating shorewall.") if $config{debug};
 	} # end if do update
 
-print ( $buf );
-	#my ($port, $ipaddr) = IO::Socket::sockaddr_in($sock->peername);
-	#my $hn = gethostbyaddr($ipaddr, Socket::AF_INET);
+  #print ( $buf );
 	$log->debug($buf) if $config{debug};
-	# Without the multiline flag, will do one line at a time, nice.
-	my ( $source, $remote_logname, $user, $when, $request, $server_response, $bytes, $referrer, $agent ) = $buf =~ /^(\S+) (\S+) (\S+) \[([^\]]+)\] "([^"]+)" (\d+) (\d+) "([^"]+)" "([^"]+)"$/;
-	if ( ! $source ) {
-		$log->error("No match: " . $buf );
-		next;
-	#} else {
-		#$log->error("match: " . $buf );
-	} 
-#[error] No match: 192.168.101.10 - - [07/Feb/2013:11:22:59 -0500] "GET /css/alphacube.css HTTP/1.0" 304 282 "http://www.intelligentquote.ca/" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:19.0) Gecko/20100101 Firefox/19.0"
-#[debug] 127.0.0.1 - - [07/Feb/2013:11:03:00 -0500] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.2.22 (Ubuntu) (internal dummy connection)"
-#$log->debug("Thing1: $1, thing3: $line ");
+  foreach my $re ( @re ) {
+    my $source;
+    my $server_response;
+    if ( !( $buf =~ /$re/ ) ) {
+      $log->error('No match: ' . $buf);
+      next;
+    }
+    $log->error('match: ' . $buf );
+    my $remote = $+{IP};
+    if ( $remote =~ /client ([\.\d]+):\d+/ ) {
+      $source = $1;
+    }
+  
+    my ( $ip, $hostname );
+    if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
+      # Is an IP
+      $log->debug( $source.' is an ip' ) if $config{debug};
+      $ip = $source;
+    } else {
+      # is a hostname
+      $hostname = $source;
+      $ip = gethostbyname($source);
+      if ( defined $ip ) {
+        $ip = Socket::inet_ntoa($ip);
+        $log->debug( "Got $ip for $source" ) if $config{debug};
+      } # end if
+    } # end if
 
-	my ( $ip, $hostname );
-	if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
-# Is an IP
-		$log->debug( "$source is an ip" ) if $config{debug};
-		$ip = $source;
-	} else {
-# is a hostname
-		$hostname = $source;
-		$ip = gethostbyname($source);
-		if ( defined $ip ) {
-			$ip = Socket::inet_ntoa($ip);
-			$log->debug( "Got $ip for $source" ) if $config{debug};
-		} # end if
-	} # end if
+    if ( $ip and $whitelist{$ip} ) {
+      $log->debug( "$ip is whitelisted" ) if $config{debug};
+      next;
+    } # end if
+    if ( ! $ip ) {
+      $log->debug( "No ip for $source" ) if $config{debug};
+      next;
+    } # end if
+    if ( $ip eq '127.0.0.1' ) {
+      $log->debug( "Not localhost for $source" ) if $config{debug};
+      next;
+    } # end if
 
-	if ( $ip and $whitelist{$ip} ) {
-		$log->debug( "$ip is whitelisted" ) if $config{debug};
-		next;
-	} # end if
-	if ( ! $ip ) {
-		$log->debug( "No ip for $source" ) if $config{debug};
-		next;
-	} # end if
-	if ( $ip eq '127.0.0.1' ) {
-		$log->debug( "Not localhost for $source" ) if $config{debug};
-		next;
-	} # end if
-	if ( $server_response == 404 ) {
-		$log->debug("GOt 404");
+    if ( ! $host_counts{$ip} ) {
+      my $Interface = openprint::Host_Interface->find_one(ip=>$ip);
+      if ( $Interface ) {
+        my $Host = $Interface->Host();
+        $host_counts{$$Interface{ip}} = $Host;
+      } else {
+        my $Host = $host_counts{$ip} = new openprint::Host();
+        $Interface = new openprint::Host_Interface();
+        $$Host{Interfaces} = [ $Interface ];
+        $Host->hostname( $hostname );
+        $Host->save();
+        $Interface->save({ ip=>$ip, host_id=>$$Host{id} } );
+      } # end if
+    } # end if
+    $host_counts{$ip}{count} += 1;
 
-		if ( ! $host_counts{$ip} ) {
-			my $Interface = openprint::Host_Interface->find_one(ip=>$ip);
-			if ( $Interface ) {
-				my $Host = $Interface->Host();
-				$host_counts{$$Interface{ip}} = $Host;
-			} else {
-				my $Host = $host_counts{$ip} = new openprint::Host();
-				$Interface = new openprint::Host_Interface();
-				$$Host{Interfaces} = [ $Interface ];
-				$Host->hostname( $hostname );
-				$Host->save();
-				$Interface->save({ ip=>$ip, host_id=>$$Host{id} } );
-			} # end if
-		} # end if
-		$host_counts{$ip}{count} += 1;
-
-		if ( $host_counts{$ip}{count} > 20 and ! $host_counts{$ip}{blacklist} ) {
-			$host_counts{$ip}{blacklist} = 1;
-			$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $opts->{debug};
-			#`shorewall drop $ip` if $host_counts{$ip}{blacklist};
-		} # end if
-		$_ = $host_counts{$ip}->save();
-		$log->error( $_ ) if $_;
-	} # end if 404
+    if ( $host_counts{$ip}{count} > 20 and ! $host_counts{$ip}{blacklist} ) {
+      $host_counts{$ip}{blacklist} = 1;
+      $log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $opts->{debug};
+      #`shorewall drop $ip` if $host_counts{$ip}{blacklist};
+    } # end if
+    $_ = $host_counts{$ip}->save();
+    $log->error( $_ ) if $_;
+    last;
+  } # end froeach re
 
 } # end while buf = <STDIN>
 
@@ -243,13 +269,7 @@ Command-line options:
 EOH
 } # end sub usage
 
-$dbh->disconnect() if $dbh and $dbh->ping();
-
-closelog;
-
-if ( $config{pid_file} ) {
-	unlink $config{pid_file};
-} # end if
+Term();
 
 1;
 __END__

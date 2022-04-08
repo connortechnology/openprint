@@ -1,15 +1,15 @@
 <div class="PaymentOptions">
 <? echo (
-     my %Types = map { $_->name(), $_ } openprint::PaymentType->find(
-     'payee_id is null or ='=>$$variable{Invoice}->invoicer_id(),
+  my %Types = map { $_->name(), $_ } openprint::PaymentType->find(
+     'payee_id is null or =' => $$variable{Invoice}->invoicer_id(),
      order=>'lower(name)',
-     );
+  );
 
-    my @options;
-    my $html;
-	foreach my $k ( keys %Types ) {
+  my @options;
+  my $html;
+  foreach my $k ( sort { $a cmp $b } keys %Types ) {
 
-		if ( $k eq 'Bitcoin' ) {
+		if ( 0 and ($k eq 'Bitcoin') ) {
 			my $Address = openprint::Bitcoin_Address->generate( $$variable{Invoice} );
 			#$Address->save({object_type=>'openprint::Invoice',object_id=>$$variable{Invoice}{id}});
 			if ( $Address ) {
@@ -19,8 +19,8 @@
 			push @options, $Types{$k}->description();
 		} # end if
 	} # end foreach 
-    return if ! @options;
+  return if ! @options;
 
-    return 'Payment can be made by ' . join(', ', @options) . ' or other pre-arrangement';
+  return 'Payment can be made by:<br/>' . join('<br/>', @options) . ' or other pre-arrangement';
 ) ?>
 </div>

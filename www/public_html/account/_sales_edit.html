@@ -19,7 +19,7 @@
 		return $$variable{Company}->csr_commission();
 	}
 ) ?>%</li>
-            <li class="credit_card_fee"><label>Credit Card Fee</label>
+      <li class="credit_card_fee"><label>Credit Card Fee</label>
 <? echo (
 	if ( $$variable{can_edit} ) {
 		return input( type=>'float', name=>'credit_card_fee', value=>$$variable{Company}->credit_card_fee() );
@@ -27,7 +27,7 @@
 		return $$variable{Company}->credit_card_fee();
 	}
 ) ?>%</li>
-            <li><label>Sales Rep</label><? echo ( 
+      <li><label>Sales Rep</label><? echo ( 
 				if ( $session{user_type} eq 'A' or ( $session{user_id} == $$variable{Company}->salesrep_id() ) ) {
 					my @csr_ids = openprint::User->find( 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)', company_id=>$config{owner_id} );
 					if ( $$variable{Company}->salesrep_id(), and ! sets::isin( $$variable{Company}->salesrep_id(), [ map { $_->id() } @csr_ids ] ) ) {
@@ -40,35 +40,35 @@
 				}
 			) ?>
 			</li>
-        <? if ( $$variable{Company}->id() ) ?>
-            <? eval (
-                @{$$variable{Orders}} = openprint::Order->find(company_id=>$$variable{Company}->id(),order=>'id DESC');
+      <? if ( $$variable{Company}->id() ) ?>
+      <? eval (
+          @{$$variable{Orders}} = openprint::Order->find(company_id=>$$variable{Company}->id(),order=>'id DESC');
+      ) ?>
+      <li class="Orders"><label># of Orders</label>
+        <a href="/main/order/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( @{$$variable{Orders}} ) ?></a>
+        <? if ( @{$$variable{Orders}} ) ?>
+        Last on:
+        <a href="/main/order/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( format_date( $$variable{Orders}[0]->created_on() ); ) ?></a>
+        <? endif ( @{$$variable{Orders}} ) ?>
+      </li>
+      <? eval ( @{$$variable{Projects}} = openprint::Project->find(company_id=>$$variable{Company}->id(),order=>'id DESC'); ) ?>
+      <li class="Projects"><label># of Projects</label>
+        <a href="/main/project/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( @{$$variable{Projects}} ) ?></a>
+        <? if ( @{$$variable{Projects}} ) ?>
+        Last on:
+        <a href="/main/project/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( format_date( $$variable{Projects}[0]->created_on() ); ) ?></a>
+        <? endif ( @{$$variable{Projects}} ) ?>
+      </li>
+      <li>
+        <label>Accounting Contacts</label>
+        <span id="AccountingContacts"><? echo (
+            my @accounting_contacts = sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$variable{Company}->id() );
+            my @Users = openprint::User->find( id=>\@accounting_contacts, order=>'lower(firstname),lower(lastname)' ) if @accounting_contacts;
+            return join('<br/>', map { $_->name() } @Users );
             ) ?>
-            <li><label># of Orders</label>
-                <a href="/main/order/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( @{$$variable{Orders}} ) ?></a>
-                <? if ( @{$$variable{Orders}} ) ?>
-                Last on:
-                <a href="/main/order/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( format_date( $$variable{Orders}[0]->created_on() ); ) ?></a>
-                <? endif ( @{$$variable{Orders}} ) ?>
-            </li>
-            <? eval ( @{$$variable{Projects}} = openprint::Project->find(company_id=>$$variable{Company}->id(),order=>'id DESC'); ) ?>
-            <li><label># of Projects</label>
-                <a href="/main/project/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( @{$$variable{Projects}} ) ?></a>
-                <? if ( @{$$variable{Projects}} ) ?>
-                Last on:
-                <a href="/main/project/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( format_date( $$variable{Projects}[0]->created_on() ); ) ?></a>
-                <? endif ( @{$$variable{Projects}} ) ?>
-            </li>
-            <li>
-                <label>Accounting Contacts</label>
-                <span id="AccountingContacts"><? echo (
-										my @accounting_contacts = sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$variable{Company}->id() );
-										my @Users = openprint::User->find( id=>\@accounting_contacts, order=>'lower(firstname),lower(lastname)' ) if @accounting_contacts;
-										return join('<br/>', map { $_->name() } @Users );
-										) ?>
-								</span>
-            </li>
-        <? endif ( $$variable{Company}->id() ) ?>
+        </span>
+      </li>
+      <? endif ( $$variable{Company}->id() ) ?>
 			<li><label>Notes</label><textarea name="notes" rows="<?echo(count_lines($$variable{Company}->notes());)?>"><?echo($$variable{Company}->notes())?></textarea></li>
 		</ul>
 	</fieldset>

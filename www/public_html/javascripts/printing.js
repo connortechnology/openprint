@@ -69,7 +69,7 @@ function SpecialColour_onchange( element, side, index, signature ) {
 			if ( i == index ) continue;
 
 			// if the colour exists
-			var t = $('ColourCoatingType'+i+side+signature);
+			var t = document.getElementById('ColourCoatingType'+i+side+signature);
 			if ( ! t ) continue;
 
 			for ( var m = 0; m < type_element.options.length; m += 1 ) {
@@ -556,3 +556,7 @@ function cbStockFillResults( results ) {
     //if ( timeout ) { clearTimeout( timeout ); timeout = null; }
 	calc(form.name);
 } // end function Stock_Fill
+
+window.addEventListener('DOMContentLoaded', function() {
+	calc('f1');
+});

@@ -34,12 +34,13 @@ sub view_services {
 			$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, \%variable );
 			return if $variable{Redirect}; # Redirects on error
 			my $Project = new openprint::Project( $project_index );
+      $openprint::log->debug($Project->to_string());
 			my $services = $Project->services();
 # We already did recalc in create_edit_process... aug 6 2019
 			#my $s = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 			#$log->debug("*** After Time to Save Project - View Services Function *** $project_index $session{project_id}");
 			# Display any resulting uncalculated services
-			openprint::print_project::continue_project( $log, $dbh, \%variable, $project_index );
+			openprint::print_project::continue_project($Project);
 			return if $variable{ExternalRedirect};
 		} elsif ( $param{btnFunction} eq 'Delete Project' ) {
 			$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $project_index );
@@ -59,6 +60,7 @@ sub view_services {
 		return;
 	} # end if
 	my $Project = $variable{Project} = new openprint::Project( $project_index );
+  return if !$$Project{id};
 	my $services = $Project->services();
 	my $Service = $Project->Service( $param{ServiceIndex} ) if $param{ServiceIndex};
 
@@ -139,9 +141,9 @@ sub view_services {
 		
 				$Project->summary(undef);
 				$Project->save( { calculated_on => 'NOW()' } );
-				openprint::print_project::continue_project( $log, $dbh, \%variable, $project_index );
+				openprint::print_project::continue_project($Project);
 				return if $variable{ExternalRedirect};
-			} elsif ( $param{'btnFunction'} eq 'Modify Project' ) {
+			} elsif ( $param{btnFunction} eq 'Modify Project' ) {
 				my $service_name = $param{txtServiceName} ? $param{txtServiceName} : 'Adjustment';
 				my $CurrentCurrency = openprint::Currency::get_current();
 				my $ProjectCurrency = $Project->Currency();
@@ -180,13 +182,13 @@ sub view_services {
 				$session{project_id} = $project_index;
 				$Project->currency_id( $session{Currency_id} );
 				$Project->recalculate();
-				openprint::print_project::continue_project( $log, $dbh, \%variable, $project_index );
+				openprint::print_project::continue_project($Project);
 				return if $variable{ExternalRedirect};
 			} elsif ( $param{btnFunction} eq 'Continue Project' ) {
 				$session{project_id} = $project_index;
 				$Project->currency_id( $session{Currency_id} );
 				$Project->recalculate();
-				openprint::print_project::continue_project( $log, $dbh, \%variable, $project_index );
+				openprint::print_project::continue_project($Project);
 				return if $variable{ExternalRedirect};
 			} elsif ( $param{btnFunction} eq 'Reuse Project' ) {
 				$project_index = openprint::print_project::reuse_project( $project_index );
@@ -238,10 +240,9 @@ sub view_services {
 			return;
 		} # end if
 
-		if ( $param{'ContinueProject'} and $param{'ContinueProject'} ne 'Incomplete Form' ) {
-			$log->debug("*** Continue Project called From View Services ( view.html ) Function ***");
-			openprint::print_project::continue_project( $log, $dbh, \%variable, $project_index );
-			return if $variable{ExternalRedirect};
+		if ( $param{ContinueProject} and $param{ContinueProject} ne 'Incomplete Form' ) {
+			$log->debug('*** Continue Project called From View Services ( view.html ) Function ***');
+			openprint::print_project::continue_project($Project);
 		} # end if 
 	} # end if can_edit
 
@@ -483,7 +484,7 @@ $log->debug("group $group_id");
 		} # end foreach spec
 	} # end foreach signature
 
-	my $old_bindery_type = get_book_type( $Project );
+	my $old_bindery_type = $Project->get_book_type();
 	if ( $old_bindery_type and ($$param{rdbTemplateType} ne $old_bindery_type) and $$services{$old_bindery_type} ) {
 		foreach ( @{$$services{$old_bindery_type}} ) {
 			openprint::print_project::delete_service( $Project, $_ );
@@ -510,28 +511,6 @@ $log->debug("No Nobindery");
 	$Project->unlock();
 	sql::end_transaction( $dbh, $ac );
 } # end sub multipage_signatures
-
-sub get_book_type {
-	my ( $Project ) = @_;
-	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
-	my $services = $Project->services();
-
-# the way we cut down the book depends on how it is being bound, so we need this for the signature information.
-	foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound' ) {
-		
-		if ( $$services{$service} ) {
-			return $service;
-		} # end if
-	} # end foreach
-	if ( $$services{''} and @{$$services{''}} ) {
-		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		if ( $$printing_specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
-			return 'PerfectBound';
-		} # end if
-	} # end if
-	return;
-} # end sub get_book_type
-
 
 sub publication_pages {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -592,7 +571,7 @@ $log->error("No Group!") if ! $type;
 	} # end foreach ss_id
 
 	if ( ! $$variable{rdbTemplateType} ) {
-		$$variable{rdbTemplateType} = get_book_type( $project_index );
+		$$variable{rdbTemplateType} = $Project->get_book_type();
 	} # end if
 
 } # end sub publication_pages

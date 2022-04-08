@@ -4,8 +4,8 @@ use sets;
 use strict;
 use Date::Calc ();
 
-use constant DAYS_TO_KEEP_TRASH => 60*60*24*90;
-use constant DEBUG => 1;
+use constant DAYS_TO_KEEP_TRASH => 60*60*24*30;
+use constant DEBUG => 0;
 
 my $amavis_home = '/var/lib/amavis';
 
@@ -32,7 +32,7 @@ my ( $year, $month, $day ) = Date::Calc::Today();
 
 my $postfix_uid = getpwnam('postfix');
 my $postfix_gid = getgrnam('postfix');
-print "postfix $postfix_uid:$postfix_gid\n";
+print "postfix $postfix_uid:$postfix_gid\n" if DEBUG;
 
 foreach my $user ( @users ) {
 	next if $user =~ /^\./;

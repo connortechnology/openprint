@@ -4,6 +4,7 @@ package openprint::Invoice_Payment;
 use strict;
 use vars qw( $debug $table $serial %fields %defaults %transforms %find_fields );
 
+$debug = 0;
 $table = 'invoices_payments';
 $serial = 'invoices_payments_id_seq';
 

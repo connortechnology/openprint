@@ -626,17 +626,33 @@ sub history {
 	if ( $param{btnFunction} ) {
 	if ( $param{btnFunction} eq 'Delete' ) {
 		foreach my $po_id ( ref $param{po_id} eq 'ARRAY' ? @{$param{po_id}} : $param{po_id} ) {
+      next if ! openprint::PurchaseOrder->transform(id=>$po_id);
 			my $PO = new openprint::PurchaseOrder( $po_id );
 			if ( $_ = $PO->delete() ) {
 				$variable{error} .= $_ . '<br/>';
 			} else {
 				my $L = new openprint::PurchaseOrder_Log();
 				$L->save({
-						'user_id'	=>	$session{user_id},
-						'po_id'		=>	$PO->id(),
-						'reason'	=>	'deleted.',
+						user_id	=>	$session{user_id},
+						po_id		=>	$PO->id(),
+						reason	=>	'deleted.',
 						});
 				$variable{information} .= 'PO ' . $po_id . ' has been deleted.<br/>';
+			} # end if
+		} # end foreach po_id
+		delete $param{po_id};
+	} elsif ( $param{btnFunction} eq 'Destroy' ) {
+		foreach my $po_id ( ref $param{po_id} eq 'ARRAY' ? @{$param{po_id}} : $param{po_id} ) {
+      next if ! openprint::PurchaseOrder->transform(id=>$po_id);
+			my $PO = new openprint::PurchaseOrder( $po_id );
+      next if !$PO->deleted();
+			if ( $_ = $PO->destroy() ) {
+				$variable{error} .= $_ . '<br/>';
+        last;
+			} else {
+				my $L = new openprint::Log();
+				$L->save({ action=>'Delete', note	=>	'deleted PO '.$po_id });
+				$variable{information} .= 'PO ' . $po_id . ' has been destroyed.<br/>';
 			} # end if
 		} # end foreach po_id
 		delete $param{po_id};
@@ -856,7 +872,7 @@ sub _history {
 				( map { 'paid_on_end_'.$_ } ( 'year', 'month','day' ) ),
 				'authorized', 'supplier_id','created_by','authorized_by', 
 				'deleted','types', 'item_id', 'cancelled', 'vendor_category_id', 'department_id', 'docket',
-				'currency_id', 'has_manifest', 'has_attachments', 'paid',
+				'currency_id', 'has_manifest', 'has_attachments', 'paid', 'vendee_id',
 				) );
 } # end sub _purchase_orders
 
@@ -1176,7 +1192,7 @@ sub _taxes_edit {
 					});
 		} # end if action
 	} # end if action
-} # end sub payments_edit
+} # end sub taxes_edit
 
 sub _logs {
 	$variable{PurchaseOrder} = new openprint::PurchaseOrder( $param{po_id} );

@@ -26,6 +26,7 @@ require openprint::StockGroup;
 require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 require openprint::PaperAllocation;
+require openprint::PaperInventory;
 require POSIX;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
@@ -181,6 +182,13 @@ $serial	= 'paper_id_seq';
 		4	=>	'4 Uncoated, white stock', 
 		5	=>	'5 Uncoated, yellow stock'
 );
+
+sub new {
+  my $self = openprint::Object::new(@_);
+
+	@$self{'start_width','start_height','Supplied'} = ( @$self{'width','height'}, $self );
+  return $self;
+}
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
@@ -1426,8 +1434,8 @@ sub load_from_signature {
 
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = openprint::Paper->find_one( id=>$$specs{'paper_id'.$qty_index} );
-			if ( ! $Paper ) {
-				$openprint::log->warn("Loading by paper id but not found: " . $$specs{'paper_id'.$qty_index} );
+			if ( !$Paper ) {
+				$openprint::log->warn('Loading by paper id but not found: ' . $$specs{'paper_id'.$qty_index} );
 			} else {
 				$$Paper{Supplied} = $Paper->clone();
 			} # end if
@@ -1438,7 +1446,7 @@ sub load_from_signature {
 			return new openprint::Paper();
 		} # end if
 
-		if ( ! $Paper ) {
+		if ( !$Paper ) {
 			my %params = (
 					'supplied is null or ='	=> $$specs{rdbSuppliedStock},
 					brand	 	=> $$specs{ddmStockBrand},
@@ -1459,14 +1467,14 @@ sub load_from_signature {
 				} # end if
 			} # end if
 			my @Papers = openprint::Paper->find( %params );
-			if ( ! @Papers ) {
+			if ( !@Papers ) {
 $log->debug("Didn't find specific paper $params{width} x $params{height} $$specs{StockType} type: " . $$specs{'StockType'.$qty_index});
 				delete $params{width};
 				delete $params{height};
 				@Papers = openprint::Paper->find( %params );
 			} # end if
-			if ( ! @Papers ) {
-				$openprint::log->warn("No papers found for brnad($$specs{ddmStockBrand}) finish($$specs{ddmStockFinish}) color($$specs{ddmStockColour}) weight($$specs{ddmStockWeight})");
+			if ( !@Papers ) {
+				$openprint::log->warn("No papers found for brand($$specs{ddmStockBrand}) finish($$specs{ddmStockFinish}) color($$specs{ddmStockColour}) weight($$specs{ddmStockWeight})");
 				$Paper = new openprint::Paper();
 				my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} )) if $Project;;
 				@StockOptions = misc::trim(split (',', $openprint::config{StockOptions} )) if ! @StockOptions;
@@ -1520,15 +1528,15 @@ $log->debug("Didn't find specific paper $params{width} x $params{height} $$specs
 			} else {
 				$Paper = $Papers[0];
 			} # end if
-			if ( ( ! $Paper ) and @Papers ) {
-$log->debug("No paper found matching minimum_order want($$specs{'StockQuantity'.$qty_index})");
-foreach my $P ( @Papers ) {
-$log->debug($P->id_string());
-} # end foreach P
-				$Paper = shift @Papers;
+			if ( (!$Paper) and @Papers ) {
+        $log->debug('No paper found matching minimum_order want '.$$specs{'StockQuantity'.$qty_index});
+        foreach my $P ( @Papers ) {
+          $log->debug($P->id_string());
+        } # end foreach P
+        $Paper = shift @Papers;
 			} # end if
 		} # end if Paper
-		if ( ! $Paper ) {
+		if ( !$Paper ) {
 #$log->debug("No paper found");
 			$Paper = new openprint::Paper();
 		} # end if
@@ -1538,7 +1546,7 @@ $log->debug($P->id_string());
 		} # end if
 	} # end if
 	if ( $qty_index and (defined $$specs{'OverrideStockPrice'.$qty_index} ) and ( $$specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) ) {
-		$openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
+		$openprint::log->warn('Override price: ' . $$specs{'StockPrice'.$qty_index} );
 		$$Paper{Price} = $$specs{'StockPrice'.$qty_index};
 	} # end if
 
@@ -1546,8 +1554,8 @@ $log->debug($P->id_string());
 	$Paper = $Paper->clone();
 #$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
-#FIXME Whay?
-# So... if loading need to check that it fits the size.... but if we are loading by id.... then we don't need to do this... maybe test the impact of this code.
+    #FIXME Whay?
+    # So... if loading need to check that it fits the size.... but if we are loading by id.... then we don't need to do this... maybe test the impact of this code.
 		if ( 
 			( ( $$Paper{width} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{height} != $$specs{'StockHeight'.$qty_index} ) )
 			and
@@ -1557,19 +1565,17 @@ $log->debug($P->id_string());
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$$Paper{Supplied} = $Supplied;
 			if ( ! $Supplied->start_width() ) {
-#$openprint::log->debug("Setting start with");
 				$Supplied->width( $$specs{'StockWidth'.$qty_index} );
 				$Supplied->start_width( $Supplied->width() );
 			} 
 
 			if ( ! $Paper->start_width() ) {
-#$openprint::log->debug("Setting start with");
 				$Paper->start_width( $Paper->width() );
 				$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			} elsif ( $Paper->width() >= $$specs{'StockWidth'.$qty_index} ) {
 				$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			} else {
-				$log->warn("Unsuitable Stock" . $Paper->to_string() . ' desired: ' . $$specs{'StockWidth'.$qty_index} . 'x' . $$specs{'StockHeight'.$qty_index});
+				$log->warn('Unsuitable Stock' . $Paper->to_string() . ' desired: ' . $$specs{'StockWidth'.$qty_index} . 'x' . $$specs{'StockHeight'.$qty_index});
 				return new openprint::Paper();
 			} # end if
 
@@ -1581,7 +1587,7 @@ $log->debug($P->id_string());
 				} elsif ( $Paper->height() >= $$specs{'StockHeight'.$qty_index} ) {
 					$Paper->height( $$specs{'StockHeight'.$qty_index} );
 				} else {
-					$log->warn("Unsuitable Stock due to height");
+					$log->warn('Unsuitable Stock due to height');
 					return new openprint::Paper();
 				} # end if
 			
@@ -1883,7 +1889,9 @@ $openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil
 				) 
 		 ) {
 $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
-		push @results, 'may have wrong basis size. Should probably be 20x26';
+		push @results, 'may have wrong basis size '.$Paper->basis_width() . 'x' . $Paper->basis_height().'. Should probably be 20x26' .
+ssi::button('fix'.$$Paper{id}, { onclick=>q`set_basis_dimensions('20','26');`, text=>'Fix' } );
+;
 	}
 	if ( $Paper->is_bond()
 			and (
@@ -1893,8 +1901,18 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
 				) 
 		 ) {
 $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
-		push @results, 'may have wrong basis size. Should probably be 17x22';
+		push @results, 'may have wrong basis size '.$Paper->basis_width() . 'x' . $Paper->basis_height().'. Should probably be 17x22';
 	}
+  if ( $Paper->is_envelope() 
+			and (
+				($Paper->basis_width() != 17) 
+				or 
+				($Paper->basis_height() != 22)
+				) 
+  ) {
+$openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
+		push @results, 'may have wrong basis size '.$Paper->basis_width() . 'x' . $Paper->basis_height().'. Should probably be 17x22';
+  }
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
     push @results, 'appears to be C1S, but is marked double sided.';
   }
@@ -1934,11 +1952,43 @@ sub is_bond {
 			or 
 			$Paper->weight() =~ /bond/i);
 }
+sub is_envelope {
+	my $Paper = shift;
+	return 
+			($Paper->brand() =~ /envelope/i
+			 or
+			$Paper->finish() =~ /envelope/i
+			or 
+			$Paper->weight() =~ /envelope/i);
+}
 
 sub is_fsc {
 	my $Paper = shift;
 	return $$Paper{fsc_code} || ($Paper->brand() =~ /fsc/i) || ($Paper->finish() =~ /fsc/i);
 }
+
+sub destroy {
+  my $self = shift;
+  my $error;
+  my $ac = sql::start_transaction( $openprint::dbh );
+  foreach (
+    openprint::PaperPrice->find( paper_id=>$$self{id} ),
+    openprint::PaperInventory->find( paper_id=>$$self{id} ),
+    openprint::PaperAllocation->find( paper_id=>$$self{id} ),
+  ) {
+    $error .= $_->destroy();
+    if ( $error ) {
+      $openprint::dbh->rollback();
+      return $error;
+    } # end if
+  } # end foreach
+  sql::execute(undef,undef, 'DELETE FROM Paper_recommendations WHERE lngPaperIndex=?', $$self{id});
+  sql::execute(undef,undef, 'DELETE FROM inventory_check_entries WHERE paper_id=?', $$self{id});
+  sql::update(undef,undef, 'manifest_content_types', ['paper_id=?', $$self{id}], paper_id=>undef);
+  $error .= $self->SUPER::destroy();
+  sql::end_transaction( $openprint::dbh, $ac );
+  return $error;
+} # end sub destroy
 
 1;
 __END__

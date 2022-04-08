@@ -1,7 +1,9 @@
 <? if ( @{$$variable{Users}} ) ?>
+<form name="f2" id="f2" action="?" method="post">
 	<table class="List">
 		<tr> 
-			<th class="UserID">Account #</th>
+      <th class="checkbox"><input type="checkbox" onclick="select_all(this.form, 'user_id', this.checked);"/></th>
+			<th class="UserID">User #</th>
 			<th class="User">Name</th>
 			<th class="Email">Email</th>
 			<th class="Company">Company</th>
@@ -15,17 +17,19 @@
 	my $rowclass;
 	foreach my $User ( @{$$variable{Users}} ) {
 		$html .= sprintf(q`
-<tr%1$s> 
-	<td class="UserID">%2$s</td>
-	<td class="User">%3$s</td>
-	<td class="Email">%4$s</td>
-	<td class="Company">%6$s</td>
-	<td class="UserType">%7$s</td>
-	<td class="Access">%8$s</td>
-	<td class="Groups">%9$s</td>
-	<td class="Date">%5$s</td>
+<tr class="%1$s"> 
+  <td class="checkbox"><input type="checkbox" name="user_id" value="%2$d"/></td>
+	<td class="UserID">%3$s</td>
+	<td class="User">%4$s</td>
+	<td class="Email">%5$s</td>
+	<td class="Company">%7$s</td>
+	<td class="UserType">%8$s</td>
+	<td class="Access">%9$s</td>
+	<td class="Groups">%10$s</td>
+	<td class="Date">%6$s</td>
 </tr>
-`, $rowclass, 
+`, $rowclass . ($User->deleted() ? ' deleted' : ''), 
+  $$User{id},
 	$User->admin_link_to( $$User{id} ),
 	$User->admin_link_to( $User->name() ), 
 	$User->admin_link_to( $User->email() ), 
@@ -39,11 +43,24 @@
 	join(', ', map { $$_{name} } $User->Groups() ),
  );
 
-		$rowclass = $rowclass ? '' : ' class="colRow"';
-		} # end foreach
-		return $html;
+		$rowclass = $rowclass ? '' : 'colRow';
+  } # end foreach
+  return $html;
 ) ?>
 </table>
+<p class="button">
+<?echo(
+return join("\n",
+   $session{'/administrator/managerial/users.html?deleted'} eq '1' ? (
+      button( 'destroy', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_users.html?btnFunction=destroy', { user_id: get_value( $('f2').user_id ) } );`, text=>'Destroy Checked' } ),
+      button( 'undelete', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_users.html?btnFunction=undelete', { user_id: get_value( $('f2').user_id ) } );`, text=>'Undelete Checked' } ),
+      ) : (
+      button( 'delete', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_users.html?btnFunction=delete', { user_id: get_value( $('f2').user_id ) } );`, text=>'Delete Checked' } ),
+      )
+);
+) ?>
+</p>
+</form>
 <? else ( @{$$variable{Users}} ) ?>
 There were no results matching your criteria.<br>
 <? endif ( @{$$variable{Users}} ) ?>

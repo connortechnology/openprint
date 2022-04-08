@@ -1,9 +1,9 @@
 <? include('/includes/error_reporting.html') ?>
-<script type="text/javascript" src="<? hash_link(/javascripts/passwordmeter.js) ?>"></script>
 <div class="UserProfile">
 	<form id="f1" name="f1" method="post" action="profile.html">
+		<fieldset class="filters">
 		<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
-		<fieldset class="filters"><legend>Choose User</legend>
+      <legend>Choose User</legend>
 			<ul>
 			<li>
 				<label>Company</label>
@@ -33,9 +33,7 @@ or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
 				<? echo ( button( 'Go2', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
 			</li>
 			</ul>
-		</fieldset>
 		<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
-		<fieldset>
 			<p class="buttons">
 				<? echo ( 
 					my $html;
@@ -72,7 +70,7 @@ or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
 			</li>
 			<li>
 				<label>Salutation</label>
-				<? echo ( radio( 'salutation', [ map { $_, $_ } ( 'Mr.', 'Mrs.', 'Ms.', 'Miss' ) ], $$variable{User}->salutation() ); ) ?>
+        <? echo ( radio( 'salutation', [ map { $_, $_ } ( 'Mr.', 'Mrs.', 'Ms.', 'Miss' ) ], $$variable{User}->salutation(), { inline=>1 } ); ) ?>
 			</li>
 			<li class="required"> 
 				<label for="phone">Phone</label>
@@ -129,19 +127,7 @@ or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
 					<label for="email">E-mail Address</label>
 					<input type="email" id="email" name="email" value="<? hecho ( $$variable{User}->email() ) ?>" autocomplete="username"/>
 				</li>
-				<li>
-					<? include('/includes/password_requirements.html') ?>
-				</li>
-				<li class="required"> 
-					<label for="password">Password</label>
-					<input type="<?echo($session{user_type} eq 'A' ? 'text' : 'password' )?>" name="password" id="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" autocomplete="current-password"/>
-					<span id="psContainer"><span id="psStrength"></span></span>
-				</li>
-				<li class="required"> 
-					<label for="VerifyPassword">Verify Password</label>
-					<input type="password" name="VerifyPassword" id="VerifyPassword" onkeyup="check_passwords(this.form.password, this);" autocomplete="current-password"/>
-					<span id="password_alert"></span>
-				</li>
+        <?include(/includes/_password_part.html)?>
 				<li><label>Password Last Changed</label>
 					<? echo ( format_datetime( $$variable{User}->password_changed_on(), 'never'); ) ?>
 				</li>

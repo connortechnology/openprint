@@ -831,7 +831,7 @@ sub get_scores {
 		return;
 	} # end if
 	if ( $$sig_specs{txtSignatureType} eq 'Cover Pages' ) {
-		if ( openprint::print::get_book_type( $Project ) eq 'PerfectBound' ) {
+		if ( $Project->get_book_type() eq 'PerfectBound' ) {
 			$$specs{"txtVerticalQty-$form"} = 4;
 			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} != 2 ) {

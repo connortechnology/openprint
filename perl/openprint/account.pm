@@ -283,12 +283,12 @@ sub registration {
 			$variable{information} .= 'Registration was successful.<br/><br/>';
 			$variable{success} = 1;
 			$variable{error} .= $User->Profile()->save(\%param);
-			$variable{error} .= ( new openprint::Log())->save({'action'=>'Create User', 'company_id'=>$Company->id(), 'user_id'=>$User->id()});
+			$variable{error} .= ( new openprint::Log())->save({action=>'Create User', company_id=>$Company->id(), user_id=>$User->id()});
 
 # Promo Codes can only happen when we are creating a new company. Otherwise they breach the security of the existing company.
 			if ( $param{promo_code} ) {
 				require openprint::Promo_Code;
-				if ( my $Promo = openprint::Promo_Code->find_one('code lc'=>lc openprint::Promo_Code->transform('code',$param{promo_code})) ) {
+				if ( my $Promo = openprint::Promo_Code->find_one('code lc'=>lc openprint::Promo_Code->transform('code', $param{promo_code})) ) {
 					$log->debug("Found promo code $$Promo{effect}");
 					eval $$Promo{effect};
 					$log->error( "Eval error of promo code $param{promo_code}, Reason: " . $@ ) if $@;
@@ -304,7 +304,7 @@ sub registration {
 						FROM	=> $agent,
 						TO		=> $User,
 						SUBJECT => 'New Login Application',
-						ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
+						ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp(ssi::variable_substitution(\$email_template, \%info)), 'text/html', 'quoted-printable' ],
 						);
 			} # end if
 
@@ -610,8 +610,44 @@ sub change_password_confirmation {
 
 sub login {
 	if ( $param{btnFunction} eq 'Forgotten Password' ) {
-		openprint::login::forgotten_password();
-	} elsif ( $param{btnFunction} eq 'Login' ) {
+
+    if ( $config{encrypt_passwords} ) {
+      if (!$param{email}) {
+        $variable{error} .= 'Please enter your email address and try again.<br/>';
+        return;
+      } 
+      # Generate magic link and send it
+      foreach my $User ( openprint::User->find_one(email=>$param{email}) ) {
+        if (!$User) {
+          $variable{error} .= 'User not found matching '.$param{email}.'<br/>';
+          next;
+        }
+        if ($User->web_active() ne 'Y') {
+          $variable{error} .= 'User '.$User->email(). ' is not activated'.$User->web_active().'. Please contact your CSR.<br/>';
+          next;
+        }
+        my %info;
+        $info{User} = $User;
+        $info{auth_code} = openprint::login::auth_code($User);
+        my $email_template = ssi::slurp_content('/email_template.html');
+
+        $info{ReplacementText} = ssi::include('/email_content/magic_link.html', \%info);
+        my $body = ssi::variable_substitution(\$email_template, \%info);
+
+        my $Email = new openprint::Email();
+        $Email->html_body($body);
+        $Email->send(
+          FROM  => ($config{HelpDeskEmail} ? $config{HelpDeskEmail} : 'iconnor@connortechnology.com'),
+          TO  => $User->email(),
+          SUBJECT => 'Login Link',
+        );
+        $variable{information} .= 'An email with a magic login link has been sent to '.$User->email().'<br/>';
+      }
+
+    } else {
+		  openprint::login::forgotten_password();
+    }
+	} elsif ( $param{btnFunction} eq 'Login' or $param{action} eq 'login') {
 		if ( ! $param{email} ) {
 			$variable{error} = 'Please enter the email address of the account to retrieve.';
 			return;

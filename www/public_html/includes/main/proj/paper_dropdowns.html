@@ -7,17 +7,14 @@
 		<ul>
 		<li>
 			<label>Customer supplied</label>
-			<input type="radio" id="SuppliedStock<?Signature?>Y" name="rdbSuppliedStock<?Signature?>" value="Y" <? echo ( checked( $$variable{'rdbSuppliedStock'.$$variable{Signature}} eq 'Y' ); ) ?> onclick="Stock_onchange(this,'<?Signature?>');" />
-			<label class="radio" for="SuppliedStock<?Signature?>Y">Yes</label>
-			<input type="radio" id="SuppliedStock<?Signature?>N" name="rdbSuppliedStock<?Signature?>" value="N" <? echo ( checked( $$variable{'rdbSuppliedStock'.$$variable{Signature}} ne 'Y' ); ) ?> onclick="Stock_onchange(this,'<?Signature?>');" />
-			<label class="radio" for="SuppliedStock<?Signature?>N">No</label><br/>
+      <?echo(radio('rdbSuppliedStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ], $$variable{'rdbSuppliedStock'.$$variable{Signature}}, { onclick=>"Stock_onchange(this,'$$variable{Signature}');", default=>'N' } ); )?>
 		</li>
 		<li>
 			<label>Unlisted stock</label>
-			<input type="radio" id="SpecificStock<?Signature?>Y" name="rdbSpecificStock<?Signature?>" value="Y" <? echo ( checked( $$variable{'rdbSpecificStock'.$$variable{Signature}} eq 'Y' ); ) ?> onclick="$('HouseStock<?Signature?>').hide();$('SpecificStock<?Signature?>').show();if(this.form.ddmStockSheetSize1){clear_ddm(this.form.ddmStockSheetSize1);};if(this.form.ddmStockSheetSize2){clear_ddm(this.form.ddmStockSheetSize2);};if(this.form.ddmStockSheetSize3){clear_ddm(this.form.ddmStockSheetSize3);};calc(this.form.name);" />
-			<label class="radio" for="SpecificStock<?Signature?>Y">Yes</label>
-			<input type="radio" id="SpecificStock<?Signature?>N" name="rdbSpecificStock<?Signature?>" value="N" <? echo ( checked( $$variable{'rdbSpecificStock'.$$variable{Signature}} ne 'Y' ); ) ?> onclick="$('SpecificStock<?Signature?>').hide();$('HouseStock<?Signature?>').show();Stock_onchange(this,'<?Signature?>');" />
-			<label class="radio" for="SpecificStock<?Signature?>N">No</label>
+      <?echo(radio('rdbSpecificStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ],
+      $$variable{'rdbSpecificStock'.$$variable{Signature}}, {
+     default=>'N',
+     onclick=>"if(this.value=='Y'){$('HouseStock$$variable{Signature}').hide();$('SpecificStock$$variable{Signature}').show();if(this.form.ddmStockSheetSize1){clear_ddm(this.form.ddmStockSheetSize1);};if(this.form.ddmStockSheetSize2){clear_ddm(this.form.ddmStockSheetSize2);};if(this.form.ddmStockSheetSize3){clear_ddm(this.form.ddmStockSheetSize3);};calc(this.form.name);}else{$('SpecificStock$$variable{Signature}').hide();$('HouseStock$$variable{Signature}').show();Stock_onchange(this,'$$variable{Signature}');}" } );)?>
 		</li>
 		</ul>
 		<? endif ( $$variable{Mode} ne 'Easy' ) ?>

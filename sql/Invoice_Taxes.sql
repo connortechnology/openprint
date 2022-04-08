@@ -4,6 +4,7 @@ CREATE TABLE Invoice_Taxes (
 	tax_id		INTEGER NOT NULL, FOREIGN KEY (tax_id) REFERENCES Taxes (id),
 	rate		float,
 	amount		float,
+  charge    boolean NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (id)
 );
 

@@ -30,6 +30,7 @@ $serial = 'quotes_id_seq';
 	'created_on'	=>	'dtmquotedate',
 	'updated_on'	=>	'dtmlastmodified',
 	'company_id'	=>	'companyindex',
+  for_company_id  =>  'for_company_id',
 	'user_id'		=>	'userindex',
 	'currency_id'	=>	'currency_id',
 	'status'		=>	'strstatus',
@@ -45,7 +46,7 @@ $serial = 'quotes_id_seq';
 	'Currency'		=>	undef,
 	'reference'		=>	'reference',
 	'comments'		=>	'comments',
-	'deleted'		=>	'deleted',
+	'deleted'		  =>	'deleted',
 	'by_companyname'	=>	undef,
 	'by_firstname'		=>	undef,
 	'by_lastname'		=>	undef,
@@ -153,19 +154,21 @@ sub save {
 sub destroy {
 	my $self = shift;
 
-	if ( ! $$self{id} ) {
-		$log->error("Quote::delete called with no id");
+	if (!$$self{id}) {
+		$log->error('Quote::delete called with no id');
 		return;
 	}
 
+  my $error = '';
 	my $ac = sql::start_transaction( $dbh );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Details WHERE quote_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_By WHERE quote_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_For WHERE quote_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Quote_Log WHERE quote_id=?', $$self{id} );
-	sql::execute( undef, undef, 'DELETE FROM Quotes WHERE id=?', $$self{id} );
+  sql::execute( undef, undef, 'UPDATE Companies SET last_quote_id=NULL WHERE last_quote_id=?', $$self{id} );
+  $error .= $self->SUPER::destroy();
 	sql::end_transaction( $dbh, $ac );
-	openprint::logs::insertLogRecord('11', "Quote Index: " . $$self{id},);
+  return $error;
 } # end sub destroy
 
 sub status {
@@ -542,6 +545,13 @@ sub url_to {
 sub link_to {
 	return sprintf('<a href="/main/quote/history_details.html?quote_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
 } # end sub link_to
+
+sub For_Company() {
+  if (!exists $_[0]{For_Company}) {
+    $_[0]{For_Company} = new openprint::Company($_[0]{for_company_id});
+  }
+  return $_[0]{For_Company};
+}
 
 1;
 __END__

@@ -12,7 +12,6 @@ use vars qw( $log $dbh %config $debug $table $serial %fields %find_fields %trans
 require openprint::ProjectType;
 require openprint::Company;
 require openprint::Order;
-require openprint::print;
 
 require sql;
 require openprint::JDF;
@@ -166,6 +165,8 @@ sub destroy {
 		$Quote->add_log('Deleted Project ' . $$self{id} );
 	} # end foreach
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM PressActivities WHERE project_id=?}, $$self{id} );
+	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM productionfeedback WHERE project_id=?}, $$self{id} );
+	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM signaturecapture WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM projects WHERE id=?}, $$self{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub destroy
@@ -245,7 +246,7 @@ sub jdf {
 	$Component->setAttribute('Status','Unavailable');
 	$Component->setAttribute('isWaste','false');
 	$Component->setAttribute('AmountRequired',$self->ordered_quantity());
-	$Component->setAttribute('ResourceWeight',openprint::print::get_finished_weight( $self->id() ) );
+	$Component->setAttribute('ResourceWeight', $self->finished_weight());
 	## THese are crucial for Metrix
 	#$Component->setAttribute('ProductType','Body');
 	$Component->setAttribute('Dimensions',join(' ', 
@@ -347,7 +348,7 @@ sub jdf {
 	} # end foreach Signature
 
 	# Add Binding Info
-	if ( my $binding = openprint::print::get_book_type( $self->id() ) ) {
+	if ( my $binding = $self->get_book_type() ) {
 		my $BindingIntent = $ProductResourcePool->appendChild( $doc->createElement('BindingIntent') );
 		$BindingIntent->setAttribute('ID','BI'.$self->id() ); # FInal Binding
 		$BindingIntent->setAttribute('Class','Intent' );
@@ -849,7 +850,7 @@ sub summary {
 		$$self{summary} = shift;
 	} # end if
 	if ( ! $$self{summary} ) {
-		my $summary = $self->Type()->description() . ' ';
+		my $summary = $self->Type()->description();
 
 		my $services = $self->services();
 		if ( $$services{''} and @{$$services{''}} ) {
@@ -887,7 +888,7 @@ sub summary {
 			} # end if
 			my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{id}, 'Group' );
 
-# I believe the point of this is to stick the Printed Web or Sheetfred into the summary.	Nastily executed.
+# I believe the point of this is to stick the Printed Web or Sheetfed into the summary.	Nastily executed.
 # The logic is, each group has to be either all sheetfed, or all web (or digital, etc).	
 			foreach my $group_id ( sort @groups ) {
 				my @sigs = $self->signatures({Group=>$group_id});
@@ -902,11 +903,11 @@ sub summary {
 				} # end if
 
 				my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
-				$summary .= openprint::Estimating::Printing::summary( $self, $sigs[0], $sig_specs );
+				my $group_html = openprint::Estimating::Printing::summary( $self, $sigs[0], $sig_specs );
 				if ( $$printing_specs{"PrintingType-$group_id"} ) { 
-					$summary .= ', '. '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span>,';
+					$group_html .= '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span><br/>';
 				} #endif Web
-				$summary .= '<br/>';
+				$summary .= $group_html if $group_html;
 			} # end foreach Group
 		} # end if
 
@@ -1170,16 +1171,16 @@ sub add_signature {
 	my ( $self, $sig_index, $status, $data ) = @_;
 	
 	$self->lock();
-	my $print_service_index = $self->add_service( 'Signature', $data );
-	if ( ! $print_service_index ) {
-		$log->error("Error adding Signature!");
+	my $print_service_index = $self->add_service('Signature', $data);
+	if ( !$print_service_index ) {
+		$log->error('Error adding Signature!');
 		$self->unlock();
 		return;
 	} # end if
-	openprint::service::status( $self->id(), $print_service_index, $status ) if $status;
-	if ( ! $sig_index ) {
+	openprint::service::status($self->id(), $print_service_index, $status) if $status;
+	if ( !$sig_index ) {
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-		( $sig_index ) = sql::execute( undef, undef, $_, $self->id() );
+		( $sig_index ) = sql::execute(undef, undef, $_, $self->id());
 		$sig_index += 1;
 	} # end if
 	openprint::service::insert_service_spec( $log, $dbh, $self->id(), $print_service_index, 'SignatureIndex', $sig_index );
@@ -1277,6 +1278,7 @@ sub Ordered_Project {
 # don't need to lock project_contents... cuz it's just an insert....
 sub add_service {
 	my ( $self, $type, $data, $options ) = @_;
+  $data = {} if !$data;
 
 	my $ServiceType;
 	if ( ref $type ne 'openprint::ServiceType' ) {
@@ -1289,60 +1291,55 @@ sub add_service {
 	} # end if
 
 	$self->lock();
-if ( $debug ) {
-$log->debug("Project: $$self{id} $self");
-foreach my $k ( keys %{$$self{Services}} ) {
-	$log->debug(" Services: $k => " . join( ',', @{$$self{Services}{$k}} ) );
-} # end ofreach
-}
 
 	my $Service = new openprint::Project_Service();
-	$Service->save({ project_id=>$$self{id}, ( status=>$$options{status} ? $$options{status} : 'uncalculated' ), servicetype_id=>$ServiceType->id()});
+	$Service->save({
+      project_id=>$$self{id},
+      ( status=>$$options{status} ? $$options{status} : 'uncalculated' ),
+      servicetype_id=>$ServiceType->id()
+    });
 	my $service_index = $$Service{service_id};
 	$openprint::log->debug("Added Service $$ServiceType{name} at $service_index");
+	$openprint::log->error("Adding Service $$ServiceType{name} at $service_index with no project type") if ! $$self{type_id};
 
 	# Do this so that it doesn't try to load the specs, saving 1 db call.
 	$openprint::service::specs_cache{$service_index} = {};
-	openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, 'ServiceType', $ServiceType->name(), 1 );
-	#$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex NULLS FIRST};
-	my @Defaults = openprint::ServiceType_Default->find( 'projecttype_id is null or =' => $$self{type_id}, servicetype_id=>$ServiceType->id(), order=>'projecttype_id NULLS FIRST' );
+	openprint::service::insert_service_spec($log, $dbh, $$self{id}, $service_index, 'ServiceType', $ServiceType->name(), 1);
+	my @Defaults = openprint::ServiceType_Default->find(
+    'projecttype_id is null or =' => $$self{type_id},
+    servicetype_id=>$ServiceType->id(),
+    order=>'projecttype_id NULLS FIRST'
+  );
+	foreach my $n ( @Defaults ) {
+    $openprint::log->debug('Setting initial default '.$n->to_string());
+  }
 	my %defaults = map { $_->name(), $_->value() } @Defaults;
-	#$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
-	#push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{user_id} );
 	foreach my $n ( keys %defaults ) {
-	#while ( my ( $n, $v ) = splice @defaults, 0, 2 ) {
-		my $v = $defaults{$n};
-		if ( $data and exists $$data{$n} ) {
-		} else {
-			openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, $n, $v, 1 );
-		} # end if
-	} # end while
-
+    $openprint::log->debug('Setting initial default '.$n.'=>'.$defaults{$n});
+  }
 	
 	my $module = 'openprint::Estimating::'.$ServiceType->type();
-	if ( my $function = $module->can( 'setup_defaults' ) ) {
-		%defaults = $function->( $self );
-		foreach my $n ( keys %defaults ) {
-			my $v = $defaults{$n};
-			if ( $data and exists $$data{$n} ) {
-			} else {
-				openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, $n, $v, 1 );
-			} # end if
-		} # end while
-
+	if ( my $function = $module->can('setup_defaults') ) {
+		my %setup_defaults = $function->( $self );
+    foreach my $n ( keys %setup_defaults ) {
+      $openprint::log->debug('Setting initial setup default '.$n.'=>'.$setup_defaults{$n});
+    }
+    @defaults{keys %setup_defaults} = values %setup_defaults;
 	} # end if
 
 	foreach my $qty_index ( $self->quantity_indexes() ) {
-		openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, "txtQuantity$qty_index", 
-		( ( $data and exists $$data{"txtQuantity$qty_index"} ) ? $$data{"txtQuantity$qty_index"} : $self->quantity($qty_index) ), 1 );
+    $defaults{'txtQuantity'.$qty_index} = $self->quantity($qty_index);
 	} # end foreach
-	if ( $data ) {
-		foreach my $n ( keys %$data ) {
-			openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, $n, $$data{$n} );
-		} # end foreach 
-	}
 
-	#delete $$self{Services};
+  @defaults{keys %{$data}} = values %{$data};
+	foreach my $n ( keys %{$data} ) {
+    $openprint::log->debug('Setting data default '.$n.'=>'.$$data{$n});
+  }
+	foreach my $n ( keys %defaults ) {
+    $openprint::log->debug('Setting default '.$n.'=>'.$defaults{$n});
+		openprint::service::insert_service_spec($log, $dbh, $$self{id}, $service_index, $n, $defaults{$n}, 1);
+	} # end foreach default
+
 	if ( ! $$self{Services}{$ServiceType->name()} ) {
 		$$self{Services}{$ServiceType->name()} = [ $$Service{service_id} ];
 	} else {
@@ -1350,6 +1347,8 @@ foreach my $k ( keys %{$$self{Services}} ) {
 	}
 	delete $$self{service_types};
 	delete $$self{signatures};
+
+  # FIXME Why are we saving here? prices would only change if there eas a default price
 	foreach my $qty_index ( $self->quantity_indexes() ) {
 		$self->price($qty_index,undef);
 	} # end foreach
@@ -1611,7 +1610,7 @@ sub recalculate {
 	my $services = $self->services();
 	if ( $$services{''} ) {
 		my $Type = $self->Type();
-		$openprint::log->debug("Project::recalculate $$Type{type}");
+		$openprint::log->debug('Project::recalculate '.$$Type{type});
 		my $specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable,
 				$$self{id}, $$services{''}[0], $$Type{type} );
 		my $status = $$specs{Status};
@@ -1791,40 +1790,38 @@ sub change_ProjectType {
 		} # end if
 	} # end if $$project{type_id}
 
+  # Have to set it first because Service defaults depend upon it.
+  $$Project{type_id} = $ProjectType->id();
+
 	if ( $$Project{id} ) {
 		if ( ! $$services{''} ) {
 			my $printing_service_index = openprint::print_project::insert_project_type( $openprint::r, $openprint::log, $openprint::dbh, $$Project{id}, $ProjectType->name() );
 			push @{$$services{''}}, $printing_service_index;
 		} # end if
-		my @oldRequiredServiceTypes = $OldProjectType->required_ServiceTypes();
-		my @newRequiredServiceTypes = $ProjectType->required_ServiceTypes();
+		my %oldRequiredServiceTypes = map { $$_{name} => $_ } $OldProjectType->required_ServiceTypes();
+		my %newRequiredServiceTypes = map { $$_{name} => $_ } $ProjectType->required_ServiceTypes();
 
 	# Remove no longer needed services
-		foreach my $ServiceType ( @oldRequiredServiceTypes ) {
-#FIXME I don't think we should use sets on Objects
-			if ( ! sets::isin( $ServiceType, \@newRequiredServiceTypes ) ) {
-				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
+		foreach my $service_type_name ( keys %oldRequiredServiceTypes ) {
+			if ( ! $newRequiredServiceTypes{$service_type_name} ) {
+				foreach my $s_id ( @{$$services{$service_type_name}} ) {
 					openprint::print_project::delete_service($Project, $s_id);
 				} # end foreach
-				delete $$services{$ServiceType->name()};
+				delete $$services{$service_type_name};
 			} # end if
 		} # end foreach
 
 	# add needed services
-		foreach my $ServiceType ( @newRequiredServiceTypes ) {
-			if ( ! $$services{$ServiceType->name()} ) {
-				my $s_id = $Project->add_service( $ServiceType );
-				push @{$$services{$ServiceType->name()}}, $s_id;
-				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity1', $Project->quantity1() );
-				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity2', $Project->quantity2() );
-				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity3', $Project->quantity3() );
+		foreach my $service_type_name ( keys %newRequiredServiceTypes ) {
+			if ( ! $$services{$service_type_name} ) {
+				my $s_id = $Project->add_service($newRequiredServiceTypes{$service_type_name});
+				push @{$$services{$service_type_name}}, $s_id;
 			} # endif
 		} # end foreach
-$log->debug("Saving project type_id $$ProjectType{id}");
-		$error .= $Project->save( { type_id => $ProjectType->id() } );
+    $log->debug("Saving project type_id $$ProjectType{id}");
+		$error .= $Project->save();
 	} else {
-		$log->debug("Do not have project id, just setting type_id");
-		$$Project{type_id} = $ProjectType->id();
+		$log->debug('Do not have project id, just setting type_id');
 	} # end if
 	return $error;
 } # end sub change_ProjectType
@@ -1940,7 +1937,7 @@ sub finished_weight {
 
 # This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.
 	return $project_weight * (1+$openprint::config{WeightMarkup}/100);
-} # end sub get_finished_weight
+} # end sub finished_weight
 
 sub can_view {
 	if ( ! $_[0]{id} ) {
@@ -2044,6 +2041,26 @@ sub csr_commission {
 	$$self{csr_commission} = shift if @_;
 	return $$self{csr_commission};
 } # end sub csr_commission
+
+sub get_book_type {
+  my $Project = shift;
+  my $services = $Project->services();
+
+# the way we cut down the book depends on how it is being bound, so we need this for the signature information.
+  foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound' ) {
+    if ( $$services{$service} ) {
+      return $service;
+    } # end if
+  } # end foreach
+
+  if ( $$services{''} and @{$$services{''}} ) {
+    my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+    if ( $$printing_specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
+      return 'PerfectBound';
+    } # end if
+  } # end if
+  return;
+} # end sub get_book_type
 
 sub is_fsc {
 	my $self = shift;	

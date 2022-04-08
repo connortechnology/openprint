@@ -32,6 +32,7 @@ $serial = 'timetracks_id_seq';
 	time_associated 	=>	'time_associated',
 	user_id	  	    	=>	'user_id',
 	rate		        	=>	'rate',
+  units             =>  'units',
 	created_on    		=> 'created_on',
 	updated_on    		=> 'updated_on',
 	deleted	      		=> 'deleted',
@@ -108,7 +109,7 @@ sub elapsed {
 		return misc::hms2time( $_[0]{duration} );
 
 	} elsif ( $$self{time_associated} ) {
-		return Date::Parse::str2time( $$self{ending} ) - Date::Parse::str2time( $$self{starting} );
+		return Date::Parse::str2time($$self{ending}) - Date::Parse::str2time($$self{starting});
 	} else {
 		my ($start) = $$self{starting} =~ /(\d\d\d\d-\d\d-\d\d)/;
 		my ($end) = $$self{ending} =~ /(\d\d\d\d-\d\d-\d\d)/;
@@ -116,13 +117,13 @@ if ( 0 ) {
     my $start_dt = $parser->parse_datetime( "$start 00:00:00");
 $openprint::log->debug("starting: " . $parser->format_datetime( $start_dt ) );
     my $end_dt = $parser->parse_datetime( "$end 00:00:00" )->add( DateTime::Duration->new('days'=>1) ) ;
-$openprint::log->debug("ending: " . $parser->format_datetime( $end_dt ) );
+$openprint::log->debug('ending: ' . $parser->format_datetime( $end_dt ) );
     my $duration_dt = $end_dt->subtract_datetime( $start_dt );
-$openprint::log->debug("elapsed: " . $duration_dt->in_units('seconds') );
+$openprint::log->debug('elapsed: ' . $duration_dt->in_units('seconds') );
     return $duration_dt->in_units('seconds');
 }
 
-		return (Date::Parse::str2time( "$end 23:59:59" )+1) - Date::Parse::str2time( "$start 00:00:00");
+		return (Date::Parse::str2time("$end 23:59:59")+1) - Date::Parse::str2time("$start 00:00:00");
 	} # end if
 } # end sub elapsed
 
@@ -140,14 +141,16 @@ sub rate {
 	} # end if
   return;
 }
+
 sub units {
-	my ( $self ) = @_;
-  if ( $$self{service_id} ) {
+	my $self = shift;
+  $$self{units} = shift if @_;
+  if ( (! $$self{units}) and $$self{service_id} ) {
     my $Service = $self->Service();
     my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
-    return $Price{units};
+    $$self{units} = $Price{units};
   } 
-  return
+  return $$self{units};
 } # end sub units
 
 sub Price {
@@ -159,18 +162,22 @@ sub Price {
 		$Price{Cost} = $Price{Price} = $$self{rate};
 	} # end if
 
-	if ( lc $Price{units} eq '/year' ) {
-		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*365));
-		#$openprint::log->debug('Month pricing ' . $elapsed );
-		$Price{Total} = $Price{Price} * $elapsed;
-	} elsif ( lc $Price{units} eq '/month' ) {
+  my $units = lc $self->units();
+  $units = lc $Price{units} if ! $units;
+  $Price{units} = $units;
+
+	if ( $units eq '/year' ) {
+		my $years = Math::Round::nearest(1,$elapsed/(60*60*24*365));
+    #$openprint::log->debug('Years pricing ' . $years .' from elapsed '.$elapsed);
+		$Price{Total} = $Price{Price} * $years;
+	} elsif ( $units eq '/month' ) {
 		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*30));
 		#$openprint::log->debug('Month pricing ' . $elapsed );
 		$Price{Total} = $Price{Price} * $elapsed;
-	} elsif ( lc $Price{units} eq '/hr.' ) {
+	} elsif ( $units =~ /^\/hr\.?/ ) {
 		$Price{Total} = $Price{Price} * $elapsed / 3600;
 	} else {
-		$openprint::log->warn('Unknown units in Timetrack Service ('.$Service->name().') ('.$Price{units}.') assuming Hrs');
+		$openprint::log->warn('Unknown units in Timetrack Service ('.$Service->name().') ('.$units.') assuming Hrs');
 		$Price{Total} = $Price{Price} * $elapsed / 3600;
 	} # end if
 	return \%Price;
@@ -219,6 +226,42 @@ sub copy {
 	delete $$New{invoice_id};
 	return $New;
 } # end sub copy
+
+sub elapsed_formatted {
+  my $self = shift;
+  if ( $$self{time_associated} ) {
+    return misc::seconds_to_pretty_interval( $self->elapsed() );
+  } 
+  my $units = lc $self->units();
+
+  my $elapsed = $self->elapsed();
+  if ( $units eq '/year' ) {
+    $elapsed = Math::Round::nearest(1, $elapsed/(60*60*24*365));
+    return $elapsed . ' year' . ($elapsed == 1 ? '' : 's');
+  } elsif ( $units eq '/month' ) {
+    $elapsed = Math::Round::nearest(1, $elapsed/(60*60*24*30));
+    return $elapsed . ' month' . ($elapsed == 1 ? '' : 's');
+  } elsif ( $units eq '/week' ) {
+    $elapsed = Math::Round::nearest(1, $elapsed/(60*60*24*7));
+    return $elapsed . ' week' . ($elapsed == 1 ? '' : 's');
+  } elsif ( $units =~ /^\/hr\.?/ ) {
+    $elapsed = Math::Round::nearest(1, $elapsed/(60*60));
+    return $elapsed . ' hour' . ($elapsed == 1 ? '' : 's');
+  } else {
+    return $elapsed . ' hour' . ($elapsed == 1 ? '' : 's');
+  } # end if
+}
+
+sub link_to {
+    my $self = shift;
+    my $text = @_ ? shift : $$self{id};
+    if ( $self->invoiced() ) {
+      return '<a href="/timetrack/view.html?timetrack_id='.$$self{id}.'">'.$text.'</a>';
+    } else {
+      return '<a href="/timetrack/edit.html?timetrack_id='.$$self{id}.'">'.$text.'</a>';
+    }
+}
+
 
 1;
 __END__

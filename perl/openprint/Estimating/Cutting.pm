@@ -640,7 +640,7 @@ sub signature_calc {
 				if ( $CuttingMakeReady ) {
 					my %setup = $CuttingMakeReady->get_price(undef, $Equipment);
 					if ( !%setup ) {
-						$log->error("No Cutting Makeready for $$Equipment{strid}");
+						$log->error('No Cutting Makeready for '.$$Equipment{strid});
 					} else {
 						if ( $setup{units} eq 'per cut' ) {
 							%setup = $CuttingMakeReady->get_price($folding_cuts, $Equipment);
@@ -648,7 +648,7 @@ sub signature_calc {
 							$results{Breakdown} .= sprintf('Make Ready: $%1$.2f%2$s * %4$d cuts = $%3$.2f<br/>',
 									@setup{'Price','units','Total'}, $folding_cuts);
 						} else {
-							$openprint::log->debug("unknown units on $$CuttingMakeReady{units}") if DEBUG;
+							$openprint::log->debug('unknown units on '.$$CuttingMakeReady{units}) if DEBUG;
 							$results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price});
 						} # end if
 						$price{MakeReady} = $setup{Total};
@@ -764,7 +764,7 @@ EQUIPMENT: foreach my $Equipment ( @my_equipment ) {
 
     my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
     $sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
-    $sheets *= $$sig_specs{'PageQuantity'.$qty_index} if $$sig_specs{txtSignatureType} and ($$sig_specs{txtSignatureType} eq 'Pad Pages') and $$sig_specs{'PageQuantity'.$qty_index};
+    $sheets *= $$sig_specs{'PageQuantity'.$qty_index} if ($$sig_specs{txtSignatureType} and ($$sig_specs{txtSignatureType} eq 'Pad Pages')) and $$sig_specs{'PageQuantity'.$qty_index};
 
     if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
       if ( $$Spec{units} eq 'Sheets' ) {

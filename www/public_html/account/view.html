@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script nonce="<?echo($config{CSP_NONCE})?>">
 	function delwall( wall_id ) {
 		new Ajax.Request('_wall.json', { parameters: { wall_id: wall_id, action: 'delete' } } );
 	} // end function delwall

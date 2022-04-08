@@ -79,8 +79,16 @@ my $res = $ua->request($req);
 if ($res->is_success) {
 	$log->debug("Content: " . $res->content );
 	my $content = $res->content;
-	my $rates = JSON::decode_json( $content );
-	my %Currencies = map { $_->short(), $_ } openprint::Currency->find();
+  if (!$content) {
+    $log->error("Received no content but with success from $url");
+    return;
+  }
+  my $rates = {};
+  eval {
+    $rates = JSON::decode_json( $content );
+  };
+  $log->error("Failed to decode $content as json: $@") if $@;
+  my %Currencies = map { $_->short(), $_ } openprint::Currency->find();
 	foreach my $cur ( keys %$rates ) {
 		next if ! $Currencies{$cur};
 		if ( ! $$rates{$cur}{'30d'} ) {

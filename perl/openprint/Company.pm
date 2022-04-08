@@ -10,8 +10,9 @@ require openprint;
 require sql;
 require openprint::Object;
 require openprint::User;
+  require openprint::Quote;
 
-$debug = 0;
+$debug = 1;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -66,8 +67,11 @@ $serial = 'companies_id_seq';
 		category_id				=>	'category_id',
 		offers_credit				=>	'offers_credit',
 		last_project_id			=>	'last_project_id',
+		last_project_on			=>	undef,
 		last_order_id				=>	'last_order_id',
+		last_order_on				=>	undef,
 		last_quote_id				=>	'last_quote_id',
+		last_quoted_on				=>	undef,
 		last_invoice_id			=>	'last_invoice_id',
 		);
 %find_fields = (
@@ -135,33 +139,42 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM CreditApplications WHERE Company_Id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Companies_in_Marketing_Categories WHERE Company_Id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Addresses WHERE company_id=?', $$self{id} );
-	foreach my $Payment ( openprint::Payment->find('recipient_id'=>$$self{id}) ) {
+	sql::execute( undef, undef, 'DELETE FROM Locations WHERE company_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Uploads WHERE company_id=?', $$self{id} );
+  foreach (openprint::Asset->find(company_id=>$$self{id})) { $_->destroy(); }
+
+	sql::execute( undef, undef, 'DELETE FROM Assets WHERE company_id=?', $$self{id} );
+	foreach my $Payment ( openprint::Payment->find(recipient_id=>$$self{id}) ) {
 		$Payment->delete();
 	} # end foreach Payment
 	sql::execute( undef, undef, 'DELETE FROM Complaints WHERE company_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE company_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM logs WHERE company_id=?', $$self{id} );
+  $openprint::log->error("Deleting purchaseorder_items");
+  sql::update(undef, undef, 'purchaseorder_items', ['vendor_id=?', $$self{id}], vendor_id=>undef);
+  sql::update(undef, undef, 'manifests', ['supplier_id=?', $$self{id}], supplier_id=>undef);
 
-	foreach my $Paper ( openprint::Paper->find('owner_id'=>$$self{id} ) ) {
-		$Paper->delete();
+	foreach my $Paper ( openprint::Paper->find(owner_id=>$$self{id}) ) {
+		$Paper->destroy();
 	} # end foreach
 
-	foreach my $Quote ( openprint::Quote->find('company_id'=>$$self{id} ) ) {
+	foreach my $Quote ( openprint::Quote->find(company_id=>$$self{id}) ) {
 		$Quote->delete();	
 	} # end foreach
-	foreach my $Order ( openprint::Order->find('company_id'=>$$self{id} ) ) {
+	foreach my $Order ( openprint::Order->find(company_id=>$$self{id}) ) {
 		$Order->delete();	
 	} # end foreach
-	sql::execute( undef, undef, 'DELETE FROM Order_log WHERE Company_Id=?', $$self{id} );
-	foreach my $Project ( openprint::Project->find('company_id'=>$$self{id} ) ) {
-		$Project->delete();	
+	sql::execute( undef, undef, 'DELETE FROM Order_log WHERE company_id=?', $$self{id} );
+	foreach my $Project ( openprint::Project->find(company_id=>$$self{id} ) ) {
+		$Project->destroy();	
 		last if $dbh->errstr();
 	} # end foreach
-	sql::execute( undef, undef, 'DELETE FROM Project_log WHERE Company_Id=?', $$self{id} );
-	foreach my $User ( openprint::User->find('company_id'=>$$self{id}, 'deleted'=>[0,1] ) ) {
+	sql::execute(undef, undef, 'DELETE FROM Project_log WHERE Company_Id=?', $$self{id} );
+	foreach my $User ( openprint::User->find(company_id=>$$self{id}, deleted=>[0,1] ) ) {
 		$User->destroy();
 	} # end foreach
-	sql::execute( undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{id} );
+	sql::execute(undef, undef, 'DELETE FROM Company_Profiles WHERE company_id=?',$$self{id} );
+	sql::execute(undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{id} );
 
 	sql::end_transaction( $dbh, $ac );
 
@@ -170,7 +183,7 @@ sub destroy {
 } # end sub destroy
 
 sub save {
-    my ($self, $param, $force ) = @_;
+  my ($self, $param, $force ) = @_;
 	
 	$self->set( $param ? $param : {} );
 	require Text::Unidecode;
@@ -355,7 +368,7 @@ sub can_delete {
 	return 0 if ! $_[0]{id};
 	return 1 if $openprint::session{user_type} eq 'A';
 	return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
-	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
+	return 1 if $_[0]->salesrep_id() and sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
 	return 1 if $_[0]{id} == $$openprint::User{company_id} and $$openprint::User{administrator} eq 'Y';
 	return 0;
 }
@@ -495,15 +508,29 @@ sub tax_code {
 } # end if
 
 sub admin_link_to {
-	return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ( @_ > 1 ? $_[1] : $_[0]{name} ) );
+	return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ssi::html_escape( @_ > 1 ? $_[1] : $_[0]{name} ) );
 } # end sub link_to
 
 sub link_to {
 	if ( $openprint::session{user_type} eq 'A' ) {
-		return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ( @_ > 1 ? $_[1] : $_[0]{name} ) );
+		return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ssi::html_escape( @_ > 1 ? $_[1] : $_[0]{name} ) );
 	}
-	return sprintf('<a href="/account/company_profile.html?company_id=%d">%s</a>', $_[0]{id}, $_[0]{name} );
+	return sprintf('<a href="/account/company_profile.html?company_id=%d">%s</a>', $_[0]{id}, ssi::html_escape($_[0]{name}) );
 } # end sub link_to
+
+sub last_project_on {
+	if ( ! exists $_[0]{last_project_on} ) {
+		(  $_[0]{last_project_on} ) = sql::execute( undef, undef, 'SELECT MAX(dtmCreationDate) FROM Projects WHERE company_id=?', $_[0]{id} );
+	}
+	return $_[0]{last_project_on};
+} # end sub last_project_on
+
+sub last_quoted_on {
+	if ( ! exists $_[0]{last_quoted_on} ) {
+		(  $_[0]{last_quoted_on} ) = sql::execute( undef, undef, 'SELECT MAX(dtmQuoteDate) FROM Quotes WHERE companyindex=?', $_[0]{id} );
+	}
+	return $_[0]{last_quoted_on};
+} # end sub last_quoted_on
 
 sub last_ordered_on {
 	if ( ! exists $_[0]{last_ordered_on} ) {
@@ -551,8 +578,16 @@ sub can_become {
 			$User->in_Group('Estimating')
 		 ) {
 		return 1;
-	}
-	return 0;
+  }
+  return 0;
+}
+
+sub accounting_contact_ids {
+  my $self = shift;
+  if ( !exists $$self{accounting_contact_ids}) {
+    $$self{accounting_contact_ids} = [ sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$self{id}) ];
+  }
+  return @{$$self{accounting_contact_ids} };
 }
 
 1;

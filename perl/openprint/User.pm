@@ -4,6 +4,7 @@ our @ISA = qw( openprint::Object );
 
 require openprint::Object;
 require openprint::User_in_UserGroup;
+require openprint::Company;
 
 use openprint ();
 use vars qw( $log $dbh %config $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD $default_sort );
@@ -116,7 +117,7 @@ sub save {
 
 	my @changes = $self->changes( $params );
 
-	if ( $params and $$params{type} and $$self{type} and ( $$params{type} ne $$self{type} ) and ( $$params{type} ne 'C' ) ) {
+	if ( 0 and $params and $$params{type} and $$self{type} and ( $$params{type} ne $$self{type} ) and ( $$params{type} ne 'C' ) ) {
 # Notify someone
 		my %info;
 		$info{User} = $self;
@@ -137,7 +138,7 @@ sub save {
 		my %info;
 		$info{User} = $self;
 		$_ = $$params{web_active} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
-		$info{ReplacementText} = ssi::include( $_, \%info );
+		$info{ReplacementText} = ssi::include( '/email_content/'.$_, \%info );
 		my $email_template = ssi::include( '/email_template.html', \%info  );
 
 		new openprint::Email()->send(
@@ -173,7 +174,8 @@ sub destroy {
 	foreach my $Order ( openprint::Order->find(user_id=>$$self{id}) ) {
 		$Order->delete();
 	} # end foreach
-	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{id}], 'user_id', undef );
+	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{id}], user_id=> undef );
+	sql::execute( undef, undef, 'DELETE FROM order_notifications WHERE user_id=?', $$self{id});
 	foreach my $Project ( openprint::Project->find(user_id=>$$self{id}) ) {
 		$Project->delete();
 	} # end foreach
@@ -182,21 +184,31 @@ sub destroy {
 	sql::update( undef, undef, 'barcode_log', ['operator_id=?', $$self{id} ], 'operator_id', undef );
 	sql::update( undef, undef, 'barcode_log', ['user_id=?',$$self{id}], 'user_id', undef );
 	sql::update( undef, undef, 'skids', ['created_by_id=?',$$self{id}], 'created_by_id', undef );
+	sql::update( undef, undef, 'purchaseorders', ['contact_id=?',$$self{id}], contact_id=> undef );
 
 	sql::execute( $log, $dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{id} );
 	sql::execute( $log, $dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Assistants WHERE csr_id=? OR assistant_id=?', @$self{'id','id'} );
 	sql::execute( undef, undef, 'DELETE FROM EmailCampaign_sent WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM emailcampaign_destination WHERE user_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE user_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM uploads WHERE user_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM user_profiles WHERE user_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Message_to WHERE user_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Messages WHERE from_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM User_Relationships WHERE user_id1=? OR user_id2=?', @$self{'id','id'} );
+	sql::execute( undef, undef, 'DELETE FROM object_views WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM views WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM user_purchaseorder_limits WHERE user_id=?', $$self{'id'} );
+  sql::update(undef,undef, 'locations', ['created_by=?', $$self{id}], created_by=>undef);
+  sql::update(undef,undef, 'purchaseorders', ['contact_id=?', $$self{id}], contact_id=>undef);
 
 	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE id=?', $$self{id} );
 
 	sql::end_transaction( $dbh, $ac );
+  if ( $dbh->errstr()) {
+    return $dbh->errstr();
+  }
 
 	(new openprint::Log())->save({action=>'Destroy User',note=>'User ID: ' . $$self{id}});
 } # end sub destroy
@@ -258,7 +270,7 @@ sub Prev {
 
 sub Company {
 	if ( ! $_[0]{Company} ) {
-		require openprint::Company;
+    $openprint::log->debug('Loading company');
 		$_[0]{Company} = new openprint::Company( $_[0]{company_id} );
 	} # end if
 	return $_[0]{Company};
@@ -564,7 +576,7 @@ $openprint::log->debug("Autoload User $name $_[0]") if $debug;
 				$$Profile{fields}{$name} = $_[1];
 			} # end if
 			return $$Profile{fields}{$name};
-		} else {
+		} elsif ( $debug ) {
 			my ( $caller, undef, $line ) = caller;
 			$openprint::log->error("Unknown field in User::AUTOLOAD $name from $caller:$line");
 		} # end if
@@ -579,10 +591,11 @@ sub can_edit {
 	return 1 if $openprint::session{user_id} == $_[0]{id};
 	return 1 if $openprint::session{user_type} eq 'A';
 	return 1 if ( $openprint::User->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
-	my $Company = new openprint::Company( $_[0]{company_id} );
+	my $Company = $_[0]->Company();
 	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
 	return 1 if openprint::usergroup::exists('UserManagement') and openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{user_id} );
 	return 1 if $openprint::User->in_Group('Estimating') and ($_[0]{company_id} != $openprint::User{company_id});
+  return 1 if ! $_[0]{passowrd};
 	return 0;
 } # end sub can_edit
 
@@ -590,7 +603,7 @@ sub can_view {
 	return 1 if $openprint::session{user_id} == $_[0]{id};
 	return 1 if $openprint::session{user_type} eq 'A';
 	return 1 if ( $openprint::User->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
-	my $Company = new openprint::Company( $_[0]{company_id} );
+	my $Company = $_[0]->Company();
 	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
 	return 1 if $_[0]->in_Group('Estimating') and ($_[0]{company_id} != $openprint::session{company_id});
 	require openprint::Blocklist;

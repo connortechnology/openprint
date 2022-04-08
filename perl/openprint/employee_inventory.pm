@@ -148,16 +148,17 @@ sub skids {
 		} elsif ( $param{skids} ) {
 			foreach my $skid_id ( ref $param{skids} eq 'ARRAY' ? @{$param{skids}} : $param{skids} ) {
 				my $Skid = new openprint::Skid( $skid_id );
-				if ( $Skid->deleted() ) {
-					$variable{information} .= $Skid->link_to() . ' is already deleted.<br/>';
-				} else {
-					$_ = $Skid->delete();
-					if ( $_ ) {
-						$variable{error} .= $_;
-					} else {
-						$variable{information} .= $Skid->link_to() . ' has been deleted.<br/>';
-					} # end if
-				} # end if
+				if (!$Skid->deleted()) {
+					$variable{information} .= $Skid->link_to() . ' hasn\'t been deleted and so can\'t be destroyed.<br/>';
+          next;
+
+				}
+        $_ = $Skid->destroy();
+        if ( $_ ) {
+          $variable{error} .= $_;
+        } else {
+          $variable{information} .= $Skid->link_to() . ' has been destroyed.<br/>';
+        } # end if
 			} # end foreach
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Allocate' ) {

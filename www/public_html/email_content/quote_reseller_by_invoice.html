@@ -1,4 +1,5 @@
-<style type="text/css"><? echo ( misc::load_file( $log, $config{SkinPath} . '/css/quote.css' ); ) ?></style>
+<!--Quote_Reseller_By-->
+<style><?include('/css/quote.css')?></style>
 <div class="Quote">
 	<div class="Header">
 		<?include('/includes/quote_header.html')?>
@@ -45,7 +46,7 @@
 						my $specs = openprint::service::get_specs_ref( $Project, $$services{PlainCartons}[0] );
 						$weight = $$specs{'totalWeight'.$qty_index};
 					} else {
-						$weight = openprint::print::get_finished_weight( $Project->id() ) * $Project->quantity($qty_index);
+          $weight = $Project->finished_weight() * $Project->quantity($qty_index);
 					} # end if
 					my $g = Math::Round::nearest(1,$weight * 453.59237);
 					if ( $g > 1000 ) {
@@ -70,12 +71,14 @@
 			} # end foreach QP
 			return $html;
 		) ?>
-</table>
-<? endif ( $$variable{Quote}->Quoted_Projects() ) ?>
-	<?include('/email_content/_quote_products_by.html')?>
-<span class="Currency">All prices are in <b><? echo ( $$variable{Quote}->Currency->name() ) ?></b> and are subject to applicable taxes.</span>
-		<? if ( $$variable{AdministratorName} ) ?><b>Administrator Name</b><?AdministratorName?><br/><? endif ( $$variable{AdministratorName} ) ?>
-		<? if ( $$variable{AdministratorComments} ) ?><b>Administrator Comments</b><?AdministratorComments?><br/><? endif ( $$variable{AdministratorComments} ) ?>
-<br class="pagebreak"/>
-<? echo ( $config{QuoteViewDisclaimer} ) ?>
+  </table>
+  <? endif ( $$variable{Quote}->Quoted_Projects() ) ?>
+  <?include('/email_content/_quote_products_by.html')?>
+  <span class="Currency">All prices are in <b><? echo ( $$variable{Quote}->Currency->name() ) ?></b> and are subject to applicable taxes.</span>
+  <? if ( $$variable{AdministratorName} ) ?><b>Administrator Name</b><?AdministratorName?><br/><? endif ( $$variable{AdministratorName} ) ?>
+  <? if ( $$variable{AdministratorComments} ) ?><b>Administrator Comments</b><?AdministratorComments?><br/><? endif ( $$variable{AdministratorComments} ) ?>
+  <br class="pagebreak"/>
+  <div class="Disclaimer">
+  <? echo ( $config{QuoteViewDisclaimer} ) ?>
+  </div>
 </div>

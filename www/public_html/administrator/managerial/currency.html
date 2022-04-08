@@ -16,7 +16,7 @@
 					amount: form.elements['amount-'+from_id].value, 
 					btnFunction: 'Add'
 				}, function(){ 
-						jQuery( '#Conversions'+to_id ).load( '_currency_conversions.html', { currency_id: to_id } );
+						jQuery('#Conversions'+to_id).load('_currency_conversions.html', { currency_id: to_id });
 					} 
 			);
 	} // end function set_conversion
@@ -28,6 +28,7 @@
 			<th class="name">Long Name</th>
 			<th class="short">Short Name</th>
 			<th class="symbol">Symbol</th>
+      <th class="precision">Precision</th>
 			<th class="conversions">Conversions</th>
 		</tr>
 		<? echo (
@@ -36,23 +37,25 @@
 			foreach my $Currency ( openprint::Currency->find('order'=>'lower(name)') ) {
 				$html .= sprintf(q`
 		<tr%1$s> 
-			<td class="name"><input type="text" name="name-%2$d" value="%3$s" /></td>
-			<td class="short"><input type="text" name="short-%2$d" value="%4$s" /></td>
-			<td class="symbol"><input type="text" name="symbol-%2$d" value="%5$s" /></td>
-			<td class="conversions" id="Conversions%2$d">%6$s</td>
-		</tr>`, $rowclass, @$Currency{'id','name','short','symbol'},
-				include('/administrator/managerial/_currency_conversions.html', { Currency=>$Currency } ),
+			<td class="name"><input type="text" name="name-%2$d" value="%3$s"/></td>
+			<td class="short"><input type="text" name="short-%2$d" value="%4$s"/></td>
+			<td class="symbol"><input type="text" name="symbol-%2$d" value="%5$s"/></td>
+      <td class="precision"><input type="number" name="precision-%2$d" value="%6$d" min="0" max="8"/></td>
+			<td class="conversions" id="Conversions%2$d">%7$s</td>
+		</tr>`, $rowclass, @$Currency{'id','name','short','symbol','precision'},
+    include('/administrator/managerial/_current_currency_conversions.html', { Currency=>$Currency, } ),
 				);
 			} # end foreach
 			return $html
 		) ?>	
 		<tr class="totals"> 
-			<td colspan="4"><b>Add a Currency</b></td>
+			<td colspan="5"><b>Add a Currency</b></td>
 		</tr>
 		<tr> 
 			<td class="name"><input type="text" name="name"/></td>
 			<td class="short"><input type="text" name="short"/></td>
 			<td class="symbol"><input type="text" name="symbol"/></td>
+			<td class="precision"><input type="number" name="precision" min="0" max="8"/></td>
 			<td>&nbsp;</td>
 		</tr>
 	</table>

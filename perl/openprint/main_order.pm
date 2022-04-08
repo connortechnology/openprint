@@ -119,10 +119,11 @@ sub information {
 				$error = 'No order_id given to Re-Open.';
 			} # end if order_id
 		} elsif ( $param{btnFunction} eq 'Process Order' ) {
-			if ( $param{quote_id} ) {
-				( $order_id, $error ) = openprint::order::make_order_from_quote( $param{quote_id} );
-			} else {
-				if ( openprint::Order->find( project_id=>$param{ProjectIndex},status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
+			if ($param{quote_id}) {
+				($order_id, $error) = openprint::order::make_order_from_quote($param{quote_id});
+			} elsif ($param{ProjectIndex}) {
+				if ( openprint::Order->find( project_id=>$param{ProjectIndex},
+            status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
 					return misc::error($log, $dbh, \%variable, q{Can't order project.}, "Project $param{ProjectIndex} has already been ordered." );
 				} # end if
 

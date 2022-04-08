@@ -1,7 +1,7 @@
 <div class="PageTitle">
 <h2>Companies</h2>
 </div>
-<script type="text/javascript">
+<script nonce="<?echo($config{CSP_NONCE})?>">
 function load_page() {
 	new Ajax.Updater( 'Results', '_companies.html', { parameters: $('f1').serialize() } );
 } 

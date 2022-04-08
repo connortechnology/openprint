@@ -410,20 +410,20 @@
 		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Width" name="rdbGrainDirection<?QTYIndex?>" value="width" onclick="calc(this.form.name);"
 <? echo ( checked( $$variable{'rdbGrainDirection'.$$variable{QTYIndex}} eq 'width' ); ) ?>
  />
-		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Width">Width</label>
+		<label class="radio-inline" for="rdbGrainDirection<?QTYIndex?>Width">Width</label>
 		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Height" name="rdbGrainDirection<?QTYIndex?>" value="height" onclick="calc(this.form.name);"
 <? echo ( checked( $$variable{'rdbGrainDirection'.$$variable{QTYIndex}} eq 'height' ); ) ?>
  />
-		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Height">Height</label>
+		<label class="radio-inline" for="rdbGrainDirection<?QTYIndex?>Height">Height</label>
 		<br/>
 		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Long" name="rdbGrainDirection<?QTYIndex?>" value="Long" onclick="calc(this.form.name);"
 <? echo ( checked( $$variable{'rdbGrainDirection'.$$variable{QTYIndex}} eq 'Long' ); ) ?>
  />
-		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Long">Long</label>
+		<label class="radio-inline" for="rdbGrainDirection<?QTYIndex?>Long">Long</label>
 		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Short" name="rdbGrainDirection<?QTYIndex?>" value="Short" onclick="calc(this.form.name);"
 <? echo ( checked( $$variable{'rdbGrainDirection'.$$variable{QTYIndex}} eq 'Short' ); ) ?>
  />
-		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Short">Short</label>
+		<label class="radio-inline" for="rdbGrainDirection<?QTYIndex?>Short">Short</label>
 		<? echo ( write_override( 'chkOverrideGrainDirection'.$$variable{QTYIndex}, $$variable{'chkOverrideGrainDirection'.$$variable{QTYIndex}},'',"calc('f1');" ); ) ?>
 	</span>
 <? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>

@@ -51,15 +51,15 @@ sub slurp_content {
 	} # end if
 	my $content = '';
 	if ( -e $config{SkinPath}.$file ) {
-		$content = File::Slurp::read_file($config{SkinPath}.$file,err_mode => 'carp' );
+		$content = File::Slurp::read_file($config{SkinPath}.$file, err_mode => 'carp' );
 	} elsif ( -e $config{SkinPath}.'/html/'.$file ) {
-		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file,err_mode => 'carp' );
+		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file, err_mode => 'carp' );
 	} elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
-		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file,err_mode => 'carp' );
+		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file, err_mode => 'carp' );
 	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
-		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file,err_mode => 'carp' );
+		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file, err_mode => 'carp' );
 	} else {
-		$content = File::Slurp::read_file($file,err_mode => 'carp' );
+		$content = File::Slurp::read_file($file, err_mode => 'carp');
 	} # end if
 	if ( ! $content ) {
 		$log->warn( "No content found for $file" );
@@ -130,7 +130,7 @@ sub variable_substitution {
 					$log->error("Unable to find terminating if ( $command ) in $after");
 				} # end if
 			} elsif ( $command =~ /^eval\s*\(\s*(.*)\s*\)/ms ) {
-				$_ = eval $1;
+				eval $1;
 				$log->error("Eval error of ($1), Reason: ".$@) if $@;
 			} elsif ( $command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
 				if ( !$1 ) {	
@@ -317,12 +317,13 @@ sub fill_select {
 } # sub customer_drop_down
 
 sub return_states_and_provinces {
+  my $selected_country = shift;
 	require provinces;
 	require states;
 	my @states_and_provinces = ();
-	push @states_and_provinces, @states::states;
-	push @states_and_provinces, @provinces::provinces;
-	return make_drop_down( \@states_and_provinces, \@_ );
+	push @states_and_provinces, @states::states if !$selected_country or $selected_country eq 'US';
+	push @states_and_provinces, @provinces::provinces if !$selected_country or $selected_country eq 'CA'; 
+	return make_drop_down(\@states_and_provinces, $selected_country);
 } # end sub return_states_and_provinces
 
 sub return_states {
@@ -453,6 +454,20 @@ sub fix_date {
 	return ( $year, $month, $day );
 } # end sub fix_date
 
+sub fix_datetime {
+	my ( $year, $month, $day, $hour,$minute,$second ) = @_;
+	$month = int $month;
+	$month = 12 if ( $month > 12 );
+	$month = 1 if $month < 0;
+	if ( $year and $month and $day > Date::Calc::Days_in_Month( $year, $month ) ) {
+		$day = Date::Calc::Days_in_Month( $year, $month );
+	} # end if
+  $hour = 23 if $hour > 23;
+  $minute = 59 if $minute > 59;
+  $second = 59 if $second > 59;
+	return ( $year, $month, $day, $hour, $minute, $second );
+} # end sub fix_datetime
+
 sub get_dates {
 	my ( $log, $dbh, $year, $month, $day ) = @_;
 
@@ -513,29 +528,31 @@ sub button {
 			$path =~ s/(.*\/).*/$1/;
 			$href = $path . $href;
 		} # end if
-		my $PageSetting = openprint::Page_Setting::get( $href );
+		my $PageSetting = openprint::Page_Setting::get($href);
 		return if $PageSetting and ! $PageSetting->can_view();
-	} else {
-		$$options{href} = '#';
+    if ( ! $$options{onclick} ) {
+      $$options{onclick} = 'window.location.href=\''.$$options{href}.'\';return false;';
+      delete $$options{href};
+      $$options{type} = 'button';
+    }
+  } elsif ( ! $$options{type} ) {
+    # Default non-a types to a button
+    $$options{type} = 'button';
 	} # end if
 	$$options{text} = $name if ! exists $$options{text};
-	
-	my $html = $$options{type} ?
-		qq`<button id="Button$name" class="button $$options{class}" type="$$options{type}"` :
-		qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
-	$html .= qq`name="$$options{name}" ` if $$options{name};
-	$html .= qq`value="$$options{value}" ` if $$options{value};
-	$html .= qq`title="$$options{title}" ` if $$options{title};
-	$html .= 'target="'.$$options{target}.'" ' if $$options{target};
-	$html .= 'disabled="'.$$options{disabled}.'" ' if $$options{disabled};
-	if ( $$options{onclick} and ! $$options{disabled} ) {
-		$html .= 'onclick="';
-		$html .= $$options{onclick}."return false;\" ";
-	} # end if
-	if ( $$options{ontouch} ) {
-		$html .= 'ontouch="'.$$options{ontouch}.'" ';
+  if ( $$options{text} and ! $$options{value}) {
+    $$options{value} = $$options{text};
+  }
+	my $html = 
+		qq`<button id="Button$name" name="$name" class="btn button $$options{class}" `;
+	if ( $$options{href} and $$options{type} ) {
+		$html .= qq`onclick="window.location='$$options{href}'" `;
+    #} elsif ( $$options{onclick} and ! $$options{disabled} ) {
+    #$html .= 'onclick="';
+    #$html .= $$options{onclick}."return false;\" ";
 	} # end if
 	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
+  $html .= join(' ', map { $_ eq 'onclick' ? () : $_.'="'.$$options{$_}.'"' } ( keys %$options ) );
 	$html .= '>';
 	if ( $$options{image} ) {
 		if ( $openprint::config{ButtonsUseImages} and ($openprint::config{ButtonsUseImages} eq 'true') ) {
@@ -556,6 +573,14 @@ sub button {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
 	}
 	$html .= $$options{type} ? '</button>' : '</a>';
+  if ( $$options{onclick} ) {
+    $html .= '<script nonce="'.$config{CSP_NONCE}.qq`">
+    \$j('#Button$name').on('click', function(){
+    $$options{onclick};
+    });
+    </script>
+    `;
+  } # end if
 	return $html;
 } # end sub button
 
@@ -605,6 +630,32 @@ sub writeTip {
 		return $word;
 	} # endif
 } # end  sub writeTip
+
+sub setup_datetime_select {
+	my ( $page, $prefix, $delta_seconds ) = @_;
+
+  my @fields = ( 'year','month','day','hour','minute','second');
+	if ( ( 
+        ! ( 
+          exists $session{$page.'?'.$prefix.'_year'}
+          and
+          exists $session{$page.'?'.$prefix.'_month'}
+          and 
+          exists $session{$page.'?'.$prefix.'_day'} ) )
+      or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
+		if ( $delta_seconds ne '' ) {
+      my $dt = DateTime->now( time_zone=>$openprint::TZ );
+      $dt = $dt->add(seconds=>$delta_seconds);
+
+      @session{map {$page.'?'.$prefix.'_'.$_} @fields} = map { $dt->$_() } @fields;
+    } else {
+      @session{map {$page.'?'.$prefix.'_'.$_} @fields} = map { '' } @fields;
+		} # end if
+	} else {
+      @session{map {$page.'?'.$prefix.'_'.$_} @fields} = fix_datetime(
+      @session{map {$page.'?'.$prefix.'_'.$_} @fields} );
+	} # end if
+} # end sub setup_datetime_select
 
 sub setup_date_select {
 	my ( $page, $prefix, $delta ) = @_;
@@ -668,6 +719,7 @@ sub date_select {
 #$log->debug($html);
 		} # endif
 	} # end foreach o
+  $html .= "\n";
 	if ( $$options{with_clear} ) {
 		$html .= button( $prefix.'_clear', {
 				onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
@@ -758,11 +810,12 @@ $openprint::log->error("No date from $value");
 		make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour ),
 		make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min ),
 	);
+  $html .= "\n";
 	if ( $$options{with_clear} ) {
-		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange}, 'text'=>'C' } );
+		$html .= button( $prefix.'_clear', { onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange}, text=>'C' } )."\n";
 	} # end if
 	if ( $$options{with_today} ) {
-		$html .= button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $('%1$s_year'), $('%1$s_month'), $('%1$s_day'), $('%1$s_hour'), $('%1$s_minute') );`, $prefix ).$$options{onchange}, 'text'=>'T' } );
+		$html .= button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $('%1$s_year'), $('%1$s_month'), $('%1$s_day'), $('%1$s_hour'), $('%1$s_minute') );`, $prefix ).$$options{onchange}, text=>'T' } )."\n";
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span></span>';
 	return $html;
@@ -783,16 +836,17 @@ sub save_params {
 	my ( $url, @keys ) = @_;
 
 	foreach ( @keys ) {
-		$openprint::log->debug("save_params: key $_") if Debug;
-		if ( ! exists $param{$_} ) {
-			$openprint::log->debug("save_params: does not exist in param key $_") if Debug;
+		$openprint::log->debug('save_params: key '.$_) if Debug;
+		if (!exists $param{$_}) {
+			$openprint::log->debug('save_params: does not exist in param key '.$_) if Debug;
 			next;
-		} 
-		if ( ref $param{$_} eq 'ARRAY' ) {
+		}
+		if (ref $param{$_} eq 'ARRAY') {
 			$session{"$url?$_"} = join(',', @{$param{$_}} );
 $openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if Debug;
 		} else {
-			$session{"$url?$_"} = $param{$_};
+      s/^\s+//, s/\s+$// for $param{$_};
+			$session{$url.'?'.$_} = $param{$_};
 $openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")") if Debug;
 		} # end if
 		$session{$url.'?lastupdated'} = time;
@@ -845,11 +899,14 @@ sub radio {
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= $$options{container}[0] if $$options{container};
 		$html .= sprintf(q`
-				<input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
-				<label class="radio" for="%1$s%6$s%2$s">%3$s</label>
+      <div class="form-check%7$s">
+				<label class="form-check-label radio%7$s" for="%1$s%6$s%2$s">
+				<input class="form-check-input" type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
+				%3$s</label></div>
 				`, $name, $value, $label, checked( $value eq $selected ), 
 				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
 				$$options{id},
+				( ($$options{inline} or ! exists $$options{inline} ) ? '-inline' : '' ),
 				);
 		$html .= $$options{container}[1] if $$options{container};
 	} # end foreach value
@@ -862,24 +919,34 @@ sub checkboxes {
 	my $onclick = $$options{onclick} if $options;
 	my $html;
 	my @container = @{$$options{container}} if $$options{container};
-	$values = ['on', '' ] if ! $values;
+
+	if ( ! $values ) {
+		$values = ['on', '' ];
+	} elsif ( ref $values ne 'ARRAY' ) {
+		$values = [ $values ];
+	}
 	my $id = $$options{id} ? $$options{id} : $name;
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= $container[0] if @container;
-		$html .= sprintf('<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s/>',
-				$name, $value, $id,
-				checked( defined($value) and sets::isin( $value, $selected ) ),
-				( $onclick ? ' onclick="'.$onclick.'"' : '' )
-				);
 		if ( $label ) {
 			$html .= sprintf(
 '
-<label class="radio" for="%1$s%2$s">
-%3$s
+<label class="radio%7$s" for="%1$s%2$s">
+<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s/>
+%6$s
 </label>
-', $id, $value, $label );
-		} # end if
+', $name, $value, $id, checked( sets::isin( $value, $selected ) ),
+( $onclick ? ' onclick="'.$onclick.'"' : ''),
+$label,
+( $$options{inline} ? '-inline' : '' ),
+ );
+		} else {
+			$html .= sprintf('<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s/>',
+					$name, $value, $id,
+					checked( sets::isin( $value, $selected ) ),
+					( $onclick ? ' onclick="'.$onclick.'"' : ''), );
+		} # end if has label content
 		$html .= $container[1] if @container;
 	} # end foreach value
 	return $html;
@@ -990,12 +1057,12 @@ sub input {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
-		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+    } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+      $options{type} = 'text';
+      $options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
+      delete $options{step};
+    } else {
 			$options{type} = 'text';
-			$options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
-			delete $options{step};
-		} else {
-			$options{type} = 'number';
 		} # end if
 		$options{step} = 'any' if ! exists $options{step};
 		$options{oninput} = 'floatize_calculator(this);'.$options{oninput};
@@ -1146,7 +1213,7 @@ sub format_date {
 } # end sub format_date
 
 sub format_datetime {
-	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : $_[1];
 } # end sub format_datetime
 
 sub format_time {
@@ -1154,8 +1221,9 @@ sub format_time {
 } # end sub format_time
 
 sub format_csv_datetime {
-	return $_[0] ? Date::Format::time2str( '%Y-%m-%d %H:%M:%S', Date::Parse::str2time( $_[0] ) ) : '';
+	return $_[0] ? Date::Format::time2str( '%Y-%m-%d %H:%M:%S', Date::Parse::str2time( $_[0] ) ) : $_[1];
 } # end sub format_datetime
+
 sub format_csv_date {
 	return $_[0] ? Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_datetime
@@ -1182,22 +1250,79 @@ sub include_logs_view {
 }
 
 sub do_css_links {
-    my @html;
-    my $css = shift;
-    $css =~ s/^\///;
-    $css =~ s/\..+$//;
-    my @parts = split '/', $css;
-    
-    while ( @parts ) {
-        $css = join('_', @parts ) . '.css';
-        if ( -e $config{SkinPath}.'/css/'.$css ) {
-            push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
-        } elsif ( Debug ) {
-          $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
-        } # end if
-        pop @parts;
-    } # end while
-    return join("\n", reverse @html );
+  my @html;
+  my $css = shift;
+  $css =~ s/^\///;
+  $css =~ s/\..+$//;
+  my @parts = split '/', $css;
+  $log->debug("Parts: @parts");
+
+  while ( @parts ) {
+    $css = join('_', @parts ) . '.css';
+    $log->debug("$css");
+    if ( -e $config{SkinPath}.'/css/'.$css ) {
+      $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
+      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
+    } elsif ( Debug ) {
+      $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
+    } # end if
+    if ( -e $ENV{DOCUMENT_ROOT}.'/css/'.$css ) {
+      $log->debug("xist at " . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
+      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/base_css/'.$css).'"/>';
+    } elsif ( Debug ) {
+      $log->debug("Does not exist at " . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
+    }
+    pop @parts;
+  } # end while
+  return join("\n", reverse @html);
+}
+
+sub bootstrap_navmenu {
+	my $menu = shift;
+	my $current_uri = shift;
+
+	my $html;
+
+  my @categories;
+  if ( ref $menu eq 'ARRAY' ) {
+    @categories = map { $_ % 2 ? () : $$menu[$_] } 0 .. (scalar @{$menu}-1);
+    my %m = @{$menu};
+    $menu = \%m;
+  } else {
+    @categories = sort keys %{$menu};
+  }
+
+	foreach my $category ( @categories ) {
+		if ( ref $$menu{$category} ) {
+			my %urls = %{$$menu{$category}};
+			my $submenu_html;
+			my $on = 0;
+			foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
+				my $text = $urls{$url};
+				if ( $text ) {
+					my $Page_Setting = openprint::Page_Setting::get( $url );
+					if ( $Page_Setting->can_view() ) {
+						$submenu_html .= sprintf('<li class="menu-item"><a href="%s">%s</a></li>', $url, $text )."\n";
+					} # end if
+				}
+				$on = 1 if $current_uri eq $url;
+			} # end foreach url
+
+			if ( $submenu_html ) {
+				$html .= join( $submenu_html,
+						sprintf(q`
+							<li id="%1$sMenu" class="menu-item dropdown %2$s">
+							<a href="#%1$sSubMenu" data-toggle="collapse" aria-expanded="%3$s" class="dropdown-toggle">%1$s</a>
+							<ul id="%1$sSubMenu" class="dropdown-menu %4$s list-unstyled">`,
+							$category,
+							( $on ? ('active','true','in' ) : ( '', 'false', 'collapse' ) ),
+							),'</ul></li>' );
+			}
+		} else {
+			$html .= sprintf( q`<li id="%1$sMenu" class="menu-item %2$s"><a href="%2$s">%1$s</a></li>`, $category, $$menu{$category} );
+		}
+	} # end foreach category
+	return $html;
 }
 
 1;

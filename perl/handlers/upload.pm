@@ -96,11 +96,6 @@ sub handler {
 		if ( ! $data ) {
 			$log->debug("No uploadin progress for " . $r->param('serial') );
 			$data = {};
-		#} else {
-		#$log->debug("$data");	
-#foreach my $k ( keys %$data ) {
-#$log->debug("($k) -> $$data{$k}");
-#}
 		} # end if
 
 #<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -117,11 +112,17 @@ sub handler {
 		foreach my $key ( sort $r->param() ) {
 			$log->debug("Parameter $key is (" . $r->param($key) . ")" );
 			$param{$key} = $r->param($key);
-		} # end foreach
-		configuration::init( $r->dir_config() );
-		openprint::session_init();
-		if ( $serial ) {
-			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{user_id}, 'company_id', $session{company_id}, 'size', $uploaded ] );
+    } # end foreach
+    configuration::init( $r->dir_config() );
+    openprint::session_init();
+    if ( $serial ) {
+      sql::update( undef, undef, 'uploads', ['id=?', $serial], [
+          finished=>'NOW()',
+          user_id => $session{user_id},
+          company_id => $session{company_id},
+          size => $uploaded,
+          total => $uploaded,
+        ] );
 		#} else {
 			#$log->error("No serial in upload, dumping session");
 			#foreach my $k ( keys %session ) {
@@ -150,7 +151,7 @@ sub handler {
 				$r->print( q`{ "success": true }` );
 			} # end if
 		} else {
-$log->debug("Doing standrad upload");
+      $log->debug('Doing standard upload');
 
 			upload_files();
 			my $page = '/upload/_upload_complete.html';
@@ -220,6 +221,7 @@ sub create_dir {
 
 # Returns path component from ProjectFilesPath onward, basically company and docket components
 sub get_destdir {
+  return '' if !$config{ProjectFilesPath};
 	my $destdir = '/';
 	# First off, determine if we are logged in.
 	if ( $session{company_id} ) {
@@ -261,7 +263,7 @@ sub upload_files {
 	my $destdir = get_destdir();
 	if ( ! $destdir ) {
 		$variable{error} .= 'There was an error saving your upload!<br/>';
-$log->error("No destdir");
+    $log->error('No destdir');
 		return;
 	} # end if
 	

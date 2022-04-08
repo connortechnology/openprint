@@ -26,23 +26,23 @@
 				<input type="text" onkeyup="filter_companies('payor_id', {name:this.value,selected_id:get_ddm_value($('payor_id'))});" class="filter" />
 				<select name="payor_id" id="payor_id" onchange="load_payments(this.form);">
 					<option value="">All</option>
-					<? echo ( make_drop_down( openprint::Company->dropdown( 'is_invoiced'=>1), $session{$r->uri().'?company_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown( 'is_invoiced'=>1), $session{$r->uri().'?payor_id'} ); ) ?>
 				</select>
 			</li>
 			<li>
 				<label>Received On</label>
-<? echo ( date_select_session( $r->uri(), 'received_on_start', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
+        <? echo ( date_select_session($r->uri(), 'received_on_start', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
 					to 
-<? echo ( date_select_session( $r->uri(), 'received_on_end', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
+        <? echo ( date_select_session($r->uri(), 'received_on_end', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
 			</li>
 			<li>
 				<label>Entered On</label>
-<? echo ( date_select_session( $r->uri(), 'entered_on_start', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
+        <? echo ( date_select_session($r->uri(), 'entered_on_start', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
 					to 
-<? echo ( date_select_session( $r->uri(), 'entered_on_end', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
+        <? echo ( date_select_session($r->uri(), 'entered_on_end', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
 			</li>
 			<li><label>Transaction</label>
-				<? echo ( input(type=>'text', name=>'transaction_id', value=>$session{'/payment/history.html?transaction_id'},onkeydown=>q`if(event.keyCode == 13){load_payments($('f1'));` ); ) ?>
+				<? echo ( input(type=>'text', name=>'transaction_id', value=>$session{'/payment/history.html?transaction_id'}, onkeydown=>q`if(event.keyCode == 13){load_payments($('f1'));` ); ) ?>
 			</li>
 			</ul>
 			<p class="buttons">

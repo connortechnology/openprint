@@ -15,6 +15,7 @@ CREATE TABLE timetracks (
     user_id integer, FOREIGN KEY (user_id) REFERENCES Users(id),
     paycheque_id integer,
     rate numeric(10,2),
+    units   text,
     deleted boolean DEFAULT false,
     currency_id integer, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
     travel_associated boolean DEFAULT false NOT NULL,

@@ -12,19 +12,19 @@ $table = 'service_types';
 $serial = 'service_types_id_seq';
 
 %fields = (
-	id				=>	'id',
-	name			=> 'name',
+	id			    	=>	'id',
+	name		    	=> 'name',
 	description		=> 'description',
-	url				=> 'strdetailedurl',
-	type			=> 'type',
+	url				    => 'strdetailedurl',
+	type		    	=> 'type',
 	category_id		=> 'category_id',
-	sorting			=> 'sorting',
+	sorting		  	=> 'sorting',
 	create_visible	=> 'create_visible',
 	view_visible	=> 'view_visible',
 	summary_visible	=> 'summary_visible',
-	category		=> undef,
+	category		  => undef,
 	allow_delete	=> 'allow_delete',
-	deleted			=> 'deleted',
+	deleted		  	=> 'deleted',
 );
 %find_fields = (
 	category	=>	'(SELECT name FROM ServiceType_Categories WHERE id=category_id)',
@@ -36,6 +36,8 @@ $serial = 'service_types_id_seq';
 	category_id		=>	undef,
 	sorting			=>	undef,
 	summary_visible	=>	1,
+  create_visible => 0,
+  view_visible => 0,
 	allow_delete	=>	1,
 );
 

@@ -24,6 +24,7 @@ my %menu = (
 		'/employee/accounting/stock.html'	=>	'Stock',
 		'/employee/accounting/credit_applications.html'	=>	'Credit Applications',
 		'/payment/history.html'				=>	'Payment History',
+		'/payment/edit.html'				=>	undef,
 		'/invoice/history.html'				=>	'Invoices',
 	},
 	Inventory	=>	{
@@ -60,6 +61,7 @@ my %menu = (
 	IT	=>	{
 		'/article/history.html'   =>  'Articles',
 		'/employee/it/hosts.html'   =>  'Hosts',
+		'/employee/it/networks.html'   =>  'Networks',
 		'/employee/it/host.html'   =>  undef,
 		'/employee/it/licenses.html'        =>  'Licenses',
 		'/location/search.html'				=>	'Locations',
@@ -150,4 +152,7 @@ foreach my $category ( sort keys %menu ) {
 <li class="off"><a href="/session.html">SESSION</a></li>
 </ul>
 <? endif ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
+<ul>
+<li class="off"><a href="#" onclick="popup_window('/_bug_report.html');return false;">SEND BUG REPORT</a></li>
+</ul>
 <? endif ( $session{user_id} ) ?>

@@ -4,7 +4,7 @@
 	<thead>
 		<tr>
 			<th class="thumbnail">&nbsp;</th>
-			<th class="description">Product</th>
+			<th class="description">Product / Service</th>
 			<th class="quantity">Quantity</th>
 			<th class="cost">Cost</th>
 			<th class="markup">Markup</th>
@@ -24,7 +24,7 @@
 									<td class="price">%5$s%6$s</td>
 									<td class="markup">%7$s</td>
 									<td class="newprice">%8$s</td>
-									</tr>', $rowclass, $Product->id(), $Product->name() . ($Product->description() ne $Product->name() ? ' ' . $Product->description() : '' ) . ( $Product->description() ? '<br/>'.$Product->comments() : $Product->comments() ), 
+        </tr>', $rowclass, $Product->id(), $Product->name() . ($Product->description() ne $Product->name() ? ' ' . $Product->description() : '' ) . ('<div class="comments">'.$Product->comments().'</div>'), 
 									Number::Format::format_number($Product->quantity()), 
 									openprint::Currency::format( $Product->cost() ), 
                   $Product->units(),

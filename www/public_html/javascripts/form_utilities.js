@@ -237,13 +237,14 @@ function get_ddm_value ( ddm ) {
 	} // end if
 	return value;
 } // end function
+
 function get_ddm_text ( ddm ) {
 	if ( ddm ) {
 		if ( ddm.selectedIndex != -1 && ddm.options[ddm.selectedIndex] ) {
 			return ddm.options[ddm.selectedIndex].text;
 		} // end if
 	} else {
-		alert("null ddm passed to get_ddm_value : " + ddm);
+		console.log("null ddm passed to get_ddm_value : " + ddm);
 	} // end if
 } // end function
 
@@ -746,9 +747,9 @@ function addLoadEvent(func) {
 }
 
 function Country_onchange( country_ddm, state ) {
-	var country = get_ddm_value( country_ddm );
-	var state_label = $(country_ddm.name + '_state');
-	var postal_label = $(country_ddm.name + '_postal');
+	const country = get_ddm_value( country_ddm );
+	const state_label = $(country_ddm.name + '_state');
+	const postal_label = $(country_ddm.name + '_postal');
 	var onchange = state.getAttribute('onchange');
 	if ( country == 'US' ) {
 		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
@@ -1648,3 +1649,70 @@ function stop_filter_companies() {
 		filter_ajax = null;
 	}
 } 
+
+function load_logs_form() {
+  const form = jQuery('#logs_form');
+  if (form.length) {
+    jQuery('#Logs').load('/includes/_logs_contents.html',
+            jQuery('#logs_form').serialize()
+            );
+  } else {
+    console.error('No form found');
+  }
+}
+
+function update_event_bindings() {
+  // 
+  document.querySelectorAll("select[data-on-change], input[data-on-change]").forEach(function attachOnChangeThis(el) {
+    var fnName = el.getAttribute("data-on-change");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    }
+    el.onchange = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll("input[data-on-input]").forEach(function(el) {
+    var fnName = el.getAttribute("data-on-input");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    }
+    el.oninput = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll('button[data-onclick-this]').forEach(function(el) {
+    var fnName = el.getAttribute('data-onclick-this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll('button[data-on-click-this]').forEach(function(el) {
+    var fnName = el.getAttribute('data-on-click-this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
+  document.querySelectorAll("i[data-on-click], a[data-on-click], button[data-on-click], input[data-on-click]").forEach(function attachOnClick(el) {
+    var fnName = el.getAttribute("data-on-click");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName + " on element " + el.name);
+      return;
+    }
+
+    el.onclick = function(ev) {
+      window[fnName](ev);
+    };
+  });
+}
+
+window.addEventListener("DOMContentLoaded", function() {
+  update_event_bindings();
+});

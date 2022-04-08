@@ -39,7 +39,7 @@ if ($opts->{help}) {
 }
 
 $log = new logger({level=>'debug'});
-configuration::from_file($$opts{config} ? $$opts{config} : "/etc/$program.conf");
+configuration::from_file($$opts{config} ? $$opts{config} : "/etc/openprint/$program.conf");
 # Commandline overrides config file
 configuration::merge( $opts );
 $log->level($config{log_level}) if $config{log_level};
@@ -61,7 +61,7 @@ $openprint::dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 configuration::init();
-configuration::from_file($$opts{config} ? $$opts{config} : "/etc/$program.conf");
+configuration::from_file($$opts{config} ? $$opts{config} : "/etc/openprint/$program.conf");
 configuration::merge( $opts );
 
 my @Currencies = openprint::Currency->find();

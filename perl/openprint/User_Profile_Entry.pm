@@ -8,12 +8,12 @@ $debug = 0;
 $table = 'user_profiles';
 @identified_by = ( 'user_id', 'field_id' );
 %fields = (
-	'user_id'	=>	'user_id',
-	'field_id'	=>	'field_id',
-	'value'		=>	'value',
+	user_id 	=>	'user_id',
+	field_id	=>	'field_id',
+	value		  =>	'value',
 );
 %transforms = (
-	'value' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
+	value => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
 );
 %defaults = (
 );
