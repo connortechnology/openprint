@@ -2,7 +2,7 @@
 	<h1>Accounting</h1>
 	<h2>Expenses</h2>
 </div>
-<script type="text/javascript">
+<script>
 	function delete_confirm(form) {
 		var number_of_deleted_expensess = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -22,8 +22,17 @@
 		} // end if
 	}
 	function load_expenses( form ) {
-		LoadContent( 'ExpenseList','_expenses.html', $('f1') );
+    $j('#ExpenseList').load('_expenses.html', $j('#f1').serialize(), function() {
+      //$j('#ExpensesTable').DataTable();
+    });
+
+		//LoadContent( 'ExpenseList','_expenses.html', $('f1') );
 	} // end function
+
+  $j(document).ready( function () {
+        //$j('#ExpensesTable').DataTable();
+    //load_expenses();
+  });
 </script>	 
 <? include(/includes/error_reporting.html) ?>
 <form id="f1" name="f1" method="post" action="/employee/accounting/expenses.html">
@@ -71,15 +80,14 @@
 			<div class="content">
 				<ul>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
-			<li><label>Company</label>
-				<input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
-				<select id="owner_id" name="owner_id" onchange="stop_filter_companies();load_expenses();">
-					<option value="">All</option>
-<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(), offers_credit=>1}), $session{$r->uri().'?owner_id'}, {encode=>1} ) ) ?>
-				</select>
-      </li>
+          <li><label>Company</label>
+            <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+            <select id="owner_id" name="owner_id" onchange="stop_filter_companies();load_expenses();">
+              <option value="">All</option>
+    <? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(), offers_credit=>1}), $session{$r->uri().'?owner_id'}, {encode=>1} ) ) ?>
+            </select>
+          </li>
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
-			</li>
 					<li>
 						<label>Currency</label>
 						<select name="currency_id" id="currency_id" onchange="load_expenses(this.form);">

@@ -175,7 +175,7 @@ sub destroy {
 		$Order->delete();
 	} # end foreach
 	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{id}], user_id=> undef );
-	sql::update( undef, undef, 'order_notifications', ['user_id=?',$$self{id}], user_id=>undef );
+	sql::execute( undef, undef, 'DELETE FROM order_notifications WHERE user_id=?', $$self{id});
 	foreach my $Project ( openprint::Project->find(user_id=>$$self{id}) ) {
 		$Project->delete();
 	} # end foreach
@@ -190,6 +190,7 @@ sub destroy {
 	sql::execute( $log, $dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Assistants WHERE csr_id=? OR assistant_id=?', @$self{'id','id'} );
 	sql::execute( undef, undef, 'DELETE FROM EmailCampaign_sent WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM emailcampaign_destination WHERE user_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE user_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM uploads WHERE user_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM user_profiles WHERE user_id=?', $$self{id} );
@@ -594,6 +595,7 @@ sub can_edit {
 	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
 	return 1 if openprint::usergroup::exists('UserManagement') and openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{user_id} );
 	return 1 if $openprint::User->in_Group('Estimating') and ($_[0]{company_id} != $openprint::User{company_id});
+  return 1 if ! $_[0]{passowrd};
 	return 0;
 } # end sub can_edit
 

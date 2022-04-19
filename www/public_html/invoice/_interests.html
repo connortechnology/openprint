@@ -3,23 +3,29 @@
 <? if ( @{$$variable{Interests}} ) ?>
 <fieldset><legend>Interest</legend>
 	<table>
-		<tr><th align="left">When</th><th>Description</th><th class="Price">Amount</th><th width="20">&nbsp;</th></tr>
+		<tr>
+      <th class="DateTime When">When</th>
+      <th class="Description">Description</th>
+      <th class="Price">Amount</th>
+      <th class="buttons">&nbsp;</th>
+    </tr>
 		<? echo ( 
 			my $html = '';
 			$$variable{interest_total} = 0;
 			foreach my $Interest ( @{$$variable{Interests}} ) {
 				$html .= sprintf('
 <tr>
-  <td>%2$s</td>
-  <td>%3$s</td>
+  <td class="DateTime When">%2$s</td>
+  <td class="Description">%3$s</td>
   <td class="Price">%4$s</td>
-  <td>%5$s</td>
+  <td class="buttons">%5$s</td>
 </tr>', $Interest->id(), $Interest->compounded_on(), $Interest->description(), openprint::Currency::format( $Interest->amount() ),
   button('deleteInterest'.$Interest->id(), {
-    onclick=>q`new Ajax.Updater('Interests', '_interests.html', { evalScripts:true, parameters: { action: 'delete', interest_id: '` . $Interest->id() . q`'} } );`,
-    text=>'X', title=>'Delete' ),
+  'data-onclick-this'=>'del_interest', 'data-interest_id'=>$Interest->id(),
+   # q`new Ajax.Updater('Interests', '_interests.html', { evalScripts:true, parameters: { action: 'delete', interest_id: '` . $Interest->id() . q`'} } );`,
+    text=>'X', title=>'Delete' } ),
 					);
-				$$variable{'interest_total'} += $Interest->amount();
+				$$variable{interest_total} += $Interest->amount();
 			} # end foreach
 			return $html;
 		) ?>

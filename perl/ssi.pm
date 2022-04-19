@@ -59,7 +59,7 @@ sub slurp_content {
 	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
 		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file, err_mode => 'carp' );
 	} else {
-		$content = File::Slurp::read_file($file,err_mode => 'carp' );
+		$content = File::Slurp::read_file($file, err_mode => 'carp');
 	} # end if
 	if ( ! $content ) {
 		$log->warn( "No content found for $file" );
@@ -317,12 +317,13 @@ sub fill_select {
 } # sub customer_drop_down
 
 sub return_states_and_provinces {
+  my $selected_country = shift;
 	require provinces;
 	require states;
 	my @states_and_provinces = ();
-	push @states_and_provinces, @states::states;
-	push @states_and_provinces, @provinces::provinces;
-	return make_drop_down( \@states_and_provinces, \@_ );
+	push @states_and_provinces, @states::states if !$selected_country or $selected_country eq 'US';
+	push @states_and_provinces, @provinces::provinces if !$selected_country or $selected_country eq 'CA'; 
+	return make_drop_down(\@states_and_provinces, $selected_country);
 } # end sub return_states_and_provinces
 
 sub return_states {
@@ -531,34 +532,27 @@ sub button {
 		return if $PageSetting and ! $PageSetting->can_view();
     if ( ! $$options{onclick} ) {
       $$options{onclick} = 'window.location.href=\''.$$options{href}.'\';return false;';
-      undef $$options{href};
+      delete $$options{href};
       $$options{type} = 'button';
     }
-	#} else {
-		#$$options{href} = '#';
   } elsif ( ! $$options{type} ) {
     # Default non-a types to a button
     $$options{type} = 'button';
 	} # end if
 	$$options{text} = $name if ! exists $$options{text};
+  if ( $$options{text} and ! $$options{value}) {
+    $$options{value} = $$options{text};
+  }
 	my $html = 
-		qq`<button id="Button$name" class="btn button $$options{class}" `;
-	$html .= qq`name="$$options{name}" ` if $$options{name};
-	$html .= qq`value="$$options{value}" ` if $$options{value};
-	$html .= qq`title="$$options{title}" ` if $$options{title};
-	$html .= 'target="'.$$options{target}.'" ' if $$options{target};
-	$html .= 'disabled="'.$$options{disabled}.'" ' if $$options{disabled};
-	$html .= 'type="'.$$options{type}.'" ' if $$options{type};
+		qq`<button id="Button$name" name="$name" class="btn button $$options{class}" `;
 	if ( $$options{href} and $$options{type} ) {
 		$html .= qq`onclick="window.location='$$options{href}'" `;
     #} elsif ( $$options{onclick} and ! $$options{disabled} ) {
     #$html .= 'onclick="';
     #$html .= $$options{onclick}."return false;\" ";
 	} # end if
-	if ( $$options{ontouch} ) {
-		$html .= 'ontouch="'.$$options{ontouch}.'" ';
-	} # end if
 	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
+  $html .= join(' ', map { $_ eq 'onclick' ? () : $_.'="'.$$options{$_}.'"' } ( keys %$options ) );
 	$html .= '>';
 	if ( $$options{image} ) {
 		if ( $openprint::config{ButtonsUseImages} and ($openprint::config{ButtonsUseImages} eq 'true') ) {
@@ -843,11 +837,11 @@ sub save_params {
 
 	foreach ( @keys ) {
 		$openprint::log->debug('save_params: key '.$_) if Debug;
-		if ( !exists $param{$_} ) {
+		if (!exists $param{$_}) {
 			$openprint::log->debug('save_params: does not exist in param key '.$_) if Debug;
 			next;
 		}
-		if ( ref $param{$_} eq 'ARRAY' ) {
+		if (ref $param{$_} eq 'ARRAY') {
 			$session{"$url?$_"} = join(',', @{$param{$_}} );
 $openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if Debug;
 		} else {

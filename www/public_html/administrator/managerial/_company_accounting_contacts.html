@@ -1,7 +1,7 @@
 <?include('/includes/error_reporting.html')?>
 <? echo (
-	my @accounting_contacts = sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$variable{Company}->id() );
-	my @Users = openprint::User->find( id=>\@accounting_contacts, order=>'lower(firstname),lower(lastname)' ) if @accounting_contacts;
+  my @accounting_contacts = $$variable{Company}->accounting_contact_ids();
+	my @Users = openprint::User->find(id=>\@accounting_contacts) if @accounting_contacts;
 	
 	my $html;
 	foreach my $User ( @Users ) {
@@ -19,10 +19,12 @@
 		$html .= '</select>';
 	} # end if
 
-	my @Users = openprint::User->find( company_id=>$company_id, order=>'lower(firstname),lower(lastname)') if $company_id;
+  my @Users = openprint::User->find(company_id=>$company_id,
+    (@accounting_contacts ? ('id not in'=>\@accounting_contacts) : ())
+  ) if $company_id;
 	if ( @Users ) {
 		$html .= ssi::select( [ map { $_->id(), $_->name() } @Users ], undef, { name=>'new_accounting_contact_id', id=>'new_accounting_contact_id', prepend=>['','select'] } );
-		$html .= button( 'AddAccountingContact', { onclick=>qq`new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { parameters: { company_id: $$variable{Company}{id}, new_accounting_contact_id: \$('new_accounting_contact_id').value, action: 'add' } } );`, text=>'Add' } );
+		$html .= button( 'AddAccountingContact', { onclick=>qq`new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { parameters: { company_id: $$variable{Company}{id}, user_id: \$('new_accounting_contact_id').value, action: 'add' } } );`, text=>'Add' } );
 	} # end if
 	return $html;
 ) ?>

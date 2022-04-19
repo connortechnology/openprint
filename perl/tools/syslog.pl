@@ -30,6 +30,7 @@ Getopt::Long::GetOptions($opts, 'fifo=s', 'help', 'config=s',
 	'log_file=s', 'log_level=s',
 	'pid_file=s', 'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'port=s','debug=s',
+	'reload=s',
 );
 
 if ($opts->{help}) {
@@ -129,9 +130,9 @@ my $MAXLEN = 1524;
 $log->debug("Opening $config{protocol} socket on port $config{port}") if $openprint::config{debug};
 my $sock = IO::Socket::INET->new( LocalPort=>$config{port}, Proto=>$config{protocol} )||die("Socket: $@");
 
-if ( $config{'pid_file'} ) {
+if ( $config{pid_file} ) {
 	my $pidh;
-	if (open($pidh, '> '.$config{'pid_file'} ) ) {
+	if (open($pidh, '> '.$config{pid_file})) {
 		print $pidh $$."\n";
 		close($pidh);
 	} else {
@@ -165,9 +166,14 @@ while(1) {
 	# Every hour, we update and
 	if ( $last_update < (time-3600) ) {
 		$last_update = time;
+		%host_counts = ();
+		%hostname_lookups = ();
 
 		my @WhiteList_Hosts = openprint::Host->find( whitelist=>1 );
-		%whitelist = map{ $_->ip(),$_ } openprint::Host_Interface->find('ip is null'=>0, host_id=>[ map { $$_{id} } @WhiteList_Hosts ] ) if @WhiteList_Hosts;
+		%whitelist = map{ $_->ip() => $_ } openprint::Host_Interface->find(
+				'ip is null'=>0,
+				host_id=>[ map { $$_{id} } @WhiteList_Hosts ]
+				) if @WhiteList_Hosts;
 		$openprint::log->debug(join("\n", map { 'whitelist: ' . $_ } keys %whitelist ) ) if $config{debug};
 
 		# If a blacklist is specified, update it on start
@@ -208,8 +214,8 @@ while(1) {
 		$log->debug("Done updating shorewall.") if $config{debug};
 	} # end if do update
 
-	while( $sock->recv($buf, $MAXLEN) ) {
-		next if ! $buf;
+	while ($sock->recv($buf, $MAXLEN)) {
+		next if !$buf;
 		#my ($port, $ipaddr) = IO::Socket::sockaddr_in($sock->peername);
 		#my $hn = gethostbyaddr($ipaddr, Socket::AF_INET);
 		#$log->debug($buf) if $config{debug};
@@ -221,7 +227,6 @@ while(1) {
 		} 
 		my $changed = 0;
 		foreach my $re ( @re ) {
-
 			#$log->debug("Checking Line: $re") if $config{debug};
 
 			if ( $line =~ /$re/ ) {
@@ -232,7 +237,7 @@ while(1) {
 	# Is an IP
 					$log->debug("$source is an ip") if $config{debug};
 					$ip = $source;
-				} elsif ( $hostname_lookups{$source} ) {
+				} elsif ($hostname_lookups{$source}) {
 					$hostname = $source;
 					$ip = $hostname_lookups{$source};
 				} else {
@@ -351,7 +356,6 @@ $log->debug("count for $ip is $$Host{count}");
 		} # end if
 		last if ! ( $dbh and $dbh->ping() );
 	} # end while recv
-
 } # end while
 
 sub sig_handler {
