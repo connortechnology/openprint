@@ -155,15 +155,17 @@ sub verify_login {
 	} # end if
 
 	# Have a valid user now.
-	if ( $User->Company()->activation() eq 'N' ) {
-		$$variable{error} = 'Company not activated.';
-		$$variable{information} = 'Your company account has not been looked over and activated by an administrator yet. You will be notified when your application has been approved.';
-		(new openprint::Log())->save({Object=>$User, action=>'Login Failed', note=>'Company Account Not Activated', user_id=>$User->id(), company_id=>$User->company_id() } );
-		return;
-	} elsif ( $User->Company()->activation() ne 'Y' ) {
-		$$variable{error} = 'Company Account activation status is unknown.('.$User->Company()->activation().')';
-		$$variable{information} = 'Please report this error.';
-		return;
+  if ( $User->company_id()) {
+    if ( $User->Company()->activation() eq 'N' ) {
+      $$variable{error} = 'Company not activated.';
+      $$variable{information} = 'Your company account has not been looked over and activated by an administrator yet. You will be notified when your application has been approved.';
+      (new openprint::Log())->save({Object=>$User, action=>'Login Failed', note=>'Company Account Not Activated', user_id=>$User->id(), company_id=>$User->company_id() } );
+      return;
+    } elsif ( $User->Company()->activation() ne 'Y' ) {
+      $$variable{error} = 'Company Account activation status is unknown.('.$User->Company()->activation().')';
+      $$variable{information} = 'Please report this error.';
+      return;
+    } # end if
 	} # end if
 
 	# Have a valid user now.
@@ -212,10 +214,7 @@ sub verify_login {
 
 	} # end if
 
-	@session{'company_id','user_id','email','user_type'} = $User->get('company_id','id','email','type');
-	openprint::usergroup::init_cache();
-	delete $session{Pricelist_id};
-	(new openprint::Log())->save({Object=>$User, action=>'Login', note=>'Successful Login' } );
+  login($User);
 
 	if ( $openprint::param{rdbRememberMe} eq 'Y' ) {
 		my $Cookie = Apache2::Cookie->new($r,
@@ -246,6 +245,14 @@ sub verify_login {
 		$$variable{ExternalRedirect} = $r->uri();
 	} # end if
 } # sub verify_login
+
+sub login {
+  my $User = shift;
+	@session{'company_id','user_id','email','user_type'} = $User->get('company_id','id','email','type');
+	openprint::usergroup::init_cache();
+	delete $session{Pricelist_id};
+	(new openprint::Log())->save({Object=>$User, action=>'Login', note=>'Successful Login' } );
+}
 
 sub logout {
 	(new openprint::Log())->save({Object=>$openprint::User, action=>'Logout'});

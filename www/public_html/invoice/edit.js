@@ -25,7 +25,8 @@ function update_product( product_id ) {
 	$('product-total-'+product_id).innerHTML = do_decimals( parseFloat($('product-price-'+product_id).value) * parseFloat($('product-quantity-'+product_id).value), 2 );
 } // end function update_product
 
-function add_timetrack( timetrack_id ) {
+function add_timetrack(button) {
+  const timetrack_id = button.getAttribute('data-id');
 	new Ajax.Updater( 'Timetracks', '_timetracks.html', {
 			parameters: {
 				invoice_id: invoice_id,
@@ -33,6 +34,7 @@ function add_timetrack( timetrack_id ) {
 				action: 'add'
 			},
 			onComplete: function(transport) {
+        update_event_bindings();
 				update_totals();
 				TableKit.reload();
 			},
@@ -41,7 +43,8 @@ function add_timetrack( timetrack_id ) {
 			}
 	} );
 } // end function add_timetrack( invoice_id)
-function del_timetrack( timetrack_id ) {
+function del_timetrack( button ) {
+  const timetrack_id = button.getAttribute('data-id');
 	new Ajax.Updater( 'Timetracks', '_timetracks.html', {
 			parameters: {
 				invoice_id: invoice_id,
@@ -49,6 +52,7 @@ function del_timetrack( timetrack_id ) {
 				action: 'remove'
 			},
 			onComplete: function(transport) {
+        update_event_bindings();
 				update_totals();
 				TableKit.reload();
 			},
