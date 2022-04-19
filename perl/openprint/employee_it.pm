@@ -957,6 +957,7 @@ sub _interface {
             $Host->save({hostname=>$param{hostname}});
           } else {
             $log->debug("Not updating hostname from $$Host{hostname} to $param{hostname}");
+            $Host->save(); # To update updated_on
           }
         } # end foreach HI
       } # end if @His
