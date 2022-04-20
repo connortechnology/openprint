@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 
 package openprint::employee_it;
 use openprint;
@@ -23,6 +24,8 @@ require openprint::License;
 require openprint::Software;
 require openprint::Location;
 require openprint::Syslog;
+
+use Data::Dumper;
 
 sub index {
 }
@@ -274,14 +277,29 @@ sub host {
 
       $variable{error} .= $Host->save(\%param) if @changes;
       foreach my $I ( $Host->Interfaces(), new openprint::Host_Interface() ) {
+        $$I{id} = '' if ! $$I{id};
         if ( $param{"mac-$$I{id}"} or $param{"ip-$$I{id}"} or $param{"comment-$$I{id}"} ) {
-          my %c = map { exists($param{"$_-$$I{id}"}) ?( $_=>$param{"$_-$$I{id}"} ) : ( $_=>$openprint::Host_Interface::defaults{$_} ) } ( 'mac', 'ip', 'dhcp', 'monitor', 'comment' );
-          my @c = $I->changes( \%c );
-          if ( @c ) {
-            $c{host_id} = $$Host{id};
-            $variable{error} .= $I->save(\%c);
-            push @changes, 'Interface changed: ' . join(',', @c ) . '<br/>' if ! $variable{error};
-          }
+          if ( ref $param{"mac-$$I{id}"} eq 'ARRAY' ) {
+            while (@{$param{"mac-$$I{id}"}}) {
+              $log->debug("hello". @{$param{"mac-$$I{id}"}});
+              my %c = map { $_=>exists($param{"$_-$$I{id}"}) ? shift @{$param{"$_-$$I{id}"}} : $openprint::Host_Interface::defaults{$_} } ( 'mac', 'ip', 'dhcp', 'monitor', 'comment' );
+              $openprint::log->debug( Data::Dumper::Dumper( \%c ) );
+              $c{host_id} = $$Host{id};
+              $log->debug("hello");
+              $variable{error} .= $I->save(\%c);
+              $log->debug("hello");
+              push @changes, 'Interface added: ' . $I->to_string() . '<br/>' if ! $variable{error};
+              $log->debug("hello" . @{$param{"mac-$$I{id}"}});
+            } # end while
+          } else {
+            my %c = map { $_ => exists($param{"$_-$$I{id}"}) ? $param{"$_-$$I{id}"} : $openprint::Host_Interface::defaults{$_} } ( 'mac', 'ip', 'dhcp', 'monitor', 'comment' );
+            my @c = $I->changes(\%c);
+            if ( @c ) {
+              $c{host_id} = $$Host{id};
+              $variable{error} .= $I->save(\%c);
+              push @changes, 'Interface changed: ' . join(',', @c ) . '<br/>' if ! $variable{error};
+            }
+          } # end if multiple new interfaces to add
         } else {
           $variable{error} .= $I->delete() if $$I{id};
         } # end if
@@ -917,6 +935,7 @@ sub _interface {
     if ( $param{action} eq 'add interface' ) {
       my $I = $variable{Interface} = new openprint::Host_Interface();
       $$I{host_id} = $param{host_id};
+      $I->save();
     } elsif ($param{action} eq 'dhcp' ) {
       if ( ! $param{mac} ) {
         $openprint::log->error('Need mac when doing dhcp update');
@@ -957,6 +976,7 @@ sub _interface {
             $Host->save({hostname=>$param{hostname}});
           } else {
             $log->debug("Not updating hostname from $$Host{hostname} to $param{hostname}");
+            $Host->save(); # To update updated_on
           }
         } # end foreach HI
       } # end if @His

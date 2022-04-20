@@ -22,11 +22,11 @@ table .Markup {
 }
 
 .tax_exempt {
-	padding-left: 180px;
+	padding-left: 185px;
 }
-.tax_exempt label {
-	width: 175px;
-	margin-left: -180px;
+.tax_exempt label:not(.radio):not(.radio-inline) {
+	width: 180px;
+	margin-left: -185px;
 }
 
 table .Supplier {

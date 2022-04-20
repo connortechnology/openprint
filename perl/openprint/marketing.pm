@@ -20,6 +20,7 @@ package openprint::marketing;
 require openprint::EmailCampaign;
 require openprint::EmailCampaign_Sent;
 require openprint::EmailCampaign_Destination;
+require openprint::EmailCampaign_Subscription;
 require openprint::MarketingCategory;
 require openprint::Company;
 require openprint::Company_in_Marketing_Category;
@@ -289,6 +290,8 @@ sub subscriptions {
       # NEW
       $User = new openprint::User();
       $User->email($param{email});
+      $User->type('C');
+      $User->web_active($config{NewFirstUserAccountActivation});
     } else {
       $User = $Users[0];
     }
@@ -366,15 +369,18 @@ sub subscriptions {
         }
       } # end if not logged in
       if (!$User->id()) {
-        $variable{error} .= $User->save({email=>$param{email}});
+        my $Company = new openprint::Company();
+        $Company->save({name=>$User->email(), activation=>$config{NewCustomerAccountActivation}});
+        $variable{error} .= $User->save({email=>$param{email}, company_id=>$Company->id(), password=>$param{password}});
         if (!$variable{error}) {
-          $openprint::User = $User;
-          $variable{information} .= 'Account created.<br/>';
+          openprint::login::login($User);
+          $variable{information} .= 'Account created and logged in.<br/>';
         }
       }
       if (!$User->password() and $param{password}) {
-        $User->set({password=>$param{password}});
-        $variable{information} .= 'Password assigned.<br/>';
+        $User->save({password=>$param{password}});
+        openprint::login::login($User);
+        $variable{information} .= 'Password assigned and logged in.<br/>';
       }
       if ( ( $param{all} eq 'N' ) and ( $User->mailinglist() ne 'N' ) ) {
         $variable{error} .= $User->save({mailinglist=>$param{all}});
@@ -382,9 +388,23 @@ sub subscriptions {
       } elsif ( ( $param{all} eq 'Y' ) and ( $User->mailinglist() ne 'Y' ) ) {
         $variable{error} .= $User->save({mailinglist=>'Y'});
         $variable{information} .= 'Subscribed to all email communications.<br/>' if ! $variable{error};
-      } else {
-        $variable{information} .= ' No changes made to subscriptions.';
       } # end if
+      my %Subscriptions = map { $$_{campaign_id} => $_ } openprint::EmailCampaign_Subscription->find(user_id=>$User->id());
+      foreach my $Campaign (openprint::EmailCampaign->find(user_id=>undef, runnable=>1)) {
+        if ($param{'campaign_'.$$Campaign{id}} == '1') {
+          if (!$Subscriptions{$$Campaign{id}}) {
+            $Subscriptions{$$Campaign{id}} = new openprint::EmailCampaign_Subscription();
+            $Subscriptions{$$Campaign{id}}->save({user_id=>$User->id(), campaign_id=>$$Campaign{id}});
+            $variable{information} .= 'Subscribed to ' . $Campaign->name().'<br/>';
+          }
+        } else {
+          if ($Subscriptions{$$Campaign{id}}) {
+            $Subscriptions{$$Campaign{id}}->delete();
+            $variable{information} .= 'Unsubscribed from ' . $Campaign->name().'<br/>';
+          }
+        }
+      }
+      $variable{ExternalRedirect} = '/marketing/subscriptions.html';
     } # end if save
 	} # end if action
   $variable{User} = $User;

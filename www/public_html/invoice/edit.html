@@ -23,10 +23,10 @@ name=>'invoicer_id', prepend=>['','select']
 					</select>
 					<input type="text" name="invoicee" id="invoicee" style="display: none;"/>
 				</li>
-				<li class="posted_on"><label>Posted On</label>
+				<li class="posted_on Date"><label>Posted On</label>
 				<? echo ( date_select( 'posted_on', $$variable{Invoice}->posted_on(), { with_today=>1 } ); ) ?>
 				</li>
-				<li class="due_on"><label>Due On</label>
+				<li class="due_on Date"><label>Due On</label>
 				<? echo ( date_select( 'due_on', $$variable{Invoice}->due_on(), { with_today=>1 } ); ) ?>
 				</li>
 				<li class="monthly_interest"><label for="monthly_interest">Interest Rate</label>
@@ -105,7 +105,7 @@ name=>'invoicer_id', prepend=>['','select']
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td align="right" colspan="4">Total</td>
+				<td colspan="4">Total</td>
 				<td class="Price"><? echo ( openprint::Currency::format( $$variable{payment_total} ); ) ?></td>
 			</tr>
 		</table>

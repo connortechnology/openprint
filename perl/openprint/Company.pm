@@ -140,6 +140,10 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM Companies_in_Marketing_Categories WHERE Company_Id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Addresses WHERE company_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Locations WHERE company_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Uploads WHERE company_id=?', $$self{id} );
+  foreach (openprint::Asset->find(company_id=>$$self{id})) { $_->destroy(); }
+
+	sql::execute( undef, undef, 'DELETE FROM Assets WHERE company_id=?', $$self{id} );
 	foreach my $Payment ( openprint::Payment->find(recipient_id=>$$self{id}) ) {
 		$Payment->delete();
 	} # end foreach Payment
@@ -148,9 +152,10 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM logs WHERE company_id=?', $$self{id} );
   $openprint::log->error("Deleting purchaseorder_items");
   sql::update(undef, undef, 'purchaseorder_items', ['vendor_id=?', $$self{id}], vendor_id=>undef);
+  sql::update(undef, undef, 'manifests', ['supplier_id=?', $$self{id}], supplier_id=>undef);
 
 	foreach my $Paper ( openprint::Paper->find(owner_id=>$$self{id}) ) {
-		$Paper->delete();
+		$Paper->destroy();
 	} # end foreach
 
 	foreach my $Quote ( openprint::Quote->find(company_id=>$$self{id}) ) {
@@ -363,7 +368,7 @@ sub can_delete {
 	return 0 if ! $_[0]{id};
 	return 1 if $openprint::session{user_type} eq 'A';
 	return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
-	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
+	return 1 if $_[0]->salesrep_id() and sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
 	return 1 if $_[0]{id} == $$openprint::User{company_id} and $$openprint::User{administrator} eq 'Y';
 	return 0;
 }
@@ -573,8 +578,16 @@ sub can_become {
 			$User->in_Group('Estimating')
 		 ) {
 		return 1;
-	}
-	return 0;
+  }
+  return 0;
+}
+
+sub accounting_contact_ids {
+  my $self = shift;
+  if ( !exists $$self{accounting_contact_ids}) {
+    $$self{accounting_contact_ids} = [ sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$self{id}) ];
+  }
+  return @{$$self{accounting_contact_ids} };
 }
 
 1;

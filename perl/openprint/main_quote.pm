@@ -38,64 +38,67 @@ sub history {
   $session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
   $session{$r->uri().'?deleted'} = '0' if ! exists $session{$r->uri().'?deleted'};
   #$session{$r->uri().'?limit'} = '1000' if ! exists $session{$r->uri().'?limit'};
+
+  if ($param{btnFunction}) {
+    if ( $param{btnFunction} eq 'Delete' ) {
+      foreach my $Quote (openprint::Quote->find(id=>[(ref $param{quote_id} eq 'ARRAY') ?  @{$param{quote_id}} : ($param{quote_id})])) {
+        $variable{error} .= try_to_delete($Quote);
+      } # end foreach
+    } elsif ( $param{btnFunction} eq 'Undelete' ) {
+      foreach my $Quote (openprint::Quote->find(id=>[(ref $param{quote_id} eq 'ARRAY') ?  @{$param{quote_id}} : ($param{quote_id})])) {
+        $variable{error} .= $Quote->undelete();
+      } # end foreach
+    } elsif ($param{btnFunction} eq 'destroy') {
+      foreach my $Quote (openprint::Quote->find(
+          deleted=>1,
+          id=>[(ref $param{quote_id} eq 'ARRAY') ?  @{$param{quote_id}} : ($param{quote_id})])) {
+        if (!$Quote->deleted()) {
+          $variable{error} .= 'Can\'t destroy quote '.$$Quote{id}.' since it isn\'t deleted.<br/>';
+          next;
+        }
+        $variable{error} .= $Quote->destroy();
+      } # end foreach
+    } elsif ( $param{btnFunction} eq 'Download in CSV format' ) {
+
+      my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Currency', 
+        'Total 1', 'Total 2', 'Total 3',
+        'Project Quantity 1', 'Project Price 1',
+        'Project Quantity 2', 'Project Price 2',
+        'Project Quantity 3', 'Project Price 3',
+        'Ordered Quantity', 'Ordered Price', 'Docket' );
+      my @data;
+      my $total1;
+      my $total2;
+      my $total3;
+      foreach my $Quote ( @{$variable{Quotes}} ) {
+        foreach my $QP ( $Quote->Quoted_Projects() ) {
+          my $Project = $QP->Project();
+
+          push @data, (
+            $Quote->id(), ssi::format_csv_datetime($Quote->created_on()),
+            $Quote->by_name(), $Quote->Company()->name(), $Quote->for_name(), $Quote->status(),
+            $Quote->Currency()->name(),
+            $Quote->total1(), $Quote->total2(), $Quote->total3(),
+            $QP->quantity1(), $QP->price1(),
+            $QP->quantity2(), $QP->price2(),
+            $QP->quantity3(), $QP->price3(),
+            $Project->ordered_quantity(),
+            $Project->ordered_price(),
+            $Project->docket(),
+          );
+        } # end foreach Project
+        $total1 += $Quote->total1();
+        $total2 += $Quote->total2();
+        $total3 += $Quote->total3();
+      } # end foreach
+      push @data, '','','','','','', 'Totals:', $total1, $total2, $total3, '', '', '', '', '', '';
+      misc::export_csv( $r, $log, \%variable, 'quote_report.csv', \@header, \@data );
+    } else {
+      $log->error("Unknown btnFunction in quote history $param{btnFunction}");
+    } # end if
+  }
+
   _history();
-
-	return if ! $param{btnFunction};
-
-  if ( $param{btnFunction} eq 'Delete' ) {
-    foreach my $Quote (openprint::Quote->find(id=>[(ref $param{chkDelete} eq 'ARRAY') ?  @{$param{chkDelete}} : ($param{chkDelete})])) {
-      $variable{error} .= try_to_delete($quote_id);
-    } # end foreach
-  } elsif ( $param{btnFunction} eq 'Undelete' ) {
-    foreach my $Quote (openprint::Quote->find(id=>[(ref $param{chkDelete} eq 'ARRAY') ?  @{$param{chkDelete}} : ($param{chkDelete})])) {
-      $variable{error} .= $Quote->undelete();
-    } # end foreach
-  } elsif ( $param{btnFunction} eq 'destroy' ) {
-    foreach my $Quote (openprint::Quote->find(id=>[(ref $param{chkDelete} eq 'ARRAY') ?  @{$param{chkDelete}} : ($param{chkDelete})])) {
-      if (!$Quote->deleted()) {
-        $variable{error} .= 'Can\'t destroy quote '.$$Quote{id}.' since it isn\'t deleted.<br/>';
-        next;
-      }
-      $variable{error} .= $Quote->destroy();
-    } # end foreach
-  } elsif ( $param{btnFunction} eq 'Download in CSV format' ) {
-
-    my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Currency', 
-				'Total 1', 'Total 2', 'Total 3',
-				'Project Quantity 1', 'Project Price 1',
-				'Project Quantity 2', 'Project Price 2',
-				'Project Quantity 3', 'Project Price 3',
-				'Ordered Quantity', 'Ordered Price', 'Docket' );
-		my @data;
-    my $total1;
-    my $total2;
-    my $total3;
-    foreach my $Quote ( @{$variable{Quotes}} ) {
-			foreach my $QP ( $Quote->Quoted_Projects() ) {
-				my $Project = $QP->Project();
-
-				push @data, (
-						$Quote->id(), ssi::format_csv_datetime($Quote->created_on()),
-						$Quote->by_name(), $Quote->Company()->name(), $Quote->for_name(), $Quote->status(),
-						$Quote->Currency()->name(),
-						$Quote->total1(), $Quote->total2(), $Quote->total3(),
-						$QP->quantity1(), $QP->price1(),
-						$QP->quantity2(), $QP->price2(),
-						$QP->quantity3(), $QP->price3(),
-						$Project->ordered_quantity(),
-						$Project->ordered_price(),
-						$Project->docket(),
-						);
-			} # end foreach Project
-      $total1 += $Quote->total1();
-      $total2 += $Quote->total2();
-      $total3 += $Quote->total3();
-		} # end foreach
-		push @data, '','','','','','', 'Totals:', $total1, $total2, $total3, '', '', '', '', '', '';
-		misc::export_csv( $r, $log, \%variable, 'quote_report.csv', \@header, \@data );
-  } else {
-    $log->error("Unknown btnFunction in quote history $param{btnFunction}");
-	} # end if
 } # end sub history
 
 sub _history {
