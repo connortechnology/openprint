@@ -25,7 +25,7 @@
       </li>	
       <li> 
         <label>Material</label>
-        <select name="ddmMaterial" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
+        <select name="material_id" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
           <option value="">Select a Material</option>
           <? echo ( 
               make_drop_down( [ map { $_->id(), $_->name() . ' : ' . $_->description() } openprint::Material->find(
