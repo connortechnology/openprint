@@ -29,6 +29,14 @@ fieldset p label {
 	display: none;
 }
 	
+
+.Equipment,
+.Min,
+.Max,
+.Value,
+.Name {
+  text-align: left;
+}
 .Units {
 	width: 120px;
 	text-align: center;
@@ -51,6 +59,9 @@ fieldset p label {
 }
 .Price input, .Cost input, .Markup input {
 	text-align: right;
+}
+table .interpolate {
+  text-align:center;
 }
 
 fieldset.Fold p {
