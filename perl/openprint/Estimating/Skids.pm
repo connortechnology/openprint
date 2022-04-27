@@ -131,7 +131,7 @@ sub calc {
 
 	# Flat sheets or finished product?
   if (!$$specs{item_type} or !$$specs{item_type_lock}) {
-    if (!$$services{Cutting} and !$$services{Folding}) {
+    if (!$$services{Cutting} and !$$services{Folding} and !$$services{DieCutting}) {
       $$specs{item_type} = 'FlatSheets';
     } else {
       my @bindery_services = map { $$services{$$_{name}} ? $$services{$$_{name}} : () } openprint::Service->find(category=>'Bindery');
