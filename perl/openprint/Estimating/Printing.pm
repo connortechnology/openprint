@@ -2536,6 +2536,7 @@ sub calc {
 	$$specs{Status} = 'calculated';
 	$$specs{alert} = '';
 	$$specs{information} = '';
+  delete $$specs{Impositions};
 
 	if ( ( defined $$specs{PageQuantity} ) and $$specs{PageQuantity} =~ /[^\d\.]/ ) {
 		$variables{PageQuantity} = [ sets::exclude( ['output'], $variables{PageQuantity} ) ];
@@ -4404,6 +4405,7 @@ sub get_project_price {
 
 		my $do_final_pricing = 1;
 
+    $openprint::log->debug("1 @{$other_impositions} imp $imp $base_imp");
 		my $price = calc_price( $Project, $service_index, $imp, $project, $services, \%sig_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies, \@total_impositions );
 		if ( ! $$price{complete} ) {
 			if ( DEBUG ) {
@@ -6040,6 +6042,7 @@ if ( 1 ) {
 	if ( $GripperMakeReadyService ) {
 		my $charge = 1;
 		foreach my $other_I ( @{$other_impositions} ) {
+      $openprint::log->debug("$other_I");
 			last if $other_I == $Imposition;
 			my $P = $$other_I{Paper};
 			if ( $$P{calliper} == $$Paper{calliper} and $$other_I{Press}{id} == $$Press{id} ) {
