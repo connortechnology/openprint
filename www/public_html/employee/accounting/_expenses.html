@@ -86,6 +86,12 @@
 					</tr>
 					<tr%1$s>
 						<td colspan="7"><a href="/employee/accounting/expense.html?expense_id=%2$d">%15$s</a></td>
+            <td style="display: none;"></td>
+            <td style="display: none;"></td>
+            <td style="display: none;"></td>
+            <td style="display: none;"></td>
+            <td style="display: none;"></td>
+            <td style="display: none;"></td>
 						<td class="Price">%11$s</td>
 						<td class="Price">%14$s</td>
 					</tr>
@@ -115,7 +121,7 @@
 		<tr class="totals">
 			<td colspan="7">Totals (<? echo ( scalar @{$$variable{Expenses}} ) ?> rows)</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{subtotal} ); ) ?><br/>
-			<? echo ( openprint::Currency::format( $$variable{business_subtotal} ); ) ?></td>	
+        <span title="Business Subtotal"><? echo ( openprint::Currency::format( $$variable{business_subtotal} ); ) ?></span></td>
       <? echo (
             return join("\n", map { sprintf('<td class="Price">%s<br/>%s</td>', 
 						openprint::Currency::format( $$variable{tax_totals}{$_->id()}{amount} ),
@@ -123,7 +129,7 @@
 						) } @{$$variable{Taxes}} );
       ) ?>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?><br/>
-			<? echo (openprint::Currency::format( $$variable{bus_total} ); ) ?></td>
+        <span title="Business Total"><? echo (openprint::Currency::format( $$variable{bus_total} ); ) ?></span></td>
 		</tr>
     </tfoot>
 	</table>
