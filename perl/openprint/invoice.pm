@@ -49,7 +49,7 @@ sub history {
 			_history();
 			my @Taxes = @{$variable{Taxes}};
 
-			my @Header = ('ID','Created On','Posted On', 'First Sent On', 'Due On','Company','SubTotal',
+			my @Header = ('ID','Created On','Posted On', 'First Sent On', 'Due On','Invoicer','Invoicee', 'SubTotal',
 					( map { sprintf('%s (%d%)', $_->name(), $_->rate() ) } @Taxes ),
 					'Total','Interest','Owing');
 			my @Data;
@@ -62,7 +62,9 @@ sub history {
         ssi::format_csv_datetime($Invoice->posted_on()),
         ssi::format_csv_datetime($Invoice->first_sent_on()),
         ssi::format_csv_date($Invoice->due_on()),
-        $Invoice->Invoicee()->name(), $Invoice->subtotal(), 
+        $Invoice->Invoicer()->name(),
+        $Invoice->Invoicee()->name(),
+        $Invoice->subtotal(), 
         ( map { $Invoice->Tax( $_ )->amount() } @Taxes ),
         $Invoice->total(), $Invoice->interest(), $Invoice->owing();
         $subtotal += $Invoice->subtotal();
@@ -73,7 +75,7 @@ sub history {
         }
         $total += $Invoice->total();
 			} # end foreach Invoice
-			push @Data, 'Totals:', '', '', '', '', '', $subtotal, ( map { $tax_totals{$_->id()} } @Taxes ), $total, $interest_total, $owing_total;
+			push @Data, 'Totals:', '', '', '', '', '', '', $subtotal, ( map { $tax_totals{$_->id()} } @Taxes ), $total, $interest_total, $owing_total;
 
 			misc::export_csv( $r, $log, \%variable, 'invoices.csv', \@Header, \@Data );
 		} elsif ( $param{btnFunction} eq 'Account Statement' ) {
