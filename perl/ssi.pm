@@ -544,7 +544,7 @@ sub button {
     $$options{value} = $$options{text};
   }
 	my $html = 
-		qq`<button id="Button$name" name="$name" class="btn button $$options{class}" `;
+		qq`<button id="Button$name" name="`.($$options{name} ? $$options{name} : $name).qq`" class="btn button $$options{class}" `;
 	if ( $$options{href} and $$options{type} ) {
 		$html .= qq`onclick="window.location='$$options{href}'" `;
     #} elsif ( $$options{onclick} and ! $$options{disabled} ) {
