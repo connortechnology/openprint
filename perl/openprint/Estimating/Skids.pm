@@ -426,6 +426,8 @@ sub summary {
 		my $services = $Project->services();
 		my $Material = new openprint::Material( $$specs{'ddmPackageType'.$qty_index} );
 
+    $$specs{'totalWeight'.$qty_index} = 0 if ! defined $$specs{'totalWeight'.$qty_index};
+
 		if ( $$services{BulkSkids} ) {
 			# The purpose of this is to put all the breakdown in the skids line and leave the other packaging summaries empty
 			if ( $$services{BulkSkids}[0] == $service_id ) {
