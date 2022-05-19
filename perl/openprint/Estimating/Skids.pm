@@ -244,11 +244,12 @@ sub calc {
 							$items_by_size = int($l/$item_width);
 						} else {
 							$$results{breakdown} .= 'Doesn\'t fit and item can\'t be rolled<br/>';
+
 						} # end if
 					} # end if fits
 
 					# Make sure it's not too heavy
-					$items_per_package = ( $items_by_size > $items_by_weight ) ? $items_by_weight : $items_by_size;
+					$items_per_package = ( $items_by_size and ($items_by_size > $items_by_weight) ) ? $items_by_weight : $items_by_size;
 				} else {
 					$items_per_package = $items_by_weight;
 # Have to make sure to limit by height as well.
