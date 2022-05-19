@@ -634,6 +634,31 @@ function submitCheck() {
 	}
 }
 
+function submitForm(formId) {
+  const form = document.getElementById(formId);
+  if (!form) {
+    console.error("No form found for "+formId);
+  }
+  form.submit();
+}
+function submitElementsForm(element) {
+  const form = element.form;
+  if (!form) {
+    console.error("No form found for ", element);
+  }
+  form.submit();
+}
+function submitElementsFormIfHasValue(element) {
+  if ($j(element).val()) {
+    const form = element.form;
+    if (!form) {
+      console.error("No form found for ", element);
+    }
+    form.submit();
+  } else {
+    console.log("No val");
+  }
+}
 
 function summary(summaryPage) {
 var summaryPage;
@@ -1669,6 +1694,16 @@ function update_event_bindings() {
       console.error("Nothing found to bind to " + fnName);
       return;
     }
+    el.onchange = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll('select[data-on-change-this]').forEach(function(el) {
+    var fnName = el.getAttribute('data-on-change-this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    console.log("Setting up onchangefor " + el.name + " to " + fnName);
     el.onchange = window[fnName].bind(el, el);
   });
 
