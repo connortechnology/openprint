@@ -71,6 +71,7 @@
 			my $html = '';
 			my $rowclass;
 			foreach my $Expense ( @{$$variable{Expenses}} ) {
+            my $Currency = $Expense->Currency();
 				$html .= sprintf(q`
 					<tr%1$s> 
 					<td class="Company"><a href="/employee/accounting/expense.html?expense_id=%2$d">%3$s</a></td>
@@ -102,13 +103,14 @@
 					format_date($Expense->due_on()),
 					format_date($Expense->paid_on()),
 					$Expense->business_use(),
-					openprint::Currency::format( $Expense->amount() ),
-					openprint::Currency::format( $Expense->business_use_amount() ),
+          openprint::Currency::format( $Currency->convert_from($Expense->amount(), { period=>$Expense->paid_on()}) ),
+          openprint::Currency::format( $Currency->convert_from($Expense->business_use_amount(), { period=>$Expense->paid_on()})),
 					join("\n", map { sprintf('<td class="Price" rowspan="2">%s<br/>%s</td>', 
-							openprint::Currency::format( $Expense->Tax( $_ )->amount() ),
-							openprint::Currency::format( $Expense->Tax( $_ )->amount() * ( $Expense->business_use()/100 ) ),
+          openprint::Currency::format( $Currency->convert_from($Expense->Tax( $_ )->amount(), { period=>$Expense->paid_on()})),
+          openprint::Currency::format( $Currency->convert_from($Expense->Tax( $_ )->amount() * ( $Expense->business_use()/100 ), { period=>$Expense->paid_on()})),
 							) } @{$$variable{Taxes}} ),
-					openprint::Currency::format( $Expense->total() ),
+              openprint::Currency::format( $Currency->convert_from($Expense->total(), { period=>$Expense->paid_on()}) ).'<br/>'.
+              ( ($Currency->id() != $openprint::Currency->id()) ? '('.$Expense->total().$Expense->Currency()->short().')' : ''),
 					openprint::Currency::format( $Expense->total() * ( $Expense->business_use()/100 ) ),
 					$Expense->description(),
 					);
