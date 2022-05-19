@@ -575,9 +575,9 @@ sub button {
 	$html .= $$options{type} ? '</button>' : '</a>';
   if ( $$options{onclick} ) {
     $html .= '<script nonce="'.$config{CSP_NONCE}.qq`">
-    \$j('#Button$name').on('click', function(){
+    document.getElementById('Button$name').onclick = function(){
     $$options{onclick};
-    });
+    };
     </script>
     `;
   } # end if
@@ -808,7 +808,7 @@ $openprint::log->error("No date from $value");
 	</select></span>', $prefix, $$options{onchange}, 
 		( ( exists $$options{with_time} and ! $$options{with_time} ) ? ' style="display: none;"' : '' ),
 		make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour ),
-		make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min ),
+		make_drop_down( [ map { (sprintf('%.2d', $_)) x 2 } ( 0 .. 59 ) ], $min ),
 	);
   $html .= "\n";
 	if ( $$options{with_clear} ) {

@@ -244,11 +244,12 @@ sub calc {
 							$items_by_size = int($l/$item_width);
 						} else {
 							$$results{breakdown} .= 'Doesn\'t fit and item can\'t be rolled<br/>';
+
 						} # end if
 					} # end if fits
 
 					# Make sure it's not too heavy
-					$items_per_package = ( $items_by_size > $items_by_weight ) ? $items_by_weight : $items_by_size;
+					$items_per_package = ( $items_by_size and ($items_by_size > $items_by_weight) ) ? $items_by_weight : $items_by_size;
 				} else {
 					$items_per_package = $items_by_weight;
 # Have to make sure to limit by height as well.
@@ -425,6 +426,8 @@ sub summary {
 	if ($qty_index) {
 		my $services = $Project->services();
 		my $Material = new openprint::Material( $$specs{'ddmPackageType'.$qty_index} );
+
+    $$specs{'totalWeight'.$qty_index} = 0 if ! defined $$specs{'totalWeight'.$qty_index};
 
 		if ( $$services{BulkSkids} ) {
 			# The purpose of this is to put all the breakdown in the skids line and leave the other packaging summaries empty

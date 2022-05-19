@@ -503,7 +503,7 @@ sub Taxes {
 	} # end if
 
 	if (!$$self{Taxes}) {
-		@{$$self{Taxes}} = openprint::Invoice_Tax->find( invoice_id=>$$self{id} );
+		@{$$self{Taxes}} = $$self{id} ? openprint::Invoice_Tax->find( invoice_id=>$$self{id} ) : ();
 	} # end if
 
 	if ( ! ( $$self{Taxes} and @{$$self{Taxes}} ) ) {

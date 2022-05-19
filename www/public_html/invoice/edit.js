@@ -139,11 +139,13 @@ function invoicee_change(ddm) {
 
 function add_tax( tax_id ) {
   console.log(tax_id);
-  new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: {
-    invoice_id: invoice_id,
-    action: 'add',
-    tax_id: tax_id
-    }, evalScripts: true } );
+  if (tax_id) {
+    new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: {
+      invoice_id: invoice_id,
+      action: 'add',
+      tax_id: tax_id
+      }, evalScripts: true } );
+  }
 }
 function delete_tax( tax_id ) {
   new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: {

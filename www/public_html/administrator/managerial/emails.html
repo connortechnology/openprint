@@ -28,7 +28,7 @@
 			$openprint::Email_Account::dbh = $mail_dbh;
 			$openprint::Email_Alias::dbh = $mail_dbh;
 
-			my @Emails = openprint::Email_Account->find( order=>'username' );
+      my @Emails = openprint::Email_Account->find( order=>'username', domain=>$config{email_domain} );
 
 			foreach my $Email ( @Emails ) {
 				my $User = openprint::User->find_one( email=>$Email->username() );

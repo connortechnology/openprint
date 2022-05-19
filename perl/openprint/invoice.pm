@@ -291,7 +291,7 @@ sub _history {
   foreach my $Invoice ( @Invoices ) {
     push @{$variable{Invoices}}, $Invoice;
     $variable{subtotal} += $Invoice->subtotal();
-    $variable{total} += $Invoice->total();
+    $variable{total} += $Invoice->owing() > 0 ? $Invoice->Currency()->convert_from($Invoice->total()) : $Invoice->paid_value();
     $variable{interest_total} += $Invoice->interest();
     $variable{paid_total} += $Invoice->paid();
     $variable{paidvalue_total} += $Invoice->paid_value();
@@ -553,8 +553,9 @@ sub _taxes_edit {
 	if ( $param{action} ) {
 		if ( $param{action} eq 'add' ) {
 			my $ac = sql::start_transaction( $openprint::dbh );
-			my $Tax = new openprint::Invoice_Tax();
-			$variable{error} .= $Tax->save( { invoice_id => $param{po_id}, tax_id=>$param{tax_id}, charge=>1, rate=>undef } );
+			my $Tax = new openprint::Tax( $param{tax_id} );
+			my $Invoice_Tax = new openprint::Invoice_Tax();
+			$variable{error} .= $Invoice_Tax->save( { invoice_id => $param{invoice_id}, tax_id=>$param{tax_id}, charge=>1, rate=>$Tax->rate() } );
 			if ( $variable{error} ) {
 				$openprint::dbh->rollback();
 				sql::end_transaction( $openprint::dbh, $ac );
