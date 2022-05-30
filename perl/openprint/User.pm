@@ -201,6 +201,7 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM views WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM user_purchaseorder_limits WHERE user_id=?', $$self{'id'} );
   sql::update(undef,undef, 'locations', ['created_by=?', $$self{id}], created_by=>undef);
+  sql::update(undef,undef, 'purchaseorder_logs', ['user_id=?', $$self{id}], user_id=>undef);
   sql::update(undef,undef, 'purchaseorders', ['contact_id=?', $$self{id}], contact_id=>undef);
 
 	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE id=?', $$self{id} );
