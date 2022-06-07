@@ -558,7 +558,7 @@ $log->debug("regexp: $regexp");
 			@$upload{proper_file_path} = $file =~ /$regexp/;
 		}
     if ( ! $$upload{proper_file_path} ) {
-      $log->warning("Failed to match path. Setting to $$upload{file_str}");
+      $log->warn("Failed to match path. Setting to $$upload{file_str}");
       $$upload{proper_file_path} = $$upload{file_str};
     }
 
