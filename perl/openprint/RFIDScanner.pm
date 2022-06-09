@@ -58,6 +58,7 @@ sub delete {
 	#foreach ( openprint::RFIDTagHistory->find('scanner_id'=>$$self{'id'}) ) {
 		#$_->delete();
 	#} # end foreach
+	sql::execute( undef, undef, "DELETE FROM inventory_check_entries WHERE scanner_id=$$self{id}" );
     sql::execute( undef, undef, q{DELETE FROM RFIDScanners WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete
