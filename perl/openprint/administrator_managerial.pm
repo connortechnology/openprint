@@ -1265,9 +1265,11 @@ sub _users {
           $variable{error} .= $User->destroy();
       }
     } elsif ($param{btnFunction} eq 'delete') {
-      foreach my $User ( openprint::User->find(id=>[ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id})])) {
+      my @user_ids = exists($param{'user_id[]'}) ? @{$param{'user_id[]'}} : (
+        ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id}) );
+      foreach my $User ( openprint::User->find(id=>\@user_ids) ) {
           if ($User->deleted()) {
-            $variable{error} .= 'User ' . $User->email() . ' not deleteed because already deleted<br/>';
+            $variable{error} .= 'User ' . $User->email() . ' not deleted because already deleted<br/>';
             next;
           }
           $variable{error} .= $User->delete();
