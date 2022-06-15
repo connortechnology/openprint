@@ -302,7 +302,7 @@ $log->debug("$value_total");
       my $uri = '/employee/inventory/manifests.html';
      join("\n",
    $session{$uri.'?deleted'} eq '1' ? (
-     button( 'destroy', { onclick=>q`jQuery('#Results').load('/employee/inventory/_manifests.html?btnFunction=destroy', { manifest_id_id: get_value( $('f2').manifest_id ) } );`, text=>'Destroy Checked' } ),
+     button( 'destroy', { onclick=>q`jQuery('#Results').load('/employee/inventory/_manifests.html?btnFunction=destroy', { manifest_id: get_value( $('f2').manifest_id ) } );`, text=>'Destroy Checked' } ),
       button( 'undelete', { onclick=>q`jQuery('#Results').load('/employee/inventory/_manifests.html?btnFunction=undelete', { manifest_id: get_value( $('f2').manifest_id ) } );`, text=>'Undelete Checked' } ),
       ) : (
 					button( 'Delete', { onclick=>q`ManifestResults.btnFunction.value='Delete';ManifestResults.submit();`, text=>'Delete Checked' } ),
