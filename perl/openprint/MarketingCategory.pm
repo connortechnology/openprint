@@ -23,11 +23,11 @@ $serial = 'marketing_categories_id_seq';
 
 sub delete {
 	my $self = shift;
-	my $ac = sql::start_transaction();
+	my $ac = sql::start_transaction($openprint::dbh);
 	sql::execute( undef, undef, q{DELETE FROM Companies_in_Marketing_Categories WHERE category_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Users_in_Marketing_Categories WHERE category_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Marketing_Categories WHERE id=?}, $$self{id} );
-	sql::end_transaction( $ac );
+	sql::end_transaction( $openprint::dbh, $ac ) if $ac;
 } # end sub delete
 
 sub next {
