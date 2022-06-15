@@ -973,6 +973,18 @@ sub can_edit {
 	return 1 if openprint::usergroup::is_user_in( ['Prepress','Sales Admin','PrepressManager'], $openprint::session{user_id} );
 	return 0;
 }
+sub can_delete {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $_[0]{user_id} == $openprint::session{user_id};
+	return 1 if $_[0]{company_id} == $openprint::session{company_id};
+	return 1 if $_[0]{salesrep_id} == $openprint::session{user_id};
+	return 1 if openprint::usergroup::is_user_in( ['Prepress','Sales Admin','PrepressManager'], $openprint::session{user_id} );
+	return 0;
+}
+sub can_destroy {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 0;
+}
 
 sub due_date {
 	if ( ! $_[0]{due_date} ) {
