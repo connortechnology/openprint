@@ -65,6 +65,7 @@
 			date_filter($uri.'?updated_on_end', 'updated_on <=' ),
 			date_filter($uri.'?updated_on_start', 'updated_on >=' ),
 			order		=>	'received_on DESC',
+      limit  => '1000',
 			( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
 			( $session{$uri.'?po_confirmed'} ne '' ? ( 'po_unconfirmed_type_ids exists' => !$session{$uri.'?po_confirmed'}) : () ),
 		);
@@ -92,7 +93,7 @@
 		$search{supplier_id} = $session{$uri.'?supplier_id'} if $session{$uri.'?supplier_id'};
 		$$variable{Manifests} = [ openprint::Manifest->find( %search ) ];
 	} # end if
-	$$variable{canseepricing} = openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} );
+  $$variable{canseepricing} = $openprint::session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} );
 ) ?>
 <?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{Manifests}} ) ?>
@@ -288,10 +289,10 @@ $log->debug("$value_total");
 			sql::end_transaction( $dbh, $ac );
 			$html .= '</tbody>';
 			if ( $$variable{canseepricing} ) {
-$log->debug("$value_total");
-				$html .= '<tfoot><tr class="totals"><td colspan="7">Total</td><td class="Price">'.openprint::Currency::format( $value_total ).'</td></tr></tfoot>';
+				$html .= '<tfoot><tr class="totals">
+            <td class="checkbox"><input type="checkbox" onclick="select_all( this.form, \'manifest_id\', this.checked );"/></td>
+            <td colspan="6">Totals</td><td class="Price">'.openprint::Currency::format( $value_total ).'</td></tr></tfoot>';
 			} # end if
-			
 			return $html;
 		) ?>
 	</table>
@@ -302,10 +303,10 @@ $log->debug("$value_total");
       my $uri = '/employee/inventory/manifests.html';
      join("\n",
    $session{$uri.'?deleted'} eq '1' ? (
-     button( 'destroy', { onclick=>q`jQuery('#Results').load('/employee/inventory/_manifests.html?btnFunction=destroy', { manifest_id: get_value( $('f2').manifest_id ) } );`, text=>'Destroy Checked' } ),
-      button( 'undelete', { onclick=>q`jQuery('#Results').load('/employee/inventory/_manifests.html?btnFunction=undelete', { manifest_id: get_value( $('f2').manifest_id ) } );`, text=>'Undelete Checked' } ),
+     button( 'destroy', { onclick=>q`jQuery('#Results').load('/employee/inventory/_manifests.html?btnFunction=destroy', { manifest_id: get_value( $('ManifestResults').manifest_id ) } );`, text=>'Destroy Checked' } ),
+      button( 'undelete', { onclick=>q`jQuery('#Results').load('/employee/inventory/_manifests.html?btnFunction=undelete', { manifest_id: get_value( $('ManifestResults').manifest_id ) } );`, text=>'Undelete Checked' } ),
       ) : (
-					button( 'Delete', { onclick=>q`ManifestResults.btnFunction.value='Delete';ManifestResults.submit();`, text=>'Delete Checked' } ),
+					button( 'Delete', { onclick=>q`ManifestResults.btnFunction.value='delete';ManifestResults.submit();`, text=>'Delete Checked' } ),
 			) ); ) ?>
 	</p>
 </form>
