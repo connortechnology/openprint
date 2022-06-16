@@ -2181,13 +2181,6 @@ sub _manifest_content {
 } # end sub _manifest_content
 
 sub manifests {
-	if ( $param{btnFunction} eq 'Delete' ) {
-		foreach my $manifest_id ( ref $param{manifests} eq 'ARRAY' ? @{$param{manifests}} : split(',',$param{manifests}) ) {
-			my $Manifest = new openprint::Manifest( $manifest_id );
-			$variable{error} .= $Manifest->delete();
-		} # end foreach manifest_id
-		return;
-	} # end if
 	_manifests();
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_end', '' );
@@ -2198,6 +2191,42 @@ sub manifests {
 } # end sub manifests
 
 sub _manifests {
+  if ($param{btnFunction}) {
+    if ( $param{btnFunction} eq 'delete' ) {
+      foreach my $manifest_id ( ref $param{manifest_id} eq 'ARRAY' ? @{$param{manifest_id}} : split(',',$param{manifest_id}) ) {
+        my $Manifest = new openprint::Manifest( $manifest_id );
+        $variable{error} .= $Manifest->delete();
+      } # end foreach manifest_id
+    } elsif ( $param{btnFunction} eq 'undelete' ) {
+      if (exists $param{'manifest_id[]'}) {
+        foreach my $manifest_id ( @{$param{'manifest_id[]'}} ) {
+          my $Manifest = new openprint::Manifest( $manifest_id );
+          next if !$Manifest->deleted();
+          $variable{error} .= $Manifest->undelete();
+        } # end foreach manifest_id
+      } else {
+        foreach my $manifest_id ( ref $param{manifest_id} eq 'ARRAY' ? @{$param{manifest_id}} : split(',',$param{manifest_id}) ) {
+          my $Manifest = new openprint::Manifest( $manifest_id );
+          next if !$Manifest->deleted();
+          $variable{error} .= $Manifest->undelete();
+        } # end foreach manifest_id
+      }
+    } elsif ( $param{btnFunction} eq 'destroy' ) {
+      if (exists $param{'manifest_id[]'}) {
+        foreach my $manifest_id ( @{$param{'manifest_id[]'}} ) {
+          my $Manifest = new openprint::Manifest( $manifest_id );
+          next if !$Manifest->deleted();
+          $variable{error} .= $Manifest->destroy();
+        } # end foreach manifest_id
+      } else {
+        foreach my $manifest_id ( ref $param{manifest_id} eq 'ARRAY' ? @{$param{manifest_id}} : split(',',$param{manifest_id}) ) {
+          my $Manifest = new openprint::Manifest( $manifest_id );
+          next if !$Manifest->deleted();
+          $variable{error} .= $Manifest->destroy();
+        } # end foreach manifest_id
+      } # end if
+    } # end if
+  } # end if
 	ssi::save_params( '/employee/inventory/manifests.html', ( 
 				( map { 'received_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'received_on_end_'.$_ } ( 'year','month','day' ) ),
