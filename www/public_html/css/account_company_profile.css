@@ -3,9 +3,18 @@
 div.CompanyProfile div.CompanyInformation,
 div.CompanyProfile div.Preferences,
 div.CompanyProfile div.Locations,
-div.CompanyProfile div.TradeReferences {
+div.CompanyProfile div.TradeReferences,
+div.CompanyProfile div.BusinessInformation,
+div.CompanyProfile div.BankInformation,
+.SalesInformation,
+#CompanyProfile,
+.AccountInformation {
 	width: 50%;
 	float: left;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  padding: 5px;
 }
 div.CompanyProfile div.CompanyInformation:after, .CreditInformation:after {
     content: ".";
@@ -15,10 +24,6 @@ div.CompanyProfile div.CompanyInformation:after, .CreditInformation:after {
     clear: both;
     visibility: hidden;
 
-}
-div.CompanyProfile div.BusinessInformation, div.CompanyProfile div.BankInformation, .SalesInformation, #CompanyProfile, .AccountInformation {
-	width: 50%;
-	float: right;
 }
 .CompanyProfile .CreditInformation {
 	width: 100%;
