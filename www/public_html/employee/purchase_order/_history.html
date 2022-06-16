@@ -26,6 +26,7 @@
 			date_filter( $uri.'?paid_on_end', 'paid_on <=' ),
 			date_filter( $uri.'?paid_on_start', 'paid_on >=' ),
 			order		=>	'id desc',
+      limit   =>  '10000',
 		);
     if ($session{user_type} eq 'A') {
       $search{company_id} =$session{$uri.'?vendee_id'} if $session{$uri.'?vendee_id'};
@@ -270,7 +271,8 @@
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 		$html .= '</tbody><tfoot><tr class="totals">
-								<td colspan="'.( $session{user_type} eq 'A' ? 9 : 8 ) . '">Total (' . $Currency->name().') :</td>
+      <th class="checkbox"><input type="checkbox" onclick="select_all( $(\'f1\'), \'po_id\', this.checked );"/></th>
+								<td colspan="'.( $session{user_type} eq 'A' ? 8 : 7 ) . '">Total (' . $Currency->name().') :</td>
 								<td class="Quantity">'.Number::Format::format_number($qty_total).'</td>
 								<td class="Price">'. openprint::Currency::format( $report_total ) . '</td></tr>';
     $html .= '
