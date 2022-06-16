@@ -6,15 +6,6 @@
 		max-width: none;
 	} 
 }
-fieldset p,
-fieldset ul li {
-	padding-left: 140px;
-}
-fieldset p label:not(.radio):not(.radio-inline),
-fieldset ul li label:not(.radio):not(.radio-inline) {
-	width: 140px;
-	margin-left: -140px;
-}
 
 .dialog fieldset li ,
 .dialog fieldset p {
