@@ -912,7 +912,7 @@ sub find_sql {
 	} # end if
 
 	my %sql = (
-		( distinct => ( exists $$params{distinct} ? 1:0 ) ),
+		( distinct => ( exists $$params{distinct} ? 1 : 0 ) ),
 		( columns => ( exists $$params{columns} ? $$params{columns} : '*' ) ),
 		( table => ( exists $$params{table} ? $$params{table} : ${$object_type.'::table'} )),
 		'group by'=> $$params{'group by'},

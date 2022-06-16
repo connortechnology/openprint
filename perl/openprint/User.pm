@@ -183,6 +183,7 @@ sub destroy {
 	sql::execute( $log, $dbh, 'DELETE FROM Project_Log WHERE user_id=?', $$self{id} );
 	sql::update( undef, undef, 'barcode_log', ['operator_id=?', $$self{id} ], 'operator_id', undef );
 	sql::update( undef, undef, 'barcode_log', ['user_id=?',$$self{id}], 'user_id', undef );
+	sql::update( undef, undef, 'performance_reports', ['operator_id=?', $$self{id} ], 'operator_id', undef );
 	sql::update( undef, undef, 'skids', ['created_by_id=?',$$self{id}], 'created_by_id', undef );
 	sql::update( undef, undef, 'purchaseorders', ['contact_id=?',$$self{id}], contact_id=> undef );
 
@@ -200,9 +201,24 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM object_views WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM views WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM user_purchaseorder_limits WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM purchaseorder_notifications WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM equipment_operators WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM productionfeedback WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM user_notifications WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM comments WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM companies_accountingcontacts WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM host_notifications WHERE user_id=?', $$self{'id'} );
   sql::update(undef,undef, 'locations', ['created_by=?', $$self{id}], created_by=>undef);
   sql::update(undef,undef, 'purchaseorder_logs', ['user_id=?', $$self{id}], user_id=>undef);
   sql::update(undef,undef, 'purchaseorders', ['contact_id=?', $$self{id}], contact_id=>undef);
+  sql::update(undef,undef, 'purchaseorders', ['authorized_by=?', $$self{id}], authorized_by=>undef);
+  sql::update(undef,undef, 'purchaseorders', ['created_by=?', $$self{id}], created_by=>undef);
+  sql::update(undef,undef, 'assets', ['created_by=?', $$self{id}], created_by=>undef);
+  sql::update(undef,undef, 'emailcampaigns', ['user_id=?', $$self{id}], user_id=>undef);
+  sql::update(undef,undef, 'paper_allocations', ['operator_id=?', $$self{id}], operator_id=>undef);
+  sql::update(undef,undef, 'car_areas', ['assignee_id=?', $$self{id}], assignee_id=>undef);
+  sql::update(undef,undef, 'sred_contents', ['created_by=?', $$self{id}], created_by=>undef);
+  sql::update(undef,undef, 'sred_contents', ['user_id=?', $$self{id}], user_id=>undef);
 
 	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE id=?', $$self{id} );
 

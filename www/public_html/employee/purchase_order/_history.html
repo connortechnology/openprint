@@ -21,13 +21,17 @@
 			order		=>	'id desc') ];
 	} else {
 		my %search = (
-      company_id	=> ($session{user_type} eq 'A' ? $session{$uri.'?vendee_id'} : $openprint::User->company_id()),
 			date_filter( $uri.'?starting_end', 'created_on <=' ),
 			date_filter( $uri.'?starting_start', 'created_on >=' ),
 			date_filter( $uri.'?paid_on_end', 'paid_on <=' ),
 			date_filter( $uri.'?paid_on_start', 'paid_on >=' ),
 			order		=>	'id desc',
 		);
+    if ($session{user_type} eq 'A') {
+      $search{company_id} =$session{$uri.'?vendee_id'} if $session{$uri.'?vendee_id'};
+    } else {
+      $search{company_id} = $openprint::User->company_id();
+    }
 		$search{deleted} = $session{$uri.'?deleted'} if exists $session{$uri.'?deleted'};
 		$search{supplier_id} = $session{$uri.'?supplier_id'} if $session{$uri.'?supplier_id'};
 		if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $session{user_id} ) ) { 

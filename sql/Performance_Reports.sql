@@ -1,9 +1,8 @@
 DROP TABLE IF EXISTS Performance_Reports;
 CREATE TABLE Performance_Reports (
-
     id	SERIAL,
     shift_id	INTEGER NOT NULL, FOREIGN KEY (shift_id) REFERENCES Shifts (id),
-    operator_id	INTEGER NOT NULL, FOREIGN KEY (operator_id) REFERENCES Users (index),
+    operator_id	INTEGER, FOREIGN KEY (operator_id) REFERENCES Users (id),
     created_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     deleted		BOOLEAN NOT NULL DEFAULT FALSE,
