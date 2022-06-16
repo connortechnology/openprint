@@ -282,5 +282,15 @@ $openprint::log->debug("Have weight $weight");
 
 } # end sub check
 
+sub destroy {
+  my $self = shift;
+  my $error = '';
+  sql::update(undef,undef, 'manifest_content_types', ['po_content_id=?', $$self{id}], po_content_id=>undef);
+  $error .= $openprint::dbh->errstr;
+  sql::execute(undef,undef, 'DELETE FROM purchaseorder_contents WHERE id=?', $$self{id});
+  $error .= $openprint::dbh->errstr;
+  return $error;
+}
+
 1;
 __END__
