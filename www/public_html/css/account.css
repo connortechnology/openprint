@@ -1,4 +1,4 @@
-.SelectCompany li {
+.SelectCompany li.form-check-inline {
 	text-align: left;
 	padding: 0 0 0 100px;
 }
