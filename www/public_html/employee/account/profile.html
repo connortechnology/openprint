@@ -5,33 +5,33 @@
 		<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
       <legend>Choose User</legend>
 			<ul>
-			<li>
-				<label>Company</label>
-				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
-        <select id="company_id" name="company_id" onchange="stop_filter_companies();f1.submit();">
-					<option value="">select</option>
-					<? echo ( make_drop_down( openprint::Company->dropdown(
-or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
-), $param{company_id} ? $param{company_id} : $session{company_id}); ) ?>
-				</select>
-				<? echo ( button( 'Go1', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
-			</li>
-			<li>
-				<label>User</label>
-				<select name="user_id" id="user_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
-					<option value="">select</option>
-					<? echo ( 
-						my %params = (
-							company_id	=>	$param{company_id}, 
-							order		=>	'lower(firstname),lower(lastname)'
-						);
-						if ( $session{user_type} ne 'A' ) {
-							$params{type} = ['C','E'];
-						} # end if
-						make_drop_down( openprint::User->dropdown( %params ), $param{user_id} ? $param{user_id} : $session{user_id} ); ) ?>
-				</select>
-				<? echo ( button( 'Go2', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
-			</li>
+        <li>
+          <label>Company</label>
+          <input type="text" onkeyup="filter_companies('company_id', {name:this.value, selected_id:get_ddm_value($('company_id'))});" class="filter" />
+          <select id="company_id" name="company_id" onchange="stop_filter_companies();f1.submit();">
+            <option value="">select</option>
+            <? echo ( make_drop_down( openprint::Company->dropdown(
+  or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
+  ), $param{company_id} ? $param{company_id} : $session{company_id}); ) ?>
+          </select>
+          <? echo ( button( 'Go1', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
+        </li>
+        <li>
+          <label>User</label>
+          <select name="user_id" id="user_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+            <option value="">select</option>
+            <? echo ( 
+              my %params = (
+                company_id	=>	$param{company_id}, 
+                order		=>	'lower(firstname),lower(lastname)'
+              );
+              if ( $session{user_type} ne 'A' ) {
+                $params{type} = ['C','E'];
+              } # end if
+              make_drop_down( openprint::User->dropdown( %params ), $param{user_id} ? $param{user_id} : $session{user_id} ); ) ?>
+          </select>
+          <? echo ( button( 'Go2', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
+        </li>
 			</ul>
 		<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 			<p class="buttons">
@@ -120,10 +120,10 @@ or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
 			</ul>
 		</fieldset>
 	</div>
-	<div class="column">
+	<div class="column login">
 		<fieldset><legend>The following information will be used for future logins.</legend>
 			<ul>
-				<li class="required"> 
+				<li class="required email"> 
 					<label for="email">E-mail Address</label>
 					<input type="email" id="email" name="email" value="<? hecho ( $$variable{User}->email() ) ?>" autocomplete="username"/>
 				</li>
