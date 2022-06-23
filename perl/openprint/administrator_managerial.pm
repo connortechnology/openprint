@@ -1285,10 +1285,8 @@ sub _users {
           $variable{error} .= $User->undelete();
       }
     } else {
-      $log->error("Unknown function");
+      $log->error('Unknown function '.$param{btnFunction});
     }
-  } else {
-      $log->error("on function");
   }
 
   my @Users;
@@ -1305,6 +1303,7 @@ sub _users {
 				( map { $session{join('?', $uri, $_)} ? ( $_ => $session{join('?', $uri, $_) } ) : () } ( 'company_id','type', 'web_active', 'ftp_active' ) ),
 				ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
 				ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+        limit => ($param{limit} ? $param{limit} : 1000),
 				);
 		if ( $session{$uri.'?deleted'} eq '' ) {
 			$filters{deleted} = [0,1];

@@ -18,7 +18,7 @@ CREATE TABLE CAR (
 	id serial NOT NULL,
 	issued_to_id	INTEGER, FOREIGN KEY (issued_to_id) REFERENCES Users (id),
 	issued_on	date not null default NOW(),
-	issued_by_id	INTEGER NOT NULL, FOREIGN KEY (issued_by_id) REFERENCES Users (id),
+	issued_by_id	INTEGER, FOREIGN KEY (issued_by_id) REFERENCES Users (id),
 	reply_by	date not null default NOW(),
 	docket			INTEGER,
 	company_id		INTEGER, FOREIGN KEY (company_id) REFERENCES Companies (Id),
