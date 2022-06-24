@@ -320,7 +320,7 @@ sub send {
 	openprint::quote::get_user_by_info( $log, $dbh, \%quote, $$self{id} );
 	openprint::quote::get_user_for_info( $log, $dbh, \%quote, $$self{id} );
 	openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
-	my $email_template = ssi::slurp_content( '/email_template.html' );
+	my $email_template = ssi::slurp_content('/email_template.html');
 
 	my $Email = new openprint::Email();
 
@@ -391,10 +391,14 @@ sub send {
 			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
 			my $html = ssi::variable_substitution( \$email_template, \%quote );
-			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
+			$Email->add_pdf_attachment_from_html( 'Quote'.$$self{id}, $html );
 			if ( $For_User and sets::isin( $For_User->type(), [ 'E', 'A' ] ) ) {
-				$Email->add_html_attachment( "Quote$$self{id}.html", $html );
-			} elsif ( ( $openprint::User->email() =~ /iconnor/ ) and @_ ) {
+				$Email->add_html_attachment('Quote'.$$self{id}.'.html', $html);
+			} elsif ( scalar @_ and (
+        ( $openprint::User->email() =~ /iconnor/ ) or
+        ( $openprint::User->email() =~ /isaac/ ) 
+      )
+      ) {
 				$Email->add_html_attachment( "Quote$$self{id}.html", $html );
 			}
 
