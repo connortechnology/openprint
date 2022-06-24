@@ -280,7 +280,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
           <? if ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
 				<select name="state">
 					<option value=""> select </option>
-					<? echo ( return_states_and_provinces($$variable{Company}->state()); ) ?> 
+          <? echo ( return_states_and_provinces($$variable{Company}->country(), $$variable{Company}->state()); ) ?> 
 				</select>
           <? else ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
             <input type="text" name="state" value="<?echo($$variable{Company}->state())?>"/>
