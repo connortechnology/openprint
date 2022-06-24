@@ -47,11 +47,16 @@
 					) ?>
 				</select>
 			</li>
-			<li><label>Sales Rep</label>
-            <select name="salesrep_id" size="1">
-                <option value="">All Employees</option>
-            <? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales']), $session{$r->uri().'?salesrep_id'} ); ) ?>
-            </select></li>
+      <?echo(
+        my @options = openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>['Sales']);
+        my $html = '';
+        if (@options) {
+          $html .= '<li><label>Sales Rep</label>';
+          $html .= ssi::select(\@options, $session{$r->uri().'?salesrep_id'}, { name=>'salesrep_id', prepend=>['','All Employees'] });
+          $html .= '</li>';
+        }
+        return $html;
+      ) ?>
 <? eval ( 
   $$variable{Users} = [ openprint::User->find(
     # Defaults to currently logged in company, if company is all, then list users in OUR company
@@ -97,13 +102,20 @@
 						my @options = ( 'Incomplete','Complete','Re-Opened' );
 						ssi::select( [ map { $_, $_ } @options ], $session{$r->uri().'?status'}, { name=>'status', onchange=>'load_quotes();', prepend=>['','All'] } );) ?>
 			</li>
-			<li>
-				<label>Press</label>
-				<select id="press_id" name="press_id" onchange="load_quotes();">
-					<option value="">All</option>
-					<? echo ( make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category any'=>'Printing', order=>'lower(strid)') ], $session{$r->uri().'?press_id'} ); ) ?>
-				</select>
-			</li>
+      <?echo(
+        my $html = '';
+        my @options = map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category any'=>'Printing', order=>'lower(strid)');
+        if (@options) {
+          $html .= join("\n",'<li>','<label>Press</label>',
+            ssi::select(\@options, $session{$r->uri().'?press_id'}, {
+            id=>'press_id', name=>'press_id', 'data-on-change'=>'load_quotes();',
+              prepend=>['', 'All'],
+            }),
+            '</li>'
+           );
+         }
+         return $html;
+      ) ?>
 			<li><label>Value</label>
 			<? echo ( input( type=>'float', name=>'total_start', value=>$session{$r->uri().'?total_start'}, oninput=>'load_quotes();' ); ) ?>
 			to
