@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS Claims;
 CREATE TABLE CLAIMS (
 	id SERIAL,
 	company_id			INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
-	created_by			INTEGER NOT NULL, FOREIGN KEY (created_by) REFERENCES Users (id),
+	created_by			INTEGER, FOREIGN KEY (created_by) REFERENCES Users (id),
 	created_on			TIMESTAMP WITH TIME ZONE NOT NULL Default NOW(),
 	updated_on			TIMESTAMP WITH TIME ZONE NOT NULL Default NOW(),
 	filed_on			TIMESTAMP WITH TIME ZONE,

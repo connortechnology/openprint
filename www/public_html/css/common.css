@@ -276,7 +276,6 @@ input[type="checkbox"] {
 	padding: 0;
 	border-right: none;
 	border-left: none;
-	border-top: 1px solid #000088;
 	border-bottom: none;
 }
 @media print {
@@ -342,6 +341,7 @@ hr {
 	background-color: #FF5C51;
 }
 
+/*
 .requiredFieldIndicator {
 	padding:0;
 	width: 8px;
@@ -352,6 +352,7 @@ hr {
 	display: -moz-inline-box;
 	display: inline-block;
 }
+*/
 
 .TipLink {
 	font-weight: normal;
