@@ -324,7 +324,7 @@ sub edit {
 				$Invoicee = new openprint::Company();
 				$Invoicee->save({name=>$param{invoicee}});
 			} # end if
-			$param{invoicee} = $Invoicee->id();
+			$param{invoicee_id} = $Invoicee->id();
 		} else {
 			delete $param{invoicee};
 		} # end if
