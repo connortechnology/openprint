@@ -1294,10 +1294,22 @@ sub navmenu {
 
   foreach my $category ( @categories ) {
     if ( ref $$menu{$category} ) {
-      my %urls = %{$$menu{$category}};
+      my @keys;
+      my %urls;
+
+      if ( ref $$menu{$category} eq 'ARRAY' ) {
+        %urls = @{$$menu{$category}};
+        while(@{$$menu{$category}}) {
+          push @keys, shift @{$$menu{$category}};
+          shift @{$$menu{$category}};
+        };
+      } else {
+       %urls = %{$$menu{$category}};
+       @keys =  sort { $urls{$a} cmp $urls{$b} } keys %urls;
+     }
       my $submenu_html;
       my $on = 0;
-      foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
+      foreach my $url (@keys) {
         my $text = $urls{$url};
         if ( $text ) {
           my $Page_Setting = openprint::Page_Setting::get( $url );
