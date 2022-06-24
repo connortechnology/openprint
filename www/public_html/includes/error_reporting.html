@@ -1,5 +1,5 @@
 <? echo (
-	$_ = join("\n",
+	my $html = join("\n",
 		( $$variable{error} ? '<div class="error">'.$$variable{error}.'</div>' : '' ),
 		( $$variable{warning} ? '<div class="warning">'.$$variable{warning}.'</div>' : '' ),
 		( $$variable{information} ? '<div class="information">'.$$variable{information}.'</div>' : '' ),
@@ -9,5 +9,5 @@
 	);
 	delete @$variable{'error','information','warning'};
 	delete @session{'error','information','warning'};
-	return $_;
+	return $html;
 ) ?>
