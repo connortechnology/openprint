@@ -121,7 +121,7 @@ sub Category {
 sub get_price {
 	my ( $self, $qty, $options ) = @_;
 
-	$$options{pricelist_id} = $openprint::Pricelist->id() if ! $$options{pricelist_id};
+	$$options{pricelist_id} = $openprint::Pricelist->id() if ! $$options{pricelist_id} and $openprint::Pricelist;
 
 	my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$options{pricelist_id}, 'openprint::product_priceset', $qty, undef );
 	#if ( ! %price ) {
