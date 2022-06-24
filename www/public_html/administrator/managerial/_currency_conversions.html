@@ -4,8 +4,8 @@
 
 	$html .= '1 ' . $$variable{Currency}->short().' = ';
 	$html .= input( type=>'float', name=>'amount-'.$id, onkeyup=>"calc_rate('$id');" );
-	$html .= ssi::select( openprint::Currency->dropdown('order'=>'lower(name)','id !='=>$id), [], { name=>'to-'.$id } );
-	$html .= button( 'Add'.$id, { onclick=>sprintf('set_conversion( %d );', $id ), text => 'Set Conversion' } );
+	$html .= ssi::select( openprint::Currency->dropdown(order=>'lower(name)','id !='=>$id), [], { name=>'to-'.$id } );
+	$html .= button( 'Add'.$id, { onclick=>sprintf('set_conversion(%d);', $id), text=>'Set Conversion' } );
 	$html .= '</br>';
 
 

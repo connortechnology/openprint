@@ -92,7 +92,7 @@
 		) ?></span></label>
 						<select id="ByStateProvince" name="ByStateProvince">
 							<option value=""> Select </option>
-							<? echo ( return_states_and_provinces($$variable{ByStateProvince}); ) ?>
+							<? echo ( return_states_and_provinces($$variable{ByCountry}, $$variable{ByStateProvince}); ) ?>
 						</select>
 					</li>
 					<li> 
@@ -225,10 +225,14 @@ if ( $$variable{ForCountry} eq 'US' ) {
 	return 'State/Province';
 } # end if
 ) ?></span></label>
-				<select id="ForStateProvince" name="ForStateProvince" >
+        <?if($$variable{ForCountry} eq 'US' or $$variable{ForCountry} eq 'CA')?>
+				<select id="ForStateProvince" name="ForStateProvince">
 					<option value=""> Select </option>
-					<? echo ( ssi::return_states_and_provinces($$variable{ForStateProvince}); ) ?>
+          <? echo ( ssi::return_states_and_provinces($$variable{ForCountry}, $$variable{ForStateProvince}); ) ?>
 				</select>
+        <?else($$variable{ForCountry} eq 'US' or $$variable{ForCountry} eq 'CA')?>
+        <input type="text" id="ForStateProvince" name="ForStateProvince" value="<?ForStateProvince?>"/>
+        <?endif($$variable{ForCountry} eq 'US' or $$variable{ForCountry} eq 'CA')?>
 			</li>
 			<li> 
 				<label>City</label>
@@ -271,6 +275,14 @@ if ( $$variable{ForCountry} eq 'US' ) {
 							<label>Additional comments or instructions</label>
 							<textarea id="comments" name="comments" rows="<? echo ( count_lines( $$variable{Quote}->comments() ); ) ?>" onkeyup="textarea_resize( this );"><? hecho ( $$variable{Quote}->comments() ) ?></textarea>
 						</li>
+            <ul>
+      <li>
+        <label>Currency</label>
+        <select name="currency_id">
+          <option value="">select one</option>
+          <? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $$variable{Quote}->currency_id() );) ?>
+        </select>
+      </li>
 					</ul>
 				</div>
 			</fieldset>

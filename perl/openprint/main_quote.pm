@@ -540,6 +540,7 @@ sub submit {
         reference=>$param{reference},
         comments=>$param{comments},
         status=>'Incomplete',
+        currency_id=>$param{currency_id},
         });
     $Quote->store_user_by_info( \%by );
     $Quote->store_user_for_info( \%for );

@@ -9,23 +9,24 @@ $debug = 0;
 $table = 'privacy';
 $serial = 'privacy_id_seq';
 %fields = (
-	'id'				=>	'id',
-	'object_type_id'	=>	'object_type_id',
-	'object_type'		=>	undef,
-	'object_id'			=>	'object_id',
-	'mode'				=>	'mode',
-	'privacy_mode'		=>	undef,
-	'usergroup_id'		=>	'usergroup_id',# an array of group_id
-	'relationship_type_id'	=>	'relationship_type_id',# an array of relationship_ids
-	'user_id'				=>	'user_id', # an array
+	id      			      	=>	'id',
+	object_type_id    	  => 	'object_type_id',
+	object_type 	      	=>	undef,
+	object_id		        	=>	'object_id',
+	mode			  	        =>	'mode',
+	privacy_mode        	=>	undef,
+	usergroup_id	  	    =>	'usergroup_id',# an array of group_id
+	relationship_type_id	=>	'relationship_type_id',# an array of relationship_ids
+	user_id	        			=>	'user_id', # an array
 );
 %find_fields = (
-	'object_type'			=>	'(SELECT name FROM object_types WHERE id=object_type_id)',
-	'usergroup_id'			=>	q`undef`,
-	'user_id'				=>	q`undef`,
-	'relationship_type_id'	=>	q`undef`,
+	object_type		      	=>	'(SELECT name FROM object_types WHERE id=object_type_id)',
+	usergroup_id		    	=>	q`undef`,
+	user_id			        	=>	q`undef`,
+	relationship_type_id	=>	q`undef`,
 );
 %defaults = (
+  mode => '',
 );
 sub Object {
 	return $_[0]->object_type()->new( $_[0]{object_id} );
@@ -122,5 +123,17 @@ $openprint::log->debug("Prinvacu::can_view; specfic") if $debug;
 	} # end if
 	return 0;
 } # end sub can_view
+
+sub mode {
+  my $self = shift;
+
+  if (@_) {
+    $$self{mode} = shift;
+  }
+  if (!defined($$self{mode})) {
+    $$self{mode} = $defaults{mode};
+  }
+  return $$self{mode};
+}
 1;
 __END__
