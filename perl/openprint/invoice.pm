@@ -49,7 +49,7 @@ sub history {
 			_history();
 			my @Taxes = @{$variable{Taxes}};
 
-			my @Header = ('ID','Created On','Posted On', 'First Sent On', 'Due On','Company','SubTotal',
+			my @Header = ('ID','Created On','Posted On', 'First Sent On', 'Due On','Invoicer','Invoicee', 'SubTotal',
 					( map { sprintf('%s (%d%)', $_->name(), $_->rate() ) } @Taxes ),
 					'Total','Interest','Owing');
 			my @Data;
@@ -62,7 +62,9 @@ sub history {
         ssi::format_csv_datetime($Invoice->posted_on()),
         ssi::format_csv_datetime($Invoice->first_sent_on()),
         ssi::format_csv_date($Invoice->due_on()),
-        $Invoice->Invoicee()->name(), $Invoice->subtotal(), 
+        $Invoice->Invoicer()->name(),
+        $Invoice->Invoicee()->name(),
+        $Invoice->subtotal(), 
         ( map { $Invoice->Tax( $_ )->amount() } @Taxes ),
         $Invoice->total(), $Invoice->interest(), $Invoice->owing();
         $subtotal += $Invoice->subtotal();
@@ -73,7 +75,7 @@ sub history {
         }
         $total += $Invoice->total();
 			} # end foreach Invoice
-			push @Data, 'Totals:', '', '', '', '', '', $subtotal, ( map { $tax_totals{$_->id()} } @Taxes ), $total, $interest_total, $owing_total;
+			push @Data, 'Totals:', '', '', '', '', '', '', $subtotal, ( map { $tax_totals{$_->id()} } @Taxes ), $total, $interest_total, $owing_total;
 
 			misc::export_csv( $r, $log, \%variable, 'invoices.csv', \@Header, \@Data );
 		} elsif ( $param{btnFunction} eq 'Account Statement' ) {
@@ -289,7 +291,7 @@ sub _history {
   foreach my $Invoice ( @Invoices ) {
     push @{$variable{Invoices}}, $Invoice;
     $variable{subtotal} += $Invoice->subtotal();
-    $variable{total} += $Invoice->total();
+    $variable{total} += $Invoice->owing() > 0 ? $Invoice->Currency()->convert_from($Invoice->total()) : $Invoice->paid_value();
     $variable{interest_total} += $Invoice->interest();
     $variable{paid_total} += $Invoice->paid();
     $variable{paidvalue_total} += $Invoice->paid_value();
@@ -551,8 +553,9 @@ sub _taxes_edit {
 	if ( $param{action} ) {
 		if ( $param{action} eq 'add' ) {
 			my $ac = sql::start_transaction( $openprint::dbh );
-			my $Tax = new openprint::Invoice_Tax();
-			$variable{error} .= $Tax->save( { invoice_id => $param{po_id}, tax_id=>$param{tax_id}, charge=>1, rate=>undef } );
+			my $Tax = new openprint::Tax( $param{tax_id} );
+			my $Invoice_Tax = new openprint::Invoice_Tax();
+			$variable{error} .= $Invoice_Tax->save( { invoice_id => $param{invoice_id}, tax_id=>$param{tax_id}, charge=>1, rate=>$Tax->rate() } );
 			if ( $variable{error} ) {
 				$openprint::dbh->rollback();
 				sql::end_transaction( $openprint::dbh, $ac );

@@ -72,7 +72,7 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 		} # end if
 	} # end if $r
 
-  $session{ip} = $ENV{REMOTE_ADDR};
+  $session{ip} = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
   $session{lastupdated} = time;
   $session{HTTP_USER_AGENT} = $ENV{HTTP_USER_AGENT};
 
@@ -158,20 +158,21 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 	} # end if
 	$Pricelist = new openprint::Pricelist( $session{Pricelist_id} ) if $session{Pricelist_id};
 
-	if ( $ENV{REMOTE_ADDR} ) {
+  my $ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
+	if ( $ip ) {
     openprint::Host_Interface->lock();
-		my @Interfaces = openprint::Host_Interface->find(ip=>$ENV{REMOTE_ADDR});
+		my @Interfaces = openprint::Host_Interface->find(ip=>$ip);
 		if ( !@Interfaces ) {
-      $log->debug('No HI found for '.$ENV{REMOTE_ADDR});
-			$Host = openprint::Host->find_one(hostname=>$ENV{REMOTE_ADDR});
+      $log->debug('No HI found for '.$ip);
+			$Host = openprint::Host->find_one(hostname=>$ip);
 			if ( !$Host ) {
 				$Host = new openprint::Host();
-				$Host->save({hostname=>$ENV{REMOTE_ADDR}});
+				$Host->save({hostname=>$ip});
 			}
       # The logging of the creation of the Host entry will save the host_interface
 		} else { 
 			if ( @Interfaces > 1 ) {
-				$log->error("More than 1 Interface with ip $ENV{REMOTE_ADDR}");
+				$log->error("More than 1 Interface with ip $ip");
 			}
 			$Host = $Interfaces[0]->Host();
 		}

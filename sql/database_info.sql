@@ -9,3 +9,6 @@ CREATE TABLE database_info (
 );
 
 
+/*
+insert into database_info values (1, NOW(), true);
+*/

@@ -12,7 +12,7 @@ require openprint::Object;
 require openprint::User;
   require openprint::Quote;
 
-$debug = 1;
+$debug = 0;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';

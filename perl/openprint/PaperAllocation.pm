@@ -58,7 +58,10 @@ sub delete {
 	if ( $_[0]{id} ) {
 		my $ac = sql::start_transaction( );
 		if ( $_[0]->docket() ) {
-			$_[0]->Order()->add_log( 'Allocation deleted.' . ( @_ > 1 ? ' Reason: ' . $_[1] : '' ) );
+      my $Order = $_[0]->Order();
+      if ($Order->id()) {
+        $Order->add_log( 'Allocation deleted.' . ( @_ > 1 ? ' Reason: ' . $_[1] : '' ) );
+      }
 		} # end if
 		$_ = $_[0]->SUPER::delete();
 		if ( $_ ) {

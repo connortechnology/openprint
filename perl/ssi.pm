@@ -544,7 +544,7 @@ sub button {
     $$options{value} = $$options{text};
   }
 	my $html = 
-		qq`<button id="Button$name" name="$name" class="btn button $$options{class}" `;
+		qq`<button id="Button$name" name="`.($$options{name} ? $$options{name} : $name).qq`" class="btn button $$options{class}" `;
 	if ( $$options{href} and $$options{type} ) {
 		$html .= qq`onclick="window.location='$$options{href}'" `;
     #} elsif ( $$options{onclick} and ! $$options{disabled} ) {
@@ -575,9 +575,9 @@ sub button {
 	$html .= $$options{type} ? '</button>' : '</a>';
   if ( $$options{onclick} ) {
     $html .= '<script nonce="'.$config{CSP_NONCE}.qq`">
-    \$j('#Button$name').on('click', function(){
+    document.getElementById('Button$name').onclick = function(){
     $$options{onclick};
-    });
+    };
     </script>
     `;
   } # end if
@@ -808,7 +808,7 @@ $openprint::log->error("No date from $value");
 	</select></span>', $prefix, $$options{onchange}, 
 		( ( exists $$options{with_time} and ! $$options{with_time} ) ? ' style="display: none;"' : '' ),
 		make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour ),
-		make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min ),
+		make_drop_down( [ map { (sprintf('%.2d', $_)) x 2 } ( 0 .. 59 ) ], $min ),
 	);
   $html .= "\n";
 	if ( $$options{with_clear} ) {
@@ -1275,6 +1275,48 @@ sub do_css_links {
     pop @parts;
   } # end while
   return join("\n", reverse @html);
+}
+
+sub navmenu {
+  my $menu = shift;
+  my $current_uri = shift;
+
+  my $html;
+
+  my @categories;
+  if ( ref $menu eq 'ARRAY' ) {
+    @categories = map { $_ % 2 ? () : $$menu[$_] } 0 .. (scalar @{$menu}-1);
+    my %m = @{$menu};
+    $menu = \%m;
+  } else {
+    @categories = sort keys %{$menu};
+  }
+
+  foreach my $category ( @categories ) {
+    if ( ref $$menu{$category} ) {
+      my %urls = %{$$menu{$category}};
+      my $submenu_html;
+      my $on = 0;
+      foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
+        my $text = $urls{$url};
+        if ( $text ) {
+          my $Page_Setting = openprint::Page_Setting::get( $url );
+          if ( $Page_Setting->can_view() ) {
+            $submenu_html .= sprintf('<li%s><a href="%s">%s</a></li>', ($current_uri eq $url ? ' class="on"':''), $url, $urls{$url} );
+          } # end if
+        }
+        $on = 1 if $current_uri eq $url;
+      } # end foreach url
+
+      if ( $submenu_html ) {
+        $html .= join( $submenu_html,
+          sprintf(q`<li id="%1$sMenu" class="%2$s"><a href="#" onclick="toggleMenu($('%1$sMenu'), 'off', 'on');return false;">%1$s</a><ul>`, $category, ( $on ? 'on' : 'off' ) ),'</ul></li>' );
+      }
+    } else {
+      $html .= sprintf( q`<li id="%1$sMenu" class="menu-item %2$s"><a href="%2$s">%1$s</a></li>`, $category, $$menu{$category} );
+    }
+  } # end foreach category
+  return $html;
 }
 
 sub bootstrap_navmenu {

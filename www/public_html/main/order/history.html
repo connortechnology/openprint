@@ -90,6 +90,8 @@
 	<input type="hidden" name="btnFunction"/>
 </form>
 <div id="Results"><?include('_history.html')?></div>
+<script src="<? hash_link( /main/order/history.js ) ?>"></script>
 <? else ( $session{user_id} ) ?>
 Only logged in customers have an order history. 
 <? endif ( $session{user_id} ) ?>
+

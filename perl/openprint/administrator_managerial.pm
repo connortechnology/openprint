@@ -1265,9 +1265,11 @@ sub _users {
           $variable{error} .= $User->destroy();
       }
     } elsif ($param{btnFunction} eq 'delete') {
-      foreach my $User ( openprint::User->find(id=>[ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id})])) {
+      my @user_ids = exists($param{'user_id[]'}) ? @{$param{'user_id[]'}} : (
+        ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id}) );
+      foreach my $User ( openprint::User->find(id=>\@user_ids) ) {
           if ($User->deleted()) {
-            $variable{error} .= 'User ' . $User->email() . ' not deleteed because already deleted<br/>';
+            $variable{error} .= 'User ' . $User->email() . ' not deleted because already deleted<br/>';
             next;
           }
           $variable{error} .= $User->delete();
@@ -1283,10 +1285,8 @@ sub _users {
           $variable{error} .= $User->undelete();
       }
     } else {
-      $log->error("Unknown function");
+      $log->error('Unknown function '.$param{btnFunction});
     }
-  } else {
-      $log->error("on function");
   }
 
   my @Users;
@@ -1303,6 +1303,7 @@ sub _users {
 				( map { $session{join('?', $uri, $_)} ? ( $_ => $session{join('?', $uri, $_) } ) : () } ( 'company_id','type', 'web_active', 'ftp_active' ) ),
 				ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
 				ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+        limit => ($param{limit} ? $param{limit} : 1000),
 				);
 		if ( $session{$uri.'?deleted'} eq '' ) {
 			$filters{deleted} = [0,1];

@@ -63,6 +63,7 @@
 ) ?>
 
 <? if ( @{$$variable{Orders}} ) ?>
+<form id="f2" name="f2"/>
 	<div class="unprintable">
 		<br/>
 		Please click on an <b>Order ID #</b> to view an order's details. <br/>Lines in red are waiting for customer approval.<br/>
@@ -71,6 +72,7 @@
 	<table class="List">
 		<thead>
 			<tr> 
+        <th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'order_id', this.checked );"/></th>
 				<th class="order_id">Order ID</th>
 				<th class="docket">Docket</th>
 				<th class="invoices">Invoices</th>
@@ -118,6 +120,7 @@
 				$rowclass = ' class="colRowRed"' if $Order->status() eq 'Waiting For Customer Approval';
 				$html .= sprintf( q`
 <tr%1$s> 
+  <td class="checkbox"><input type="checkbox" name="order_id" value="%2$d" /></td>
 	<td class="order_id"><a href="history_details.html?order_id=%2$d">%2$d</a></td>
 	<td class="docket"><a href="history_details.html?order_id=%2$d">%3$s</a></td>
 	<td class="invoices"><a href="history_details.html?order_id=%2$d">%4$s</a></td>
@@ -133,7 +136,7 @@
 	<td class="Price"><a href="history_details.html?order_id=%2$d">%14$s</a></td>
 </tr>
 <tr%1$s>
-	<td colspan="3">&nbsp;</td>
+	<td colspan="4">&nbsp;</td>
 	<td colspan="%16$d">%15$s</td>
 </tr>`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->name(), 
 format_date( $Order->created_on() ),
@@ -153,7 +156,7 @@ join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->
 		return $html;
 	) ?>
 		<tr class="totals">
-			<td colspan="7" align="right"><b>Report Totals</b></td>
+			<td colspan="8" align="right"><b>Report Totals</b></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportSubTotal} ); ) ?></td>
 			<? echo (
 					return join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{tax_totals}{$_->id()} ) ) : () } @{$$variable{Taxes}} );
@@ -167,6 +170,19 @@ join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->
 	</table>
 	<br/>
 	<span class="Currency">All prices listed in <? echo ( $openprint::Currency->name() ) ?>.</span>
+  <p class="buttons">
+    <? echo (
+      my $uri = '/main/order/history.html';
+      join("\n",
+        ($session{$uri.'?deleted'} eq '1' ? (
+        (($openprint::User->type() eq 'A') ? (button('destroy', {onclick=>q`order_action('destroy');`, text=>'Destroy Checked'})) : ()),
+        (button('undelete', {onclick=>q`order_action('undelete');`, text=>'Undelete Checked'})),
+        ) : (
+          button('delete', {onclick=>q`order_action('delete');`, text=>'Delete Checked'}),
+        ) ) ); 
+    ) ?>
+  </p>
+</form>
 <? else ( @{$$variable{Orders}} ) ?>
 There are no orders which match your search criteria.
 <? endif ( @{$$variable{Orders}} ) ?>

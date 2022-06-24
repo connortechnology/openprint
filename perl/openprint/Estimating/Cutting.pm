@@ -650,6 +650,7 @@ sub signature_calc {
 						} else {
 							$openprint::log->debug('unknown units on '.$$CuttingMakeReady{units}) if DEBUG;
 							$results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price});
+              $setup{Total} = $setup{Price};
 						} # end if
 						$price{MakeReady} = $setup{Total};
 						$price{Total} += $setup{Total};

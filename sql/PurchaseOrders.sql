@@ -60,7 +60,7 @@ CREATE TABLE PurchaseOrder_Notifications (
 CREATE TABLE PurchaseOrder_Logs (
 	id		SERIAL NOT NULL,
 	po_id	INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
-	user_id	INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
+	user_id	INTEGER, FOREIGN KEY (user_id) REFERENCES Users (id),
 	created_on	timestamp with time zone default NOW(),	
 	reason		TEXT,
 	PRIMARY KEY (id)

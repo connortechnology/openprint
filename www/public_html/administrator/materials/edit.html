@@ -1,12 +1,11 @@
 <?include(/includes/error_reporting.html)?>
 <script src="<?hash_link(/javascripts/pricing.js)?>"></script>
-<form name="f1" id="f1" method="post" action="edit.html">
-	<input type="hidden" name="btnFunction"/>
+<form name="f1" id="f1" method="get" action="edit.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
       <li> 
         <label>Category</label>
-        <select name="ddmSearchCategory" onchange="f1.btnFunction.value='';f1.submit();">
+        <select name="ddmSearchCategory" data-on-change-this="submitElementsForm">
           <option value="">All Categories</option>
           <? echo ( make_drop_down( openprint::MaterialCategory->dropdown( order=>'lower(name)'), $session{$$variable{uri}.'?ddmSearchCategory'} ); ) ?>
         </select>
@@ -16,7 +15,7 @@
         <input type="text" name="search_activity_code" value="<?echo($session{'/administrator/materials/edit.html?search_activity_code'})?>" />
       </li>
       <li><label>Equipment</label>
-        <select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
+        <select name="equipment_id" data-on-change-this="submitElementsForm">
           <option value="">All</option>
           <? echo ( 
             $variable{Equipment} = [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find( order=>'lower('.$openprint::Equipment::fields{strid}.')') ];
@@ -25,7 +24,7 @@
       </li>	
       <li> 
         <label>Material</label>
-        <select name="ddmMaterial" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
+        <select name="material_id" data-on-change-this="submitElementsFormIfHasValue">
           <option value="">Select a Material</option>
           <? echo ( 
               make_drop_down( [ map { $_->id(), $_->name() . ' : ' . $_->description() } openprint::Material->find(
