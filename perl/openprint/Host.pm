@@ -616,7 +616,7 @@ sub thumbnail_html {
 		return '<img src="'.$self->get_image(@dimensions).'" alt=""/>';
 	}
 	my @Assets = $self->Assets();
-	$openprint::log->debug("Assets: $size " . @Assets);
+  #$openprint::log->debug("Assets: $size " . @Assets);
 	return ( @Assets ? $Assets[0]->Asset()->sized_html($size) : '' );
 }
 
