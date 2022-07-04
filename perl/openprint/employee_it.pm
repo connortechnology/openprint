@@ -60,38 +60,72 @@ sub hosts {
 
 sub _hosts {
   $variable{uri} = '/employee/it/hosts.html';
-	if ( $param{action} eq 'Delete' ) {
-    my @host_ids;
-    if ( exists $param{host_id} ) {
-      @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
-    } elsif ( exists $param{'host_id[]'} ) {
-      @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
-    }
-		foreach my $host_id ( @host_ids ) {
-			my $Host = new openprint::Host( $host_id );
-      if ( $Host->deleted() ) {
-        $variable{error} .= $Host->destroy();
-      } else {
-        $variable{error} .= $Host->delete();
+  if ($param{action}) {
+    if ( $param{action} eq 'Delete' ) {
+      my @host_ids;
+      if ( exists $param{host_id} ) {
+        @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+      } elsif ( exists $param{'host_id[]'} ) {
+        @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
       }
-		} # end foreach host_id
-		%param = ();
-	} elsif ( $param{action} eq 'wake' ) {
-		my @host_ids;
-		if ( exists $param{host_id} ) {
-			@host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
-		} elsif ( exists $param{'host_id[]'} ) {
-			@host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
-		}
-		foreach my $Host ( openprint::Host->find(id=>\@host_ids, deleted=>[0,1])) {
-			foreach my $I ( $Host->Interfaces() ) {
-				next if ! $I->mac();
-				my ( $error, $info ) = $I->wake();
-				$variable{error} .= $error;
-				$variable{information} .= $info;
-			} # end foreach Host_Interface
-		} # end foreach Host
-	} # end if action
+      foreach my $host_id ( @host_ids ) {
+        my $Host = new openprint::Host( $host_id );
+        if ( $Host->deleted() ) {
+          $variable{error} .= $Host->destroy();
+        } else {
+          $variable{error} .= $Host->delete();
+        }
+      } # end foreach host_id
+      %param = ();
+    } elsif ( $param{action} eq 'undelete' ) {
+      my @host_ids;
+      if ( exists $param{host_id} ) {
+        @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+      } elsif ( exists $param{'host_id[]'} ) {
+        @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
+      }
+      foreach my $host_id ( @host_ids ) {
+        my $Host = new openprint::Host( $host_id );
+        if ( $Host->deleted() ) {
+          $variable{error} .= $Host->undelete();
+        } else {
+          $variable{error} .= $Host->id() . ' not deleted so not undeleted.<br/>';
+        }
+      } # end foreach host_id
+      %param = ();
+    } elsif ( $param{action} eq 'destroy' ) {
+      my @host_ids;
+      if ( exists $param{host_id} ) {
+        @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+      } elsif ( exists $param{'host_id[]'} ) {
+        @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
+      }
+      foreach my $host_id ( @host_ids ) {
+        my $Host = new openprint::Host( $host_id );
+        if ( $Host->deleted() ) {
+          $variable{error} .= $Host->destroy();
+        } else {
+          $variable{error} .= $Host->id() . ' not deleted so not destroying.<br/>';
+        }
+      } # end foreach host_id
+      %param = ();
+    } elsif ( $param{action} eq 'wake' ) {
+      my @host_ids;
+      if ( exists $param{host_id} ) {
+        @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+      } elsif ( exists $param{'host_id[]'} ) {
+        @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
+      }
+      foreach my $Host ( openprint::Host->find(id=>\@host_ids, deleted=>[0,1])) {
+        foreach my $I ( $Host->Interfaces() ) {
+          next if ! $I->mac();
+          my ( $error, $info ) = $I->wake();
+          $variable{error} .= $error;
+          $variable{information} .= $info;
+        } # end foreach Host_Interface
+      } # end foreach Host
+    } # end if action
+  } # end if action
 
 	ssi::save_params( '/employee/it/hosts.html', 
 			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
