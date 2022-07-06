@@ -26,15 +26,15 @@ $serial	= 'currency_conversions_id_seq';
 );
 
 sub amount {
-	return Math::Round::nearest(0.0001, ($_[0]{rate}));
+	return Math::Round::nearest(0.0001, $_[0]{rate});
 } # end sub amount
 
 sub To {
-	return new openprint::Currency( $_[0]{to_id} );
+	return new openprint::Currency($_[0]{to_id});
 } # end sub To
 
 sub From {
-	return new openprint::Currency( $_[0]{from_id} );
+	return new openprint::Currency($_[0]{from_id});
 } # end sub From
 
 1;

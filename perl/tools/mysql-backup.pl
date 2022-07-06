@@ -88,8 +88,9 @@ foreach my $db (@dbs) {
 					my $age = Date::Calc::Delta_Days( $1, $2, $3, $year, $mon, $mday );
 					if ( $age > $$opts{days} ) {
 						print "deleting $path/$db/$file\n" if $$opts{debug};
-						unlink "$path/$db/$file";
-						print STDERR "unable to unlink $path/$db/$file: $!\n" if $!;
+            if ( !unlink "$path/$db/$file") {
+              print STDERR "unable to unlink $path/$db/$file: $!\n";
+            }
 					} elsif ( $$opts{debug} ) {
 						print "Too new $path/$db/$file: $age days\n";
 					} # end if too old

@@ -215,8 +215,14 @@ sub online_html {
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( join("\n",
-			button( 'delete', { onclick=>q`jQuery('#Results').load('/employee/it/_hosts.html?action=Delete', { host_id: get_value( $('f1').host_id ) } );`, text=>'Delete Checked' } ),
-			button( 'Wake', { onclick=>q`jQuery('#Results').load('/employee/it/_hosts.html?action=wake', { host_id: get_value( $('f1').host_id ) } );`, text=>'Wake' } ),
-); ) ?>
+<? echo (
+   my $uri = '/employee/it/hosts.html';
+   join("\n",
+     $session{$uri.'?deleted'} eq '1' ? (
+       button( 'destroy', { onclick=>q`jQuery('#Results').load('/employee/it/_hosts.html?action=destroy', { host_id: get_value( $('f1').host_id ) } );`, text=>'Destroy Checked' } ),
+       button( 'undelete', { onclick=>q`jQuery('#Results').load('/employee/it/_hosts.html?action=undelete', { host_id: get_value( $('f1').host_id ) } );`, text=>'Undelete Checked' } ),
+      ) : (
+			  button( 'delete', { onclick=>q`jQuery('#Results').load('/employee/it/_hosts.html?action=Delete', { host_id: get_value( $('f1').host_id ) } );`, text=>'Delete Checked' } ),
+			  button( 'Wake', { onclick=>q`jQuery('#Results').load('/employee/it/_hosts.html?action=wake', { host_id: get_value( $('f1').host_id ) } );`, text=>'Wake' } ),
+) ); ) ?>
 </p>

@@ -318,12 +318,14 @@ sub fill_select {
 
 sub return_states_and_provinces {
   my $selected_country = shift;
+  my $selected_state = shift;
 	require provinces;
 	require states;
 	my @states_and_provinces = ();
-	push @states_and_provinces, @states::states if !$selected_country or $selected_country eq 'US';
-	push @states_and_provinces, @provinces::provinces if !$selected_country or $selected_country eq 'CA'; 
-	return make_drop_down(\@states_and_provinces, $selected_country);
+	push @states_and_provinces, @states::states if (!$selected_country) or ($selected_country eq 'US');
+	push @states_and_provinces, @provinces::provinces if !$selected_country or ($selected_country eq 'CA');
+
+	return make_drop_down(\@states_and_provinces, $selected_state);
 } # end sub return_states_and_provinces
 
 sub return_states {
@@ -1294,10 +1296,22 @@ sub navmenu {
 
   foreach my $category ( @categories ) {
     if ( ref $$menu{$category} ) {
-      my %urls = %{$$menu{$category}};
+      my @keys;
+      my %urls;
+
+      if ( ref $$menu{$category} eq 'ARRAY' ) {
+        %urls = @{$$menu{$category}};
+        while(@{$$menu{$category}}) {
+          push @keys, shift @{$$menu{$category}};
+          shift @{$$menu{$category}};
+        };
+      } else {
+       %urls = %{$$menu{$category}};
+       @keys =  sort { $urls{$a} cmp $urls{$b} } keys %urls;
+     }
       my $submenu_html;
       my $on = 0;
-      foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
+      foreach my $url (@keys) {
         my $text = $urls{$url};
         if ( $text ) {
           my $Page_Setting = openprint::Page_Setting::get( $url );
