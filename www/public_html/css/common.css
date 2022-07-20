@@ -235,7 +235,9 @@ fieldset p.buttons {
   margin-left: 165px;
 	float: none;
 }
-input[type="radio"], input[type="checkbox"] {
+input[type="radio"],
+.checkbox input[type="checkbox"],
+input[type="checkbox"] {
 	margin: 2px 0;
 	padding: 1px 0;
 	vertical-align: middle;
@@ -414,6 +416,7 @@ table .Company {
 }
 
 table .checkbox {
+  display: table-cell;
 	width: 25px;
 	text-align: center;
 }
