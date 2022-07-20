@@ -157,6 +157,10 @@ sub destroy {
 		$error .= $Log->save({host_id=>undef});
 		last if $error;
 	}
+  foreach ( openprint::Host_Info->find(host_id=>$_[0]{id}) ) {
+    $error .= $_->destroy();
+		last if $error;
+  }
 
 	$error .= $_[0]->SUPER::destroy();
 	return $error;

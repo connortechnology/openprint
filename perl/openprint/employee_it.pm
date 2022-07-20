@@ -137,7 +137,7 @@ sub _hosts {
 			'radius_auth', 'order', 'deleted', 'owner_id',
 			);
 
-	if ( $config{'RADIUS_Support'} eq 'Y' ) {
+	if ($config{'RADIUS_Support'} and ( $config{'RADIUS_Support'} eq 'Y')) {
 		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				database  => $config{RADIUS_DB_Name},
 				driver    => $config{RADIUS_DB_Driver},

@@ -495,12 +495,16 @@ function Serialize( form ) {
 	return parameters;
 } // end function serialize
 
+function select_all_this(element) {
+  return select_all(element.form, element.name, element.checked);
+}
+
 function select_all( form, name, checked ) {
 	if ( ! form.elements[name] ) {
 		return;
 	}	// end if
 	if ( form.elements[name].length ) {
-		for ( var i = 0, len = form.elements[name].length; i < len; i += 1 ) {
+		for ( let i = 0, len = form.elements[name].length; i < len; i += 1 ) {
 			form.elements[name][i].checked = checked;
 		} // end for
 	} else {
@@ -1726,7 +1730,8 @@ function update_event_bindings() {
     el.onclick = window[fnName].bind(el, el);
   });
 
-  document.querySelectorAll('button[data-on-click-this]').forEach(function(el) {
+  console.log("CHecking for data-on-click-this");
+  document.querySelectorAll('button[data-on-click-this], input[data-on-click-this]').forEach(function(el) {
     var fnName = el.getAttribute('data-on-click-this');
     if ( !window[fnName] ) {
       console.error('Nothing found to bind to ' + fnName);
