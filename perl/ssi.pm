@@ -555,7 +555,7 @@ sub button {
     #$html .= $$options{onclick}."return false;\" ";
 	} # end if
 	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
-  $html .= join(' ', map { $_ eq 'onclick' ? () : $_.'="'.$$options{$_}.'"' } ( keys %$options ) );
+  $html .= join(' ', map { $_ eq 'onclick' or $_ eq 'text' ? () : $_.'="'.$$options{$_}.'"' } ( keys %$options ) );
 	$html .= '>';
 	if ( $$options{image} ) {
 		if ( $openprint::config{ButtonsUseImages} and ($openprint::config{ButtonsUseImages} eq 'true') ) {
