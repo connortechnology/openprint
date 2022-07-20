@@ -547,6 +547,7 @@ sub button {
   }
 	my $html = 
 		qq`<button id="Button$name" name="`.($$options{name} ? $$options{name} : $name).qq`" class="btn button $$options{class}" `;
+    delete $$options{class};
 	if ( $$options{href} and $$options{type} ) {
 		$html .= qq`onclick="window.location='$$options{href}'" `;
     #} elsif ( $$options{onclick} and ! $$options{disabled} ) {
@@ -568,6 +569,7 @@ sub button {
 		$html .= '/>';
 		if ( $$options{text} ) {
 			$html .= $$options{text};
+      delete $$options{text};
 		} # end if
 	} elsif ( $openprint::config{SimpleButtons} eq 'Y' ) {
 		$html .= $$options{text};
