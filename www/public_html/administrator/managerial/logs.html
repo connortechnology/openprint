@@ -26,8 +26,8 @@
 				</li>			
         <li>
           <label>Company</label>
-          <input type="text" onkeyup="filterDDM(this, this.form.company_id);" size="4" />
-          <select name="company_id" onchange="jQuery( '#user_id').load( '/includes/_user_ddm.html', { company_id: this.getValue() } );">
+          <input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value(this.form.company_id)});" size="4" />
+          <select id="company_id" name="company_id" onchange="jQuery( '#user_id').load( '/includes/_user_ddm.html', { company_id: this.getValue() } );">
           <option value="">All</option>
           <? echo ( make_drop_down( openprint::Company->dropdown(
           'updated_on >=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) );

@@ -3,6 +3,7 @@ use warnings;
 
 require openprint::Object;
 require openprint::Host_Interface;
+require openprint::Host_Config;
 require openprint::Project_Log;
 
 package openprint::Host_Notification;
@@ -120,6 +121,19 @@ sub name {
 	return $_[0]{name};
 }
 
+sub Config {
+  my $self = shift;
+  $$self{Config} = @_ if @_;
+  if (!$$self{Config}) {
+    if ($$self{id}) {
+      $$self{Config} = [ openprint::Host_Config->find(host_id=>$$self{id}) ];
+    } else {
+      $$self{Config} = [];
+    }
+  }
+  return @{$$self{Config}};
+}
+
 sub destroy {
 	my $error = '';
 	require openprint::Log;
@@ -135,6 +149,10 @@ sub destroy {
 		$error .= $I->destroy();
 		return $error if $error;
 	} # end foreach Log
+	foreach ( $_[0]->Config() ) {
+		$error .= $_->destroy();
+		return $error if $error;
+	} # end foreach
 	foreach my $Log ( openprint::Project_Log->find( host_id=>$_[0]{id} ) ) {
 		$error .= $Log->save({host_id=>undef});
 		last if $error;
