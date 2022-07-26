@@ -300,7 +300,7 @@ sub summary {
         } elsif ( $$specs{ServiceType} =~ /Banding/i ) {
             $text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
         } # end if
-    } elsif ( $$specs{txtItemsPerPackage} ) {
+    } elsif ( int($$specs{txtItemsPerPackage}) ) {
         $text .= $$specs{txtItemsPerPackage} . ' items';
         if ( $$specs{ServiceType} =~ /Wrap/i ) {
             $text .= ' per wrap';
