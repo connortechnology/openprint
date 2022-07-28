@@ -488,6 +488,7 @@ sub _invoiced_products {
 		} else {
 			$variable{error} .= "Product $param{product_id} does not exist.<br/>";
 		} # end if
+    $Invoice->Products(undef);
 	} # end if
 } # end sub _invoiced_products
 
