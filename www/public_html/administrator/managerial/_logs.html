@@ -49,7 +49,7 @@
 						$Log->ip_address(), ($Log->Host()->can_view() ? $Log->Host()->link_to() : $Log->Host()->name() ),
 						$Log->note_html(),
 						$Log->User()->link_to(),
-						$Log->Company()->name(),
+						$Log->Company()->link_to(),
 						$link_to,
 						join("\n",
 							( $session{user_type} eq 'A' ?
