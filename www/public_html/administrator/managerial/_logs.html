@@ -27,6 +27,8 @@
           order => 'date_time',
 					limit=>'1000',
 					) ];
+        my @host_ids = map { $$_{host_id} } @{$$variable{Results}};
+        openprint::Host->find(id=>\@host_ids);
 
 				foreach my $Log ( @{$$variable{Results}} ) {
 					my $Object = $Log->Object();
