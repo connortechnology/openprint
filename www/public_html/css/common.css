@@ -305,9 +305,6 @@ input[type="checkbox"] {
 	width: auto;
 	max-width: 100%;
 }
-.filters p.buttons {
-  padding-left: 165px;
-}
 
 .row {
 	clear: both;
