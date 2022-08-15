@@ -2778,11 +2778,49 @@ sub packingslips {
 	ssi::setup_date_select( '/employee/inventory/packingslips.html', 'created_on_end', '' );
 	$session{'/employee/inventory/packingslips.html?deleted'} = '0' if ! exists $session{'/employee/inventory/packingslips.html?deleted'};
 } # end sub packingslips
+
 sub _packingslips {
-	ssi::save_params( '/employee/inventory/packingslips.html', ( 'company_id','docket','type_id','deleted',
-				'created_on_start_year','created_on_start_month','created_on_start_day',
-				'created_on_end_year','created_on_end_month','created_on_end_day',
-				) );
+  ssi::save_params( '/employee/inventory/packingslips.html', ( 'company_id','docket','type_id','deleted',
+      'created_on_start_year','created_on_start_month','created_on_start_day',
+      'created_on_end_year','created_on_end_month','created_on_end_day',
+    ) );
+
+  if ( $param{btnFunction} ) {
+    if ( $param{btnFunction} eq 'delete' ) {
+      foreach my $id ( ref $param{packingslips} eq 'ARRAY' ? @{$param{packingslips}} : split(',',$param{packingslips}) ) {
+        my $Label = new openprint::Label( $id );
+        $variable{error} .= $Label->delete();
+      } # end foreach id
+    } elsif ( $param{btnFunction} eq 'undelete' ) {
+      if (exists $param{'packingslips[]'}) {
+        foreach my $id ( @{$param{'packingslips[]'}} ) {
+          my $Label = new openprint::Label( $id );
+          next if !$Label->deleted();
+          $variable{error} .= $Label->undelete();
+        } # end foreach label_id
+      } else {
+        foreach my $id ( ref $param{packingslips} eq 'ARRAY' ? @{$param{packingslips}} : split(',',$param{packingslips}) ) {
+          my $Label = new openprint::Label( $id );
+          next if !$Label->deleted();
+          $variable{error} .= $Label->undelete();
+        } # end foreach
+      }
+    } elsif ( $param{btnFunction} eq 'destroy' ) {
+      if (exists $param{'packingslips[]'}) {
+        foreach my $id ( @{$param{'packingslips[]'}} ) {
+          my $Label = new openprint::Label( $id );
+          next if !$Label->deleted();
+          $variable{error} .= $Label->destroy();
+        } # end foreach id
+      } else {
+        foreach my $id ( ref $param{packingslips} eq 'ARRAY' ? @{$param{packingslips}} : split(',',$param{packingslips}) ) {
+          my $Label = new openprint::Label( $id );
+          next if !$Label->deleted();
+          $variable{error} .= $Label->destroy();
+        } # end foreach id
+      } # end if
+    } # end if
+  }
 } # end sub _packingslips
 
 sub _rfidscanners_results {
@@ -2795,26 +2833,26 @@ sub _docket_label {
 } # end sub _docket_label
 
 sub _paper_inventory_entries {
-	$variable{Paper} = new openprint::Paper( $param{paper_id} );
+  $variable{Paper} = new openprint::Paper( $param{paper_id} );
 
-	if ( $param{Action} eq 'Add' ) {
-		my $Skid = new openprint::Skid( $param{skid_id} );
-		my $Paper = new openprint::Paper( $param{paper_id} );
-		my $Condition = new openprint::InventoryCondition( $param{condition_id} );
-		$Skid->location_id( $param{Location} );
-		$Skid->add( $Paper, $param{quantity}, $Condition );
-		$Skid->save();
-		$Paper->add_inventory( $Skid->id(), $param{quantity} );
-	} # end if
-} # end sub _paper_inventory_entries
+  if ( $param{Action} eq 'Add' ) {
+    my $Skid = new openprint::Skid( $param{skid_id} );
+    my $Paper = new openprint::Paper( $param{paper_id} );
+    my $Condition = new openprint::InventoryCondition( $param{condition_id} );
+    $Skid->location_id( $param{Location} );
+    $Skid->add( $Paper, $param{quantity}, $Condition );
+    $Skid->save();
+          $Paper->add_inventory( $Skid->id(), $param{quantity} );
+        } # end if
+      } # end sub _paper_inventory_entries
 
-sub manifest_import {
-	if ( my $upload = $r->upload('import') ) {
-		require openprint::Manifest_Import_Rule;
-		my %Rules = map { $_->match(), $_ } openprint::Manifest_Import_Rule->find();
+      sub manifest_import {
+        if ( my $upload = $r->upload('import') ) {
+          require openprint::Manifest_Import_Rule;
+          my %Rules = map { $_->match(), $_ } openprint::Manifest_Import_Rule->find();
 
-		my $io =$upload->io();
-		if ( $upload->filename() =~ /txt$/i ) {
+          my $io =$upload->io();
+          if ( $upload->filename() =~ /txt$/i ) {
 
 			@{$variable{Types}} = ();
 
