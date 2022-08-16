@@ -15,6 +15,7 @@
 			( $session{'/employee/inventory/rfidtags.html?valid'} ? ( valid	=> $session{'/employee/inventory/rfidtags.html?valid'} ) : () ),
 			( $session{'/employee/inventory/rfidtags.html?location_id'} ? ( location_id=>$session{'/employee/inventory/rfidtags.html?location_id'} ) : () ),
 			order		=>	'id',
+      limit => 10000,
 			) ) {
 			if ( ! $session{'/employee/inventory/rfidtags.html?assigned'} ) {
 				if ( $RFIDTag->type() eq 'Skid' ) {
