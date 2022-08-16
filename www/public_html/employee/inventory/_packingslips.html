@@ -18,7 +18,7 @@
 ) ?>
 <? if ( @{$$variable{Labels}} ) ?>
 <form id="LabelResults" name="LabelResults" action="packingslips.html" method="post">
-	<table class="List">
+	<table class="List" id="ResultsTable">
 		<tr>
 			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'packingslips', this.checked );"/></th>
 			<th class="Docket">Docket</th>
@@ -48,6 +48,18 @@
 		) ?>
 	</table>
 	<input type="hidden" name="btnFunction"/>
+  <script> TableKit.reloadTable('ResultsTable'); </script>
+  <p class="buttons">
+    <? echo (
+      my $uri = '/employee/inventory/packingslips.html';
+     join("\n",
+   $session{$uri.'?deleted'} eq '1' ? (
+     button( 'destroy', { onclick=>q`jQuery('#Results').load('/employee/inventory/_packingslips.html?btnFunction=destroy', { packingslips: get_value( $('LabelResults').packingslips ) } );`, text=>'Destroy Checked' } ),
+      button( 'undelete', { onclick=>q`jQuery('#Results').load('/employee/inventory/_manifests.html?btnFunction=undelete', { packingslips: get_value( $('LabelResults').packingslips ) } );`, text=>'Undelete Checked' } ),
+      ) : (
+          button( 'Delete', { onclick=>q`LabelResults.btnFunction.value='delete';LabelResults.submit();`, text=>'Delete Checked' } ),
+      ) ); ) ?>
+  </p>
 </form>
 <? else ( @{$$variable{Labels}} ) ?>
 There were no packingslips matching your search criteria.
