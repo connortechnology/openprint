@@ -1,6 +1,6 @@
 .Registration {
-	margin: 0px;
-	padding: 0px;
+	margin: 0;
+	padding: 0;
 }
 .Registration fieldset {
 	width: auto;
@@ -10,15 +10,11 @@
 .Registration fieldset .content ul {
 }
 .Registration fieldset ul li {
-	padding-left: 175px;
+	padding-left: 200px;
 }
-.Registration fieldset ul li label {
-	width: 175px;
-	margin: 0px 0px 0px -175px;
-}
-.Registration fieldset ul li label.radio {
-	margin: 0px;
-	width: auto;
+.Registration fieldset ul li label:not(.radio):not(.radio-inline) {
+	width: 195px;
+	margin: 0 0 0 -200px;
 }
 .Registration .Address {
     float: right;
@@ -41,8 +37,9 @@
 }
 
 .Registration fieldset p.buttons {
+  margin-left: 200px;
 	width: 100%;
 }
 .Instructions {
-margin: 0px 0px 10px 0px;
+margin: 0 0 10px 0;
 }
