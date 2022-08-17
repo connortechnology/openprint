@@ -495,7 +495,7 @@ tr .mac {
 .PageTitle {
   position: absolute;
   top: 0;
-  right: 0;
+  right: 5px;
 	text-align: right;
 }
 .PageTitle h1 {
