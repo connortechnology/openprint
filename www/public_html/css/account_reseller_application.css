@@ -1,4 +1,7 @@
 
+.ResellerApplication {
+  width: 100%;
+}
 /* Company Profile Styles */
 div.ResellerApplication div.CompanyInformation,
 div.ResellerApplication div.Preferences,
@@ -23,11 +26,11 @@ div.ResellerApplication:after {
 div.ResellerApplication fieldset ul {
 }
 div.ResellerApplication fieldset ul li {
-	padding: 0 0 0 150px;
+	padding: 0 0 0 180px;
 }
 div.ResellerApplication fieldset ul li label:not(.radio):not(.radio-inline) {
-	margin-left: -150px;
-	width: 145px;
+	margin-left: -180px;
+	width: 175px;
 	float: left;
 }
 div.ResellerApplication fieldset li select {
