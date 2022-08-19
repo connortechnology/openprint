@@ -1,16 +1,3 @@
-<script type="text/javascript">
-function load_results( form, options ) {
-	var div = $('Results');
-	div.innerHTML = 'Loading... Please wait.';
-	var p = form.serialize(true);
-	if ( options && options.order )
-		p.order = options.order;
-	
-	 new Ajax.Updater( 'Results','/employee/it/_licenses.html', { parameters: p,
-			 onSuccess:function(){ SortableTableKit.load(); },
-			 } );
-} // end function load
-</script>
 <?include(/includes/error_reporting.html)?>
 Please select a host to view/edit.<br/>
 <form id="f1" name="f1" method="post" action="licenses.html">
@@ -57,7 +44,7 @@ Please select a host to view/edit.<br/>
 		</li>
 		<li>
 			<label>Software</label>
-			<? echo ( ssi::select( openprint::Software->dropdown(order=>'lower(name)'), $openprint::session{'/employee/it/licenses.html?software_id'}, {name=>'software_id', prepend=>['','select'] } ); ) ?>
+			<? echo ( ssi::select( openprint::Software->dropdown(order=>'lower(name)'), $session{'/employee/it/licenses.html?software_id'}, {name=>'software_id', prepend=>['','select'] } ); ) ?>
 		</li>
 		</ul>
 		<p class="buttons">
@@ -70,4 +57,5 @@ Please select a host to view/edit.<br/>
 	</fieldset>
 	<div id="Results">Choose criteria and click Show Results</div>
 </form>
-<script type="text/javascript">document.f1.ip.focus();</script>
+<script>document.f1.ip.focus();</script>
+<script src="<?hash_link(/employee/it/licenses.js)?>"></script>
