@@ -156,13 +156,13 @@ sub sized_url {
 
 		# should not be readable by anyone else
 		umask 077;
+		mkdir $path;
 		if ( ! -e $path ) {
-			mkdir $path;
 			$openprint::log->error("Unable to create path $path: $!" );
 			return '/images/icons/file.png';
 		} # end if
 	} else {
-		$openprint::log->error("No Asssset Path");
+		$openprint::log->error('No Asset Path');
 		return '/images/icons/file.png';
 	} # end if
 
