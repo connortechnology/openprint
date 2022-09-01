@@ -85,12 +85,13 @@ table.List tr {
   margin: 2px 0;
 }
 .List th {
+  vertical-align: top;
 	border: none;
-	padding: 0;
+	padding: 2px 0;
 	margin: 0;
 }
 .List td {
-	padding: 2px 0 2px 0;
+	padding: 2px 0;
 	vertical-align: top;
 	margin: 0;
 }
@@ -306,6 +307,7 @@ input[type="checkbox"] {
 	max-width: 100%;
 }
 .filters p.buttons {
+  margin: 0;
   padding-left: 165px;
 }
 
@@ -556,8 +558,6 @@ input[type="text"].filter,
 .Service input[type="text"].filter,
 fieldset p input.filter {
 	width: 40px;
-  font-size: x-small;
-  line-height: 16px;
 }
 
 td p {

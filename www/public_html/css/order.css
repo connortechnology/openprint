@@ -37,7 +37,8 @@
     border-bottom: 1px solid #000088;
     margin-bottom: 5px;
 }
-.Order div.Header:after {
+.Order div.Header:after,
+.Order #Contents {
     content: ".";
     display: block;
     height: 0;
@@ -96,18 +97,19 @@ text-align: right;
     float: left;
 }
 #Totals {
-  width: 275px;
+  width: 300px;
 }
 #Totals li {
-  padding-left: 175px;
+  padding-left: 185px;
 }
 #Totals li.error {
 	padding-left: 0;
 }
 
 #Totals li label {
-  margin-left: -175px;
-  width: 175px;
+  float: left;
+  margin-left: -185px;
+  width: 185px;
 }
 
 
