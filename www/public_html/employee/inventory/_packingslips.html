@@ -13,12 +13,14 @@
 			( $session{'/employee/inventory/packingslips.html?type_id'} ? ( type_id=>$session{'/employee/inventory/packingslips.html?type_id'}):()),
 			deleted => ( $session{$uri.'?deleted'} ne '' ? $session{$uri.'?deleted'} : [undef,1,0] ),
 			order		=>	'id desc',
+      limit => 10000,
 			);
 	} # end if
 ) ?>
 <? if ( @{$$variable{Labels}} ) ?>
 <form id="LabelResults" name="LabelResults" action="packingslips.html" method="post">
-	<table class="List">
+	<table class="List" id="ResultsTable">
+    <tbody>
 		<tr>
 			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'packingslips', this.checked );"/></th>
 			<th class="Docket">Docket</th>
@@ -46,8 +48,26 @@
 			} # end foreach Label
 			return $html;
 		) ?>
+    </tbody>
+    <tfoot>
+      <tr class="totals">
+        <td class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'packingslips', this.checked );"/></td>
+        <td colspan="5">Totals</td></tr>
+    </tfoot>
 	</table>
 	<input type="hidden" name="btnFunction"/>
+  <script> TableKit.reloadTable('ResultsTable'); </script>
+  <p class="buttons">
+    <? echo (
+      my $uri = '/employee/inventory/packingslips.html';
+     join("\n",
+   $session{$uri.'?deleted'} eq '1' ? (
+     button( 'destroy', { onclick=>q`jQuery('#Results').load('/employee/inventory/_packingslips.html?btnFunction=destroy', { packingslips: get_value( $('LabelResults').packingslips ) } );`, text=>'Destroy Checked' } ),
+      button( 'undelete', { onclick=>q`jQuery('#Results').load('/employee/inventory/_manifests.html?btnFunction=undelete', { packingslips: get_value( $('LabelResults').packingslips ) } );`, text=>'Undelete Checked' } ),
+      ) : (
+          button( 'Delete', { onclick=>q`LabelResults.btnFunction.value='delete';LabelResults.submit();`, text=>'Delete Checked' } ),
+      ) ); ) ?>
+  </p>
 </form>
 <? else ( @{$$variable{Labels}} ) ?>
 There were no packingslips matching your search criteria.

@@ -57,5 +57,19 @@ sub Hosts {
 	return map { $_->Host() } openprint::License_Host->find(license_id=>$_[0]{id});
 } # end sub Hosts
 
+sub delete {
+  return $_[0]->destroy();
+}
+
+sub destroy {
+  my $self = shift;
+  my $result = '';
+  foreach ( openprint::License_Host->find(license_id=>$$self{id})) {
+    $result .= $_->destroy();
+  }
+  $result = $self->SUPER::destroy();
+  return $result;
+}
+
 1;
 __END__

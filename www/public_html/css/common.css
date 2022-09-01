@@ -306,10 +306,6 @@ input[type="checkbox"] {
 	width: auto;
 	max-width: 100%;
 }
-.filters p.buttons {
-  margin: 0;
-  padding-left: 165px;
-}
 
 .row {
 	clear: both;
@@ -500,7 +496,7 @@ tr .mac {
 .PageTitle {
   position: absolute;
   top: 0;
-  right: 0;
+  right: 5px;
 	text-align: right;
 }
 .PageTitle h1 {
