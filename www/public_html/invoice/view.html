@@ -13,6 +13,7 @@
         if ( $$variable{Invoice}->id() ) {
           if ( $$variable{Invoice}->deleted() ) {
             $html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
+            $html .= button( 'Undelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();" } );
           } else {
             if ( Date::Parse::str2time($$variable{Invoice}->due_on()) < time ) {
               $html .= button( 'interest', { onclick=>"f1.btnFunction.value='Calculate Interest';f1.submit();", text=>'Calculate Interest' } );
