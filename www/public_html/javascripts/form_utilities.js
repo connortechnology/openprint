@@ -495,12 +495,16 @@ function Serialize( form ) {
 	return parameters;
 } // end function serialize
 
+function select_all_this(element) {
+  return select_all(element.form, element.name, element.checked);
+}
+
 function select_all( form, name, checked ) {
 	if ( ! form.elements[name] ) {
 		return;
 	}	// end if
 	if ( form.elements[name].length ) {
-		for ( var i = 0, len = form.elements[name].length; i < len; i += 1 ) {
+		for ( let i = 0, len = form.elements[name].length; i < len; i += 1 ) {
 			form.elements[name][i].checked = checked;
 		} // end for
 	} else {
@@ -1688,6 +1692,7 @@ function load_logs_form() {
 
 function update_event_bindings() {
   // 
+  console.log('update_event_bindings()');
   document.querySelectorAll("select[data-on-change], input[data-on-change]").forEach(function attachOnChangeThis(el) {
     var fnName = el.getAttribute("data-on-change");
     if ( !window[fnName] ) {
@@ -1726,7 +1731,7 @@ function update_event_bindings() {
     el.onclick = window[fnName].bind(el, el);
   });
 
-  document.querySelectorAll('button[data-on-click-this]').forEach(function(el) {
+  document.querySelectorAll('button[data-on-click-this], input[data-on-click-this]').forEach(function(el) {
     var fnName = el.getAttribute('data-on-click-this');
     if ( !window[fnName] ) {
       console.error('Nothing found to bind to ' + fnName);
@@ -1735,13 +1740,15 @@ function update_event_bindings() {
     console.log("Setting up onclick for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
+
   document.querySelectorAll("i[data-on-click], a[data-on-click], button[data-on-click], input[data-on-click]").forEach(function attachOnClick(el) {
-    var fnName = el.getAttribute("data-on-click");
-    if ( !window[fnName] ) {
-      console.error("Nothing found to bind to " + fnName + " on element " + el.name);
+    const fnName = el.getAttribute('data-on-click');
+    if (!window[fnName]) {
+      console.error('Nothing found to bind to ' + fnName + ' on element ' + el.name);
       return;
     }
 
+    console.log('Setting for data-on-click to ' + fnName + ' for element ' + el.getAttribute('id'));
     el.onclick = function(ev) {
       window[fnName](ev);
     };

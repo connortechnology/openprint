@@ -52,37 +52,38 @@ configuration::init();
 
 my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
 my @online;
-$log->debug("Sessions: " . @$session_ids );
+$log->debug('Sessions: ' . @$session_ids );
 foreach my $session_id ( @$session_ids ) {
-    $session_id =~ s/\s//g;
-    my %session;
-    if ( ! eval q`tie %session, 'Apache::Session::Postgres', $session_id, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
-        $log->error("Error fetching Session: $session_id: $@");
-        next;
-    }
-    if ( ! $session{'lastupdated'} ) {
-		$log->warn("Updating time $session_id");
-        $session{'lastupdated'} = time;
-        untie %session;
-    } elsif ( time - $session{'lastupdated'} < ( 60*60 ) ) {
-		my $I = openprint::Host_Interface->find_one( ip => $session{ip} ) if $session{ip};
-		next if ! $I;
-		my $Host = $I->Host();
-		if ( $Host->hostname() ) {
-		next if $Host->hostname() =~ /googlebot/;
-		next if $Host->hostname() =~ /baidu/;
-		next if $Host->hostname() =~ /search/;
-		next if $Host->hostname() =~ /Yandex/;
-
-		} # end if
-		push @online, $session_id;
-	} # end if
-	undef %session;
+  $session_id =~ s/\s//g;
+  my %session;
+  if (! eval q`tie %session, 'Apache::Session::Postgres', $session_id, { Handle => $dbh, Commit => 0, IDLength => 8 }`) {
+    $log->error("Error fetching Session: $session_id: $@");
+    next;
+  }
+  if (!$session{lastupdated}) {
+    $log->warn("Updating time $session_id");
+    $session{lastupdated} = time;
+  } elsif (time - $session{lastupdated} < (60*60)) {
+    $session{ip} = openprint::Host_Interface->transform(ip=>$session{ip});
+    next if !$session{ip};
+    my $I = openprint::Host_Interface->find_one(ip => $session{ip});
+    next if ! $I;
+    my $Host = $I->Host();
+    if ( $Host->hostname() ) {
+      next if $Host->hostname() =~ /googlebot/;
+      next if $Host->hostname() =~ /baidu/;
+      next if $Host->hostname() =~ /search/;
+      next if $Host->hostname() =~ /Yandex/;
+    } # end if
+    push @online, $session_id;
+  } # end if
+  untie %session;
+  undef %session;
 } # end foreach
 @$session_ids = ();
 
-if ( $$opts{'output'} ) {
-	open (MYFILE, '>'.$$opts{'output'}) or die "unable to open output at $$opts{output} : $!";
+if ( $$opts{output} ) {
+	open (MYFILE, '>'.$$opts{output}) or die "unable to open output at $$opts{output} : $!";
 	print MYFILE @online." currently online<br/>\n";
 	
 	my @user_ids;
@@ -92,8 +93,8 @@ if ( $$opts{'output'} ) {
 			$log->debug("Error fetching Session: $session_id: $@");
 			next;
 		} # en dif
-		next if ! $session{'user_id'};
-		push @user_ids, $session{'user_id'};
+		next if ! $session{user_id};
+		push @user_ids, $session{user_id};
 		undef %session;
 	} # en d foreach session_id
 	foreach my $user_id ( sets::union(@user_ids) ) {

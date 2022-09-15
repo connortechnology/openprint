@@ -85,12 +85,13 @@ table.List tr {
   margin: 2px 0;
 }
 .List th {
+  vertical-align: top;
 	border: none;
-	padding: 0;
+	padding: 2px 0;
 	margin: 0;
 }
 .List td {
-	padding: 2px 0 2px 0;
+	padding: 2px 0;
 	vertical-align: top;
 	margin: 0;
 }
@@ -235,7 +236,9 @@ fieldset p.buttons {
   margin-left: 165px;
 	float: none;
 }
-input[type="radio"], input[type="checkbox"] {
+input[type="radio"],
+.checkbox input[type="checkbox"],
+input[type="checkbox"] {
 	margin: 2px 0;
 	padding: 1px 0;
 	vertical-align: middle;
@@ -302,9 +305,6 @@ input[type="checkbox"] {
 .filters select {
 	width: auto;
 	max-width: 100%;
-}
-.filters p.buttons {
-  padding-left: 165px;
 }
 
 .row {
@@ -414,6 +414,7 @@ table .Company {
 }
 
 table .checkbox {
+  display: table-cell;
 	width: 25px;
 	text-align: center;
 }
@@ -495,7 +496,7 @@ tr .mac {
 .PageTitle {
   position: absolute;
   top: 0;
-  right: 0;
+  right: 5px;
 	text-align: right;
 }
 .PageTitle h1 {
@@ -553,8 +554,6 @@ input[type="text"].filter,
 .Service input[type="text"].filter,
 fieldset p input.filter {
 	width: 40px;
-  font-size: x-small;
-  line-height: 16px;
 }
 
 td p {

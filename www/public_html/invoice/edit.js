@@ -169,4 +169,20 @@ function del_interest(button) {
   new Ajax.Updater('Interests', '_interests.html',
     { evalScripts: true, parameters: { action: 'delete', 'invoice_id': invoice_id, 'interest_id': interest_id } }
     );
+  update_event_bindings();
+}
+
+function del_product(button) {
+  const product_id = button.getAttribute('data-product_id');
+  if (!product_id) {
+    console.log('No product id on button');
+    console.log(button);
+  }
+  new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=remove&amp;product_id='+product_id, { method: 'post', parameters: $('f1').serialize()} );
+  update_event_bindings();
+}
+
+function add_product(button) {
+  new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=add', { method: 'post', parameters: $('f1').serialize()} );
+  update_event_bindings();
 }

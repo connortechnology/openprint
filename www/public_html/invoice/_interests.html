@@ -22,7 +22,6 @@
 </tr>', $Interest->id(), $Interest->compounded_on(), $Interest->description(), openprint::Currency::format( $Interest->amount() ),
   button('deleteInterest'.$Interest->id(), {
   'data-onclick-this'=>'del_interest', 'data-interest_id'=>$Interest->id(),
-   # q`new Ajax.Updater('Interests', '_interests.html', { evalScripts:true, parameters: { action: 'delete', interest_id: '` . $Interest->id() . q`'} } );`,
     text=>'X', title=>'Delete' } ),
 					);
 				$$variable{interest_total} += $Interest->amount();
