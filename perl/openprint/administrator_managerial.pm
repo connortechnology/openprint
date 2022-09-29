@@ -876,22 +876,29 @@ sub _user_fields_tbody {
 } # end sub _user_fields_tbody
 
 sub company_profile_fields {
-	if ( $param{action} eq 'Save' ) {
-		foreach my $Field ( openprint::Company_Profile_Field->find() ) {
-			$variable{error} .= $Field->save({
-				name	=>	$param{'name-'.$Field->id()},
-				description	=>	$param{'description-'.$Field->id()},
-				type	=>	$param{'type-'.$Field->id()},
-				values	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
-				defaults	=>	[ misc::trim( split(',', $param{'defaults-'.$Field->id()} ) ) ],
-				required	=>	$param{'required-'.$Field->id()},
-				searchable	=>	$param{'searchable-'.$Field->id()},
-				search_default	=>	$param{'search_default-'.$Field->id()},
-				match			=>	$param{'match-'.$Field->id()},
-				on_registration	=>	$param{'on_registration-'.$Field->id()},
-				viewable		=>	$param{'viewable-'.$Field->id()},
-			});
-		} # end foreach Field
+  if ($param{action}) {
+    if ( $param{action} eq 'Save' ) {
+      foreach my $Field ( openprint::Company_Profile_Field->find() ) {
+        $variable{error} .= $Field->save({
+            name	=>	$param{'name-'.$Field->id()},
+            description	=>	$param{'description-'.$Field->id()},
+            type	=>	$param{'type-'.$Field->id()},
+            values	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
+            defaults	=>	[ misc::trim( split(',', $param{'defaults-'.$Field->id()} ) ) ],
+            required	=>	$param{'required-'.$Field->id()},
+            searchable	=>	$param{'searchable-'.$Field->id()},
+            search_default	=>	$param{'search_default-'.$Field->id()},
+            match			=>	$param{'match-'.$Field->id()},
+            on_registration	=>	$param{'on_registration-'.$Field->id()},
+            viewable		=>	$param{'viewable-'.$Field->id()},
+          });
+      } # end foreach Field
+      if (!$variable{error}) {
+        $variable{ExternalRedirect} = '/administrator/managerial/company_profile_fields.html';
+      }
+    } else {
+      $variable{error} .= 'Invalid value for action: ' . $param{action}. '<br/>';
+    }
 	} # end if
 } # end sub company_profile_fields
 

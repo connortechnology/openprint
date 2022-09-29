@@ -17,6 +17,7 @@ require openprint::Email;
 require openprint::Log;
 require Net::Ping;
 require Net::IP;
+require HTML::FormatText;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
@@ -437,14 +438,15 @@ sub notify {
   if ( @To and ( @To < 10 ) ) {
     my %info = ( Host	=>	$Host,);
     my $Email = new openprint::Email();
-    $info{ReplacementText} = ssi::include("/email_content/host.html", \%info );
+    $info{ReplacementText} = ssi::include('/email_content/host.html', \%info);
+    my $text_body = HTML::FormatText->format_string($info{ReplacementText});
 
-    my $html_body = ssi::include( '/email_template.html', \%info );
-    $results .= (new openprint::Email())->send(
-      TO			=>	\@To,
-      #TO	=> 'iconnor@point-one.com',
+    my $html_body = ssi::include('/email_template.html', \%info);
+    $results .= $Email->send(
+      TO			  =>	\@To,
       SUBJECT		=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
-      FROM		=>	$config{TechSupportEmail},
+      FROM	  	=>	$config{TechSupportEmail},
+      BODY      =>  $text_body,
       HTML_BODY	=>	$html_body,
     );
     (new openprint::Log())->save({ Object=>$Host, action=>'Emailed', note=>$results });

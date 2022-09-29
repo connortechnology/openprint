@@ -22,7 +22,7 @@
 					$html .= '<td class="Quantity">'.input( type=>'float', id=>'product-quantity-'.$$Product{id}, name=>'product-quantity-'.$$Product{id}, value=>$$Product{quantity}, onkeyup=>"update_product( '$$Product{quantity}' );" ) . '</td>';
 					$html .= sprintf('<td class="Price" id="product-total-%1$d">%2$s</td>', $Product->id(), openprint::Currency::format( $Product->total() ) );
 					$html .= '<td class="buttons">';
-					$html .= button( 'Remove'.$Product->id(), { onclick=>qq`new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=remove&amp;product_id=$$Product{id}', { method: 'post', parameters: \$('f1').serialize()} );`, text=>'-', title=>'Remove' } );
+            $html .= button( 'Remove'.$Product->id(), { 'data-product_id'=>$$Product{id}, 'data-on-click-this'=>'del_product', text=>'-', title=>'Remove' } );
 					$html .= '</td>';
 					$html .= "</tr>\n";
 					$$variable{product_total} += $Product->total();
@@ -51,9 +51,7 @@
 				<td class="Price"></td>
 				<td class="Quantity"><? echo ( input( type=>'float', id=>'product-quantity-', name=>'product-quantity-' ); ) ?></td>
 				<td class="Price"></td>
-				<td class="buttons">
-<? echo ( button( 'AddNewProduct', { onclick=>qq`new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=add', { method: 'post', parameters: \$('f1').serialize()} );`, text=>'+' } ); ) ?>
-				</td>
+				<td class="buttons"><? echo ( button( 'AddNewProduct', { 'data-on-click-this'=>'add_product', text=>'+' } ); ) ?></td>
 			</tr>
 		</table>
 	</fieldset>

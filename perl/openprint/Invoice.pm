@@ -368,7 +368,7 @@ sub send {
   my @AccountingContacts = $self->Invoicer()->AccountingContacts();
   my $from = @AccountingContacts ? $AccountingContacts[0]->email() : $config{AccountingEmail};
 
-	$Email->add_html_attachment("Invoice".$self->num().'.html', $invoice_html) if $To and ($To->email() =~ /^iconnor/);
+	$Email->add_html_attachment("Invoice".$self->num().'.html', $invoice_html) if $To and (($To->email() =~ /^iconnor/) or ($To->email() =~ /^isaac/));
 	my $results = $Email->send(
 		BCC			=>	$openprint::User,
 		#TO			=>	new openprint::User( $session{user_id} ),
