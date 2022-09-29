@@ -709,8 +709,7 @@ sub from_ip {
 #my $geo = $Geo::IP->open( '/usr/share/GeoIP/GeoIP.dat' );
 		$geo->Faster();
 	} # end if
-	$openprint::log->debug("from_ip");
-	my $ip = @_ ? $_[0] : $ENV{REMOTE_ADDR};
+	my $ip = @_ ? $_[0] : ($ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR});
 	if ( ref $geo eq 'Geo::IPfree' ) {
 $openprint::log->debug("Doing lookup for $ip");
 		my ( $code1, $name1 ) = $geo->LookUp( $ip );
