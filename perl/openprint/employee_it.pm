@@ -408,7 +408,7 @@ sub host {
 	} # end if
 	ssi::setup_date_select( '/employee/it/host.html', 'log_created_on_start', 0 );
 	ssi::setup_date_select( '/employee/it/host.html', 'log_created_on_end', '' );
-	if ( $config{'RADIUS_Support'} eq 'Y' ) {
+	if ( $config{'RADIUS_Support'} and ($config{'RADIUS_Support'} eq 'Y') ) {
 		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				'database'  => $config{RADIUS_DB_Name},
 				'driver'    => $config{RADIUS_DB_Driver},
