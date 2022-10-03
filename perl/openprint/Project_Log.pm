@@ -25,7 +25,7 @@ $serial= 'project_log_id_seq';
 );
 %defaults = (
 	created_on		=>	q`'NOW()'`,
-	host_id				=>	q`$self->ip_address( $ENV{REMOTE_ADDR} );return $$self{host_id};`,
+	host_id				=>	q`$self->ip_address( $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR} );return $$self{host_id};`,
 );
 
 sub description_html {
@@ -83,7 +83,7 @@ sub ip_address {
 
   if ( @_ > 1 ) {
     if ( ! defined $_[1] ) {
-      $_[1] = $ENV{REMOTE_ADDR};
+      $_[1] = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
     } # end if
     if ( $_[1] ) {
 	    my $Interface = openprint::Host_Interface->find_one( ip=>$_[1] );

@@ -331,7 +331,7 @@ sub subscriptions {
               # Using Google recaptcha
               require Captcha::reCAPTCHA;
               my $c = Captcha::reCAPTCHA->new;
-              my $result = $c->check_answer_v2($config{reCAPTCHA_secret_key}, $param{'g-recaptcha-response'}, $ENV{REMOTE_ADDR});
+              my $result = $c->check_answer_v2($config{reCAPTCHA_secret_key}, $param{'g-recaptcha-response'}, $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR});
               if ( ! $result->{is_valid} ) {
                 $variable{error} .= 'Failed reCAPTCHA.';
               }
