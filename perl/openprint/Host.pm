@@ -74,7 +74,7 @@ $serial = 'hosts_id_seq';
 	notify_frequency	=>	[ 's/\D//g' ],
 	min_ping_frequency	=>	[ 's/\D//g' ],
 	max_ping_time	=>	[ 's/\D//g' ],
-	hostname	=>	[ 's/\s//g' ],
+	hostname	=>	[ 's/[^\w\-\.\/:_%//g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
