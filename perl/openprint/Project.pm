@@ -1626,6 +1626,8 @@ sub recalculate {
 				$status = $function->($self);
 				$openprint::log->debug("$$Type{type}::Calculate_Sigs: status: $status");
 				openprint::service::status($$self{id}, $$services{''}[0], $status);
+      } else {
+        $openprint::log->error("No calculate signatures function for $$Type{type}");
 			} # end if
 			openprint::service::auto_calculate($self, $$services{''}[0]) if $status eq 'calculated';
 		} # end if
