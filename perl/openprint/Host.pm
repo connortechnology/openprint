@@ -3,6 +3,7 @@ use warnings;
 
 require openprint::Object;
 require openprint::Host_Interface;
+require openprint::Host_Config;
 require openprint::Project_Log;
 
 package openprint::Host_Notification;
@@ -73,7 +74,7 @@ $serial = 'hosts_id_seq';
 	notify_frequency	=>	[ 's/\D//g' ],
 	min_ping_frequency	=>	[ 's/\D//g' ],
 	max_ping_time	=>	[ 's/\D//g' ],
-	hostname	=>	[ 's/\s//g' ],
+	hostname	=>	[ 's/[^\w\-\.\/:_%//g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
@@ -120,6 +121,19 @@ sub name {
 	return $_[0]{name};
 }
 
+sub Config {
+  my $self = shift;
+  $$self{Config} = @_ if @_;
+  if (!$$self{Config}) {
+    if ($$self{id}) {
+      $$self{Config} = [ openprint::Host_Config->find(host_id=>$$self{id}) ];
+    } else {
+      $$self{Config} = [];
+    }
+  }
+  return @{$$self{Config}};
+}
+
 sub destroy {
 	my $error = '';
 	require openprint::Log;
@@ -135,10 +149,18 @@ sub destroy {
 		$error .= $I->destroy();
 		return $error if $error;
 	} # end foreach Log
+	foreach ( $_[0]->Config() ) {
+		$error .= $_->destroy();
+		return $error if $error;
+	} # end foreach
 	foreach my $Log ( openprint::Project_Log->find( host_id=>$_[0]{id} ) ) {
 		$error .= $Log->save({host_id=>undef});
 		last if $error;
 	}
+  foreach ( openprint::Host_Info->find(host_id=>$_[0]{id}) ) {
+    $error .= $_->destroy();
+		last if $error;
+  }
 
 	$error .= $_[0]->SUPER::destroy();
 	return $error;
@@ -616,7 +638,7 @@ sub thumbnail_html {
 		return '<img src="'.$self->get_image(@dimensions).'" alt=""/>';
 	}
 	my @Assets = $self->Assets();
-	$openprint::log->debug("Assets: $size " . @Assets);
+  #$openprint::log->debug("Assets: $size " . @Assets);
 	return ( @Assets ? $Assets[0]->Asset()->sized_html($size) : '' );
 }
 

@@ -912,7 +912,7 @@ sub find_sql {
 	} # end if
 
 	my %sql = (
-		( distinct => ( exists $$params{distinct} ? 1:0 ) ),
+		( distinct => ( exists $$params{distinct} ? 1 : 0 ) ),
 		( columns => ( exists $$params{columns} ? $$params{columns} : '*' ) ),
 		( table => ( exists $$params{table} ? $$params{table} : ${$object_type.'::table'} )),
 		'group by'=> $$params{'group by'},
@@ -1002,7 +1002,6 @@ $openprint::log->error("Wasting time looking for objects in find $k $search{$k}"
 } # end sub find_sql
 
 sub find {
-
 	no strict 'refs';
 	my $object_type = shift;
 	my $debug = ${$object_type.'::debug'};
@@ -1051,7 +1050,7 @@ sub find {
 			if ( $name_cache{$object_type}{$$params{$cache_field}} ) {
 				my ( $caller, undef, $line ) = caller;
 				$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
-				return $name_cache{$object_type}{$$params{$cache_field}};
+				return ( $name_cache{$object_type}{$$params{$cache_field}} );
 			} else {
 				# Shouldn't have to test for cached, because the hash will not get populated.
 $log->debug("returning nothing for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
@@ -1085,6 +1084,7 @@ $log->debug("returning nothing for $object_type $cache_field $$params{$cache_fie
 	} elsif ( $debug ) {
 		$log->debug("Loading Debug:$debug $object_type ($$sql{sql}) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @{$$sql{values}}).') # of results:' . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
+  return () if !@{$data};
 
 	my $fields = \%{$object_type.'::fields'};
 	if ( $$fields{id} ) {
@@ -1102,7 +1102,7 @@ $log->debug("Doing find_cache for $object_type $cache_ref $name_cache{$object_ty
 #debug();
 			return @results;
 		} # end if
-		return map { new($object_type, $_->{$$fields{id}}, $_) } @$data;
+		return map { new($object_type, $_->{$$fields{id}}, $_) } @{$data};
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
 		if ( ! @identified_by ) {

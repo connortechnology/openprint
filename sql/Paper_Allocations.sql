@@ -9,7 +9,7 @@ CREATE TABLE Paper_Allocations (
 	quantity	INTEGER NOT NULL,
 	project_id	INTEGER NOT NULL, FOREIGN KEY (project_id) REFERENCES Projects (id),
 	docket	INTEGER,
-	operator_id	INTEGER NOT NULL, FOREIGN KEY (operator_id) REFERENCES Users (id),
+	operator_id	INTEGER, FOREIGN KEY (operator_id) REFERENCES Users (id),
 	created_on	timestamp with time zone default NOW()
 );
 

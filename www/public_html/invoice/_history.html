@@ -75,12 +75,22 @@
             ( $$Invoice{currency_id} != $session{Currency_id} ) ?
             join('<br/>',
             $Currency->format($Invoice->subtotal()) . $Currency->short(), 
-            '~'.$Currency->format( $Currency->convert_from($Invoice->subtotal(), { period=>$Invoice->created_on()} ) ) . $openprint::Currency->short()
+            '~'.(
+              $Invoice->owing() > 0 ? 
+              $Currency->format( $Currency->convert_from($Invoice->subtotal(), { period=>$Invoice->created_on()} ) ) . $openprint::Currency->short()
+              :
+              $Invoice->paid_value()
+             )
               ) : 
 						openprint::Currency::format( $Invoice->subtotal() ),
             ),
 						join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->Tax( $_ )->amount() ) ) : () } @{$$variable{Taxes}} ),
-            openprint::Currency::format( $Invoice->Currency()->convert_from($Invoice->total()) ),
+            openprint::Currency::format(
+            $Invoice->owing() > 0 ?
+            $Invoice->Currency()->convert_from($Invoice->total())
+            :
+            $Invoice->paid_value()
+            ),
 						openprint::Currency::format( $Invoice->interest() ),
 						openprint::Currency::format( $Invoice->paid() ),
 						openprint::Currency::format( $Invoice->paid_value() ),

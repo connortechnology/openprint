@@ -60,38 +60,72 @@ sub hosts {
 
 sub _hosts {
   $variable{uri} = '/employee/it/hosts.html';
-	if ( $param{action} eq 'Delete' ) {
-    my @host_ids;
-    if ( exists $param{host_id} ) {
-      @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
-    } elsif ( exists $param{'host_id[]'} ) {
-      @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
-    }
-		foreach my $host_id ( @host_ids ) {
-			my $Host = new openprint::Host( $host_id );
-      if ( $Host->deleted() ) {
-        $variable{error} .= $Host->destroy();
-      } else {
-        $variable{error} .= $Host->delete();
+  if ($param{action}) {
+    if ( $param{action} eq 'Delete' ) {
+      my @host_ids;
+      if ( exists $param{host_id} ) {
+        @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+      } elsif ( exists $param{'host_id[]'} ) {
+        @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
       }
-		} # end foreach host_id
-		%param = ();
-	} elsif ( $param{action} eq 'wake' ) {
-		my @host_ids;
-		if ( exists $param{host_id} ) {
-			@host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
-		} elsif ( exists $param{'host_id[]'} ) {
-			@host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
-		}
-		foreach my $Host ( openprint::Host->find(id=>\@host_ids, deleted=>[0,1])) {
-			foreach my $I ( $Host->Interfaces() ) {
-				next if ! $I->mac();
-				my ( $error, $info ) = $I->wake();
-				$variable{error} .= $error;
-				$variable{information} .= $info;
-			} # end foreach Host_Interface
-		} # end foreach Host
-	} # end if action
+      foreach my $host_id ( @host_ids ) {
+        my $Host = new openprint::Host( $host_id );
+        if ( $Host->deleted() ) {
+          $variable{error} .= $Host->destroy();
+        } else {
+          $variable{error} .= $Host->delete();
+        }
+      } # end foreach host_id
+      %param = ();
+    } elsif ( $param{action} eq 'undelete' ) {
+      my @host_ids;
+      if ( exists $param{host_id} ) {
+        @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+      } elsif ( exists $param{'host_id[]'} ) {
+        @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
+      }
+      foreach my $host_id ( @host_ids ) {
+        my $Host = new openprint::Host( $host_id );
+        if ( $Host->deleted() ) {
+          $variable{error} .= $Host->undelete();
+        } else {
+          $variable{error} .= $Host->id() . ' not deleted so not undeleted.<br/>';
+        }
+      } # end foreach host_id
+      %param = ();
+    } elsif ( $param{action} eq 'destroy' ) {
+      my @host_ids;
+      if ( exists $param{host_id} ) {
+        @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+      } elsif ( exists $param{'host_id[]'} ) {
+        @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
+      }
+      foreach my $host_id ( @host_ids ) {
+        my $Host = new openprint::Host( $host_id );
+        if ( $Host->deleted() ) {
+          $variable{error} .= $Host->destroy();
+        } else {
+          $variable{error} .= $Host->id() . ' not deleted so not destroying.<br/>';
+        }
+      } # end foreach host_id
+      %param = ();
+    } elsif ( $param{action} eq 'wake' ) {
+      my @host_ids;
+      if ( exists $param{host_id} ) {
+        @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+      } elsif ( exists $param{'host_id[]'} ) {
+        @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
+      }
+      foreach my $Host ( openprint::Host->find(id=>\@host_ids, deleted=>[0,1])) {
+        foreach my $I ( $Host->Interfaces() ) {
+          next if ! $I->mac();
+          my ( $error, $info ) = $I->wake();
+          $variable{error} .= $error;
+          $variable{information} .= $info;
+        } # end foreach Host_Interface
+      } # end foreach Host
+    } # end if action
+  } # end if action
 
 	ssi::save_params( '/employee/it/hosts.html', 
 			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
@@ -103,7 +137,7 @@ sub _hosts {
 			'radius_auth', 'order', 'deleted', 'owner_id',
 			);
 
-	if ( $config{'RADIUS_Support'} eq 'Y' ) {
+	if ($config{'RADIUS_Support'} and ( $config{'RADIUS_Support'} eq 'Y')) {
 		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				database  => $config{RADIUS_DB_Name},
 				driver    => $config{RADIUS_DB_Driver},
@@ -374,7 +408,7 @@ sub host {
 	} # end if
 	ssi::setup_date_select( '/employee/it/host.html', 'log_created_on_start', 0 );
 	ssi::setup_date_select( '/employee/it/host.html', 'log_created_on_end', '' );
-	if ( $config{'RADIUS_Support'} eq 'Y' ) {
+	if ( $config{'RADIUS_Support'} and ($config{'RADIUS_Support'} eq 'Y') ) {
 		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				'database'  => $config{RADIUS_DB_Name},
 				'driver'    => $config{RADIUS_DB_Driver},
@@ -696,13 +730,6 @@ sub _assets {
 } # end sub _assets
 
 sub licenses {
-	if ( $param{action} eq 'Delete' ) {
-		foreach my $license_id ( ref $param{license_id} eq 'ARRAY' ? @{$param{license_id}} : $param{license_id} ) {
-			my $License = new openprint::License( $license_id );
-			$variable{error} .= $License->delete();
-		} # end foreach license_id
-		%param = ();
-	} # end if
 	_licenses();
 	ssi::setup_date_select( '/employee/it/licenses.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/employee/it/licensess.html', 'created_on_end', '' );
@@ -711,12 +738,16 @@ sub licenses {
 } # end sub licenses
 
 sub _licenses {
-	if ( $param{action} eq 'Delete' ) {
-		foreach my $license_id ( ref $param{license_id} eq 'ARRAY' ? @{$param{license_id}} : $param{license_id} ) {
-			my $License = new openprint::License( $license_id );
-			$variable{error} .= $License->delete();
-		} # end foreach license_id
-		%param = ();
+  if ($param{action}) {
+    if ( $param{action} eq 'Delete' ) {
+      foreach my $license_id ( ref $param{'license_id[]'} eq 'ARRAY' ? @{$param{'license_id[]'}} : $param{'license_id[]'} ) {
+        my $License = new openprint::License( $license_id );
+        $variable{error} .= $License->delete();
+      } # end foreach license_id
+      %param = ();
+    } else {
+      $log->error("Unknown action $param{action}");
+    } # end if
 	} # end if
 	ssi::save_params( '/employee/it/licenses.html', 
 	( map { 'created_on_start_' . $_ } ( 'year', 'month', 'day' ) ),
@@ -976,6 +1007,7 @@ sub _interface {
             $Host->save({hostname=>$param{hostname}});
           } else {
             $log->debug("Not updating hostname from $$Host{hostname} to $param{hostname}");
+            $Host->save(); # To update updated_on
           }
         } # end foreach HI
       } # end if @His

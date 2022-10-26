@@ -43,7 +43,7 @@ $Timetrack->elapsed_formatted(),
 #misc::seconds_to_pretty_interval( $Timetrack->elapsed() ),
 openprint::Currency::format( $$Price{Price} ), $$Price{units},
 openprint::Currency::format( $$Price{Total} ),
-button( 'del'.$Timetrack->id(), { onclick=>qq`del_timetrack($$Timetrack{id});`, text=>'-' } ),
+button( 'del'.$Timetrack->id(), { 'data-on-click-this'=>'del_timetrack', 'data-id'=>$$Timetrack{id}, text=>'-' } ),
 $desc );
 			$$variable{service_total} += $$Price{Total};
 			$$variable{elapsed_total} += $Timetrack->elapsed();
@@ -101,7 +101,7 @@ if ( $T->date_associated() ) {
 				my $Price = $T->Price();
 				$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
 				$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
-				$html .= sprintf('<td class="buttons">%s</td>', button( 'add'.$T->id(), { onclick=>qq`add_timetrack($$T{id});`, text=> '+' } ) );
+        $html .= sprintf('<td class="buttons">%s</td>', button( 'add'.$T->id(), { 'data-on-click-this'=>'add_timetrack', 'data-id'=>$$T{id}, text=> '+' } ) );
 				$html .= "</tr>\n";
 			$$variable{service_total} += $$Price{Total};
 			$$variable{elapsed_total} += $T->elapsed();

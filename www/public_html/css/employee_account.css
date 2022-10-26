@@ -1,21 +1,7 @@
 
-/*
-fieldset p,
-fieldset ul li {
-	padding-left: 175px;
-}
-#Login p.buttons {
-  margin-left: 175px;
-}
-fieldset p label:not(.radio):not(.radio-inline),
-fieldset ul li label:not(.radio):not(.radio-inline) {
-	width: 170px;
-	margin-left: -175px;
-}
-*/
 .UserProfile ul.UserGroups,
-.UserProfile .AssistantTo ul ,
-.UserProfile .Assistants ul ,
+.UserProfile .AssistantTo ul,
+.UserProfile .Assistants ul,
 .UserProfile .marketing_categories ul {
 	width: 100%;
 }
@@ -51,10 +37,18 @@ fieldset ul li label:not(.radio):not(.radio-inline) {
 .UserProfile input#extension {
 	width: 40px;
 }
-.UserProfile div.AdminOptions ,
-.UserProfile div.Assistants ,
+div.Assistants:after {
+  content: ".";
+  display: block;
+  height: 0;
+  font-size: 0;
+  clear: both;
+  visibility: hidden;
+}
+.UserProfile div.AdminOptions,
+.UserProfile div.Assistants,
 .UserProfile div.AssistantTo {
-	width: 50%;
+	width: 49%;
 }
 .UserProfile div.AssistantTo {
 float: right;

@@ -98,7 +98,7 @@ sub save {
 	$rc .= $self->SUPER::save( );
 	if (!$rc) {
 		foreach my $T ( $self->Taxes() ) {
-			$rc .= $T->save();
+			$rc .= $T->save({invoice_id=>$$self{id}});
 		} # end foreach
 		$self->Invoicee()->save({last_invoice_id=>$$self{id}}) if $self->Invoicee()->last_invoice_id != $$self{id};
 	} # end if
@@ -368,7 +368,7 @@ sub send {
   my @AccountingContacts = $self->Invoicer()->AccountingContacts();
   my $from = @AccountingContacts ? $AccountingContacts[0]->email() : $config{AccountingEmail};
 
-	$Email->add_html_attachment("Invoice".$self->num().'.html', $invoice_html) if $To and ($To->email() =~ /^iconnor/);
+	$Email->add_html_attachment("Invoice".$self->num().'.html', $invoice_html) if $To and (($To->email() =~ /^iconnor/) or ($To->email() =~ /^isaac/));
 	my $results = $Email->send(
 		BCC			=>	$openprint::User,
 		#TO			=>	new openprint::User( $session{user_id} ),
@@ -503,7 +503,7 @@ sub Taxes {
 	} # end if
 
 	if (!$$self{Taxes}) {
-		@{$$self{Taxes}} = openprint::Invoice_Tax->find( invoice_id=>$$self{id} );
+		@{$$self{Taxes}} = $$self{id} ? openprint::Invoice_Tax->find( invoice_id=>$$self{id} ) : ();
 	} # end if
 
 	if ( ! ( $$self{Taxes} and @{$$self{Taxes}} ) ) {

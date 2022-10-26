@@ -85,12 +85,13 @@ table.List tr {
   margin: 2px 0;
 }
 .List th {
+  vertical-align: top;
 	border: none;
-	padding: 0;
+	padding: 2px 0;
 	margin: 0;
 }
 .List td {
-	padding: 2px 0 2px 0;
+	padding: 2px 0;
 	vertical-align: top;
 	margin: 0;
 }
@@ -202,7 +203,7 @@ fieldset label:not(.radio):not(.radio-inline) {
 fieldset label:not(.radio):not(.radio-inline):after {
 	content: ":";
 }
-fieldset .address2 label:after { 
+fieldset .address2 label:not(.radio):not(.radio-inline):after { 
 	content: '';
 }
 fieldset label.radio {
@@ -235,7 +236,9 @@ fieldset p.buttons {
   margin-left: 165px;
 	float: none;
 }
-input[type="radio"], input[type="checkbox"] {
+input[type="radio"],
+.checkbox input[type="checkbox"],
+input[type="checkbox"] {
 	margin: 2px 0;
 	padding: 1px 0;
 	vertical-align: middle;
@@ -276,7 +279,6 @@ input[type="checkbox"] {
 	padding: 0;
 	border-right: none;
 	border-left: none;
-	border-top: 1px solid #000088;
 	border-bottom: none;
 }
 @media print {
@@ -303,9 +305,6 @@ input[type="checkbox"] {
 .filters select {
 	width: auto;
 	max-width: 100%;
-}
-.filters p.buttons {
-  padding-left: 165px;
 }
 
 .row {
@@ -342,6 +341,7 @@ hr {
 	background-color: #FF5C51;
 }
 
+/*
 .requiredFieldIndicator {
 	padding:0;
 	width: 8px;
@@ -352,6 +352,7 @@ hr {
 	display: -moz-inline-box;
 	display: inline-block;
 }
+*/
 
 .TipLink {
 	font-weight: normal;
@@ -413,6 +414,7 @@ table .Company {
 }
 
 table .checkbox {
+  display: table-cell;
 	width: 25px;
 	text-align: center;
 }
@@ -435,11 +437,11 @@ table .description {
 	text-align: left;
 }
 tr .ip {
-	width: 125px;
+	width: 175px;
 	text-align: left;
 }
 tr .mac {
-	width: 140px;
+	width: 150px;
 	text-align: left;
 }
 
@@ -492,8 +494,9 @@ tr .mac {
 	font-size: 16px;
 }
 .PageTitle {
+  position: absolute;
   top: 0;
-  right: 0;
+  right: 5px;
 	text-align: right;
 }
 .PageTitle h1 {
@@ -551,8 +554,6 @@ input[type="text"].filter,
 .Service input[type="text"].filter,
 fieldset p input.filter {
 	width: 40px;
-  font-size: x-small;
-  line-height: 16px;
 }
 
 td p {
@@ -704,6 +705,13 @@ table .Object {
 }
 #Login .buttons {
 text-align: left;
+}
+.Login input[type="email"],
+.Login input[type="text"],
+.Login input[type="password"] {
+	width: 75%;
+}
+.Login #showpassword {
 }
 input.input-clear {
 	margin-right: -14px;

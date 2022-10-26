@@ -876,22 +876,29 @@ sub _user_fields_tbody {
 } # end sub _user_fields_tbody
 
 sub company_profile_fields {
-	if ( $param{action} eq 'Save' ) {
-		foreach my $Field ( openprint::Company_Profile_Field->find() ) {
-			$variable{error} .= $Field->save({
-				name	=>	$param{'name-'.$Field->id()},
-				description	=>	$param{'description-'.$Field->id()},
-				type	=>	$param{'type-'.$Field->id()},
-				values	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
-				defaults	=>	[ misc::trim( split(',', $param{'defaults-'.$Field->id()} ) ) ],
-				required	=>	$param{'required-'.$Field->id()},
-				searchable	=>	$param{'searchable-'.$Field->id()},
-				search_default	=>	$param{'search_default-'.$Field->id()},
-				match			=>	$param{'match-'.$Field->id()},
-				on_registration	=>	$param{'on_registration-'.$Field->id()},
-				viewable		=>	$param{'viewable-'.$Field->id()},
-			});
-		} # end foreach Field
+  if ($param{action}) {
+    if ( $param{action} eq 'Save' ) {
+      foreach my $Field ( openprint::Company_Profile_Field->find() ) {
+        $variable{error} .= $Field->save({
+            name	=>	$param{'name-'.$Field->id()},
+            description	=>	$param{'description-'.$Field->id()},
+            type	=>	$param{'type-'.$Field->id()},
+            values	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
+            defaults	=>	[ misc::trim( split(',', $param{'defaults-'.$Field->id()} ) ) ],
+            required	=>	$param{'required-'.$Field->id()},
+            searchable	=>	$param{'searchable-'.$Field->id()},
+            search_default	=>	$param{'search_default-'.$Field->id()},
+            match			=>	$param{'match-'.$Field->id()},
+            on_registration	=>	$param{'on_registration-'.$Field->id()},
+            viewable		=>	$param{'viewable-'.$Field->id()},
+          });
+      } # end foreach Field
+      if (!$variable{error}) {
+        $variable{ExternalRedirect} = '/administrator/managerial/company_profile_fields.html';
+      }
+    } else {
+      $variable{error} .= 'Invalid value for action: ' . $param{action}. '<br/>';
+    }
 	} # end if
 } # end sub company_profile_fields
 
@@ -1265,9 +1272,11 @@ sub _users {
           $variable{error} .= $User->destroy();
       }
     } elsif ($param{btnFunction} eq 'delete') {
-      foreach my $User ( openprint::User->find(id=>[ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id})])) {
+      my @user_ids = exists($param{'user_id[]'}) ? @{$param{'user_id[]'}} : (
+        ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id}) );
+      foreach my $User ( openprint::User->find(id=>\@user_ids) ) {
           if ($User->deleted()) {
-            $variable{error} .= 'User ' . $User->email() . ' not deleteed because already deleted<br/>';
+            $variable{error} .= 'User ' . $User->email() . ' not deleted because already deleted<br/>';
             next;
           }
           $variable{error} .= $User->delete();
@@ -1283,10 +1292,8 @@ sub _users {
           $variable{error} .= $User->undelete();
       }
     } else {
-      $log->error("Unknown function");
+      $log->error('Unknown function '.$param{btnFunction});
     }
-  } else {
-      $log->error("on function");
   }
 
   my @Users;
@@ -1303,6 +1310,7 @@ sub _users {
 				( map { $session{join('?', $uri, $_)} ? ( $_ => $session{join('?', $uri, $_) } ) : () } ( 'company_id','type', 'web_active', 'ftp_active' ) ),
 				ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
 				ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+        limit => ($param{limit} ? $param{limit} : 1000),
 				);
 		if ( $session{$uri.'?deleted'} eq '' ) {
 			$filters{deleted} = [0,1];

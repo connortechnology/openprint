@@ -12,7 +12,7 @@ require openprint::Object;
 require openprint::User;
   require openprint::Quote;
 
-$debug = 1;
+$debug = 0;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -358,7 +358,7 @@ sub can_edit {
 	return 1 if ! $_[0]{id};
 	return 1 if $openprint::session{user_type} eq 'A';
 	return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
-	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
+	return 1 if $_[0]->salesrep_id() and sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
 	return 1 if $_[0]{id} == $$openprint::User{company_id} and $$openprint::User{administrator} eq 'Y';
 	return 1 if $openprint::User->in_Group('Estimating') and ( $_[0]{id} != $$openprint::User{company_id} );
 	return 0;
@@ -368,7 +368,7 @@ sub can_delete {
 	return 0 if ! $_[0]{id};
 	return 1 if $openprint::session{user_type} eq 'A';
 	return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
-	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
+	return 1 if $_[0]->salesrep_id() and sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
 	return 1 if $_[0]{id} == $$openprint::User{company_id} and $$openprint::User{administrator} eq 'Y';
 	return 0;
 }

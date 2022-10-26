@@ -10,20 +10,14 @@
 						); ) ?>
 					</span>
 				</li>
+      </ul>
+      <ul id="Taxes">
         <?include(_taxes_edit.html)?>
-				<? echo ( 
-            return;
-					my $html;
-					foreach my $Tax ( $$variable{Invoice}->Taxes() ) {
-						$html .= sprintf('<li class="tax"><label>%s (%d%)</label>%s</li>', 
-							$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
-							);
-					} # end foreach Tax
-					return $html;
-				) ?>
+      </ul>
+      <ul>
 				<li class="total">
 					<label>Total</label><?echo($$variable{CurrencySymbol})?>
-          <!--<span id="total"><? echo ( openprint::Currency::format( $$variable{Invoice}->total() ); ) ?></span>-->
+          <!--<span id="total"><? echo ( $$variable{Invoice}->Currency()->format( $$variable{Invoice}->total() ); ) ?></span>-->
 					<? echo ( join("\n",
 						input( type=>'float', name=>'total', id=>'total', value=>$$variable{Invoice}->total() ),
 						boolean_override('total_override', $$variable{Invoice}->total_override() ),
@@ -32,21 +26,21 @@
 				<? if ( $$variable{Invoice}->interest() ne '' ) ?>
 				<li class="interest">
 					<label>Interest</label>
-					<span id="interest"><? echo ( openprint::Currency::format( $$variable{Invoice}->interest() ); ) ?></span>
+					<span id="interest"><? echo ( $$variable{Invoice}->Currency()->format( $$variable{Invoice}->interest() ); ) ?></span>
 				</li>
 				<? endif ( $$variable{Invoice}->interest() ne '' ) ?>
 				<li class="paid">
 					<label>Amount Paid</label>
-					<? echo ( openprint::Currency::format( $$variable{Invoice}->paid() ); ) ?>
+					<? echo ( $$variable{Invoice}->Currency()->format( $$variable{Invoice}->paid() ); ) ?>
 				</li>
 				<li class="owing">
 					<label>Amount Owing</label>
-					<span id="Owing"><? echo ( openprint::Currency::format( $$variable{Invoice}->owing() ); ) ?></span>
+					<span id="Owing"><? echo ( $$variable{Invoice}->Currency()->format( $$variable{Invoice}->owing() ); ) ?></span>
 				</li>
 				<? if ( $$variable{Invoice}->early_payment_amount() and Date::Parse::str2time( $$variable{Invoice}->early_payment_date() ) > time ) ?>
 				<li class="early_payment_owing">
 					<label>Amount Owing if paid by <? echo ( format_date( $$variable{Invoice}->early_payment_date() ); ) ?></label>
-					<span id="EarlyOwing"><? echo ( openprint::Currency::format( $$variable{Invoice}->owing_early() ); ) ?></span>
+					<span id="EarlyOwing"><? echo ( $$variable{Invoice}->Currency()->format( $$variable{Invoice}->owing_early() ); ) ?></span>
 				</li>
 				<? endif ( $$variable{Invoice}->early_payment_amount() and Date::Parse::str2time( $$variable{Invoice}->early_payment_date() ) > time ) ?>
 			</ul>

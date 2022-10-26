@@ -51,6 +51,17 @@
 				<li><label>All email communications from <? echo ( $config{SiteTitle} ) ?></label>
 				<? echo ( radio( 'all', [ 'Y', 'Subscribed', 'N', 'Unsubscribed' ], $$variable{User}->mailinglist(), { default=>'Y' } ); ) ?>
 				</li>
+<?echo( my $html = '';
+    my %Subscriptions = map { $$_{campaign_id} => $_ } openprint::EmailCampaign_Subscription->find(user_id=>$$variable{User}->id());
+    foreach my $Campaign (openprint::EmailCampaign->find(user_id=>undef, runnable=>1)) {
+      $html .= '<li><label>'.html_escape($Campaign->name()).'</label>'.
+        radio( 'campaign_'.$$Campaign{id}, [ '1', 'Subscribed', '0', 'Unsubscribed' ], 
+          (exists($Subscriptions{$$Campaign{id}}) ? '1' : '0'),
+          { default=>'0' } ).
+        '</li>';
+    } # end foreach
+    return $html;
+)?>
 			</ul>
 			<p class="buttons">
 			<? echo ( join("\n",

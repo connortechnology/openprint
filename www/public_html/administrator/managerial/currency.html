@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script>
 	function set_conversion( from_id ) {
 		var form = jQuery('#f1')[0];
 		var to_id = get_ddm_value(form.elements['to-'+from_id]);
@@ -32,9 +32,9 @@
 			<th class="conversions">Conversions</th>
 		</tr>
 		<? echo (
-			my $html;
-			my $rowclass;
-			foreach my $Currency ( openprint::Currency->find('order'=>'lower(name)') ) {
+			my $html = '';
+			my $rowclass = '';
+			foreach my $Currency ( openprint::Currency->find(order=>'lower(name)') ) {
 				$html .= sprintf(q`
 		<tr%1$s> 
 			<td class="name"><input type="text" name="name-%2$d" value="%3$s"/></td>
@@ -43,7 +43,7 @@
       <td class="precision"><input type="number" name="precision-%2$d" value="%6$d" min="0" max="8"/></td>
 			<td class="conversions" id="Conversions%2$d">%7$s</td>
 		</tr>`, $rowclass, @$Currency{'id','name','short','symbol','precision'},
-    include('/administrator/managerial/_current_currency_conversions.html', { Currency=>$Currency, } ),
+        include('/administrator/managerial/_current_currency_conversions.html', { Currency=>$Currency } ),
 				);
 			} # end foreach
 			return $html
@@ -60,10 +60,10 @@
 		</tr>
 	</table>
 	<p class="buttons">
-			<? echo ( join( "\n",
-				button( 'Submit', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();"} ),
-				button( 'Reset', { 'onclick'=>"f1.reset();" } ),
-			); ) ?>
+    <? echo ( join( "\n",
+      button( 'Submit', { onclick=>"f1.btnFunction.value='Save';f1.submit();"} ),
+      button( 'Reset', { onclick=>'f1.reset();' } ),
+    ); ) ?>
 	</p>
 	<input type="hidden" name="btnFunction"/>
 </form>

@@ -25,7 +25,8 @@ function update_product( product_id ) {
 	$('product-total-'+product_id).innerHTML = do_decimals( parseFloat($('product-price-'+product_id).value) * parseFloat($('product-quantity-'+product_id).value), 2 );
 } // end function update_product
 
-function add_timetrack( timetrack_id ) {
+function add_timetrack(button) {
+  const timetrack_id = button.getAttribute('data-id');
 	new Ajax.Updater( 'Timetracks', '_timetracks.html', {
 			parameters: {
 				invoice_id: invoice_id,
@@ -33,6 +34,7 @@ function add_timetrack( timetrack_id ) {
 				action: 'add'
 			},
 			onComplete: function(transport) {
+        update_event_bindings();
 				update_totals();
 				TableKit.reload();
 			},
@@ -41,7 +43,8 @@ function add_timetrack( timetrack_id ) {
 			}
 	} );
 } // end function add_timetrack( invoice_id)
-function del_timetrack( timetrack_id ) {
+function del_timetrack( button ) {
+  const timetrack_id = button.getAttribute('data-id');
 	new Ajax.Updater( 'Timetracks', '_timetracks.html', {
 			parameters: {
 				invoice_id: invoice_id,
@@ -49,6 +52,7 @@ function del_timetrack( timetrack_id ) {
 				action: 'remove'
 			},
 			onComplete: function(transport) {
+        update_event_bindings();
 				update_totals();
 				TableKit.reload();
 			},
@@ -135,11 +139,13 @@ function invoicee_change(ddm) {
 
 function add_tax( tax_id ) {
   console.log(tax_id);
-  new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: {
-    invoice_id: invoice_id,
-    action: 'add',
-    tax_id: tax_id
-    }, evalScripts: true } );
+  if (tax_id) {
+    new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: {
+      invoice_id: invoice_id,
+      action: 'add',
+      tax_id: tax_id
+      }, evalScripts: true } );
+  }
 }
 function delete_tax( tax_id ) {
   new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: {
@@ -163,4 +169,20 @@ function del_interest(button) {
   new Ajax.Updater('Interests', '_interests.html',
     { evalScripts: true, parameters: { action: 'delete', 'invoice_id': invoice_id, 'interest_id': interest_id } }
     );
+  update_event_bindings();
+}
+
+function del_product(button) {
+  const product_id = button.getAttribute('data-product_id');
+  if (!product_id) {
+    console.log('No product id on button');
+    console.log(button);
+  }
+  new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=remove&amp;product_id='+product_id, { method: 'post', parameters: $('f1').serialize()} );
+  update_event_bindings();
+}
+
+function add_product(button) {
+  new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=add', { method: 'post', parameters: $('f1').serialize()} );
+  update_event_bindings();
 }

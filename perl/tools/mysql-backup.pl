@@ -83,13 +83,14 @@ foreach my $db (@dbs) {
 		closedir DIRHANDLE;
 		foreach my $file ( @files ) {
 			next if $file =~ /^\./;
-			if ( $file =~ /^(\d\d\d\d)-(\d+)-(\d+).sql.bz2$/ ) {
+			if ( $file =~ /^(\d\d\d\d)-(\d+)-(\d+)(\.\w+)?\.sql\.bz2$/ ) {
 				if ( Date::Calc::check_date( $1, $2, $3 ) ) {
 					my $age = Date::Calc::Delta_Days( $1, $2, $3, $year, $mon, $mday );
 					if ( $age > $$opts{days} ) {
 						print "deleting $path/$db/$file\n" if $$opts{debug};
-						unlink "$path/$db/$file";
-						print STDERR "unable to unlink $path/$db/$file: $!\n" if $!;
+            if ( !unlink "$path/$db/$file") {
+              print STDERR "unable to unlink $path/$db/$file: $!\n";
+            }
 					} elsif ( $$opts{debug} ) {
 						print "Too new $path/$db/$file: $age days\n";
 					} # end if too old
@@ -105,7 +106,7 @@ foreach my $db (@dbs) {
 
 sub do_backup {
   my ($db, $type, $args, $tables) = @_;
-  $type = '' if ! defined $type;
+  $type = 'full' if ! defined $type;
   my $db_tmp_file = "$path/$db/$year-$mon-$mday.$type.sql.new.bz2";
   my $db_final_file = "$path/$db/$year-$mon-$mday.$type.sql.bz2";
   my $cmd = "mysqldump $args --single-transaction ";

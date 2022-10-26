@@ -37,7 +37,7 @@ $serial = 'logs_id_seq';
 	user_id	=>	q`$openprint::session{user_id}`,
 	company_id	=>	q`$openprint::session{company_id}`,
 	url           =>  q`join('',(defined $ENV{SERVER_NAME}?$ENV{SERVER_NAME}:''),(defined($ENV{REQUEST_URI})?$ENV{REQUEST_URI}:''))`,
-	host_id		=>	q`$self->ip_address( $ENV{REMOTE_ADDR} );return $$self{host_id};`,
+	host_id		=>	q`$self->ip_address( $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR} );return $$self{host_id};`,
 	object_type_id		=>	q`undef`,
 	object_id		=>	q`undef`,
 );
@@ -71,7 +71,7 @@ sub ip_address {
 
 	if ( @_ > 1 ) {
 		if ( !defined $_[1] ) {
-			$_[1] = $ENV{REMOTE_ADDR};
+			$_[1] = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
 		} # end if
 		if ( (! $_[1]) and $openprint::config{REMOTE_ADDR} ) {
 			$_[1] = $openprint::config{REMOTE_ADDR};

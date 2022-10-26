@@ -833,12 +833,15 @@ sub is_paid {
 
 sub destroy {
   my $self = shift;
+  my $error = '';
   my $ac = sql::start_transaction( $openprint::dbh );
-  foreach ($self->Contents()) { $_->destroy(); };
-  foreach ($self->Logs()) { $_->destroy(); };
+  foreach ($self->Contents()) { $error .= $_->destroy(); };
+  foreach ($self->Logs()) { $error .= $_->destroy(); };
   sql::execute(undef,undef, 'DELETE FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{id});
+  sql::execute(undef,undef, 'DELETE FROM purchaseorder_taxes WHERE purchaseorder_id=?', $$self{id});
+  $error .= $self->SUPER::destroy();
   sql::end_transaction( $openprint::dbh, $ac );
-  return undef;
+  return $error;
 }
 
 1;

@@ -650,6 +650,7 @@ sub signature_calc {
 						} else {
 							$openprint::log->debug('unknown units on '.$$CuttingMakeReady{units}) if DEBUG;
 							$results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price});
+              $setup{Total} = $setup{Price};
 						} # end if
 						$price{MakeReady} = $setup{Total};
 						$price{Total} += $setup{Total};
@@ -1293,6 +1294,10 @@ sub calc {
       my $Imposition = new openprint::Imposition();
       $Imposition->load( $sig_specs, $qty_index, $Project );
       my $Paper = $Imposition->Paper();
+      if (!$$Paper{type}) {
+        $$specs{'hdnBreakdown'.$qty_index} .= "Unable to determine paper type on signature $form quantity $qty_index.<br/>";
+        next;
+      }
       if ( $$Paper{type} eq 'Sheet' and $Paper->is_cut() ) {
         if ( $Cut_Stocks{ $Paper->id_string() } ) {
           $Cut_Stocks{ $Paper->id_string() }{quantity} += $$sig_specs{"StockQuantity$qty_index"};

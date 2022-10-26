@@ -353,16 +353,28 @@ sub _photo_actions {
 		} # end foreach
 	} # end if function
 } # end sub _photo_actions
+
 sub photos {
 	_photos();
 } # end sub photos
+
 sub _photos {
 	ssi::save_params( '/photo_albums/photos.html', ( 'company_id','user_id' ) );
 } # end sub _photos
 
 sub upload {
-	$variable{Album} = new openprint::Photo_Album();
-	if ( $param{action} eq 'Upload' ) {
+	my $album = $variable{Album} = new openprint::Photo_Album();
+  if ($param{action}) {
+	  if ( $param{action} eq 'Upload' ) {
+    } elsif ($param{action} eq 'Save' ) {
+      if ($param{choose_album} eq 'new') {
+        $album->save({
+            name=>$param{name},
+            user_id=>$openprint::User->id(),
+            #privacy_mode_id=>
+          });
+      }
+    }
 	} # end if
 } # end sub upload
 

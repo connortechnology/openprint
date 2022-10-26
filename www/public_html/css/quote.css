@@ -34,10 +34,12 @@ div.Quote div.Header fieldset ul li label {
     width: auto;
     text-align: left;
 }
-div.Quote div.Header div#PreparedFor fieldset li label, div.Quote Div.Header div#PreparedBy fieldset li label {
+div.Quote div.Header div#PreparedFor fieldset li label,
+div.Quote Div.Header div#PreparedBy fieldset li label {
 	display: none;
 }
-div.Quote div.Information div.Header div#PreparedFor fieldset li label, div.Quote div.Information Div.Header div#PreparedBy fieldset li label {
+div.Quote div.Information div.Header div#PreparedFor fieldset li label,
+div.Quote div.Information Div.Header div#PreparedBy fieldset li label {
 	display: inline;
 }
 div.Quote div.Information div.Header fieldset li {

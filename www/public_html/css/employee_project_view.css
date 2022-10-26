@@ -174,10 +174,6 @@
 .Project table .description {
 	text-align: left;
 }
-.Project table .status {
-	text-align: right;
-	width: 90px;
-}
 .Project table tr .actions {
 	text-align: right;
 	width: 75px;

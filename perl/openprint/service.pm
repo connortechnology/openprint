@@ -612,7 +612,7 @@ sub summary {
 	if ( $$specs{ServiceType} eq 'Signature' or ( $$specs{ServiceType} eq '' and ! $$specs{txtTotalPageQuantity}  ) ) {
 		require openprint::Estimating::Printing;
 		return openprint::Estimating::Printing::summary($Project, $service_id, $specs, $qty_index );
-	} elsif ( sets::isin( $$specs{ServiceType}, ['ShrinkWrap','KraftWrap','Bundling','Banding','CrossBanding'] ) ) {
+	} elsif ( sets::isin( $$specs{ServiceType}, ['KraftWrap','Bundling','Banding','CrossBanding'] ) ) {
 		require openprint::Estimating::Packaging;
 		return openprint::Estimating::Packaging::summary($Project, $service_id, $specs, $qty_index );
 	} elsif ( sets::isin( $$specs{ServiceType}, ['SaddleStitching','LoopStitching'] ) ) {

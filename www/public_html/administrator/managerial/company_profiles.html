@@ -218,15 +218,15 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Orders}} ) ?></a>
 				<? if ( @{$$variable{Orders}} ) ?>
 				Last on
-				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Orders}[0]->created_on() ) ); ) ?></a>
+				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( format_date( $$variable{Orders}[0]->created_on()); ) ?></a>
 				<? endif ( @{$$variable{Orders}} ) ?>
 			</li>
-			<? eval ( @{$$variable{Projects}} = openprint::Project->find('company_id'=>$$variable{CustomerIndex},'order'=>'id DESC'); ) ?>
+			<? eval ( @{$$variable{Projects}} = openprint::Project->find(company_id=>$$variable{CustomerIndex},order=>'id DESC'); ) ?>
 			<li class="projects"><label># of Projects</label>
 				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Projects}} ) ?></a>
 				<? if ( @{$$variable{Projects}} ) ?>
 				Last on
-				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Projects}[0]->created_on() ) ); ) ?></a>
+				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( format_date($$variable{Projects}[0]->created_on()); ) ?></a>
 				<? endif ( @{$$variable{Projects}} ) ?>
 			</li>
 			<li class="accounting_contacts">
@@ -280,7 +280,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
           <? if ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
 				<select name="state">
 					<option value=""> select </option>
-					<? echo ( return_states_and_provinces($$variable{Company}->state()); ) ?> 
+          <? echo ( return_states_and_provinces($$variable{Company}->country(), $$variable{Company}->state()); ) ?> 
 				</select>
           <? else ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
             <input type="text" name="state" value="<?echo($$variable{Company}->state())?>"/>
@@ -506,6 +506,27 @@ function ddmCustomer_onchange(ddm) {
     ddm.form.submit();
   }
 }
+
+function AddAccountingContact(button) {
+  new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { parameters: {
+  company_id: '<?echo($$variable{Company}{id})?>',
+  user_id: $('new_accounting_contact_id').value,
+  action: 'add'
+  } } );
+  update_event_bindings();
+}
+
+function DelAccountingContact(button) {
+  const user_id = button.getAttribute('data-user_id');
+  new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html?action=delete', {
+    parameters: {
+      company_id: '<?echo($$variable{Company}{id})?>',
+      user_id: user_id
+    }
+  });
+  update_event_bindings();
+}
+
 window.addEventListener('DOMContentLoaded',function(){
   load_customers();
   $j('#search_company_filter').on('input', load_customers);

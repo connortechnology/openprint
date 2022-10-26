@@ -3,6 +3,9 @@
 <h2>Login</h2>
 </div>
 <?include('/includes/error_reporting.html')?>
+<? if ( ! $openprint::dbh ) ?>
+Sorry, we are having trouble connecting to the database. Our admins will be automatically notified.  Please try again later.
+<? else ( ! $openprint::dbh ) ?>
 <br/>
 <? if ( $session{user_id} ) ?>
 	<p><? include(/includes/_greeting.html) ?></p>
@@ -76,3 +79,4 @@ $Log->User()->link_to(),
 <? else ( $session{user_id} ) ?>
 	<? include(/includes/customer_login.html) ?>
 <? endif ( $session{user_id} ) ?>
+<? endif ( ! $openprint::dbh ) ?>

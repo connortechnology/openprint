@@ -76,6 +76,9 @@ ordered_price	=> undef,
 %transforms = (
 	id								=>	[ 's/\D//g', '<2147483647' ],
 	markup						=>	[ 's/[^\-\d\.]//g' ],
+	price1					=>	[ 's/[^\-\d\.]//g', '<2147483647' ],
+	price2					=>	[ 's/[^\-\d\.]//g', '<2147483647' ],
+	price3					=>	[ 's/[^\-\d\.]//g', '<2147483647' ],
 	quantity1					=>	[ 's/\D//g' ],
 	quantity2					=>	[ 's/\D//g' ],
 	quantity3					=>	[ 's/\D//g' ],
@@ -1623,6 +1626,8 @@ sub recalculate {
 				$status = $function->($self);
 				$openprint::log->debug("$$Type{type}::Calculate_Sigs: status: $status");
 				openprint::service::status($$self{id}, $$services{''}[0], $status);
+      } else {
+        $openprint::log->error("No calculate signatures function for $$Type{type}");
 			} # end if
 			openprint::service::auto_calculate($self, $$services{''}[0]) if $status eq 'calculated';
 		} # end if

@@ -45,7 +45,7 @@ table .Price input {
 	text-align: right;
 }
 td.Rate, th.Rate {
-	width: 90px;
+	width: 160px;
 	text-align: right;
 }
 
@@ -108,7 +108,7 @@ float: left;
 		width: 100px;
 	}
 	.Invoice table td.Rate, th.Rate {
-		width: 100px;
+		width: 160px;
 	}
 	.Invoice table td.Date, th.Date {
 		width: 140px;
@@ -119,9 +119,11 @@ float: left;
 	#Totals ul li.owing {
 		font-size: large;
 	}
+  /*
 	td.Owing, th.Owing {
 	display: none;
 	}
+  */
 	.Invoice #Logs {
 	display: none;
 	} 

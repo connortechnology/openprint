@@ -436,11 +436,24 @@ sub history {
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/main/order/history.html', 
-			'user_id','company_id','status_id','salesrep_id',
-			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
-			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
-			);
+  ssi::save_params( '/main/order/history.html', 
+    'user_id','company_id','status_id','salesrep_id',
+    'created_on_start_year', 'created_on_start_month','created_on_start_day', 
+    'created_on_end_year', 'created_on_end_month','created_on_end_day', 
+  );
+  if ($param{btnFunction}) {
+    if ($param{btnFunction} eq 'delete') {
+      foreach my $Order (openprint::Order->find(
+          id=>(ref $param{order_id} eq 'ARRAY' ? @{$param{order_id}} : split(',', $param{order_id}))
+        )) {
+        if ($Order->can_delete()) {
+          $variable{error} .= $Order->delete();
+        } else {
+          $variable{error} .= 'No permission to delete order ' . $Order->id(). '</br>';
+        }
+      } # end foreach
+    } # end if which function
+  } # end if has a function
 
 } # end sub _history
 
@@ -615,6 +628,7 @@ sub _UPS {
 	$variable{ProjectIndex} = $variable{Project}->id();
 	$variable{Order} = $variable{Project}->Order();
 } # end sub _UPS
+
 sub _order {
 	if ( $param{action} eq 'select_quantity' ) {
 		my $Project = openprint::OrderedProject->find_one( order_id=>$param{order_id}, project_id=>$param{project_id} );

@@ -35,7 +35,7 @@ $Product->comments(),
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				$sub_total += $Product->price();
 			} # end foreach Product
-			if ( $session{user_type} eq 'A' ) {
+      if ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) {
 				$html .= sprintf(q`
 <tr%1$s>
   <td class="description">
