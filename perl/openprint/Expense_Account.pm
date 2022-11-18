@@ -14,6 +14,7 @@ $serial = 'expense_accounts_id_seq';
   name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
+  name => '',
 );
 
 1;
