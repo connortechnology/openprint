@@ -67,7 +67,7 @@
 .Service .Coverages input[type="text"],
 .SpecialColour input[type="number"] ,
 .SpecialColour input[type="text"] {
-	width: 45px;
+	width: 35px;
 }
 .SpecialColour input[type="text"] {
 	min-width: 50px;
