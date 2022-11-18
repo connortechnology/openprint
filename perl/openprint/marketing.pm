@@ -321,7 +321,19 @@ sub subscriptions {
   $variable{User} = $User;
 
   if ($param{action}) {
-    if ($param{action} eq 'Save') {
+    if ($param{action} eq 'Subscribe') {
+      if (!$User->id()) {
+        my $Company = new openprint::Company();
+        $Company->save({name=>$User->email(), activation=>$config{NewCustomerAccountActivation}});
+        $variable{error} .= $User->save({company_id=>$Company->id()});
+        if (!$variable{error}) {
+          openprint::login::login($User);
+          $variable{information} .= 'Account created and logged in.<br/>';
+        }
+      } else {
+        $variable{error} .= 'User already exists, please edit subscriptions below.<br/>';
+      }
+    } elsif ($param{action} eq 'Save') {
       if (!$openprint::session{user_id}) {
         if ( $config{reCAPTCHA_site_key} ) {
           if ( ! $param{'g-recaptcha-response'} ) {
@@ -396,11 +408,13 @@ sub subscriptions {
             $Subscriptions{$$Campaign{id}} = new openprint::EmailCampaign_Subscription();
             $Subscriptions{$$Campaign{id}}->save({user_id=>$User->id(), campaign_id=>$$Campaign{id}});
             $variable{information} .= 'Subscribed to ' . $Campaign->name().'<br/>';
+            (new openprint::Log())->save({Object=>$User, action=>'Subscribe', note=>'Subscribed to ' . $Campaign->name()});
           }
         } else {
           if ($Subscriptions{$$Campaign{id}}) {
             $Subscriptions{$$Campaign{id}}->delete();
             $variable{information} .= 'Unsubscribed from ' . $Campaign->name().'<br/>';
+            (new openprint::Log())->save({Object=>$User, action=>'Unsubscribe', note=>'Unsubscribed to ' . $Campaign->name()});
           }
         }
       }
