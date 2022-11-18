@@ -369,6 +369,26 @@ Please select a company or user to obtain login information.<br/>
 		</fieldset>
 		</div>
 		<? endif ( openprint::ServiceType->find_one() ) ?>
+    <div class="Subscriptions">
+      <fieldset><legend>Subscriptions</legend>
+      <ul>
+        <li><label>All email communications from <? echo ( $config{SiteTitle} ) ?></label>
+        <? echo ( radio( 'all', [ 'Y', 'Subscribed', 'N', 'Unsubscribed' ], $$variable{User}->mailinglist(), { default=>'Y' } ); ) ?>
+        </li>
+<?echo( my $html = '';
+         require openprint::EmailCampaign_Subscription;
+    my %Subscriptions = map { $$_{campaign_id} => $_ } openprint::EmailCampaign_Subscription->find(user_id=>$$variable{User}->id()) if $$variable{User}->id();
+    foreach my $Campaign (openprint::EmailCampaign->find(user_id=>undef, runnable=>1)) {
+      $html .= '<li><label>'.html_escape($Campaign->name()).'</label>'.
+        radio( 'campaign_'.$$Campaign{id}, [ '1', 'Subscribed', '0', 'Unsubscribed' ],
+          (exists($Subscriptions{$$Campaign{id}}) ? '1' : '0'),
+          { default=>'0' } ).
+        '</li>';
+    } # end foreach
+    return $html;
+)?>
+      </ul>
+    </div>
 		<br class="spacer"/>
 		<fieldset>
 			<p id="ButtonsBottom" class="buttons">
