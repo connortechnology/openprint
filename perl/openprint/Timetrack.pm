@@ -262,6 +262,23 @@ sub link_to {
     }
 }
 
+sub can_view {
+  my $self = shift;
+  my $user = @_ ? shift : $openprint::User;
+  return 1 if $$user{id} == $$self{user_id};
+  return 1 if $$user{type} eq 'A';
+  return 1 if $user->in_Group('Accounting');
+  return 0;
+}
+sub can_edit {
+  my $self = shift;
+  my $user = @_ ? shift : $openprint::User;
+  return 1 if $$user{id} == $$self{user_id};
+  return 1 if $$user{type} eq 'A';
+  return 1 if $user->in_Group('Accounting');
+  return 0;
+}
+
 
 1;
 __END__

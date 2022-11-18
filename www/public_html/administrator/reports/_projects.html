@@ -74,7 +74,7 @@ if ( ! $param{ddmEstimator} ) {
 	return $html;
 ) ?>
 		<tr class="totals">
-			<td colspan="5" align="right">Totals (<?echo ( @{$$variable{Projects}} ) ?> projects)</td>
+      <td colspan="<?echo($param{ddmEstimator} ? '5' : '6')?>" align="right">Totals (<?echo ( @{$$variable{Projects}} ) ?> projects)</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Total1} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Total2} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Total3} ); ) ?></td>

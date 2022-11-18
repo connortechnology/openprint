@@ -279,80 +279,82 @@ sub edit {
 		$variable{error} .= 'You do not have rights to edit this article.';
 		return;
 	} # end if
-	if ( $param{func} eq 'Save' ) {
-		save_article();
-		if ( $variable{error} or $variable{warning} ) {
-		} else {
-			%param = ();
-			$param{article_id} = $Article->id();
-			# FIXME, update session filters to include this article
-			my $published_on_date = Date::Parse::str2time($Article->published_on());
-			my ( $year, $month, $day ) = @session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )};
+  if ($param{func}) {
+    if ( $param{func} eq 'Save' ) {
+      save_article();
+      if ( $variable{error} or $variable{warning} ) {
+      } else {
+        %param = ();
+        $param{article_id} = $Article->id();
+        # FIXME, update session filters to include this article
+        my $published_on_date = Date::Parse::str2time($Article->published_on());
+        my ( $year, $month, $day ) = @session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )};
 
-			if ( Date::Calc::check_date( $year, $month, $day ) ) {
-$log->debug("published on start $year, $month, $day $$Article{published_on}");
-				my $session_published_on_date_start = Date::Calc::Date_to_Time( $year, $month, $day, 0,0,0 );
-				if ( $session_published_on_date_start > $published_on_date ) {
-					($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date($published_on_date);
-					@session{map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
-				} # end if
-			} # end if
-			if ( Date::Calc::check_date( @session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )} ) ) {
-$log->debug(join('-', @session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )}   ) );
-				my $session_published_on_date_end = Date::Calc::Date_to_Time(
-					@session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )}, 0,0,0 );
-				if ( $session_published_on_date_end < $published_on_date ) {
-					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date($published_on_date);
-					@session{map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
-				} # end if
-			} # end if
+        if ( Date::Calc::check_date( $year, $month, $day ) ) {
+          $log->debug("published on start $year, $month, $day $$Article{published_on}");
+          my $session_published_on_date_start = Date::Calc::Date_to_Time( $year, $month, $day, 0,0,0 );
+          if ( $session_published_on_date_start > $published_on_date ) {
+            ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date($published_on_date);
+            @session{map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
+          } # end if
+        } # end if
+        if ( Date::Calc::check_date( @session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )} ) ) {
+          $log->debug(join('-', @session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )}   ) );
+          my $session_published_on_date_end = Date::Calc::Date_to_Time(
+            @session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )}, 0,0,0 );
+          if ( $session_published_on_date_end < $published_on_date ) {
+            my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date($published_on_date);
+            @session{map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
+          } # end if
+        } # end if
 
-			my $created_on_date = Date::Parse::str2time($Article->created_on());
-			( $year, $month, $day ) = @session{ map { '/article/history.html?created_on_start_'.$_ } ( 'year','month','day' )};
-			if ( Date::Calc::check_date( $year,$month,$day ) ) {
-				my $session_created_on_date_start = Date::Calc::Date_to_Time( $year,$month,$day, 0,0,0 );
-				if ( $session_created_on_date_start > $created_on_date ) {
-					($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date($created_on_date);
-					@session{map { '/article/history.html?created_on_start_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
-$log->debug("Setting created_on_start to $year, $month, $day from $created_on_date $$Article{created_on}");
-				} # end if
-			} # end if
-			( $year, $month, $day ) = @session{ map { '/article/history.html?created_on_end_'.$_ } ( 'year','month','day' )};
-			if ( Date::Calc::check_date( $year,$month,$day ) ) {
-				my $session_created_on_date_end = Date::Calc::Date_to_Time( $year,$month,$day, 0, 0, 0 );
-				if ( $session_created_on_date_end < $created_on_date ) {
-					($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date($created_on_date);
-$log->debug("Setting created_on_end to $year, $month, $day from $created_on_date $$Article{created_on}");
-					@session{map { '/article/history.html?created_on_end_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
-				} # end if
-			} # end if
+        my $created_on_date = Date::Parse::str2time($Article->created_on());
+        ( $year, $month, $day ) = @session{ map { '/article/history.html?created_on_start_'.$_ } ( 'year','month','day' )};
+        if ( Date::Calc::check_date( $year,$month,$day ) ) {
+          my $session_created_on_date_start = Date::Calc::Date_to_Time( $year,$month,$day, 0,0,0 );
+          if ( $session_created_on_date_start > $created_on_date ) {
+            ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date($created_on_date);
+            @session{map { '/article/history.html?created_on_start_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
+            $log->debug("Setting created_on_start to $year, $month, $day from $created_on_date $$Article{created_on}");
+          } # end if
+        } # end if
+        ( $year, $month, $day ) = @session{ map { '/article/history.html?created_on_end_'.$_ } ( 'year','month','day' )};
+        if ( Date::Calc::check_date( $year,$month,$day ) ) {
+          my $session_created_on_date_end = Date::Calc::Date_to_Time( $year,$month,$day, 0, 0, 0 );
+          if ( $session_created_on_date_end < $created_on_date ) {
+            ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date($created_on_date);
+            $log->debug("Setting created_on_end to $year, $month, $day from $created_on_date $$Article{created_on}");
+            @session{map { '/article/history.html?created_on_end_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
+          } # end if
+        } # end if
 
-			$variable{ExternalRedirect} = $session{'/article/edit.html?referer'} ? $session{'/article/edit.html?referer'} : '/article/history.html';
-		} # end if
-	} elsif ( sets::isin( $param{func}, [ 'delete','destroy','undelete' ] ) ) {
-		my $func = $Article->can($param{func});
-		$variable{error} .= $func->( $Article );
-		if ( ! $variable{error} ) {
-			%param = ();
-			$variable{ExternalRedirect} = $session{'/article/edit.html?referer'} ? $session{'/article/edit.html?referer'} : '/article/history.html';
-		} # end if
-	} elsif ( $param{func} eq 'Copy' ) {
-		$variable{Article} = $variable{Article}->copy();
-		$variable{error} .= $variable{Article}->save();
-	} elsif ( $param{func} eq 'Upload' ) {
-		# Save any changes made to Article
-		$variable{error} .= $variable{Article}->save(\%param);
-		my $Asset = openprint::Asset::upload( 'filename' );
-		if ( ref $Asset ne 'openprint::Asset' ) {
-			$variable{error} .= $Asset;
-		} else {
-			my $Article_Asset = new openprint::Article_Asset();
-			$variable{error} .= $Article_Asset->save({'asset_id'=>$Asset->id(), 'article_id'=>$Article->id()});
-			if ( $param{asset_name} and ! $Asset->name() ) {
-				$Asset->save({'name'=>$param{asset_name}});
-			} # end if
-		} # end if
-	} # end if
+        $variable{ExternalRedirect} = $session{'/article/edit.html?referer'} ? $session{'/article/edit.html?referer'} : '/article/history.html';
+      } # end if
+    } elsif ( sets::isin( $param{func}, [ 'delete','destroy','undelete' ] ) ) {
+      my $func = $Article->can($param{func});
+      $variable{error} .= $func->( $Article );
+      if ( ! $variable{error} ) {
+        %param = ();
+        $variable{ExternalRedirect} = $session{'/article/edit.html?referer'} ? $session{'/article/edit.html?referer'} : '/article/history.html';
+      } # end if
+    } elsif ( $param{func} eq 'Copy' ) {
+      $variable{Article} = $variable{Article}->copy();
+      $variable{error} .= $variable{Article}->save();
+    } elsif ( $param{func} eq 'Upload' ) {
+      # Save any changes made to Article
+      $variable{error} .= $variable{Article}->save(\%param);
+      my $Asset = openprint::Asset::upload( 'filename' );
+      if ( ref $Asset ne 'openprint::Asset' ) {
+        $variable{error} .= $Asset;
+      } else {
+        my $Article_Asset = new openprint::Article_Asset();
+        $variable{error} .= $Article_Asset->save({'asset_id'=>$Asset->id(), 'article_id'=>$Article->id()});
+        if ( $param{asset_name} and ! $Asset->name() ) {
+          $Asset->save({'name'=>$param{asset_name}});
+        } # end if
+      } # end if
+    } # end if
+  } # end if func
 	if ( ! $variable{Article}->id() ) {
 		$variable{Article}->company_id( $session{company_id} ) if ! $variable{Article}->company_id();
 		$variable{Article}->published_on( Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ) ) if ! $variable{Article}->published_on();

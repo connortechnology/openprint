@@ -101,7 +101,7 @@ sub view_services {
 					if ( $param{ServiceType} eq 'Printing' or ! $param{ServiceType} ) {
 					} else {
 						openprint::Estimating::MultiPage::calculate_signatures( $Project );
-						# Shouldn't we do this befiore that?
+						# Shouldn't we do this before that?
 #2017-01-6 yeah I think so, but we are dealing with a currency change... so... who cares/.
 						openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 					} # end if

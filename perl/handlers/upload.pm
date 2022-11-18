@@ -37,8 +37,28 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 
 my $uploaded = 0;
 
+sub cleanup {
+  if ( $r->connection->aborted( ) ) {
+    $log->debug('Was aborted');
+  } # end if
+  %openprint::variable = ();
+  %openprint::param = ();
+  if ( $dbh ) {
+    openprint::Object::init_cache();
+    $session{lastupdated} = time;
+    untie %session;
+    if ( ! $dbh->{AutoCommit} ) {
+      $log->error('Uncommited transaction');
+    } # end if
+    $dbh->disconnect();
+  } else {
+    $log->debug('No dbh at cleanup');
+  } # end if
+} # end sub cleanup
+
 sub handler {
 	my $request = shift;
+	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 	$log	= $request->log;
 
 	$request->no_cache(1);
@@ -110,7 +130,7 @@ sub handler {
 	} else {
 
 		foreach my $key ( sort $r->param() ) {
-			$log->debug("Parameter $key is (" . $r->param($key) . ")" );
+			$log->debug("Parameter $key is (" . $r->param($key) . ')' );
 			$param{$key} = $r->param($key);
     } # end foreach
     configuration::init( $r->dir_config() );
@@ -198,7 +218,7 @@ $log->debug("content: $_");
 	untie %session;
 	undef %session;
 
-	# This is neccessary because these are shared with other handlrrs
+	# This is neccessary because these are shared with other handlers
 	%variable = ();
 	%param = ();
 	return Apache2::Const::OK;

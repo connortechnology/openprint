@@ -226,7 +226,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Projects}} ) ?></a>
 				<? if ( @{$$variable{Projects}} ) ?>
 				Last on
-				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( format_date($$variable{Projects}[0]->created_on(); ) ?></a>
+				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( format_date($$variable{Projects}[0]->created_on()); ) ?></a>
 				<? endif ( @{$$variable{Projects}} ) ?>
 			</li>
 			<li class="accounting_contacts">

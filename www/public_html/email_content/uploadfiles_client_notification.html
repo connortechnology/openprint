@@ -67,7 +67,7 @@ This email is a confirmation of your upload to <?echo($config{SiteTitle})?>. Ple
 <? if ( $$variable{'txtEmailAddress'} ) ?>
    		<p>
    			<label>Email Address</label>
-   			<a href="mailto<?txtEmailAdress?>"><?txtEmailAddress?></a>
+   			<a href="mailto<?txtEmailAddress?>"><?txtEmailAddress?></a>
    		</p>
 <? endif ( $$variable{'txtEmailAddress'} ) ?>
 <? if ( $$variable{'txtPhoneNumber'} ) ?>
@@ -210,4 +210,4 @@ This email is a confirmation of your upload to <?echo($config{SiteTitle})?>. Ple
 If you have any questions or concerns, please do not hesitate to contact us.<br /><br />
 
 Thank You,<br />
-<?SiteTitle?> Staff
+<?echo($config{SiteTitle}?> Staff

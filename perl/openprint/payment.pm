@@ -65,6 +65,7 @@ sub edit {
     }
     $param{received_on} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
     my @changes = $Payment->changes(\%param);
+    $openprint::log->debug("@changes");
     if ( @changes ) {
 			$variable{error} .= $Payment->save(\%param);
       if ( !$variable{error} ) {
@@ -75,6 +76,8 @@ sub edit {
           $variable{ExternalRedirect} = '/payment/edit.html?payment_id='.$Payment->id();
         } # end if
 			} # end if
+    } else {
+      $variable{information} .= 'No changes....<br/>';
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Send Receipt' ) {
 		$variable{error} .= $Payment->send_receipt();

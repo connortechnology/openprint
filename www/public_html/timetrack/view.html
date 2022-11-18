@@ -1,5 +1,6 @@
 <div class="Timetrack">
   <?include(/includes/error_reporting.html)?>
+  <? if ( $$variable{Timetrack}->can_view() ) ?>
   <form name="f1" id="f1" action="view.html" method="post" onsubmit="$j('#buttons').html('Please wait...');return true;">
     <input type="hidden" name="referrer_invoice_id" value="<? echo ( $param{invoice_id} ) ?>" />
     <fieldset><legend>Editing timetrack<? echo ( $$variable{Timetrack}->id() ? '('.$$variable{Timetrack}->id().')' : '' ) ?></legend>
@@ -81,4 +82,7 @@
     </fieldset>
     <input type="hidden" name="func" />
   </form>
+  <? else ( $$variable{Timetrack}->can_view() ) ?>
+  <div class="warn">You do not have permission to view this timetrack</div>
+  <? endif ( $$variable{Timetrack}->can_view() ) ?>
 </div>

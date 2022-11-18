@@ -30,11 +30,12 @@ content: "";
 }
 .SpotColour {
 	width: 25%;
-display: inline-block;
+  display: inline-block;
 	min-height: 22px;
-/*
-	float: left;
-*/
+}
+.Coverage {
+	width: 25%;
+  display: inline-block;
 }
 .SpotColour label:not(.radio):not(.radio-inline),
 .Coverages label:not(.radio):not(.radio-inline) {
@@ -55,11 +56,22 @@ display: inline-block;
 	float: left;
 	width: 100px;
 }
+.SpotColours,
+.ProcessColours,
 .SpecialColour {
 	margin: 5px 0px;
 	padding-left: 155px;
 }
-.SpecialColour .checkOption {
+.SpotColours:after,
+.ProcessColours:after {
+  content: ".";
+  display: block;
+  height: 0;
+  font-size: 0;
+  clear: both;
+  visibility: hidden;
+}
+.Inks .checkOption {
 	float: left;
 	width: 155px;
 	margin-left: -155px;

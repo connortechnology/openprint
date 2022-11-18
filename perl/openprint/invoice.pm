@@ -414,6 +414,11 @@ sub view {
 			$variable{information} .= 'Invoice ' . $Invoice->id() . ' destroyed.<br/>';
 			$variable{ExternalRedirect} = '/invoice/history.html';
 		} # end if
+	} elsif ( $param{btnFunction} eq 'Undelete' ) {
+		if ( ! ( $variable{error} .= $Invoice->undelete() ) ) {
+			$variable{information} .= 'Invoice ' . $Invoice->id() . ' undeleted.<br/>';
+			$variable{ExternalRedirect} = '/invoice/history.html';
+		} # end if
 	} elsif ( $param{btnFunction} eq 'Send' ) {
 		if ( ! $Invoice->can_send() ) {
 			$variable{error} .= "You are not authorized to send this invoice.<br/>";

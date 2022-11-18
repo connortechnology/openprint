@@ -13,6 +13,7 @@
         if ( $$variable{Invoice}->id() ) {
           if ( $$variable{Invoice}->deleted() ) {
             $html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
+            $html .= button( 'Undelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();" } );
           } else {
             if ( Date::Parse::str2time($$variable{Invoice}->due_on()) < time ) {
               $html .= button( 'interest', { onclick=>"f1.btnFunction.value='Calculate Interest';f1.submit();", text=>'Calculate Interest' } );
@@ -127,7 +128,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 			) ?>
 <?if(!$$variable{Invoice}{subtotal_override})?>
 			<tr class="totals">
-				<td colspan="3">Totals</td>
+				<td colspan="3">Service subtotal</td>
 				<td class="Interval"><?echo(misc::seconds2hms($$variable{elapsed_total});)?></td>
 				<td class="Rate">&nbsp;</td>
 				<td class="Price"><? echo ( openprint::Currency::format( $$variable{service_total} ); ) ?></td>

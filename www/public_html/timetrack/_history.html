@@ -20,6 +20,7 @@
 		( $session{'/timetrack/history.html?travel_associated'} ne '' ? ( 'travel_associated'=>$session{'/timetrack/history.html?travel_associated'} ) : () ),
 		order				=> 'starting,created_on',
 		) ) {
+    next if ! $Timetrack->can_view();
 		next if $Timetrack->paid() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?paid'} ) );
 		next if ( ! $Timetrack->paid() ) and ! sets::isin( 0, split(',', $session{'/timetrack/history.html?paid'} ) );
 		next if $Timetrack->invoiced() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?invoiced'} ) );
