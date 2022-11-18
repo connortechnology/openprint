@@ -67,7 +67,7 @@
 .Service .Coverages input[type="text"],
 .SpecialColour input[type="number"] ,
 .SpecialColour input[type="text"] {
-	width: 45px;
+	width: 40px;
 }
 .SpecialColour input[type="text"] {
 	min-width: 50px;
@@ -75,7 +75,6 @@
 	text-align: left;
 }
 .SpecialColour select {
-  min-width: 275px;
 }
 .SpecialColour .Price input {
 	width: 40%;
