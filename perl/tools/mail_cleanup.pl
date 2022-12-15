@@ -4,16 +4,14 @@ use sets;
 use strict;
 use Date::Calc ();
 
-use constant DAYS_TO_KEEP_TRASH => 60*60*24*30;
 use constant DEBUG => 0;
 
 my $amavis_home = '/var/lib/amavis';
 
 my $domain = $ARGV[0] ? $ARGV[0] : '';
-my @users;
-my $spool_path = '/var/mail/';
-$spool_path .= $domain.'/' if $domain;
+my $spool_path = '/var/mail/'.($domain ? $domain.'/' : '');
 
+my @users;
 if ( $ARGV[1] ) {
 	@users = ( $ARGV[1] );
 } elsif ( opendir DIRHANDLE, $spool_path ) {
@@ -27,6 +25,9 @@ if ( !@users ) {
 }
 my $DAYS_TO_KEEP_JUNK = $ARGV[2] ? $ARGV[2] : 7;
 my $SECONDS_TO_KEEP_JUNK = $DAYS_TO_KEEP_JUNK*60*60*24;
+
+my $DAYS_TO_KEEP_TRASH = $ARGV[3] ? $ARGV[3] : 30;
+my $SECONDS_TO_KEEP_TRASH = $DAYS_TO_KEEP_TRASH*60*60*24;
 
 my ( $year, $month, $day ) = Date::Calc::Today();
 
@@ -82,7 +83,6 @@ print "Checking $user\n" if DEBUG;
   }
 
 	foreach my $folder ( '.Trash', '.Deleted Messages' ) {
-		next if $user eq 'matt';
 		if ( ! -e "$spool_path$user/$folder" ) {
 			next;
 		}
@@ -105,7 +105,7 @@ print "Checking $user\n" if DEBUG;
 				print "Unable to stat $spool_path$user/$folder/cur/$message\n";
 				last;
 			} # end if
-			if ( (time - $mtime) > DAYS_TO_KEEP_TRASH ) {
+			if ( (time - $mtime) > $SECONDS_TO_KEEP_TRASH ) {
 				unlink "$spool_path$user/$folder/cur/$message";
 			} # end if
 		} # end foreach

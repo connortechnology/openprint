@@ -67,7 +67,6 @@ $config{SkinPath} = $config{skin_path};
 $config{log_level} = 'debug' if ! $config{log_level};
 $log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
 
-$log->debug("Connecting to db");	
 my %db_config_info = (
 		port		=> $config{db_port},
 		host		=> $config{db_host},
@@ -80,7 +79,6 @@ $openprint::dbh = sql::open_sql( $log, %db_config_info );
 if ( ! $dbh ) {
 	die "Error opening db. $!";
 } # end if
-$log->debug("Connected to db");
 
 require Net::Ping;
 # udp has less network traffic overhead
@@ -102,11 +100,11 @@ foreach my $Host ( @Hosts ) {
 		my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
 		if ( ! @ping ) {
-			$log->warn("Problem with ping for " . $Host->hostname() );
+			$log->warn('Problem with ping for ' . $Host->hostname() );
 			next;
 		} # end if
 
-		if ( $Host->online() and $ping ) {
+		if ( $ping ) {
 
 			my $initial_url;
 			my $url;
@@ -117,7 +115,6 @@ foreach my $Host ( @Hosts ) {
 			if ( $Host->type() eq 'TP-Link Archer C7' ) {
 				use JSON;
         my $auth_key = '';
-
 
         my $rpc_auth_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/auth';
 				my $response = $browser->post( $rpc_auth_url, 
@@ -150,10 +147,14 @@ foreach my $Host ( @Hosts ) {
         }
         $response = $browser->post($rpc_sys_url, Content => encode_json( { method=>'net.devices' } ));
         my @wlans;
-        $response = get_from_json($response->content());
-        next if ! $response;
-        if ( $$response{result} ) {
-          @wlans = map { ( $_ =~ /^wlan/ ) ? $_ : () } @{$$response{result}};
+        my $response_json = get_from_json($response->content());
+        if (! $response_json) {
+          $log->debug('No response from '.$response->content());
+          next;
+        }
+        if ( $$response_json{result} ) {
+          @wlans = map { ( $_ =~ /^wlan/ ) ? $_ : () } @{$$response_json{result}};
+          $log->debug("Have wlans: @wlans");
         }
         foreach my $wlan ( @wlans ) {
           $response = $browser->post($rpc_sys_url, Content => encode_json( { method=>'wifi.getiwinfo', params=>[$wlan] } ));
@@ -384,7 +385,7 @@ sub update_connections {
 		} else {
 			my @WIS = openprint::Host_Interface->find( mac=>$mac ) ;
 			if ( ! @WIS ) {
-				$log->error("NO Host found for mac $mac");
+				$log->error("No Host found for mac $mac");
 				my $Host = new openprint::Host();
 				$Host->save({ hostname=>$mac });
 				my $HI = new openprint::Host_Interface();
@@ -395,15 +396,20 @@ sub update_connections {
 				if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$wap_HI{mac} ) ) {
 					$log->debug("Updating connection of $$station_HI{mac} ".($station_HI->Host()->hostname() ? $station_HI->Host()->hostname() : '' ). " from ".
             ( $$station_HI{connected_to} ? $$station_HI{connected_to} : '' ). " to $$wap_HI{mac}");
-					$station_HI->save({connected_to=>$$wap_HI{mac}});
-					(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $wap_HI->Host()->link_to() .' ' . $$wap_HI{mac} });
-					(new openprint::Log())->save({action=>'Update', Object=>$wap_HI->Host(), note=>'Connection to ' . $station_HI->Host()->link_to() });
+          $station_HI->save({connected_to=>$$wap_HI{mac}});
+          (new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(),
+              note=>'Connection to ' . $wap_HI->Host()->link_to() .' ' . $$wap_HI{mac}.
+              ($$station_HI{connected_to} ? ' was ' . $station_HI->Host()->link_to() : '')
+            });
+					(new openprint::Log())->save({action=>'Update', Object=>$wap_HI->Host(),
+              note=>'Connection to ' . $station_HI->Host()->link_to() });
 				}
 			} # end foreach station_HI
 		}
 	} # end foreach mac
 	foreach my $mac ( keys %OldConnections ) {
 		$OldConnections{$mac}->save({connected_to=>undef});
+    (new openprint::Log())->save({action=>'Update', Object=>$OldConnections{$mac}->Host(), note=>'Connection to nobody on mac '.$mac });
 	}
 	openprint::Host_Interface->unlock();
 } # end sub update_connections
@@ -432,7 +438,7 @@ EOH
 
 sub get_from_json {
   if (!$_[0]) {
-    $log->error("No content to decode json from");
+    $log->error('No content to decode json from');
     return undef;
   }
   $log->debug($_[0]);
@@ -444,6 +450,7 @@ sub get_from_json {
     $openprint::log->error($@);
     return undef;
   }
+  return $hash;
 }
 
 1;

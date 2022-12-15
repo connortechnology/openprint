@@ -43,7 +43,8 @@ $log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
 					$log->error('Error creating Session'. $@);
 				} # end if
 				if ( $r->param('_session_id') ) {
-					if ( $session{ip} ne $ENV{REMOTE_ADDR} ) {
+          my $current_ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
+					if ( $current_ip and ($session{ip} ne $current_ip) ) {
 						$log->error('Change of session ip');
 						untie %session;
 						%session = ();
@@ -159,7 +160,7 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 	$Pricelist = new openprint::Pricelist( $session{Pricelist_id} ) if $session{Pricelist_id};
 
   my $ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
-	if ( $ip ) {
+	if ( $ip and openprint::Host_Interface->transform(ip=>$ip)) {
     openprint::Host_Interface->lock();
 		my @Interfaces = openprint::Host_Interface->find(ip=>$ip);
 		if ( !@Interfaces ) {

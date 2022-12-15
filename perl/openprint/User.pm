@@ -16,7 +16,7 @@ $serial = 'users_id_seq';
 
 $debug = 0;
 
-$default_sort	=	'lower(firstname),lower(lastname)';
+$default_sort	=	'lower(firstname),lower(lastname),id';
 
 %fields = (
 	id							=>	'id',

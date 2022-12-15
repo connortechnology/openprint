@@ -186,7 +186,7 @@ sub html {
 			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
 			%4$s
 			posted on %5$s`, $Article->id(), ssi::escape_quotes($Article->title()), join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
-			($Article->anonymous() ? '' : $Article->Author()->thumbnail_html() ),
+			(($Article->anonymous() or ! $$Article{created_by})? '' : $Article->Author()->thumbnail_html() ),
 			ssi::format_datetime( $Article->published_on() ),
 			);
 if ( 0 ) {

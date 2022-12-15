@@ -512,8 +512,8 @@ sub insert_layout_proof {
 sub insert_new_proof {
 	my ( $specs, $proof_index, $form, $qty, $width, $height, $type, $qty_index ) = @_;
 	$$specs{"txtProofQuantity-$form-$proof_index-$qty_index"} = $qty;
-	$$specs{"txtProofWidth-$form-$proof_index-$qty_index"} = 1*$width;
-	$$specs{"txtProofHeight-$form-$proof_index-$qty_index"} = 1*$height;
+	$$specs{"txtProofWidth-$form-$proof_index-$qty_index"} = defined($width) ? 1*$width : '';
+	$$specs{"txtProofHeight-$form-$proof_index-$qty_index"} = defined($height) ? 1*$height : '';
 	$$specs{"ddmProofType-$form-$proof_index-$qty_index"} = $type;
 	$$specs{"txtProofIndex-$form-$proof_index-$qty_index"} = $proof_index;
 } # end sub insert_new_proof
@@ -709,16 +709,17 @@ sub summary {
 			foreach my $key ( keys %{$specs} ) {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex\-$form\-(\d+)\-$qty_index$/ ) {
 					next if ! $$specs{"ddmProofType-$form-$proof_index-$qty_index"};
+          next if ! $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
 
 					if ( my $Service = openprint::Service->find_one(name=>$$specs{"ddmProofType-$form-$proof_index-$qty_index"}) ) {
 						if ( sets::isin( $$specs{"ddmProofType-$form-$proof_index-$qty_index"}, [ 'PressProof', 'PDFProof' ] ) ) {
-							my $desc = sprintf('</td><td class="type">%s', $Service->description() );
-							$proof_totals{$desc} += $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
+              my $desc = sprintf('</td><td class="type">%s', $Service->description() );
+              $proof_totals{$desc} += $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
 						} else {
 							my $desc = sprintf('%s&quot;x%s&quot;</td><td class="type">%s', @$specs{
 									"txtProofWidth-$form-$proof_index-$qty_index",
 									"txtProofHeight-$form-$proof_index-$qty_index"}, $Service->description() );
-							$proof_totals{$desc} += $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"} if $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
+							$proof_totals{$desc} += $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
 						} # end if
 					} # end if
 				} # end if

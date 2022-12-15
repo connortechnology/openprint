@@ -129,6 +129,7 @@ sub recipient {
 sub category_id {
 	if ( @_ > 1 and defined $_[1] ) {
 		$_[0]{category_id} = $_[1];
+    $_[0]->Category(undef);
 	} # end if
 	return $_[0]{category_id};
 } # end sub category_id
@@ -144,6 +145,7 @@ sub category {
         $Category->save({name=>$$self{category}})
       } # end if	
       $$self{category_id} = $Category->id();
+      $$self{Category} = $Category;
       return $Category->name();
     }
 	} # end if
@@ -154,7 +156,11 @@ sub Category {
   my $self = shift;
   $$self{Category} = shift if @_;
   if ( ! $$self{Category} ) {
-    $$self{Category} = new openprint::Expense_Category($$self{category_id});
+    if ($$self{category_id}) {
+      $$self{Category} = new openprint::Expense_Category($$self{category_id});
+    } else {
+      $$self{Category} = new openprint::Expense_Category();
+    }
   }
   return $$self{Category};
 } # end sub Category
@@ -214,7 +220,7 @@ sub Taxes {
           tax_id      =>  $$Tax{id},
           rate        =>  $$Tax{rate},
         });
-      $openprint::log->debug("New aTax: " . $T->to_string());
+      $openprint::log->debug("New aTax: " . $T->to_string()) if $debug;
       # Should not save.  Saving will be done in the save function This is okay, because in the html, we id our field by the tax_id
       #$T->save({ 'expense_id'=>  $$self{id}}) if $$self{id};
       push @{$$self{Taxes}}, $T;
@@ -312,7 +318,7 @@ sub tax_charged {
       if ( @_ > 2 ) {
         $$T{charge} = $yesno;
         $T->amount(undef);
-        $openprint::log->debug("Setting tax charged to $yesno for T: " . $T->to_string());
+        $openprint::log->debug("Setting tax charged to $yesno for T: " . $T->to_string()) if $debug;
       }
       return $T->charge();
     }
@@ -325,15 +331,18 @@ sub business_use_amount {
 		$_[0]{business_use_amount} = $_[1];
 	} # end if
 	if ( ! defined $_[0]{business_use_amount} ) {
-		$_[0]{business_use_amount} = $_[0]{amount} ? Math::Round::nearest( 0.01, $_[0]{amount} * ( $_[0]{business_use} / 100 ) ) : '0.00';
+		$_[0]{business_use_amount} = $_[0]->amount() ? Math::Round::nearest( 0.01, $_[0]{amount} * ( $_[0]{business_use} / 100 ) ) : '0.00';
 	} # end if
 	return $_[0]{business_use_amount};
 } # end sub business_use_amount
 
 sub to_string {
-  my $type = ref($_[0]);
-  return $type . ': '. join(' ' , map { $_[0]{$_} ? $_.' => '.(ref $_[0]{$_} eq 'ARRAY' ? join(',', @{$_[0]{$_}}) : $_[0]{$_} ) : () } keys %fields ).
-  "\nTaxes:".join("\n", map { $_->to_string() } $_[0]->Taxes());
+  my $self = shift;
+  my $type = ref($self);
+  #return $type . ': '. join(' ' , map { $$self{$_} ? $_.' => '.(ref $$self{$_} eq 'ARRAY' ? join(',', @{$$self{$_}}) : $$self{$_} ) : () } keys %fields ).
+  return 'Expense: ' . $self->Company()->name() . ' ' . $self->account(). ' to ' . $self->recipient(). ' '.$$self{category_id}.':'.$self->category().' '.$self->total().
+ ($$self{business_use} ? ' ' . $$self{business_use}. '% business = ' . $self->business_use_amount() : '').
+  "\nTaxes:".join("\n", map { $_->to_string() } $self->Taxes());
 }
 
 sub amount {

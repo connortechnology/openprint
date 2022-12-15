@@ -421,6 +421,7 @@ sub signature_calc {
 				$openprint::log->debug("Min weight: $min_weight > $$Paper{gsm}");
 			}
 		} # end if
+
 		my %minimum = $AqueousMinimumCharge->get_price(undef, $Equipment) if $AqueousMinimumCharge;
 		my $sheet_width = $Imposition->sheet_width();
 		my $sheet_height = $Imposition->sheet_height();
@@ -475,7 +476,6 @@ sub signature_calc {
 
 			my $area = $imp->layout_area();
 			foreach my $type ( @types ) {
-
 				my $type_name = $$type{name};
 
 				my %SetupPrice;
@@ -547,7 +547,6 @@ sub signature_calc {
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} = "Unkown units ( $ServicePrice{units} ) for $$type{name}<br/>";
 				} # end if
-# Div by imposition
 				push @{$Price{ServicePrices}}, \%ServicePrice;
 				$Price{Service} += $ServicePrice{Total};
 				$colour_total += $ServicePrice{Total};
@@ -581,7 +580,6 @@ sub signature_calc {
 					} elsif ( $MaterialPrice{units} eq 'per m' ) {
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $run_qty / 1000;
 					} elsif ( $MaterialPrice{units} eq 'per kg' ) {
-
 						my $coverage = $$type{coverage}/100;
 						my $area = $Imposition->object_area() * $run_qty * $coverage;
 			
@@ -613,79 +611,44 @@ sub signature_calc {
 			} # end foreach type
 
 			my $ImpressionPrice;
+      my $impression_service;
 			$Price{Impression} = 0;
+
 			if ( !index($$imp{runstyle}, 'Work') ) {
 				if ( @filtered_colours > $number_of_colours ) {
 # Then AQ is done as a separate run
 # Don't need to worry about Perfecting or Web
-					my $impression_service = (@filtered_colours - @types).'ColourImpression';
-					my $Impression_Service = openprint::Service->find_one(name=>$impression_service);
-				
-					if ( ! $Impression_Service ) {
-						$openprint::log->error("No service for $impression_service");
-					} else {
-
-						$ImpressionPrice = $Impression_Service->get_Price($impressions, $Equipment);
-						if ( $$ImpressionPrice{units} eq 'per hour' ) {
-							$$sig_specs{Runspeed} = $$sig_specs{"Runspeed$qty_index"} if ! $$sig_specs{Runspeed};
-							$Price{Runspeed} = $$sig_specs{Runspeed};
-
-							my $hours = $$ImpressionPrice{quantity} = $run_qty / $$sig_specs{Runspeed};
-							$$ImpressionPrice{Total} = Math::Round::nearest(0.01, $$ImpressionPrice{Price} * $hours);
-							$Price{Impression} = $$ImpressionPrice{Total};
-							push @{$Price{ImpressionPrices}}, $ImpressionPrice;
-						} else {
-							$openprint::log->error("Unknown units on impression price");
-						}
-					} # end if have impression service
+					$impression_service = (@filtered_colours - @types).'ColourImpression';
 				} # end if more colours than allow
 			} else {
 				if ( @front_aq and ( @{$$sig_specs{SideOneColours}} > $number_of_colours ) ) {
 # Have more colours than the press supports, so the AQ is in it's own run
-					my $impression_service = (@{$$sig_specs{SideOneColours}} - @front_aq).'ColourImpression';
-					my $Impression_Service = openprint::Service->find_one(name=>$impression_service);
-
-					if ( ! $Impression_Service ) {
-						$openprint::log->error("No service for $impression_service");
-					} else {
-
-						$ImpressionPrice = $Impression_Service->get_Price($impressions, $Equipment);
-						if ( $$ImpressionPrice{units} eq 'per hour' ) {
-							$$sig_specs{Runspeed} = $$sig_specs{"Runspeed$qty_index"} if ! $$sig_specs{Runspeed};
-							$Price{Runspeed} = $$sig_specs{Runspeed};
-
-							my $hours = $$ImpressionPrice{quantity} = $run_qty / $$sig_specs{Runspeed};
-							$$ImpressionPrice{Total} = Math::Round::nearest(0.01, $$ImpressionPrice{Price} * $hours );
-							$Price{Impression} += $$ImpressionPrice{Total};
-							push @{$Price{ImpressionPrices}}, $ImpressionPrice;
-						} else {
-							$openprint::log->error("Unknown units on impression price");
-						}
-					} # end if have impression service
+					$impression_service = (@{$$sig_specs{SideOneColours}} - @front_aq).'ColourImpression';
 				} elsif ( @back_aq and ( @{$$sig_specs{SideTwoColours}} > $number_of_colours ) ) {
 # Have more colours than the press supports, so the AQ is in it's own run
-					my $impression_service = (@{$$sig_specs{SideTwoColours}} - @back_aq).'ColourImpression';
-          my $Impression_Service = openprint::Service->find_one(name=>$impression_service);
-
-          if ( ! $Impression_Service ) {
-            $openprint::log->error("No service for $impression_service");
-          } else {
-
-            $ImpressionPrice = $Impression_Service->get_Price($impressions, $Equipment);
-            if ( $$ImpressionPrice{units} eq 'per hour' ) {
-              $$sig_specs{Runspeed} = $$sig_specs{"Runspeed$qty_index"} if ! $$sig_specs{Runspeed};
-              $Price{Runspeed} = $$sig_specs{Runspeed};
-
-              my $hours = $$ImpressionPrice{quantity} = $run_qty / $$sig_specs{Runspeed};
-              $$ImpressionPrice{Total} = Math::Round::nearest(0.01, $$ImpressionPrice{Price} * $hours );
-              $Price{Impression} += $$ImpressionPrice{Total};
-              push @{$Price{ImpressionPrices}}, $ImpressionPrice;
-            } else {
-              $openprint::log->error('Unknown units on impression price');
-            }
-          } # end if have impression service
-				}
+					$impression_service = (@{$$sig_specs{SideTwoColours}} - @back_aq).'ColourImpression';
+        }
 			} # end if W&T or not
+
+      if ($impression_service) {
+        my $Impression_Service = openprint::Service->find_one(name=>$impression_service);
+        if ( ! $Impression_Service ) {
+          $openprint::log->error("No service for $impression_service");
+        } else {
+          $ImpressionPrice = $Impression_Service->get_Price($impressions, $Equipment);
+          if ( $$ImpressionPrice{units} eq 'per hour' ) {
+            $$sig_specs{Runspeed} = $$sig_specs{"Runspeed$qty_index"} if ! $$sig_specs{Runspeed};
+            $Price{Runspeed} = $$sig_specs{Runspeed};
+
+            my $hours = $$ImpressionPrice{quantity} = $run_qty / $$sig_specs{Runspeed};
+            $$ImpressionPrice{Total} = Math::Round::nearest(0.01, $$ImpressionPrice{Price} * $hours );
+            $Price{Impression} += $$ImpressionPrice{Total};
+            push @{$Price{ImpressionPrices}}, $ImpressionPrice;
+          } else {
+            $openprint::log->error("Unknown units $$ImpressionPrice{units} on $impression_service on $$Equipment{strid} for quantity $impressions price");
+          }
+        } # end if have impression service
+      }
 
 			foreach my $price_type ( 'MakeReady', 'BlanketCut', 'Service', 'Material', 'Impression', 'Signature' ) {
 				if (

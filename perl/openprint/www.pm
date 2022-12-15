@@ -234,13 +234,14 @@ $log->error("Deprecated SkinPath layout! $path");
 				if ( ! $content ) {
 					$log->error("Found no content at $path");
 				} # end if
-			} else {
+			} elsif ( -e $ENV{DOCUMENT_ROOT} . $page ) {
 				$content = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . $page );
 				if ( ! $content ) {
 					$log->error("Found no content at $ENV{DOCUMENT_ROOT}$page instead of $config{SkinPath}/$page");
 				} # end if
+      } else {
+        $log->debug("Path not found $page");
 			} # end if
-			#$variable{PageContent} = ssi::variable_substitution( \$content, \%variable );
 			$variable{PageContent} = $content;
 		} else {
 $log->debug("PageContent is $variable{PageContent}");

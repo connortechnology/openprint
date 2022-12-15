@@ -32,7 +32,7 @@
           <? echo ( make_drop_down( openprint::Company->dropdown(
               'updated_on >=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -30)),
               'last_online is null'=>0),
-            $session{$r->uri().'?company_id'}
+              (exists $param{company_id} ? $param{company_id} : $session{company_id} )
             );
             ) ?>
           </select>

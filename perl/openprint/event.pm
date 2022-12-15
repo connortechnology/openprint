@@ -98,7 +98,7 @@ sub search {
 	} # end if
 	my $Location = new openprint::User($session{'user_id'})->Location() if $session{user_id};
 	if ( ! ( $Location and $Location->id() ) ) {
-		$Location = openprint::Location::from_ip( $ENV{REMOTE_ADDR} );
+		$Location = openprint::Location::from_ip( $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR} );
 	} # end if
 $log->debug("Got location : " . $Location->to_string() );
 	if ( 1 and $Location and $Location->id() ) {

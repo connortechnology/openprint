@@ -228,7 +228,7 @@ sub calc {
 		} # end if
 		$$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 
-		if ( 0 and  $$specs{'chkOverrideDimensions'.$group_id} ne 'Y' ) {
+		if ( 0 and $$specs{'chkOverrideDimensions'.$group_id} ne 'Y' ) {
 			# Is this necessary?  I don't think so.
 			$$specs{'txtFinalWidth'.$group_id} = $$specs{txtFinalWidth};
 			$$specs{'txtFinalHeight'.$group_id} = $$specs{txtFinalHeight};
@@ -403,6 +403,11 @@ $log->debug("Adding backing pages");
 	} # end if
 
 } # end sub save
+
+sub calculate_signatures {
+  return openprint::Estimating::MultiPage::calculate_signatures(@_);
+}
+
 
 1;
 __END__

@@ -422,6 +422,7 @@ $openprint::log->debug("********************************************************
 	push @signatures, sort $Project->signatures({type=>'Gate Folded Pages'});
 	push @signatures, sort $Project->signatures({type=>'Pad Pages'});
 	push @signatures, sort $Project->signatures({type=>'Backing Pages'});
+	push @signatures, sort $Project->signatures({type=>''}); # Legacy
 	@signatures = $Project->signatures() if ! @signatures;
 	$openprint::log->debug( "Signatures: @signatures");
 	return 'uncalculated' if ! @signatures;
@@ -431,6 +432,13 @@ $openprint::log->debug("********************************************************
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$i] );
+    
+    if (!$$sig_specs{txtSignatureType}) {
+      $openprint::log->warn('Deleting due to lack of signature type');
+      openprint::print_project::delete_service( $Project, $signatures[$i] );
+      splice @signatures, $i, 1;
+      $i-=1;
+    }
 
 		# This has been deprecated
 		if ( $$printing_specs{PrintingType} ) {

@@ -61,7 +61,7 @@ sub insertLogRecord {
 		'action_id'	=>	$action_type_id, 
 		'user_id'		=>	$user_id, 
 		'company_id'	=>	$company_id,
-		'ip_address'	=>	$ENV{REMOTE_ADDR}, 
+		'ip_address'	=>	$ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR}, 
 		'url'			=>	$ENV{SERVER_NAME} . $ENV{REQUEST_URI}, 
 		'note'			=>	$note,
 	});

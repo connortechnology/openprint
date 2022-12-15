@@ -45,6 +45,7 @@
 
 		$rowclass = $rowclass ? '' : 'colRow';
   } # end foreach
+  $html .= '<tr class="totals"><td colspan=9">'.@{$$variable{Users}}.' users</td></tr>';
   return $html;
 ) ?>
 </table>

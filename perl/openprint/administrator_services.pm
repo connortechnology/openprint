@@ -129,15 +129,15 @@ sub edit {
             #equipment_id	=>	$param{"equipment_id-$$Price{id}"},
             period_start	=>	( Date::Calc::check_date( map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
             period_end		=>	( Date::Calc::check_date( map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
-            min				=>	$param{"min-$$Price{id}"},
-            max				=>	$param{"max-$$Price{id}"},
-            range_units			=>	$param{"range_units-$$Price{id}"},
-            units			=>	$param{"units-$$Price{id}"},
-            cost			=>	$param{"cost-$$Price{id}"},
-            markup			=>	$param{"markup-$$Price{id}"},
-            price			=>	$param{"price-$$Price{id}"},
+            min				    =>	$param{"min-$$Price{id}"},
+            max				    =>	$param{"max-$$Price{id}"},
+            range_units		=>	$param{"range_units-$$Price{id}"},
+            units			    =>	$param{"units-$$Price{id}"},
+            cost			    =>	$param{"cost-$$Price{id}"},
+            markup			  =>	$param{"markup-$$Price{id}"},
+            price			    =>	$param{"price-$$Price{id}"},
             discountable	=>	$param{"discountable-$$Price{id}"},
-            mode			=>	$param{"mode-$$Price{id}"},
+            mode			    =>	$param{"mode-$$Price{id}"},
             supplier_id		=>	$param{"supplier_id-$$Price{id}"} ? $param{"supplier_id-$$Price{id}"} : undef,
           };
           my @price_changes = $Price->changes( $new_values );
@@ -146,7 +146,7 @@ sub edit {
             push @changes, ('Change price for ' .$Price->id_string() . ': ' .  join(', ', map { $_ } @price_changes));
           } # end if
         } # end foreach 
-        (new openprint::Log())->save({object_id=>$$Service{id},object_type=>ref$Service, action=>'Edit Service', note=>join('<br/>', @changes) }) if @changes;
+        (new openprint::Log())->save({Object=>$Service, action=>'Edit Service', note=>join('<br/>', @changes) }) if @changes;
       } # end if not error
       sql::end_transaction( $dbh, $ac );
       if ( ! $variable{error} ) {

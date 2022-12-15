@@ -1,6 +1,5 @@
 <div class="CompanyProfileFields">
 	<form id="f1" name="f1" action="company_profile_fields.html" method="post">
-		<input type="hidden" name="action" id="action" />
 		<p class="buttons">
 		<? echo ( button('Save',{ type=>'submit', name=>'action', value=>'Save', onclick=>'save_all();' });) ?>
  		Use dragndrop for sorting.
@@ -26,10 +25,10 @@
 		</table>
 	</form>
 </div>
-<script type="text/javascript" src="<?hash_link(/administrator/managerial/profile.js)?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link(/administrator/managerial/profile.js)?>"></script>
+<script>
 window.addEventListener('DOMContentLoaded', function() {
-	Sortable.create( 'fields', {
+	Sortable.create('fields', {
 		tag: 'tr',
 		constraint: 'vertical',
 		onUpdate: function( container ) {

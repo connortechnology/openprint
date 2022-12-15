@@ -346,6 +346,12 @@ LINE: while ( my $line = <FH> ) {
         delete $expense_find{description};
       }
       delete $expense_find{Taxes};
+      if ($expense_find{Category}) {
+        if ($expense_find{Category}->id() and ! $expense_find{category_id}) {
+          $expense_find{category_id} = $expense_find{Category}->id();
+        }
+        delete $expense_find{Category};
+      }
       my @Expenses = openprint::Expense->find(\%expense_find);
 
       if ( @Expenses ) {
@@ -389,7 +395,7 @@ LINE: while ( my $line = <FH> ) {
       } 
       $log->info("No expenses found to match $date, $desc, $debit, $credit, (".(defined $balance ? $balance : 'undef').', rules? ' . @Rules . "\n" . $Expense->to_string());
 
-      print 'Add record for? [Y|n|R]';
+      print 'Add record for? [Y|n|r]';
       $response = <STDIN>;
       chomp $response;
       if ( (!$response) or ($response =~ /[Yy]/) ) {
@@ -412,7 +418,6 @@ LINE: while ( my $line = <FH> ) {
         $Expenses_Added{$$Expense{id}} = $Expense;
         last;
       } elsif ( $response =~ /[Rr]/ ) {
-        $log->debug('Loading rules');
         @Rules = openprint::Expense_Rule->find();
         $log->debug(@Rules . ' loaded');
       } else {

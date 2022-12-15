@@ -408,7 +408,7 @@ sub host {
 	} # end if
 	ssi::setup_date_select( '/employee/it/host.html', 'log_created_on_start', 0 );
 	ssi::setup_date_select( '/employee/it/host.html', 'log_created_on_end', '' );
-	if ( $config{'RADIUS_Support'} eq 'Y' ) {
+	if ( $config{'RADIUS_Support'} and ($config{'RADIUS_Support'} eq 'Y') ) {
 		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				'database'  => $config{RADIUS_DB_Name},
 				'driver'    => $config{RADIUS_DB_Driver},
@@ -730,13 +730,6 @@ sub _assets {
 } # end sub _assets
 
 sub licenses {
-	if ( $param{action} eq 'Delete' ) {
-		foreach my $license_id ( ref $param{license_id} eq 'ARRAY' ? @{$param{license_id}} : $param{license_id} ) {
-			my $License = new openprint::License( $license_id );
-			$variable{error} .= $License->delete();
-		} # end foreach license_id
-		%param = ();
-	} # end if
 	_licenses();
 	ssi::setup_date_select( '/employee/it/licenses.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/employee/it/licensess.html', 'created_on_end', '' );
@@ -745,12 +738,16 @@ sub licenses {
 } # end sub licenses
 
 sub _licenses {
-	if ( $param{action} eq 'Delete' ) {
-		foreach my $license_id ( ref $param{license_id} eq 'ARRAY' ? @{$param{license_id}} : $param{license_id} ) {
-			my $License = new openprint::License( $license_id );
-			$variable{error} .= $License->delete();
-		} # end foreach license_id
-		%param = ();
+  if ($param{action}) {
+    if ( $param{action} eq 'Delete' ) {
+      foreach my $license_id ( ref $param{'license_id[]'} eq 'ARRAY' ? @{$param{'license_id[]'}} : $param{'license_id[]'} ) {
+        my $License = new openprint::License( $license_id );
+        $variable{error} .= $License->delete();
+      } # end foreach license_id
+      %param = ();
+    } else {
+      $log->error("Unknown action $param{action}");
+    } # end if
 	} # end if
 	ssi::save_params( '/employee/it/licenses.html', 
 	( map { 'created_on_start_' . $_ } ( 'year', 'month', 'day' ) ),
