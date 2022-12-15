@@ -48,7 +48,7 @@ sub hosts {
   my $uri = $r->uri();
 	ssi::setup_date_select( $uri, 'created_on_start', '' );
 	ssi::setup_date_select( $uri, 'created_on_end', '' );
-	ssi::setup_date_select( $uri, 'updated_on_start', '' );
+	ssi::setup_date_select( $uri, 'updated_on_start', -30 );
 	ssi::setup_date_select( $uri, 'updated_on_end', '' );
 	if ( ! exists $session{$uri.'?has_hostname'} ) {
 		$session{$uri.'?has_hostname'} = '';
