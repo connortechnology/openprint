@@ -323,13 +323,18 @@ sub subscriptions {
   if ($param{action}) {
     if ($param{action} eq 'Subscribe') {
       if (!$User->id()) {
-        my $Company = new openprint::Company();
-        $Company->save({name=>$User->email(), activation=>$config{NewCustomerAccountActivation}});
-        $variable{error} .= $User->save({company_id=>$Company->id()});
-        if (!$variable{error}) {
-          openprint::login::login($User);
-          $variable{information} .= 'Account created and logged in.<br/>';
+        if ($User->email()) {
+          my $Company = new openprint::Company();
+          $Company->save({name=>$User->email(), activation=>$config{NewCustomerAccountActivation}});
+          $variable{error} .= $User->save({company_id=>$Company->id()});
+          if (!$variable{error}) {
+            openprint::login::login($User);
+            $variable{information} .= 'Account created and logged in.<br/>';
+          }
+        } else {
+          $variable{error} .= 'You must specify the email address.<br/>';
         }
+
       } else {
         $variable{error} .= 'User already exists, please edit subscriptions below.<br/>';
       }
