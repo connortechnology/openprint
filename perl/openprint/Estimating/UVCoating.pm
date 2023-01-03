@@ -161,17 +161,17 @@ sub calc {
 
 			$MakeReadies{$results{Equipment}{id}} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} if $results{Equipment};
 			@outputs = sets::union( @outputs, 
-					"ddmEquipment-$form-$qty_index", 
-					"MakeReadyPrice-$form-$qty_index",
-                    "BlanketPrice-$form-$qty_index",
-                    "ServicePrice-$form-$qty_index",
-                    "MaterialPrice-$form-$qty_index",
-                    "SignaturePrice-$form-$qty_index",
-					);	
-			if ( ( ! defined $$specs{"OverrideMakeReadyPrice-$form-$qty_index"} ) or ( $$specs{"OverrideMakeReadyPrice-$form-$qty_index"} ne 'Y' ) ) {
-				$$specs{"MakeReadyPrice-$form-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{MakeReady} );
-			} # end if
-			if ( ( ! defined $$specs{"OverrideBlanketPrice-$form-$qty_index"} ) or ( $$specs{"OverrideBlanketPrice-$form-$qty_index"} ne 'Y' ) ) {
+        "ddmEquipment-$form-$qty_index", 
+        "MakeReadyPrice-$form-$qty_index",
+        "BlanketPrice-$form-$qty_index",
+        "ServicePrice-$form-$qty_index",
+        "MaterialPrice-$form-$qty_index",
+        "SignaturePrice-$form-$qty_index",
+      );	
+      if ( ( ! defined $$specs{"OverrideMakeReadyPrice-$form-$qty_index"} ) or ( $$specs{"OverrideMakeReadyPrice-$form-$qty_index"} ne 'Y' ) ) {
+        $$specs{"MakeReadyPrice-$form-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{MakeReady} );
+      } # end if
+      if ( ( ! defined $$specs{"OverrideBlanketPrice-$form-$qty_index"} ) or ( $$specs{"OverrideBlanketPrice-$form-$qty_index"} ne 'Y' ) ) {
 				$$specs{"BlanketPrice-$form-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Blanket} );
 			} # end if
 			if ( ( ! defined $$specs{"OverrideServicePrice-$form-$qty_index"} ) or ( $$specs{"OverrideServicePrice-$form-$qty_index"} ne 'Y' ) ) {
@@ -230,7 +230,6 @@ sub calc {
 	} # end foreach qty
 
 	return $$specs{Status} = $status;
-
 } # end sub calc
 
 sub cut_imposition {
@@ -410,6 +409,9 @@ sub signature_calc {
 	my $MinimumCharge = openprint::Service->find_one(name=>'UVCoatingMinimumCharge');
 
 	foreach my $Equipment ( @equipment ) {
+    if (!defined($Equipment->useinestimating()) and $Equipment->id() != $Imposition->Press()->id()) {
+      next;
+    }
 		my %BestPricePerImposition;
 		my %minimum = $MinimumCharge->get_price( undef, $Equipment ) if $MinimumCharge;
 		my $BlanketCutPrice;
@@ -684,30 +686,33 @@ sub summary {
 } # end sub summary
 
 sub load_equipment {
-	@all_equipment = openprint::Equipment->find( Specifications => {'UVCoating Capable'=>'Y'}, useinestimating=>1, order=>'lower(strName)');
+	@all_equipment = openprint::Equipment->find(
+    Specifications => {'UVCoating Capable'=>'Y'},
+    'useinestimating null_or_=' =>1,
+    order=>'lower(strName)');
 } # end sub load_equipment
 
 sub has_overrides {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-    my @v;
-    if ( $qty_index ) {
-			push @v, map { $$specs{$_.$qty_index} ? $_.$qty_index : () } ( 'OverridePrice' );
-        foreach my $s_s_id ( $Project->signatures() ) {
-            my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-            my $form = $$sig_specs{SignatureIndex};
-            push @v, map { $$specs{$_} ? $_ : () } (
-                    "chkOverrideEquipment-$form-$qty_index",
-                    "chkOverrideImposition-$form-$qty_index",
-                    "OverrideMakeReadyPrice-$form-$qty_index",
-                    "OverrideBlanketPrice-$form-$qty_index",
-                    "OverrideServicePrice-$form-$qty_index",
-                    "OverrideMaterialPrice-$form-$qty_index",
-                    "OverrideSignaturePrice-$form-$qty_index",
-                    );
-        } # end foreach sig
-    } # end if
+  my @v;
+  if ( $qty_index ) {
+    push @v, map { $$specs{$_.$qty_index} and ($$specs{$_.$qty_index} eq 'Y') ? $_.$qty_index : () } ( 'OverridePrice' );
+    foreach my $s_s_id ( $Project->signatures() ) {
+      my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+      my $form = $$sig_specs{SignatureIndex};
+      push @v, map { $$specs{$_} and ($$specs{$_} eq 'Y') ? $_ : () } (
+        "chkOverrideEquipment-$form-$qty_index",
+        "chkOverrideImposition-$form-$qty_index",
+        "OverrideMakeReadyPrice-$form-$qty_index",
+        "OverrideBlanketPrice-$form-$qty_index",
+        "OverrideServicePrice-$form-$qty_index",
+        "OverrideMaterialPrice-$form-$qty_index",
+        "OverrideSignaturePrice-$form-$qty_index",
+      );
+    } # end foreach sig
+  } # end if
 
     return @v;
 
