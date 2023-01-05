@@ -30,7 +30,7 @@
 			$html .= sprintf(q`<tr%6$s>
 				<td class="pms"><a href="/administrator/production/ink.html?ink_id=%1$d">%2$s</a></td>
 				<td class="name"><a href="/administrator/production/ink.html?ink_id=%1$d">%3$s</a></td>
-				<td class="material"><a href="/administrator/materials/edit.html?ddmMaterial=%4$d">%5$s</a><br/>
+				<td class="material"><a href="/administrator/materials/edit.html?material_id=%4$d">%5$s</a><br/>
 			`, $Ink->id(), $Ink->pmsid(), $Ink->name(), $Ink->material_id(), $Ink->Material()->name(), $rowclass );
 			if ( $Ink->material_id() ) {
 				foreach my $Pricelist ( @{$$variable{'Pricelists'}} ) {
