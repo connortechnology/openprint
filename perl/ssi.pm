@@ -1350,18 +1350,20 @@ sub bootstrap_navmenu {
   } else {
     @categories = sort keys %{$menu};
   }
-
+$log->error("categoryies @categories");
 	foreach my $category ( @categories ) {
-		if ( ref $$menu{$category} ) {
+		if ( ref $$menu{$category} eq 'HASH' ) {
 			my %urls = %{$$menu{$category}};
-			my $submenu_html;
+			my $submenu_html = '';
 			my $on = 0;
 			foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
 				my $text = $urls{$url};
 				if ( $text ) {
 					my $Page_Setting = openprint::Page_Setting::get( $url );
 					if ( $Page_Setting->can_view() ) {
-						$submenu_html .= sprintf('<li class="menu-item"><a href="%s">%s</a></li>', $url, $text )."\n";
+						$submenu_html .= sprintf('<li class="dropdown-item"><a href="%s">%s</a></li>', $url, $text )."\n";
+          } else {
+            $log->debug("Not permitted to view $url");
 					} # end if
 				}
 				$on = 1 if $current_uri eq $url;
@@ -1370,17 +1372,45 @@ sub bootstrap_navmenu {
 			if ( $submenu_html ) {
 				$html .= join( $submenu_html,
 						sprintf(q`
-							<li id="%1$sMenu" class="menu-item dropdown %2$s">
-							<a href="#%1$sSubMenu" data-toggle="collapse" aria-expanded="%3$s" class="dropdown-toggle">%1$s</a>
-							<ul id="%1$sSubMenu" class="dropdown-menu %4$s list-unstyled">`,
+							<li class="nav-item dropdown %2$s">
+							<a href="#" id="%1$sMenu" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">%1$s</a>
+							<ul id="%1$sSubMenu" class="dropdown-menu aria-labelledby="%1$sMenu">`,
 							$category,
-							( $on ? ('active','true','in' ) : ( '', 'false', 'collapse' ) ),
+							( $on ? ('active','true' ) : ( '', 'collapse' ) ),
 							),'</ul></li>' );
 			}
+    } elsif ( ref $$menu{$category} eq 'ARRAY' ) {
+      my $submenu_html = '';
+      my $on = 0;
+      while ( my ($url, $text) = splice(@{$$menu{$category}}, 0, 2) ) {
+        if ($text) {
+          my $Page_Setting = openprint::Page_Setting::get($url);
+          if ($Page_Setting->can_view()) {
+            $submenu_html .= sprintf('<li><a class="dropdown-item" href="%1$s">%2$s</a></li>', $url, $text )."\n";
+          } else {
+            $log->error("Not permitted to view $url");
+          } # end if
+        } else {
+          $log->error("No text for $url");
+        }
+        $on = 1 if $current_uri eq $url;
+      } # end foreach url
+
+      if ($submenu_html) {
+        $html .= join($submenu_html,
+            sprintf(q`
+              <li class="nav-item dropdown %2$s">
+              <a href="#" id="%1$sMenu" class="nav-link dropdown-toggle" %4$s role="button" data-bs-toggle="dropdown" aria-expanded="false">%1$s</a>
+              <ul id="%1$sSubMenu" class="dropdown-menu list-unstyled" aria-labelledby="%1$sMenu">`,
+              $category,
+              ( $on ? ('active','true','aria-current="page"' ) : ( '', 'false', 'collapse', '' ) ),
+              ),'</ul></li>' );
+      }
 		} else {
-			$html .= sprintf( q`<li id="%1$sMenu" class="menu-item %2$s"><a href="%2$s">%1$s</a></li>`, $category, $$menu{$category} );
+			$html .= sprintf( q`<li id="%1$sMenu" class="nav-item %2$s"><a href="%2$s">%1$s</a></li>`, $category, $$menu{$category} );
 		}
 	} # end foreach category
+  $log->error($html);
 	return $html;
 }
 
