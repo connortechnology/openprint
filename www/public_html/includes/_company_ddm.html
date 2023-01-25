@@ -42,6 +42,9 @@
 			} # end if
 		}
 	}
+  if (defined($param{deleted})) {
+    $sql{deleted} = $param{deleted} ne '' ? $param{deleted} : ['1','0'];
+  }
 	my $time = time;
 	my @Companies = openprint::Company->find( %sql );
 	$log->debug("Loading took: " . ( time - $time ) . ' secs');
