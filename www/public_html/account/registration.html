@@ -2,14 +2,14 @@
 <script nonce="<?echo($config{CSP_NONCE})?>">
 function howdidyouhearaboutus_onchange(e) {
 	if ( e.value == 'Other' ) {
-		$('Other').show();
-		$('salesrep_id').hide();
+		$j('#Other').show();
+		$j('#salesrep_id').hide();
 	} else if ( e.value == 'CSR' ) {
-		$('Other').show();
-		$('salesrep_id').show();
+		$j('#Other').show();
+		$j('#salesrep_id').show();
 	} else {
-		$('Other').hide();
-		$('salesrep_id').hide();
+		$j('#Other').hide();
+		$j('#salesrep_id').hide();
 	} // end if
 } // end function howdidyouhearaboutus_onchange(e)
 </script>
@@ -71,7 +71,7 @@ function howdidyouhearaboutus_onchange(e) {
 							<option value=""> Select </option>
 							<? echo (
 								$$variable{country} = $param{country} ? $param{country} : $session{Country};
-								return return_countries( $$variable{country});
+								return return_countries($$variable{country});
 							) ?>					
 							</select>
 						</li>
@@ -88,8 +88,13 @@ function howdidyouhearaboutus_onchange(e) {
 							<select id="state" name="state">
 								<option value=""> Select </option>
 							<? echo (
-								
-								return return_states( $param{state} ).return_provinces( $param{state} );
+                if ($$variable{country} eq 'US') {
+                  return return_states($param{state});
+                } elsif ($$variable{country} eq 'CA') {
+                   return_provinces($param{state});
+                } else {
+                   return_states($param{state}).return_provinces( $param{state} );
+                }
 							) ?>
 							</select>
 						</li>
