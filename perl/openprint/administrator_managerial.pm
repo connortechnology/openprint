@@ -680,8 +680,6 @@ sub company_profiles {
 		} # end if
 		$Company = new openprint::Company( $index );
 	} elsif ( $openprint::param{btnFunction} eq 'Undelete' ) {
-		$index = $param{company_id};
-		$Company = new openprint::Company( $param{company_id} );
 		$Company->undelete();
 	} # end if btnFunction
 
@@ -794,6 +792,7 @@ sub usergroups {
 			} # end if
 		} # end if
 		$variable{error} .= $Group->save(\%param);
+    $variable{ExternalRedirect} = '/administrator/managerial/usergroups.html' if !$variable{error};
 	} # end if
 } # end sub usergroups
 
