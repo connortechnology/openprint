@@ -19,10 +19,11 @@
         </select>
       </li>
 <? echo (
-		@{$$variable{SalesReps}} = openprint::User->find(
-			id=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],
+    my @salesrep_ids = sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies');
+		$$variable{SalesReps} = [openprint::User->find(
+			id=>\@salesrep_ids,
 			deleted=>exists($session{$r->uri().'?deleted_salresrep_id'}) ? $session{$r->uri().'?deleted_salresrep_id'} : 0
-			);
+			)] if @salesrep_ids;
 		if ( @{$$variable{SalesReps}} ) {
 			return '
 		<li>
@@ -131,7 +132,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		<? if ( $$variable{Company}->deleted() ) ?>
 		<div class="error">This company has been deleted.</div>
 		<? endif ( $$variable{Company}->deleted() ) ?>
-		<b><? echo ( $$variable{Company}->notes() )?></b>
+		<div class="notes"><? echo ( $$variable{Company}->notes() ? )?></div>
 	<div class="leftColumn">
 		<ul>
 			<? if ( $$variable{Company}->id() ) ?>
