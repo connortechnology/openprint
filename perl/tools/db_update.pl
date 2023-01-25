@@ -251,14 +251,12 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		} # end if
 	} # end foreach
 	if ( ! exists $$data{$openprint::Company::fields{last_project_id}} ) {
-		if ( ! sets::isin( 'projects', \@tables ) ) {
-			$dbh->do( misc::load_file( $log, q{../../sql/Projects.sql}) ) or die;
-			@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
-		}
 		$dbh->do('ALTER TABLE companies ADD last_project_id INTEGER');
-		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_project_id) REFERENCES Projects (id)');
-		$dbh->do('UPDATE companies SET last_project_id = (SELECT MAX(id) FROM projects WHERE company_id=companies.id)');
-		die $dbh->errstr() if $dbh->errstr();
+    if (sets::isin( 'projects', \@tables ) ) {
+      $dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_project_id) REFERENCES Projects (id)');
+      $dbh->do('UPDATE companies SET last_project_id = (SELECT MAX(id) FROM projects WHERE company_id=companies.id)');
+      die $dbh->errstr() if $dbh->errstr();
+    }
 	} # end if
 	if ( ! exists $$data{$openprint::Company::fields{last_order_id}} ) {
 if ( ! sets::isin( 'orders', \@tables ) ) {
@@ -617,6 +615,11 @@ if ( ! sets::isin( 'expenses', \@tables ) ) {
   }
 }
 
+if ( ! sets::isin( 'taxes', \@tables ) ) {
+  print "Adding Taxes\n";
+	$dbh->do( misc::load_file( $log, '../../sql/Taxes.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+}
 if ( ! sets::isin( 'expense_taxes', \@tables ) ) {
   print "Adding Expense Taxes\n";
 	$dbh->do( misc::load_file( $log, '../../sql/Expense_Taxes.sql' ) );
