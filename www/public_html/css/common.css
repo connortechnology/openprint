@@ -191,12 +191,12 @@ li {
 fieldset p,
 fieldset li {
 	margin: 2px 0 2px 0;
-	padding: 0 0 0 165px;
+	padding: 0 0 0 175px;
 	text-align: left;
 }
 fieldset label:not(.radio):not(.radio-inline) {
-	width: 160px;
-	margin-left: -165px;
+	width: 170px;
+	margin-left: -175px;
 	float: left;
 	text-align: left;
 }
@@ -233,7 +233,7 @@ fieldset p textarea, fieldset li textarea {
 }
 fieldset p.buttons {
   padding: 0;
-  margin-left: 165px;
+  margin-left: 175px;
 	float: none;
 }
 input[type="radio"],
