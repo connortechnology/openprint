@@ -259,7 +259,6 @@ sub registration {
 			$variable{error} .= $error;
 			return;
 		} # end if
-
 	} # end if
 
 	if ( $param{email} or $param{firstname} or $param{lastname} ) {
@@ -297,7 +296,7 @@ sub registration {
 				} # end if
 			} # end if
 
-			if ( $User->email() ) {
+			if ( 0 and $User->email() ) {
 # Send confirmation
 				$info{ReplacementText} = ssi::include( '/email_content/first_user_login_app_confirmation.html', \%info );
 				new openprint::Email()->send(
@@ -330,9 +329,9 @@ sub registration {
 			} # end if
 		} else {
 
-#FIXME
+#FIXME, fix what?
 			$User->web_active( $session{company_id} ? 'Y' : $config{NewNonFirstUserAccountActivation} );
-			$User->administrator( 'N' );
+			$User->administrator('N');
 			$variable{error} .= $User->save();
 			return if $variable{error};
 			$variable{information} .= 'Registration was successful.<br/><br/>';
@@ -340,9 +339,10 @@ sub registration {
 			$variable{error} .= $User->Profile()->save(\%param);
 			$variable{error} .= ( new openprint::Log())->save({'action'=>'Create User', 'company_id'=>$Company->id(), 'user_id'=>$User->id()});
 
-			if ( $User->web_active ne 'Y') {
+			if ($User->web_active ne 'Y') {
 # send notifications
-				foreach my $Notification ( openprint::User->find( 'company_id'=>$Company->id(), 'administrator'=>'Y' ) ) {
+				foreach my $Notification ( openprint::User->find(company_id=>$Company->id(), administrator=>'Y') ) {
+          next if $Notification->Id() == $session{user_id};
 					@info{'AdminSalutation','AdminFirstName','AdminLastName'} = $Notification->get('salutation','firstname','lastname');
 
 					$info{ReplacementText} = ssi::include( '/email_content/not_first_user_login_app_notification_for_company_admin.html', \%info );
@@ -354,7 +354,7 @@ sub registration {
 							);
 				} # end foreach
 
-				if ( $User->email() ) {
+				if ( 0 and $User->email() ) {
 # Send confirmation to the newly added user
 					$info{ReplacementText} = ssi::include( '/email_content/not_first_user_login_app_confirmation.html', \%info );
 					(new openprint::Email())->send(
@@ -387,23 +387,22 @@ sub registration {
 
 	if ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) {
 		# If I'm a salesrep, then only change my company, not the user.
-		$session{company_id} = $Company->id();
-		$variable{information} .= 'You are now representing '.$Company->name().'<br/>';
+    # ICON 2022-12-16 I don't think this is good.  Should just show them the switch company dropdown
+    #$session{company_id} = $Company->id();
+    #$variable{information} .= 'You are now representing '.$Company->name().'<br/>';
 	} elsif (
 			( (! $session{company_id} ) or ( $session{company_id} == $Company->id() ) )
-			and ( ! $session{user_id} )
+			and (!$session{user_id})
 			) {
-$log->debug('U ' . $User->web_active(). ' C' . $Company->activation() );
 		# auto log in.
 		if ( $User->web_active() eq 'Y' and $Company->activation() eq 'Y') {
 			@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
-			(new openprint::Log())->save({'action'=>'Login', 'note'=>'Automatic login after registration.'});
+			(new openprint::Log())->save({action=>'Login', note=>'Automatic login after registration.'});
 			$variable{information} .= '<p>Your account has been activated and you have been automatically logged in.</p>';
 		} else {
 			$variable{information} .= 'At this time your login remains inactive.<br/><br/>You will be notified via email when your account is activated.<br/>';
 		} # end if
 	} # end if
-
 } # end sub registration
 
 sub _check_company_name {
@@ -412,9 +411,9 @@ sub _check_company_name {
 sub login_password {
 	$_ = $config{customerlogin};
 	if ($ENV{HTTP_REFERER} =~ /$_/) {
-		$variable{message} = "Your account has been activated.	While it is not required, it is recommended you change your password now.";
+		$variable{message} = 'Your account has been activated.	While it is not required, it is recommended you change your password now.';
 	} else {
-		$variable{message} = "Please enter the required information to change your password.";
+		$variable{message} = 'Please enter the required information to change your password.';
 	} # end if
 } # login password
 
