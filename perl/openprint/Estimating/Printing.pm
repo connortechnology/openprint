@@ -6287,7 +6287,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 					my %BlanketCut = $BlanketCutService->get_price( undef, $Press );
 					%BlanketCut = openprint::service::get_price_object( 'BlanketCut', undef, $Press ) if ! %BlanketCut;
 					if ( %BlanketCut ) {
-						$price{'Ink breakdown'} .= ' Blanket: $'. $BlanketCut{Price};
+						$price{'Ink breakdown'} .= ' Blanket: $'. $BlanketCut{Price}.' ';
 						$ink_price{BlanketCut} = \%BlanketCut;
 						$ink_price{Total} = $BlanketCut{Price};
 					} # end if
@@ -6345,7 +6345,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			} # end if
 			$ink_price{ServicePrice} = \%InkService;
 			$ink_price{Total} += $InkService{Total};
-			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f = $%4$.2f', @InkService{'Price','units','Total'}, $colour_impressions );
+			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f = $%5$.2f', @InkService{'Price','units','Total'}, $colour_impressions, $ink_price{Total} );
 		} # end if
 
 # Washed_colours contains each colour used in the other signatures
@@ -6461,6 +6461,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 					$price{'Ink breakdown'} .= ' ' . $colour_impressions . " * $material_price{Price}$material_price{units} = " . $p;
 				} else {
 					$log->error("Unknown units for $colour: $material_price{units}" . $$Press{strid} );
+          $price{'Ink breakdown'} .= "<div class=\"warning\"> Unknown units for material $colour: $material_price{units} $$Press{strid}</div>";
 				} # end if
 			} # end if material_price
 		} # end if material_id

@@ -279,8 +279,9 @@ sub seconds_to_pretty_interval {
 	my $days = int ( $remainder / ( 60* 60 * 24 ) );
 	$remainder = $remainder % ( 60 * 60 * 24 );
 	if ( sets::isin($days, [ 28,29,30,31 ]) ) {
-$openprint::log->debug("Remainder: $remainder");
-    if ( (! $remainder) or ( $remainder == 82800 ) ) {
+$openprint::log->debug("Remainder: $remainder from $seconds");
+    if ( (! $remainder) or ( $remainder == 82800 ) or ($remainder==3600)) {
+      # 2600 is for dst change in november
       $string .= '1 month';
       return $string;
     }
