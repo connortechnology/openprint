@@ -1,11 +1,38 @@
 <div class="PageTitle">
-<h1>Administrator Managerial</h1>
-<h2>Companies</h2>
+  <h1>Administrator Managerial</h1>
+  <h2>Companies</h2>
 </div>
 <script nonce="<?echo($config{CSP_NONCE})?>">
 function load_page() {
-	LoadContent('Results', '_companies.html', $('f1'));
+	LoadContent('Results', '_companies.html', $j('#f1').serialize());
 } 
+function destroy_clicked() {
+  const selected = get_value( $j('#f2')[0].elements['company_id'] );
+  if (!selected.length) {
+    alert('Please select a company to destroy');
+  } else {
+    jQuery('#Results').load('/administrator/managerial/_companies.html?action=destroy', { company_id: selected } );
+  }
+}
+function undelete_clicked() {
+  const selected = get_value( $j('#f2')[0].elements['company_id'] );
+  if (!selected.length) {
+    alert('Please select a company to undelete');
+  } else {
+    jQuery('#Results').load('/administrator/managerial/_companies.html?action=undelete', { company_id: selected } );
+  }
+}
+function delete_clicked() {
+console.log($j('#f2')[0].elements['company_id']);
+  const selected = get_value( $j('#f2')[0].elements['company_id'] );
+console.log(selected);
+  if (!selected.length) {
+    alert('Please select a company to delete');
+  } else {
+    jQuery('#Results').load('/administrator/managerial/_companies.html?action=delete', { company_id: selected } );
+  }
+}
+
 </script>
 <form id="f1" name="f1" method="post" action="companies.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
