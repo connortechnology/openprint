@@ -18,7 +18,9 @@
     $filters{country} = $Country->short();
   }
 
-	my @CSRs = openprint::User->find( company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
+  my @CSRs = openprint::User->find(
+    ($config{owner_id} ? (company_id=>$config{owner_id}) : ()),
+    'usergroup any'=>'Sales' );
 	if ( $session{$uri.'?salesrep_id_exclude'} and $session{$uri.'?salesrep_id'} ) {
 		my @csr_ids = map { $$_{id} } @CSRs;
 		@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};
@@ -61,29 +63,28 @@
 	<td class="Date">%8$s</td>
 	<td class="Date">%9$s</td>
 </tr>
-`, $rowclass, $Company->id(),
-	$Company->admin_link_to( $$Company{accountnumber} ),
-	$Company->admin_link_to( $$Company{name} ), 
-  $Company->CSR()->name(),
-  format_date($$Company{created_on}),
-  format_date($$Company{updated_on}),
-  format_date($Company->last_project_on()),
-  format_date($Company->last_quoted_on()),
-);
-
+    `, $rowclass, $Company->id(),
+      $Company->admin_link_to( $$Company{accountnumber} ),
+      $Company->admin_link_to( $$Company{name} ), 
+      $Company->CSR()->name(),
+      format_date($$Company{created_on}),
+      format_date($$Company{updated_on}),
+      format_date($Company->last_project_on()),
+      format_date($Company->last_quoted_on()),
+    );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
-		} # end foreach
-    $html .= '</table>
+  } # end foreach
+  $html .= '</table>
 <p class="button">
 '. join("\n",
 $can_destroy ? (
-      button( 'destroy', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_companies.html?action=destroy', { company_id: get_value( $('f2').company_id ) } );`, text=>'Destroy Checked' } ),
-      button( 'undelete', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_companies.html?action=undelete', { company_id: get_value( $('f2').company_id ) } );`, text=>'Undelete Checked' } ),
+      button( 'destroy', { 'data-on-click'=>'destroy_clicked', text=>'Destroy Checked' } ),
+      button( 'undelete', { 'data-on-click'=>'undelete_clicked', text=>'Undelete Checked' } ),
       ) : (
-      button( 'delete', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_companies.html?action=delete', { company_id: get_value( $('f2').company_id ) } );`, text=>'Delete Checked' } ),
+      button( 'delete', { 'data-on-click'=>'delete_clicked', text=>'Delete Checked' } ),
       )
 ).' </p>';
-		return $html;
+	return $html;
 ) ?>
 <? else ( @{$$variable{Companies}} ) ?>
 There were no results matching your criteria.<br>
