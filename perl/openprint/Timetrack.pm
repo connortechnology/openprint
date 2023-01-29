@@ -78,6 +78,11 @@ sub starting_dt {
 	}
 	if ( ! $_[0]{starting_dt} ) {
 		$_[0]{starting_dt} = $parser->parse_datetime( $_[0]{starting} );
+    if (!$_[0]{time_associated}) {
+      $_[0]{starting_dt}->hour(0);
+      $_[0]{starting_dt}->minute(0);
+      $_[0]{starting_dt}->second(0);
+    }
 	}
 	return $_[0]{starting_dt};
 }
@@ -88,6 +93,11 @@ sub ending_dt {
 	}
 	if ( ! $_[0]{ending_dt} ) {
 		$_[0]{ending_dt} = $parser->parse_datetime( $_[0]{ending} );
+    if (!$_[0]{time_associated}) {
+      $_[0]{ending_dt}->hour(0);
+      $_[0]{ending_dt}->minute(0);
+      $_[0]{ending_dt}->second(0);
+    }
 	}
 	return $_[0]{ending_dt};
 }
@@ -124,6 +134,7 @@ $openprint::log->debug('elapsed: ' . $duration_dt->in_units('seconds') );
 }
 
 		return (Date::Parse::str2time("$end 23:59:59")+1) - Date::Parse::str2time("$start 00:00:00");
+
 	} # end if
 } # end sub elapsed
 
