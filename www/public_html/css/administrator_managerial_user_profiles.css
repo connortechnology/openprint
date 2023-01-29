@@ -109,6 +109,7 @@ content: '';
 	width: 40px;
 }
 #UserProfile,
+.Subscriptions,
 .Assistants {
   width: 50%;
   float: left;

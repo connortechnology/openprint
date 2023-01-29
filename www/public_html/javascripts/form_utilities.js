@@ -25,8 +25,8 @@ function get_value( obj ) {
 	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'textarea' ) {
 		return obj.value;
 	} else if ( obj.length ) {
-		var value = new Array();
-		for ( var x = 0, len=obj.length; x < len; x += 1 ) {
+		const value = new Array();
+		for ( let x = 0, len=obj.length; x < len; x += 1 ) {
 			if ( obj[x].checked ) {
 				if ( obj[x].type == 'radio' ) return obj[x].value;
 				value[value.length] = obj[x].value;
@@ -593,8 +593,8 @@ function changed( form ) {
 } // end function changed
 
 function fmCheck( form ) {
-	if ( $('ButtonsTop') ) $('ButtonsTop').hide();
-	if ( $('ButtonsBottom') ) $('ButtonsBottom').hide();
+	$j('#ButtonsTop').hide();
+	$j('#ButtonsBottom').hide();
 	if ( fmChange == 1 ) {
 		if ( ( ! changed(form) ) || confirm("Are you sure you want to leave this record without saving your changes?") ) {
 			fmChange == 0;
@@ -618,8 +618,8 @@ function fmCheck( form ) {
 	} else {
 		form.submit();
 	}
-	if ( $('ButtonsTop') ) $('ButtonsTop').show();
-	if ( $('ButtonsBottom') ) $('ButtonsBottom').show();
+	$j('#ButtonsTop').show();
+	$j('#ButtonsBottom').show();
 }
 
 function addCheck(form) {
@@ -1315,37 +1315,30 @@ function toggleContent( divID, show_url, inputs, hide_url ) {
 
 var openprint_load_content_ajax = null;
 function LoadContent( divID, page, parameters, message ) {
-    if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
+  if (openprint_load_content_ajax) {
+  console.log(openprint_load_content_ajax);
+    openprint_load_content_ajax.abort();
+    openprint_load_content_ajax = null;
+  }
 
-	var div = $( divID );
-	if ( div ) {
-		if ( message ) { 
-			div.innerHTML = message;
-		} else { 
-			div.innerHTML = 'Please wait....';
-		} // end if
+	const div = $j('#'+divID);
+	if (div.length) {
+    div.html(message? message : 'Please wait...');
+  } else {
+    console.log("Nothing found for " + divID);
 	} // end if
-	var method = 'get';
-	//alert( typeof parameters );
-	if ( ! parameters ) { 
-		parameters = '';
-	} else if ( parameters == '[object HTMLFormElement]' ) {
-		var p = parameters.serialize(true);
-		if ( p )
-			parameters = $H(p).toQueryString();
-	} else if ( typeof parameters == 'object' ) {
-		//var p = parameters.serialize(true);
-		//if ( p )
-			parameters = $H(parameters).toQueryString();
-	} 
-	if ( parameters.length > 8190 ) 
-		method = 'post';
-	
-	openprint_load_content_ajax = new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
+  openprint_load_content_ajax = $j.ajax({
+    url: page,
+    data: parameters,
+    success: function(data) {
+      div.html(data);
+      update_event_bindings();
+    }
+  });
 } // end function LoadContent
 
 function photo_popup( asset_id, album_id ) {
-	popup_window('/photo_albums/_view_photo.html?asset_id='+asset_id+'&amp;album_id='+album_id, '', { width: window.innerWidth-100, height: window.innerHeight-100 } );
+  popup_window('/photo_albums/_view_photo.html?asset_id='+asset_id+'&amp;album_id='+album_id, '', { width: window.innerWidth-100, height: window.innerHeight-100 } );
 } // end function photo_popup
 
 var popupWin;

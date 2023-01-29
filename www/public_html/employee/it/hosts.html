@@ -1,13 +1,13 @@
 <script>
 function load_host( form, options ) {
 	form = $j(form);
-	var div = $j('#Results');
-	div.innerHTML = 'Loading... Please wait.';
-	var p = form.serialize(true);
+	const div = $j('#Results');
+	div.html('Loading... Please wait.');
+	const p = form.serialize(true);
 	if ( options && options.order )
 		p = p+'&order='+options.order;
 	
-	div.load('/employee/it/_hosts.html', p );
+	div.load('/employee/it/_hosts.html', p);
 } // end function load
 </script>
 <?include('/includes/error_reporting.html')?>
@@ -118,7 +118,7 @@ q`
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
-				button( 'ShowResults', { onclick=>"load_host( \$('f1') );", text=>'Show Results' } ),
+				button( 'ShowResults', { onclick=>"load_host( \$j('#f1') );", text=>'Show Results' } ),
 				button( 'Reset', { onclick=>'f1.reset();' } ),
 				button( 'Add', { href=>'host.html', text=>'Add New Host' } ),
 				); ) ?>
@@ -126,4 +126,4 @@ q`
 	</fieldset>
 	<div id="Results"><?include(/employee/it/_hosts.html)?></div>
 </form>
-<script type="text/javascript">document.f1.ip.focus();</script>
+<script>document.f1.ip.focus();</script>

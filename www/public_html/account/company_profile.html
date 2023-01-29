@@ -112,7 +112,7 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 					</select>
 				</li>
 	<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
-				<li>
+				<li class="quote_project_breakdown">
 					<label>Include project breakdown with quote?</label>
 					<? echo ( radio( 'quote_project_breakdown', [ 'Y','Yes','N','No'], $$variable{Company}->quote_project_breakdown() ); ) ?>
 				</li>

@@ -1,6 +1,6 @@
-<script type="text/javascript">
-    function calc(formName) {
-		LoadContent( 'Results', '/employee/reports/_order_history_results.html', $(formName) );
+<script>
+  function calc(formName) {
+		LoadContent( 'Results', '/employee/reports/_order_history_results.html', $j('#'+formName).serialize() );
 	} // end function
 </script>
 <div class="PageTitle">
