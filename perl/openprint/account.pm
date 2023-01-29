@@ -103,7 +103,7 @@ sub registration {
 	}
 	if ( $required_fields{password} ) {
     $error .= 'Empty Password.<br/>' if $param{password} eq '';
-    $error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verifypassword};
+    $error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verify_password};
     if ( my $reason = openprint::login::check_password($param{password}) ) {
       $error .= "Password not good enough. $reason<br/>";
     } # end if
