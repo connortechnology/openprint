@@ -97,10 +97,13 @@ sub handler {
 			$param{$key} = \@values;
 			#$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
-			$param{$key} = $values[0];
-      #utf8::decode($param{$key});
-#utf8::encode($values[0]);
-			#$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
+      my $x = $values[0];
+      if (utf8::decode($x)) {
+        $param{$key} = $x;
+      } else {
+        $param{$key} = $values[0];
+      }
+      #$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
 		} # end if
 	} # end foreach
 	foreach my $key ( sort keys %param ) {
