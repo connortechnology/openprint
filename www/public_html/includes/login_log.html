@@ -15,7 +15,12 @@
 	my $rowclass;
 
 	foreach my $Log ( openprint::Log->find( { company_id=>$session{company_id}, user_id=>$session{user_id}, order=>'date_time DESC', limit=>5, action_id=>[2,3,78,79] } ) ) {
-		$html .= sprintf('<tr%s><td class="DateTime">%s</td><td class="from" title="%s">%s</td><td class="result">%s</td></tr>',
+		$html .= sprintf('
+    <tr%s>
+      <td class="DateTime">%s</td>
+      <td class="from" title="%s">%s</td>
+      <td class="result">%s</td>
+    </tr>',
 			$rowclass,
 Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),
 			#format_datetime($Log->date_time()),
