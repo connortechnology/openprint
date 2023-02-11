@@ -15,8 +15,8 @@ use vars qw( $log $dbh %config);
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
-$log = logger->new();
-$log->{level} = 'debug';
+$openprint::log = logger->new();
+$openprint::log->{level} = 'debug';
 
 use Getopt::Long;
 use File::Basename qw(basename);
@@ -25,18 +25,20 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help',
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s', 'db_port=s', 'debug=s', 'file=s',
- );
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s', 'db_port=s',
+    'debug=s', 'file=s',
+    );
 
 if ($opts->{help}) {
-    usage();
-    exit 0;
+  usage();
+  exit 0;
 }
 
 $$opts{db_name} = 'point-one' if ! $$opts{db_name};
 $$opts{db_user} = 'point-one' if ! $$opts{db_user};
 $$opts{db_pass} = 'point-one' if ! $$opts{db_pass};
 $$opts{db_host} = 'database.internal.point-one.com' if ! $$opts{db_host};
+$$opts{db_port} = 5432 if ! $$opts{db_port};
 
 unless ($opts->{db_name}) {
     print STDERR "$program: missing required --db_name parameter\n";
@@ -51,15 +53,15 @@ unless ($opts->{db_pass}) {
     exit 1;
 }
 
-$dbh = sql::open_sql( $log,
+$openprint::dbh = sql::open_sql( $log,
     host      => $opts->{db_host},
     database  => $opts->{db_name},
     driver    => 'Pg',
     login     => $opts->{db_user},
     password  => $opts->{db_pass},
-    port      =>  $opts->{db_port},
+    port      => $opts->{db_port},
 );
-die 'Error opening db' if ! $dbh;
+die "Error opening db at $$opts{db_user}:$$opts{db_pass} @ $$opts{db_host}:$$opts{db_port}" if ! $dbh;
 
 if ( ! $$opts{file} and @ARGV ) {
   $$opts{file} = shift @ARGV;
@@ -70,8 +72,8 @@ require openprint::User;
 my $csv = Text::CSV_XS->new();
 open ( FH, $$opts{file} ) or die "Can't open $$opts{file} : $!";
 my @Companies = openprint::Company->find();
-my %Companies = map { $_->name(), $_ } @Companies;
-my %Companies2 = map { $_->business_name(), $_ } @Companies;
+my %Companies = map { $_->name() => $_ } @Companies;
+#my %Companies2 = map { $_->business_name() ? ( $_->business_name() => $_ ) : () } @Companies;
 
 my %fields = (
 ContactName => 'name',
@@ -85,7 +87,7 @@ POAddressLine2 => undef,
 POAddressLine3 => undef,
 POAddressLine4 => undef,
 POCity          => undef,
-PORegion        => undef
+PORegion        => undef,
 POZipCode       => undef,
 POCountry       => undef,
 SAAttentionTo   => undef,
@@ -97,7 +99,7 @@ SACity          => undef,
 SARegion        =>  undef,
 SAZipCode       =>  undef,
 SACountry       =>  undef,
-PhoneNumber     =>  undef,
+PhoneNumber     =>  'phone',
 FaxNumber       =>  undef,
 MobileNumber    =>  undef,
 DDINumber     =>  undef,
@@ -116,27 +118,106 @@ CompanyNumber     =>  undef,
 DueDateBillDay    =>  undef,
 DueDateBillTerm   =>  undef,
 DueDateSalesDay   =>  undef,
-DeDateSalesTerm,SalesAccount,PurchasesAccount,TrackingName1,SalesTrackingOption1,PurchasesT
-rackingOption1,TrackingName2,SalesTrackingOption2,PurchasesTrackingOption2,BrandingTheme,DefaultTaxBills,DefaultTaxSales,Person1FirstName,Person1LastName,Person1Em
-ail,Person1IncludeInEmail,Person2FirstName,Person2LastName,Person2Email,Person2IncludeInEmail,Person3FirstName,Person3LastName,Person3Email,Person3IncludeInEmail,P
-erson4FirstName,Person4LastName,Person4Email,Person4IncludeInEmail,Person5FirstName,Person5LastName,Person5Email,Person5IncludeInEmail
-
+DeDateSalesTerm   =>  undef,
+SalesAccount      =>  undef,
+PurchasesAccount  =>  undef,
+TrackingName1     =>  undef,
+SalesTrackingOption1 => undef,
+PurchasesTrackingOption1  => undef,
+TrackingName2     => undef,
+SalesTrackingOption2 =>   undef,
+PurchasesTrackingOption2  => undef,
+BrandingTheme             =>  undef,
+DefaultTaxBills           =>  undef,
+DefaultTaxSales           =>  undef,
+Person1FirstName          =>  undef,
+Person1LastName           =>  undef,
+Person1Email              =>  undef,
+Person1IncludeInEmail     =>  undef,
+Person2FirstName          =>  undef,
+Person2LastName           =>  undef,
+Person2Email              =>  undef,
+Person2IncludeInEmail     =>  undef,
+Person3FirstName          =>  undef,
+Person3LastName           =>  undef,
+Person3Email              =>  undef,
+Person3IncludeInEmail     =>  undef,
+Person4FirstName          =>  undef,
+Person4LastName           =>  undef,
+Person4Email              =>  undef,
+Person4IncludeInEmail     =>  undef,
+Person5FirstName          =>  undef,
+Person5LastName           =>  undef,
+Person5Email              =>  undef,
+Person5IncludeInEmail     =>  undef,
 );
+
+my @fields;
 
 while ( <FH> ) {
 	my $status = $csv->parse($_);
-	my ($name, $email ) = misc::trim($csv->fields());
-	next if ! $name;
+  my @row = misc::trim($csv->fields());
+  print scalar(@row) . " fields " . scalar(keys %fields) . " in fields\n";
+  if ($row[0] eq '*ContactName') {
+    $row[0] =~ s/\*//g;
+    @fields = @row;
+    print "Fields: @fields\n";
+    next;
+  } else {
+    print "Rows: @row\n";
+  }
+	my %row;
+  @row{@fields} = @row;
+    
+  if ( $row{ContactName} =~ /\(([^\)]+)\)/ ) {
+    print "Have email in contact name ($1)\n";
+    if ( !$row{EmailAddress} or ($row{EmailAddress} eq $1) ) {
+      $row{EmailAddress} = $1;
+      $row{ContactName} =~ s/\s*\($1\)\s*//g;
+    }
+  }
+  if ( $row{ContactName} =~ /\// ) {
+    my ( $name, $crap ) = split(/\//, $row{ContactName});
+    print "Removing duplicate ";
+    $row{ContactName} = $name;
+    print $row{ContactName} . "\n";
+  }
 
-	my $Company = $Companies{$name};
+  my @names = split(/ /, $row{ContactName});
+  if ((@names == 2) and ( !$row{FirstName} and !$row{LastName}) ) {
+    $row{FirstName} = $names[0];
+    $row{LastName} = $names[1];
+  }
 
-	if ( ! $Company ) {
+  $row{ContactName} = openprint::Company->transform(name=>$row{ContactName});
+
+  my %data = map { defined($fields{$_}) ? ($fields{$_}=>$row{$_}) : () } keys %row;
+	my $Company = $Companies{$row{ContactName}};
+
+	if (!$Company) {
+    if (!confirm("Have ContactName = $row{ContactName}, email = $row{EmailAddress} continue?")) {
+      exit(0);
+    }
     $Company = new openprint::Company();
-    $Company->save({name=>$name});
+    $Company->save(\%data);
+    $Companies{$Company->name()} = $Company;
 	} # end if
-  my ( $first, $last ) = split(' ', $name );
-  my $User = new openprint::User( );
-  $User->save({ firstname=>$first, lastname=>$last, email=>$email, company_id=>$Company->id() });
+  $data{company_id} = $Company->id();
+
+  if ( $data{email} ) {
+    my $User = openprint::User->find_one(email=>$data{email}) if $data{email};
+    if ( $User ) {
+      if ($User->company_id() != $Company->id()) {
+        print "User $$User{email} is not in this company $$Company{name} $$User{company_id} != $$Company{id}\n";
+      }
+      if (!confirm('User exists, continue?') ) {
+        next;
+      }
+    }
+    $User = new openprint::User() if !$User;
+
+    $User->save(\%data);
+  }
 } # end while
 close (FH);
 
@@ -155,6 +236,20 @@ Command-line options:
 
 EOH
 } # end sub usage
+
+sub confirm {
+  my $prompt = shift || 'confirm?';
+  my $default = shift || 'Y';
+
+  my $yesno = 0;
+  print($prompt . ($default eq 'Y'?'Y':'y').'/'.($default eq 'N' ? 'N' : 'n'). '/q: ');
+  my $char = <>;
+  chomp($char);
+  exit(0) if $char eq 'q';
+  $char = $default if !$char;
+  $yesno = ( $char =~ /[yY]/ );
+  return $yesno;
+}
 
 1;
 __END__
