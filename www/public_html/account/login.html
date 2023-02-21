@@ -55,9 +55,10 @@ if ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) {
 		if ( @Logs ) {
 			my $html = 'The following recent actions may have an effect on pricing.<br/>
 <table class="List sortable"><tr>
-<th class="DateTime">When</th>
-<th class="User">User</th>
-<th class="Object">Thing</th><th class="description">Description</th></tr>';
+	<th class="DateTime">When</th>
+	<th class="User">User</th>
+	<th class="Object">Thing</th>
+	<th class="description">Description</th></tr>';
 			my $rowclass = '';
 			foreach my $Log ( @Logs ) {
 				$html .= sprintf('<tr%s>
