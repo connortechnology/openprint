@@ -349,9 +349,9 @@ sub calc {
 				my $results = calc_signature($sig_specs, $item_qty, $item_width, $item_height, $item_calliper, $item_weight, $imposition, $item_name);
 				$package_qty += $$results{package_qty};
 				$material_price = $$results{material_price};
-				$material_total += $$results{material_total};
+				$material_total += $$results{material_total} if $$results{material_total};
 				$package_weight = $$results{package_weight};
-				$total_weight += $$results{total_weight};
+				$total_weight += $$results{total_weight} if $$results{total_weight};
 				$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>Form '.$$sig_specs{SignatureIndex}.'</legend>'.
 					sprintf('%d sheets size %dx%d @ %.3flbs<br/>', $item_qty, $item_width, $item_height, $item_weight).
 					$$results{breakdown}.'</fieldset>';

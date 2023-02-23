@@ -1327,10 +1327,16 @@ sub navmenu {
 
       if ( $submenu_html ) {
         $html .= join( $submenu_html,
-          sprintf(q`<li id="%1$sMenu" class="%2$s"><a href="#" onclick="toggleMenu($('%1$sMenu'), 'off', 'on');return false;">%1$s</a><ul>`, $category, ( $on ? 'on' : 'off' ) ),'</ul></li>' );
+          sprintf(q`
+            <li id="%1$sMenu" class="%2$s"><a href="#" onclick="toggleMenu($('%1$sMenu'), 'off', 'on');return false;">%1$s</a>
+            <ul>`, $category, ( $on ? 'on' : 'off' ) ),'</ul>
+          </li>
+          ' );
       }
     } else {
-      $html .= sprintf( q`<li id="%1$sMenu" class="menu-item %2$s"><a href="%2$s">%1$s</a></li>`, $category, $$menu{$category} );
+      $html .= sprintf( q`
+        <li id="%1$sMenu" class="menu-item %2$s"><a href="%2$s">%1$s</a></li>
+        `, $category, $$menu{$category} );
     }
   } # end foreach category
   return $html;

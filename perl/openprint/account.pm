@@ -27,6 +27,7 @@ require openprint::User_Relationship;
 require openprint::Wall;
 require openprint::Blocklist;
 require openprint::Email_Account;
+require HTML::FormatText;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -103,7 +104,7 @@ sub registration {
 	}
 	if ( $required_fields{password} ) {
     $error .= 'Empty Password.<br/>' if $param{password} eq '';
-    $error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verifypassword};
+    $error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verify_password};
     if ( my $reason = openprint::login::check_password($param{password}) ) {
       $error .= "Password not good enough. $reason<br/>";
     } # end if
@@ -310,13 +311,16 @@ sub registration {
 			if ( ! ($session{user_type} and sets::isin($session{user_type}, ['E','A']) ) ) {
 # send notification
 				$info{ReplacementText} = ssi::include('/email_content/first_user_login_app_notification.html', \%info);
+        my $text_body = HTML::FormatText->format_string($info{ReplacementText});
+        my $html_body = ssi::include('/email_template.html', \%info);
 				foreach my $to ( split(',', $config{UserRegistrationEmail} ) ) {
 					new openprint::Email()->send(
 							FROM	=> $agent,
 							TO	=> $to,
 							SUBJECT => 'New Login Application',
 							'Reply-To' => sprintf('"%s %s" <%s>', $User->get( 'firstname','lastname','email' ) ),
-							ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
+               BODY      =>  $text_body,
+               HTML_BODY =>  $html_body,
 							);
 				} # end foreach
 			} # end if

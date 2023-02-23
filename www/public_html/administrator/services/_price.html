@@ -44,7 +44,7 @@ input( type=>'float', name=>join('-', 'cost', $$Price{id} ), value=>$Currency->f
 		radio( join('-', 'discountable',$$Price{id} ), [ 'Y', 'Yes', 'N', 'No' ], $Price->discountable(), { default=>'Y' } ),
 		ssi::select( [ '', 'Basic', 'Stepped', 'Stepped', 'Interpolate', 'Interpolate' ], $Price->mode(), { name=>'mode-'.$$Price{id}, id=>'mode-'.$$Price{id} } ),
 		($Price->id() ? 
-		join('', 
+		join("\n", 
 			button( 'x'.$Price->id(), { onclick=>qq`del_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, text=>'X', title=>'Delete' } ),
 			button( 'c'.$Price->id(), { onclick=>qq`copy_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, text=>'C', title=>'Copy' } ),
 			) : ''),

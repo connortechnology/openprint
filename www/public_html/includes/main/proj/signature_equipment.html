@@ -6,7 +6,7 @@
 
 			if ( $$variable{Equipment} ) {
 				$html .= ssi::select( 
-					[ '', 'Equipment Options', map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], 
+					[ '', 'select', map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], 
 					$$variable{"ddmEquipment-$$variable{SignatureIndex}-$qty_index"},
 					{ 
 						name=>"ddmEquipment-$$variable{SignatureIndex}-$qty_index",

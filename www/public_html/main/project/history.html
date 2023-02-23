@@ -32,8 +32,7 @@
 		} // end if
 	}
 	function load_projects() {
-		var div = $('ProjectList');
-		if ( div ) LoadContent( $('ProjectList'), '/main/project/_history.html', $('f1') );
+		LoadContent( 'ProjectList', '/main/project/_history.html', $j('#f1').serialize() );
 	} // end function
 </script>	 
 <? if ( $session{user_id} ) ?>
