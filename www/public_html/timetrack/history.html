@@ -2,16 +2,15 @@
 <h1>Timetracks</h1>
 <h2>History</h2>
 </div>
-<script type="text/javascript">
+<script>
 	function delete_confirm(form) {
 		var number_of_deleted_timetracks = 0;
-		for ( var index = 0; index < form.elements.length; index += 1 ) {
+		for ( let index = 0, len=form.elements.length; index < len; index += 1 ) {
 			if ( ! form.elements[index].name )
 				continue;
 			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
 				number_of_deleted_timetracks += 1;
 			} // end if
-
 		} // end for
 		if ( number_of_deleted_timetracks == 0 ) {
 			alert("To Delete Timetracks, click the checkbox beside the timetrack.");
@@ -22,7 +21,7 @@
 		} // end if
 	}
 	function load_timetracks() {
-		LoadContent('TimetrackList','_history.html', $('f1') );
+		LoadContent('TimetrackList', '_history.html', $j('#f1').serialize());
 	} // end function
 </script>	 
 <?include('/includes/error_reporting.html')?>
