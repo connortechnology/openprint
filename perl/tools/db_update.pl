@@ -3082,6 +3082,9 @@ if ( ! sets::isin( 'emailcampaigns', \@tables ) ) {
 if ( ! sets::isin( 'emailtemplates', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/EmailTemplates.sql}) );
 } 
+if ( ! sets::isin( 'emailcampaign_subscriptions', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../../sql/EmailCampaign_Subscriptions.sql}) );
+} 
 
 if ( ! sets::isin( 'paper_inventory', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Paper_Inventory.sql}) );
