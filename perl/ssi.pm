@@ -1380,7 +1380,7 @@ $log->error("categoryies @categories");
 						sprintf(q`
 							<li class="nav-item dropdown %2$s">
 							<a href="#" id="%1$sMenu" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">%1$s</a>
-							<ul id="%1$sSubMenu" class="dropdown-menu aria-labelledby="%1$sMenu">`,
+							<ul id="%1$sSubMenu" class="dropdown-menu" aria-labelledby="%1$sMenu">`,
 							$category,
 							( $on ? ('active','true' ) : ( '', 'collapse' ) ),
 							),'</ul></li>' );
