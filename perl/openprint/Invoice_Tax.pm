@@ -6,7 +6,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 
 $table = 'invoice_taxes';
 $serial = 'invoice_taxes_id_seq';

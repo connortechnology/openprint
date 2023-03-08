@@ -98,6 +98,7 @@ sub save {
 	$rc .= $self->SUPER::save( );
 	if (!$rc) {
 		foreach my $T ( $self->Taxes() ) {
+      $T->amount(undef);
 			$rc .= $T->save({invoice_id=>$$self{id}});
 		} # end foreach
 		$self->Invoicee()->save({last_invoice_id=>$$self{id}}) if $self->Invoicee()->last_invoice_id != $$self{id};

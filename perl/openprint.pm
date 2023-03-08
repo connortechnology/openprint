@@ -160,25 +160,30 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 	$Pricelist = new openprint::Pricelist( $session{Pricelist_id} ) if $session{Pricelist_id};
 
   my $ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
-	if ( $ip and openprint::Host_Interface->transform(ip=>$ip)) {
-    openprint::Host_Interface->lock();
-		my @Interfaces = openprint::Host_Interface->find(ip=>$ip);
-		if ( !@Interfaces ) {
-      $log->debug('No HI found for '.$ip);
-			$Host = openprint::Host->find_one(hostname=>$ip);
-			if ( !$Host ) {
-				$Host = new openprint::Host();
-				$Host->save({hostname=>$ip});
-			}
-      # The logging of the creation of the Host entry will save the host_interface
-		} else { 
-			if ( @Interfaces > 1 ) {
-				$log->error("More than 1 Interface with ip $ip");
-			}
-			$Host = $Interfaces[0]->Host();
-		}
-    openprint::Host_Interface->unlock();
-	}
+  if ($ip) {
+    my $safe_ip = openprint::Host_Interface->transform(ip=>$ip);
+    if ($safe_ip) {
+      openprint::Host_Interface->lock();
+      my @Interfaces = openprint::Host_Interface->find(ip=>$safe_ip);
+      if ( !@Interfaces ) {
+        $log->debug('No HI found for '.$safe_ip);
+        $Host = openprint::Host->find_one(hostname=>$safe_ip);
+        if ( !$Host ) {
+          $Host = new openprint::Host();
+          $Host->save({hostname=>$safe_ip});
+        }
+        # The logging of the creation of the Host entry will save the host_interface
+      } else { 
+        if ( @Interfaces > 1 ) {
+          $log->error("More than 1 Interface with ip $safe_ip");
+        }
+        $Host = $Interfaces[0]->Host();
+      }
+      openprint::Host_Interface->unlock();
+    } else {
+      $log->warn("ip and safe ip differ. $ip != $safe_ip");
+    } # end if safe_ip
+  } # end if ip
 
 } # end sub session_init
 

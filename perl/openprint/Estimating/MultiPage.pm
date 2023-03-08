@@ -433,7 +433,7 @@ $openprint::log->debug("********************************************************
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$i] );
     
-    if (!$$sig_specs{txtSignatureType}) {
+    if (0 and !$$sig_specs{txtSignatureType}) {
       $openprint::log->warn('Deleting due to lack of signature type');
       openprint::print_project::delete_service( $Project, $signatures[$i] );
       splice @signatures, $i, 1;

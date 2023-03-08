@@ -333,7 +333,7 @@ sub edit {
     # Store values before calculating taxes
 		$Invoice->set(\%param);
     # This must happen before saving because charging or not for a tax alters the total.
-    foreach my $Tax ($Invoice->Taxes()) {
+    foreach my $Tax ($Invoice->Taxes(undef)) {
       # Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
       $Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()};
     } # end foreach
