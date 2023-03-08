@@ -1,5 +1,7 @@
 CREATE TABLE Licenses (
 	id	SERIAL,
+  company_id INTEGER, FOREIGN KEY(company_id) REFERENCES Companies(id),
+  site_id     INTEGER, FOREIGN KEY(site_id) REFERENCES Sites(id),
 	serialkey	TEXT,
 	max_uses	integer,
 	purchased_on	DATE,
