@@ -6,6 +6,7 @@ CREATE TABLE Licenses (
 	expires_on	DATE,
 	software_id	INTEGER, FOREIGN KEY (software_id) REFERENCES Software (id),
 	comment		TEXT,
+  features_json  TEXT,
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	PRIMARY KEY (id)	
