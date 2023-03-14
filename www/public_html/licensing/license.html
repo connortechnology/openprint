@@ -82,26 +82,8 @@ $html .= '</li>';
 		</div>
 	</fieldset>
 	<fieldset><legend>Allocated To</legend>
-<div id="Allocations"><?include(_license_allocations.html)?></div>
+    <div id="Allocations"><?include(_license_allocations.html)?></div>
 	</fieldset>
-	<fieldset><legend>Logs</legend>
-		<ul>
-			<li><label>Date:</label>
-				<? echo ( join(' to ', 
-						datetime_select_session( '/employee/it/license.html','log_created_on_start', {
-							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_license_logs.html', { parameters: $('f1').serialize() } );`,
-							with_today	=>1,
-							with_clear	=>1,
-							} ),
-						datetime_select_session( '/employee/it/license.html','log_created_on_end', {
-							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_license_logs.html', { parameters: $('f1').serialize() } );`,
-							with_today	=>1,
-							with_clear	=>1,
-							} ),
-						); ) ?>
-			</li>
-		</ul>
-		<div id="Logs"><?include(/employee/it/_license_logs.html)?></div>
-	</fieldset>
+  <? echo ( $$variable{License}->id() ? include_logs( $$variable{License}) : ''; ) ?>
 </form>
 </div></div>
