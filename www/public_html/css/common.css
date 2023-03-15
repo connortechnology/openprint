@@ -249,7 +249,7 @@ input[type="checkbox"] {
 .dialog table li {
 	padding-left: 80px;
 }
-.dialog table li label:not(.radio) {
+.dialog table li label:not(.radio):not(.radio-inline) {
 	margin-left: -80px;
 	width: 75px;
 }
