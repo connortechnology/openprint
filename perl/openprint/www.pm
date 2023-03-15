@@ -625,7 +625,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 				if ( my $function = ('openprint::'.$module)->can($proc) ) {
 					$function->($r, $log, $dbh, \%variable );
 				} else {
-					$log->error( "Eval error of require $module :: $proc, Reason: " );
+					$log->error( "Eval error of require $module :: $proc, Reason: can't do function" );
 				}
 			} # end if
 		} else {
@@ -643,7 +643,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 					$function->($r, $log, $dbh, \%variable);
 					$log->debug("calling of require $module :: $proc");
 				} else {
-					$log->error("Eval error of require $module :: $proc");
+					$log->error("Eval error of require $module :: $proc, can't do function");
 				}
 			} else {
 				$log->error("No proc in filename $filename");
