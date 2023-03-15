@@ -5,7 +5,7 @@ function load_results( form, options ) {
 	if (options && options.order)
 		p.order = options.order;
 	
-  div.load('/employee/it/_licenses.html', p,
+  div.load('/licensing/_licenses.html', p,
     function(response, status, xhr){
       update_event_bindings();
       TableKit.load();
@@ -14,7 +14,7 @@ function load_results( form, options ) {
 } // end function load
 
 function delete_checked() {
-  $j('#Results').load('/employee/it/_licenses.html?action=Delete',
+  $j('#Results').load('/licensing/_licenses.html?action=Delete',
     { license_id: get_checkbox_values($('f1').elements['license_id']) },
     function(response, status, xhr){
       update_event_bindings();
