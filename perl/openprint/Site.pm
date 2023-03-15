@@ -2,6 +2,7 @@ use strict;
 package openprint::Site;
 our @ISA = qw( openprint::Object );
 require openprint::Object;
+require openprint::Host_Site;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
@@ -26,6 +27,17 @@ $serial = 'sites_id_seq';
   deleted         =>  0,
 );
 
+sub Company {
+  my $self = shift;
+  if (!$$self{Company}) {
+    $$self{Company} = new openprint::Company($$self{company_id});
+  }
+  return $$self{Company};
+}
+sub Owner {
+  return $_[0]->Company();
+}
+
 sub Host_Sites {
   my $self = shift;
   if (@_) {
@@ -44,12 +56,11 @@ sub Host_Sites {
 
 sub Hosts {
   my $self = shift;
-  if (@_) {
-    $$self{Hosts} = shift;
-  }
+  $$self{Hosts} = shift if @_;
   if (!$$self{Hosts}) {
     if ($$self{id}) {
-      $$self{Hosts} = [ openprint::Host->find(id=>map { $$_{host_id} } $self->Host_Sites()) ];
+      my @host_ids = map { $$_{host_id} } $self->Host_Sites();
+      $$self{Hosts} = [@host_ids ? openprint::Host->find(id=>\@host_ids) : ()];
     } else {
       $$self{Hosts} = [];
     }
