@@ -1,11 +1,3 @@
-<script>
-	function check_inputs( form ) {
-		return true;
-	} //  end function check_inputs
-	function del_allocation( host_id ) {
-		new Ajax.Updater( 'Allocations', '_site_allocations.html', { parameters: { site_id: $('site_id').value, host_id: host_id, action: 'delete' } } );
-	} // end function del_allocation
-</script>
 <div class="Site"><div class="Edit">
 <?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" method="post" action="edit.html" enctype="multipart/form-data">
@@ -29,7 +21,7 @@
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
         </li>
 				<li class="name"><label>Name</label>
-          <input type="text" name="name" value="<? echo ( $$variable{Site}->comment() ) ?>" />
+          <input type="text" name="name" value="<? echo ( $$variable{Site}->name() ) ?>" />
 				</li>
         <?if($$variable{Site}->id())?>
 				<li><label>Created On</label><? echo ( format_datetime( $$variable{Site}->created_on() ) ) ?></li>
@@ -49,6 +41,10 @@
 				</p>
 		</div>
 	</fieldset>
+  <fieldset><legend>Hosts</legend>
+    <div id="Hosts"><?include(_hosts.html)?></div>
+  </fieldset>
   <? echo ( $$variable{Site}->id() ? include_logs( $$variable{Site}) : ''; ) ?>
 </form>
 </div></div>
+<script src="edit.js"></script>
