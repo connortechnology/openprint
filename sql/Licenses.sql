@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS Licenses CASCADE;
+
 CREATE TABLE Licenses (
 	id	SERIAL,
   company_id INTEGER, FOREIGN KEY(company_id) REFERENCES Companies(id),
