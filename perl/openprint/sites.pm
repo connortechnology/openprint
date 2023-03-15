@@ -13,6 +13,8 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 *r = \$openprint::r;
 
 require openprint::Site;
+require openprint::Host;
+require openprint::Host_Site;
 require openprint::Location;
 
 use Data::Dumper;
@@ -22,10 +24,10 @@ sub index {
 
 sub list {
 	_list();
-	ssi::setup_date_select( '/licensing/sites.html', 'created_on_start', '' );
-	ssi::setup_date_select( '/licensing/sites.html', 'created_on_end', '' );
-	ssi::setup_date_select( '/licensing/sites.html', 'updated_on_start', '' );
-	ssi::setup_date_select( '/licensing/sites.html', 'updated_on_end', '' );
+	ssi::setup_date_select( $r->uri(), 'created_on_start', '' );
+	ssi::setup_date_select( $r->uri(), 'created_on_end', '' );
+	ssi::setup_date_select( $r->uri(), 'updated_on_start', '' );
+	ssi::setup_date_select( $r->uri(), 'updated_on_end', '' );
 } # end sub list
 
 sub _list {
@@ -50,63 +52,67 @@ sub _list {
 } # end sub _sites
 
 sub edit {
-	my $Site = $variable{Site} = new openprint::Site( openprint::Site->transform(id=>$param{site_id}) );
-	if ( $param{action} eq 'Delete' ) {
-		$variable{error} .= $Site->delete();
-		if (!$variable{error}) {
-			$variable{ExternalRedirect} = '/sites/list.html';
-			%param = ();
-		} # end if
-	} elsif ( $param{action} eq 'Save' ) {
-		my $Site = new openprint::Site( $param{site_id} );
-		$variable{error} .= $Site->save(\%param);
-		if ( ! $variable{error} ) {
-			%param = ();
-			$variable{ExternalRedirect} = '/licensing/sites.html';
-		} # end if
-	} # end if
-} # end sub site
+  my $Site = $variable{Site} = new openprint::Site( openprint::Site->transform(id=>$param{site_id}) );
+  if ($param{action}) {
+    if ( $param{action} eq 'Delete' ) {
+      $variable{error} .= $Site->delete();
+      if (!$variable{error}) {
+        $variable{ExternalRedirect} = '/sites/list.html';
+        %param = ();
+      } # end if
+    } elsif ( $param{action} eq 'Save' ) {
+      my $Site = new openprint::Site( $param{site_id} );
+      $variable{error} .= $Site->save(\%param);
+      if ( ! $variable{error} ) {
+        %param = ();
+        $variable{ExternalRedirect} = '/sites/list.html';
+      } # end if
+    } # end if
+  } # end if param
+} # end sub edit
 
-sub _site_host_popup {
+sub _host_popup {
 	my $Site = $variable{Site} = new openprint::Site($param{site_id});
 	if ( ! $Site->id() ) {
 		$variable{error} .= 'Site not found.';
 		return;
 	} # end if
-} # end sub _site_host_popup
+} # end sub _host_popup
 
-sub _site_host_results {
+sub _host_results {
 	my $Site = $variable{Site} = new openprint::Site($param{site_id});
 	if ( ! $Site->id() ) {
 		$variable{error} .= 'Site not found.';
 		return;
 	} # end if
-} # end sub _site_host_results
+} # end sub _host_results
 
-sub _site_allocations {
-	my $Site = $variable{Site} = new openprint::Site($param{site_id});
-	if ( ! $Site->id() ) {
-		$variable{error} .= 'Site not found.';
-		return;
-	} # end if
-	if ( $param{action} eq 'allocate' ) {
-		my $Host = new openprint::Host($param{host_id});
-		if ( ! $Host->id() ) {
-			$variable{error} .= 'Host not found.';
-			return;
-		} # end if
-		
-		my $LH = new openprint::Site_Host();
-		$variable{error} .= $LH->save({site_id=>$param{site_id}, host_id=>$param{host_id}});
-	} elsif ( $param{action} eq 'delete' ) {
-		my $LH = openprint::Site_Host->find_one( site_id=>$param{site_id}, host_id=>$param{host_id} );
-		if ( ! $LH ) {
-			$variable{error} .= 'Allocation not found.';
-			return;
-		} 
-		$variable{error} .= $LH->delete();
-	} # end if	
-} # end sub _site_alliations
+sub _hosts {
+  my $Site = $variable{Site} = new openprint::Site($param{site_id});
+  if ( ! $Site->id() ) {
+    $variable{error} .= 'Site not found.';
+    return;
+  } # end if
+  if ($param{action}) {
+    if ( $param{action} eq 'allocate' ) {
+      my $Host = new openprint::Host($param{host_id});
+      if ( ! $Host->id() ) {
+        $variable{error} .= 'Host not found.';
+        return;
+      } # end if
+
+      my $SH = new openprint::Host_Site();
+      $variable{error} .= $SH->save({site_id=>$param{site_id}, host_id=>$param{host_id}});
+    } elsif ( $param{action} eq 'delete' ) {
+      my $SH = openprint::Host_Site->find_one( site_id=>$param{site_id}, host_id=>$param{host_id} );
+      if ( ! $SH ) {
+        $variable{error} .= 'Allocation not found.';
+        return;
+      } 
+      $variable{error} .= $SH->delete();
+    } # end if	
+	} # end if action
+} # end sub _hosts
 
 1;
 __END__
