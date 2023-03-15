@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-package openprint::employee_it;
+package openprint::licensing;
 use openprint;
 use vars qw( %variable %session %param %config $log $dbh $r );
 *variable = \%openprint::variable;
@@ -15,6 +15,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 require openprint::License;
 require openprint::Software;
 require openprint::Location;
+require openprint::Site;
 
 use Data::Dumper;
 
@@ -56,30 +57,44 @@ sub _licenses {
 } # end sub _licenses
 
 sub license {
-	my $License = $variable{License} = new cloudmule::License( cloudmule::License->transform('id',$param{license_id}) );
-	if ( $param{action} eq 'Delete' ) {
-		$variable{error} .= $License->delete();
-		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/licensing/licenses.html';
-			%param = ();
-		} # end if
-	} elsif ( $param{action} eq 'Save' ) {
-		my $License = new openprint::License( $param{license_id} );
-		if ( $_ = openprint::License->find_one(serialkey=>$param{serialkey}, ( $param{license_id} ? ('id !=' => $param{license_id}) : () ) ) ) {
-			$variable{error} .= 'License has already been entered.  Click <a href="license.html?license_id='.$_->id().'">here</a> to view it.<br/>';
-			return;
-		} # end if
-		if ( $param{software_id} ) {
-			delete $param{software};
-		} else {
-			delete $param{software_id};
-		} # end if
-		$variable{error} .= $License->save(\%param);
-		if ( ! $variable{error} ) {
-			%param = ();
-			$variable{ExternalRedirect} = '/licensing/licenses.html';
-		} # end if
-	} # end if
+  my $License = $variable{License} = new openprint::License( openprint::License->transform(id=>$param{license_id}) );
+  if ($param{action} ) {
+    if ( $param{action} eq 'Delete' ) {
+      $variable{error} .= $License->delete();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/licensing/licenses.html';
+        %param = ();
+      } # end if
+    } elsif ( $param{action} eq 'Save' ) {
+      if ( 0 and $_ = openprint::License->find_one(serialkey=>$param{serialkey},
+          ( $param{license_id} ? ('id !=' => $param{license_id}) : () ) ) ) {
+        $variable{error} .= 'License has already been entered.  Click <a href="license.html?license_id='.$_->id().'">here</a> to view it.<br/>';
+        return;
+      } # end if
+      if ( $param{software_id} ) {
+        delete $param{software};
+      } else {
+        delete $param{software_id};
+      } # end if
+      my $features = {};
+      foreach my $feature ('cameras','motion_detection', 'facial_recognition','object_detection','alpr') {
+        $$features{$feature} = $param{"feature[$feature]"};
+      }
+      $param{features} = $features;
+
+      my @changes = $License->changes(\%param);
+      $log->debug("@changes");
+      if (@changes) {
+        $variable{error} .= $License->set(\%param);
+        $License->generate_key();
+        $variable{error} .= $License->save();
+        if ( ! $variable{error} ) {
+          %param = ();
+          $variable{ExternalRedirect} = '/licensing/licenses.html';
+        } # end if
+      } # end if
+    }
+  } # end if
 } # end sub license
 
 sub _license_host_popup {
