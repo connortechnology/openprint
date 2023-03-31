@@ -4,6 +4,7 @@ our @ISA = qw(openprint::Object);
 
 require openprint::License_Host;
 require openprint::Software;
+use JSON;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 $debug = 0;
@@ -20,6 +21,7 @@ $serial='licenses_id_seq';
 		comment       =>	'comment',
 		created_on		=>	'created_on',
 		updated_on		=>	'updated_on',
+    features_json      =>  'features_json', # json encoded
 		);
 %find_fields = (
 		host_id	=>	'id IN (SELECT license_id FROM license_hosts where host_id=?)',
@@ -69,6 +71,17 @@ sub destroy {
   }
   $result = $self->SUPER::destroy();
   return $result;
+}
+
+sub features {
+  my $self = shift;
+  if (@_) {
+    $$self{features} = shift;
+    $$self{features_json} = JSON::json_encode($$self{features});
+  } elsif (!$$self{features}) {
+    $$self{features} = JSON::json_decode($$self{features_json});
+  }
+  return $$self{features};
 }
 
 1;
