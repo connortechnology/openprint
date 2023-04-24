@@ -18,11 +18,16 @@ MV=/bin/mv;
 CP=/bin/cp;
 TOUCH=/bin/touch;
 BACKUPS=3;
+DEBUG=0;
 
 USAGE="Usage: `/usr/bin/basename $0` [-hTv] [-c arg] [ -n int] args"
 
 while getopts hTvc:n: OPT; do
 	case "$OPT" in
+    d)
+      DEBUG=1;
+      ;;
+
 		h)
 			echo $USAGE
 			exit 0
@@ -77,7 +82,7 @@ while (( "$BACKUPS" > "0" )) ; do
 	let BACKUPS=DEC;
 done
 
-#echo "$CP -al $2.0 $2.1"
+if [ DEBUG ]; then echo "$CP -al $1 $2.0"; fi;
 $TIME$CP -al "$1" "$2.0"
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
 $TOUCH "$2.0"
