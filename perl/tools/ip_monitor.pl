@@ -296,7 +296,7 @@ while(1) {
         notify( $Host, $online );
       }
     } else {
-      if ( ( ! $online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} < ( $now - $$Host{state_changed_on} ) ) ) {
+      if ( (!$online) and $$Host{notify_frequency} and ((!$$Host{state_changed_on}) or ($$Host{notify_frequency} < ( $now - $$Host{state_changed_on} )))) {
         $log->debug("( ! $online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} < ( $now - $$Host{state_changed_on}-$now ) ) " . ($now-$$Host{state_changed_on} ));
         notify( $Host, $online );
         $Host->save({ state_changed_on => $now });
