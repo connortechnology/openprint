@@ -377,14 +377,11 @@ sub information {
         $NewProject->add_to_log( @session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
         $Project->add_to_log( @session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
       } # end if
-      $variable{error} .= $NewQP->save({
-          'quote_id'    => $NewQuote->id(),
-          'project_id'  => $NewProject->id(),
-          });
+      $variable{error} .= $NewQP->save({quote_id => $NewQuote->id(), project_id => $NewProject->id() });
     } # end foreach QP
     foreach my $QP ( $Quote->Products() ) {
       my $NewQP = $QP->copy();
-      $variable{error} .= $NewQP->save({'quote_id'=>$NewQuote->id()});
+      $variable{error} .= $NewQP->save({quote_id=>$NewQuote->id()});
     } # end foreach QP
 
     my %by;
@@ -560,6 +557,7 @@ sub submit {
             cost      => $param{'cost-'.$QP->id()},
             markup    => $param{'markup-'.$QP->id()},
             quantity  => $param{'quantity-'.$QP->id()},
+            units  => $param{'units-'.$QP->id()},
             comments  => $param{'comments-'.$QP->id()},
         });
     } # end foreach

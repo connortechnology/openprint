@@ -189,6 +189,14 @@ sub html_escape {
 	return $thing;
 }
 
+sub escape_single_quotes {
+	for( $_ = 0; $_ < @_; $_ += 1 ) {
+		next if ! defined $_[$_];
+		$_[$_] =~ s/'/\\'/mg;
+	} 
+	return @_;
+}
+
 sub escape_quotes {
 	for( $_ = 0; $_ < @_; $_ += 1 ) {
 		next if ! defined $_[$_];
