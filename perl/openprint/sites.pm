@@ -51,6 +51,10 @@ sub _list {
   );
 } # end sub _sites
 
+sub view {
+  my $Site = $variable{Site} = new openprint::Site( openprint::Site->transform(id=>$param{site_id}) );
+}
+
 sub edit {
   my $Site = $variable{Site} = new openprint::Site( openprint::Site->transform(id=>$param{site_id}) );
   if ($param{action}) {
