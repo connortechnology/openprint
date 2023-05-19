@@ -1327,6 +1327,7 @@ function LoadContent( divID, page, parameters, message ) {
   } else {
     console.log("Nothing found for " + divID);
 	} // end if
+  console.log($j);
   openprint_load_content_ajax = $j.ajax({
     url: page,
     data: parameters,
@@ -1751,3 +1752,51 @@ function update_event_bindings() {
 window.addEventListener("DOMContentLoaded", function() {
   update_event_bindings();
 });
+
+function fix_prototype_bootstrap() {
+  /*
+  if (Prototype.BrowserFeatures.ElementExtensions) {
+    var disablePrototypeJS = function (method, pluginsToDisable) {
+      var handler = function (event) {
+        event.target[method] = undefined;
+        setTimeout(function () {
+          delete event.target[method];
+        }, 0);
+      };
+      pluginsToDisable.each(function (plugin) {
+        jQuery(window).on(method + '.bs.' + plugin, handler);
+      });
+    },
+      pluginsToDisable = ['collapse', 'dropdown', 'modal', 'tooltip', 'popover'];
+    disablePrototypeJS('show', pluginsToDisable);
+    disablePrototypeJS('hide', pluginsToDisable);
+  }
+  */
+  /* ----------- RESOLVES THE ISSUE OF THE DROPDOWN MENUS DISAPPEARING ------------ */
+  (function() {
+    var isBootstrapEvent = false;
+    if (window.jQuery) {
+      var all = jQuery('*');
+      jQuery.each(['hide.bs.dropdown',
+        'hide.bs.collapse',
+        'hide.bs.modal',
+        'hide.bs.tooltip',
+        'hide.bs.popover',
+        'hide.bs.tab'], function(index, eventName) {
+          all.on(eventName, function( event ) {
+            isBootstrapEvent = true;
+          });
+        });
+    }
+    var originalHide = Element.hide;
+    Element.addMethods({
+      hide: function(element) {
+        if(isBootstrapEvent) {
+          isBootstrapEvent = false;
+          return element;
+        }
+        return originalHide(element);
+      }
+    });
+  })();
+} // fix_prototype_bootstrap
