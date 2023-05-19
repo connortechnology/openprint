@@ -60,7 +60,8 @@
         </li>
 				<li>
 					<label>Serial/Key</label>
-					<input type="text" id="serialkey" name="serialkey" value="<? echo ( $$variable{License}->serialkey() ) ?>" />
+					<input type="hidden" id="serialkey" name="serialkey" value="<? echo ( $$variable{License}->serialkey() ) ?>" />
+					<input type="text" id="hash" name="hash" value="<? echo ( $$variable{License}->hash() ) ?>" />
 				</li>
 				<li class="max_uses">
 					<label>Max Uses(empty is unlimited)</label>
