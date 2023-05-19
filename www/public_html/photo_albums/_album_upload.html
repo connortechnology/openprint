@@ -76,25 +76,31 @@
 <? endif ( $$variable{Album}->can_edit() ) ?>
 </fieldset>
 <? if ( $$variable{Album}->can_edit() ) ?>
-<script type="text/javascript">
-	var uploader = new qq.FineUploader({
-        debug: true,
-		element: $('fine-uploader'),
-		request: {
-			endpoint: '/upload.htm',
-			paramsInBody: false,
-			params: {
-				id: '<? echo ( $$variable{Album}->id() ) ?>',
-				UploadType: '<? echo ( my $type = ref $$variable{Album}; $type =~ s/^openprint:://; return $type; ) ?>'
-			}
-		},
-		validation: {
+<script>
+window.addEventListener('DOMContentLoaded',function(){
+	const uploader = new qq.FineUploader({
+    debug: true,
+    element: $('fine-uploader'),
+    request: {
+      endpoint: '/upload.htm',
+      paramsInBody: false,
+      params: {
+        id: '<? echo ( $$variable{Album}->id() ) ?>',
+        UploadType: '<? echo ( my $type = ref $$variable{Album}; $type =~ s/^openprint:://; return $type; ) ?>'
+      }
+    },
+    validation: {
 			allowedExtensions: ['jpg', 'jpeg', 'png', 'gif','bmp','pdf','flv','avi','mp4'],
 			sizeLimit: 1024*1024*1024
 		},
 		callbacks: {
 			onComplete: function(id, fileName){
-				new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '<? echo ( $$variable{Album}->id() ) ?>', album_type: '<? echo ( ref $$variable{Album} ) ?>' } } );
+				new Ajax.Updater('Photos', '/photo_albums/_album_photos.html', {
+          parameters: {
+            album_id: '<? echo ( $$variable{Album}->id() ) ?>',
+            album_type: '<? echo ( ref $$variable{Album} ) ?>'
+          }
+        });
 			}
 		},
 		dragAndDrop: {
@@ -103,10 +109,11 @@
 		failedUploadTextDisplay: {
 			mode: 'custom',
 		},
- retry: {
-       enableAuto: true // defaults to false
+    retry: {
+      enableAuto: true // defaults to false
     }
-    });
+  });
+});
 
 </script>
 <? endif ( $$variable{Album}->can_edit() ) ?>
