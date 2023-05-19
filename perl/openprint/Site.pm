@@ -69,5 +69,13 @@ sub Hosts {
   return $$self{Hosts};
 }
 
+sub link_to {
+  my $self = shift;
+  my $text = shift if @_;
+  $text = ssi::html_escape($$self{name}) if !$text;
+  my $options = shift if @_;
+	return sprintf('<a href="/sites/view.html?site_id=%d"%s>%s</a>', $$self{id}, ($options?join(' ', map {$_.'="'.$$options{$_}.'"'} keys %$options):''), $text );
+}
+
 1;
 __END__
