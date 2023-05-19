@@ -311,7 +311,6 @@ sub description {
 
 sub send {
 	my $self = shift;
-
 	my $results;
 
 	my %quote;
@@ -321,6 +320,9 @@ sub send {
 	openprint::quote::get_user_for_info( $log, $dbh, \%quote, $$self{id} );
 	openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 	my $email_template = ssi::slurp_content('/email_template.html');
+  if (!$email_template) {
+    $openprint::log->error("Have no email template!");
+  }
 
 	my $Email = new openprint::Email();
 
@@ -345,6 +347,25 @@ sub send {
 		$Email->add_pdf_attachment_from_html( sprintf('Project%d.html',$Project->project_id()), ssi::variable_substitution( \$email_template, \%variable ));
 	} # for each Project
 	
+	if ( @_ ) {
+		$quote{ReplacementText} = ssi::include( '/email_content/quote_end_user_body.html', \%quote );
+		my $email_template = ssi::slurp_content( '/email_template.html' );
+		$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
+
+		$quote{ReplacementText} = ssi::include('/email_content/quote_end_user_invoice.html', \%quote );
+    my $html = ssi::variable_substitution(\$email_template, \%quote);
+		$Email->add_pdf_attachment_from_html("Quote$$self{id}",$html);
+    if ( ( $openprint::User->email() =~ /isaac/ ) and @_ ) {
+      $Email->add_html_attachment( "Quote$$self{id}.html", $html);
+    }
+
+		$results .= $Email->send(
+				FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+				TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}) ),
+				SUBJECT => "$openprint::config{SiteTitle}:Quote $$self{id}",
+				);
+		$Email->attachments(undef);
+  } else {
 	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $session{user_type}, ['A', 'E']) ) {
 		if ( $openprint::User->email_quotes_to_myself() ) {
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_body.html', \%quote );
@@ -359,7 +380,7 @@ sub send {
 
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					#BCC		=>	'iconnor@connortechnology.com',
+					BCC		=>	'iconnor@connortechnology.com',
 					TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}) ),
 					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
 					);
@@ -404,8 +425,8 @@ sub send {
 
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					#BCC		=>	'iconnor@connortechnology.com',
-					TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}) ),
+					BCC		=>	'iconnor@connortechnology.com',
+          TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}) ),
 					SUBJECT => "Quote $$self{id} : " . $self->reference(),
 					);
 			$Email->attachments(undef);
@@ -413,6 +434,7 @@ sub send {
 
 	} else {
 # Not a reseller
+    $openprint::log->debug("Not a reseller");
 		$quote{ReplacementText} = ssi::include( '/email_content/quote_end_user_body.html', \%quote );
 		my $email_template = ssi::slurp_content( '/email_template.html' );
 		$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
@@ -423,14 +445,13 @@ sub send {
 		$results .= $Email->send(
 				FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 				#TO    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-				TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}) ),
-					#nnBCC		=>	'iconnor@connortechnology.com',
+        TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}) ),
+        #TO		=>	'iconnor@connortechnology.com',
 				SUBJECT => "$openprint::config{SiteTitle}:Quote $$self{id}",
 				);
 		$Email->attachments(undef);
 	} # end if reseller or admin
 
-	if ( ! @_ ) {
 		if ( $openprint::config{SendQuoteToAdmin} eq 'Y' ) {
 			$log->debug("Sending quote to admin");
 # Send one to the admin
@@ -475,7 +496,6 @@ sub send {
 				$results .= $Email->send(
 						FROM    => $openprint::config{QuotingEmail},
 						TO      => $openprint::config{QuotingEmail},
-#BCC      => 'iconnor@point-one.com',
 						SUBJECT => "$$self{for_companyname} : Quote $$self{id} has custom modifications",
 						);
 			} # end if
@@ -493,6 +513,7 @@ sub total {
 	} # end if
 	return $$self{'total'.$qty_index};
 } # end sub total
+
 sub Currency {
 	return new openprint::Currency( $_[0]{currency_id} );
 } # end sub Currency
