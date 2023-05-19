@@ -954,7 +954,7 @@ sub find_sql {
 	my $fields = \%{$object_type.'::fields'};
 # Check for Object references
 	if ( 0 and  %search ) {
-$openprint::log->debug("Usgin search");
+$openprint::log->debug("Using search");
 		foreach my $k ( keys %search ) {
 			if ( sets::isin( ref $search{$k}, [ '', 'SCALAR','ARRAY','HASH' ] ) ) {
 $openprint::log->error("Wasting time looking for objects in find $k $search{$k}");
