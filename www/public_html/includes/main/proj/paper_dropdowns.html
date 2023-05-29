@@ -14,7 +14,7 @@
       <?echo(radio('rdbSpecificStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ],
       $$variable{'rdbSpecificStock'.$$variable{Signature}}, {
      default=>'N',
-     onclick=>"if(this.value=='Y'){$('HouseStock$$variable{Signature}').hide();$('SpecificStock$$variable{Signature}').show();if(this.form.ddmStockSheetSize1){clear_ddm(this.form.ddmStockSheetSize1);};if(this.form.ddmStockSheetSize2){clear_ddm(this.form.ddmStockSheetSize2);};if(this.form.ddmStockSheetSize3){clear_ddm(this.form.ddmStockSheetSize3);};calc(this.form.name);}else{$('SpecificStock$$variable{Signature}').hide();$('HouseStock$$variable{Signature}').show();Stock_onchange(this,'$$variable{Signature}');}" } );)?>
+     onclick=>"if(this.value=='Y'){\$('HouseStock$$variable{Signature}').hide();\$('SpecificStock$$variable{Signature}').show();if(this.form.ddmStockSheetSize1){clear_ddm(this.form.ddmStockSheetSize1);};if(this.form.ddmStockSheetSize2){clear_ddm(this.form.ddmStockSheetSize2);};if(this.form.ddmStockSheetSize3){clear_ddm(this.form.ddmStockSheetSize3);};calc(this.form.name);}else{\$('SpecificStock$$variable{Signature}').hide();\$('HouseStock$$variable{Signature}').show();Stock_onchange(this,'$$variable{Signature}');}" } );)?>
 		</li>
 		</ul>
 		<? endif ( $$variable{Mode} ne 'Easy' ) ?>
