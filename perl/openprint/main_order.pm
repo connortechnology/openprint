@@ -443,15 +443,23 @@ sub _history {
   );
   if ($param{btnFunction}) {
     if ($param{btnFunction} eq 'delete') {
-      foreach my $Order (openprint::Order->find(
-          id=>(ref $param{order_id} eq 'ARRAY' ? @{$param{order_id}} : split(',', $param{order_id}))
-        )) {
-        if ($Order->can_delete()) {
-          $variable{error} .= $Order->delete();
-        } else {
-          $variable{error} .= 'No permission to delete order ' . $Order->id(). '</br>';
-        }
-      } # end foreach
+      my @order_ids;
+      if (exists $param{'order_id[]'}) {
+        @order_ids = @{$param{'order_id[]'}};
+      } elsif ( exists $param{order} ) {
+        @order_ids = ref $param{order_id} eq 'ARRAY' ? @{$param{order_id}} : split(',', $param{order_id});
+      }
+      if (!@order_ids) {
+        $variable{error} .= 'Please specify the orders to delete<br/>';
+      } else {
+        foreach my $Order (openprint::Order->find(id=>\@order_ids)) {
+          if ($Order->can_delete()) {
+            $variable{error} .= $Order->delete();
+          } else {
+            $variable{error} .= 'No permission to delete order ' . $Order->id(). '</br>';
+          }
+        } # end foreach
+      } # end if order_ids
     } # end if which function
   } # end if has a function
 
