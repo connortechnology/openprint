@@ -431,8 +431,9 @@ table .Price input[type="text"] {
 	text-align: right;
 }
 table .Status, table .status {
+	text-align: left;
+	padding-left: 7px;
 	width: 200px;
-	text-align: right;
 }
 table .description {
 	text-align: left;
@@ -453,7 +454,7 @@ tr .mac {
 }
 .DateSelectorT,
 .DateSelectorC {
-	min-width: 215px;
+	min-width: 295px;
 	display: inline-block;
 }
 .DateSelectorCT {
@@ -600,11 +601,6 @@ th.When {
 .thumbnail ,
 .thumbnail img {
 	width: 48px;
-}
-table .status {
-	text-align: left;
-	padding-left: 7px;
-	width: 80px;
 }
 table .order_id {
 	text-align: left;
