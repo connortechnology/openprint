@@ -11,7 +11,7 @@ function isin( array, value ) {
 } // end function isin
 
 function get_value( obj ) {
-	if ( ! obj ) {
+	if (!obj) {
 		return;
 	} // end if
 	if ( obj.type == 'select-one' ) {
@@ -24,7 +24,7 @@ function get_value( obj ) {
 		}
 	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'textarea' ) {
 		return obj.value;
-	} else if ( obj.length ) {
+	} else if (obj.length) {
 		const value = new Array();
 		for ( let x = 0, len=obj.length; x < len; x += 1 ) {
 			if ( obj[x].checked ) {
@@ -32,8 +32,11 @@ function get_value( obj ) {
 				value[value.length] = obj[x].value;
 			} // end if
 		}
+
+    /*
 		if ( value.length == 0 ) return;
 		if ( value.length == 1 ) return value[0];
+    */
 		return value;
 	} else {
 		return obj.innerHTML;
@@ -1324,17 +1327,18 @@ function LoadContent( divID, page, parameters, message ) {
 	const div = $j('#'+divID);
 	if (div.length) {
     div.html(message? message : 'Please wait...');
+
+    openprint_load_content_ajax = $j.ajax({
+      url: page,
+      data: parameters,
+      success: function(data) {
+        div.html(data);
+        update_event_bindings();
+      }
+    });
   } else {
     console.log("Nothing found for " + divID);
 	} // end if
-  openprint_load_content_ajax = $j.ajax({
-    url: page,
-    data: parameters,
-    success: function(data) {
-      div.html(data);
-      update_event_bindings();
-    }
-  });
 } // end function LoadContent
 
 function photo_popup( asset_id, album_id ) {
