@@ -276,8 +276,7 @@ $log->debug("PageContent is $variable{PageContent}");
       $config{CSP_NONCE} = '';
       my @chars = ('A'..'Z', 'a'..'z', '0' .. '9');
       $config{CSP_NONCE} .= $chars[rand @chars] for 1 .. 16;
-      $r->headers_out->{'Content-Security-Policy'} = "script-src 'unsafe-inline' 'unsafe-eval' 'self' $config{CSP}";
-      # 'nonce-$config{CSP_NONCE}'
+      $r->headers_out->{'Content-Security-Policy'} = "script-src 'unsafe-inline' 'unsafe-eval' 'self' $config{CSP} nonce-$config{CSP_NONCE}";
     }
 
 		local $|=1;
