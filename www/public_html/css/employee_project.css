@@ -51,11 +51,11 @@ text-align: right;
     margin: 0;
     padding: 0 5px 0 0;
     vertical-align: middle;
-    width: 70px;
-margin-left: -75px;
+    width: 80px;
+margin-left: -85px;
 }
 #project_id {
-    width: 70px;
+    width: 80px;
 }
 
 table.ProofsSummary {
