@@ -50,7 +50,7 @@ Please select an allocation to view/edit.<br>
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
-				button( 'ShowResults', { onclick=>q`LoadContent( 'Results', '/employee/inventory/_allocations.html', $('f1') );`, text=>'Show Results' } ),
+				button( 'ShowResults', { onclick=>q`LoadContent( 'Results', '/employee/inventory/_allocations.html', $j('#f1').serialize() );`, text=>'Show Results' } ),
 				button( 'Reset', { onclick=>q`f1.elements['action'].value='Reset';f1.submit();` } ),
 				); ) ?>
 		</p>
