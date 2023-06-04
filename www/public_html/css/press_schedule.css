@@ -328,6 +328,12 @@ right: 0;
 	content: ')';
 }
 
+.container {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
 .filters .buttons {
 	clear:both;
 	padding:0;
@@ -356,27 +362,29 @@ right: 0;
 
 .filters li {
 	list-style:none;
-	padding:000 85px;
+	padding:000 145px;
+  /*
 	float: left;
+  */
 }
 .filters li label:not(.radio):not(.radio-inline) {
 	vertical-align: top;
-	margin:0 0 0 -85px;
-	width: 80px;
+	margin:0 0 0 -145px;
+	width: 140px;
 	float: left;
 }
 .filters .presses {
-	width: 215px;
+	width: 275px;
 	float: left;
 }
 .filters .presses li {
-	width: 140px;
-	padding-left: 70px;
+	width: 180px;
+	padding-left: 90px;
 }
 .filters .presses li label:not(.radio):not(.radio-inline),
 .legend li label:not(.radio):not(.radio-inline) {
-	margin-left: -70px;
-	width: 65px;
+	margin-left: -90px;
+	width: 85px;
 }
 .statuses {
 	width: 40%;
@@ -390,26 +398,30 @@ right: 0;
 	width: 75px;
 }
 .dates {
-	width: 350px;
-	float: left;
+	min-width: 500px;
 }
-.dates li{
+.dates li {
+  /*
 	width: 265px;
+  */
 }
 
 .legend {
+  width: 320px;
+  /*
 	width: 30%;
 	float: left;
+  */
 }
 .legend li {
-	padding-left: 70px;
+	padding-left: 90px;
 }
 .legend li ul {
 
 }
 .legend li li {
 	padding:0px;
-	width: 200px;
+	width: 230px;
 }
 .legend li li label:not(.radio):not(.radio-inline) {
 	margin:0;
