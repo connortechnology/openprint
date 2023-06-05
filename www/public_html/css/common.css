@@ -96,7 +96,6 @@ table.List tr {
 	margin: 0;
 }
 .totals td {
-	border-top: 1px solid #000088;
 }
 
 .List input[type="text"], .List input[type="number"] {
@@ -418,6 +417,7 @@ table .checkbox {
 	width: 25px;
 	text-align: center;
 }
+table .cost,
 table .Price {
 	width: 120px;
 	text-align: right;
