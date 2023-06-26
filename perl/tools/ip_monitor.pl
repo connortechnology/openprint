@@ -172,7 +172,7 @@ while(1) {
 			( @host_ids ? ( id=>\@host_ids ) : () ),
 			);
   foreach my $Host ( @Hosts ) {
-    $log->debug('host '.($Host->hostname()?$Host->hostname():'with no hostname').' was '.($Host->online() ? 'online' : 'offline'));
+    #$log->debug('host '.($Host->hostname()?$Host->hostname():'with no hostname').' was '.($Host->online() ? 'online' : 'offline'));
 
     my $online = undef;
     my $now = time;
@@ -180,7 +180,7 @@ while(1) {
 
     # If we have a minimum frequency set and not enough time has passed, the skip it.
     if ( $$Host{min_ping_frequency} and $last_ping_time{$$Host{id}} and ( ($now - $last_ping_time{$$Host{id}}) < $$Host{min_ping_frequency} ) ) {
-      $log->debug("min_ping_frequency is $$Host{min_ping_frequency} and now - last_ping_time($last_ping_time{$$Host{id}}) = " . ($now - $last_ping_time{$$Host{id}}) . " < $$Host{min_ping_frequency}" );
+      #$log->debug("min_ping_frequency is $$Host{min_ping_frequency} and now - last_ping_time($last_ping_time{$$Host{id}}) = " . ($now - $last_ping_time{$$Host{id}}) . " < $$Host{min_ping_frequency}" );
       next;
     }
     $last_ping_time{$$Host{id}} = $now;
@@ -413,7 +413,7 @@ while(1) {
   } # end foreach Host
 
   if ( $config{sleep} ) {
-    $log->debug("Sleeping for $config{sleep} seconds");
+    #$log->debug("Sleeping for $config{sleep} seconds");
     sleep $config{sleep};
   }
 } # end while
