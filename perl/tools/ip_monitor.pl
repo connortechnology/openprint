@@ -189,6 +189,7 @@ while(1) {
     # status because we don't want to hold this lock for however long it takes to ping.
     my @HIs = $Host->Interfaces(undef);
     foreach my $HI ( @HIs ) {
+      $HI->load(); # Refresh in case something has changed
       next if ! $HI->monitor();
       if ( ! $HI->ip() ) {
         $log->debug('No ip for '.$HI->to_string());

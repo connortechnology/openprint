@@ -1268,19 +1268,19 @@ sub do_css_links {
   $css =~ s/^\///;
   $css =~ s/\..+$//;
   my @parts = split '/', $css;
-  $log->debug("Parts: @parts");
+  #$log->debug("Parts: @parts");
 
   while ( @parts ) {
     $css = join('_', @parts ) . '.css';
-    $log->debug("$css");
+    #$log->debug("$css");
     if ( -e $config{SkinPath}.'/css/'.$css ) {
-      $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
+      #$log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
       push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
     } elsif ( Debug ) {
       $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
     } # end if
     if ( -e $ENV{DOCUMENT_ROOT}.'/css/'.$css ) {
-      $log->debug("xist at " . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
+      #$log->debug("xist at " . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
       push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/base_css/'.$css).'"/>';
     } elsif ( Debug ) {
       $log->debug("Does not exist at " . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
@@ -1388,7 +1388,7 @@ $log->error("categoryies @categories");
 						sprintf(q`
 							<li class="nav-item dropdown %2$s">
 							<a href="#" id="%1$sMenu" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">%1$s</a>
-							<ul id="%1$sSubMenu" class="dropdown-menu aria-labelledby="%1$sMenu">`,
+							<ul id="%1$sSubMenu" class="dropdown-menu" aria-labelledby="%1$sMenu">`,
 							$category,
 							( $on ? ('active','true' ) : ( '', 'collapse' ) ),
 							),'</ul></li>' );
@@ -1404,8 +1404,8 @@ $log->error("categoryies @categories");
           } else {
             $log->error("Not permitted to view $url");
           } # end if
-        } else {
-          $log->error("No text for $url");
+          #} else {
+          #$log->error("No text for $url");
         }
         $on = 1 if $current_uri eq $url;
       } # end foreach url
@@ -1424,7 +1424,7 @@ $log->error("categoryies @categories");
 			$html .= sprintf( q`<li id="%1$sMenu" class="nav-item %2$s"><a href="%2$s">%1$s</a></li>`, $category, $$menu{$category} );
 		}
 	} # end foreach category
-  $log->error($html);
+  #$log->error($html);
 	return $html;
 }
 

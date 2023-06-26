@@ -5,6 +5,7 @@ To represent another <? echo ( translate('company') ) ?>, please select it from 
 Any actions you perform will be recorded in the selected <? echo ( translate('company') ) ?>'s history.<br/>
 <form id="f1" name="f1" action="select_company.html" method="post">
 	<fieldset class="SelectCompany">
+    <ul>
 <? if ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
 	<? echo (
 		my $all = $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'] );
@@ -101,6 +102,7 @@ return $html;
 		return $html;
 		) ?>
 		</li>
+    </ul>
 	</fieldset>
 	<input type="hidden" name="btnFunction" value="SelectCompany"/>
 </form>
