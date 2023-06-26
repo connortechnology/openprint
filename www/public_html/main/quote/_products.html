@@ -7,6 +7,7 @@
 			<th class="cost">Cost</th>
 			<th class="markup">Markup</th>
 			<th class="price">Price</th>
+			<th class="units">Units</th>
 			<th class="buttons">&nbsp;</th>
 		</tr>
 	</thead>
@@ -19,16 +20,17 @@
 				$html .= sprintf(q`
 <tr%1$s>
 	<td class="description">%3$s<br/>
-    <textarea class="mce" id="comments-%2$d" name="comments-%2$d" placeholder="comments">%9$s</textarea>
+    <textarea class="mce" id="comments-%2$d" name="comments-%2$d" placeholder="comments">%10$s</textarea>
   </td>
 	<td class="quantity"><input type="number" id="quantity-%2$d" name="quantity-%2$d" value="%4$d" onkeyup="calc_from_quantity(this);"/></td>
 	<td class="price"><input type="number" id="cost-%2$d" value="%5$.2f" name="cost-%2$d" onkeyup="calc_from_cost(this);"/></td>
-	<td class="markup"><input type="number" id="markup-%2$d" name="markup-%2$d" value="%6$.2f" onkeyup="calc_from_markup(this);"/></td>
-	<td class="newprice"><input type="number" id="price-%2$d" name="price-%2$d" value="%7$.2f" /></td>
-	<td class="buttons">%8$s</td>
+	<td class="markup"><input type="number" id="markup-%2$d" name="markup-%2$d" value="%6$.2f" step="0.01" onkeyup="calc_from_markup(this);"/></td>
+	<td class="newprice"><input type="number" id="price-%2$d" name="price-%2$d" value="%7$.2f" step="0.01"/></td>
+	<td class="units"><input type="text" id="units-%2$d" name="units-%2$d" value="%8$s" /></td>
+	<td class="buttons">%9$s</td>
 </tr>`, $rowclass, $Product->id(),
-$Product->name() . ($Product->name() ne $Product->description() ? ' ' . $Product->description() : ''),
-$Product->quantity(), $Product->cost(), $Product->markup(), $Product->price(),
+$Product->link_to($Product->name() . ($Product->name() ne $Product->description() ? ' ' . $Product->description() : '')),
+$Product->quantity(), $Product->cost(), $Product->markup(), $Product->price(), $Product->units(),
 ssi::button( 'removeProduct'.$Product->id(), { onclick=>qq`new Ajax.Updater('Products', '_products.html?action=del&amp;product_id=$$Product{id}', { parameters: f1.serialize() } );`, text=>'-', title=>'Remove' } ),
 $Product->comments(),
 );
@@ -46,6 +48,7 @@ $Product->comments(),
   <td class="price"><input type="number" step="0.01" min="0" id="cost-" name="cost-" onkeyup="calc_from_cost(this);"/></td>
   <td class="markup"><input type="number" step="0.01" min="0" id="markup-" name="markup-" onkeyup="calc_from_markup(this);"/></td>
   <td class="newprice"><input type="number" step="0.01" min="0" id="price-" name="price-" /></td>
+	<td class="units"><input type="text" id="units-" name="units-" /></td>
   <td class="buttons">%4$s</td>
 </tr>
                   `, $rowclass, 
