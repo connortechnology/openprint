@@ -44,6 +44,7 @@ sub cache_field {
 	monitor		=>	0,
 	online		=>	undef,
 );
+my %macBases;
 
 sub Host {
   if ( ! $_[0]{Host} ) {
@@ -91,39 +92,39 @@ $openprint::log->debug("Using $iface. " . $iface->address . ', subnet: ' . $subn
 } # end sub get_mac
 
 sub authenticate {
-	my ( $HI, $browser, $response, $method, $port, $url, $args ) = @_;
-	my $headers = $response->headers();
-	if ( $$headers{'www-authenticate'} ) {
-$openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
+  my ( $HI, $browser, $response, $method, $port, $url, $args ) = @_;
+  my $headers = $response->headers();
+  if ( $$headers{'www-authenticate'} ) {
+    $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 
-		my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
-		my %tokens = map { /(\w+)="?([^"]+)"?/i } split(', ', $tokens );
-		if ( $tokens{realm} ) {
-			my $Host = $HI->Host();
-			my $username = $Host->info('username');
-			my $password = $Host->info('password');
-			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password args: ".
-					($args ? join(',',map { $_.'=>'.$$args{$_} } keys %{$args}) :'none'));
-			$browser->credentials(
-					$HI->ip().':'.$port,
-					$tokens{realm},
-					($username ? $username : ''), 
-					($password ? $password : ''),
-					);
-			$response = $browser->get($url);
+    my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
+    my %tokens = map { /(\w+)="?([^"]+)"?/i } split(', ', $tokens );
+    if ( $tokens{realm} ) {
+      my $Host = $HI->Host();
+      my $username = $Host->info('username');
+      my $password = $Host->info('password');
+      $openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password args: ".
+        ($args ? join(',',map { $_.'=>'.$$args{$_} } keys %{$args}) :'none'));
+      $browser->credentials(
+        $HI->ip().':'.$port,
+        $tokens{realm},
+        ($username ? $username : ''), 
+        ($password ? $password : ''),
+      );
+      $response = $browser->get($url);
       $openprint::log->debug("Auth response for get $url $tokens{realm}, $username, $password ".$response->is_success);
 
       #if ( $response->is_success and ( ($method ne 'get') or $args ) ) {
       #$openprint::log->debug('Sending actual url '.$method . ' ' . $url);
       #$response = $browser->$method($url, ($args and %{$args}) ? $args : () );
       #}
-		} else {
-			$openprint::log->error('No realm');
-		} # end if
-	} else {
-		foreach my $k ( keys %{$headers} ) {
-			$openprint::log->debug("No auth Header $k => $$headers{$k}");
-		}
+    } else {
+      $openprint::log->error('No realm');
+    } # end if
+  } else {
+    foreach my $k ( keys %{$headers} ) {
+      $openprint::log->debug("No auth Header $k => $$headers{$k}");
+    }
     my $Host = $HI->Host();
     my $username = $Host->info('username');
     my $password = $Host->info('password');
@@ -137,8 +138,8 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 
     $response = $browser->$method( $url, $args ? $args : () );
     $openprint::log->debug("Auth response for $method $url $username, $password ".$response->is_success);
-	}
-	return $response;
+  }
+  return $response;
 } # end sub authenticate
 
 sub vendor {
@@ -148,14 +149,32 @@ sub vendor {
       my $oui = $_[0]{mac};
       $oui =~ s/[^A-Fa-f0-9]//g;
       $oui =~ s/^([A-Fa-f0-9]{6}).*$/${1}000000/;
-			if ( ! $oui ) {
-				$openprint::log->error("Got no oui from $oui $_[0]{mac}");
-				return;
-			}
+      if ( ! $oui ) {
+        $openprint::log->error("Got no oui from $oui $_[0]{mac}");
+        return;
+      }
 
       if ( my $Vendor = openprint::OUI_Vendor->find_one(oui=>$oui) ) {
         $_[0]{vendor} = $$Vendor{vendor_name};
+      } elsif (-e '/usr/share/arp-scan/ieee-oui.txt') {
+        if (!%macBases) {
+          my $oui_txt = misc::load_file($openprint::log, '/usr/share/arp-scan/ieee-oui.txt');
+          if (!$oui_txt) {
+            $openprint::log->error('No content from /usr/share/arp-scan/ieee-oui.txt');
+          } else {
+            foreach my $line (split("\n",  $oui_txt)) {
+              next if $line =~ /#/;
+              my ($mac, $vendor) = split("\t", $line);
+              next if !$mac;
+              $mac = lc $mac;
+              my $type = $vendor;
+              $type =~ s/\W//g;
+              $macBases{$mac} = { vendor=>$type, type=>$type} if !$macBases{$mac};
+            } # end foreach line
+          } # end if out_txt
+        } # end if ! macBases
       } else {
+
         eval {
           require Net::MAC::Vendor;
           my $vendor = Net::MAC::Vendor::lookup($_[0]{mac});
@@ -165,13 +184,13 @@ sub vendor {
             $_[0]{vendor} = shift @{$vendor};
 
             my $Vendor = new openprint::OUI_Vendor();
-            $Vendor->save({ oui=>$oui, vendor_name=>$_[0]{vendor} });
-          }
-        };
+              $Vendor->save({ oui=>$oui, vendor_name=>$_[0]{vendor} });
+            }
+          };
+        }
+        $openprint::log->error("Error in eval: $@") if $@;
+        return $_[0]{vendor};
       }
-      $openprint::log->error("Error in eval: $@") if $@;
-      return $_[0]{vendor};
-    }
     return '';
   }
   return $_[0]{vendor};
