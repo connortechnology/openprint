@@ -86,6 +86,7 @@ button('GoHost', { href=>$$variable{Backup}->Host()->url_to(), text=>'Go' } ),
         <?endif($$variable{Backup}->id())?>
 			</ul>
 		</div>
+    <?if ($$variable{Backup}->id())?>
 <div class="content leftColumn">
 <fieldset><legend>Files</legend>
 <div id="Files">
@@ -93,6 +94,7 @@ button('GoHost', { href=>$$variable{Backup}->Host()->url_to(), text=>'Go' } ),
 </div>
 </fieldset>
 </div>
+    <?endif ($$variable{Backup}->id())?>
 <br class="spacer"/>
 				<p class="buttons">
 					<? echo ( 
