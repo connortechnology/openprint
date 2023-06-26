@@ -1,14 +1,14 @@
 <?include('/includes/error_reporting.html')?>
-<? if ( $$variable{'Quote'}->Products() ) ?>
+<? if ( $$variable{Quote}->Products() ) ?>
 <table class="List">
 	<thead>
 		<tr>
 			<th class="thumbnail">&nbsp;</th>
 			<th class="description">Product / Service</th>
 			<th class="quantity">Quantity</th>
-			<th class="cost">Cost</th>
+			<th class="price">Cost</th>
 			<th class="markup">Markup</th>
-			<th class="price">Price</th>
+			<th class="newprice">Price</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -16,7 +16,7 @@
 			my $html;
 			my $rowclass;
 			my $subtotal = 0;
-			foreach my $Product ( $$variable{'Quote'}->Products() ) {
+			foreach my $Product ( $$variable{Quote}->Products() ) {
 				$html .= sprintf('<tr%1$s>
 									<td class="thumbnail">%9$s</td>
 									<td class="description">%3$s</td>
@@ -43,4 +43,4 @@
 		) ?>
 	</tbody>
 </table>
-<? endif ( $$variable{'Quote'}->Products() ) ?>
+<? endif ( $$variable{Quote}->Products() ) ?>

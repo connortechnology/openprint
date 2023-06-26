@@ -78,7 +78,7 @@ configuration::merge($opts);
 @SIG{qw(HUP)} = \&sig_handler;
 my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s*',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Bad protocol version identification \'[^\']+\' from (?<IP>[\._a-zA-Z0-9\-]+)( port [[:digit:]]+)?$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Bad (remote )?protocol version identification \'[^\']+\' from (?<IP>[\._a-zA-Z0-9\-]+)( port [[:digit:]]+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Did not receive identification string from (?<IP>[\._a-zA-Z0-9\-]+)( port [[:digit:]]+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)(\s+user\=\w+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (fatal: )?Unable to negotiate with (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+',

@@ -2,7 +2,7 @@
 <h1>Products</h1>
 <h2>Search</h2>
 </div>
-<script type="text/javascript">
+<script>
 	function delete_confirm(form) {
 		var number_of_deleted_products = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -21,8 +21,8 @@
 			} // end if
 		} // end if
 	}
-	function load_products( form ) {
-		LoadContent( 'ProductsList', '_search.html', form );
+	function load_products() {
+		LoadContent( 'ProductsList', '_search.html', $j('#f1').serialize());
 	} // end function
 </script>	 
 <?include('/includes/error_reporting.html')?>
@@ -34,7 +34,7 @@
 				<ul>
 		<? if ( @{$$variable{Categories}} = openprint::Product_Category->find( order=>'lower(name)') ) ?>
 					<li><label>Category</label>
-						<select name="category_id" id="category_id" onchange="load_products(this.form);">
+						<select name="category_id" id="category_id" onchange="load_products();">
 							<option value="">All</option>
 							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{'/product/search.html?category_id'} ); ) ?>
 						</select>
@@ -48,9 +48,9 @@
 		<? if ( $session{user_type} eq 'A' ) ?>
 					<li>
 						<label>Created On</label>
-						<? echo ( date_select_session( '/product/search.html', 'created_on_start', {onchange=>'load_products(this.form);'} ); ) ?>
+						<? echo ( date_select_session( '/product/search.html', 'created_on_start', {onchange=>'load_products();'} ); ) ?>
 							to 
-						<? echo ( date_select_session( '/product/search.html', 'created_on_end', {onchange=>'load_products(this.form);'} ); ) ?>
+						<? echo ( date_select_session( '/product/search.html', 'created_on_end', {onchange=>'load_products();'} ); ) ?>
 					</li>
 		<? endif ( $session{user_type} eq 'A' ) ?>
 				</ul>
@@ -58,7 +58,7 @@
 			</div>
 			<p class="buttons">
 				<? echo ( join("\n",
-					button( 'ShowResults', { onclick=> 'load_products(f1);', text=>'Show Results' } ),
+					button( 'ShowResults', { onclick=> 'load_products();', text=>'Show Results' } ),
 					( openprint::Product::can_edit() ? button( 'New', { href=> '/product/edit.html', text=>'New Product' } ) : '' ),
 					); ) ?>
 			</p>

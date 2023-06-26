@@ -1,4 +1,12 @@
-Your quote is attached. Please save it for future reference
+Dear <?echo($$variable{Quote}->for_name())?>,<br/>
+<br/>
+Your quote is attached.<br/>
+<?if($$variable{Quote}->reference())?>
+This quote has the following reference text:<br/>
+<?echo( $$variable{Quote}->reference())?><br/>
+<?endif($$variable{Quote}->reference())?>
+<br/>
+Please save it for future reference
 <? echo (
 	my $Company = $$variable{Quote}->Company();
 	if ( $Company->salesrep_id() ) {

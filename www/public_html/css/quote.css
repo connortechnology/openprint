@@ -136,7 +136,7 @@ div.Quote table .quantity {
 }
 div.Quote table .price {
 	text-align: right;
-	width: 90px;
+	width: 100px;
 }
 div.Quote table .newprice {
 	text-align: right;
@@ -172,4 +172,14 @@ div.Quote table tr.totals td {
 }
 .Project table .description {
 	text-align: left;
+}
+table .thumbnail {
+  width: 150px;
+  display: table-cell;
+  padding: 1px;
+  border-radius: 0;
+}
+.thumbnail img {
+  width: 150px;
+  display: inline-block;
 }

@@ -677,6 +677,7 @@ sub _products {
       $variable{error} .= $Product->save({
           'quantity'    =>  $param{'quantity-'.$Product->id()},
           'markup'    =>  $param{'markup-'.$Product->id()},
+          'units'    =>  $param{'units-'.$Product->id()},
           });
     } # end foreach
     if ( $param{action} eq 'add' ) {
@@ -687,6 +688,7 @@ sub _products {
           'quantity'    =>  $param{'quantity-'},
           'cost'      =>  $param{'cost-'},
           'markup'    =>  $param{'markup-'},
+          'units'    =>  $param{'units-'},
           });
     } elsif ( $param{action} eq 'del' ) {
       my $Product = new openprint::QuotedProduct( $param{product_id} );
@@ -695,6 +697,7 @@ sub _products {
     } # end if
   } # end if
 } # end sub _products
+
 sub overview {
 } # end sub overview
 

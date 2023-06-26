@@ -94,7 +94,10 @@
 						openprint::Currency::format( $Invoice->interest() ),
 						openprint::Currency::format( $Invoice->paid() ),
 						openprint::Currency::format( $Invoice->paid_value() ),
-						openprint::Currency::format( $Invoice->owing() ),
+            join('<br/>~',
+            openprint::Currency::format( $Invoice->owing() ).$Currency->short(),
+              openprint::Currency::format( $Currency->convert_from($Invoice->owing())).$openprint::Currency->short(),
+              )
 						);
 				} # end if can view
 				$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -117,7 +120,14 @@
 			<td class="Interest Price"><? echo ( openprint::Currency::format( $$variable{interest_total} ); ) ?></td>	
 			<td class="Paid Price"><? echo ( openprint::Currency::format( $$variable{paid_total} ); ) ?></td>	
 			<td class="Price Value"><? echo ( openprint::Currency::format( $$variable{paidvalue_total} ); ) ?></td>	
-			<td class="Owing Price"><? echo ( openprint::Currency::format( $$variable{owing_total} ); ) ?></td>	
+			<td class="Owing Price"><? echo ( openprint::Currency::format( $$variable{owing_total} ); ) ?>
+       <? echo( 
+          if ( $$variable{owing_total} != $$variable{owing_total_value} ) {
+            return '<br/>~' . $openprint::Currency->format($$variable{owing_total_value}) . $openprint::Currency->short();
+          }
+          return;
+          )?>
+      </td>	
 		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( $openprint::Currency->name(); ) ?></span>
