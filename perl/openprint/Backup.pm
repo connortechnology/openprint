@@ -45,6 +45,7 @@ $serial = 'backups_id_seq';
 	updated_on  	=>	q`'NOW()'`,
 	lastran_on		=>	undef,
 	deleted     	=>	0,
+	host_id     	=>	undef,
 	type_id     	=>	undef,
 	owner_id			=>	undef,
   keep          =>  undef,
@@ -173,6 +174,7 @@ sub size {
   }
   $openprint::log->debug("Size of $$self{dest_path}: @output");
   my ( $size ) = $output[0] =~ /^(\d+)/;
+  $size *= 1024;
   return $size;
 }
 
