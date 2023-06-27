@@ -62,7 +62,7 @@ table .radius select {
 table .buttons {
 	width: 45px;
 }
-fieldset li input[type="text"],
+fieldset li input[type="text"]:not(.filter),
 fieldset li textarea {
 	width: 100%;
 }
