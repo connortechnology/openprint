@@ -104,6 +104,10 @@ return $html.'<option value="">Use the filter to populate this dropdown</option>
 		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"load_page();"} ); ) ?></li>
 		<li><label>Web Active?</label><? echo ( radio( 'web_active', [ 'Y','Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?web_active'}, {onclick=>'load_page();'} ); ) ?></li>
 		<li><label>FTP Active?</label><? echo ( radio( 'ftp_active', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?ftp_active'}, {onclick=>'load_page();'} ); ) ?></li>
+    <li><label>Limit Results</label>
+      <? echo ( ssi::select([ map { $_ => $_ } ( 20, 1000, 10000 )],
+      ($session{$r->uri().'?limit'} ? $session{$r->uri().'?limit'} : 1000),
+      {name=>'limit'}); ) ?></li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
