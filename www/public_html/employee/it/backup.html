@@ -25,7 +25,7 @@
           <?echo ( join("\n",
                 ssi::select( 
                   openprint::Host->dropdown( 
-                  'owner_id is null'=>0,
+                  owner_id=>$$variable{Backup}->owner_id(),
                   blacklist=>0,
                     order=>'hostname' ),
             $$variable{Backup}->host_id(),
@@ -76,11 +76,11 @@ button('GoHost', { href=>$$variable{Backup}->Host()->url_to(), text=>'Go' } ),
 </fieldset>
 </div>
     <?endif ($$variable{Backup}->id())?>
-<br class="spacer"/>
+        <br class="spacer"/>
 				<p class="buttons">
 					<? echo ( 
 						my $html;
-						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+            $html .= button( 'Save', {'data-on-click'=>'click_save'})."\n";
 						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
 						if ( $$variable{Backup}->id() ) {
 							if ( $$variable{Backup}->deleted() ) {
@@ -99,7 +99,7 @@ my $html = '';
 foreach my $HI ( $$variable{Backup}->Host()->Interfaces() ) {
 $html .= "
 VoxIP: sudo ssh-copy-id -i /var/www/.ssh/id_rsa.pub root\@$$HI{ip}<br/>
-VueIP: sudo ssh-copy-id -i /var/www/.ssh/id_rsa.pub ipc\@$$HI{ip}<br/>
+VueIP: sudo su -s/bin/bash -c"ssh-copy-id -f ipc\@$$HI{ip}" www-data<br/>
 ";
 }
 return $html;
@@ -136,6 +136,14 @@ return $html;
     }
 		return true;
 	} //  end function check_inputs
+
+function click_save() {
+  const form = document.getElementById('f1');
+  if ( check_inputs( form ) ){
+    form.elements['action'].value='Save';
+    form.submit();
+  }
+}
 
   function initPage() {
     const tinymce_options = {
