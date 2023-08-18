@@ -140,5 +140,20 @@ sub get_current {
 	$openprint::session{'Pricelist_id'} = $list_id;
 	return new openprint::Pricelist( $list_id );
 } # end sub get_current
+
+sub url_to {
+  my $self = shift;
+  return '/administrator/production/pricelists.html?ddmPriceList='.$$self{id};
+}
+
+sub link_to {
+  my $self = shift;
+  if ($openprint::User{type} eq 'A') {
+    return '<a href="'.$self->url_to().'">'.($_[0] ? $_[0] : $self->name()).'</a>';
+  } else {
+    return ($_[0] ? $_[0] : $self->name());
+  }
+}
+
 1;
 __END__
