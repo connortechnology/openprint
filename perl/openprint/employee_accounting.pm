@@ -451,7 +451,7 @@ sub expenses {
         ssi::date_filter( $uri.'?paid_on_start', 'period_end null_or_>=' ),
         order   =>  'period_start,name',
       );
-      my @header = ('Recipient', 'Account', 'Category', 'Invoiced', 'Due', 'Paid', 'Bus %', 'Amount','Business Use Amount', (map { $_->name() } @Taxes), 'Total');
+      my @header = ('Recipient', 'Account', 'Category', 'Description', 'Transaction Id', 'Invoiced', 'Due', 'Paid', 'Bus %', 'Amount','Business Use Amount', (map { $_->name() } @Taxes), 'Total');
       my @data = ();
 
       my @Expenses = openprint::Expense->find(
@@ -474,7 +474,7 @@ sub expenses {
       foreach my $Expense ( @Expenses ) {
         my $Currency = $Expense->Currency();
         push @data, (
-          $Expense->Recipient()->name(), $Expense->account(), $Expense->category(), 
+          $Expense->Recipient()->name(), $Expense->account(), $Expense->category(), $Expense->description(), $Expense->transaction_id(),
           ssi::format_csv_date($Expense->invoiced_on()),
           ssi::format_csv_date($Expense->due_on()),
           ssi::format_csv_date($Expense->paid_on()),
