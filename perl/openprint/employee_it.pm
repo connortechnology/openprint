@@ -316,7 +316,9 @@ sub host {
           if ( ref $param{"mac-$$I{id}"} eq 'ARRAY' ) {
             while (@{$param{"mac-$$I{id}"}}) {
               $log->debug("hello". @{$param{"mac-$$I{id}"}});
-              my %c = map { $_=>exists($param{"$_-$$I{id}"}) ? shift @{$param{"$_-$$I{id}"}} : $openprint::Host_Interface::defaults{$_} } ( 'mac', 'ip', 'dhcp', 'monitor', 'comment' );
+              my %c = map { $_=>exists($param{"$_-$$I{id}"}) ? 
+               ( ref $param{"$_-$$I{id}"} ? shift @{$param{"$_-$$I{id}"}} : $param{"$_-$$I{id}"} )
+                : $openprint::Host_Interface::defaults{$_} } ( 'mac', 'ip', 'dhcp', 'monitor', 'comment' );
               $openprint::log->debug( Data::Dumper::Dumper( \%c ) );
               $c{host_id} = $$Host{id};
               $log->debug("hello");
