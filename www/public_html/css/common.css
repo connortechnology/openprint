@@ -2,7 +2,9 @@ input:invalid {
 	color:red;
 }
 input, textarea {
+  /*
 	font-size: small;
+  */
 }
 textarea {
   box-sizing: border-box;
