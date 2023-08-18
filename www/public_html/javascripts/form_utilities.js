@@ -782,7 +782,7 @@ function Country_onchange( country_ddm, state ) {
 	const country = get_ddm_value( country_ddm );
 	const state_label = $(country_ddm.name + '_state');
 	const postal_label = $(country_ddm.name + '_postal');
-	var onchange = state.getAttribute('onchange');
+	const onchange = state.getAttribute('onchange');
 	if ( country == 'US' ) {
 		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
 		new Ajax.Updater( state.id, '/includes/_states.html' );
@@ -794,9 +794,14 @@ function Country_onchange( country_ddm, state ) {
 		if ( state_label ) state_label.innerHTML='Province';
 		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} else {
-		$(state.name+'_container').innerHTML = '<input type="text" name="' + state.name + '" id="' + state.id + '" '+ ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
-		if ( state_label ) state_label.innerHTML='State/Province';
-		if ( postal_label ) postal_label.innerHTML='Postal Code';
+    const container = document.getElementById(state.name+'_container');
+    if (container) {
+		  container.innerHTML = '<input type="text" name="' + state.name + '" id="' + state.id + '" '+ ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+    } else {
+      console.err("Unable to find element for "+state.name+'_container');
+    }
+		if ( state_label ) state_label.innerHTML = 'State/Province';
+		if ( postal_label ) postal_label.innerHTML = 'Postal Code';
 	} // end if
 } // end function
 
