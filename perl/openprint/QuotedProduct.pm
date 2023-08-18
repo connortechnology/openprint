@@ -84,9 +84,20 @@ sub price {
 		$$self{price} = $new_value;
 	} # end if
 	if ( ! defined $$self{price} ) {
-		$$self{price} = Math::Round::nearest(0.01, $self->cost() * $$self{quantity} * ( 1 + $$self{markup}/100 ) );
+		$$self{price} = Math::Round::nearest(0.01, $self->cost() * ( 1 + $$self{markup}/100 ) );
 	} # end if
 	return $$self{price};
+} # end sub price
+
+sub total {
+	my ( $self, $new_value ) = @_;
+	if ( @_ == 2 ) {
+		$$self{total} = $new_value;
+	} # end if
+	if ( ! defined $$self{total} ) {
+		$$self{total} = Math::Round::nearest(0.01, $self->price() * $$self{quantity});
+	} # end if
+	return $$self{total};
 } # end sub total
 
 sub quantity {
