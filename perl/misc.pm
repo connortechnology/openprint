@@ -107,6 +107,7 @@ sub save_file {
 } # end sub save_file
 
 sub build_city_prov_country {
+  require countries;
 	my ( $city, $prov, $country ) = @_;
 	my $cpc = $city;
 
@@ -117,7 +118,7 @@ sub build_city_prov_country {
 
 	if ( $country ) {
 		$cpc .= ', ' if $cpc;
-		$cpc .= $country;
+		$cpc .= ($countries::countries{$country} ? $countries::countries{$country} : $country);
 	} # end if;
 	return $cpc;
 } # end sub build_city_prov_country
