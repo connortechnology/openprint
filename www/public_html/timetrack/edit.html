@@ -95,7 +95,7 @@
 			<li><label>Billable</label><? echo ( radio('billable', [1,'Yes',0,'No'], $$variable{Timetrack}->billable()); ) ?></li>
 			<li><label for="rate">Override Rate</label>
 				<? echo (input( type=>'float', name=>'rate', id=>'rate', value=>$$variable{Timetrack}->rate() ); ) ?>
-        <? echo (ssi::select([ map { $_ => $_ } ( '/Hr', '/month', '/week', '/year' )], $$variable{Timetrack}->units(), { name=>'units' } ); ) ?>
+        <? echo (ssi::select([ map { $_ => $_ } ( 'once', '/Hr', '/day', '/month', '/week', '/year' )], $$variable{Timetrack}->units(), { name=>'units' } ); ) ?>
 			</li>
 			<li><label>Currency</label><? echo ( 
 					my $default = $$variable{Timetrack}->currency_id();
