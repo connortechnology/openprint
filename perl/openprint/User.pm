@@ -28,7 +28,6 @@ $default_sort	=	'lower(firstname),lower(lastname),id';
 	email						=>	'email',
 	email_valid			=>	'email_valid',
 	phone						=>	'phone',
-	extension				=>	'extension',
 	mobile					=>	'mobile',
 	sms							=>	'sms',
 	fax							=>	'fax',
