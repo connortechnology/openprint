@@ -9,7 +9,7 @@ use Text::CSV_XS ();
 use Date::Calc qw(Add_Delta_Days);
 use Date::Format qw( time2str );
 
-use Mail::Sendmail ();
+#use Mail::Sendmail ();
 
 use openprint ();
 
@@ -70,7 +70,8 @@ sub send_email_with_attachment {
 # Signal end of attachments
 		$$mail{BODY} .= "--$boundary--\n\n";
 	} # end if
-	Mail::Sendmail::sendmail(%{$mail}) || $log->error( "Error: $Mail::Sendmail::error\n" );
+	#Mail::Sendmail::sendmail(%{$mail}) || $log->error( "Error: $Mail::Sendmail::error\n" );
+	$log->error("Deprecated");
 } # end sub send_email_with_attachment
 
 # Loads the specified file and returns it.	Returns undef on failure.
@@ -107,7 +108,6 @@ sub save_file {
 } # end sub save_file
 
 sub build_city_prov_country {
-  require countries;
 	my ( $city, $prov, $country ) = @_;
 	my $cpc = $city;
 
@@ -118,7 +118,7 @@ sub build_city_prov_country {
 
 	if ( $country ) {
 		$cpc .= ', ' if $cpc;
-		$cpc .= ($countries::countries{$country} ? $countries::countries{$country} : $country);
+		$cpc .= $country;
 	} # end if;
 	return $cpc;
 } # end sub build_city_prov_country
