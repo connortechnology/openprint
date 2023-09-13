@@ -3,13 +3,11 @@ use strict;
 package openprint::Email;
 our @ISA = qw( openprint::Object );
 
-require Mail::Sendmail;
 use openprint ();
 require email;
 require ssi;
 require MIME::QuotedPrint;
 require MIME::Base64;
-require Mail::Sendmail;
 require Encode;
 require File::Slurp;
 
@@ -30,6 +28,7 @@ sub html_body {
 
 # The idea is that the params don't modify the object.
 sub send {
+require Mail::Sendmail;
 	my ( $self, %params ) = @_;
 	if ( $debug ) {
 		$openprint::log->debug("Sending an email");
