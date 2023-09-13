@@ -19,6 +19,7 @@ require openprint::Tax;
 require openprint::Email;
 require openprint::UserGroup;
 require openprint::Invoice;
+require openprint::MarketingCategory;
 require openprint::Payment;
 require openprint::Timetrack;
 require openprint::User_Profile_Field;
@@ -27,8 +28,6 @@ require openprint::Company_Profile_Field;
 require openprint::Company_Category;
 require openprint::Company_Credit;
 
-require Authen::Passphrase;
-require Authen::Passphrase::BlowfishCrypt;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -87,6 +86,8 @@ sub configuration {
             if ( (!$$C{value}) and $new_value ) {
               if ( 0 ) {
                 eval {
+require Authen::Passphrase;
+require Authen::Passphrase::BlowfishCrypt;
                   # Special case need to update everyone's passwords
                   foreach my $User ( openprint::User->find() ) {
                     my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $$User{password} );
@@ -365,6 +366,8 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		} elsif ( $config{encrypt_passwords} ) {
 			my $ppr;
 			eval {
+require Authen::Passphrase;
+require Authen::Passphrase::BlowfishCrypt;
 				$ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($User->password());
 			};
 			if ( (! $ppr ) or ! $ppr->match($param{password}) ) {
