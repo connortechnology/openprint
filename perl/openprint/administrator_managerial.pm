@@ -275,134 +275,113 @@ sub _currency_conversions {
 	} # end if
 } # end sub currency_conversions
 
-sub user_profiles {
+sub user_profiles_action {
+  my ($company_id, $User, $action) = @_;
 
-	my $user_id = $param{ddmUser} ? openprint::User->transform( 'id', $param{ddmUser} ) : undef;
-	$user_id = $param{user_id} ? openprint::User->transform( 'id', $param{user_id} ) : undef if ! $user_id;
-	my $User = $variable{User} = new openprint::User( $user_id );
-
-	my $user_role = $param{ddmUserRole};
-
-	if ( exists $param{ddmCustomer} ) {
-		if ( $param{ddmCustomer} and $User->company_id() and ( $User->company_id() != $param{ddmCustomer} ) ) {
-$log->error("PReventing customer change");
-			# Prevent selection of user from another company
-			$User = new openprint::User();
-		} # end if
-	} else {
-		# The porpose of this code was something to do with selecting by email address. It would load the user, but not change the
-		$param{ddmCustomer} = $User->company_id() if $User->id();
-	} # end if
-
-	# selected company
-	my $cust_id = $param{ddmCustomer};
-	$cust_id = $session{company_id} if ! $cust_id;
-
-	if ( $param{btnFunction} eq '<<' ) {
-		$User = $User->Prev( 'type'=>$param{ddmUserRole}, 'company_id'=>$param{ddmCustomer} );
-	} elsif ($param{btnFunction} eq '>>') {
-		$User = $User->Next( 'type'=>$param{ddmUserRole}, 'company_id'=>$param{ddmCustomer} );
-    } elsif ( $param{btnFunction} eq 'copy' ) {
-		$User = $User->copy();
-		$User->save({});
-		$user_id = $User->id();
-    } elsif ( $param{btnFunction} eq 'merge' ) {
-		if ( $$User{id} == $param{merge_user_id} ) {
-			$variable{error} .= 'Choose a different user to merge into.';
-		} else {
-			my $ac = sql::start_transaction( $dbh );
-			foreach my $type ( 'Order','Quote','Project', 'Log','Timetrack' ) {
-				require "openprint/$type.pm";
-				foreach ( "openprint::$type"->find( user_id=>$param{merge_user_id}) ) {
-					$variable{error} .= $_->save({user_id=>$User->id()});
-				} # end foreach
-			} # end foreach type
-			foreach my $type ( 'Claim', 'PurchaseOrder' ) {
-				require "openprint/$type.pm";
-				foreach ( "openprint::$type"->find( contact_id=>$param{merge_user_id}) ) {
-					$variable{error} .= $_->save({contact_id=>$User->id()});
-				} # end foreach
-			} # end foreach type
-			new openprint::User( $param{merge_user_id} )->delete();
-			sql::end_transaction( $dbh, $ac );
-		} # end if
-	} elsif ( $param{btnFunction} eq 'Undelete' ) {
-		if ( $_ = $User->undelete() ) {
-			$variable{error} .= "Error undeleting user: $_<br/>";
-		} else {
-			$variable{information} = 'User undeleted successfully.';
-		} # end if
-	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		$User->delete();
-		$User = $User->Next( type=>$param{ddmUserRole}, company_id=>$param{ddmCustomer} );
-		$variable{information} = 'User marked deleted.';
-	} elsif ( $param{btnFunction} eq 'Destroy' ) {
+	if ($action eq '<<') {
+		$User = $User->Prev( type=>$param{ddmUserRole}, company_id=>$company_id );
+	} elsif ($action eq '>>') {
+		$User = $User->Next( type=>$param{ddmUserRole}, company_id=>$company_id );
+  } elsif ( $action eq 'copy') {
+    $User = $User->copy();
+    $User->save({});
+  } elsif ($action eq 'merge') {
+    if ( $$User{id} == $param{merge_user_id} ) {
+      $variable{error} .= 'Choose a different user to merge into.';
+    } else {
+      my $ac = sql::start_transaction( $dbh );
+      foreach my $type ( 'Order','Quote','Project', 'Log','Timetrack' ) {
+        require "openprint/$type.pm";
+        foreach ( "openprint::$type"->find( user_id=>$param{merge_user_id}) ) {
+          $variable{error} .= $_->save({user_id=>$User->id()});
+        } # end foreach
+      } # end foreach type
+      foreach my $type ( 'Claim', 'PurchaseOrder' ) {
+        require "openprint/$type.pm";
+        foreach ( "openprint::$type"->find( contact_id=>$param{merge_user_id}) ) {
+          $variable{error} .= $_->save({contact_id=>$User->id()});
+        } # end foreach
+      } # end foreach type
+      new openprint::User( $param{merge_user_id} )->delete();
+      sql::end_transaction( $dbh, $ac );
+    } # end if
+  } elsif ($action eq 'Undelete') {
+    if ( $_ = $User->undelete() ) {
+      $variable{error} .= "Error undeleting user: $_<br/>";
+    } else {
+      $variable{information} = 'User undeleted successfully.';
+    } # end if
+  } elsif ($action eq 'Delete') {
+    $User->delete();
+    $User = $User->Next(type=>$param{ddmUserRole}, company_id=>$company_id);
+    $variable{information} = 'User marked deleted.';
+  } elsif ($action eq 'Destroy') {
     $variable{error} .= $User->destroy();
     if (!$variable{error}) {
-      $User = $User->Next( type=>$param{ddmUserRole}, company_id=>$param{ddmCustomer} );
+      $User = $User->Next(type=>$param{ddmUserRole}, company_id=>$company_id);
       $variable{information} = 'Record deleted.';
     }
+  } elsif ($action eq 'Save') {
+    if ( $param{password} ne $param{verifypassword} ) {
+      return misc::error( $log, $dbh, \%variable, "Passwords don't match.", "Your password and verify password fields do not match.");
+    } # end if
 
-	} elsif ($param{btnFunction} eq 'Save') {
-		if ( $param{password} ne $param{verifypassword} ) {
-			return misc::error( $log, $dbh, \%variable, "Passwords don't match.", "Your password and verify password fields do not match.");
-		} # end if
+    my @Users = openprint::User->find( 'email lc' => lc $param{email} ) if $param{email};
+    if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
+      $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
+      my $error = "There is already one or more users with the specified email address.  They are listed below:<br/>";
+      foreach my $U ( @Users ) {
+        $error .= sprintf('<a href="/administrator/managerial/user_profiles.html?ddmUser=%d">%s : %s &lt;%s&gt; %s</a><br/>', $U->id(), $U->Company()->name(), $U->name(), $U->email(), $U->deleted() ? 'deleted' : '' );
+      } # end foreach U
 
-if ( 0 ) {
-		my @Users = openprint::User->find( 'email lc' => lc $param{email} ) if $param{email};
-		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
-$log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
-			my $error = "There is already one or more users with the specified email address.  They are listed below:<br/>";
-			foreach my $U ( @Users ) {
-				$error .= sprintf('<a href="/administrator/managerial/user_profiles.html?ddmUser=%d">%s : %s &lt;%s&gt; %s</a><br/>', $U->id(), $U->Company()->name(), $U->name(), $U->email(), $U->deleted() ? 'deleted' : '' );
-			} # end foreach U
+      return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
+    } # end if
 
-			return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
-		} # end if
-}
+    if ( ! $param{password} ) {
+      delete $param{password};
+    } elsif ( $config{encrypt_passwords} ) {
+      my $ppr;
+      eval {
+        require Authen::Passphrase;
+        require Authen::Passphrase::BlowfishCrypt;
+        $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($User->password());
+      };
+      if ( (! $ppr ) or ! $ppr->match($param{password}) ) {
+        $param{password_changed_on} = 'NOW()';
+        $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $param{password} );
+        $param{password} = $ppr->as_rfc2307();
+      } else {
+        delete $param{password};
+      } # end if
 
-		if ( ! $param{password} ) {
-			delete $param{password};
-		} elsif ( $config{encrypt_passwords} ) {
-			my $ppr;
-			eval {
-require Authen::Passphrase;
-require Authen::Passphrase::BlowfishCrypt;
-				$ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($User->password());
-			};
-			if ( (! $ppr ) or ! $ppr->match($param{password}) ) {
-				$param{password_changed_on} = 'NOW()';
-				$ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $param{password} );
-				$param{password} = $ppr->as_rfc2307();
-			} else {
-				delete $param{password};
-			} # end if
+    } elsif ( $param{password} ne $User->password() ) {
+      $param{password_changed_on} = 'NOW()';
+    } # end if
 
-		} elsif ( $param{password} ne $User->password() ) {
-			$param{password_changed_on} = 'NOW()';
-		} # end if
+    # This has to exist, in order to save the no assistants situation
+    $param{assistant_ids} = [] if ! exists $param{assistant_ids};
+    $param{csr_ids} = [] if ! exists $param{csr_ids};
+    my $error = $User->save(\%param);
+    if (!$error) {
+      $User->Profile()->save(\%param);
+      if ($config{FEATURE_PURCHASE_ORDERS} and ($config{FEATURE_PURCHASE_ORDERS} ne 'N')) {
+        require openprint::PurchaseOrder_ContentType;
+        foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
+          $User->po_limit( $Type->id(), $param{'po_limit-'.$Type->id()} );
+        } # end foreach Type
+      }
+    } # end if
 
-		# This has to exist, in order to save the no assistants situation
-		$param{assistant_ids} = [] if ! exists $param{assistant_ids};
-		$param{csr_ids} = [] if ! exists $param{csr_ids};
-		my $error = $User->save( \%param );
-		if ( ! $error ) {
-			$User->Profile()->save( \%param );
-			foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
-				$User->po_limit( $Type->id(), $param{'po_limit-'.$Type->id()} );
-			} # end foreach Type
-		} # end if
+    if ($error) {
+      return misc::error( $log, $dbh, \%variable, 'Error Saving.', "There was an error saving the user's information. $error");
+    } # end if
 
-		if ( $error ) {
-			return misc::error( $log, $dbh, \%variable, 'Error Saving.', "There was an error saving the user's information. $error");
-		} # end if
+    if ( $config{mail_db_name} ) {
+      email::save($User->email(), \%param);
+    } # end if
 
-		if ( $config{mail_db_name} ) {
-			email::save($User->email(), \%param);
-		} # end if
-
-		my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
-		sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE user_id=?', $User->id() );
+    my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
+    sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE user_id=?', $User->id() );
 
 		# add them back in
 		if ( $param{selectUserCategories} ) {
@@ -432,6 +411,7 @@ require Authen::Passphrase::BlowfishCrypt;
 				sql::execute( undef, undef, 'DELETE FROM User_Service_Defaults WHERE id=?', $service_default_id );
 			} # end if
 		} # end foreach
+
 		if ( $param{'name-'} ) {
 			sql::insert( undef, undef, 'User_Service_Defaults', {
 					user_id			=>	$User->id(),
@@ -444,6 +424,35 @@ require Authen::Passphrase::BlowfishCrypt;
 		$variable{information} = 'Record saved successfully.';
 		$variable{ExternalRedirect} = '/administrator/managerial/user_profiles.html?ddmUser='.$User->id();
 	} # end if btnFunction
+} # end sub user_profiles_action
+
+sub user_profiles {
+
+	my $user_id = $param{ddmUser} ? openprint::User->transform( 'id', $param{ddmUser} ) : undef;
+	$user_id = $param{user_id} ? openprint::User->transform( 'id', $param{user_id} ) : undef if ! $user_id;
+	my $User = $variable{User} = new openprint::User( $user_id );
+
+	my $user_role = $param{ddmUserRole};
+
+	if ( exists $param{ddmCustomer} ) {
+		if ( $param{ddmCustomer} and $User->company_id() and ( $User->company_id() != $param{ddmCustomer} ) ) {
+$log->error("PReventing customer change");
+			# Prevent selection of user from another company
+			$User = new openprint::User();
+		} # end if
+	} else {
+		# The purpose of this code was something to do with selecting by email address. It would load the user, but not change the
+		$param{ddmCustomer} = $User->company_id() if $User->id();
+	} # end if
+
+	# selected company
+	my $cust_id = $param{ddmCustomer};
+	$cust_id = $session{company_id} if ! $cust_id;
+	$param{ddmCustomer} = $cust_id if ! $param{ddmCustomer};
+
+  if ($param{btnFunction}) {
+    $User = user_profiles_action($cust_id, $User, $param{btnFunction});
+  }
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
 	my @Users = openprint::User->find(
@@ -462,7 +471,8 @@ require Authen::Passphrase::BlowfishCrypt;
 		} else {
 			$User = $Users[0] if @Users;
 		} # end if
-    } # end if
+  } # end if
+
 	if ( $User->id() ) {
 		if ( $User->deleted() ) {
 			unshift @Users, $User;
@@ -471,23 +481,9 @@ require Authen::Passphrase::BlowfishCrypt;
 		} # end if
 	} # end if
 
-	# load user fields
-
-	$param{ddmCustomer} = $cust_id if ! $param{ddmCustomer};
 	$variable{UserIndex} = $User->id();
 	$variable{User} = $User;
-	$variable{NUM_USERS} = scalar @Users;
-
-	if ( $User->id() ) {
-		my $count = 1;
-		foreach my $U ( @Users ) {
-			if ( $U->id() == $User->id() ) {
-				$variable{EDIT_USER_NUM} = $count;
-				last;
-			} # endif
-			$count += 1;
-		} # end foreach
-	} # end if
+	$variable{Users} = \@Users;
 
 	if ( $config{mail_db_name} ) {
 		email::load($User->email(), \%variable);
@@ -495,8 +491,6 @@ require Authen::Passphrase::BlowfishCrypt;
 		$openprint::Email_Account::dbh = $mail_dbh;
 		$variable{Email} = openprint::Email_Account->find_one(username=>$User->email());
 	} # end if
-
-	$variable{Users} = \@Users;
 
 	# Get Marketing Category Inforamation - get all categories, and highlight the ones this user is in.
 	my @available_categories = sql::execute( $log, $dbh, 'SELECT id, name FROM Marketing_Categories' );
