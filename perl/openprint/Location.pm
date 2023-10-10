@@ -701,14 +701,16 @@ sub googlemap_html {
 } # end sub googlemap_html
 
 sub from_ip {
-	require Geo::IPfree;
-	if ( ! $geo ) {
-		$geo = Geo::IPfree->new();
-#$geo->LoadDB( '/usr/share/GeoIP/GeoIP.dat' );
-#'/usr/share/GeoIP/GeoIP.dat');
-#my $geo = $Geo::IP->open( '/usr/share/GeoIP/GeoIP.dat' );
-		$geo->Faster();
-	} # end if
+eval {
+  require Geo::IPfree;
+  if ( ! $geo ) {
+    $geo = Geo::IPfree->new();
+    #$geo->LoadDB( '/usr/share/GeoIP/GeoIP.dat' );
+    #'/usr/share/GeoIP/GeoIP.dat');
+    #my $geo = $Geo::IP->open( '/usr/share/GeoIP/GeoIP.dat' );
+    $geo->Faster();
+  } # end if
+};
 	my $ip = @_ ? $_[0] : ($ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR});
 	if ( ref $geo eq 'Geo::IPfree' ) {
 $openprint::log->debug("Doing lookup for $ip");
