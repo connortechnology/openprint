@@ -2,7 +2,6 @@ use strict;
 package openprint::article;
 
 use LWP::UserAgent ();
-use HTML::LinkExtractor ();
 require HTML::Entities;
 use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
@@ -155,24 +154,27 @@ $log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
 } 
 $log->debug("before unescape $param{body} ");
 	$param{body} = unescape_substitutions( $param{body} );
-$log->debug("aftere unescape $param{body} ");
+  $log->debug("aftere unescape $param{body} ");
 
-	if ( ! $Article->id() ) {
-		$variable{error} .= $Article->save(\%param);
-		new openprint::Log()->save({action=>'Create Article', object=>'Article', object_id=>$Article->id()});
-	} else {
-		$variable{error} .= $Article->save(\%param);
-	} # end if
-	my $LX = new HTML::LinkExtractor();
-	$LX->parse( \$$Article{body} );
-	if ( $LX->links ) {
-		foreach my $Link ( @{$LX->links} ) {
-			next if $$Link{tag} ne 'a';
-			next if $$Link{target} eq '_blank';	
-			$variable{warning} .= 'The link ' . $$Link{_TEXT_} . ' does not have a target="_blank" on it<br/>.';
-		} # end foreach  Link
-	} # end if links
-	undef $LX;
+  if (!$Article->id()) {
+    $variable{error} .= $Article->save(\%param);
+    new openprint::Log()->save({action=>'Create Article', Object=>$Article});
+  } else {
+    $variable{error} .= $Article->save(\%param);
+  } # end if
+  eval {
+    require HTML::LinkExtractor;
+    my $LX = new HTML::LinkExtractor();
+    $LX->parse( \$$Article{body} );
+    if ( $LX->links ) {
+      foreach my $Link ( @{$LX->links} ) {
+        next if $$Link{tag} ne 'a';
+        next if $$Link{target} eq '_blank';	
+        $variable{warning} .= 'The link ' . $$Link{_TEXT_} . ' does not have a target="_blank" on it<br/>.';
+      } # end foreach  Link
+    } # end if links
+    undef $LX;
+  };
 
 	my $Privacy = $Article->Privacy();
 	$variable{error} .= $Privacy->save( {
