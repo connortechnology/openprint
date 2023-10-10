@@ -28,7 +28,7 @@ sub html_body {
 
 # The idea is that the params don't modify the object.
 sub send {
-require Mail::Sendmail;
+  require Mail::Sendmail;
 	my ( $self, %params ) = @_;
 	if ( $debug ) {
 		$openprint::log->debug("Sending an email");
@@ -196,6 +196,8 @@ require Mail::Sendmail;
 
 		if ( $openprint::config{EmailTo} ) {
 			$mail{TO} = $openprint::config{EmailTo};
+      delete($mail{BCC});
+      delete($mail{CC});
 		} # end if
 		Mail::Sendmail::sendmail(%mail) || $openprint::log->error( "Error: $Mail::Sendmail::error\n" );
 		$results .= 'Sent to: ' .  ssi::htmlize( $mail{TO} ) . '<br/>';
