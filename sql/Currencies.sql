@@ -5,6 +5,7 @@ CREATE TABLE Currencies (
 	name		TEXT NOT NULL,
 	short		TEXT,
 	symbol		char(4) NOT NULL,/* 4 to support unicode */
+  precision smallint NOT NULL default 2,
     PRIMARY KEY ( id )
 );
 INSERT INTO Currencies VALUES (nextval('Currency_id_seq'),'Canadian Dollars','CAD','$');
