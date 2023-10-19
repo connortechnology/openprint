@@ -4,6 +4,7 @@ use warnings;
 require openprint::Object;
 require openprint::Host_Interface;
 require openprint::Host_Config;
+require openprint::Host_Info;
 require openprint::Project_Log;
 
 package openprint::Host_Notification;
@@ -225,23 +226,26 @@ sub Interfaces {
 	return $_[0]{Interfaces} ? @{$_[0]{Interfaces}} : ();
 } # end sub Interfaces
 
-sub info {
-	require openprint::Host_Info;
-	if ( ! $_[0]{Info} ) {
-		%{$_[0]{Info}} = map { $_->name(), $_ } openprint::Host_Info->find(host_id=>$_[0]{id});
+sub Info {
+  my $self = shift;
+	if ( ! $$self{Info} ) {
+		%{$$self{Info}} = map { $_->name(), $_ } openprint::Host_Info->find(host_id=>$$self{id});
 		if ( $debug ) {
-			foreach my $k ( keys %{$_[0]{Info}} ) {
-				$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
+			foreach my $k ( keys %{$$self{Info}} ) {
+				$openprint::log->debug(" $k => " . $$self{Info}{$k}->value() );
 			} # end foreach
 		}
 	} # end if
-	if ( $_[0]{Info}{$_[1]} ) {
-		return $_[0]{Info}{$_[1]}->value();
-	} # end if
-	$openprint::log->debug("No value for $_[1] " . $_[0]->to_string() );
-	foreach my $k ( keys %{$_[0]{Info}} ) {
-		$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
-	} # end foreach
+  return $$self{Info}[1];
+}
+
+sub info {
+  my $self = shift;
+  my $key = shift;
+
+  my $Info = $self->Info($key);
+  return $Info->value() if $Info;
+	$openprint::log->debug("No value for $key " . $self->to_string() );
 	return '';
 } # end sub info
 
