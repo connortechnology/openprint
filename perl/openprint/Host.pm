@@ -42,6 +42,8 @@ $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
 	id			=>	'id',
+  name => 'name',
+  abbr_name => 'abbr_name',
 	hostname	=>	'hostname',
 	blacklist	=>	'blacklist',
 	whitelist	=>	'whitelist',
@@ -76,6 +78,8 @@ $serial = 'hosts_id_seq';
 	max_ping_time	=>	[ 's/\D//g' ],
 	hostname	=>	[ 's/[^\w\-\.\/:_%//g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	abbr_name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 	blacklist 	=>	0,
@@ -100,25 +104,27 @@ $serial = 'hosts_id_seq';
 );
 
 sub name {
-	if ( ! $_[0]{name} ) {
-		$_[0]{name} = $_[0]->hostname();
-		if ( ! $_[0]{name} ) {
-			foreach my $HI ( $_[0]->Interfaces() ) {
+  my $self = shift;
+  $$self{name} = shift if @_;
+	if (!$$self{name}) {
+		$$self{name} = $self->hostname();
+		if ( ! $$self{name} ) {
+			foreach my $HI ( $$self->Interfaces() ) {
 				if ( $$HI{ip} ) {
-					$_[0]{name} = $$HI{ip};
-					return $_[0]{name};
+					$$self{name} = $$HI{ip};
+					return $$self{name};
 				}
 			}
-			foreach my $HI ( $_[0]->Interfaces() ) {
+			foreach my $HI ( $$self->Interfaces() ) {
 				if ( $$HI{mac} ) {
-					$_[0]{name} = $$HI{mac};
-					return $_[0]{name};
+					$$self{name} = $$HI{mac};
+					return $$self{name};
 				}
 			}
 			return 'unknown';			
 		}
 	}
-	return $_[0]{name};
+	return $$self{name};
 }
 
 sub Config {
