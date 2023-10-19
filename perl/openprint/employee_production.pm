@@ -962,17 +962,21 @@ sub complete_service {
 	my @forms;
 	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$Project{id}, 'service_id @>'=>$service_id ) ) {
 		my $Shift = $Job->Shift();
-		@operator_ids = sets::union(@operator_ids, @{$Shift->operator_ids()}) if $Shift->operator_ids();
-		push @forms, map { my $sig_specs = openprint::service::get_specs_ref( $Project, $_ ); $$sig_specs{SignatureIndex}; } @{$Job->pertains_id()};
-# FIXME: What if job has other signatures...
-		my @service_ids = @{$Job->service_id()} if $Job->service_id();
-		@service_ids = sets::exclude( \@service_ids, [ $service_id ] );
+    if ($Shift) {
+      @operator_ids = sets::union(@operator_ids, @{$Shift->operator_ids()}) if $Shift->operator_ids();
+      push @forms, map { my $sig_specs = openprint::service::get_specs_ref( $Project, $_ ); $$sig_specs{SignatureIndex}; } @{$Job->pertains_id()};
+      # FIXME: What if job has other signatures...
+      my @service_ids = @{$Job->service_id()} if $Job->service_id();
+      @service_ids = sets::exclude( \@service_ids, [ $service_id ] );
 
-		if ( ! @service_ids ) {
-			$Job->delete();
-		} else {
-			$Job->save({service_id=>\@service_ids});
-		}
+      if ( ! @service_ids ) {
+        $Job->delete();
+      } else {
+        $Job->save({service_id=>\@service_ids});
+      }
+    } else {
+      $openprint::log->warn("No shift for ".$Job->to_string());
+    } # end if Shift
 	} # end foreach Job
 	@forms = sort sets::union( @forms );
 	
