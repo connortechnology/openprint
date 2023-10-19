@@ -48,7 +48,12 @@
 				<ul>
 					<li class="info"><label for="description">Description</label><? echo ( $$variable{Location}->description() ) ?></li>
 					<li class="type"><label for="type">Type</label><? echo ( $$variable{Location}->type() ) ?></li>
+          <?if($$variable{Location}->company_id())?>
+          <li class="owner"><label for="owner">Owner</label><? echo ( $$variable{Location}->Company()->link_to() ) ?></li>
+          <?endif($$variable{Location}->company_id())?>
+          <?if($$variable{Location}->short())?>
 					<li class="short"><label for="short">Short</label><? echo ( $$variable{Location}->short() ) ?></li>
+          <?endif($$variable{Location}->short())?>
 				</ul>
 			</div>
 		</fieldset>
