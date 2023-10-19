@@ -10,6 +10,7 @@ use constant Debug => 1;
 
 use Apache2::Request ();
 use Apache2::RequestRec ();
+use Apache2::RequestIO ();
 use Apache2::Connection ();
 use Apache2::RequestUtil ();
 use APR::URI ();
@@ -283,7 +284,7 @@ $log->debug("PageContent is $variable{PageContent}");
 		if ( ! $r->connection()->aborted() ) {
 			if ( $template ) {
 #$log->debug("parsing template! $template");
-				$r->print( ssi::variable_substitution( \$template, \%variable ) );
+				$request->print( ssi::variable_substitution( \$template, \%variable ) );
 			} else {
 
 #$log->warn("No template!" . $r->content_type());
