@@ -52,6 +52,7 @@ foreach my $row (@relays) {
     print "No company for $$row{rbid} for $$row{name}, assigning rhinobee\n";
     $company = $rhinobee;
   }
+  $$row{name} = openprint::Host->transform(name=>$$row{name});
   my $host = openprint::Host->find_one(name=>$$row{name});
 
   if (!$host) {
@@ -66,6 +67,18 @@ foreach my $row (@relays) {
       if (confirm("Owner id doesn't match $$host{owner_id} != $$company{id}, update? Y|n", 'Y')) {
         $host->save({owner_id=>$company->id()});
       }
+    }
+  }
+
+  foreach my $info (qw(relay_type relay_class battery_box bb_quantity ssid key key_type direction_cardinal direction_degrees)) {
+    my $Info = $host->Info($info);
+    if (!$Info) {
+      $Info = new openprint::Host_Info();
+      $Info->save({host_id=>$host->id(), name=>$info, value=>$$row{$info}});
+    } elsif ($Info->value() ne $$row{$info}) {
+      if (confirm("Update $info from $$Info{value} to $$row{$info}", 'Y')) {
+        $Info->save({value=>$$row{$info}});
+    }
     }
   }
 } # end foreach relay
