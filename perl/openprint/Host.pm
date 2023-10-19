@@ -110,13 +110,13 @@ sub name {
 	if (!$$self{name}) {
 		$$self{name} = $self->hostname();
 		if ( ! $$self{name} ) {
-			foreach my $HI ( $$self->Interfaces() ) {
+			foreach my $HI ( $self->Interfaces() ) {
 				if ( $$HI{ip} ) {
 					$$self{name} = $$HI{ip};
 					return $$self{name};
 				}
 			}
-			foreach my $HI ( $$self->Interfaces() ) {
+			foreach my $HI ( $self->Interfaces() ) {
 				if ( $$HI{mac} ) {
 					$$self{name} = $$HI{mac};
 					return $$self{name};
