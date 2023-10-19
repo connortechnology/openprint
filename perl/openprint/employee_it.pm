@@ -302,11 +302,8 @@ sub host {
       } # end foreach I
       
     } elsif ( $param{action} eq 'Save' ) {
-      if ( $param{type_id} ) {
-        delete $param{type};
-      } else {
-        delete $param{type_id};
-      } # end if
+      delete $param{$param{type_id} ? 'type' : 'type_id'};
+      delete $param{$param{manufacturer_id} ? 'manufacturer' : 'manufacturer_id'};
       my $Location = openprint::Location::save_location( \%param );
       $param{location_id} = $Location->id() if $Location and $Location->id();
       my @changes = $Host->changes(\%param);
