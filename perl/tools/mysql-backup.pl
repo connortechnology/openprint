@@ -9,6 +9,7 @@ $year += 1900;
 
 my $opts = {};
 GetOptions($opts,
+  'check=s',
   'databases=s',
   'days=s',
   'debug=s',

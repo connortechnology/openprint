@@ -95,7 +95,8 @@ sub new {
 			if ( $data ) {
 				my $self = $$sub_cache{$id};
 				# The reason to use load is if we have overriden it in the object, like in Paper
-        #$self->load($data);
+        # 2022-04-21 had commented it out for some reason. Probably performance, but we need it if we are using find()
+        $self->load($data);
         #$log->debug("Loading object $parent $id from cache and populating with data new objcet is $self old cache is " . $$sub_cache{$id}) if DEBUG_CACHE;
 				return $self;
 			} else {

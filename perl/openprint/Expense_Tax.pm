@@ -54,7 +54,7 @@ sub amount {
           return undef;
         }
         $amount = $Expense->total() / (1+($$self{rate}/100));
-        $openprint::log->error("calculated amouhnt from total: $amount = $$Expense{total} / ($$self{rate}/100);");
+        #$openprint::log->error("calculated amouhnt from total: $amount = $$Expense{total} / ($$self{rate}/100);");
       }
       $$self{amount} = $amount * ($$self{rate}/100);
     } # end if
@@ -83,15 +83,17 @@ sub charge {
 				return $$self{charge};
 			} # end if
 		} # end if
-		if ( $self->Tax()->period_start() ) {
-			# See if tax is applicabale
-			my $period_start = Date::Parse::str2time( $self->Tax()->period_start() );
-			my $invoiced_on = Date::Parse::str2time( $Expense->invoiced_on() );
-			if ( $period_start < $invoiced_on ) {
-				$$self{charge} = 0;
-				return $$self{charge};
-			} # end if
-		} # end if
+    if ( $self->Tax()->period_start() ) {
+      # See if tax is applicable
+      my $period_start = Date::Parse::str2time( $self->Tax()->period_start() );
+      if ( $Expense->invoiced_on()) {
+        my $invoiced_on = Date::Parse::str2time( $Expense->invoiced_on() );
+        if ( $period_start < $invoiced_on ) {
+          $$self{charge} = 0;
+          return $$self{charge};
+        } # end if
+      } # end if invoiced_on
+    } # end if period_start
 		if ( sets::isin( $self->name(), ['GST','HST'] ) ) {
 			if ( $Expense->Company()->taxexempt1() eq 'Y' ) {
 				$$self{charge} = 0;
@@ -127,6 +129,16 @@ sub Expense {
     $$self{Expense} = new openprint::Expense($$self{expense_id});
   }
   return $$self{Expense};
+}
+
+sub to_string {
+  my $self = shift;
+  my $type = ref($self);
+  #return $type . ': '. join(' ' , map { $$self{$_} ? $_.' => '.(ref $$self{$_} eq 'ARRAY' ? join(',', @{$$self{$_}}) : $$self{$_} ) : () } keys %fields ).
+  return 'Tax: '.$self->name().' '.$self->rate().'% charge: '.($self->charge() ? 'yes':'no').' amount: ' . $self->Expense()->Currency()->format($self->amount())."\n";
+
+  #($$self{business_use} ? ' ' . $$self{business_use}. '% business = ' . $self->business_use_amount() : '').
+  #"\nTaxes:".join("\n", map { $_->to_string() } $self->Taxes());
 }
 1;
 __END__
