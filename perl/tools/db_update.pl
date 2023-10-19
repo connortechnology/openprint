@@ -1,8 +1,9 @@
 #!/usr/bin/perl 
-use lib '/var/www/testing/perl';
+use lib '/var/www/openprint/perl';
 use strict;
 
 require sql;
+require configuration;
 require logger;
 require openprint::Object;
 require openprint::Paper;
