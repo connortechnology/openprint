@@ -1131,6 +1131,11 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
     $log->debug("Adding max_ping_time to hosts");
     $dbh->do('ALTER TABLE hosts ADD max_ping_time INTEGER') or die $dbh->errstr();
   }
+  if ( !exists $$hosts_table{manufacturer_id}) {
+		$log->debug("Adding manufacturer_id to hosts");
+		$dbh->do('ALTER TABLE hosts add manufacturer_id INTEGER');
+		$dbh->do('ALTER TABLE hosts add FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
+  }
 }
 if ( sets::isin( 'tbl_projects', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_projects'", 'column_name');
