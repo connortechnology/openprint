@@ -485,7 +485,7 @@ sub forgotten_password {
 sub auth_code {
   my $user = shift;
   my @local_time = localtime();
-  my $authKey = $config{AUTH_HASH_SECRET}.$$user{'email'}.$$user{'password'}.$local_time[1].$local_time[2].$local_time[3].$local_time[4].$local_time[5];
+  my $authKey = $config{AUTH_HASH_SECRET}.$$user{email}.$$user{password}.$local_time[1].$local_time[2].$local_time[3].$local_time[4].$local_time[5];
   #ZM\Debug("Generated using hour:".$local_time[2] . ' mday:' . $local_time[3] . ' month:'.$local_time[4] . ' year: ' . $local_time[5] );
   return Digest::MD5::md5_base64($authKey);
 }
