@@ -644,7 +644,7 @@ sub save_location {
 	$$Location = $$param{company_id} if $$param{company_id};
 
 	if ( $$param{location} ) {
-		$Location = openprint::Location->find_one('name lc'=> lc openprint::Location->transform('name',$$param{location}),
+		$Location = openprint::Location->find_one('name lc'=> lc openprint::Location->transform(name=>$$param{location}),
 			( $$param{address} ? ( 'address lc'=>lc openprint::Location->transform('address',$$param{address}) ) : () ),
 			( $parent_id ? ( 'parent_id'=>$parent_id ) : () ),
 			);
@@ -841,6 +841,7 @@ $openprint::log->debug("Location::fitlers selected $country_id, $state_id, $city
 
     return $html;
 } # end sub filters
+
 sub html {
 	my $self = $_[0];
 	my $html = sprintf(q`
