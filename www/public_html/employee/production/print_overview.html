@@ -39,6 +39,7 @@ var drops = new Array();
 	<input type="hidden" name="ServiceIndex" />
 	<input type="hidden" name="schedule_id" />
 	<fieldset class="filters unprintable"><legend>Display Criteria</legend>
+    <div class="container">
 		<div class="presses">
 		<ul>
 			<li>
@@ -132,6 +133,7 @@ var drops = new Array();
 			</li>
 			</ul>
 		</div>
+    </div>
 		<p class="buttons">
 			<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ); ) ?>
 			<? echo ( button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ); ) ?>

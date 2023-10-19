@@ -193,7 +193,7 @@ sub _history {
       ( map { 'paid_on_end_'.$_ } ( 'year','month','day' ) ),
       'paid','invoicee_id','bad_debt','product_id', 'invoicer_id', 'currency_id' ) );
 
-  $variable{subtotal} = $variable{total} = $variable{interest_total} = $variable{owing_total} = 0;
+  $variable{subtotal} = $variable{total} = $variable{interest_total} = $variable{owing_total} = $variable{owing_total_value} = 0;
   $variable{Taxes} = [ openprint::Tax->find(
       ssi::date_filter($uri.'?created_on_end', 'period_start null_or_<='),
       ssi::date_filter($uri.'?created_on_start', 'period_end null_or_>='),
@@ -296,6 +296,7 @@ sub _history {
     $variable{paid_total} += $Invoice->paid();
     $variable{paidvalue_total} += $Invoice->paid_value();
     $variable{owing_total} += $Invoice->owing();
+    $variable{owing_total_value} += $Invoice->Currency()->convert_from($Invoice->owing());
     foreach my $Tax ( @{$variable{Taxes}} ) {
       my $IT = $Invoice->Tax( $Tax );
       next if ! $$IT{tax_id};

@@ -11,7 +11,7 @@ function isin( array, value ) {
 } // end function isin
 
 function get_value( obj ) {
-	if ( ! obj ) {
+	if (!obj) {
 		return;
 	} // end if
 	if ( obj.type == 'select-one' ) {
@@ -24,7 +24,7 @@ function get_value( obj ) {
 		}
 	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'textarea' ) {
 		return obj.value;
-	} else if ( obj.length ) {
+	} else if (obj.length) {
 		const value = new Array();
 		for ( let x = 0, len=obj.length; x < len; x += 1 ) {
 			if ( obj[x].checked ) {
@@ -32,8 +32,11 @@ function get_value( obj ) {
 				value[value.length] = obj[x].value;
 			} // end if
 		}
+
+    /*
 		if ( value.length == 0 ) return;
 		if ( value.length == 1 ) return value[0];
+    */
 		return value;
 	} else {
 		return obj.innerHTML;
@@ -779,7 +782,7 @@ function Country_onchange( country_ddm, state ) {
 	const country = get_ddm_value( country_ddm );
 	const state_label = $(country_ddm.name + '_state');
 	const postal_label = $(country_ddm.name + '_postal');
-	var onchange = state.getAttribute('onchange');
+	const onchange = state.getAttribute('onchange');
 	if ( country == 'US' ) {
 		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
 		new Ajax.Updater( state.id, '/includes/_states.html' );
@@ -791,9 +794,14 @@ function Country_onchange( country_ddm, state ) {
 		if ( state_label ) state_label.innerHTML='Province';
 		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} else {
-		$(state.name+'_container').innerHTML = '<input type="text" name="' + state.name + '" id="' + state.id + '" '+ ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
-		if ( state_label ) state_label.innerHTML='State/Province';
-		if ( postal_label ) postal_label.innerHTML='Postal Code';
+    const container = document.getElementById(state.name+'_container');
+    if (container) {
+		  container.innerHTML = '<input type="text" name="' + state.name + '" id="' + state.id + '" '+ ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+    } else {
+      console.err("Unable to find element for "+state.name+'_container');
+    }
+		if ( state_label ) state_label.innerHTML = 'State/Province';
+		if ( postal_label ) postal_label.innerHTML = 'Postal Code';
 	} // end if
 } // end function
 
@@ -1324,17 +1332,18 @@ function LoadContent( divID, page, parameters, message ) {
 	const div = $j('#'+divID);
 	if (div.length) {
     div.html(message? message : 'Please wait...');
+
+    openprint_load_content_ajax = $j.ajax({
+      url: page,
+      data: parameters,
+      success: function(data) {
+        div.html(data);
+        update_event_bindings();
+      }
+    });
   } else {
     console.log("Nothing found for " + divID);
 	} // end if
-  openprint_load_content_ajax = $j.ajax({
-    url: page,
-    data: parameters,
-    success: function(data) {
-      div.html(data);
-      update_event_bindings();
-    }
-  });
 } // end function LoadContent
 
 function photo_popup( asset_id, album_id ) {
@@ -1751,3 +1760,51 @@ function update_event_bindings() {
 window.addEventListener("DOMContentLoaded", function() {
   update_event_bindings();
 });
+
+function fix_prototype_bootstrap() {
+  /*
+  if (Prototype.BrowserFeatures.ElementExtensions) {
+    var disablePrototypeJS = function (method, pluginsToDisable) {
+      var handler = function (event) {
+        event.target[method] = undefined;
+        setTimeout(function () {
+          delete event.target[method];
+        }, 0);
+      };
+      pluginsToDisable.each(function (plugin) {
+        jQuery(window).on(method + '.bs.' + plugin, handler);
+      });
+    },
+      pluginsToDisable = ['collapse', 'dropdown', 'modal', 'tooltip', 'popover'];
+    disablePrototypeJS('show', pluginsToDisable);
+    disablePrototypeJS('hide', pluginsToDisable);
+  }
+  */
+  /* ----------- RESOLVES THE ISSUE OF THE DROPDOWN MENUS DISAPPEARING ------------ */
+  (function() {
+    var isBootstrapEvent = false;
+    if (window.jQuery) {
+      var all = jQuery('*');
+      jQuery.each(['hide.bs.dropdown',
+        'hide.bs.collapse',
+        'hide.bs.modal',
+        'hide.bs.tooltip',
+        'hide.bs.popover',
+        'hide.bs.tab'], function(index, eventName) {
+          all.on(eventName, function( event ) {
+            isBootstrapEvent = true;
+          });
+        });
+    }
+    var originalHide = Element.hide;
+    Element.addMethods({
+      hide: function(element) {
+        if(isBootstrapEvent) {
+          isBootstrapEvent = false;
+          return element;
+        }
+        return originalHide(element);
+      }
+    });
+  })();
+} // fix_prototype_bootstrap

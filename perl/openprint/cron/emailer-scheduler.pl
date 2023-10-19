@@ -65,7 +65,8 @@ configuration::merge($opts);
 $config{log_level} = 'debug' if !$config{log_level};
 $log = logger->new({file=>$config{log_file}, level=>$config{log_level}});
 
-$session{company_id} = $config{owner_id};
+$session{company_id} = $config{owner_id} ? $config{owner_id} : $config{company_id};
+die "No company assigned" if ! $session{company_id};
 $session{user_type} = $config{user_type} ? $config{user_type} : '';
 $ENV{DOCUMENT_ROOT} = $config{DOCUMENT_ROOT};
 

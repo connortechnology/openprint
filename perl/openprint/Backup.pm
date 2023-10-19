@@ -45,6 +45,7 @@ $serial = 'backups_id_seq';
 	updated_on  	=>	q`'NOW()'`,
 	lastran_on		=>	undef,
 	deleted     	=>	0,
+	host_id     	=>	undef,
 	type_id     	=>	undef,
 	owner_id			=>	undef,
   keep          =>  undef,
@@ -127,14 +128,14 @@ sub run {
     my $stderr;
     my $log;
 
-    my $command = qq`/var/www/testing/perl/tools/make_snapshot.sh -T -t $type -n $keep "$_[0]{username}\@$ip:$_[0]{path}" "$dest"`;
+    my $command = qq`/var/www/testing/perl/tools/make_snapshot.sh -T -t $type -n $keep "$_[0]{username}\@$ip:$_[0]{path}" "$dest/"`;
 
     $openprint::log->debug("Command: $command");
     IPC::Run3::run3( $command, undef, \$stdout, \$stderr );
     if ( $? ) {
     #my $log = File::Slurp::read_file("$dest.$type.0.log",err_mode => 'carp' );
     $results .= join( "\n", map { $_ ? $_ : () } ( $stdout , $stderr, $log ) );
-      $openprint::log->error("ERror running backup. Reason: ($?) stdout($stdout) stderr($stderr)");
+      $openprint::log->error("Error running backup. Reason: ($?) stdout($stdout) stderr($stderr)");
   (new openprint::Log())->save({
       Object  =>  $_[0],
       action  =>  'Failed Backup',
@@ -149,7 +150,7 @@ sub run {
     (new openprint::Log())->save({
         Object  =>  $_[0],
         action  =>  'Successful Backup',
-        note    =>  $results,
+        note    =>  $command."\n".$results,
     });
 
     # Stop after the first successful backup, as we are iterating through ips
@@ -173,6 +174,7 @@ sub size {
   }
   $openprint::log->debug("Size of $$self{dest_path}: @output");
   my ( $size ) = $output[0] =~ /^(\d+)/;
+  $size *= 1024;
   return $size;
 }
 

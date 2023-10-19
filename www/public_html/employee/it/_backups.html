@@ -27,14 +27,15 @@
 			<th class="hostname">Host</th>
 			<th class="type">Type</th>
 			<th class="enabled">Enabled</th>
-			<th class="Space">Disk Usage</th>
 			<th class="DateTime">Last Ran</th>
+			<th class="Space">Disk Usage</th>
 		</tr>
 	</thead>
 	<tbody>
 		<? echo (
 			my $html;
 			my $rowclass;
+      my $total_diskspace = 0;
 			foreach my $Backup ( @{$$variable{Backups}} ) {
         my $Host = $Backup->Host();
 
@@ -45,8 +46,8 @@
 						<td class="hostname"><a href="/employee/it/backup.html?backup_id=%1$d">%3$s</a></td>
 						<td class="type"><a href="/employee/it/backup.html?backup_id=%1$d">%4$s</a></td>
 						<td class="enabled"><a href="/employee/it/backup.html?backup_id=%1$d">%5$s</a></td>
-						<td class="Space"><a href="/employee/it/backup.html?backup_id=%1$d">%6$s</a></td>
 						<td class="DateTime"><a href="/employee/it/backup.html?backup_id=%1$d">%7$s</a></td>
+						<td class="Space"><a href="/employee/it/backup.html?backup_id=%1$d">%6$s</a></td>
           </tr>
 					', $Backup->id(), $Backup->name(), 
           $Host->hostname() . ' ' . ($Host->online() ? '<span class="online">online</span>' : '<span class="offline">offline</span>'),
@@ -57,11 +58,13 @@
 					$rowclass,
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
+        $total_diskspace += $Backup->size();
 			} # end foreach Backup
-			$html .= '<tr class="totals"><td colspan="6"># of backups: ' . @{$$variable{Backups}} . '</td></tr>';
+			$html .= '<tr class="totals"><td colspan="6"># of backups: ' . @{$$variable{Backups}} . '</td>
+        <td class="Space">'.Number::Format::format_bytes($total_diskspace).'</td>
+      </tr>';
 			return $html;
 		) ?>
-		<tr>
 	</tbody>
 </table>
 <p class="buttons">

@@ -434,13 +434,59 @@ sub expenditure {
 } # end sub expenditure
 
 sub expenses {
-	if ( $param{btnFunction} eq 'Delete' ) {
-		my $Expenditure = new openprint::Expense( $param{expense_id} );
-		if ( $variable{error} .= $Expenditure->delete() ) {
-			$variable{ExternalRedirect} = '/employee/accounting/expense.html';
-			return;	
-		} # end if
-		delete $param{expense_id};
+  if ($param{btnFunction}) {
+    if ( $param{btnFunction} eq 'Delete' ) {
+      my $Expenditure = new openprint::Expense( $param{expense_id} );
+      if ( $variable{error} .= $Expenditure->delete() ) {
+        $variable{ExternalRedirect} = '/employee/accounting/expense.html';
+        return;	
+      } # end if
+      delete $param{expense_id};
+    } elsif ( $param{btnFunction} eq 'Download') {
+      my $uri = '/employee/accounting/expenses.html';
+      my @Taxes = openprint::Tax->find(
+        ssi::date_filter( $uri.'?invoiced_on_end', 'period_start null_or_<=' ),
+        ssi::date_filter( $uri.'?invoiced_on_start', 'period_end null_or_>=' ),
+        ssi::date_filter( $uri.'?paid_on_end', 'period_start null_or_<=' ),
+        ssi::date_filter( $uri.'?paid_on_start', 'period_end null_or_>=' ),
+        order   =>  'period_start,name',
+      );
+      my @header = ('Recipient', 'Account', 'Category', 'Description', 'Transaction Id', 'Invoiced', 'Due', 'Paid', 'Bus %', 'Amount','Business Use Amount', (map { $_->name() } @Taxes), 'Total');
+      my @data = ();
+
+      my @Expenses = openprint::Expense->find(
+        ( map {
+            ( exists $session{$uri.'?'.$_} and $session{$uri.'?'.$_} ne '' ) ? ( $_ => [split(',',$session{$uri.'?'.$_})] ) : ()
+          } ( 'category_id', 'recipient_id', 'account_id','attention','amount','total', 'currency_id', 'business_use' ) ),
+        ssi::date_filter( $uri.'?invoiced_on_end', 'invoiced_on <=' ),
+        ssi::date_filter( $uri.'?invoiced_on_start', 'invoiced_on >=' ),
+        ssi::date_filter( $uri.'?due_on_end', 'due_on <=' ),
+        ssi::date_filter( $uri.'?due_on_start', 'due_on >=' ),
+        ssi::date_filter( $uri.'?paid_on_end', 'paid_on <=' ),
+        ssi::date_filter( $uri.'?paid_on_start', 'paid_on >=' ),
+        ssi::date_filter( $uri.'?entered_on_end', 'created_on <=' ),
+        ssi::date_filter( $uri.'?entered_on_start', 'created_on >=' ),
+        ($openprint::User->type() eq 'A' ? ( $session{$uri.'?owner_id'} ? (owner_id=>$session{$uri.'?owner_id'}):()) : (owner_id=>$session{owner_id})),
+        ( $session{$uri.'?description'} ? ('description ilike'=>$session{$uri.'?description'}.'%') : () ),
+        order     => 'paid_on,due_on',
+        deleted   => ($session{$uri.'?deleted'} eq '' ? [0,1] : $session{$uri.'?deleted'}),
+      );
+      foreach my $Expense ( @Expenses ) {
+        my $Currency = $Expense->Currency();
+        push @data, (
+          $Expense->Recipient()->name(), $Expense->account(), $Expense->category(), $Expense->description(), $Expense->transaction_id(),
+          ssi::format_csv_date($Expense->invoiced_on()),
+          ssi::format_csv_date($Expense->due_on()),
+          ssi::format_csv_date($Expense->paid_on()),
+          $Expense->business_use(),
+          $Currency->convert_from($Expense->amount(), { period=>$Expense->paid_on()}),
+          $Currency->convert_from($Expense->business_use_amount(), { period=>$Expense->paid_on()}),
+          ( map { $Currency->convert_from($Expense->Tax( $_ )->amount(), { period=>$Expense->paid_on()}) } @Taxes),
+          $Currency->convert_from($Expense->total(), { period=>$Expense->paid_on()}),
+        );
+      } # end foreach Expense
+      misc::export_csv( $r, $log, \%variable, 'expenses.csv', \@header, \@data );
+    }
 	} else {
 		_expenses();
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'invoiced_on_start', -31 );

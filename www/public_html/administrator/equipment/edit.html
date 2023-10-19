@@ -16,7 +16,8 @@ function add_stock_setting( stock_id ) {
 			}
 		}
 	);
-	var tr = $('stock_'+stock_id); if(tr) { tr.parentNode.removeChild(tr) };
+	const tr = $('stock_'+stock_id);
+  if (tr) { tr.parentNode.removeChild(tr) };
 } // end function add_stock_setting
 
 function filter_onChange( element, id, selected ) {
@@ -44,14 +45,24 @@ function filter_onChange( element, id, selected ) {
 				parameters:Form.serialize($(formName))});
 				//evalScripts:true, 
 	}
-	function del_operator( user_id ) {
-		new Ajax.Updater('Operators','/administrator/equipment/_operators.html', {
-				parameters: { action: 'delete', equipment_id: equipment_id, user_id: user_id } } );
-	} // end function del_operator
+	function del_operator(user_id) {
+    $j.get('/administrator/equipment/_operators.html',
+      { action: 'delete', equipment_id: equipment_id, user_id: user_id },
+      function(data) {
+        $j('#Operators').html(data);
+        update_event_bindings();
+      }
+    );
+  } // end function del_operator
 
 	function add_operator(user_id) {
-		new Ajax.Updater('Operators','/administrator/equipment/_operators.html', {
-				parameters: { action: 'add', equipment_id: equipment_id, user_id: user_id } } );
+    $j.get('/administrator/equipment/_operators.html',
+      { action: 'add', equipment_id: equipment_id, user_id: user_id },
+      function(data) {
+        $j('#Operators').html(data);
+        update_event_bindings();
+      }
+    );
 	}
 	function delete_spec( id ) {
     new Ajax.Request('/administrator/equipment/_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('S'+id); tr.parentNode.removeChild(tr);SortableTable.load();} } );

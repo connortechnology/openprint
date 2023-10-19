@@ -2,7 +2,9 @@ input:invalid {
 	color:red;
 }
 input, textarea {
+  /*
 	font-size: small;
+  */
 }
 textarea {
   box-sizing: border-box;
@@ -96,7 +98,6 @@ table.List tr {
 	margin: 0;
 }
 .totals td {
-	border-top: 1px solid #000088;
 }
 
 .List input[type="text"], .List input[type="number"] {
@@ -193,6 +194,7 @@ fieldset li {
 	margin: 2px 0 2px 0;
 	padding: 0 0 0 175px;
 	text-align: left;
+  min-height: 38px;
 }
 fieldset label:not(.radio):not(.radio-inline) {
 	width: 170px;
@@ -249,7 +251,7 @@ input[type="checkbox"] {
 .dialog table li {
 	padding-left: 80px;
 }
-.dialog table li label:not(.radio) {
+.dialog table li label:not(.radio):not(.radio-inline) {
 	margin-left: -80px;
 	width: 75px;
 }
@@ -291,12 +293,12 @@ input[type="checkbox"] {
 }
 
 .filters p, .filters li {
-	padding: 0 0 0 165px;
+	padding: 0 0 0 175px;
 	text-align: left;
 }
 .filters label:not(.radio):not(.radio-inline) {
-	width: 160px;
-	margin-left: -165px;
+	width: 170px;
+	margin-left: -175px;
 }
 .filters input[type="number"] ,
 .filters input[type="text"] {
@@ -418,6 +420,7 @@ table .checkbox {
 	width: 25px;
 	text-align: center;
 }
+table .cost,
 table .Price {
 	width: 120px;
 	text-align: right;
@@ -430,8 +433,9 @@ table .Price input[type="text"] {
 	text-align: right;
 }
 table .Status, table .status {
+	text-align: left;
+	padding-left: 7px;
 	width: 200px;
-	text-align: right;
 }
 table .description {
 	text-align: left;
@@ -452,7 +456,7 @@ tr .mac {
 }
 .DateSelectorT,
 .DateSelectorC {
-	min-width: 215px;
+	min-width: 295px;
 	display: inline-block;
 }
 .DateSelectorCT {
@@ -599,11 +603,6 @@ th.When {
 .thumbnail ,
 .thumbnail img {
 	width: 48px;
-}
-table .status {
-	text-align: left;
-	padding-left: 7px;
-	width: 80px;
 }
 table .order_id {
 	text-align: left;
