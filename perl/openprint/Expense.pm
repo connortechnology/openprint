@@ -98,6 +98,7 @@ sub Company {
 } # end sub Company
 
 sub Currency {
+  return $openprint::Currency if !$_[0]{currency_id};
 	return new openprint::Currency( $_[0]{currency_id} );
 } # end sub Currency
 
@@ -123,7 +124,7 @@ sub recipient {
     my $Company = new openprint::Company($$self{recipient_id});
     $$self{recipient} = $$Company{name};
   }
-  return $$self{recipient};
+  return $$self{recipient} ? $$self{recipient} : '';
 }
 
 sub category_id {
