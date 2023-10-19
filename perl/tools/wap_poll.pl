@@ -5,6 +5,7 @@ use strict;
 use warnings;
 
 use LWP;
+use JSON;
 
 require configuration;
 require sql;
@@ -112,7 +113,6 @@ foreach my $Host ( @Hosts ) {
 			my $protocol = 'http';
 
 			if ( $Host->type() eq 'TP-Link Archer C7' ) {
-				use JSON;
         my $auth_key = '';
 
         my $rpc_auth_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/auth';
@@ -161,6 +161,7 @@ foreach my $Host ( @Hosts ) {
           $log->debug("Have wlans: @wlans");
         }
         foreach my $wlan ( @wlans ) {
+          $log->debug("Getting from post $rpc_sys_url $wlan");
           $response = $browser->post($rpc_sys_url, Content => encode_json( { method=>'wifi.getiwinfo', params=>[$wlan] } ));
           $response = get_from_json($response->content());
           next if ! $response;
@@ -197,7 +198,6 @@ foreach my $Host ( @Hosts ) {
         last;
 
       } elsif ( 0 ) {
-				use JSON;
 				$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
 				$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/admin/status/overview?status=1';
 				$args = {
