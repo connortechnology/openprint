@@ -6,6 +6,7 @@ require openprint::Host_Interface;
 require openprint::Host_Config;
 require openprint::Host_Info;
 require openprint::Project_Log;
+require openprint::Manufacturer;
 
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
@@ -38,7 +39,7 @@ package openprint::Host;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
-$debug = 0;
+$debug = 1;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
@@ -103,6 +104,23 @@ $serial = 'hosts_id_seq';
   max_ping_time =>  1000,
   min_ping_frequency  =>  60,
 );
+
+sub save {
+  my ( $self, $params ) = @_;
+
+  $self->set( $params ) if $params;
+
+  if ( $$self{Manufacturer} and $$self{Manufacturer}->name() and ! $$self{Manufacturer}->id() ) {
+    $$self{Manufacturer}->save();
+  } # end if
+
+  if ( ( my $error = $self->SUPER::save( ) ) ) {
+    return $error;
+  } # end if
+  return '';
+
+} # end sub save
+
 
 sub name {
   my $self = shift;
@@ -234,15 +252,16 @@ sub Interfaces {
 
 sub Info {
   my $self = shift;
+  my $key = shift;
 	if ( ! $$self{Info} ) {
 		%{$$self{Info}} = map { $_->name(), $_ } openprint::Host_Info->find(host_id=>$$self{id});
 		if ( $debug ) {
 			foreach my $k ( keys %{$$self{Info}} ) {
-				$openprint::log->debug(" $k => " . $$self{Info}{$k}->value() );
+				$openprint::log->debug(" $k => " . ( defined $$self{Info}{$k}->value() ? $$self{Info}{$k}->value() : 'undef') );
 			} # end foreach
 		}
 	} # end if
-  return $$self{Info}[1];
+  return $$self{Info}{$key};
 }
 
 sub info {
@@ -661,6 +680,32 @@ sub thumbnail_url {
 	}
 	my @Assets = $self->Assets();
 	return ( @Assets ? $Assets[0]->Asset()->sized_url($size) : '' );
+}
+
+sub Manufacturer {
+  my $self = shift;
+  $$self{Manufacturer} = shift if @_;
+  if (!$$self{Manufacturer}) {
+    $$self{Manufacturer} = new openprint::Manufacturer();
+  }
+  return $$self{Manufacturer};
+}
+
+sub manufacturer {
+  my $self = shift;
+  my $Manufacturer = $self->Manufacturer();
+  if (@_) {
+    my $manufacturer = shift;
+    if ($Manufacturer->name() ne $manufacturer) {
+      my $Manufacturer = openprint::Manufacturer->find_one('name lc'=>lc openprint::Manufacturer->transform(name=>$manufacturer));
+      if (!$Manufacturer) {
+        $Manufacturer = new openprint::Manufacturer();
+        $Manufacturer->name($manufacturer);
+      }
+      $$self{Manufacturer} = $Manufacturer;
+    }
+  }
+  return $Manufacturer->name();
 }
 
 1;
