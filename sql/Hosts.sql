@@ -1,14 +1,17 @@
-DROP TABLE IF EXISTS hosts;
+DROP TABLE IF EXISTS hosts CASCADE;
 CREATE TABLE hosts (
 	id			SERIAL,
 	hostname	text,
-	blacklisted	boolean not null default false,
-	whitelisted	boolean not null default false,
+	name	text,
+	abbr_name	text,
+	blacklist	boolean not null default false,
+	whitelist	boolean not null default false,
 	monitored	boolean not null default false,
 	description text,
 	dhcp		boolean not null default false,
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	resolved_on	TIMESTAMP WITH TIME ZONE,
 	count		INTEGER,
 	deleted		BOOLEAN NOT NULL DEFAULT FALSE,
 	online		BOOLEAN,
@@ -18,6 +21,7 @@ CREATE TABLE hosts (
 	notify_frequency	INTEGER,
 	location_id			INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
 	owner_id			INTEGER, FOREIGN KEY (owner_id) REFERENCES Companies (id),
+	type_id INTEGER, FOREIGN KEY (type_id) REFERENCES Host_types (id),
   min_ping_frequency  INTEGER,
   max_ping_time       INTEGER,
 	PRIMARY KEY (id)

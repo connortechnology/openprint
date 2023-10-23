@@ -14,14 +14,11 @@ require openprint::Company;
 require openprint::Order;
 
 require sql;
-require openprint::JDF;
 require openprint::OrderedProduct;
 require openprint::OrderedProject;
-require openprint::ScheduledJob;
 require openprint::Project_Service;
 require openprint::Todo;
 require openprint::Bug;
-require openprint::Estimating::MultiPage;
 require openprint::service;
 require openprint::Project_Log;
 
@@ -196,6 +193,7 @@ sub get_project_type_service_index {
 } # end sub
 
 sub JDF_ProductIntent {
+require openprint::JDF;
 	my ( $self ) = @_;
 
 	my $services = $self->services();
@@ -211,6 +209,7 @@ sub JDF_ProductIntent {
 } # end sub JDF_ProductIntent
 
 sub jdf {
+require openprint::JDF;
 	my ( $self, $version ) = @_;
 	$version = 1.3 if ! $version;
 	my $ppi = 1;
@@ -598,6 +597,7 @@ $openprint::log->debug("Service : " . $Service->service_type() . ' ' . $Service-
 			%statuses = map { $_ => $_ } values %service_statuses;
 		} # end if
 		if ( $self->Type()->type() eq 'MultiPage' ) {
+require openprint::Estimating::MultiPage;
 			foreach my $qty_index ( $self->quantity_indexes() ) {
 				if ( openprint::Estimating::MultiPage::status( $$self{id}, undef, $qty_index ) ) {
 					$new_status = 'uncalculated';
@@ -1113,6 +1113,7 @@ sub status_change {
 	my ( $self, $company_id, $user_id, $new_status ) = @_;
 	$company_id = $openprint::session{company_id} if ! $company_id;
 	$user_id = $openprint::session{user_id} if ! $user_id;
+require openprint::ScheduledJob;
 
 	$self->add_to_log( $company_id,$user_id, 'Marked '.$new_status );
 	if ( $new_status eq 'Printed' ) {
@@ -1655,6 +1656,8 @@ sub calliper {
 
 		my @quantity_indexes = $Project->quantity_indexes() ;
 		if ( $project_type eq 'MultiPage' ) {
+
+require openprint::Estimating::MultiPage;
 	
 			foreach my $group_id ( $$printing_specs{groups} ? split(',', $$printing_specs{groups} ) : openprint::Estimating::MultiPage::groups( $$Project{id}, $printing_specs ) ) {
 				foreach my $signature_service_index ( $Project->signatures({Group=>$group_id}) ) {

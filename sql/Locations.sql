@@ -1,12 +1,5 @@
 
 DROP TABLE IF EXISTS Locations;
-DROP TABLE IF EXISTS Location_Types;
-
-CREATE TABLE Location_Types (
-	id SERIAL,
-	name	TEXT,
-	PRIMARY KEY (id)
-);
 
 CREATE TABLE Locations (
 	id SERIAL NOT NULL,
@@ -27,6 +20,7 @@ CREATE TABLE Locations (
 	album_id INTEGER, FOREIGN KEY (album_id) REFERENCES Photo_Albums (id),
 	description	text,
 	deleted		BOOLEAN NOT NULL DEFAULT FALSE,
+  company_id  INTEGER, FOREIGN KEY(company_id) REFERENCES Companies (id),
 	PRIMARY KEY (id)
 );
 

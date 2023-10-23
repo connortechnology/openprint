@@ -14,7 +14,7 @@ use vars qw( $log $dbh %config $debug %fields %find_fields %transforms %defaults
 $table = 'users';
 $serial = 'users_id_seq';
 
-$debug = 0;
+$debug = 1;
 
 $default_sort	=	'lower(firstname),lower(lastname),id';
 
@@ -28,7 +28,6 @@ $default_sort	=	'lower(firstname),lower(lastname),id';
 	email						=>	'email',
 	email_valid			=>	'email_valid',
 	phone						=>	'phone',
-	extension				=>	'extension',
 	mobile					=>	'mobile',
 	sms							=>	'sms',
 	fax							=>	'fax',
@@ -601,10 +600,10 @@ sub last_logged_in {
 sub AUTOLOAD {
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
-$openprint::log->debug("AUTOLOAD $name") if $debug;
+  #$openprint::log->debug("AUTOLOAD $name") if $debug;
 	if ( $fields{$name} ) {
 		if ( @_ > 1 ) {
-$openprint::log->debug("Autoload User $name $_[0]") if $debug;
+      #$openprint::log->debug("Autoload User $name $_[0]") if $debug;
 			return $_[0]{$name} = $_[1];
 		} else {
 			return $_[0]{$name};
@@ -612,7 +611,7 @@ $openprint::log->debug("Autoload User $name $_[0]") if $debug;
 	} else {
 		my $Profile = $_[0]->Profile();
 		if ( exists $$Profile{fields}{$name} ) {
-			$openprint::log->warn("PRofile field in User::AUTOLOAD $name") if $debug;
+      #$openprint::log->warn("PRofile field in User::AUTOLOAD $name") if $debug;
 			if ( @_ > 1 ) {
 				$$Profile{fields}{$name} = $_[1];
 			} # end if

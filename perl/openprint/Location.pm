@@ -644,7 +644,7 @@ sub save_location {
 	$$Location = $$param{company_id} if $$param{company_id};
 
 	if ( $$param{location} ) {
-		$Location = openprint::Location->find_one('name lc'=> lc openprint::Location->transform('name',$$param{location}),
+		$Location = openprint::Location->find_one('name lc'=> lc openprint::Location->transform(name=>$$param{location}),
 			( $$param{address} ? ( 'address lc'=>lc openprint::Location->transform('address',$$param{address}) ) : () ),
 			( $parent_id ? ( 'parent_id'=>$parent_id ) : () ),
 			);
@@ -701,14 +701,16 @@ sub googlemap_html {
 } # end sub googlemap_html
 
 sub from_ip {
-	require Geo::IPfree;
-	if ( ! $geo ) {
-		$geo = Geo::IPfree->new();
-#$geo->LoadDB( '/usr/share/GeoIP/GeoIP.dat' );
-#'/usr/share/GeoIP/GeoIP.dat');
-#my $geo = $Geo::IP->open( '/usr/share/GeoIP/GeoIP.dat' );
-		$geo->Faster();
-	} # end if
+eval {
+  require Geo::IPfree;
+  if ( ! $geo ) {
+    $geo = Geo::IPfree->new();
+    #$geo->LoadDB( '/usr/share/GeoIP/GeoIP.dat' );
+    #'/usr/share/GeoIP/GeoIP.dat');
+    #my $geo = $Geo::IP->open( '/usr/share/GeoIP/GeoIP.dat' );
+    $geo->Faster();
+  } # end if
+};
 	my $ip = @_ ? $_[0] : ($ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR});
 	if ( ref $geo eq 'Geo::IPfree' ) {
 $openprint::log->debug("Doing lookup for $ip");
@@ -841,6 +843,7 @@ $openprint::log->debug("Location::fitlers selected $country_id, $state_id, $city
 
     return $html;
 } # end sub filters
+
 sub html {
 	my $self = $_[0];
 	my $html = sprintf(q`

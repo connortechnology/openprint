@@ -1,8 +1,9 @@
 #!/usr/bin/perl 
-use lib '/var/www/testing/perl';
+use lib '/var/www/openprint/perl';
 use strict;
 
 require sql;
+require configuration;
 require logger;
 require openprint::Object;
 require openprint::Paper;
@@ -1129,6 +1130,11 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
   if ( !exists $$hosts_table{max_ping_time} ) {
     $log->debug("Adding max_ping_time to hosts");
     $dbh->do('ALTER TABLE hosts ADD max_ping_time INTEGER') or die $dbh->errstr();
+  }
+  if ( !exists $$hosts_table{manufacturer_id}) {
+		$log->debug("Adding manufacturer_id to hosts");
+		$dbh->do('ALTER TABLE hosts add manufacturer_id INTEGER');
+		$dbh->do('ALTER TABLE hosts add FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
   }
 }
 if ( sets::isin( 'tbl_projects', \@tables ) ) {

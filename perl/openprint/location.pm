@@ -106,6 +106,7 @@ sub edit {
 				} # end if
 			} # end if
 			$variable{error} .= $Location->save({
+          (exists $param{short} ? (short=>$param{short}) : ()),
 					name		=>	$param{location}, 
 					description	=>	$param{description},
 					parent_id	=>	$parent_id, 

@@ -5,6 +5,7 @@ use strict;
 use warnings;
 
 use LWP;
+use JSON;
 
 require configuration;
 require sql;
@@ -98,13 +99,12 @@ foreach my $Host ( @Hosts ) {
 		$log->debug("Pinging $$Host{hostname} at $$HI{ip}");
 		my @ping = $p->ping($HI->ip());
 		my $ping = $ping[0];
-#$openprint::log->debug("Ping1: @ping");
 		if ( ! @ping ) {
 			$log->warn('Problem with ping for ' . $Host->hostname() );
 			next;
 		} # end if
 
-		if ( $ping ) {
+		if ($ping) {
 
 			my $initial_url;
 			my $url;
@@ -113,7 +113,6 @@ foreach my $Host ( @Hosts ) {
 			my $protocol = 'http';
 
 			if ( $Host->type() eq 'TP-Link Archer C7' ) {
-				use JSON;
         my $auth_key = '';
 
         my $rpc_auth_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/auth';
@@ -121,6 +120,7 @@ foreach my $Host ( @Hosts ) {
           Content => JSON::encode_json( { method=>'login', params=>[ $Host->info('username'), $Host->info('password') ] }),
         );
         if (!$response->is_success) {
+          $log->debug($response->status_line());
           if ($response->status_line() eq '307 Temporary Redirect') {
             $protocol = 'https';
             $rpc_auth_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/auth';
@@ -139,17 +139,21 @@ foreach my $Host ( @Hosts ) {
         my $rpc_sys_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/sys';
         my $rpc_admin_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/admin';
         $response = get_from_json($response->content());
-        next if ! $response;
+        if (! $response) {
+          $log->warn("No response from login");
+          next;
+        }
 
         if ( $$response{result} ) {
           $auth_key = $$response{result};
           $rpc_sys_url .= '?auth='.$auth_key;
         }
         $response = $browser->post($rpc_sys_url, Content => encode_json( { method=>'net.devices' } ));
+          $log->debug($response->status_line());
         my @wlans;
         my $response_json = get_from_json($response->content());
         if (! $response_json) {
-          $log->debug('No response from '.$response->content());
+          $log->warn('No response from '.$response->content());
           next;
         }
         if ( $$response_json{result} ) {
@@ -157,6 +161,7 @@ foreach my $Host ( @Hosts ) {
           $log->debug("Have wlans: @wlans");
         }
         foreach my $wlan ( @wlans ) {
+          $log->debug("Getting from post $rpc_sys_url $wlan");
           $response = $browser->post($rpc_sys_url, Content => encode_json( { method=>'wifi.getiwinfo', params=>[$wlan] } ));
           $response = get_from_json($response->content());
           next if ! $response;
@@ -193,7 +198,6 @@ foreach my $Host ( @Hosts ) {
         last;
 
       } elsif ( 0 ) {
-				use JSON;
 				$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
 				$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/admin/status/overview?status=1';
 				$args = {

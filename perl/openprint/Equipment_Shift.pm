@@ -1,7 +1,6 @@
 use strict;
 package openprint::Equipment_Shift;
 our @ISA = qw(openprint::Object);
-require DateTime::Format::Duration;
 require DateTime::TimeZone;
 require openprint::Object;
 require openprint::Shift;
@@ -60,11 +59,6 @@ sub to_string {
 			$_[0]->endtime() ? $_[0]->endtime() : $_[0]{endtime_seconds},,
 			);
 }
-
-my $dtfd = DateTime::Format::Duration->new(
-		pattern => '%Y years, %m months, %e days, '.
-		'%H hours, %M minutes, %S seconds'
-		);
 
 sub starttime {
 		#return Date::Format::time2str('%H:%M:%S', $_[0]->starttime_seconds());
@@ -149,7 +143,6 @@ sub test_emanantise {
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
 
 	my $shift_start_time_dt = DateTime::Duration->new( seconds => $self->starttime_seconds() % DAY );
-	#$log->debug( 'shift start time: ' . $dtfd->format_duration( $shift_start_time_dt ) );
 
 	my $date_part_dt = $requested_dt->clone()->truncate(to=>'day');
 	if ( $requested_dt->is_dst() and ! $date_part_dt->is_dst() ) {
@@ -223,7 +216,6 @@ sub emanantise {
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
 
 	my $shift_start_time_dt = DateTime::Duration->new( seconds => $self->starttime_seconds() % DAY );
-	#$log->debug( 'shift start time: ' . $dtfd->format_duration( $shift_start_time_dt ) );
 
 	my $date_part_dt = $requested_dt->clone()->truncate(to=>'day');
 	if ( $requested_dt->is_dst() and ! $date_part_dt->is_dst() ) {

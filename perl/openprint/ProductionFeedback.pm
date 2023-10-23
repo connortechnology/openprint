@@ -1,6 +1,4 @@
 use strict;
-require openprint::SignatureCapture;
-require openprint::User;
 require openprint::Project;
 require openprint::Equipment;
 require openprint::Project_Service;
@@ -49,10 +47,12 @@ $serial = 'ProductionFeedback_id_seq';
 );
 
 sub User {
+  require openprint::User;
 	return new openprint::User( $_[0]{'user_id'} );
 } # end sub User
 
 sub Signature {
+  require openprint::SignatureCapture;
 	return new openprint::SignatureCapture( $_[0]{signature_id} );
 } # end sub Signature
 

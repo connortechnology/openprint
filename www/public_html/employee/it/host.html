@@ -33,6 +33,14 @@
 		<div class="content leftColumn">
 			<ul>
 				<li>
+					<label>Name</label>
+					<input type="text" id="name" name="name" value="<? echo ( $$variable{Host}->name() ) ?>" oninput="to_hostname(this);" />
+				</li>
+				<li>
+					<label>Abbreviated Name</label>
+					<input type="text" id="abbr_name" name="abbr_name" value="<? echo ( $$variable{Host}->abbr_name() ) ?>" oninput="to_hostname(this);" />
+				</li>
+				<li>
 					<label>Hostname</label>
 					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{Host}->hostname() ) ?>" oninput="to_hostname(this);" />
 				</li>
@@ -43,6 +51,14 @@
 						<? echo ( make_drop_down( openprint::Host_Type->dropdown(order=>'lower(name)'), $$variable{Host}->type_id() ); ) ?>
 					</select>
           <?echo(button('NewType',{onclick=>q`toggle_input( $j('#type_id'), $j('#type') );`, text=>'New'});)?>
+				</li>
+				<li class="Manufacturer"><label onclick="toggle_input( $j('#manufacturer_id'), $j('#manufacturer') );">Manufacturer</label>
+					<input type="text" id="manufacturer" name="manufacturer" style="display:none;" oninput="ddm_select_by_text( $j('#manufacturer_id'), this.value, 0 );" />
+					<select name="manufacturer_id" id="manufacturer_id" onchange="$j('#manufacturer').value='';">
+						<option value="">select</option>
+						<? echo ( make_drop_down( openprint::Manufacturer->dropdown(order=>'lower(name)'), $$variable{Host}->manufacturer_id() ); ) ?>
+					</select>
+          <?echo(button('NewManufacturer',{onclick=>q`toggle_input( $j('#manufacturer_id'), $j('#manufacturer') );`, text=>'New'});)?>
 				</li>
 				<li class="blacklist">
 					<label>Blacklist</label>

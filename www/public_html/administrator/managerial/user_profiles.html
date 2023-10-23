@@ -275,6 +275,7 @@ Please select a company or user to obtain login information.<br/>
               <? echo ( input( type=>'float', name=>'wage', value=>$$variable{User}->wage() ); ) ?> /Hr
             </li>
           </ul>
+          <?if($config{FEATURE_PURCHASE_ORDERS} and ($config{FEATURE_PURCHASE_ORDERS} ne 'N'))?>
           <ul class="Purchasing">
             <li class="purchasing_limit">
               <label>Purchasing Limit (per PO)</label>
@@ -291,6 +292,7 @@ Please select a company or user to obtain login information.<br/>
                 );
             ) ?>
           </ul>
+          <?endif($config{FEATURE_PURCHASE_ORDERS} and ($config{FEATURE_PURCHASE_ORDERS} ne 'N'))?>
         </fieldset>
 			</div>
       <div class="Assistants">

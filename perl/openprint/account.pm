@@ -613,7 +613,6 @@ sub change_password_confirmation {
 
 sub login {
 	if ( $param{btnFunction} eq 'Forgotten Password' ) {
-
     if ( $config{encrypt_passwords} ) {
       if (!$param{email}) {
         $variable{error} .= 'Please enter your email address and try again.<br/>';
@@ -632,6 +631,11 @@ sub login {
         my %info;
         $info{User} = $User;
         $info{auth_code} = openprint::login::auth_code($User);
+        if (!$info{auth_code}) {
+          $variable{error} .= 'Unable to generate auth code for User '.$User->email(). '. Please contact your CSR.<br/>';
+          next;
+        }
+
         my $email_template = ssi::slurp_content('/email_template.html');
 
         $info{ReplacementText} = ssi::include('/email_content/magic_link.html', \%info);
@@ -646,7 +650,6 @@ sub login {
         );
         $variable{information} .= 'An email with a magic login link has been sent to '.$User->email().'<br/>';
       }
-
     } else {
 		  openprint::login::forgotten_password();
     }
