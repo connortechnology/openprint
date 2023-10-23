@@ -242,6 +242,10 @@ while(1) {
 	# Is an IP
 					$log->debug("$source is an ip") if $config{debug};
 					$ip = $source;
+        } elsif ( $source =~ /^[\d:]+$/ ) {
+	# Is an IP
+					$log->debug("$source is an ipv6") if $config{debug};
+					$ip = $source;
 				} elsif ($hostname_lookups{$source}) {
 					$hostname = $source;
 					$ip = $hostname_lookups{$source};
