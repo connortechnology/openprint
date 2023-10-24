@@ -1,5 +1,5 @@
 #!/usr/bin/perl 
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/openprint/perl';
 
 BEGIN {
 # Debugging Stuff
@@ -10,6 +10,7 @@ BEGIN {
 	#use Apache::SmallProf;
 	use 5.10.0;
 	use utf8;
+	use DBD::Pg;
 	#use threads;
 	#use threads::shared;
 	use Apache2::Request ();
@@ -26,15 +27,15 @@ BEGIN {
 	#use Apache2::SizeLimit;
 	use Apache::DBI ();
 	use URI::Escape ();
-	use HTML::Strip ();
-	use HTML::Entities ();
+	#use HTML::Strip ();
+	#use HTML::Entities ();
 	use Data::Dumper ();
 
 	use MIME::QuotedPrint ();
 	use MIME::Base64 ();
-	use Mail::Sendmail ();
+	#use Mail::Sendmail ();
 	use Text::CSV_XS ();
-	use	Authen::Captcha ();
+	#use	Authen::Captcha ();
 	#use GD::Barcode;
 	use Encode ();
 	use JSON ();
@@ -73,20 +74,21 @@ BEGIN {
 	use openprint::User_Type ();
 	use openprint::User_Notification ();
 	use openprint::Service ();
-	use openprint::Paper ();
-	use openprint::Material ();
+
+	#use openprint::Paper ();
+	#use openprint::Material ();
 	use openprint::Product ();
 	use openprint::ProductPrice ();
 	use openprint::Pricelist ();
-	use openprint::ProjectType ();
-	use openprint::ProjectTypeCategory ();
+	#use openprint::ProjectType ();
+	#use openprint::ProjectTypeCategory ();
 	use openprint::Order ();
 	use openprint::Quote ();
 	#use openprint::JDF ();
 	use	openprint::Timetrack ();
 	use	openprint::Currency ();
 	use	openprint::Ledger ();
-	use openprint::Project_Service ();
+	#use openprint::Project_Service ();
 	use openprint::Article ();
 	use openprint::Article_Category ();
 	use openprint::Host ();
@@ -95,20 +97,20 @@ BEGIN {
 	use openprint::Opinion_Availability ();
 	use openprint::Opinion_Type ();
 	use openprint::Page_Setting ();
-	use openprint::Survey ();
-	use openprint::Event ();
-	use MapImage;
-	use Lingua::EN::Inflect ();
+	#use openprint::Survey ();
+	#use openprint::Event ();
+	#use MapImage;
+	#use Lingua::EN::Inflect ();
 	use	openprint::Location ();
-	use	openprint::Affiliate ();
+	#use	openprint::Affiliate ();
 
 	use countries;
 	use provinces;
 	use Text::Unidecode;
 
-	use openprint::Estimating::Printing;
-	use openprint::Estimating::Folding;
-	use openprint::Imposition;
+	#use openprint::Estimating::Printing;
+	#use openprint::Estimating::Folding;
+	#use openprint::Imposition;
 
 }
 
