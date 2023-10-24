@@ -133,7 +133,7 @@ sub _hosts {
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored','whitelisted','blacklisted','online',
-			'ip','hostname','mac','type_id','network_id',
+			'ip','hostname', 'mac', 'type_id', 'network_id', 'name',
 			'radius_auth', 'order', 'deleted', 'owner_id',
 			);
 
