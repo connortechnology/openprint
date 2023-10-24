@@ -24,5 +24,6 @@ CREATE TABLE hosts (
 	type_id INTEGER, FOREIGN KEY (type_id) REFERENCES Host_types (id),
   min_ping_frequency  INTEGER,
   max_ping_time       INTEGER,
+  manufacturer_id     INTEGER, FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id),
 	PRIMARY KEY (id)
 );
