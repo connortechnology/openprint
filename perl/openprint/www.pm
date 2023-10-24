@@ -3,7 +3,7 @@ package openprint::www;
 use utf8;
 use open ( ':encoding(UTF-8)', ':std' );
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 #use Benchmark;
 #use diagnostics;
@@ -219,8 +219,8 @@ sub handler {
 		}
 	} else {
 		$variable{SiteTitle} = $config{SiteTitle};
-		$variable{SecureSiteURL} = $config{SecureSiteURL};
 		$variable{siteURL} = $config{siteURL};
+		$variable{SecureSiteURL} = $config{SecureSiteURL} ? $config{SecureSiteURL} : $variable{siteURL};
 		$variable{PageTitle} = $config{SiteTitle} .' - ' . $page;
 
 	#$log->debug( "Before loading content: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
