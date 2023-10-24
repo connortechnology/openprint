@@ -1136,6 +1136,14 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 		$dbh->do('ALTER TABLE hosts add manufacturer_id INTEGER');
 		$dbh->do('ALTER TABLE hosts add FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
   }
+  if ( !exists $$hosts_table{name}) {
+		$log->debug("Adding name to hosts");
+		$dbh->do('ALTER TABLE hosts add name TEXT');
+  }
+  if ( !exists $$hosts_table{abbr_name}) {
+		$log->debug("Adding abbr_name to hosts");
+		$dbh->do('ALTER TABLE hosts add abbr_name TEXT');
+  }
 }
 if ( sets::isin( 'tbl_projects', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_projects'", 'column_name');
@@ -3658,6 +3666,8 @@ if ( ! sets::isin('logs',\@tables ) ) {
 	if ( ! exists $$data{host_id} ) {
 		$dbh->do('ALTER TABLE logs add host_id INTEGER');
 		$dbh->do('ALTER TABLE Logs add FOREIGN KEY (host_id) REFERENCES Hosts (id)');
+  } else {
+    $dbh->do('ALTER TABLE Logs ALTER host_id DROP NOT NULL');
 	} # end if
 	$dbh->do('ALTER TABLE Logs DROP COLUMN ip_address') if ( exists $$data{ip_address} );
 	$dbh->do('ALTER TABLE Logs DROP COLUMN hostname') if ( exists $$data{hostname} );
