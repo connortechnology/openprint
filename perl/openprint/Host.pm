@@ -67,6 +67,7 @@ $serial = 'hosts_id_seq';
 	notify_frequency	=>	'notify_frequency',
 	location_id			=>	'location_id',
 	owner_id			=>	'owner_id',
+  manufacturer_id => 'manufacturer_id',
 );
 %find_fields = (
 	type	=>	'type_id = (SELECT id FROM Host_types WHERE host_types.name = ?)',

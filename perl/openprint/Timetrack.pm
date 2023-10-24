@@ -59,6 +59,7 @@ $serial = 'timetracks_id_seq';
 	rate			       	=>	undef,
 	currency_id		  	=>	undef,
 	owner_id		     	=>	q`$openprint::Owner->id()`,
+  company_id        =>  undef,
 	invoice_id			  =>	undef,
 	service_id		  	=>	undef,
 	project_id		  	=>	undef,

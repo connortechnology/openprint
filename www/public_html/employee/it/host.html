@@ -58,7 +58,7 @@
 						<option value="">select</option>
 						<? echo ( make_drop_down( openprint::Manufacturer->dropdown(order=>'lower(name)'), $$variable{Host}->manufacturer_id() ); ) ?>
 					</select>
-          <?echo(button('NewType',{onclick=>q`toggle_input( $j('#manufacturer_id'), $j('#manufacturer') );`, text=>'New'});)?>
+          <?echo(button('NewManufacturer',{onclick=>q`toggle_input( $j('#manufacturer_id'), $j('#manufacturer') );`, text=>'New'});)?>
 				</li>
 				<li class="blacklist">
 					<label>Blacklist</label>

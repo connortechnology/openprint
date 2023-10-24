@@ -26,13 +26,13 @@
 									<td class="newprice">%8$s</td>
         </tr>', $rowclass, $Product->id(), $Product->name() . ($Product->description() ne $Product->name() ? ' ' . $Product->description() : '' ) . ('<div class="comments">'.$Product->comments().'</div>'), 
 									Number::Format::format_number($Product->quantity()), 
-									openprint::Currency::format( $Product->cost() ), 
+									openprint::Currency::format( $Product->price() ), 
                   $Product->units(),
 									1*$Product->markup().'%', 
-									openprint::Currency::format( $Product->price() ),
+									openprint::Currency::format( $Product->total() ),
 						$Product->Product()->thumbnail_html(),
 					);
-				$subtotal += $Product->price();
+				$subtotal += $Product->total();
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Product
 		$html .= '<tr class="totals">';
