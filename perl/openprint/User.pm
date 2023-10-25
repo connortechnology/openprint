@@ -14,7 +14,7 @@ use vars qw( $log $dbh %config $debug %fields %find_fields %transforms %defaults
 $table = 'users';
 $serial = 'users_id_seq';
 
-$debug = 1;
+$debug = 0;
 
 $default_sort	=	'lower(firstname),lower(lastname),id';
 
