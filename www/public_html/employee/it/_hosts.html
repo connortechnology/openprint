@@ -49,6 +49,7 @@
       order	=> ($session{$uri.'?order'} and $openprint::Host::fields{$session{$uri.'?order'}} ) ? $session{$uri.'?order'} : 'lower(hostname)',
 				( $host_ids ? ( id => $host_ids ) : () ),
 				( $session{$uri.'?hostname'} ? ( 'hostname ilike' => ( $session{$uri.'?hostname'} =~ /%/ ? $session{$uri.'?hostname'} : $session{$uri.'?hostname'}.'%' ) ) : () ),
+				( $session{$uri.'?name'} ? ( 'name ilike' => ( $session{$uri.'?name'} =~ /%/ ? $session{$uri.'?name'} : $session{$uri.'?name'}.'%' ) ) : () ),
 				( $session{$uri.'?blacklisted'} ne '' ? ( blacklist=>$session{$uri.'?blacklisted'} ) : () ),
 				( $session{$uri.'?whitelisted'} ne '' ? ( whitelist=>$session{$uri.'?whitelisted'} ) : () ),
 				( $session{$uri.'?monitored'} ne '' ? ( monitored=>$session{$uri.'?monitored'} ) : () ),
@@ -151,7 +152,9 @@
 			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'host_id', this.checked );"/></th>
 			<th class="thumbnail">Image</th>
 			<th class="name">Name</th>
+			<th class="abbr_name">Abbr Name</th>
 			<th class="type">Type</th>
+			<th class="location">Lat &amp; Long</th>
 			<th class="ip" onclick="load_host(f1, {order:'ip'});">IP</th>
 			<th class="mac" onclick="load_host(f1, {order:'mac'});">Mac</th>
       <th class="status">Status</th>
@@ -177,19 +180,23 @@ sub online_html {
 			my $html;
 			my $rowclass;
 			foreach my $Host ( @{$$variable{Hosts}} ) {
+             my $location = $Host->Location();
 				$html .= sprintf('
-					<tr class="%10$s">
+					<tr class="%12$s">
 						<td class="checkbox"><input type="checkbox" id="host_id" name="host_id" value="%1$d"/></td>
-						<td class="thumbnail">%11$s</td>
+						<td class="thumbnail">%13$s</td>
 						<td class="name"><a href="/employee/it/host.html?host_id=%1$d">%2$s</a></td>
-						<td class="type"><a href="/employee/it/host.html?host_id=%1$d">%3$s</a></td>
-						<td class="ip"><a href="/employee/it/host.html?host_id=%1$d">%4$s</a></td>
-						<td class="mac"><a href="/employee/it/host.html?host_id=%1$d">%5$s</a></td>
-            <td class="status"><a href="/employee/it/host.html?host_id=%1$d">%6$s<br/>%7$s</a></td>
-						<td class="options"><a href="/employee/it/host.html?host_id=%1$d">%8$s</a></td>
-						<td class="description"><a href="/employee/it/host.html?host_id=%1$d">%9$s</a></td>
+						<td class="abbr_name"><a href="/employee/it/host.html?host_id=%1$d">%3$s</a></td>
+						<td class="type"><a href="/employee/it/host.html?host_id=%1$d">%4$s</a></td>
+						<td class="location"><a href="/employee/it/host.html?host_id=%1$d">%5$s</a></td>
+						<td class="ip"><a href="/employee/it/host.html?host_id=%1$d">%6$s</a></td>
+						<td class="mac"><a href="/employee/it/host.html?host_id=%1$d">%7$s</a></td>
+            <td class="status"><a href="/employee/it/host.html?host_id=%1$d">%8$s<br/>%9$s</a></td>
+						<td class="options"><a href="/employee/it/host.html?host_id=%1$d">%10$s</a></td>
+						<td class="description"><a href="/employee/it/host.html?host_id=%1$d">%11$s</a></td>
 					</tr>
-					', $Host->id(), $Host->hostname(), $Host->type(),
+          ', $Host->id(), $Host->name(), $Host->abbr_name(), $Host->type(),
+          ($location->id() ? join(', ', $location->latitude(), $location->longitude()) : ''),
 					join('<br/>', map { online_html($_->online(), $_->ip() . ' ') } $Host->Interfaces() ),
 					join('<br/>', map { online_html($_->online(), $_->mac() ? $_->mac() : ' ') } $Host->Interfaces() ),
 					join('<br/>', map { online_html($_->online()) } $Host->Interfaces() ), # statsys

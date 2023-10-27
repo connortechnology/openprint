@@ -12,7 +12,7 @@
 	<input type="hidden" name="action"/>
 	<fieldset>
 <? if ( $session{user_type} eq 'A' ) ?>
-<legend>Viewing Location<? echo ( $$variable{Location}->id() ? '('.$$variable{Location}->id().')' : '' ) ?></legend>
+<legend>Viewing Location<? echo ( $$variable{Location}->id() ? ' ('.$$variable{Location}->id().')' : '' ) ?></legend>
 <? endif ( $session{user_type} eq 'A' ) ?>
 		<p class="buttons">
 			<? echo (
@@ -79,6 +79,9 @@
 							return $html;
 						) ?>
 					</li>
+          <?if($$variable{Location}->latitude() and $$variable{Location}->longitude())?>
+          <li><label>Lat &amp; Long</label><?echo ($$variable{Location}->latitude().', '.$$variable{Location}->longitude())?></li>
+          <?endif($$variable{Location}->latitude() and $$variable{Location}->longitude())?>
 				</ul>
 				<div id="Opinions"><? echo ( $$variable{Location}->opinions('Opinions') ) ?></div>
 				<div id="Comments"><?include(/includes/_comments.html)?></div>

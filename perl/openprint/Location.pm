@@ -88,14 +88,16 @@ sub get_all_children {
 } # end sub get_all_children
 
 sub parent {
-$openprint::log->error("use of deprecated method Location parent");
+  $openprint::log->error("use of deprecated method Location parent");
 	return new openprint::Location( $_[0]{parent_id}) if $_[0]{parent_id};
 } # end sub parent
+
 sub Parent {
 	# _map has code that does while ( $_->Parent() = ) 
 	return new openprint::Location( $_[0]{parent_id}) if $_[0]{parent_id};
 	return;
 } # end sub parent
+
 sub Root {
 	my $P = shift;
 	
@@ -110,7 +112,6 @@ sub Root {
 			} elsif ( $continue ) {
 				last;
 			}
-				
 		}
 		$P = $P2;
 	} # end while 
@@ -118,7 +119,6 @@ sub Root {
 } # end sub Root
 
 sub Parents {
-	
 	if ( ( ! $_[0]{id} ) or ! $_[0]{parent_id} ) {
 		return ();
 	} 
@@ -376,7 +376,6 @@ sub get_latitude_and_longitude {
 			$_[0]{longitude} = openprint::Location->transform('longitude',  $$location{geometry}{location}{lng} );
 			return 1;
 		} # end if
-	
 	} else {
 		my $Address = $$location{AddressDetails};
 		if ( $$Address{Country} ) {
@@ -425,9 +424,7 @@ sub get_latitude_and_longitude {
 	return 0;
 } # end sub get_latitude_longitude
 
-
 sub distance {
-$openprint::log->debug("distance: @_");
 	shift @_ if $_[0] eq 'openprint::Location';
 	shift @_ if ref $_[0] eq 'openprint::Location';
 
@@ -437,7 +434,7 @@ $openprint::log->debug("distance: @_");
 	$dist  = acos($dist);
 	$dist = rad2deg($dist);
 	$dist = $dist * 60 * 1.1515;
-$openprint::log->debug("Calcing distance from $lat1,$lon1 to $lat2,$lon2 units: $unit, dist: $dist");
+  $openprint::log->debug("Calcing distance from $lat1,$lon1 to $lat2,$lon2 units: $unit, dist: $dist");
 	if ($unit eq "K") {
 		$dist = $dist * 1.609344;
 	} elsif ($unit eq "N") {
@@ -570,7 +567,8 @@ sub address {
 		} # end if
 	} # end if
 	return $_[0]{address};
-}#sub address
+} # end sub address
+
 sub postalcode {
 	if ( @_ > 1 ) {
 		$_[0]{postalcode} = $_[1];
@@ -581,7 +579,7 @@ sub postalcode {
 		} # end if
 	} # end if
 	return $_[0]{postalcode};
-}#sub address
+} #  end sub postalcode
 
 sub where_link {
 	if ( ! $_[0]{where_link} ) {
@@ -692,8 +690,11 @@ $openprint::log->debug("Change:");
 
 sub googlemap_html {
 	if ( ! exists $_[0]{googlemap_html} ) {
-		my $url = sprintf('http://maps.google.com/maps?f=q&amp;hl=en&amp;ll=%1$s,%2$s&amp;q=%3$s&amp;z=13&amp;output=embed', 
-				$_[0]->latitude(), $_[0]->longitude(), join('+',$_[0]->name(), $_[0]->address(), ( $_[0]->postalcode() ? $_[0]->postalcode() : () ), map{$_->name()} ( $_[0]->Parents() ) ) );
+    #my $url = sprintf('http://maps.google.com/maps?f=q&amp;hl=en&amp;ll=%1$s,%2$s&amp;q=%3$s&amp;z=13&amp;output=embed', 
+    #$_[0]->latitude(), $_[0]->longitude(), join('+',$_[0]->name(), $_[0]->address(), ( $_[0]->postalcode() ? $_[0]->postalcode() : () ), map{$_->name()} ( $_[0]->Parents() ) ) );
+
+    my $url = sprintf('https://maps.google.com/maps?f=q&amp;hl=en&amp;ll=%1$s,%2$s&amp;z=13&amp;output=embed', 
+    $_[0]->latitude(), $_[0]->longitude());
 		$url =~ s/ /%20/g;
 		$_[0]{googlemap_html} = '<iframe src="'.$url.'" style="width: 100%; height:400px;"></iframe>';
 	} # end if
