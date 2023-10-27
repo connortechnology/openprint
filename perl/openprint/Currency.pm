@@ -216,10 +216,6 @@ sub format {
 	$precision = $$Currency{precision} if ! defined $precision;
   $precision = 2 if ! defined $precision;
   $symbol = $Currency->symbol() if ! defined $symbol;
-  if (!$symbol) {
-    $symbol = '$';
-    $openprint::log->debug("Precision $precision, symbol $symbol for currency $$Currency{name}");
-  }
 	require Number::Format;
 	my $Formatter = new Number::Format(
 			-decimal_digits     =>  $precision,
