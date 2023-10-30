@@ -7137,7 +7137,14 @@ sub press_setup_cost {
 			$Price{'Plate Price'} = $PlateSetupPrice{Price};
 			$Price{'Plate Total'} = $PlateSetupPrice{Price} * $plates;
 		} else {
-			$log->error("No Plate Make Ready Units ($units) for plates on " . $$Press{strid} );
+			$log->error("No Plate Make Ready Units ($units) for plates on $$Press{strid} defaulting to pre plate");
+			%PlateSetupPrice = openprint::service::get_price_object( $PlateSetupPrice{ServiceName}, $plates, $Press );
+			if ( ! %PlateSetupPrice ) {
+				$log->error("Error getting PlateMakeReady for $$Press{strid} for $plates plates runs: $plate_runs setup count: $setup_count change: $plate_change_qty");
+			} # end if
+			$Price{'Plate Units'} = $PlateSetupPrice{units};
+			$Price{'Plate Price'} = $PlateSetupPrice{Price};
+			$Price{'Plate Total'} = $PlateSetupPrice{Price} * $plates;
 		} # end if units
 	} else {
 		$Price{'Plate Units'} = '';
