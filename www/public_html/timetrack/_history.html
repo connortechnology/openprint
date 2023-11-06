@@ -76,6 +76,7 @@
 		</tr>
 		<? echo ( 
 			my ( $html, $rowclass );
+      require HTML::Strip;
 			my $hs = HTML::Strip->new();
 			foreach my $T ( @{$$variable{Timetracks}} ) {
 				$html .= sprintf(q`
