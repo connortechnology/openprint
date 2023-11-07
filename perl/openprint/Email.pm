@@ -60,7 +60,7 @@ sub send {
 
 	my %mail = (
 			'content-type'	=>	$$self{'content-type'},
-			BOUNDARY =>	$$self{boundary},
+			BOUNDARY =>	$$self{boundary} ? $$self{boundary} : '====' . time() . '====',
 			( $params{CC} ? ( CC		=>	$params{CC} ) : () ),
 			( @bcc ? ( BCC		=>	join(',', @bcc ) ) : () ),
 			Smtp    => $params{SMTP} ? $params{SMTP} : $openprint::config{smtp_server},
