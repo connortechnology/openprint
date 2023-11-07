@@ -132,7 +132,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		<? if ( $$variable{Company}->deleted() ) ?>
 		<div class="error">This company has been deleted.</div>
 		<? endif ( $$variable{Company}->deleted() ) ?>
-		<div class="notes"><? echo ( $$variable{Company}->notes() ? )?></div>
+		<div class="notes"><? echo ( $$variable{Company}->notes() )?></div>
 	<div class="leftColumn">
 		<ul>
 			<? if ( $$variable{Company}->id() ) ?>

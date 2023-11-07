@@ -84,6 +84,54 @@ sub execute_array {
 	return \@return_array;
 } # end sub execute_array
 
+sub execute_hash {
+  my ( $l, $d, $sql, @values ) = @_;
+  my @return_array = ();
+  my $print_sql = $sql;
+  my $starttime;
+
+  $l = $log if ! defined $l;
+  $d = $dbh if ! $d;
+
+  if ( $l and DEBUG ) {
+    $print_sql = $sql;
+    $print_sql =~ s/\?/\%s/g;
+    $print_sql = sprintf($print_sql, @values);
+    $starttime = [gettimeofday] if $timing;
+  } # end if
+  my $sth;
+  if ( ! $d ) {
+    $l->error( "No dbh $print_sql" ) if $l;
+    return;
+  } # end if
+  if ( ! ( $sth = $d->prepare_cached($sql) ) ) {
+    $l->error( "Error Preparing SQL: ($print_sql): " . $d->errstr ) if $l;
+    return;
+  } # end if
+#$l->warn($sql);
+  if ( ! $sth->execute(@values) ) {
+    $l->error("SQL execution failed: ($print_sql):" . $d->errstr) if $l;
+    return;
+  } # end if
+  if ( my $num_of_fields = $sth->{'NUM_OF_FIELDS'} ) {
+    while ( my $ref = $sth->fetchrow_hashref ) {
+      push @return_array, $ref;
+    } # end while
+  } # end if
+  $sth->finish();
+  if ( $l and DEBUG ) {
+    if ( $timing ) {
+      $l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
+    } elsif ( @return_array ) {
+      $l->debug("SQL ($print_sql) Results:".join(',',@return_array));
+    } else {
+      $l->debug("SQL ($print_sql) No Results:");
+    } # end if
+  } # end if
+
+  return @return_array;
+} # end sub execute_hash
+
 sub execute {
 	my $results = execute_array(@_);
 	return $results?@{$results}:();

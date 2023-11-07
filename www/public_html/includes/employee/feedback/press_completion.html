@@ -1,5 +1,6 @@
 <div class="Press">
-	<p>
+  <ul>
+	<li>
 		<label>Press</label>
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 		<select name="UsePress-<?SignatureIndex?>">
@@ -11,7 +12,7 @@
 <? else ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 <? echo ( $$variable{"UsePress-$$variable{SignatureIndex}"} ) ?>
 <? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
-	</p>
+	</li>
 <? echo (
 	my $Service = $$variable{Service} = $$variable{Project}->Service( $$variable{ServiceIndex} );
   my @Roles = openprint::Operator_Role->find( servicetype_id=>$Service->servicetype_id(), order=>'lower(name)' );
@@ -22,7 +23,7 @@
 
   my $html;
   foreach my $Role ( @Roles ) {
-    $html .= sprintf( q`<p><label>%2$s</label>`, $$Role{id}, $$Role{name} );
+    $html .= sprintf( q`<li><label>%2$s</label>`, $$Role{id}, $$Role{name} );
 
 		my $Operator = $Operators{$$Role{id}};
 $log->debug("Operator for $$Role{name} " . ( $Operator ? $Operator->User()->name() : 'none' ) );
@@ -39,16 +40,16 @@ $log->debug("Operator for $$Role{name} " . ( $Operator ? $Operator->User()->name
 				$html .= '<br/>You are not logged in as the assigned operator.';
 			} # end if
 		} # end if
-		$html .= '</p>';
+		$html .= '</li>';
 	
 	} #end foreach Role
 	return $html;
 ) ?>
-	<p>
+	<li>
 		<label>Comments</label>
 		<textarea name="txtEmployeeComments-<?SignatureIndex?>" cols="41" rows="5" wrap="VIRTUAL"><? echo ( $$variable{"txtEmployeeComments-$$variable{SignatureIndex}"} ) ?></textarea>
-	</p>
-	<p>
+	</li>
+	<li>
 		<label>Completed</label>
 <? eval ( 
 		my ( $y, $m, $d ) = Date::Calc::Today();
@@ -62,8 +63,8 @@ $log->debug("Operator for $$Role{name} " . ( $Operator ? $Operator->User()->name
 		<select name="ddmPressCompletionDateDay-<?SignatureIndex?>" size="1" onchange="setDaysDropDown(document.f1.elements['ddmPressCompletionDateYear-<?SignatureIndex?>'].value, document.f1.elements['ddmPressCompletionDateMonth-<?SignatureIndex?>'],this, this.value);"><?days?></select>
 		<select name="ddmPressCompletionDateYear-<?SignatureIndex?>" size="1"><?years?></select>
 		</span>
-	</p>
-	<p>
+	</li>
+	<li>
 		<label>Complete</label>
 		<?echo( radio(
 					'rdbPressComplete-'.$$variable{SignatureIndex},
@@ -71,8 +72,8 @@ $log->debug("Operator for $$Role{name} " . ( $Operator ? $Operator->User()->name
 					$$variable{"rdbPressComplete-$$variable{SignatureIndex}"},
 					{ default => $$variable{Service}->status() eq 'Complete' ? 'Yes' : 'No' }
 					); ) ?>
-	</p>
-	<p><label>Schedule</label>
+	</li>
+	<li><label>Schedule</label>
 <? echo ( 
 	my @schedule = openprint::ScheduledJob->find( project_id=>$$variable{Project}->id(), 'service_id @>'=>$$variable{ServiceIndex} );
 	if ( @schedule ) {
@@ -83,5 +84,6 @@ $log->debug("Operator for $$Role{name} " . ( $Operator ? $Operator->User()->name
 	} # end if
 	return 'Not scheduled.';
 ) ?>
-	</p>
+	</li>
+  </ul>
 </div>

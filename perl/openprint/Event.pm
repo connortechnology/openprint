@@ -407,6 +407,7 @@ sub head_html {
 
 	my $description;
 	if ( $Event->info() ) {
+    require HTML::Strip;
 		my $hs = HTML::Strip->new();
 		$description = $hs->parse($Event->info());
 		$hs->eof();

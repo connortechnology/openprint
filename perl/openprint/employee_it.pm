@@ -133,7 +133,7 @@ sub _hosts {
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored','whitelisted','blacklisted','online',
-			'ip','hostname','mac','type_id','network_id',
+			'ip','hostname', 'mac', 'type_id', 'network_id', 'name',
 			'radius_auth', 'order', 'deleted', 'owner_id',
 			);
 
@@ -167,23 +167,25 @@ sub networks {
 } # end sub networks
 
 sub _networks {
-	if ( $param{action} eq 'Delete' ) {
-    my @host_ids;
-    if ( exists $param{host_id} ) {
-      @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
-    } elsif ( exists $param{'host_id[]'} ) {
-      @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
-    }
-		foreach my $host_id ( @host_ids ) {
-			my $Host = new openprint::Host( $host_id );
-      if ( $Host->deleted() ) {
-        $variable{error} .= $Host->destroy();
-      } else {
-        $variable{error} .= $Host->delete();
+  if ($param{action}) {
+    if ( $param{action} eq 'Delete' ) {
+      my @host_ids;
+      if ( exists $param{host_id} ) {
+        @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+      } elsif ( exists $param{'host_id[]'} ) {
+        @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
       }
-		} # end foreach host_id
-		%param = ();
-	} # end if
+      foreach my $host_id ( @host_ids ) {
+        my $Host = new openprint::Host( $host_id );
+        if ( $Host->deleted() ) {
+          $variable{error} .= $Host->destroy();
+        } else {
+          $variable{error} .= $Host->delete();
+        }
+      } # end foreach host_id
+      %param = ();
+    } # end if
+  } # end if
 	ssi::save_params( '/employee/it/networks.html', 
 			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month', 'created_on_end_day', 
@@ -300,11 +302,8 @@ sub host {
       } # end foreach I
       
     } elsif ( $param{action} eq 'Save' ) {
-      if ( $param{type_id} ) {
-        delete $param{type};
-      } else {
-        delete $param{type_id};
-      } # end if
+      delete $param{$param{type_id} ? 'type' : 'type_id'};
+      delete $param{$param{manufacturer_id} ? 'manufacturer' : 'manufacturer_id'};
       my $Location = openprint::Location::save_location( \%param );
       $param{location_id} = $Location->id() if $Location and $Location->id();
       my @changes = $Host->changes(\%param);

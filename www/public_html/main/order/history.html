@@ -69,9 +69,9 @@
 			</li>
 			<li> 
 				<label>Created</label>
-<? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>q`LoadContent('Results','_history.html',$('f1'));`,with_clear=>1,with_today=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>q`LoadContent('Results','_history.html','f1');`,with_clear=>1,with_today=>1 } ); ) ?>
 				to
-<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>q`LoadContent('Results','_history.html',$('f1'));`,with_clear=>1,with_today=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>q`LoadContent('Results','_history.html','f1');`,with_clear=>1,with_today=>1 } ); ) ?>
 			</li>
 			</ul>
 			<br class="spacer"/>

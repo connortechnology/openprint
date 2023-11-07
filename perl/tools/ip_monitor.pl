@@ -194,6 +194,7 @@ while(1) {
       if ( ! $HI->ip() ) {
         $log->debug('No ip for '.$HI->to_string());
         if ( $HI->online() ) {
+          $HI->load(); # Get any updates that aren't in cache
           $HI->save({online=>0});
         }
         next;
@@ -256,6 +257,7 @@ while(1) {
         $online = $ping if ! $online;
 
         if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) or !defined($$HI{online})) {
+          $HI->load(); # Get any updates that aren't in cache
           $HI->save({online=>$ping});
         }
         $log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . ( defined $ping ? $ping : 'undef' ) );

@@ -19,7 +19,6 @@ use constant DEBUG => 0;
 
 require sql;
 require openprint::Currency;
-require openprint::print_project;
 require openprint::service;
 require openprint::Order;
 require openprint::OrderedProduct;
@@ -450,6 +449,7 @@ sub save_project_information {
 					push @{$$services{$ShippingType->name()}}, $new_service_index;
 				} # end if
 			} elsif ( $$services{$ShippingType->name()} ) {
+				require openprint::print_project;
 				# Thismight delete bindery shipping 
 				foreach ( @{$$services{$ShippingType->name()}} ) {
 					openprint::print_project::delete_service( $Project, $_ );

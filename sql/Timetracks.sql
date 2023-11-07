@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS timetracks;
 CREATE TABLE timetracks (
     id SERIAL,
     starting timestamp with time zone NOT NULL,
@@ -13,7 +14,6 @@ CREATE TABLE timetracks (
     time_associated boolean,
     date_associated boolean,
     user_id integer, FOREIGN KEY (user_id) REFERENCES Users(id),
-    paycheque_id integer,
     rate numeric(10,2),
     units   text,
     deleted boolean DEFAULT false,
@@ -23,7 +23,3 @@ CREATE TABLE timetracks (
 	billable	boolean not null default true,
 	PRIMARY KEY (id)
 );
-
-ALTER TABLE ONLY timetracks
-    ADD CONSTRAINT timetracks_paycheque_id_fkey FOREIGN KEY (paycheque_id) REFERENCES paycheques(id);
-

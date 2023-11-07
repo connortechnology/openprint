@@ -53,14 +53,15 @@ function check_input( form, signature_index ) {
 		<fieldset><legend>Production Feedback</legend>
 			<?include('/includes/employee/feedback/employee.html')?>
 			<?include('/includes/employee/feedback/comments.html')?>
-			<p>
+      <ul>
+			<li>
 				<label>Proofs Ready</label>
 					<? echo ( radio( 'rdbComplete', ['Yes','Yes','No','No'], $$variable{rdbComplete}, {
 							default=>'No',
 							onclick=>q`if(this.value=='Yes'){$('ClientApproved').show();$('QAApproved').show();}else{$('ClientApproved').hide();$('QAApproved').hide();};`,
 							} ); ) ?>
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Ready Date</label>
 				<? if ( $$variable{rdbComplete} ne 'Yes' ) ?>
 				<? eval ( $$variable{CompletionDate} = Date::Format::time2str( '%Y-%m-%d %H:%M', time ); ) ?>
@@ -73,21 +74,21 @@ function check_input( form, signature_index ) {
 				<? else ( $$variable{rdbComplete} ne 'Yes' ) ?>
 					<?CompletionDate?>
 				<? endif ( $$variable{rdbComplete} ne 'Yes' ) ?>
-			</p>
-			<p id="ClientApproved" <? echo ( $$variable{rdbComplete} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
+			</li>
+			<li id="ClientApproved" <? echo ( $$variable{rdbComplete} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
 				<label>Client Approved?</label>
 					<?echo(radio( 'rdbClientApproved', ['Y','Yes','N','No'], $$variable{rdbClientApproved}, { default=>'N' } ); ) ?>
 				<? if ( $$variable{rdbClientApproved} eq 'Y' ) ?>
 					at <? echo ( $$variable{ClientApprovalDate} ) ?>
 				<? endif ( $$variable{rdbClientApproved} eq 'Y' ) ?>
-			</p>
-			<p id="QAApproved" <? echo ( $$variable{rdbComplete} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
+			</li>
+			<li id="QAApproved" <? echo ( $$variable{rdbComplete} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
 				<label>QA Approved?</label>
 					<?echo(radio( 'rdbApproved', ['Y','Yes','N','No'], $$variable{rdbApproved}, { default=>'N', onclick=>q`if(this.value=='Y'){$('DueDate').show();}else{$('DueDate').hide();};` } ); ) ?>
 				<? if ( $$variable{rdbApproved} eq 'Y' ) ?>
 					at <? echo ( $$variable{ApprovalDate} ) ?>
 				<? endif ( $$variable{rdbApproved} eq 'Y' ) ?>
-			</p>
+			</li>
 <? eval (
 		if ( ! $variable{ddmDueDate} ) {
 			$variable{ddmDueDate} = $variable{Project}->get_due_date();
@@ -95,7 +96,7 @@ function check_input( form, signature_index ) {
 		$variable{duedate} = $variable{ddmDueDate};
 		@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{ddmDueDate});
 )?>
-			<p id="DueDate" <? echo ( $$variable{rdbApproved} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
+			<li id="DueDate" <? echo ( $$variable{rdbApproved} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
 <? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 				<label>Due Date</label>
 <? echo ( 
@@ -103,7 +104,8 @@ input( name=>'duedate', type=>'text', value=>$$variable{duedate} );
 ) ?>
 <script>$j("[name$='duedate']").datepicker({ dateFormat: "yy-mm-dd", constrainInput: true}); </script>
 <? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
-			</p>
+			</li>
+      </ul>
 			<p class="buttons">
 			<? echo (
 					my $html;

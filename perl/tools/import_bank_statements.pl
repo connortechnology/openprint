@@ -31,6 +31,7 @@ my $program = 'import_bank_statements';
 $log = logger->new('debug');
 my $opts = {};
 GetOptions($opts, 'help',
+  'config=s',
   'db_name=s',
   'db_host=s',
   'db_user=s',
@@ -56,7 +57,7 @@ open(FH, $$opts{file}) or die "Can't open $$opts{file} : $!";
 if ( $opts->{debug}) {
   $$log{level} = $opts->{debug};
 }
-$_ = configuration::from_file("/etc/openprint/$program.conf");
+$_ = configuration::from_file($$opts{config} ? $$opts{config} : "/etc/openprint/$program.conf");
 $log->error($_) if $_;
 configuration::merge($opts);
 

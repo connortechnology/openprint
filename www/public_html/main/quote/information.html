@@ -72,10 +72,12 @@
 			return 'State/Province';
 		} # end if
 		) ?></span></label>
-						<select id="ByStateProvince" name="ByStateProvince">
-							<option value=""> Select </option>
-							<? echo ( return_states_and_provinces($$variable{ByCountry}, $$variable{ByStateProvince}); ) ?>
-						</select>
+            <span id="ByStateProvince_container">
+              <select id="ByStateProvince" name="ByStateProvince">
+                <option value=""> Select </option>
+                <? echo ( return_states_and_provinces($$variable{ByCountry}, $$variable{ByStateProvince}); ) ?>
+              </select>
+            </span>
 					</li>
 					<li> 
 						<label>City</label>
@@ -207,6 +209,7 @@ if ( $$variable{ForCountry} eq 'US' ) {
 	return 'State/Province';
 } # end if
 ) ?></span></label>
+        <span id="ForStateProvince_container">
         <?if($$variable{ForCountry} eq 'US' or $$variable{ForCountry} eq 'CA')?>
 				<select id="ForStateProvince" name="ForStateProvince">
 					<option value=""> Select </option>
@@ -215,6 +218,7 @@ if ( $$variable{ForCountry} eq 'US' ) {
         <?else($$variable{ForCountry} eq 'US' or $$variable{ForCountry} eq 'CA')?>
         <input type="text" id="ForStateProvince" name="ForStateProvince" value="<?ForStateProvince?>"/>
         <?endif($$variable{ForCountry} eq 'US' or $$variable{ForCountry} eq 'CA')?>
+        </span>
 			</li>
 			<li> 
 				<label>City</label>

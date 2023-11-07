@@ -81,8 +81,8 @@ sub verify_login {
 	} # end if
 
 	my $User = undef;
-	foreach my $U ( @Users ) {
-    if ( $param{auth_code}) {
+	foreach my $U (@Users) {
+    if ($param{auth_code}) {
       $log->debug("Have auth code $param{auth_code}");
 
       $config{AUTH_HASH_TTL} = 300 if !$config{AUTH_HASH_TTL};
@@ -100,22 +100,28 @@ sub verify_login {
       last if $User;
     }
 
-    if ( $param{password} ) {
+    if ($param{password}) {
       my $password = $param{password};
 
-      if ( $config{encrypt_passwords} ) {
-        eval {
-          require Authen::Passphrase::BlowfishCrypt;
-          my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($U->password());
-          if ( $ppr->match($password) ) {
-            $User = $U;
-            $openprint::log->debug("User $$U{email}'s password matched: $$U{password} == $password");
-            last;
-          } else {
-            $openprint::log->debug("User $$U{email}'s password did not match: $$U{password} != $password");
-          } # end if
-        };
-        $log->error('Eval error of Authen::Passphrase::BlowfishCrypt Reason: '.$@) if $@;
+      if ($config{encrypt_passwords}) {
+        if (!$U->password()) {
+          $variable{error} .= $$U{email} . ' does not have a password assigned yet. Please click Forgot Password to send a magic link email.<br/>';
+          next;
+        }
+        if ($U->password() =~ /^{CRYPT}/) {
+          eval {
+            require Authen::Passphrase::BlowfishCrypt;
+            my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($U->password());
+            if ($ppr->match($password)) {
+              $User = $U;
+              $openprint::log->debug("User $$U{email}'s password matched: $$U{password} == $password");
+              last;
+            } else {
+              $openprint::log->debug("User $$U{email}'s password did not match: $$U{password} != $password");
+            } # end if
+          };
+          $log->error('Eval error of Authen::Passphrase::BlowfishCrypt Reason: '.$@) if $@;
+        }
 
         # Failed, could be error, could be that the password is stored in plaintext
         if ($U->password() eq $password) {
@@ -123,9 +129,7 @@ sub verify_login {
           $openprint::log->debug("User $$U{email}'s password matched plaintext: $$U{password} == $password");
           eval {
             require Authen::Passphrase::BlowfishCrypt;
-            my $ppr = Authen::Passphrase::BlowfishCrypt->new(
-              cost => 8, salt_random => 1,
-              passphrase => $password);
+            my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $password);
 
             $variable{error} .= $User->save({ password => $ppr->as_rfc2307() });
           };
@@ -146,7 +150,7 @@ sub verify_login {
     } # end if password
 	} # end foreach User
 
-	if ( ! $User ) {
+	if (!$User) {
 		$$variable{information} = 'The credentials you entered were not correct.	Please try again.<br/>';
 		foreach my $U ( @Users ) {
 			(new openprint::Log())->save({Object=>$U, action=>'Login Failed', note=>'Invalid Password', user_id=>$U->id(), company_id=>$U->company_id() } );
@@ -485,7 +489,7 @@ sub forgotten_password {
 sub auth_code {
   my $user = shift;
   my @local_time = localtime();
-  my $authKey = $config{AUTH_HASH_SECRET}.$$user{'email'}.$$user{'password'}.$local_time[1].$local_time[2].$local_time[3].$local_time[4].$local_time[5];
+  my $authKey = $config{AUTH_HASH_SECRET}.$$user{email}.$$user{password}.$local_time[1].$local_time[2].$local_time[3].$local_time[4].$local_time[5];
   #ZM\Debug("Generated using hour:".$local_time[2] . ' mday:' . $local_time[3] . ' month:'.$local_time[4] . ' year: ' . $local_time[5] );
   return Digest::MD5::md5_base64($authKey);
 }

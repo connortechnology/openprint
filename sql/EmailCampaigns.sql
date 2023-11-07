@@ -21,5 +21,6 @@ CREATE TABLE EmailCampaigns (
 	user_id		integer, FOREIGN KEY (user_id) REFERENCES Users (id),
 	recipients_per_run	integer,
 mailinglist boolean not null default true,
+	deleted					BOOLEAN NOT NULL default false,
 	PRIMARY KEY (id)
 );

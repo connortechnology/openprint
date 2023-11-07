@@ -1,8 +1,9 @@
 #!/usr/bin/perl 
-use lib '/var/www/testing/perl';
+use lib '/var/www/openprint/perl';
 use strict;
 
 require sql;
+require configuration;
 require logger;
 require openprint::Object;
 require openprint::Paper;
@@ -1129,6 +1130,19 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
   if ( !exists $$hosts_table{max_ping_time} ) {
     $log->debug("Adding max_ping_time to hosts");
     $dbh->do('ALTER TABLE hosts ADD max_ping_time INTEGER') or die $dbh->errstr();
+  }
+  if ( !exists $$hosts_table{manufacturer_id}) {
+		$log->debug("Adding manufacturer_id to hosts");
+		$dbh->do('ALTER TABLE hosts add manufacturer_id INTEGER');
+		$dbh->do('ALTER TABLE hosts add FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
+  }
+  if ( !exists $$hosts_table{name}) {
+		$log->debug("Adding name to hosts");
+		$dbh->do('ALTER TABLE hosts add name TEXT');
+  }
+  if ( !exists $$hosts_table{abbr_name}) {
+		$log->debug("Adding abbr_name to hosts");
+		$dbh->do('ALTER TABLE hosts add abbr_name TEXT');
   }
 }
 if ( sets::isin( 'tbl_projects', \@tables ) ) {
@@ -3652,6 +3666,8 @@ if ( ! sets::isin('logs',\@tables ) ) {
 	if ( ! exists $$data{host_id} ) {
 		$dbh->do('ALTER TABLE logs add host_id INTEGER');
 		$dbh->do('ALTER TABLE Logs add FOREIGN KEY (host_id) REFERENCES Hosts (id)');
+  } else {
+    $dbh->do('ALTER TABLE Logs ALTER host_id DROP NOT NULL');
 	} # end if
 	$dbh->do('ALTER TABLE Logs DROP COLUMN ip_address') if ( exists $$data{ip_address} );
 	$dbh->do('ALTER TABLE Logs DROP COLUMN hostname') if ( exists $$data{hostname} );

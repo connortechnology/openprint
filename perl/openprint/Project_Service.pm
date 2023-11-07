@@ -181,6 +181,7 @@ sub delete {
 		return '';
 	} # end if
 
+  require openprint::ScheduledJob;
 	# Lock all schedule
 	openprint::ScheduledJob->lock();
 	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{project_id}, 'service_id any'=>$$self{service_id} ) ) {

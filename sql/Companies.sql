@@ -52,6 +52,14 @@ FOREIGN KEY (Salesrep_id) REFERENCES Users (id),
 	deleted					BOOLEAN NOT NULL default false,
 	offers_credit			BOOLEAN NOT NULL DEFAULT FALSE,
 	category_id	  			INTEGER, FOREIGN KEY (category_id) REFERENCES company_categories (id),
+
+  asset_id            integer,
+ last_project_id      integer,
+ last_order_id        integer,
+ last_quote_id        integer,
+ last_invoice_id      integer,
+ credit_card_fee      double precision,
+ csr_commission       double precision,
 	PRIMARY KEY (id)
 );
 INSERT INTO Companies (ysnAccountActivation,name) values ('Y','ConnorTechnology');

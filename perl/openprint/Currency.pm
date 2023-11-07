@@ -215,8 +215,7 @@ sub format {
 	$price = 0 if ! $price;
 	$precision = $$Currency{precision} if ! defined $precision;
   $precision = 2 if ! defined $precision;
-	$symbol = $Currency->symbol() if ! defined $symbol;
-
+  $symbol = $Currency->symbol() if ! defined $symbol;
 	require Number::Format;
 	my $Formatter = new Number::Format(
 			-decimal_digits     =>  $precision,

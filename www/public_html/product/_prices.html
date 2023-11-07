@@ -3,7 +3,7 @@
 	$$variable{Product} = new openprint::Product( $param{product_id} ) if ! $$variable{Product};
 ) ?>
 <? while ( $$variable{Pricelist} = shift @{$$variable{Pricelists}} ) ?>
-<fieldset><legend>Prices for Price List: <? echo ( $$variable{Pricelist}->name(); ) ?></legend>
+<fieldset><legend>Prices for Price List: <? echo ( $$variable{Pricelist}->link_to(); ) ?></legend>
 	<div class="Equipment" id="pricelist-<? echo ( $$variable{Pricelist}{id})?>">
 		<table class="List"><thead>
 			<tr>

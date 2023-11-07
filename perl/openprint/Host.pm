@@ -4,7 +4,9 @@ use warnings;
 require openprint::Object;
 require openprint::Host_Interface;
 require openprint::Host_Config;
+require openprint::Host_Info;
 require openprint::Project_Log;
+require openprint::Manufacturer;
 
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
@@ -37,11 +39,13 @@ package openprint::Host;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
-$debug = 0;
+$debug = 1;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
 	id			=>	'id',
+  name => 'name',
+  abbr_name => 'abbr_name',
 	hostname	=>	'hostname',
 	blacklist	=>	'blacklist',
 	whitelist	=>	'whitelist',
@@ -63,6 +67,7 @@ $serial = 'hosts_id_seq';
 	notify_frequency	=>	'notify_frequency',
 	location_id			=>	'location_id',
 	owner_id			=>	'owner_id',
+  manufacturer_id => 'manufacturer_id',
 );
 %find_fields = (
 	type	=>	'type_id = (SELECT id FROM Host_types WHERE host_types.name = ?)',
@@ -76,6 +81,8 @@ $serial = 'hosts_id_seq';
 	max_ping_time	=>	[ 's/\D//g' ],
 	hostname	=>	[ 's/[^\w\-\.\/:_%//g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	abbr_name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 	blacklist 	=>	0,
@@ -99,26 +106,45 @@ $serial = 'hosts_id_seq';
   min_ping_frequency  =>  60,
 );
 
+sub save {
+  my ( $self, $params ) = @_;
+
+  $self->set( $params ) if $params;
+
+  if ( $$self{Manufacturer} and $$self{Manufacturer}->name() and ! $$self{Manufacturer}->id() ) {
+    $$self{Manufacturer}->save();
+  } # end if
+
+  if ( ( my $error = $self->SUPER::save( ) ) ) {
+    return $error;
+  } # end if
+  return '';
+
+} # end sub save
+
+
 sub name {
-	if ( ! $_[0]{name} ) {
-		$_[0]{name} = $_[0]->hostname();
-		if ( ! $_[0]{name} ) {
-			foreach my $HI ( $_[0]->Interfaces() ) {
+  my $self = shift;
+  $$self{name} = shift if @_;
+	if (!$$self{name}) {
+		$$self{name} = $self->hostname();
+		if ( ! $$self{name} ) {
+			foreach my $HI ( $self->Interfaces() ) {
 				if ( $$HI{ip} ) {
-					$_[0]{name} = $$HI{ip};
-					return $_[0]{name};
+					$$self{name} = $$HI{ip};
+					return $$self{name};
 				}
 			}
-			foreach my $HI ( $_[0]->Interfaces() ) {
+			foreach my $HI ( $self->Interfaces() ) {
 				if ( $$HI{mac} ) {
-					$_[0]{name} = $$HI{mac};
-					return $_[0]{name};
+					$$self{name} = $$HI{mac};
+					return $$self{name};
 				}
 			}
 			return 'unknown';			
 		}
 	}
-	return $_[0]{name};
+	return $$self{name};
 }
 
 sub Config {
@@ -225,23 +251,27 @@ sub Interfaces {
 	return $_[0]{Interfaces} ? @{$_[0]{Interfaces}} : ();
 } # end sub Interfaces
 
-sub info {
-	require openprint::Host_Info;
-	if ( ! $_[0]{Info} ) {
-		%{$_[0]{Info}} = map { $_->name(), $_ } openprint::Host_Info->find(host_id=>$_[0]{id});
+sub Info {
+  my $self = shift;
+  my $key = shift;
+	if ( ! $$self{Info} ) {
+		%{$$self{Info}} = map { $_->name(), $_ } openprint::Host_Info->find(host_id=>$$self{id});
 		if ( $debug ) {
-			foreach my $k ( keys %{$_[0]{Info}} ) {
-				$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
+			foreach my $k ( keys %{$$self{Info}} ) {
+				$openprint::log->debug(" $k => " . ( defined $$self{Info}{$k}->value() ? $$self{Info}{$k}->value() : 'undef') );
 			} # end foreach
 		}
 	} # end if
-	if ( $_[0]{Info}{$_[1]} ) {
-		return $_[0]{Info}{$_[1]}->value();
-	} # end if
-	$openprint::log->debug("No value for $_[1] " . $_[0]->to_string() );
-	foreach my $k ( keys %{$_[0]{Info}} ) {
-		$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
-	} # end foreach
+  return $$self{Info}{$key};
+}
+
+sub info {
+  my $self = shift;
+  my $key = shift;
+
+  my $Info = $self->Info($key);
+  return $Info->value() if $Info;
+	$openprint::log->debug("No value for $key " . $self->to_string() );
 	return '';
 } # end sub info
 
@@ -651,6 +681,32 @@ sub thumbnail_url {
 	}
 	my @Assets = $self->Assets();
 	return ( @Assets ? $Assets[0]->Asset()->sized_url($size) : '' );
+}
+
+sub Manufacturer {
+  my $self = shift;
+  $$self{Manufacturer} = shift if @_;
+  if (!$$self{Manufacturer}) {
+    $$self{Manufacturer} = new openprint::Manufacturer();
+  }
+  return $$self{Manufacturer};
+}
+
+sub manufacturer {
+  my $self = shift;
+  my $Manufacturer = $self->Manufacturer();
+  if (@_) {
+    my $manufacturer = shift;
+    if ($Manufacturer->name() ne $manufacturer) {
+      my $Manufacturer = openprint::Manufacturer->find_one('name lc'=>lc openprint::Manufacturer->transform(name=>$manufacturer));
+      if (!$Manufacturer) {
+        $Manufacturer = new openprint::Manufacturer();
+        $Manufacturer->name($manufacturer);
+      }
+      $$self{Manufacturer} = $Manufacturer;
+    }
+  }
+  return $Manufacturer->name();
 }
 
 1;

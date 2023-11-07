@@ -9,7 +9,7 @@ use Text::CSV_XS ();
 use Date::Calc qw(Add_Delta_Days);
 use Date::Format qw( time2str );
 
-use Mail::Sendmail ();
+#use Mail::Sendmail ();
 
 use openprint ();
 
@@ -70,7 +70,8 @@ sub send_email_with_attachment {
 # Signal end of attachments
 		$$mail{BODY} .= "--$boundary--\n\n";
 	} # end if
-	Mail::Sendmail::sendmail(%{$mail}) || $log->error( "Error: $Mail::Sendmail::error\n" );
+	#Mail::Sendmail::sendmail(%{$mail}) || $log->error( "Error: $Mail::Sendmail::error\n" );
+	$log->error("Deprecated");
 } # end sub send_email_with_attachment
 
 # Loads the specified file and returns it.	Returns undef on failure.

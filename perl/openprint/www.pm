@@ -3,13 +3,14 @@ package openprint::www;
 use utf8;
 use open ( ':encoding(UTF-8)', ':std' );
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 #use Benchmark;
 #use diagnostics;
 
 use Apache2::Request ();
 use Apache2::RequestRec ();
+use Apache2::RequestIO ();
 use Apache2::Connection ();
 use Apache2::RequestUtil ();
 use APR::URI ();
@@ -219,8 +220,8 @@ sub handler {
 		}
 	} else {
 		$variable{SiteTitle} = $config{SiteTitle};
-		$variable{SecureSiteURL} = $config{SecureSiteURL};
 		$variable{siteURL} = $config{siteURL};
+		$variable{SecureSiteURL} = $config{SecureSiteURL} ? $config{SecureSiteURL} : $variable{siteURL};
 		$variable{PageTitle} = $config{SiteTitle} .' - ' . $page;
 
 	#$log->debug( "Before loading content: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
@@ -276,15 +277,14 @@ $log->debug("PageContent is $variable{PageContent}");
       $config{CSP_NONCE} = '';
       my @chars = ('A'..'Z', 'a'..'z', '0' .. '9');
       $config{CSP_NONCE} .= $chars[rand @chars] for 1 .. 16;
-      $r->headers_out->{'Content-Security-Policy'} = "script-src 'unsafe-inline' 'unsafe-eval' 'self' $config{CSP}";
-      # 'nonce-$config{CSP_NONCE}'
+      $r->headers_out->{'Content-Security-Policy'} = "script-src 'unsafe-inline' 'unsafe-eval' 'self' $config{CSP} nonce-$config{CSP_NONCE}";
     }
 
 		local $|=1;
 		if ( ! $r->connection()->aborted() ) {
 			if ( $template ) {
 #$log->debug("parsing template! $template");
-				$r->print( ssi::variable_substitution( \$template, \%variable ) );
+				$request->print( ssi::variable_substitution( \$template, \%variable ) );
 			} else {
 
 #$log->warn("No template!" . $r->content_type());

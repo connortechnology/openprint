@@ -59,6 +59,7 @@ $serial = 'timetracks_id_seq';
 	rate			       	=>	undef,
 	currency_id		  	=>	undef,
 	owner_id		     	=>	q`$openprint::Owner->id()`,
+  company_id        =>  undef,
 	invoice_id			  =>	undef,
 	service_id		  	=>	undef,
 	project_id		  	=>	undef,
@@ -185,8 +186,14 @@ sub Price {
 		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*30));
 		#$openprint::log->debug('Month pricing ' . $elapsed );
 		$Price{Total} = $Price{Price} * $elapsed;
+	} elsif ( $units eq '/week' ) {
+		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*7));
+		#$openprint::log->debug('Month pricing ' . $elapsed );
+		$Price{Total} = $Price{Price} * $elapsed;
 	} elsif ( $units =~ /^\/hr\.?/ ) {
 		$Price{Total} = $Price{Price} * $elapsed / 3600;
+	} elsif ( $units eq 'once' ) {
+		$Price{Total} = $Price{Price};
 	} else {
 		$openprint::log->warn('Unknown units in Timetrack Service ('.$Service->name().') ('.$units.') assuming Hrs');
 		$Price{Total} = $Price{Price} * $elapsed / 3600;
@@ -255,6 +262,11 @@ sub elapsed_formatted {
   } elsif ( $units eq '/week' ) {
     $elapsed = Math::Round::nearest(1, $elapsed/(60*60*24*7));
     return $elapsed . ' week' . ($elapsed == 1 ? '' : 's');
+  } elsif ( $units eq '/day' ) {
+    $elapsed = Math::Round::nearest(1, $elapsed/(60*60*24));
+    return $elapsed . ' day' . ($elapsed == 1 ? '' : 's');
+  } elsif ( $units eq 'once' ) {
+    return '';
   } elsif ( $units =~ /^\/hr\.?/ ) {
     $elapsed = Math::Round::nearest(1, $elapsed/(60*60));
     return $elapsed . ' hour' . ($elapsed == 1 ? '' : 's');
@@ -281,6 +293,7 @@ sub can_view {
   return 1 if $user->in_Group('Accounting');
   return 0;
 }
+
 sub can_edit {
   my $self = shift;
   my $user = @_ ? shift : $openprint::User;
@@ -289,7 +302,6 @@ sub can_edit {
   return 1 if $user->in_Group('Accounting');
   return 0;
 }
-
 
 1;
 __END__

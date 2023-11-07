@@ -350,7 +350,8 @@ sub information {
     } # end if
     $NewQuote->company_id( $session{company_id} );
     $NewQuote->status( 'Incomplete' );
-    $NewQuote->Currency( openprint::Currency::get_current() );
+    $NewQuote->currency_id($Quote->currency_id());
+    $NewQuote->reference($Quote->reference());
     $NewQuote->save();
     if ( ! $NewQuote->id() ) {
       $variable{error} .= 'Unable to create new quote.<br/>';
@@ -403,10 +404,6 @@ sub information {
 
 		my $Quote = $variable{Quote} = new openprint::Quote( $quote_id );  
 		$session{quote_id} = $quote_id;
-		my $Currency = openprint::Currency::get_current();
-		if ( $Quote->currency_id() != $Currency->id() ) {
-			$variable{error} .= $Quote->save({currency_id=>$Currency->id()});
-		}
 
 		if ( $param{remove} ) {
 			sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE quote_id=? AND project_id=?', @param{'quote_id','remove'} );
@@ -589,6 +586,49 @@ sub confirmation {
   } # end if
 
 	if ( $param{btnFunction} eq 'Close' ) {
+    if ( $Quote->status() ne 'Complete' ) {
+
+      my @subtotals;
+
+      my $warning = '';
+      foreach my $QP ( $Quote->Quoted_Projects() ) {
+        foreach my $qty_index ( $QP->quantity_indexes() ) {
+          my $old_price = $QP->price($qty_index);
+          if ( $old_price != $QP->price($qty_index,undef) ) {
+            $warning .= 'Price change from '.$Quote->Currency()->format($old_price). ' to ' . $Quote->Currency()->format($QP->price($qty_index)).' for project '.$QP->Project()->id().' quantity ' . $qty_index.'<br/>';
+          }
+          my $old_quantity = $QP->quantity($qty_index);
+          if ( $old_quantity != $QP->quantity($qty_index,undef) ) {
+            $warning .= "Price change from $old_quantity to " . $QP->quantity($qty_index).' for project '.$QP->Project()->id().' quantity ' . $qty_index.'<br/>';
+          }
+          $subtotals[$qty_index] += $QP->price($qty_index);
+        } # end foreach
+        $QP->save();
+      } # end foreach QP
+      foreach my $Product ( $Quote->Products() ) {
+        $Product->save({cost=>$Product->cost()});
+        $subtotals[1] += $Product->price();
+        $subtotals[2] += $Product->price();
+        $subtotals[3] += $Product->price();
+      } # end foreach Product
+      foreach my $qty_index ( 1 .. 3 ) {
+        $Quote->total($qty_index, $subtotals[$qty_index]);
+      } # end foreach
+      $Quote->administrator_name($param{AdministratorName}) if exists $param{AdministratorName};
+      $Quote->administrator_comments($param{AdministratorComments}) if exists $param{AdministratorComments};
+      if ( $warning ) {
+        $Quote->save();
+        $variable{warning} = $warning.'<br/>Please verify the quoted prices/quantities and click Submit again.';
+        $variable{ExternalRedirect} = '/main/quote/submit.html?quote_id='.$Quote->id();
+      } else {
+        $Quote->status('Complete');
+        $Quote->save();
+        $Quote->send();
+        $Quote->add_log('Submitted');
+      }
+    } else {
+      $variable{error} .= 'This quote has already been sent.  Not sending again.<br/>';
+    } # end if ! Complete
 		$Quote->status('Complete');
 		$Quote->save();
 		$Quote->add_log('Closed');
