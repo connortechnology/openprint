@@ -666,7 +666,8 @@ sub thumbnail_html {
 	my $size = @_ ? shift : 'small';
 	if ( $self->can_get_image() ) {
 		my @dimensions = openprint::Asset::get_dimensions('Landscape', $size);
-		return '<img src="'.$self->get_image(@dimensions).'" alt=""/>';
+    my $src = $self->get_image(@dimensions);
+		return '<img src="'.$self->get_image(@dimensions).'" alt=""/>' if $src;
 	}
 	my @Assets = $self->Assets();
   #$openprint::log->debug("Assets: $size " . @Assets);
