@@ -123,15 +123,22 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 		} # end if
 	}
 	if ( ! $session{Currency_id} ) {
-		if ( ! $config{Currency} ) {
-			$log->warn("Please specify a default currency!");
-		} else {
+		if ( $config{currency_id} ) {
+			my $C = openprint::Currency->find_one( id => $config{currency_id} );
+			if ( ! $C ) {
+				$log->error("The default currency $config{currency_id} was not found in db!");
+			} else {
+				$session{Currency_id} = $C->id();
+			}
+		} elsif ($config{Currency}) {
 			my $C = openprint::Currency->find_one( short => $config{Currency} );
 			if ( ! $C ) {
 				$log->error("The default currency $config{Currency} was not found in db!");
 			} else {
 				$session{Currency_id} = $C->id();
 			}
+    } else {
+			$log->warn('Please specify a default currency!');
 		}
 	} # end if
 
