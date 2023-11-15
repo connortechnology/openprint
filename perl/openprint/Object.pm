@@ -326,8 +326,7 @@ sub save {
 		@identified_by = ('id') if ! @identified_by;
 		my $need_serial = ! ( @identified_by == map { $$self{$_} ? $_ : () } @identified_by );
 
-		if ( $force_insert or $need_serial ) {
-
+		if ($force_insert or $need_serial) {
 			if ( $need_serial ) {
 				if ( $serial ) {
 					@$self{@identified_by} = @sql{@$fields{@identified_by}} = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
@@ -348,7 +347,6 @@ sub save {
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
-				(new openprint::Log())->save({Object=>$self, action=>'Created'}) if $type !~ /Log/i;
 			} # end if
       if ( ! ( $type =~ /Log/i ) ) {
         my ( $caller, undef, $line ) = caller;
