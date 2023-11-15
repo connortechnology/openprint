@@ -99,10 +99,14 @@ sub Host {
 	if ( ( ! $_[0]{host_id} ) and ( $_[0]{ip_address} ) ) {
 		my $Interface = openprint::Host_Interface->find_one( ip=>$_[0]{ip_address} );
 		my $Host;
-		if ( !$Interface ) {
-			$Host = new openprint::Host();
-			$Host->save();
-			$Interface = new openprint::Host_Interface();
+		if (!$Interface) {
+      # This should fix infinite loop when adding a new host.
+      $Host = openprint::Host->find_one(hostname=>$_[0]{ip_address});
+      if (!$Host) {
+        $Host = new openprint::Host();
+        $Host->save({hostname=>$_[0]{ip_address}});
+      }
+      $Interface = new openprint::Host_Interface();
 			$Interface->save({ host_id=>$$Host{id}, ip=>$_[0]{ip_address} });
 		} else {
 			$Host = $Interface->Host();
