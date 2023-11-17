@@ -76,7 +76,7 @@ sub name {
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User->find('type'=>['E','A'],'usergroup any'=>'Quality Control Notifications');
+	my @Users = openprint::User->find(type=>['E','A'],'usergroup any'=>'Quality Control Notifications');
 
 	if ( @Users ) {
 		my $email_template = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . '/email_content/email_template.html' );
@@ -229,8 +229,8 @@ sub summary_html {
 			ssi::escape_quotes($Article->title()),
 			$Article->source_content(),
 			($Article->summary() ? $Article->summary() : $Article->body() ),
-			( $Article->published() ? Date::Format::time2str($openprint::config{DateTimeFormat}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
-			join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
+			( $Article->published() ? ssi::format_datetime($Article->published_on()) : '' ),
+			join('', map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
     );
 	if ( $Article->source() ) {
 		$html .= sprintf('<a class="source" href="%1$s" target="_blank" title="Original Article">%1$s</a>', $Article->source() );
@@ -297,7 +297,7 @@ sub Photos {
     #if ( ! $_[0]{album_id} ) {
         #return ();
     #} # end if
-    return openprint::Article_Asset->find('article_id'=>$_[0]{id});
+    return openprint::Article_Asset->find(article_id=>$_[0]{id});
 } # end sub Photos
 
 sub Album {
