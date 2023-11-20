@@ -48,7 +48,7 @@ $log->debug("City: looking for $session{'/event/search.html?city_id'} got " . $C
 <? else ( @{$$variable{Events}} == 0 ) ?>
 		<? echo ( 
 			my $html;
-			my $Me = new openprint::User( $session{user_id} );
+			my $Me = $openprint::User;
 			foreach my $Event ( @{$$variable{Events}} ) {
 				$html .= $Event->html();
 
