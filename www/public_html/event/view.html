@@ -165,7 +165,10 @@ $log->debug("My location is " . $MyLocation->to_string() );
 				</li>
 				<li><label>By Relationship</label>
 					<select name="relationship_ip" onchange="invite_by_relationship(this);"><option value="">none</option>
-						<? echo ( ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'lower(name)') ) ) ?>
+						<? echo ( 
+            require openprint::User_Relationship_Type;
+            return make_drop_down( openprint::User_Relationship_Type->dropdown(order=>'lower(name)') );
+            ) ?>
 					</select>
 				</li>
 		<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
