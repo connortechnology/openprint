@@ -30,6 +30,16 @@
 		<input type="hidden" name="timetrack_id" value="<? echo ( $$variable{Timetrack}->id() ) ?>" />
 		<div class="leftColumn">
 			<ul>
+        <?echo (
+         my @owners = openprint::Company->find(offers_credit=>1);
+         if (@owners > 1) {
+         return join("\n", '<li class="owner_id"><label>Owner</label>',
+           ssi::select([ map { $_->id()=> $_->name()} @owners], $$variable{Timetrack}->owner_id(), {name=>'owner_id'}),
+           '</li>'
+         );
+         }
+         return;
+         ) ?>
 			<li><label for="company_id">Company</label>
 				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
 				<select id="company_id" name="company_id" onchange="company_id_onchange(this);">
