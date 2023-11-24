@@ -13,6 +13,8 @@ require sql;
 require openprint;
 require File::Slurp;
 require URI::Encode;
+require URI::Escape;
+require Number::Format;
 
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
