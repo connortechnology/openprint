@@ -1639,7 +1639,20 @@ sub connect {
 			$openprint::log->error( 'Unable to connect to RADIUS DB server.' );
 		} # end if
 	}
-return $dbh;
+  return $dbh;
 }
+
+sub TO_JSON {
+  my $self = shift;
+  my $type = ref $self;
+  my $fields = eval('\%'.$type.'::fields');
+
+  # copy all the sql backed fields, as there might be other things in the object.
+  my %simple_hash;
+  my @keys = map { defined $$fields{$_} ? $_ : () } keys %$fields;
+  @simple_hash{@$fields{@keys}} = @$self{@keys};
+  return \%simple_hash;
+}
+
 1;
 __END__
