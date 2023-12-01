@@ -23,9 +23,7 @@ function undelete_clicked() {
   }
 }
 function delete_clicked() {
-console.log($j('#f2')[0].elements['company_id']);
   const selected = get_value( $j('#f2')[0].elements['company_id'] );
-console.log(selected);
   if (!selected.length) {
     alert('Please select a company to delete');
   } else {
@@ -39,12 +37,12 @@ console.log(selected);
 		<ul>
 		<li>
 			<label>ID</label>
-			<? echo ( input( type=>'cardinal', name=>'company_id', onkeydown=>'if(event.keyCode==13){f1.submit();}' ); ) ?>
+			<? echo ( input( type=>'cardinal', name=>'company_id', onkeydown=>'if(event.keyCode==13){load_page();}' ); ) ?>
 			<? echo ( button( 'Go1',{ onclick=>q`f1.action='company_profiles.html';f1.submit();`, text=> 'Go' } ); ) ?>	
 		</li>
 		<li>
 			<label>Name</label>
-			<? echo ( input( type=>'text', name=>'company_name', onkeydown=>'if(event.keyCode==13){f1.submit();}', oninput=>'load_page();' ); ) ?>
+      <? echo ( input( type=>'text', name=>'company_name', onkeydown=>'if(event.keyCode==13){load_page();}', oninput=>'load_page();', value=>$param{company_name} ); ) ?>
 			<? echo ( button( 'Go2',{ onclick=>q`f1.action='company_profiles.html';f1.submit();`, text=> 'Go' } ); ) ?>	
 		</li>
     <? echo (

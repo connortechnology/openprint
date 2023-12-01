@@ -162,17 +162,17 @@ sub can_view {
 	my $User;
 	if ( @_ > 1 and $_[1] ) {
 		$User = ref $_[1] eq 'openprint::User' ? $_[1] : new openprint::User($_[1]);
-$openprint::log->debug("Using specified user $_[1]");
+    #$openprint::log->debug("Using specified user $_[1]");
 	} else {
 		$User = $openprint::User;
 	} # end if
 	return 1 if $$User{type} eq 'A';
-$openprint::log->debug("Event::can_view not an admin $$User{email} $$User{type}");
+  #$openprint::log->debug("Event::can_view not an admin $$User{email} $$User{type}");
 	return 1 if $_[0]{created_by} == $$User{id};
 #$openprint::log->debug("Event::can_view not creator");
 	return 0 if $_[0]{deleted};
 #$openprint::log->debug("Event::can_view not deleated");
-	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{created_by});
+	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id}, $_[0]{created_by});
 #$openprint::log->debug("Event::can_view not blocked");
 	my $Privacy = $_[0]->Privacy();
 	return 1 if ! $$Privacy{id};

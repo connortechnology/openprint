@@ -1,5 +1,6 @@
 <ul>
 	<? echo ( 
+    require openprint::User_Relationship;
 		my $html;
 		my @to_ids = map { $_->user_id1() == $session{'user_id'} ? $_->user_id2() : $_->user_id1() } openprint::User_Relationship->find( 
 			'custom'=>[ '(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ],

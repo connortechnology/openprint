@@ -1,5 +1,6 @@
 <? eval (
-	@{$$variable{'Events'}} = ();
+  require openprint::Event;
+	$$variable{Events} = [];
 	foreach my $Event ( openprint::Event->find( 
 		location_id		=>	$variable{'Location'}->id(),
 		ssi::date_filter( '/event/search.html?starting_on_start','starting_on >=' ),

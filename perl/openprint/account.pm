@@ -85,7 +85,7 @@ sub registration {
 	$error .= 'Missing city.<br/>' if $required_fields{city} and ! $param{city};
 	$error .= 'Missing state/province.<br/>' if $required_fields{state} and ! $param{state};
 	$error .= 'Missing country.<br/>' if $required_fields{country} and ! $param{country};
-	if ( ! $session{company_id} ) {
+	if (!$session{company_id} ) {
 		$error .= 'You must agree to the terms.<br/>' if $required_fields{agree_terms} and ! $param{agree_terms};
 		if ( $required_fields{postalcode} ) {
 			$error .= 'Missing Postal Code.<br/>' if ! $param{postalcode};
@@ -179,10 +179,12 @@ sub registration {
 		$param{email} =~ tr/[A-Z]/[a-z]/;
 		if ( openprint::User->find_one(email=>$param{email},'company_id is null'=>0) ) {
 			$variable{error} = $param{email} .' is already a user!';
+      $log->debug($variable{error});
 			return;
 		} # end if
 		if ( openprint::User->find_one(email=>$param{email}, deleted=>1 ) ) {
 			$variable{error} = $param{email} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
+      $log->debug($variable{error});
 			return;
 		} # end if
 		$User = openprint::User->find_one(email=>$param{email}, 'company_id is null'=>1);

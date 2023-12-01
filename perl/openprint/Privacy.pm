@@ -1,6 +1,7 @@
 use strict;
 use openprint ();
 require openprint::Object_Type;
+require openprint::User_Relationship;
 package openprint::Privacy;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );

@@ -29,8 +29,8 @@ use vars qw($log $dbh %config %session);
 
 my $program = 'import_bank_statements';
 $log = logger->new('debug');
-my $opts = {};
-GetOptions($opts, 'help',
+my $options = {};
+GetOptions($options, 'help',
   'config=s',
   'db_name=s',
   'db_host=s',
@@ -42,24 +42,24 @@ GetOptions($opts, 'help',
   'Currency=s',
   'format=s');
 
-if ( $opts->{help} ) {
+if ( $options->{help} ) {
   usage();
   exit 0;
 }
 
-if ( ! $$opts{file} and @ARGV ) {
-  $$opts{file} = $ARGV[0];
-  #print "Setting file to $$opts{file}\n";
+if ( ! $$options{file} and @ARGV ) {
+  $$options{file} = $ARGV[0];
+  #print "Setting file to $$options{file}\n";
 }
 
-open(FH, $$opts{file}) or die "Can't open $$opts{file} : $!";
+open(FH, $$options{file}) or die "Can't open $$options{file} : $!";
 
-if ( $opts->{debug}) {
-  $$log{level} = $opts->{debug};
+if ( $options->{debug}) {
+  $$log{level} = $options->{debug};
 }
-$_ = configuration::from_file($$opts{config} ? $$opts{config} : "/etc/openprint/$program.conf");
+$_ = configuration::from_file($$options{config} ? $$options{config} : "/etc/openprint/$program.conf");
 $log->error($_) if $_;
-configuration::merge($opts);
+configuration::merge($options);
 
 unless ($config{db_name}) {
   print STDERR "$program: missing required --db_name parameter\n";
@@ -78,22 +78,22 @@ die 'Error opening db' if ! $dbh;
 configuration::init();
 $_ = configuration::from_file("/etc/openprint/$program.conf");
 $log->error($_) if $_;
-configuration::merge($opts);
+configuration::merge($options);
 
 openprint::session_init();
 
-while ( !($$opts{account} and openprint::Expense_Account->find_one(name=>$$opts{account})) ) {
+while ( !($$options{account} and openprint::Expense_Account->find_one(name=>$$options{account})) ) {
   my $guessed_account = '';
   my @accounts = openprint::Expense_Account->find(order=>'lower(name)');
   if ( @accounts == 1 ) {
-    $$opts{account} = $accounts[0]{name};
-    print "Selecting $$opts{account} for the account:\n";
+    $$options{account} = $accounts[0]{name};
+    print "Selecting $$options{account} for the account:\n";
     last;
   } else {
 
-    if ( $$opts{file} =~ /Transactions(.*)\.csv$/ ) {
+    if ( $$options{file} =~ /Transactions(.*)\.csv$/ ) {
       $guessed_account = 'CDT Mastercard 9122 3629';
-    } elsif ( $$opts{file} =~ /report(.*)\.csv$/ ) {
+    } elsif ( $$options{file} =~ /report(.*)\.csv$/ ) {
       $guessed_account = 'PC Mastercard 6369';
       print "Guessing account to " . $guessed_account. "\n";
     }
@@ -106,17 +106,17 @@ while ( !($$opts{account} and openprint::Expense_Account->find_one(name=>$$opts{
   my $response = <STDIN>;
   chomp $response;
   if ( $response and $accounts{$response} ) {
-    $$opts{account} = $accounts{$response}{name};
+    $$options{account} = $accounts{$response}{name};
   } elsif ( (! $response) and $guessed_account ) {
-    $$opts{account} =  $guessed_account;
+    $$options{account} =  $guessed_account;
   } else {
     print "Invalid entry\n";
   }
 }
 
-my $Account = openprint::Expense_Account->find_one(name=>$$opts{account});
+my $Account = openprint::Expense_Account->find_one(name=>$$options{account});
 if ( ! $Account ) {
-  die "No account found for $$opts{account}\n";
+  die "No account found for $$options{account}\n";
 }
 if ( ! $openprint::Owner->id() ) {
   die "Need an owner\n";
@@ -125,23 +125,23 @@ if ( ! $openprint::Owner->id() ) {
 }
 
 my $guessed_format='';
-if ( $$opts{file} =~ /Transactions(.*)\.csv$/ ) {
+if ( $$options{file} =~ /Transactions(.*)\.csv$/ ) {
   $guessed_format = 'CDNTire';
-} elsif ( $$opts{file} =~ /accountactivity(.*)\.csv$/ ) {
+} elsif ( $$options{file} =~ /accountactivity(.*)\.csv$/ ) {
   $guessed_format = 'TD';
-} elsif ( $$opts{file} =~ /cibc(.*)\.csv$/ ) {
+} elsif ( $$options{file} =~ /cibc(.*)\.csv$/ ) {
   $guessed_format = 'CIBC';
-} elsif ( $$opts{file} =~ /download\.csv$/ ) {
+} elsif ( $$options{file} =~ /download\.csv$/ ) {
   $guessed_format = 'Meridian';
-} elsif ( $$opts{file} =~ /report(.*)\.csv$/ ) {
+} elsif ( $$options{file} =~ /report(.*)\.csv$/ ) {
   $guessed_format = 'PC';
-} elsif ( $$opts{file} =~ /Download\.CSV$/ ) {
+} elsif ( $$options{file} =~ /Download\.CSV$/ ) {
   $guessed_format = 'Paypal';
 }
 print "Guessed format is $guessed_format\n";
 
 my @formats = ('CDNTire', 'CIBC', 'PC', 'TD', 'Meridian','Paypal');
-while ( !( $$opts{format} and sets::isin($$opts{format}, \@formats) ) ) {
+while ( !( $$options{format} and sets::isin($$options{format}, \@formats) ) ) {
   print "Please select the format:\n";
   for ( my $i = 0; $i < @formats; $i += 1 ) {
     print '['.$i.'] '.$formats[$i].($formats[$i] eq $guessed_format ? ' < ':'')."\n";
@@ -149,9 +149,9 @@ while ( !( $$opts{format} and sets::isin($$opts{format}, \@formats) ) ) {
   my $response = <STDIN>;
   chomp $response;
   if ( ($response ne '') and $formats[$response] ) {
-    $$opts{format} = $formats[$response];
+    $$options{format} = $formats[$response];
   } elsif ( (! $response) and $guessed_format ) {
-     $$opts{format} =  $guessed_format;
+     $$options{format} =  $guessed_format;
    } else {
     print "Invalid entry\n";
   }
@@ -167,7 +167,7 @@ my %Expenses_Added;
 my @columns;
 
 my $csv = Text::CSV_XS->new();
-if ($$opts{format} eq 'CDNTire') {
+if ($$options{format} eq 'CDNTire') {
   <FH>;
   <FH>;
   <FH>;
@@ -178,7 +178,7 @@ if ($$opts{format} eq 'CDNTire') {
     #}
   $csv->parse($line);
   @columns = $csv->fields();
-} elsif ($$opts{format} eq 'Paypal') {
+} elsif ($$options{format} eq 'Paypal') {
   my $line = <FH>;
   $line =~ s/[^[:ascii:]]//g;
   my $status = $csv->parse($line);
@@ -199,7 +199,7 @@ LINE: while ( my $line = <FH> ) {
   delete $$Expense{id};
   my ($date, $time, $card, $amount, $desc, $desc1, $desc2, $desc3, $debit, $credit, $balance, $paid_on, $type, $posted, $ref );
 
-  if ( $$opts{format} eq 'CIBC' ) {
+  if ( $$options{format} eq 'CIBC' ) {
     ($date, $desc, $debit, $credit, $card) = misc::trim($csv->fields());
 
     $paid_on = $date,
@@ -211,7 +211,7 @@ LINE: while ( my $line = <FH> ) {
       total       => $amount,
       paid_on     => $paid_on,
     });
-  } elsif ( $$opts{format} eq 'TD' ) {
+  } elsif ( $$options{format} eq 'TD' ) {
     ($date, $desc, $debit, $credit, $balance) = misc::trim($csv->fields());
 
     my ($month, $day, $year) = split('/', $date);
@@ -224,7 +224,7 @@ LINE: while ( my $line = <FH> ) {
       total       => $amount,
       paid_on     => $paid_on,
     });
-  } elsif ( $$opts{format} eq 'Meridian' ) {
+  } elsif ( $$options{format} eq 'Meridian' ) {
     #my  ID, Date, Account Name, Description1, Description2, Description3, Amount, Balance
     #653656564,2019-11-20 12:00:00 AM,2471118-Maximiser - 0,"Cheque 27",,,-3100,37.49
     ( $ref, $date, $card, $desc1, $desc2, $desc3, $amount, $balance ) = misc::trim($csv->fields());
@@ -240,7 +240,7 @@ LINE: while ( my $line = <FH> ) {
       paid_on     => $paid_on,
     });
 
-  } elsif ( $$opts{format} eq 'PC' ) {
+  } elsif ( $$options{format} eq 'PC' ) {
     #( $desc, $card, $date, $time, $amount) = misc::trim($csv->fields()); OLD
     ( $desc, $type, $card, $date, $time, $credit) = misc::trim($csv->fields());
     next if $desc eq 'Merchant Name';
@@ -256,7 +256,7 @@ LINE: while ( my $line = <FH> ) {
       total       => $amount,
       paid_on     => $paid_on,
     });
-  } elsif ( $$opts{format} eq 'CDNTire' ) {
+  } elsif ( $$options{format} eq 'CDNTire' ) {
 
     if ( @columns == 6 ) {
       ( $ref, $date, $posted, $type, $desc, $amount) = misc::trim($csv->fields());
@@ -275,7 +275,7 @@ LINE: while ( my $line = <FH> ) {
       total_locked=> 1,
       paid_on     => $date,
     });
-  } elsif ( $$opts{format} eq 'Paypal' ) {
+  } elsif ( $$options{format} eq 'Paypal' ) {
     my %data;
     print "columns: @columns\n";
     print "data: ". join(' ', misc::trim($csv->fields()));
@@ -286,28 +286,54 @@ LINE: while ( my $line = <FH> ) {
     $debit = $amount;
 
     my ( $d, $m, $y ) = split(/\//, $data{Date});
-    $paid_on = join('-', ( $y, $m, $d ));
+    $paid_on = $date = join('-', ( $y, $m, $d ));
     $desc = join("\n", map { $_ . ' = '. $data{$_} } sort { $a cmp $b } keys %data);
     $amount = $data{Net};
 
     $Expense->set_no_defaults({
       description => $desc,
       account_id  => $$Account{id},
-      total       => $amount,
-      total_luocked=> 1,
-      paid_on     => $paid_on,
+      total       => ($data{'Balance Impact'} eq 'Credit' ? -1*$amount : $amount),
+      total_locked=> 1,
+      paid_on     => $date,
+      transaction_id=>$data{'Transaction ID'},
     });
+    if ($data{'From Email Address'}) {
+      my $u = openprint::User->find_one(email=>$data{'From Email Address'});
+      if (!$u) {
+        if (confirm('Add user/company for '.$data{'From Email Address'}.'? [Y|n]', 'Y')) {
+          my $company = new openprint::Company();
+          $company->save({
+              name=>$data{Name},
+              address1 => $data{'Address Line 1'},
+              address2 => $data{'Address Line 2'},
+              country=>$data{'Country Code'},
+              state => $data{'State/Province/Region/County/Territory/Prefecture/Republic'},
+              phone => $data{'Contact Phone Number'},
+              city  => $data{'Town/City'},
+              postalcode  =>$data{'Zip/Postal Code'},
+            });
+          $u = new openprint::User();
+          $u->save({
+              name=>$data{Name},
+              company_id=>$company->id(),
+              email=>$data{'From Email Address'},
+            });
+          $Expense->recipient_id($company->id());
+        }
+      } else {
+        $Expense->recipient_id($u->company_id());
+      }
+    }
 
   } else {
-    die "Unknown format $$opts{format}";
+    die "Unknown format $$options{format}";
   } # end if format
 
   if ( $Expense->{total} ) {
-
     my $response;
 
     while ( 1 ) {
-
       my $matched = 0;
       foreach my $Rule ( @Rules ) {
         if ( $Rule->match({desc=>$desc, date=>$date, amount=>$amount, debit=>$debit, credit=>$credit, balance=>$balance}) ) {
@@ -364,7 +390,9 @@ LINE: while ( my $line = <FH> ) {
         }
       } elsif ( $matched ) {
         ## Look for it without the description, but with a transaction id
-        delete $expense_find{description};
+        delete $expense_find{'description ilike'};
+        delete $expense_find{transaction_id};
+        delete $expense_find{'recipient lc'};
         @Expenses = openprint::Expense->find(\%expense_find);
         if ( @Expenses ) {
           $log->info("Found an expense after filtering that looks like it matches:\n" . join("\n", map { $_->to_string() } @Expenses));
@@ -372,7 +400,7 @@ LINE: while ( my $line = <FH> ) {
         } else {
           delete %expense_find{'paid_on >='};
           delete %expense_find{'paid_on <='};
-          $expense_find{paid_on} = undef;
+          #$expense_find{paid_on} = undef;
           @Expenses = openprint::Expense->find(\%expense_find);
           if ( @Expenses ) {
             foreach my $E ( @Expenses ) {
@@ -434,6 +462,24 @@ LINE: while ( my $line = <FH> ) {
 close(FH);
 
 $dbh->disconnect();
+
+sub confirm {
+  my $prompt = shift;
+  my $default = @_ ? lc shift : 'y';
+  print $prompt ? $prompt : "Confirm? (Y|n)";
+  if ( $$options{y} ) {
+    print "Y\n";
+    return 1;
+  }
+  if ( $$options{n} ) {
+    print "N\n";
+    return 0;
+  }
+  $_=<STDIN>; chomp;
+  return 1 if $_ and ( lc($_) eq 'y');
+  return 1 if (!$_) and ($default eq 'y');
+  return 0;
+}
 
 sub usage {
 	print <<EOH;

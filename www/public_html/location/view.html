@@ -2,10 +2,12 @@
 <div class="Location"><div class="View">
 <? if ( $$variable{Location}->id() ) ?>
 <? echo (
-	my @Duplicates = openprint::Location->find(name=>$$variable{Location}->name(), parent_id=>$$variable{Location}->parent_id(), 'id !='=>$$variable{Location}->id() );
-	if ( @Duplicates ) {
-	return "There are the following duplicates:<br/>" . join('<br/>', map { $_->to_string() } @Duplicates );
-	}
+  if ($session{user_type} eq 'E' or $session{user_type} eq 'A') {
+  	my @Duplicates = openprint::Location->find(name=>$$variable{Location}->name(), parent_id=>$$variable{Location}->parent_id(), 'id !='=>$$variable{Location}->id() );
+	  if ( @Duplicates ) {
+	    return "There are the following duplicates:<br/>" . join('<br/>', map { $_->to_string() } @Duplicates );
+	  }
+  }
 	return;
 ) ?>
 	<form id="f1" name="f1" action="/location/view.html?location_id=<? echo ( $$variable{Location}->id() ) ?>" method="post" enctype="multipart/form-data">

@@ -401,7 +401,7 @@ sub category {
 } # end sub category
 
 sub view {
-	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
+	$param{article_id} = openprint::Article->transform( id=>$param{article_id} );
 	my $Article = $variable{Article} = new openprint::Article( $param{article_id} );
 	
 	# WHy?
