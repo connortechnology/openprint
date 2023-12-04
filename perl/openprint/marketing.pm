@@ -282,7 +282,7 @@ sub subscriptions {
   my $User;
 
   if ($param{email}) {
-    my @Users = openprint::User->find(email=>$param{email});
+    my @Users = openprint::User->find(email=>openprint::User->transform(email=>$param{email}));
     if (@Users > 1) {
       $variable{error} .= 'Multiple user records found.  Please contact support.';
       return;
