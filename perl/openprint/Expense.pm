@@ -341,7 +341,7 @@ sub to_string {
   my $self = shift;
   my $type = ref($self);
   #return $type . ': '. join(' ' , map { $$self{$_} ? $_.' => '.(ref $$self{$_} eq 'ARRAY' ? join(',', @{$$self{$_}}) : $$self{$_} ) : () } keys %fields ).
-  return 'Expense: ' . $self->Company()->name() . ' ' . $self->account(). ' to ' . $self->recipient(). ' '.$$self{category_id}.':'.$self->category().' '.$self->total().
+  return 'Expense: ' . $self->Company()->name() . ' ' . $self->account(). ' to ' . $self->recipient(). ' '.$$self{category_id}.':'.$self->category().' '.$self->Currency()->format($self->total()).
  ($$self{business_use} ? ' ' . $$self{business_use}. '% business = ' . $self->business_use_amount() : '').
   "\nTaxes:".join("\n", map { $_->to_string() } $self->Taxes());
 }
@@ -360,7 +360,6 @@ sub amount {
   }
   return $$self{amount};
 }
-
 
 1;
 __END__
