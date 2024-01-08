@@ -48,12 +48,13 @@ sub amount {
 
       my $amount = $$Expense{amount};
       if ( !defined($amount) ) {
-        $amount = $Expense->total();
+        $amount = $$Expense{total};
         if ( !defined($amount) ) {
+          $$self{amount} = 0;
           $openprint::log->error('No amount in '.$Expense->to_string());
           return undef;
         }
-        $amount = $Expense->total() / (1+($$self{rate}/100));
+        $amount = $amount / (1+($$self{rate}/100));
         #$openprint::log->error("calculated amouhnt from total: $amount = $$Expense{total} / ($$self{rate}/100);");
       }
       $$self{amount} = $amount * ($$self{rate}/100);
