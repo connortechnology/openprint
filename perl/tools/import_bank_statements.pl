@@ -257,13 +257,14 @@ LINE: while ( my $line = <FH> ) {
       description => $desc,
       account_id  => $$Account{id},
       paid_on     => $paid_on,
+      total_locked=> 1,
     });
     if ($cad) {
       $Expense->currency_id($CAD->id());
-      $Expense->total(-1*$cad);
+      $amount = $Expense->total(-1*$cad);
     } else {
       $Expense->currency_id($USD->id());
-      $Expense->total(-1*$usd);
+      $amount = $Expense->total(-1*$usd);
     }
 
   } elsif ( $$options{format} eq 'PC' ) {
