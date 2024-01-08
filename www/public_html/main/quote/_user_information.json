@@ -1,6 +1,6 @@
 <? echo ( 
 	my $html = '';
-	my $User = new openprint::User( $param{'user_id'} );
+	my $User = new openprint::User($param{user_id});
 	my %data = (
 		#'ForSalutation'	=>	$User->salutation(),
 		'ForFirstName'	=>	$User->firstname(),
@@ -8,15 +8,15 @@
 		'ForEmail'	=>	$User->email(),
 		'ForTitle'	=>	$User->title(),
 		'ForPhone'	=>	$User->phone(),
-		'ForExtension'	=>	$User->extension(),
+		#'ForExtension'	=>	$User->extension(),
 		'ForFax'	=>	$User->fax(),
 	);
 
-	$html .= join('', 
-		map { sprintf( q{$('%s').value = '%s';}, $_, $data{$_} ) } keys %data
+	$html .= join("\n", 
+		map { sprintf( q{$j('#%s').val('%s');}, $_, $data{$_} ) } keys %data
 	);
 	#$html .= sprintf( q{set_rdb_value($('f1').ForSalutation,'%s');}, $User->salutation() );
-	$html .= sprintf( q{$('ForSalutation%1$s').checked=true;}, $User->salutation() );
+	$html .= sprintf( q{$j('#ForSalutation%1$s').checked=true;}, $User->salutation() );
 
 	return $html;
 ) ?>

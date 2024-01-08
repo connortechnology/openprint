@@ -98,11 +98,11 @@ display: none;
 
 div.Quote div.Information fieldset ul li {
 	margin: .2em;
-	padding-left: 110px;
+	padding-left: 130px;
 }
 div.Quote div.Information fieldset ul li label {
-	margin: 0px 15px 0px -110px;
-	width: 110px;
+	margin: 0px 15px 0px -130px;
+	width: 130px;
 }
 div.Quote div.Information fieldset ul li label.radio {
     width: auto;
