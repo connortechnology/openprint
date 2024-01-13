@@ -113,6 +113,7 @@ sub save {
 
   if ( $$self{Manufacturer} and $$self{Manufacturer}->name() and ! $$self{Manufacturer}->id() ) {
     $$self{Manufacturer}->save();
+    $$self{manufacturer_id} = $$self{Manufacturer}->id();
   } # end if
 
   if ( ( my $error = $self->SUPER::save( ) ) ) {
