@@ -27,13 +27,14 @@ sub session_init {
 		if ( $$cookies{_session_id} ) {
 			$cookie = $$cookies{_session_id};
 			$cookie = $cookie->value if $cookie;
-$log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
+      $log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
 		} else {
 			if ( $r->param('_session_id') ) {
 				$log->error('Since when is session_id in the params');
 				$cookie = $r->param('_session_id');
 			} # end if
 		} # end if
+    $cookie =~ s/[^A-Za-z0-9]//g if $cookie; # sanitize
 
 		if ( $dbh ) {
 			# If we have no cookie, then... shouldn't try to load it...
