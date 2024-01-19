@@ -1,6 +1,6 @@
 <div class="Host"><div class="Edit">
 <?include(/includes/error_reporting.html)?>
-<form id="f1" name="f1" method="post" action="/employee/it/host.html" enctype="multipart/form-data">
+<form id="f1" name="f1" method="post" action="/employee/it/host.html" enctype="multipart/form-data" autocomplete="off">
 	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{Host}->id() ) ?>" />
 	<input type="hidden" id="action" name="action" />
 	<fieldset><legend>Host <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) .($$variable{Host}->deleted() ? ' <span class="warning">Deleted</span>':'')) ?></legend>
@@ -97,7 +97,7 @@
 					<textarea id="description" name="description" rows="<? echo (count_lines($$variable{Host}->description()) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Host}->description() ) ?></textarea>
 				</li>
 				<li><label>Owner</label>
-          <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+          <input type="text" id="owner_id_filter" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
           <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
             <option value="">None</option>
 <? echo ( 
