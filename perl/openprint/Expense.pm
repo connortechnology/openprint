@@ -187,12 +187,17 @@ sub Recipient {
 	return new openprint::Company( $_[0]{recipient_id} );
 }
 
-sub delete {
-	foreach my $T ( $_[0]->Taxes() ) {
-		$T->delete();
+sub destroy {
+  my $self = shift;
+  if (!$$self{id}) {
+    $openprint::log->error("Attempt to delete Expense without id");
+    return;
+  }
+	foreach my $T ( $self->Taxes() ) {
+		$T->destroy();
 	} # end foreach
-	$_[0]->SUPER::delete();
-} # end sub delete
+	$self->SUPER::destroy();
+} # end sub destroy
 
 sub Taxes {
   my $self = shift;
@@ -360,7 +365,6 @@ sub amount {
   }
   return $$self{amount};
 }
-
 
 1;
 __END__
