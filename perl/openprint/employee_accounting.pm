@@ -451,7 +451,7 @@ sub expenses {
         ssi::date_filter( $uri.'?paid_on_start', 'period_end null_or_>=' ),
         order   =>  'period_start,name',
       );
-      my @header = ('Recipient', 'Account', 'Category', 'Description', 'Invoiced', 'Due', 'Paid', 'Bus %', 'Amount','Business Use Amount', (map { $_->name() . ' ' . $_->rate().'%' } @Taxes), 'Total');
+      my @header = ('Recipient', 'Account', 'Category', 'Description', 'Invoiced', 'Due', 'Paid', 'Bus %', 'Currency','Amount in Original Currency','Amount','Business Use Amount', (map { $_->name() . ' ' . $_->rate().'%' } @Taxes), 'Total');
       my @data = ();
 
       my @Expenses = openprint::Expense->find(
@@ -480,10 +480,14 @@ sub expenses {
           ssi::format_csv_date($Expense->due_on()),
           ssi::format_csv_date($Expense->paid_on()),
           $Expense->business_use(),
+          $Currency->short(),
+          $Expense->amount(),
           $Currency->convert_from($Expense->amount(), { period=>$Expense->paid_on()}),
           $Currency->convert_from($Expense->business_use_amount(), { period=>$Expense->paid_on()}),
-          ( map { $Currency->convert_from($Expense->Tax( $_ )->amount(), { period=>$Expense->paid_on()}) } @Taxes),
-          $Currency->convert_from($Expense->total(), { period=>$Expense->paid_on()}),
+          ( map { $Expense->Tax( $_ )->amount() } @Taxes),
+          $Expense->total(),
+          #( map { $Currency->convert_from($Expense->Tax( $_ )->amount(), { period=>$Expense->paid_on()}) } @Taxes),
+          #$Currency->convert_from($Expense->total(), { period=>$Expense->paid_on()}),
         );
       } # end foreach Expense
       misc::export_csv( $r, $log, \%variable, 'expenses.csv', \@header, \@data );
@@ -846,6 +850,9 @@ sub expense_rule {
     }
   } elsif ( $param{action} eq 'Copy' ) {
     $Rule = $variable{Rule} = $Rule->copy();
+  } elsif ( $param{action} eq 'Delete' ) {
+    $Rule->delete();
+    $variable{ExternalRedirect} = '/employee/accounting/expense_rules.html';
   }
 }
 
