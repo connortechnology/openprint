@@ -58,6 +58,8 @@ sub amount {
         #$openprint::log->error("calculated amouhnt from total: $amount = $$Expense{total} / ($$self{rate}/100);");
       }
       $$self{amount} = $amount * ($$self{rate}/100);
+    } else {
+      $$self{amount} = 0;
     } # end if
     $$self{amount} = Math::Round::nearest(0.01, $$self{amount});
   } # end if
