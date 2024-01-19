@@ -34,8 +34,10 @@ while (my $line = <$fh>) {
   #$line = Encode::encode_utf8($line);
   if ($csv->parse($line)) {
     #rb_id;mrtg_add_status;mrtg_template;mrtg_gateway;mrtg_relay;relay;relay_rb_id;nagios_host_template;nagios_name_1;nagios_alias;ip_address;nagios_name_1;nagios_parent;nagios_statusmap_image;nagios_service_template;nagios_name_2;nagios_service_description;nagios_check_command
+    #rb_id;mrtg_add_status;mrtg_template;mrtg_gateway;mrtg_relay;relay;relay_rb_id;snmp_community;nagios_host_template;nagios_name_1;nagios_alias;ip_address;nagios_notes;nagios_parent;nagios_statusmap_image;nagios_service_template;nagios_name_2;nagios_service_description;nagios_check_command
     my @fields = qw(rbid mrtg_add_status mrtg_template mrtg_gateway mrtg_relay
       relay relay_rb_id 
+      snmp_community
       nagios_host_template nagios_name_1 nagios_alias ip_address nagios_notes nagios_parent nagios_statusmap_image
       nagios_service_template nagios_name_2 nagios_service_description nagios_check_command);
     my %row;
