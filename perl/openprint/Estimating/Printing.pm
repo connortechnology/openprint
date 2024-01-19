@@ -3366,7 +3366,7 @@ sub breakdown {
 
 	if ( $stock_qty ) {
 		my $RunOvers = $$price{'Run Overs'};
-		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run: %dimpressions @ %f %s = %s FM:%s Additional Plate:%d * %d changes (minimum %d) = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d',
+		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %s*%d=%d, Additional Setups: %d*%d=%d Run: %dimpressions @ %f %s = %s FM:%s Additional Plate:%d * %d changes (minimum %d) = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d',
 					@$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs'},
 					@$RunOvers{'impressions','value','units','total'},
 					@$stock_qty{'FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs Minimum','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
@@ -5566,10 +5566,12 @@ sub calc_price {
 	if ( $$specs{'OverrideSetup'.$qty_index} and ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) ) {
 		$setup_overs = $$specs{'OverSetup'.$qty_index};
 	} elsif ( $setup_rate ) {
+    $openprint::log->error("Have setup_rate?! $setup_rate");
 		$setup_overs = int($setup_rate * $num_colours);
 	} else {
 		$setup_overs = $Press->specification('MakeReady Overs '.$$Imposition{runstyle}, $num_colours);
 		$setup_overs = $Press->specification('MakeReady Overs', $num_colours) if ! $setup_overs;
+    $openprint::log->error("From MakeReadye?! $setup_overs");
 	} # end if
 
 	#$setup_overs *= ( 1 + ( $roll2sheet_setup_overs_rate / 100 ) ) if $roll2sheet_setup_overs_rate;
@@ -6114,7 +6116,44 @@ if ( 1 ) {
 	$initial_setup_rate *= ( 1 + ( $roll2sheet_setup_overs_rate / 100 ) ) if $roll2sheet_setup_overs_rate;
 
 	# Shouldn't need ceil.	Rate is an integer
-	my $initial_setup_overs = ceil( $plate_setup{'Setup Plate Count'} * $initial_setup_rate );
+  my $initial_setup_overs;
+  if ($initial_setup_rate) {
+    $initial_setup_overs = ceil( $plate_setup{'Setup Plate Count'} * $initial_setup_rate );
+    $openprint::log->error("Initial overs from rate $initial_setup_overs $initial_setup_rate");
+  } else {
+    $initial_setup_overs = $Press->specification( 'MakeReady Overs ' . $Paper->material(), $plate_setup{'Plate Count'} );
+    $initial_setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{runstyle}, $plate_setup{'Plate Count'} ) if ! $initial_setup_overs;
+    $initial_setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $initial_setup_overs;
+    $openprint::log->error("Initial overs from flat $initial_setup_overs $initial_setup_rate");
+	} # end if
+
+	my $total_overs = 0;
+
+	if ( $_ = $Press->Specification('Overs') and $$_{value} eq 'All' ) {
+		$total_overs += ceil( $run_overs + $setup_overs );
+	} else {
+		$total_overs += ceil( ( $setup_overs > $run_overs ) ? $setup_overs : $run_overs );
+	} # end if
+	$total_overs += $additional_overs;
+	$total_overs += ( $bindery_overs - $total_overs ) if $bindery_overs > $total_overs;
+
+	$min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), $plate_setup{'Plate Count'} );
+#$log->debug("Overs min " . $Paper->material() . " $min_overs");
+	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} ) if ! $min_overs;
+	$min_overs = 0 if ! defined $min_overs;
+	$total_overs = $min_overs if $total_overs < $min_overs;
+
+	$gross_sheets = $net_sheets + $total_overs;
+	$impressions = $gross_sheets;
+	my $colour_impressions = $gross_sheets;
+	if ( $is_wt ) {
+# Same sheets, go through twice, colours merged.
+		$colour_impressions *= 2;
+		$impressions *= 2;
+	#} elsif ( $$Imposition{sides} == 2 and $$Imposition{runstyle} eq 'Sheet Work' ) {
+		#$impressions *= 2;
+	}
+
 
 	my $additional_setup_count = $plate_setup{'Plate Count'} - $plate_setup{'Setup Plate Count'};
 	my $additional_setup_overs = 0;
@@ -6132,6 +6171,7 @@ if ( 1 ) {
 	} else {
 		if ( $setup_rate ) {
 			$setup_overs = $initial_setup_overs;
+
 #+ $additional_setup_overs;
 		} else {
 			$setup_overs = $Press->specification( 'MakeReady Overs ' . $Paper->material(), $plate_setup{'Plate Count'} );
@@ -6139,7 +6179,7 @@ if ( 1 ) {
 			$setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $setup_overs;
 		} # end if
 		$setup_overs += $fm_overs + $additional_setup_overs;
-	} # en dif
+	} # end if
 
 	my $total_overs = 0;
 
@@ -6186,7 +6226,7 @@ if ( 1 ) {
 			'Net Sheet Count'			=>	$net_sheets,
 			'Initial Setup Count'		=> $plate_setup{'Setup Plate Count'},
 			'Initial Setup Rate'		=> $initial_setup_rate,
-			'Initial Setup Overs'		=> ( $$specs{'OverrideSetup'.$qty_index} and ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) ) ? $$specs{'OverSetup'.$qty_index} : ceil( $plate_setup{'Setup Plate Count'} * $initial_setup_rate ),
+			'Initial Setup Overs'		=> ( $$specs{'OverrideSetup'.$qty_index} and ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) ) ? $$specs{'OverSetup'.$qty_index} : $initial_setup_overs,
 			'Additional Setup Count'	=> $additional_setup_count,
 			'Additional Setup Rate'		=> $additional_setup_rate,
 			'Additional Setup Overs'	=> $additional_setup_overs,

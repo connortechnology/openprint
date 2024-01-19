@@ -82,6 +82,9 @@ configuration::merge($options);
 
 openprint::session_init();
 
+my $USD = openprint::Currency->find_one(short=>'USD');
+my $CAD = openprint::Currency->find_one(short=>'CAD');
+
 while ( !($$options{account} and openprint::Expense_Account->find_one(name=>$$options{account})) ) {
   my $guessed_account = '';
   my @accounts = openprint::Expense_Account->find(order=>'lower(name)');
@@ -137,10 +140,12 @@ if ( $$options{file} =~ /Transactions(.*)\.csv$/ ) {
   $guessed_format = 'PC';
 } elsif ( $$options{file} =~ /Download\.CSV$/ ) {
   $guessed_format = 'Paypal';
+} elsif ( $$options{file} =~ /csv(\d+)\.csv$/ ) {
+  $guessed_format = 'RBC';
 }
 print "Guessed format is $guessed_format\n";
 
-my @formats = ('CDNTire', 'CIBC', 'PC', 'TD', 'Meridian','Paypal');
+my @formats = ('CDNTire', 'CIBC', 'PC', 'TD', 'Meridian','Paypal','RBC');
 while ( !( $$options{format} and sets::isin($$options{format}, \@formats) ) ) {
   print "Please select the format:\n";
   for ( my $i = 0; $i < @formats; $i += 1 ) {
@@ -184,6 +189,8 @@ if ($$options{format} eq 'CDNTire') {
   my $status = $csv->parse($line);
   die $csv->error_diag() if !$status;
   @columns = $csv->fields();
+} elsif ($$options{format} eq 'RBC') {
+  my $line = <FH>;
 }
 
 LINE: while ( my $line = <FH> ) {
@@ -197,7 +204,8 @@ LINE: while ( my $line = <FH> ) {
   my $Expense = new openprint::Expense();
   $$Expense{owner_id}    =  $$openprint::Owner{id};
   delete $$Expense{id};
-  my ($date, $time, $card, $amount, $desc, $desc1, $desc2, $desc3, $debit, $credit, $balance, $paid_on, $type, $posted, $ref );
+
+  my ($date, $time, $card, $amount, $desc, $desc1, $desc2, $desc3, $debit, $credit, $balance, $paid_on, $type, $posted, $ref, $cad, $usd );
 
   if ( $$options{format} eq 'CIBC' ) {
     ($date, $desc, $debit, $credit, $card) = misc::trim($csv->fields());
@@ -239,6 +247,26 @@ LINE: while ( my $line = <FH> ) {
       total       => $amount,
       paid_on     => $paid_on,
     });
+  } elsif ($$options{format} eq 'RBC') {
+    #"Account Type","Account Number","Transaction Date","Cheque Number","Description 1","Description 2","CAD$","USD$"
+    (undef, undef, $date, $ref, $desc1, $desc2, $cad, $usd) = misc::trim($csv->fields());
+    my ($month, $day, $year) = split('/', $date);
+    $paid_on = join('-', $year, $month, $day);
+    $desc = join(' ', ($desc1 ?$desc1:()), ($desc2?$desc2:()));
+
+    $Expense->set_no_defaults({
+      description => $desc,
+      account_id  => $$Account{id},
+      paid_on     => $paid_on,
+      total_locked=> 1,
+    });
+    if ($cad) {
+      $Expense->currency_id($CAD->id());
+      $amount = $Expense->total(-1*$cad);
+    } else {
+      $Expense->currency_id($USD->id());
+      $amount = $Expense->total(-1*$usd);
+    }
 
   } elsif ( $$options{format} eq 'PC' ) {
     #( $desc, $card, $date, $time, $amount) = misc::trim($csv->fields()); OLD
@@ -283,17 +311,21 @@ LINE: while ( my $line = <FH> ) {
     #"Date","Time","TimeZone","Name","Type","Status","Currency","Gross","Fee","Net","From Email Address","To Email Address","Transaction ID","Shipping Address","Address Status","Item Title","Item ID","Shipping and Handling Amount","Insurance Amount","Sales Tax","Option 1 Name","Option 1 Value","Option 2 Name","Option 2 Value","Reference Txn ID","Invoice Number","Custom Number","Quantity","Receipt ID","Balance","Address Line 1","Address Line 2/District/Neighborhood","Town/City","State/Province/Region/County/Territory/Prefecture/Republic","Zip/Postal Code","Country","Contact Phone Number","Subject","Note","Country Code","Balance Impact"
     print Data::Dumper::Dumper(\%data);
 
-    $debit = $amount;
 
     my ( $d, $m, $y ) = split(/\//, $data{Date});
     $paid_on = $date = join('-', ( $y, $m, $d ));
     $desc = join("\n", map { $_ . ' = '. $data{$_} } sort { $a cmp $b } keys %data);
     $amount = $data{Net};
+    $amount =~ s/[^\-0-9\.]//g;
+    $amount = $amount * -1;
+
+    my $currency = openprint::Currency->find_one(short=>$data{Currency});
 
     $Expense->set_no_defaults({
+        ($currency ? (currency_id=>$currency->id()) : ()),
       description => $desc,
       account_id  => $$Account{id},
-      total       => ($data{'Balance Impact'} eq 'Credit' ? -1*$amount : $amount),
+      total       => $amount,
       total_locked=> 1,
       paid_on     => $date,
       transaction_id=>$data{'Transaction ID'},
@@ -318,6 +350,33 @@ LINE: while ( my $line = <FH> ) {
               name=>$data{Name},
               company_id=>$company->id(),
               email=>$data{'From Email Address'},
+            });
+          $Expense->recipient_id($company->id());
+        }
+      } else {
+        $Expense->recipient_id($u->company_id());
+      }
+    }
+    if ($data{'To Email Address'}) {
+      my $u = openprint::User->find_one(email=>$data{'To Email Address'});
+      if (!$u) {
+        if (confirm('Add user/company for '.$data{'To Email Address'}.'? [Y|n]', 'Y')) {
+          my $company = new openprint::Company();
+          $company->save({
+              name=>$data{Name},
+              address1 => $data{'Address Line 1'},
+              address2 => $data{'Address Line 2'},
+              country=>$data{'Country Code'},
+              state => $data{'State/Province/Region/County/Territory/Prefecture/Republic'},
+              phone => $data{'Contact Phone Number'},
+              city  => $data{'Town/City'},
+              postalcode  =>$data{'Zip/Postal Code'},
+            });
+          $u = new openprint::User();
+          $u->save({
+              name=>$data{Name},
+              company_id=>$company->id(),
+              email=>$data{'To Email Address'},
             });
           $Expense->recipient_id($company->id());
         }
@@ -398,23 +457,15 @@ LINE: while ( my $line = <FH> ) {
           $log->info("Found an expense after filtering that looks like it matches:\n" . join("\n", map { $_->to_string() } @Expenses));
           next LINE;
         } else {
-          delete %expense_find{'paid_on >='};
-          delete %expense_find{'paid_on <='};
+          #delete %expense_find{'paid_on >='};
+          #delete %expense_find{'paid_on <='};
           #$expense_find{paid_on} = undef;
           @Expenses = openprint::Expense->find(\%expense_find);
           if ( @Expenses ) {
             foreach my $E ( @Expenses ) {
-               print "Update paid_on to $paid_on record for? " . $E->to_string()." [Y|n]";
-               $response = <STDIN>;
-               chomp $response;
-               if ( (!$response) or ($response =~ /[Yy]/) ) {
-
-                 $_ = $E->save({
-                     paid_on     =>  $paid_on,
-                   });
-                 if ( $_ ) {
-                   die $_;
-                 }
+               if (confirm("WARNING Update paid_on to $paid_on record for? " . $E->to_string()." [y|N]", 'N')) {
+                 $_ = $E->save({ paid_on     =>  $paid_on });
+                 die $_ if $_;
                  #$Expenses_Added{$$Expense{id}} = $Expense;
                }
             } # end foreach Expense
@@ -437,7 +488,7 @@ LINE: while ( my $line = <FH> ) {
             due_on      =>  $paid_on,
             description =>  $desc,
             owner_id    =>  $$openprint::Owner{id},
-            currency_id =>  $$openprint::Currency{id},
+            ($$Expense{currency_id} ? () : (currency_id =>  $$openprint::Currency{id})),
             total_locked => 1,
           });
         $_ = $Expense->save({amount=>undef});

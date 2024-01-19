@@ -30,7 +30,7 @@ function add_subnet( id ) {
 
 function add_interface( id ) {
   $j.get('_interface.html', { host_id: $j('#host_id').val(), action: 'add interface' }, function(data) {
-    $j('#Interfaces tbody').append(data);
+    $j('#Interfaces > tbody').append(data);
   });
 }
 
