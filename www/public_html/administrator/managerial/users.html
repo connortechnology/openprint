@@ -24,7 +24,7 @@ function load_page() {
 		</li>
 		<li>
 			<label>Email</label>
-			<? echo ( input( type=>'email', name=>'email', onkeydown=>'if(event.keyCode==13){f1.submit();}', oninput=>'load_page();' ); ) ?>
+      <? echo ( input( type=>'email', name=>'email', value=>$param{email}, onkeydown=>'if(event.keyCode==13){f1.submit();}', oninput=>'load_page();' ); ) ?>
 			<? echo ( button( 'Go2',{ onclick=>"f1.action='user_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
 		</li>
 </ul>

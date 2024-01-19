@@ -254,11 +254,12 @@ sub Interfaces {
 sub Info {
   my $self = shift;
   my $key = shift;
+  $$self{Info} = shift if @_;
 	if ( ! $$self{Info} ) {
 		%{$$self{Info}} = map { $_->name(), $_ } openprint::Host_Info->find(host_id=>$$self{id});
 		if ( $debug ) {
 			foreach my $k ( keys %{$$self{Info}} ) {
-				$openprint::log->debug(" $k => " . ( defined $$self{Info}{$k}->value() ? $$self{Info}{$k}->value() : 'undef') );
+				$openprint::log->debug("Host::Info $k => " . ( defined $$self{Info}{$k}->value() ? $$self{Info}{$k}->value() : 'undef') );
 			} # end foreach
 		}
 	} # end if

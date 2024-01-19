@@ -316,10 +316,8 @@ sub Tax {
 
 sub tax_charged { 
   my ( $self, $name, $yesno ) = @_;
-  $openprint::log->debug("taX_charged: $name $yesno");
 	foreach my $T ( $self->Taxes() ) {
     my $tax_name = $T->Tax()->name();
-    $openprint::log->debug("Looking at tax $tax_name !? $name ");
     if ( $tax_name eq $name ) {
       if ( @_ > 2 ) {
         $$T{charge} = $yesno;
@@ -346,7 +344,7 @@ sub to_string {
   my $self = shift;
   my $type = ref($self);
   #return $type . ': '. join(' ' , map { $$self{$_} ? $_.' => '.(ref $$self{$_} eq 'ARRAY' ? join(',', @{$$self{$_}}) : $$self{$_} ) : () } keys %fields ).
-  return 'Expense: ' . $self->Company()->name() . ' ' . $self->account(). ' to ' . $self->recipient(). ' '.$$self{category_id}.':'.$self->category().' '.$self->total().
+  return 'Expense: ' . $self->Company()->name() . ' ' . $self->account(). ' to ' . $self->recipient(). ' '.$$self{category_id}.':'.$self->category().' '.$self->Currency()->format($self->total()).
  ($$self{business_use} ? ' ' . $$self{business_use}. '% business = ' . $self->business_use_amount() : '').
   "\nTaxes:".join("\n", map { $_->to_string() } $self->Taxes());
 }
@@ -366,5 +364,13 @@ sub amount {
   return $$self{amount};
 }
 
+sub recipient_id {
+  my $self = shift;
+  if (@_) {
+    $$self{recipient_id} = shift;
+    $self->recipient(undef);
+  }
+  return $$self{recipient_id};
+}
 1;
 __END__

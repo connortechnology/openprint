@@ -99,7 +99,7 @@ my $html = '';
 foreach my $HI ( $$variable{Backup}->Host()->Interfaces() ) {
 $html .= "
 VoxIP: sudo ssh-copy-id -i /var/www/.ssh/id_rsa.pub root\@$$HI{ip}<br/>
-VueIP: sudo su -s/bin/bash -c"ssh-copy-id -f ipc\@$$HI{ip}" www-data<br/>
+VueIP: sudo su -s/bin/bash -c\"ssh-copy-id -o \\\"StrictHostKeyChecking no\\\" -f ipc\@$$HI{ip}\" www-data<br/>
 ";
 }
 return $html;

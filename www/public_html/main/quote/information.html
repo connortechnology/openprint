@@ -1,3 +1,6 @@
+<?eval(
+$$variable{ProjectTypes} = openprint::ProjectType->find_one();
+)?>
 <? if ( ! $$variable{Quote}->id() ) ?>
 	There is no current quote.
 	<? echo ( button( 'create', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New Quote' } ); ) ?>
@@ -112,10 +115,6 @@
 		<div id="PreparedFor">
 			<fieldset><legend>Prepared For</legend>
 			<div class="content"><ul>
-			<li>
-				<label>E-mail</label>
-				<input type="email" id="ForEmail" name="ForEmail" value="<?ForEmail?>"<? echo ( sets::isin( 'ForEmail', split(',', $config{QuoteRequiredFields}) ) ? ' required' : '' ) ?>/>
-			</li>
 <? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 			<li class="company_id"> 
 				<label>Company</label>
@@ -181,6 +180,10 @@
 				<label>Last Name</label>
 				<input type="text" id="ForLastName" name="ForLastName" value="<?ForLastName?>"<? echo ( sets::isin( 'ForLastName', split(',', $config{QuoteRequiredFields}) ) ? ' required' : '' ) ?>/>
 			</li>
+			<li>
+				<label>E-mail</label>
+				<input type="email" id="ForEmail" name="ForEmail" value="<?ForEmail?>"<? echo ( sets::isin( 'ForEmail', split(',', $config{QuoteRequiredFields}) ) ? ' required' : '' ) ?>/>
+			</li>
 			<li> 
 				<label>Title</label>
 				<input type="text" id="ForTitle" name="ForTitle" value="<?ForTitle?>" />
@@ -238,8 +241,11 @@ if ( $$variable{ForCountry} eq 'US' ) {
 			</li>
 			<li> 
 				<label>Phone</label>
-				<? echo ( input( type=>'tel', id=>'ForPhone', name=>'ForPhone', value=>$$variable{ForPhone} ); ) ?> x
-				<? echo ( input( type=>'tel', id=>'ForExtension', name=>'ForExtension', value=>$$variable{ForExtension} ); ) ?> 
+				<? echo ( join(' x ', 
+        input( type=>'tel', id=>'ForPhone', name=>'ForPhone', value=>$$variable{ForPhone} ),
+				input( type=>'tel', id=>'ForExtension', name=>'ForExtension', value=>$$variable{ForExtension} ),
+        );
+        ) ?> 
 			</li>
 			<li> 
 				<label>Fax</label>
@@ -263,10 +269,15 @@ if ( $$variable{ForCountry} eq 'US' ) {
 						</li>
             <li class="currency">
               <label>Currency</label>
-              <select name="currency_id">
-                <option value="">select one</option>
-                <? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $$variable{Quote}->currency_id() );) ?>
-              </select>
+              <?echo(
+                my @currencies = openprint::Currency->find();
+                if (@currencies > 1) {
+                  return ssi::select([map { $_{id} => $_{name} }@currencies], $$variable{Quote}->currency_id(), { name=>'currency_id', prepend=>['','select one'] });
+                } elsif (@currencies == 1) {
+                  return $currencies[0]->name();
+                }
+                return 'No currencies configured.';
+                ) ?>
             </li>
 					</ul>
 				</div>
@@ -274,7 +285,7 @@ if ( $$variable{ForCountry} eq 'US' ) {
 		</div>
 	</div><!--Header-->
 
-	<? if ( openprint::ProjectType->find_one() ) ?>
+  <? if ( $$variable{HasProjectTypes} ) ?>
 	<? if ( @{$$variable{PROJECTS}} == 0 ) ?>
 			No projects
 	<? else ( @{$$variable{PROJECTS}} == 0 ) ?>
@@ -393,7 +404,7 @@ $log->debug("Markup: $$variable{markup}");
 		</table>
 		<? endif ( $openprint::Company->reseller() eq 'Y' or sets::isin( $session{user_type}, [ 'A', 'E' ] ) ) ?>
 		<? endif ( @{$$variable{PROJECTS}} == 0 ) ?>
-		<? endif ( openprint::ProjectType->find_one() ) ?>
+  <? endif ( $$variable{HasProjectTypes} ) ?>
 
 		<? if ( openprint::Product->find_one() ) ?>
 		<div class="Products">
@@ -405,8 +416,10 @@ $log->debug("Markup: $$variable{markup}");
 		<p class="buttons">
 				<? echo ( 
 					my $html;
-					$html .= button( 'AddFromHistory', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $session{user_id};
-					$html .= button( 'CreateNewProject', { href=>'/main/project/create_edit.html', text=>'Add New Project' } );
+          if ( $$variable{HasProjectTypes} ) {
+            $html .= button( 'AddFromHistory', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $session{user_id};
+            $html .= button( 'CreateNewProject', { href=>'/main/project/create_edit.html', text=>'Add New Project' } );
+          }
 					$html .= button( 'Continue', { onclick=>"f1.btnFunction.value='Continue';f1.submit();", href=>'', text=>'Continue' } );
 					) ?>
 		</p>
