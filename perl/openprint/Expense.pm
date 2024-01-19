@@ -311,10 +311,8 @@ sub Tax {
 
 sub tax_charged { 
   my ( $self, $name, $yesno ) = @_;
-  $openprint::log->debug("taX_charged: $name $yesno");
 	foreach my $T ( $self->Taxes() ) {
     my $tax_name = $T->Tax()->name();
-    $openprint::log->debug("Looking at tax $tax_name !? $name ");
     if ( $tax_name eq $name ) {
       if ( @_ > 2 ) {
         $$T{charge} = $yesno;
@@ -359,6 +357,15 @@ sub amount {
     }
   }
   return $$self{amount};
+}
+
+sub recipient_id {
+  my $self = shift;
+  if (@_) {
+    $$self{recipient_id} = shift;
+    $self->recipient(undef);
+  }
+  return $$self{recipient_id};
 }
 
 1;
