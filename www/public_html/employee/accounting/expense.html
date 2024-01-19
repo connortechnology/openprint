@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script>
 var tax_ids = [ <? echo ( 
 	my @Taxes = openprint::Tax->find(
 			'period_start null_or_<='   =>  $$variable{Expense}->invoiced_on(),
@@ -83,7 +83,7 @@ function select_category( recipient_id ) {
 <form name="f1" id="f1" action="expense.html" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="expense_id" value="<? echo ( $$variable{Expense}->id() ) ?>" />
-	<fieldset><legend>Editing Expense</legend>
+	<fieldset><legend>Editing Expense <? echo ( $$variable{Expense}->id() ) ?></legend>
 		<div class="leftColumn">
 			<ul>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
