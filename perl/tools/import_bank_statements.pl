@@ -204,6 +204,7 @@ LINE: while ( my $line = <FH> ) {
   my $Expense = new openprint::Expense();
   $$Expense{owner_id}    =  $$openprint::Owner{id};
   delete $$Expense{id};
+
   my ($date, $time, $card, $amount, $desc, $desc1, $desc2, $desc3, $debit, $credit, $balance, $paid_on, $type, $posted, $ref, $cad, $usd );
 
   if ( $$options{format} eq 'CIBC' ) {
@@ -310,17 +311,21 @@ LINE: while ( my $line = <FH> ) {
     #"Date","Time","TimeZone","Name","Type","Status","Currency","Gross","Fee","Net","From Email Address","To Email Address","Transaction ID","Shipping Address","Address Status","Item Title","Item ID","Shipping and Handling Amount","Insurance Amount","Sales Tax","Option 1 Name","Option 1 Value","Option 2 Name","Option 2 Value","Reference Txn ID","Invoice Number","Custom Number","Quantity","Receipt ID","Balance","Address Line 1","Address Line 2/District/Neighborhood","Town/City","State/Province/Region/County/Territory/Prefecture/Republic","Zip/Postal Code","Country","Contact Phone Number","Subject","Note","Country Code","Balance Impact"
     print Data::Dumper::Dumper(\%data);
 
-    $debit = $amount;
 
     my ( $d, $m, $y ) = split(/\//, $data{Date});
     $paid_on = $date = join('-', ( $y, $m, $d ));
     $desc = join("\n", map { $_ . ' = '. $data{$_} } sort { $a cmp $b } keys %data);
     $amount = $data{Net};
+    $amount =~ s/[^\-0-9\.]//g;
+    $amount = $amount * -1;
+
+    my $currency = openprint::Currency->find_one(short=>$data{Currency});
 
     $Expense->set_no_defaults({
+        ($currency ? (currency_id=>$currency->id()) : ()),
       description => $desc,
       account_id  => $$Account{id},
-      total       => ($data{'Balance Impact'} eq 'Credit' ? -1*$amount : $amount),
+      total       => $amount,
       total_locked=> 1,
       paid_on     => $date,
       transaction_id=>$data{'Transaction ID'},
@@ -345,6 +350,33 @@ LINE: while ( my $line = <FH> ) {
               name=>$data{Name},
               company_id=>$company->id(),
               email=>$data{'From Email Address'},
+            });
+          $Expense->recipient_id($company->id());
+        }
+      } else {
+        $Expense->recipient_id($u->company_id());
+      }
+    }
+    if ($data{'To Email Address'}) {
+      my $u = openprint::User->find_one(email=>$data{'To Email Address'});
+      if (!$u) {
+        if (confirm('Add user/company for '.$data{'To Email Address'}.'? [Y|n]', 'Y')) {
+          my $company = new openprint::Company();
+          $company->save({
+              name=>$data{Name},
+              address1 => $data{'Address Line 1'},
+              address2 => $data{'Address Line 2'},
+              country=>$data{'Country Code'},
+              state => $data{'State/Province/Region/County/Territory/Prefecture/Republic'},
+              phone => $data{'Contact Phone Number'},
+              city  => $data{'Town/City'},
+              postalcode  =>$data{'Zip/Postal Code'},
+            });
+          $u = new openprint::User();
+          $u->save({
+              name=>$data{Name},
+              company_id=>$company->id(),
+              email=>$data{'To Email Address'},
             });
           $Expense->recipient_id($company->id());
         }
@@ -456,7 +488,7 @@ LINE: while ( my $line = <FH> ) {
             due_on      =>  $paid_on,
             description =>  $desc,
             owner_id    =>  $$openprint::Owner{id},
-            currency_id =>  $$openprint::Currency{id},
+            ($$Expense{currency_id} ? () : (currency_id =>  $$openprint::Currency{id})),
             total_locked => 1,
           });
         $_ = $Expense->save({amount=>undef});
