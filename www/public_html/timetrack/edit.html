@@ -118,8 +118,8 @@
  
 					ssi::select( openprint::Currency->dropdown(), $default, { name=>'currency_id', id=>'currency_id', prepend=>['','select'] } );
           ) ?></li>
-      </li><label>Value</label>
-        <?echo($$variable{Timetrack}->Price()->total())?>
+      <li><label>Value</label>
+        <?echo($openprint::Currency->format($$variable{Timetrack}->Price()->total()))?>
       </li>
 			<li>
 				<label>Travel Associated</label>
