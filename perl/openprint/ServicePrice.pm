@@ -96,6 +96,12 @@ sub cost {
 	return $_[0]{cost};
 } # end sub cost
 
+sub total {
+  my $self = shift;
+  $$self{total} = shift if @_;
+  return $$self{total};
+}
+
 sub id_string {
 	my $Price = $_[0];
 	my $price_desc = '';
