@@ -169,42 +169,44 @@ sub Price {
 	my ( $self ) = @_;
 	my $elapsed = $self->elapsed();
 	my $Service = $self->Service();
-	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist(), $self->starting() );
+	my $price = $Service->get_Price( undef, undef, $self->Company()->Pricelist(), $self->starting() );
+  $$price{price} = $$price{Price};
+
 	if ( $$self{rate} ) {
-		$Price{Cost} = $Price{Price} = $$self{rate};
+		$$price{cost} = $$price{price} = $$self{rate};
 	} # end if
 
   my $units = lc $self->units();
-  $units = lc $Price{units} if ! $units;
-  $Price{units} = $units;
+  $units = lc $$price{units} if ! $units;
+  $$price{units} = $units;
 
 	if ( $units eq '/year' ) {
-		my $years = Math::Round::nearest(1,$elapsed/(60*60*24*365));
+		my $years = Math::Round::nearest(1, $elapsed/(60*60*24*365));
     #$openprint::log->debug('Years pricing ' . $years .' from elapsed '.$elapsed);
-		$Price{Total} = $Price{Price} * $years;
+		$$price{total} = $$price{price} * $years;
 	} elsif ( $units eq '/month' ) {
-		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*30));
+		$elapsed = Math::Round::nearest(1, $elapsed/(60*60*24*30));
 		#$openprint::log->debug('Month pricing ' . $elapsed );
-		$Price{Total} = $Price{Price} * $elapsed;
+		$$price{total} = $$price{price} * $elapsed;
 	} elsif ( $units eq '/week' ) {
 		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*7));
 		#$openprint::log->debug('Month pricing ' . $elapsed );
-		$Price{Total} = $Price{Price} * $elapsed;
+		$$price{total} = $$price{price} * $elapsed;
 	} elsif ( $units =~ /^\/hr\.?/ ) {
-		$Price{Total} = $Price{Price} * $elapsed / 3600;
+		$$price{total} = $$price{price} * $elapsed / 3600;
 	} elsif ( $units eq 'once' ) {
-		$Price{Total} = $Price{Price};
+		$$price{total} = $$price{price};
 	} else {
 		$openprint::log->warn('Unknown units in Timetrack Service ('.$Service->name().') ('.$units.') assuming Hrs');
-		$Price{Total} = $Price{Price} * $elapsed / 3600;
+		$$price{total} = $$price{price} * $elapsed / 3600;
 	} # end if
-	return \%Price;
+	return $price;
 } # end sub Price
 
 sub value {
 	my ( $self ) = @_;
 	my $Price = $self->Price();
-	return $$Price{Total};
+	return $$Price{total};
 } # end sub value 
 
 sub wage {
