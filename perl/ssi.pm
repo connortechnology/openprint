@@ -904,7 +904,12 @@ sub count_lines {
 sub radio {
 	my ( $name, $values, $selected, $options ) = @_;
 
-	my $onclick = $$options{onclick} if $options;
+  $options = {} if !$options;
+
+  my $id = exists($$options{id}) ? $$options{id} : '';
+  delete $$options{id};
+  my $container = exists $$options{container} ? $$options{container} : undef;
+
 	my $html;
 	if ( exists($$options{default}) and ! defined($selected) ) {
 #$log->debug("Selecting default $$options{default} for radio $name");
@@ -912,18 +917,18 @@ sub radio {
 	} # end if
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
-		$html .= $$options{container}[0] if $$options{container};
+		$html .= $$container[0] if $container;
 		$html .= sprintf(q`
       <div class="form-check%7$s">
 				<label class="form-check-label radio%7$s" for="%1$s%6$s%2$s">
 				<input class="form-check-input" type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
 				%3$s</label></div>
 				`, $name, $value, $label, checked($value eq $selected),
-				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
-				$$options{id},
+				join(' ', map { $_.'="'.$$options{$_}.'"' } keys %{$options}),
+				$id,
 				( ($$options{inline} or ! exists $$options{inline} ) ? '-inline' : '' ),
 				);
-		$html .= $$options{container}[1] if $$options{container};
+		$html .= $$container[1] if $container;
 	} # end foreach value
 	return $html;
 } # end sub radio
