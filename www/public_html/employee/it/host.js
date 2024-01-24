@@ -74,14 +74,51 @@ function toggle_monitored(e) {
   }
   var checkboxes = $j('.option_monitor input').prop("checked", e.value == '1' ? true : false );
 }
-var tinymce_options = {
+
+window.addEventListener('DOMContentLoaded',initPage);
+
+function initPage() {
+  var tinymce_options = {
     mode : "textareas",
     plugins: "paste",
     theme : "advanced",
-theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
-theme_advanced_buttons2 : '',
-theme_advanced_buttons2 : '',
-cleanup : true
-};
+    theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
+    theme_advanced_buttons2 : '',
+    theme_advanced_buttons2 : '',
+    cleanup : true
+  };
 
-tinyMCE.init( tinymce_options );
+  tinyMCE.init(tinymce_options);
+
+  if (window.L) {
+    const form = document.getElementById('f1');
+    const latitude = form.elements['latitude'].value;
+    const longitude = form.elements['longitude'].value;
+    map = L.map('map', {
+      center: L.latLng(GEOLOCATION_LATITUDE, GEOLOCATION_LONGITUDE),
+      zoom: 8,
+      onclick: function() {
+        alert('click');
+      }
+    });
+    L.tileLayer(GEOLOCATION_TILE_PROVIDER, {
+      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+      maxZoom: 18,
+      id: 'mapbox/streets-v11',
+      tileSize: 512,
+      zoomOffset: -1,
+      detectRetina: true,
+      accessToken: GEOLOCATION_ACCESS_TOKEN
+    }).addTo(map);
+    marker = L.marker([latitude, longitude], {draggable: 'true'});
+    marker.addTo(map);
+    marker.on('dragend', function(event) {
+      const marker = event.target;
+      const position = marker.getLatLng();
+      const form = document.getElementById('f1');
+      form.elements['latitude'].value = position.lat;
+      form.elements['longitude'].value = position.lng;
+    });
+    map.invalidateSize();
+  } // end if window.L
+} // end DOMContentLoaded
