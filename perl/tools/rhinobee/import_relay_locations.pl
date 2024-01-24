@@ -75,8 +75,15 @@ while (my $line = <$fh>) {
       }
 
       my $location = $host->Location();
-      $lat =~ s/[^0-9\.]/ /g;
-      $long =~ s/[^0-9\.]/ /g;
+      print "Lat $lat long $long\n";
+      if ($lat =~ /([\d\.\-]+)\s([\d\.\-]+)'\s*([\d\.\-]+)"([NS])/) {
+        $lat = join(' ', ($4 eq 'N'? 1 : -1)*$1, $2, $3);
+      }
+
+      if ($long =~ /([\d\.\-]+)\s([\d\.\-]+)'\s*([\d\.\-]+)"([EW])/) {
+        $long = join(' ', ($4 eq 'E'? 1 : -1)*$1, $2, $3);
+      }
+
       print "Lat $lat long $long\n";
       if ($lat and $long) {
         my $out_ref = $geo->cnv_to_dd([$lat, $long]);
