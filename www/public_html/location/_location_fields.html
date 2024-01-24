@@ -8,7 +8,7 @@
 	$html .= sprintf(q`<input type="text" id="location" name="location" value="%1$s"/>
 		<div id="location_autocomplete" class="autocomplete" style="display:none;"></div>
 		<script>
-$j(document).ready(function() {
+window.addEventListener('DOMContentLoaded', function() {
   const loc = $j('#location');
   if (loc)
     loc.autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/location/_locations.html?type=place' } );
