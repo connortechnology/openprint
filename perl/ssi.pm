@@ -1117,13 +1117,7 @@ sub input {
 
 sub select( $$$ ) {
 	my ( $data, $selected, $options ) = @_;
-	my $html = '<select';
-	$html .= ' name="'.$$options{name}.'"' if $$options{name};
-	$html .= ' id="'.$$options{id}.'"' if $$options{id};
-	$html .= ' onchange="'.$$options{onchange}.'"' if $$options{onchange};
-	$html .= ' size="'.$$options{size}.'"' if $$options{size};
-	$html .= ' multiple="multiple"' if $$options{multiple};
-	$html .= '>';
+	my $html = '<select' . join(' ', '', map { $_.'="'.$$options{$_}.'"' } keys %{$options} ) . '>';
 	$html .= make_drop_down( $data, $selected, $options );
 	$html .= '</select>';
 } # end sub select($$$)
