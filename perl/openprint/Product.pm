@@ -197,12 +197,11 @@ sub upload {
     my $self = shift;
     my $Album = $self->Album();
     if ( ! $Album->id() ) {
-        $Album->save({ 'Images for product: ' . $$self{name} });
-        $self->save({'album_id'=>$Album->id()});
+      $Album->save({ 'Images for product: ' . $$self{name} });
+      $self->save({album_id=>$Album->id()});
     } # end if
     return $Album->upload( @_ );
 } # end sub upload
-
 
 sub can_edit {
 	return 1 if $openprint::session{user_type} eq 'A';
@@ -231,6 +230,7 @@ sub manufacturer {
 sub Supplier {
 	return new openprint::Company( $_[0]{supplier_id} );
 } # end sub Supplier
+
 sub link_to {
 	return sprintf('<a href="/product/view.html?product_id=%d">%s</a>', $_[0]{id}, ( @_ > 1 ? $_[1] : $_[0]{name} ) );
 }
