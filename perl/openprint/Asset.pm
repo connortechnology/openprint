@@ -19,7 +19,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %transforms %defaults $table $serial );
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	id			=>	'id',
@@ -89,7 +89,6 @@ sub on_disk_filename {
 sub url {
 	return '/assets/'.$_[0]->on_disk_filename();
 }
-
 
 sub is_video {
 	my $extension;
@@ -197,13 +196,12 @@ sub sized_url {
 						$src = $src . '.watermarked';
 					}
 				}
-				$openprint::log->debug("Creating $size at ${width} x $src $dest");
-				if ( ! -e $src ) {
+				if (! -e $src) {
 					$openprint::log->error("Source file $src does not exist.");
 					return '/assets/'.$filename;
 				} # end if
 
-				
+				$openprint::log->debug("Creating $size at ${width} x $src $dest");
 				my $command;
 				if ( $extension eq 'pdf' ) {
 					$command  = qq`convert -thumbnail ${width}x${height} -alpha remove "${src}\[0\]" "$dest"`;
@@ -212,11 +210,11 @@ sub sized_url {
 				} # end fi
 
 				IPC::Run3::run3($command, undef, $stdout, $stderr );
-				if ( $? ) {
+				if ($?) {
 					$openprint::log->error("ERror creating sized image. Reason: ($?) cmd:($command) stdout($stdout) stderr($stderr)");
 					return '/assets/'.$filename;
 				} # end if convert
-				if ( ! -e $dest ) {
+				if (! -e $dest) {
 					$openprint::log->error("Unable to create $dest cmd($command) stdout($stdout) stderr($stderr)");
 				} # end if
 				if ( $extension =~ /jpe?g/i ) {
@@ -647,31 +645,38 @@ sub from_content {
 sub upload {
 	my $upload = $openprint::r->upload($_[0]);
 	if ( ! $upload ) {
+    $openprint::log->error("There was no upload for $_[0]");
 		return "There was no upload for $_[0]<br/>";
 	} # end if
 	require Digest::MD5;
 	my $data;
 	$upload->slurp( $data );
 	my $md5 = Digest::MD5::md5_base64( $data );
-	if ( ! $md5 ) {
+	if (!$md5) {
+    $openprint::log->error("Unable to MD5");
 		return "Unable to MD5?";
 	} else {
 		$openprint::log->debug("MD5 was $md5");
 	} # end if
-	my $Asset = openprint::Asset->find_one( md5 =>$md5);
-	if ( ! $Asset ) {
+	my $Asset = openprint::Asset->find_one(md5 =>$md5);
+	if (!$Asset) {
 		$Asset = new openprint::Asset();
-		$! .= $Asset->save({'filename'=>$upload->filename(),'md5'=>$md5});
-		if ( ! $upload->link( $Asset->on_disk_path() ) ) {
+    $openprint::log->debug($Asset->to_string());
+		$_ = $Asset->save({filename=>$upload->filename(), md5=>$md5});
+    if ($_) {
+      return "There was an error saving the asset: $_<br/>";
+    }
+		if (!$upload->link($Asset->on_disk_path())) {
 			return 'There was an error saving file ' . $upload->filename().' to ' . $Asset->on_disk_path() . ": $!<br/>";
 		} # end if
-		if ( ( @_ > 1 ) and $_[1] ) {
+		if ((@_ > 1) and $_[1] ) {
+      delete $_[1]{id};
 			# Should be a hash of more attribute
 			$Asset->save($_[1]);
 		} # end if
 	} else {
-		if ( ! -e $Asset->on_disk_path() ) {
-			if ( ! $upload->link( $Asset->on_disk_path() ) ) {
+		if (!-e $Asset->on_disk_path()) {
+			if (!$upload->link( $Asset->on_disk_path())) {
 				return 'There was an error saving file ' . $upload->filename().' to ' . $Asset->on_disk_path() . ": $!<br/>";
 			} # end if
 		} # end if
