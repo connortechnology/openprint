@@ -778,6 +778,43 @@ function addLoadEvent(func) {
 	}
 }
 
+function country_onchange_this(country_ddm) {
+	const country = get_ddm_value( country_ddm );
+	const state_label = document.getElementById(country_ddm.name + '_state_label');
+	const postal_label = document.getElementById(country_ddm.name + '_postal');
+  const state = document.getElementById(country_ddm.name + '_state');
+	const onchange = state.getAttribute('onchange');
+  const container = document.getElementById(country_ddm.name+'_'+state.name+'_container');
+
+	if (country == 'US') {
+    if (container) {
+      container.innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+    }
+    $j.get('/includes/_states.html', function(data) {
+      $j('#'+country_ddm.name + '_state').html(data);
+    });
+		if (state_label) state_label.innerHTML = 'State';
+		if (postal_label) postal_label.innerHTML = 'ZIP Code';
+	} else if (country == 'CA') {
+    if (container) {
+      container.innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+    }
+    $j.get('/includes/_provinces.html', function(data) {
+      $j('#'+country_ddm.name + '_state').html(data);
+    });
+		if (state_label) state_label.innerHTML = 'Province';
+		if (postal_label) postal_label.innerHTML = 'Postal Code';
+	} else {
+    if (container) {
+		  container.innerHTML = '<input type="text" name="' + state.name + '" id="' + state.id + '" '+ ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+    } else {
+      console.err("Unable to find element for "+state.name+'_container');
+    }
+		if ( state_label ) state_label.innerHTML = 'State/Province';
+		if ( postal_label ) postal_label.innerHTML = 'Postal Code';
+	} // end if
+}
+
 function Country_onchange( country_ddm, state ) {
 	const country = get_ddm_value( country_ddm );
 	const state_label = $(country_ddm.name + '_state');
@@ -1702,6 +1739,7 @@ function update_event_bindings() {
       return;
     }
     el.onchange = window[fnName].bind(el, el);
+    console.log('setting onchange on '+el.name+' to '+fnName);
   });
 
   document.querySelectorAll('select[data-on-change-this]').forEach(function(el) {
