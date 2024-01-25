@@ -270,21 +270,21 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			</li>
 			<li> 
 				<label>Country</label>
-				<select name="country" onchange="Country_onchange(this, this.form.state);">
+				<select name="country" data-on-change-this="country_onchange_this">
 					<option value=""> select </option>
 					<? echo ( return_countries($$variable{Company}->country() ); ) ?>
 				</select>
 			</li>
 			<li> 
-				<label><span id="country_state">State/Province</span></label>
+        <label id="country_state_label">State/Province</label>
         <span id="country_state_container">
           <? if ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
-				<select name="state">
+				<select name="state" id="country_state">
 					<option value=""> select </option>
           <? echo ( return_states_and_provinces($$variable{Company}->country(), $$variable{Company}->state()); ) ?> 
 				</select>
           <? else ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
-            <input type="text" name="state" value="<?echo($$variable{Company}->state())?>"/>
+            <input type="text" name="state" id="country_state" value="<?echo($$variable{Company}->state())?>"/>
           <? endif ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
         </span>
 			</li>
