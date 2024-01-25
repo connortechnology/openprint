@@ -112,10 +112,10 @@ sub destroy {
 
 sub upload {
 	my $error = '';
-	my $Asset = openprint::Asset::upload( $_[1], $_[2] );
-	if ( ref $Asset eq 'openprint::Asset' ) {
-		my $Photo = openprint::Photo_in_Album->find_one(asset_id=>$$Asset{id},album_id=>$_[0]{id});
-		if ( ! $Photo ) {
+	my $Asset = openprint::Asset::upload($_[1], $_[2]);
+	if (ref $Asset eq 'openprint::Asset') {
+		my $Photo = openprint::Photo_in_Album->find_one(asset_id=>$$Asset{id}, album_id=>$_[0]{id});
+		if (!$Photo) {
 			$Photo = new openprint::Photo_in_Album();
 			$error .= $Photo->save({ asset_id=>$$Asset{id}, album_id=>$_[0]->id() });   
 			$error .= new openprint::Log()->save({'action'=>'Upload Photo', 'Object'=>$Photo});
@@ -124,6 +124,7 @@ sub upload {
 		} # end if
 	} else {
 		$error .= "Failed to upload photo: $Asset";
+    $openprint::log->error($error);
 	} # end if
 	return $error;
 } # end sub upload
