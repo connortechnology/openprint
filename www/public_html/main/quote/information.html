@@ -272,7 +272,9 @@ if ( $$variable{ForCountry} eq 'US' ) {
               <?echo(
                 my @currencies = openprint::Currency->find();
                 if (@currencies > 1) {
-                  return ssi::select([map { $_{id} => $_{name} }@currencies], $$variable{Quote}->currency_id(), { name=>'currency_id', prepend=>['','select one'] });
+                  return ssi::select(
+                  [map { $_->{id} => $_->{name} } @currencies],
+                    $$variable{Quote}->currency_id(), { name=>'currency_id', prepend=>['','select one'] });
                 } elsif (@currencies == 1) {
                   return $currencies[0]->name();
                 }
