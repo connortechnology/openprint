@@ -1115,9 +1115,11 @@ sub input {
 	return $html;
 } # end sub input
 
+my %make_dropdown_options = map { $_=>$_} ('prepend','append','encode','length');
+
 sub select( $$$ ) {
 	my ( $data, $selected, $options ) = @_;
-	my $html = '<select' . join(' ', '', map { $_.'="'.$$options{$_}.'"' } keys %{$options} ) . '>';
+	my $html = '<select' . join(' ', '', map { exists $make_dropdown_options{$_} ? () : $_.'="'.$$options{$_}.'"' } keys %{$options} ) . '>';
 	$html .= make_drop_down( $data, $selected, $options );
 	$html .= '</select>';
 } # end sub select($$$)
