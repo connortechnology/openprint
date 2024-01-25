@@ -65,22 +65,22 @@ sub get_unfinished_quote_contents {
 sub get_user_by_info {
 	my ( $log, $dbh, $variable, $quote_id ) = @_;
 
-	$_ = 'SELECT strCompanyName, strSalutation, strFirstName, strLastName, strAddress, strAddress2, strCity, strState, strCountry, strPostalCode, strPhone, strExt, strFax, strEmail FROM tbl_Quote_Users_By WHERE quote_id=?';
-	return @$variable{'ByCompanyName','BySalutation', 'ByFirstName','ByLastName','ByAddress1','ByAddress2','ByCity','ByStateProvince','ByCountry','ByPostalCode','ByPhone', 'ByExtension', 'ByFax', 'ByEmail'} = sql::execute( $log, $dbh, $_, $quote_id );
+	$_ = 'SELECT strCompanyName, strSalutation, strFirstName, strLastName, strTitle, strAddress, strAddress2, strCity, strState, strCountry, strPostalCode, strPhone, strExt, strFax, strEmail FROM tbl_Quote_Users_By WHERE quote_id=?';
+	return @$variable{'ByCompanyName','BySalutation', 'ByFirstName','ByLastName','ByTitle', 'ByAddress1','ByAddress2','ByCity','ByStateProvince','ByCountry','ByPostalCode','ByPhone', 'ByExtension', 'ByFax', 'ByEmail'} = sql::execute( $log, $dbh, $_, $quote_id );
 } # end sub get_user_by_info
 
 sub get_user_for_info {
 	my ( $log, $dbh, $variable, $quote_id ) = @_;
 
-	$_ = 'SELECT strCompanyName, strSalutation, strFirstName, strLastName, strAddress, strAddress2, strCity, strState, strCountry, strPostalCode, strPhone, strExt, strFax, strEmail FROM tbl_Quote_Users_For WHERE quote_id=?';
-	return @$variable{'ForCompanyName', 'ForSalutation','ForFirstName','ForLastName','ForAddress1','ForAddress2','ForCity','ForStateProvince','ForCountry','ForPostalCode','ForPhone', 'ForExtension', 'ForFax', 'ForEmail'} = sql::execute( $log, $dbh, $_, $quote_id );
+	$_ = 'SELECT strCompanyName, strSalutation, strFirstName, strLastName, strTitle, strAddress, strAddress2, strCity, strState, strCountry, strPostalCode, strPhone, strExt, strFax, strEmail FROM tbl_Quote_Users_For WHERE quote_id=?';
+	return @$variable{'ForCompanyName', 'ForSalutation','ForFirstName','ForLastName','ForTitle', 'ForAddress1','ForAddress2','ForCity','ForStateProvince','ForCountry','ForPostalCode','ForPhone', 'ForExtension', 'ForFax', 'ForEmail'} = sql::execute( $log, $dbh, $_, $quote_id );
 } # end sub get_user_for_info
 
 sub get_misc_info {
     my ( $log, $dbh, $variable, $quote_id ) = @_;
     $_ = q{SELECT CompanyIndex, to_char(dtmQuoteDate, 'MM/DD/YYYY'), curTotalSale1, curTotalSale2, curTotalSale3, strCustomerComments, strAdministratorComments, strAdministratorName, currency_id FROM Quotes WHERE id=?};
     @$variable{'Company_ID','DATE', 'TOTAL1','TOTAL2','TOTAL3','Comments','AdministratorComments', 'AdministratorName','currency_id'} = sql::execute( $log, $dbh, $_, $quote_id );
-	my $Currency = new openprint::Currency( $$variable{'currency_id'} );
+	my $Currency = new openprint::Currency( $$variable{currency_id} );
     @$variable{'CurrencyName', 'CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$$variable{'QUOTE_ID'} = $quote_id;
 } # end sub get_misc_info
