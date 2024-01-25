@@ -180,7 +180,7 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 </fieldset>
 <? if ( $$variable{Host}->id() ) ?>
 <fieldset class="Where"><legend>Where</legend>
-    <div class="LeftColumn">
+    <div class="leftColumn">
 <? echo ( 
     $$variable{Location} = $$variable{Host}->Location();
     return include('/location/_location_fields.html');
@@ -192,8 +192,8 @@ return ssi::select(
 	{ name=>'location_id' } ) if $openprint::Owner->id();
 ) ?>
   </div>
-  <div class="RightColumn">
-    <div id="map"> </div>
+  <div class="rightColumn">
+    <div id="map" style="height: 500px; width: 500px;"> </div>
   </div>
 </fieldset>
 <? endif ( $$variable{Host}->id() ) ?>
