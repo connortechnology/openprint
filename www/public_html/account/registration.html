@@ -191,7 +191,7 @@ function howdidyouhearaboutus_onchange(e) {
 				</li>
 				<li class="email<? echo ( $$variable{RequiredFields}{email} ? ' required' : '' ) ?>">
 					<label>E-mail</label>
-					<input type="email" name="email" value="<? echo ( htmlize($param{email}); ) ?>"  />
+					<input type="email" name="email" value="<? echo ( htmlize($param{email}); ) ?>" autocomplete="new-password" autofill="off" />
 				</li>
                 <? echo (
                     my $html;
