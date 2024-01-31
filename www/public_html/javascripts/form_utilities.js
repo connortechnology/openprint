@@ -1,3 +1,5 @@
+//"use strict";
+
 function isin( array, value ) {
 	if ( array ) {
 		for ( var i = 0; i < array.length; i += 1 ) {
@@ -1371,7 +1373,7 @@ function LoadContent( divID, url, parameters, message ) {
     div.html(message ? message : 'Please wait...');
 
     openprint_load_content_ajax = $j.ajax({
-      url: page,
+      url: url,
       data: parameters,
       success: function(data) {
         div.html(data);
