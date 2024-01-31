@@ -1359,7 +1359,7 @@ function toggleContent( divID, show_url, inputs, hide_url ) {
 } // end function toggleContent
 
 var openprint_load_content_ajax = null;
-function LoadContent( divID, page, parameters, message ) {
+function LoadContent( divID, url, parameters, message ) {
   if (openprint_load_content_ajax) {
   console.log(openprint_load_content_ajax);
     openprint_load_content_ajax.abort();
@@ -1368,7 +1368,7 @@ function LoadContent( divID, page, parameters, message ) {
 
 	const div = $j('#'+divID);
 	if (div.length) {
-    div.html(message? message : 'Please wait...');
+    div.html(message ? message : 'Please wait...');
 
     openprint_load_content_ajax = $j.ajax({
       url: page,
