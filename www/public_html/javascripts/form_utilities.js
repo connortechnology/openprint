@@ -1389,6 +1389,22 @@ function photo_popup( asset_id, album_id ) {
 
 var popupWin;
 function popup_window( url, parameters, options ) {
+  let d = $j('#dialog');
+  console.log('hi');
+  if (!d.length) {
+    console.log("Creating dialog element");
+
+    $j('body').append('<div id="dialog"></div>' );
+    d = $j('#dialog');
+  } else {
+    console.log("Dialog is " + d.length);
+  }
+
+  d.load(url);
+  d.dialog(options);
+  update_event_bindings();
+
+/*
 	if ( ! options ) options = {};
 	if ( (! options.width) && ! ( options.left && options.right) ) options.width = 400;
 	if ( (! options.height) && ! ( options.top && options.bottom ) ) options.height = 400;
@@ -1411,7 +1427,7 @@ function popup_window( url, parameters, options ) {
 
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
-onDestroy: function(eventName, win) {
+      onDestroy: function(eventName, win) {
 				if (win == popupWin) {
 					popupWin = null;
 					Windows.removeObserver(this);
@@ -1445,8 +1461,8 @@ onDestroy: function(eventName, win) {
 		}
 		popupWin.setAjaxContent(url, null , true);
 	} // end if
+    */
 } // end function popup_window
-
 
 function toggle_input( ddm, txt ) {
 	ddm.toggle();
@@ -1730,10 +1746,9 @@ function load_logs_form() {
 }
 
 function update_event_bindings() {
-  // 
   console.log('update_event_bindings()');
   document.querySelectorAll("select[data-on-change], input[data-on-change]").forEach(function attachOnChangeThis(el) {
-    var fnName = el.getAttribute("data-on-change");
+    const fnName = el.getAttribute("data-on-change");
     if ( !window[fnName] ) {
       console.error("Nothing found to bind to " + fnName);
       return;
@@ -1794,7 +1809,7 @@ function update_event_bindings() {
   });
 }
 
-window.addEventListener("DOMContentLoaded", function() {
+window.addEventListener('DOMContentLoaded', function() {
   update_event_bindings();
 });
 
