@@ -6,7 +6,7 @@
 		<th class="mac">Mac</th>
 		<th class="Date assigned_on">Assigned On</th>
 		<th class="comment">Comment</th>
-		<th class="buttons"><? echo ( button('Add', { onclick=>qq`popup_window('_host_popup.html?site_id=$$variable{Site}{id}');`, text=>'+', title=>'Add' } ); ) ?></th>
+    <th class="buttons"><? echo ( button('Add', { onclick=>qq`popup_window('_host_popup.html?site_id=$$variable{Site}{id}', null, {width: 800, height: 600});`, text=>'+', title=>'Add' } ); ) ?></th>
 	</tr>
 <? echo ( 
 	my $html;
