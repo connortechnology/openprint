@@ -10,8 +10,8 @@ require openprint::Equipment_Stock_Setting;
 require openprint::Equipment_Operator;
 require sql;
 
-use Memoize;
-memoize('fits');
+#use Memoize;
+#memoize('fits');
 #memoize('Specification');
 
 use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field $default_sort );

@@ -1,6 +1,6 @@
 use strict;
 package openprint::pricing;
-use Memoize;
+#require Memoize;
 use Carp qw( cluck );
 
 require openprint::pricelist;
@@ -17,8 +17,10 @@ use constant DEBUG => 0;
 my %price_cache;
 
 sub clear_cache {
-	%price_cache = ();
-	Memoize::flush_cache('get_best_prices');
+  if (%price_cache) {
+    %price_cache = ();
+    #Memoize::flush_cache('get_best_prices');
+  }
 } # end sub clear_cache
 
 sub init_cache {
@@ -175,7 +177,7 @@ sub split_by_equipment {
 	return %lists;
 } # end sub split_by_equipment
 
-memoize('get_best_prices');
+#Memoize::memoize('get_best_prices');
 sub get_best_prices {
 	my ( $cust_id, $prod_index, $list_id, $Object, $equipment, $qty, $period ) = @_;
 
