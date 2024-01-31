@@ -178,7 +178,7 @@ while(1) {
     my $now = time;
     my $has_monitored_interfaces = 0;
 
-    # If we have a minimum frequency set and not enough time has passed, the skip it.
+    # If we have a minimum frequency set and not enough time has passed, then skip it.
     if ( $$Host{min_ping_frequency} and $last_ping_time{$$Host{id}} and ( ($now - $last_ping_time{$$Host{id}}) < $$Host{min_ping_frequency} ) ) {
       #$log->debug("min_ping_frequency is $$Host{min_ping_frequency} and now - last_ping_time($last_ping_time{$$Host{id}}) = " . ($now - $last_ping_time{$$Host{id}}) . " < $$Host{min_ping_frequency}" );
       next;
