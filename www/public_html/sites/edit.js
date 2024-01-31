@@ -1,10 +1,9 @@
-function load_host( form, options ) {
-  form = $j(form);
+function load_host() {
+  const form = $j('#PopupForm');
   const div = $j('#Results');
   div.html('Loading... Please wait.');
   const p = form.serialize(true);
-  if ( options && options.order )
-    p = p+'&order='+options.order;
+  console.log(p);
 
   div.load('/sites/_host_results.html', p);
 } // end function load
