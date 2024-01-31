@@ -19,8 +19,9 @@
 			} // end if
 		} // end if
 	} // end function delete_confirrm
+
 	function load_quotes( ) {
-		LoadContent('QuoteList', '/main/quote/_history.html', 'f1' );
+		LoadContent('QuoteList', '/main/quote/_history.html', $j('#f1').serialize() );
 	} // end function load_quotes
 </script>	 
 <?include('/includes/error_reporting.html')?>
