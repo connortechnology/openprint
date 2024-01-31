@@ -56,13 +56,13 @@ sub cleanup {
 	%openprint::variable = ();
 	%openprint::param = ();
 	if ( $dbh ) {
+		$session{lastupdated} = time;
+		untie %session;
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
 		$openprint::Service::cached = 0;
 		$openprint::Material::cached = 0;
 		openprint::Object::init_cache();
-		$session{lastupdated} = time;
-		untie %session;
 		if ( ! $dbh->{AutoCommit} ) {
 			$log->error('Uncommited transaction');
 		} elsif ( Debug ) {
