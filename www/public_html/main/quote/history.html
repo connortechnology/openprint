@@ -109,7 +109,7 @@
         if (@options) {
           $html .= join("\n",'<li>','<label>Press</label>',
             ssi::select(\@options, $session{$r->uri().'?press_id'}, {
-            id=>'press_id', name=>'press_id', 'data-on-change'=>'load_quotes();',
+            id=>'press_id', name=>'press_id', 'data-on-change'=>'load_quotes',
               prepend=>['', 'All'],
             }),
             '</li>'
@@ -118,9 +118,9 @@
          return $html;
       ) ?>
 			<li><label>Value</label>
-			<? echo ( input( type=>'float', name=>'total_start', value=>$session{$r->uri().'?total_start'}, oninput=>'load_quotes();' ); ) ?>
+			<? echo ( input( type=>'float', name=>'total_start', value=>$session{$r->uri().'?total_start'}, data_on_input=>'load_quotes' ); ) ?>
 			to
-			<? echo ( input( type=>'float', name=>'total_end', value=>$session{$r->uri().'?total_end'}, oninput=>'load_quotes();' ); ) ?>
+			<? echo ( input( type=>'float', name=>'total_end', value=>$session{$r->uri().'?total_end'}, data_on_input=>'load_quotes' ); ) ?>
 			</li>
 			</ul>
       <br class="spacer"/>
