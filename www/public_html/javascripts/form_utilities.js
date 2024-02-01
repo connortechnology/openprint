@@ -1391,6 +1391,7 @@ function photo_popup( asset_id, album_id ) {
 
 var popupWin;
 function popup_window( url, parameters, options ) {
+  /*
   let d = $j('#dialog');
   console.log('hi');
   if (!d.length) {
@@ -1405,8 +1406,8 @@ function popup_window( url, parameters, options ) {
   d.load(url);
   d.dialog(options);
   update_event_bindings();
+  */
 
-/*
 	if ( ! options ) options = {};
 	if ( (! options.width) && ! ( options.left && options.right) ) options.width = 400;
 	if ( (! options.height) && ! ( options.top && options.bottom ) ) options.height = 400;
@@ -1463,7 +1464,6 @@ function popup_window( url, parameters, options ) {
 		}
 		popupWin.setAjaxContent(url, null , true);
 	} // end if
-    */
 } // end function popup_window
 
 function toggle_input( ddm, txt ) {
@@ -1752,7 +1752,7 @@ function update_event_bindings() {
   document.querySelectorAll("select[data-on-change], input[data-on-change]").forEach(function attachOnChangeThis(el) {
     const fnName = el.getAttribute("data-on-change");
     if ( !window[fnName] ) {
-      console.error("Nothing found to bind to " + fnName);
+      console.error("Nothing found to bind to " + fnName + " on "+el.name);
       return;
     }
     el.onchange = window[fnName].bind(el, el);
@@ -1774,6 +1774,17 @@ function update_event_bindings() {
     if ( !window[fnName] ) {
       console.error("Nothing found to bind to " + fnName);
       return;
+    }
+    el.oninput = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll("input[data_on_input]").forEach(function(el) {
+    const fnName = el.getAttribute("data_on_input");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    } else {
+      console.log("Setting oninput for "+el.name+" to "+fnName);
     }
     el.oninput = window[fnName].bind(el, el);
   });
