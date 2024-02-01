@@ -559,6 +559,7 @@ sub button {
 	my $html = 
 		qq`<button id="Button$name" name="`.($$options{name} ? $$options{name} : $name).qq`" class="btn button $$options{class}" `;
     delete $$options{class};
+    delete $$options{name};
 	if ( $$options{href} and $$options{type} ) {
 		$html .= qq`onclick="window.location='$$options{href}'" `;
     #} elsif ( $$options{onclick} and ! $$options{disabled} ) {
@@ -566,7 +567,7 @@ sub button {
     #$html .= $$options{onclick}."return false;\" ";
 	} # end if
 	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
-  $html .= join(' ', map { ($_ eq 'onclick' or $_ eq 'text') ? () : $_.'="'.$$options{$_}.'"' } ( keys %$options ) );
+  $html .= join(' ', map { ($_ eq 'onclick' or $_ eq 'text') ? () : $_.'="'.$$options{$_}.'"' } ( keys %{$options} ) );
 	$html .= '>';
 	if ( $$options{image} ) {
 		if ( $openprint::config{ButtonsUseImages} and ($openprint::config{ButtonsUseImages} eq 'true') ) {
@@ -582,6 +583,7 @@ sub button {
 			$html .= $$options{text};
       delete $$options{text};
 		} # end if
+    delete $$options{image};
 	} elsif ( $openprint::config{SimpleButtons} eq 'Y' ) {
 		$html .= $$options{text};
 	} else {
@@ -595,7 +597,9 @@ sub button {
     };
     </script>
     `;
+    delete $$options{onclick};
   } # end if
+
 	return $html;
 } # end sub button
 
@@ -1013,7 +1017,7 @@ sub date_filter {
 	return ( $sql_field, $parser->format_datetime( $datetime ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this' );
 
 sub input {
 	my %options = @_;
