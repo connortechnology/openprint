@@ -825,9 +825,14 @@ sub _select_category {
 }
 
 sub expense_rules {
-    
+  _expense_rules();
 }
 sub _expense_rules {
+  ssi::save_params( '/employee/accounting/expense_rules.html', (
+      'created_on_start_year','created_on_start_month','created_on_start_day',
+      'category_id', 'recipient_id', 'account_id', 'currency_id',
+      'name',
+    ) );
 }
 
 sub expense_rule {
