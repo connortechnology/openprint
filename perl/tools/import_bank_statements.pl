@@ -330,21 +330,26 @@ LINE: while ( my $line = <FH> ) {
       paid_on     => $date,
       transaction_id=>$data{'Transaction ID'},
     });
-    if ($data{'From Email Address'}) {
+
+    if ($data{'Balance Impact'} eq 'Credit' and $data{'From Email Address'}) {
       my $u = openprint::User->find_one(email=>$data{'From Email Address'});
       if (!$u) {
         if (confirm('Add user/company for '.$data{'From Email Address'}.'? [Y|n]', 'Y')) {
-          my $company = new openprint::Company();
-          $company->save({
-              name=>$data{Name},
-              address1 => $data{'Address Line 1'},
-              address2 => $data{'Address Line 2'},
-              country=>$data{'Country Code'},
-              state => $data{'State/Province/Region/County/Territory/Prefecture/Republic'},
-              phone => $data{'Contact Phone Number'},
-              city  => $data{'Town/City'},
-              postalcode  =>$data{'Zip/Postal Code'},
-            });
+
+          my $company = openprint::Company->find_one(name=>$data{Name});
+          if (!$company) {
+            $company = new openprint::Company();
+            $company->save({
+                name=>$data{Name},
+                address1 => $data{'Address Line 1'},
+                address2 => $data{'Address Line 2'},
+                country=>$data{'Country Code'},
+                state => $data{'State/Province/Region/County/Territory/Prefecture/Republic'},
+                phone => $data{'Contact Phone Number'},
+                city  => $data{'Town/City'},
+                postalcode  =>$data{'Zip/Postal Code'},
+              });
+          }
           $u = new openprint::User();
           $u->save({
               name=>$data{Name},
@@ -354,24 +359,28 @@ LINE: while ( my $line = <FH> ) {
           $Expense->recipient_id($company->id());
         }
       } else {
+        $log->debug("Setting recipient to ".$u->Company()->name() ." from From ".$u->email());
         $Expense->recipient_id($u->company_id());
       }
-    }
-    if ($data{'To Email Address'}) {
+    } # end if From Email Address
+    if ($data{'Balance Impact'} eq 'Debit' and $data{'To Email Address'}) {
       my $u = openprint::User->find_one(email=>$data{'To Email Address'});
       if (!$u) {
         if (confirm('Add user/company for '.$data{'To Email Address'}.'? [Y|n]', 'Y')) {
-          my $company = new openprint::Company();
-          $company->save({
-              name=>$data{Name},
-              address1 => $data{'Address Line 1'},
-              address2 => $data{'Address Line 2'},
-              country=>$data{'Country Code'},
-              state => $data{'State/Province/Region/County/Territory/Prefecture/Republic'},
-              phone => $data{'Contact Phone Number'},
-              city  => $data{'Town/City'},
-              postalcode  =>$data{'Zip/Postal Code'},
-            });
+          my $company = openprint::Company->find_one(name=>$data{Name});
+          if (!$company) {
+            $company = new openprint::Company();
+            $company->save({
+                name=>$data{Name},
+                address1 => $data{'Address Line 1'},
+                address2 => $data{'Address Line 2'},
+                country=>$data{'Country Code'},
+                state => $data{'State/Province/Region/County/Territory/Prefecture/Republic'},
+                phone => $data{'Contact Phone Number'},
+                city  => $data{'Town/City'},
+                postalcode  =>$data{'Zip/Postal Code'},
+              });
+          }
           $u = new openprint::User();
           $u->save({
               name=>$data{Name},
@@ -381,9 +390,10 @@ LINE: while ( my $line = <FH> ) {
           $Expense->recipient_id($company->id());
         }
       } else {
+        $log->debug("Setting recipient to ".$u->Company()->name() ." from To ".$u->email());
         $Expense->recipient_id($u->company_id());
       }
-    }
+    } # end if To Email Address
 
   } else {
     die "Unknown format $$options{format}";
