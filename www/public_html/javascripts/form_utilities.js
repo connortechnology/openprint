@@ -1795,6 +1795,7 @@ function update_event_bindings() {
       console.error("Nothing found to bind to " + fnName);
       return;
     }
+    console.log("Setting up oninput for " + el.name + " to " + fnName);
     el.oninput = window[fnName].bind(el, el);
   });
 
