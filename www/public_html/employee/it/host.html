@@ -34,7 +34,7 @@
 			<ul>
 				<li>
 					<label>Name</label>
-					<input type="text" id="name" name="name" value="<? echo ( $$variable{Host}->name() ) ?>" />
+					<input type="text" id="name" name="name" value="<? echo ( $$variable{Host}->name() ) ?>" autocomplete="off" autofill="off"/>
 				</li>
 				<li>
 					<label>Abbreviated Name</label>
@@ -179,7 +179,7 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 	</table>
 </fieldset>
 <? if ( $$variable{Host}->id() ) ?>
-<fieldset class="Where"><legend>Where</legend>
+<fieldset class="Where"><legend>Where <?echo( $$variable{Host}->Location()->link_to()) ?></legend>
     <div class="leftColumn">
 <? echo ( 
     $$variable{Location} = $$variable{Host}->Location();
