@@ -31,10 +31,11 @@
 	<td class="total"><input type="number" id="total-%2$d" name="total-%2$d" value="%9$.2f" step="any"/></td>
 	<td class="buttons">%10$s</td>
 </tr>`, $rowclass, $Product->id(),
-$Product->link_to($Product->name() . ($Product->name() ne $Product->description() ? ' ' . $Product->description() : '')),
+$Product->Product()->link_to($Product->name() . ($Product->name() ne $Product->description() ? ' ' . $Product->description() : '')),
 $Product->quantity(), $Product->cost(), $Product->markup(), $Product->price(), $Product->units(), $Product->total(),
 button( 'removeProduct'.$Product->id(), {
-  onclick=>qq`new Ajax.Updater('Products', '_products.html?action=del&amp;product_id=$$Product{id}', { parameters: f1.serialize() } );`, text=>'-', title=>'Remove' } ),
+data_on_click=>'remove_product', data_product_id=>$$Product{id}, text=>'-', title=>'Remove' } ),
+#qq`new Ajax.Updater('Products', '_products.html?action=del&amp;product_id=$$Product{id}', { parameters: f1.serialize() } );`,
 $Product->comments(),
 );
 				$rowclass = $rowclass ? '' : ' class="colRow"';
