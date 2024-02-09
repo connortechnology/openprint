@@ -338,25 +338,29 @@ sub host {
         } # end if
       } # end foreach Interface
 
-      my %notifications = map { $$_{user_id}, $_ } $Host->Notifications();
+      if ($param{notification_ids}) {
+        my %notifications = map { $$_{user_id}, $_ } $Host->Notifications();
 
-      foreach my $user_id ( sets::union(split(',',$param{notification_ids})) ) {
-        if ( $notifications{$user_id} ) {
-          delete $notifications{$user_id};
-          next;
+        foreach my $user_id (sets::union(split(',', $param{notification_ids}))) {
+          if ($notifications{$user_id}) {
+            delete $notifications{$user_id};
+            next;
+          }
+          my $Notification = new openprint::Host_Notification();
+          $variable{error} .= $Notification->save({host_id=>$$Host{id}, user_id=>$user_id});
         }
-        my $Notification = new openprint::Host_Notification();
-        $variable{error} .= $Notification->save({host_id=>$$Host{id}, user_id=>$user_id});
+        foreach my $Notification ( values %notifications ) {
+          $variable{error} .= $Notification->delete();
+        }
+        $Host->Notifications(undef);
       }
-      foreach my $Notification ( values %notifications ) {
-        $variable{error} .= $Notification->delete();
-      }
-      $Host->Notifications(undef);
       
-      if ( ! $variable{error} ) {
+      if (!$variable{error}) {
         (new openprint::Log())->save({Object=>$Host, action=>'Edit', note=>join('<br/>', @changes) }) if @changes;
         $variable{ExternalRedirect} = '/employee/it/hosts.html';
         return;
+      } else {
+        $openprint::log->error($variable{error});
       } # end if
       %param = ();
     } elsif ( $param{action} eq 'ping' ) {
