@@ -177,10 +177,10 @@ sub edit {
 			my @specs_changes;
 			if ( ! $variable{error} ) {
 				my $New = new openprint::MaterialSpecification();
-				$New->set( { material_id=>$Material->id() } );
+				$New->set( { material_id=>$Material->id(), id=>'' } );
 				foreach my $Spec ( $Material->Specifications(), $New ) {
 
-					if ( $param{'txtSpecificationName'.($$Spec{id} ? $$Spec{id} : '')} ) {
+					if ( $param{'txtSpecificationName'.$$Spec{id}} ) {
 						my @spec_changes = $Spec->changes({
 								equipment_id	=>	$param{'spec_equipment_id-'.$$Spec{id}},
 								min				=>	$param{'txtSpecificationMin'.$$Spec{id}},

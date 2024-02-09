@@ -173,7 +173,7 @@ sub sized_url {
 
 	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( is_photo( $extension ) ) {
-		my $dest_filename = $blah.'.jpg';
+		my $dest_filename = $filename;
 		if ( $openprint::config{AssetPath} ) {
 			my $dest = $path.$dest_filename;
 			if ( ! -e $dest ) {

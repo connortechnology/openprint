@@ -2,27 +2,27 @@
 	<h1>Accounting</h1>
 	<h2>Expense Rules</h2>
 </div>
-<script type="text/javascript">
+<script>
 	function delete_confirm(form) {
-		var number_of_deleted_expense_ruless = 0;
-		for ( var index = 0; index < form.elements.length; index += 1 ) {
+		let number_of_deleted_expense_rules = 0;
+		for ( let index = 0; index < form.elements.length; index += 1 ) {
 			if ( ! form.elements[index].name )
 				continue;
 			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
-				number_of_deleted_expense_ruless += 1;
+				number_of_deleted_expense_rules += 1;
 			} // end if
 
 		} // end for
-		if ( number_of_deleted_expense_ruless == 0 ) {
+		if ( number_of_deleted_expense_rules == 0 ) {
 			alert("To delete Expenses, click the checkbox beside the expense_rules.");
 		} else {
-			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_expense_ruless + " expense_ruless from history?\n") ) {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_expense_rules + " expense_ruless from history?\n") ) {
 				form.submit();
 			} // end if
 		} // end if
 	}
-	function load_expense_rules( form ) {
-		LoadContent( 'ExpenseList','_expense_rules.html', $('f1') );
+	function load_expense_rules() {
+		LoadContent( 'ExpenseList', '_expense_rules.html', $j('#f1').serialize() );
 	} // end function
 </script>	 
 <? include(/includes/error_reporting.html) ?>
@@ -36,8 +36,11 @@
 						<label>Created On</label>
 		<? echo ( date_select_session( '/employee/accounting/expense_rules.html', 'created_on_start', { onchange=>q`check_time_starting($('f1'), 'entered_on_start','entered_on_end');load_expense_rules($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
 							to 
-		<? echo ( date_select_session( '/employee/accounting/expense_rules.html', 'created_on_end', { onchange=>q`load_expense_rules($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+		<? echo ( date_select_session( '/employee/accounting/expense_rules.html', 'created_on_end', { onchange=>'load_expense_rules', with_today=>1,with_clear=>1 } ); ) ?>
 					</li>
+          <li><label>Name</label>
+            <?echo(input(type=>'text', name=>'name', value=>$session{$r->uri().'?name'}, data_on_input=>'load_expense_rules');)?>
+          </li>
 				</ul>
 			</div>
 		</div>
@@ -87,7 +90,7 @@
 				button( 'ShowResults', { onclick=>"load_expense_rules(\$('f1'));", text=> 'Show Results' } ),
 				button( 'Download', { onclick=>"f1.btnFunction.value='Download';f1.submit();" } ),
 				button( 'Reset', { onclick=>'f1.reset();' } ),
-				button( 'New', { href=>'expense.html', text=>'New Expense' } ),
+				button( 'New', { href=>'expense_rule.html', text=>'New Expense' } ),
 				); ) ?>
 		</p>
 	</fieldset>

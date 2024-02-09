@@ -1,4 +1,4 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
 <?include(/includes/error_reporting.html)?>
 <div class="Product">
 	<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="view.html">
@@ -7,6 +7,7 @@
 				<? echo ( join( "\n", 
 					( $$variable{Product}->can_edit() ? (
 						button( 'Edit',{ href=>'/product/edit.html?product_id='.$$variable{Product}->id() } ),
+						button( 'Copy',{ href=>'/product/edit.html?product_id='.$$variable{Product}->id().'&btnFunction=Copy' } ),
 						button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);" } ),
 						button( 'New',{ href=>'/product/edit.html' } ),
 					) : () ),

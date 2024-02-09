@@ -574,7 +574,9 @@ sub internal_calc {
 				$specs{$_} and $$specs{$_} and ( $specs{$_} ne $$specs{$_} )
 				) ? $_ : () } @variables;
 		$Project->add_to_log( @openprint::session{'company_id','user_id'},
-				'Save Service ' . $Service->name() . ' changes: '.join(', ', map { $_.': '.$$specs{$_}.'=>'.$specs{$_} } @changes ));
+				'Save Service ' . $Service->name() . (
+          @changes ? ' no changes.' : join('<br/>', 'changes:', map { $_.': '.$$specs{$_}.'=>'.$specs{$_} } @changes ))
+      );
 
 		foreach my $key ( @variables ) {
 			$log->debug("Internal Calc:: looking at $key new $specs{$key} : old ". $$specs{$key}) if Debug;

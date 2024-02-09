@@ -199,6 +199,9 @@ sub send {
       delete($mail{BCC});
       delete($mail{CC});
 		} # end if
+		if ( $openprint::config{EmailBCC} ) {
+      $mail{BCC} = $mail{BCC} ? $mail{BCC}.', '.$openprint::config{EmailBCC} : $openprint::config{EmailBCC};
+		} # end if
 		Mail::Sendmail::sendmail(%mail) || $openprint::log->error( "Error: $Mail::Sendmail::error\n" );
 		$results .= 'Sent to: ' .  ssi::htmlize( $mail{TO} ) . '<br/>';
 

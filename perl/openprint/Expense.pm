@@ -212,12 +212,12 @@ sub Taxes {
     $$self{Taxes} = [];
   } # end if
 
-  if ( (!@{$$self{Taxes}}) and $self->Company()->country() and $self->Company()->state() and ($$self{invoiced_on} or $$self{paid_on}) ) {
+  if ( (!@{$$self{Taxes}}) and $self->Recipient()->country() and $self->Recipient()->state() and ($$self{invoiced_on} or $$self{paid_on}) ) {
     foreach my $Tax ( openprint::Tax->find(
         'period_start null_or_<='   =>  ( $$self{invoiced_on} ? $$self{invoiced_on} : $$self{paid_on} ),
         'period_end null_or_>='     =>  ( $$self{invoiced_on} ? $$self{invoiced_on} : $$self{paid_on} ),
-        country   =>  $self->Company()->country(),
-        state     =>  $self->Company()->state()),
+        country   =>  $self->Recipient()->country(),
+        state     =>  $self->Recipient()->state()),
     ) {
       my $T = new openprint::Expense_Tax();
       $T->set({
