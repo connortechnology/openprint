@@ -6869,11 +6869,11 @@ $log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 				} # end if
 			} # end foreach
 	
-			if ( @allowed and ! sets::isin( $Paper->material(), \@allowed ) ) {
+			if (@allowed and (!$Paper->material() or !sets::isin( $Paper->material(), \@allowed ))) {
 				$results{$press_id} = 'Not suitable for this stock.';
 				next;
 			} # end if
-			if ( @disallowed and sets::isin( $Paper->material(), \@disallowed ) ) {
+			if (@disallowed and $Paper->material() and sets::isin($Paper->material(), \@disallowed)) {
 				$results{$press_id} = 'Not suitable for this stock.';
 				next;
 			} # end if
