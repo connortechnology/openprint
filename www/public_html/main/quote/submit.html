@@ -19,7 +19,7 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 			<?include(/includes/quote_header.html)?>
 			<?include(/includes/quote_information.html)?>
 				<? if ( $$variable{Quote}->comments() ) ?>
-				<div class="comments"><label>Comments</label>
+        <div class="comments"><label>Comments</label><br/>
 				<? echo ( $$variable{Quote}->comments() ) ?>
 				</div>
 				<? endif ( $$variable{Quote}->comments() ) ?>
@@ -61,14 +61,6 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 	} # end if
 	return $html;
 ) ?>
-	<p class="buttons">
-		<? echo ( join("\n",
-					button( 'BackBottom', { href=>'/main/quote/information.html?quote_id='.$$variable{Quote}->id(), text=>'Back' } ),
-					button( 'SubmitQuoteBottom', { onclick=>"f1.btnFunction.value='Submit';f1.submit();", text=>'Submit Quote' } ),
-					button( 'CloseQuoteBottom', { onclick=>"f1.btnFunction.value='Close';f1.submit();", text=>'Close Quote Without Sending' } ),
-					button( 'SendToMeBottom', { onclick=>"f1.action='/main/quote/submit.html';f1.btnFunction.value='SendToMe';f1.submit();", text=>'Send To Me' } ),
-					); ) ?>
-	</p>
 	<input type="hidden" name="btnFunction"/>
 </form>
-	</div></div><!--Quote-->
+</div></div><!--Quote-->
