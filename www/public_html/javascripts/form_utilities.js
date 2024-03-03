@@ -1809,6 +1809,16 @@ function update_event_bindings() {
     el.onclick = window[fnName].bind(el, el);
   });
 
+  document.querySelectorAll('button[data_onclick_this]').forEach(function(el) {
+    const fnName = el.getAttribute('data_onclick_this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
+
   document.querySelectorAll("i[data-on-click], a[data-on-click], button[data-on-click], input[data-on-click]").forEach(function attachOnClick(el) {
     const fnName = el.getAttribute('data-on-click');
     if (!window[fnName]) {
