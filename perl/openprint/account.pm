@@ -19,6 +19,7 @@ require openprint::MarketingCategory;
 require openprint::User;
 require openprint::User_Profile_Field;
 require openprint::Company;
+require openprint::Company_Credit;
 require openprint::Company_Profile_Field;
 require openprint::Photo_Album;
 require openprint::Video_Album;
