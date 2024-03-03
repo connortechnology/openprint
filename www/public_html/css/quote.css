@@ -183,3 +183,6 @@ table .thumbnail {
   width: 150px;
   display: inline-block;
 }
+.comments fieldset p {
+  text-align: left;
+}
