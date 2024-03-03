@@ -618,7 +618,7 @@ sub AUTOLOAD {
 			return $$Profile{fields}{$name};
 		} elsif ( $debug ) {
 			my ( $caller, undef, $line ) = caller;
-			$openprint::log->error("Unknown field in User::AUTOLOAD $name from $caller:$line");
+			$openprint::log->debug("Unknown field in User::AUTOLOAD $name from $caller:$line");
 		} # end if
 	} # end if
 } # end sub AUTOLOAD
