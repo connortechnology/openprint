@@ -140,7 +140,7 @@ div.Quote table .price {
 }
 div.Quote table .newprice {
 	text-align: right;
-	width: 90px;
+	width: 110px;
 }
 div.Quote table .newprice input {
 	width: 80px;
@@ -157,7 +157,7 @@ div.Quote table .project_id {
 	width: 100px;
 }
 div.Quote table .weight {
-	width: 130px;
+	width: 200px;
 	text-align: right;
 }
 div.Quote div.History {
