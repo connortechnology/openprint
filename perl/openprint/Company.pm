@@ -245,16 +245,20 @@ sub save_tradereferences {
 
 
 sub Credit {
-	
-	my $supplier = $_[1] ? $_[1] : $openprint::config{owner_id};;
+  my $self = shift;	
+	my $supplier_id = $_[0] ?  $_[0] : $openprint::config{owner_id};
+  if (!$supplier_id) {
+    $openprint::log->error("Please set site owner for Credit.");
+		return new openprint::Company_Credit();
+  }
 
 	require openprint::Company_Credit;
-	if ( ! $_[0]{id} ) {
+	if (!$$self{id}) {
 		$_ =  new openprint::Company_Credit();
 		$_->set({supplier_id=>$supplier});
 		return $_;
 	} # end if
-	return new openprint::Company_Credit( { company_id=>$_[0]{id}, supplier_id=>$supplier } );
+	return new openprint::Company_Credit( { company_id=>$$self{id}, supplier_id=>$supplier_id } );
 } # end sub Credit
 
 sub dropdown {
