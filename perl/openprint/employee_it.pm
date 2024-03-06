@@ -983,18 +983,18 @@ sub _interface {
         foreach my $Interface (@HIs) {
           my $Host = $Interface->Host();
           if ( 
-            (
-              (!$$Interface{ip})
-                or
-              (is_ipv4($Interface->ip()) and is_ipv4($param{ip}))
-                or
-              (is_ipv6($Interface->ip()) and is_ipv6($param{ip}))
+            (!$$Interface{ip}) or (
+              (
+                (is_ipv4($Interface->ip()) and is_ipv4($param{ip}))
+                  or
+                (is_ipv6($Interface->ip()) and is_ipv6($param{ip}))
+              )
+                and ( $Interface->ip() ne $param{ip} )
             )
-              and ( $Interface->ip() ne $param{ip} )
           ) {
             (new openprint::Log())->save( {
                 Object  =>  $Host,
-                note    =>  "IP Address changed from $$Interface{ip} to $param{ip}",
+                note    =>  'IP Address changed from '.(defined($$Interface{ip}?$$Interface{ip}:'undef').' to '.$param{ip},
                 action  =>  'IP Changed',
               } );
             $Interface->save({ip=>$param{ip}});
