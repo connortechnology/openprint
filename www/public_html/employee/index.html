@@ -103,6 +103,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 <div class="Index">
 <div class="Widgets">
 <?echo ( 
+     require openprint::PurchaseOrder;
 		my @POs = map { $_->can_authorize() ? $_ : () } openprint::PurchaseOrder->find( 
 			authorized=>0,
 			'notification_user_id contains'	=>	$session{user_id},

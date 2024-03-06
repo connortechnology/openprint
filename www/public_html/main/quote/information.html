@@ -265,7 +265,7 @@ if ( $$variable{ForCountry} eq 'US' ) {
 						</li>
 						<li class="comments">
 							<label>Additional comments or instructions</label>
-							<textarea id="comments" name="comments" rows="<? echo ( count_lines( $$variable{Quote}->comments() ); ) ?>" onkeyup="textarea_resize( this );"><? hecho ( $$variable{Quote}->comments() ) ?></textarea>
+							<textarea class="mce" id="comments" name="comments" rows="<? echo ( count_lines( $$variable{Quote}->comments() ); ) ?>" onkeyup="textarea_resize( this );"><? hecho ( $$variable{Quote}->comments() ) ?></textarea>
 						</li>
             <li class="currency">
               <label>Currency</label>

@@ -34,7 +34,7 @@
 $Product->Product()->link_to($Product->name() . ($Product->name() ne $Product->description() ? ' ' . $Product->description() : '')),
 $Product->quantity(), $Product->cost(), $Product->markup(), $Product->price(), $Product->units(), $Product->total(),
 button( 'removeProduct'.$Product->id(), {
-data_on_click=>'remove_product', data_product_id=>$$Product{id}, text=>'-', title=>'Remove' } ),
+data_onclick_this=>'remove_product', data_product_id=>$$Product{id}, text=>'-', title=>'Remove' } ),
 #qq`new Ajax.Updater('Products', '_products.html?action=del&amp;product_id=$$Product{id}', { parameters: f1.serialize() } );`,
 $Product->comments(),
 );
@@ -59,7 +59,9 @@ $Product->comments(),
                   `, $rowclass, 
 									make_drop_down( [ '', 'select', map { $_->id(), $_->name() } openprint::Product_Category->find(order=>'lower(name)') ] ),
 									make_drop_down( [ '', 'select', map { $_->id(), $_->name() } openprint::Product->find(order=>'lower(name)') ] ),
-									button( 'addProduct', { onclick=>q`new Ajax.Updater('Products', '_products.html?action=add', { parameters: f1.serialize() } );`, text=>'+',title=>'Add' } ),
+                  button( 'addProduct', { data_onclick_this=>'add_product', 
+                  #onclick=>q`new Ajax.Updater('Products', '_products.html?action=add', { parameters: f1.serialize() } );`,
+                  text=>'+',title=>'Add' } ),
 					);
 			} # end if
 			$html .= '
