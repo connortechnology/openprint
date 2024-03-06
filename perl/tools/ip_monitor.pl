@@ -18,6 +18,7 @@ require openprint::Log;
 require Net::Ping;
 require Net::IP;
 require HTML::FormatText;
+require Time::HiRes;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
@@ -86,6 +87,7 @@ if ( $config{pid_file} ) {
 $config{ping_wait} = 2 if ! $config{ping_wait};
 # udp has less network traffic overhead
 my $p = Net::Ping->new($config{ping_type},$config{ping_wait});
+$p->hires();
 my %last_ping_time;
 
 my $hup;
@@ -211,7 +213,8 @@ while(1) {
           $log->warn('Problem with ping for '.$Host->hostname().' ip: '.$ip->ip());
           next;
         } 
-        my $ping = $ping[0];
+
+        my ($ping, $duration, undef) = @ping;
         if ( $ping and $HI->is_subnet() ) {
           if ( ! openprint::Host_Interface->find_one(ip=>$ip->ip()) ) {
 
@@ -243,13 +246,13 @@ while(1) {
           next;
         }
 
-        if ( $ping and ( $ping[1] > ($$Host{max_ping_time} ? $$Host{max_ping_time} : 1 ) ) ) {
+        if ( $ping and ( $duration > ($$Host{max_ping_time} ? $$Host{max_ping_time} : 1 ) ) ) {
           (new openprint::Log())->save({
               Object=>$Host,
               action=>'Long response time',
               ip_address=>$HI->ip(),
               host_id=>$$Host{id},
-              note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}),
+              note=>sprintf('Response time %.3f seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', 1000000*$duration, @$Host{'id','hostname'}),
             });
         } # end if
 
