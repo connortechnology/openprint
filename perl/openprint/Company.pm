@@ -255,7 +255,7 @@ sub Credit {
 	require openprint::Company_Credit;
 	if (!$$self{id}) {
 		$_ =  new openprint::Company_Credit();
-		$_->set({supplier_id=>$supplier});
+		$_->set({supplier_id=>$supplier_id});
 		return $_;
 	} # end if
 	return new openprint::Company_Credit( { company_id=>$$self{id}, supplier_id=>$supplier_id } );
