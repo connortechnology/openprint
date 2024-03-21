@@ -424,6 +424,7 @@ sub user_profiles_action {
 		$variable{information} = 'Record saved successfully.';
 		$variable{ExternalRedirect} = '/administrator/managerial/user_profiles.html?ddmUser='.$User->id();
 	} # end if btnFunction
+  return $User;
 } # end sub user_profiles_action
 
 sub user_profiles {
@@ -436,7 +437,7 @@ sub user_profiles {
 
 	if ( exists $param{ddmCustomer} ) {
 		if ( $param{ddmCustomer} and $User->company_id() and ( $User->company_id() != $param{ddmCustomer} ) ) {
-$log->error("PReventing customer change");
+      $log->error('Preventing customer change');
 			# Prevent selection of user from another company
 			$User = new openprint::User();
 		} # end if
@@ -446,17 +447,16 @@ $log->error("PReventing customer change");
 	} # end if
 
 	# selected company
-	my $cust_id = $param{ddmCustomer};
-	$cust_id = $session{company_id} if ! $cust_id;
-	$param{ddmCustomer} = $cust_id if ! $param{ddmCustomer};
+	my $company_id = $param{ddmCustomer} ? $param{ddmCustomer} : $session{company_id};
+	$param{ddmCustomer} = $company_id if ! $param{ddmCustomer};
 
   if ($param{btnFunction}) {
-    $User = user_profiles_action($cust_id, $User, $param{btnFunction});
+    $User = user_profiles_action($company_id, $User, $param{btnFunction});
   }
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
 	my @Users = openprint::User->find(
-		( $cust_id ? ( company_id=>$cust_id ) : () ),
+		( $company_id ? ( company_id=>$company_id ) : () ),
 		( $user_role ? ( type=>$user_role ) : () ),
 		( $param{deleted} ne '' ? ( deleted=>$param{deleted} ) : () ),
 		);
@@ -513,7 +513,7 @@ $log->error("PReventing customer change");
 sub company_profiles {
 
 	ssi::save_params( '/administrator/managerial/company_profiles.html', ( 'search_salesrep_id','deleted' ) );
-# form field to db field mappings
+  # form field to db field mappings
 	my %shipping_fields = (
 			'txtShippingCompanyName'	=>	'CompanyName',
 			'rdbShippingSalutation'	 	=>	'Salutation',
@@ -542,8 +542,12 @@ sub company_profiles {
 		$index = $Company->next();
 		$Company = new openprint::Company( $index );
 	} elsif ( $param{btnFunction} eq 'Go' ) {
-		if ( $param{txtSearchAccountNum} ne '' ) {
-			( $index ) = sql::execute( $log, $dbh, 'SELECT id from Company WHERE strAccountNum=?',$param{txtSearchAccountNum});
+		if ($param{txtSearchAccountNum}) {
+      my $c = openprint::Company->find_one(accountnumber=>$param{txtSearchAccountNum});
+      if ($c) {
+        $Company = $c;
+        $index = $c->id();
+      }
 		} # end if
 	} elsif ( $param{btnFunction} eq 'merge' ) {
 		if ( ! $param{company_id} ) {
