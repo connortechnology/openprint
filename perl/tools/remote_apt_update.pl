@@ -105,7 +105,7 @@ foreach my $Host ( @Hosts ) {
       `ssh-copy-id $config{username}\@$$HI{ip}`;
       $ssh->auth_publickey($config{username}, "$home/.ssh/id_ed25519.pub", "$home/.ssh/id_ed25519") or $ssh->die_with_error;
     }
-    print "rsync -rav $home/VueIPSkin  $config{username}\@$$HI{ip}...";
+    print "rsync -rav $home/VueIPSkin  $config{username}\@$$HI{ip}...\n";
     `rsync -rav $home/VueIPSkin  $config{username}\@$$HI{ip}:`;
     print $!."\n" if $!;
     foreach my $cmd ( 
@@ -119,8 +119,8 @@ foreach my $Host ( @Hosts ) {
 
     ) {
       print "Execing $cmd\n";
-    #print "Opening channel\n";
-    my $chan = $ssh->channel() or $ssh->die_with_error;
+      #print "Opening channel\n";
+      my $chan = $ssh->channel() or $ssh->die_with_error;
       $chan->exec($cmd. ' 2>&1') or $ssh->die_with_error;
       #print "Output:\n";
       my $output = '';
@@ -133,7 +133,7 @@ foreach my $Host ( @Hosts ) {
         print "EXIT CODE: ", $chan->exit_status, "\n";
         die if !confirm('Continue? [Y|n]', 'Y');
       }
-    }
+    } # end foreach cmd
     last; 
   } # end foreach HI
 } # end foreach $Host

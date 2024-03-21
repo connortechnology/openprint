@@ -208,6 +208,8 @@ sub load {
 		my %keys = map { (defined $$fields{$_} ? ($_=>$$fields{$_}) : (exists $$data{$_} ? ($_=>$_) : ()) ) } keys %$fields;
     #$log->debug(join(',', map { $_ .'=>'.$keys{$_} } sort { $a cmp $b} keys %keys));
 		@$self{keys %keys} = @$data{ values %keys };
+  } else {
+    $log->warn("No data? ".ref $data);
 	} # end if
 } # end sub load
 

@@ -1,12 +1,13 @@
 use strict;
+use warnings;
 require openprint::Object;
 require openprint::Host;
-use Data::Dumper;
+#use Data::Dumper;
 
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field );
-$debug = 0;
+$debug = 1;
 $serial = 'host_interfaces_id_seq';
 $table = 'host_interfaces';
 

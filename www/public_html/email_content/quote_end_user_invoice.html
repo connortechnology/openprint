@@ -5,6 +5,12 @@
 		<?include('/includes/quote_header.html')?>
 		<?include('/includes/quote_prepared_by.html')?>
 		<?include('/includes/quote_prepared_for.html')?>
+    <? if ( $$variable{Quote}->comments() ) ?>
+    <div class="comments"><fieldset><legend>Comments</legend>
+        <? echo ( $$variable{Quote}->comments() ) ?>
+      </fieldset>
+        </div>
+        <? endif ( $$variable{Quote}->comments() ) ?>
 	</div>
 	<div class="Projects">
 	<? if ( $$variable{Quote}->Quoted_Projects() ) ?>
