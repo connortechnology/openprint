@@ -173,6 +173,7 @@ sub Price {
   $$price{price} = $$price{Price};
 
 	if ( $$self{rate} ) {
+    $openprint::log->debug("Overriding rate to $$self{rate}");
 		$$price{cost} = $$price{price} = $$self{rate};
 	} # end if
 
@@ -194,6 +195,7 @@ sub Price {
 		$$price{total} = $$price{price} * $elapsed;
 	} elsif ( $units =~ /^\/hr\.?/ ) {
 		$$price{total} = $$price{price} * $elapsed / 3600;
+    $openprint::log->debug("Total is $$price{total} from $$price{price} * $elapsed /3600");
 	} elsif ( $units eq 'once' ) {
 		$$price{total} = $$price{price};
 	} else {
