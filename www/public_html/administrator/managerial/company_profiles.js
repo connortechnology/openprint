@@ -1,7 +1,8 @@
 function load_customers( ) {
-  var form = document.getElementById('f1');
-  if ( ! form ) {
+  const form = document.getElementById('f1');
+  if (!form) {
     alert('No form');
+    return;
   }
   $j('#ddmCustomer').load(
     '/includes/_company_ddm.html',
@@ -24,7 +25,6 @@ function ddmCustomer_onchange(ddm) {
 }
 
 function AddAccountingContact(button) {
-  console.log(button);
   $j('#AccountingContacts').load('_company_accounting_contacts.html', {
     company_id: $j('#company_id').val(),
     user_id: $j('#new_accounting_contact_id').val(),
