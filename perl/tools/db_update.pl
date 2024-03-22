@@ -70,8 +70,8 @@ if ( ! sets::isin( 'configuration', \@tables ) ) {
 
 if ( ! sets::isin( 'object_types', \@tables ) ) {
 	$log->debug("Adding object_types table");
-    $dbh->do( misc::load_file( $log, '../../sql/Object_Types.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
+  $dbh->do( misc::load_file( $log, '../../sql/Object_Types.sql' ) );
+  die $dbh->errstr() if $dbh->errstr();
 	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Comment', 'comment')`);
 	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Like', 'like')`);
 	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Host', 'host')`);
@@ -81,27 +81,33 @@ configuration::init( $log, $dbh );
 $config{db_name} = $ARGV[0];
 
 if ( ! sets::isin( 'currencies', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/Currencies.sql}) );
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='currencies'", 'column_name');
-	if ( ! exists $$data{short} ) {
-		$dbh->do('ALTER TABLE Currencies ADD short TEXT');
-	} # end if
-	$dbh->do('ALTER TABLE currencies ADD sy varchar(4)');
-	$dbh->do('UPDATE currencies set sy=symbol');
-	$dbh->do('ALTER TABLE currencies DROP COLUMN symbol');
-	$dbh->do('ALTER TABLE currencies RENAME COLUMN sy TO symbol');
-  if ( ! exists $$data{precision} ) {
-    $log->debug("Add precision to currencies");
-    $dbh->do('ALTER TABLE currencies ADD precision smallint NOT NULL default 2');
+  if ( sets::isin( 'currency', \@tables ) ) {
+    $dbh->do('ALTER TABLE Currency RENAME TO Currencies');
+  } else {
+    $dbh->do( misc::load_file( $log, q{../../sql/Currencies.sql}) );
   }
+} 
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='currencies'", 'column_name');
+if ( ! exists $$data{short} ) {
+  $dbh->do('ALTER TABLE Currencies ADD short TEXT');
 } # end if
 
+$dbh->do('ALTER TABLE currencies ADD sy varchar(4)');
+$dbh->do('UPDATE currencies set sy=symbol');
+$dbh->do('ALTER TABLE currencies DROP COLUMN symbol');
+$dbh->do('ALTER TABLE currencies RENAME COLUMN sy TO symbol');
+if ( ! exists $$data{precision} ) {
+  $log->debug("Add precision to currencies");
+  $dbh->do('ALTER TABLE currencies ADD precision smallint NOT NULL default 2');
+}
+
 if ( ! sets::isin( 'annualsales', \@tables ) ) {
+  print "Adding annualsales\n";
 	$dbh->do( misc::load_file( $log, q{../../sql/AnnualSales.sql}) );
 } # end if
 
 if ( ! sets::isin( 'company_categories', \@tables ) ) {
+  print "Adding company_categories\n";
 	$dbh->do( misc::load_file( $log, q{../../sql/Company_Categories.sql}) );
 	die if $dbh->errstr();
   if ( sets::isin( 'companies', \@tables ) ) {
@@ -121,58 +127,85 @@ if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
 } # end if
 
-if ( ! sets::isin( 'companies', \@tables ) ) {
-	if ( ! sets::isin( 'company', \@tables ) ) {
-		$dbh->do( misc::load_file( $log, q{../../sql/Companies.sql}) );
-		die $dbh->errstr() if $dbh->errstr();
-	} else {
-		my $ac = sql::start_transaction( $dbh );
-		print "Renaming company to companies\n";
-		$dbh->do('ALTER TABLE Company RENAME TO Companies');
-		my $data2 = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='companies'", 'column_name');
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN strName TO name');
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN strAddress1 TO address1');
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN strAddress2 TO address2');
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN strcity TO city');
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN strstate TO state') if exists $$data2{strstate};
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN strcountry TO country');
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN strpostalcode TO postalcode');
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN dtmdateentered TO created_on');
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN dtmlastupdated TO updated_on') if exists $$data2{dtmlastupdated};
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN dtmlastmodified TO updated_on') if exists $$data2{dtmlastmodified};
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN lngpricelist TO pricelist_id');
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN strgstnumber TO fedtaxnumber');
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN strpstnumber TO statetaxnumber');
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN strphone TO phone');
-		$dbh->do('ALTER TABLE Companies RENAME COLUMN strfax TO fax');
+sub column_rename {
+  my ($table, $from, $to) = @_;
+  $table = lc $table;
+  $from = lc $from;
+  my $row = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='$table'", 'column_name');
+  if (exists($$row{$from}) and ! exists($$row{$to})) {
+    $dbh->do("ALTER TABLE $table RENAME COLUMN $from TO $to") or die $dbh->errstr();
+  } elsif (exists $$row{$from}) {
+    $log->error("Column rename on table $table from $from to $to not applied because ! exists $to");
+  } else {
+    $log->error("Column rename on table $table from $from to $to not applied because ! exists $from");
+  }
+}
 
-		$dbh->do(q`alter table Companies rename column index to id`);
-		$dbh->do(q`alter table Companies rename column strprovstate to state`) if exists $$data2{strprovstate};
-		$dbh->do(q`alter table Companies rename column lngsalesperson to salesrep_id`);
-		$dbh->do(q`alter table Companies rename column ysnmailinglist to mailinglist`);
-		$dbh->do(q`alter table Companies rename column strweburl to url`);
-		$dbh->do(q`alter table Companies rename column strcustomgreeting to greeting`);
-		$dbh->do(q`alter table Companies rename column dblpricingpercent to discount`);
-		$dbh->do(q`alter table Companies rename column strbusinesstype to business_type`);
-		$dbh->do(q`alter table Companies rename column strlegalbusname to business_name`);
-		$dbh->do(q`alter table Companies rename column legalform to business_form`);
-		$dbh->do(q`alter table Companies rename column strpresidentowner to president_owner`);
-		$dbh->do(q`alter table Companies rename column dtmbusinessstartdate to established`);
-		$dbh->do(q`alter table Companies rename column stremployees to employees`);
-		$dbh->do(q`alter table Companies rename column strannualsales to annual_sales`);
-		$dbh->do(q`alter table Companies rename column strbankname to bank_name`);
-		$dbh->do(q`alter table Companies rename column strbankbranch to bank_branch`);
-		$dbh->do(q`alter table Companies rename column strbankphone to bank_phone`);
-		$dbh->do(q`alter table Companies rename column strbankaccountno to bank_account`);
-		$dbh->do(q`alter table Companies rename column strbankaccountmanager to bank_manager`);
-		$dbh->do(q`alter table Companies rename column strbankfax to bank_fax`);
-		$dbh->do(q`alter table Companies rename column strbankemail to bank_email`);
+if ( ! sets::isin( 'companies', \@tables ) ) {
+  print "Companies doesn't yet exist.\n";
+  if ( sets::isin('tbl_customer', \@tables) or sets::isin('company', \@tables) ) {
+		my $ac = sql::start_transaction( $dbh );
+    if ( sets::isin('tbl_customer', \@tables)) {
+      print "Renaming tbl_customer to companies\n";
+      $dbh->do('ALTER TABLE tbl_customer RENAME to companies') or die $dbh->errstr();
+    } else {
+      print "Renaming company to companies\n";
+      $dbh->do('ALTER TABLE Company RENAME TO Companies');
+    }
+    @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+
+		my $data2 = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='companies'", 'column_name');
+    column_rename('Companies', 'strcompanyname', 'name');
+    column_rename('Companies', 'strname', 'name');
+    column_rename('Companies', 'straddress1', 'address1');
+    column_rename('Companies', 'straddress2', 'address2');
+    column_rename('Companies', 'strcity', 'city');
+    column_rename('Companies', 'strstate', 'state');
+    column_rename('Companies', 'strcountry', 'country');
+    column_rename('Companies', 'strpostalcode', 'postalcode');
+		$dbh->do('ALTER TABLE Companies RENAME COLUMN dtmdateentered TO created_on') if exists $$data2{dtmdateentered} and ! exists $$data2{created_on};
+		$dbh->do('ALTER TABLE Companies RENAME COLUMN dtmlastupdated TO updated_on') if exists $$data2{dtmlastupdated} and ! exists $$data2{updated_on};
+		$dbh->do('ALTER TABLE Companies RENAME COLUMN dtmlastmodified TO updated_on') if exists $$data2{dtmlastmodified} and ! exists $$data2{updated_on};
+		$dbh->do('ALTER TABLE Companies RENAME COLUMN lngpricelist TO pricelist_id') if exists $$data2{lngpricelist} and ! exists $$data2{pricelist_id};
+		$dbh->do('ALTER TABLE Companies RENAME COLUMN strgstnumber TO fedtaxnumber') if exists $$data2{strgstnumber} and ! exists $$data2{fedtaxnumber};
+		$dbh->do('ALTER TABLE Companies RENAME COLUMN strpstnumber TO statetaxnumber') if exists $$data2{strpstnumber} and ! exists $$data2{statetaxnumber};
+		$dbh->do('ALTER TABLE Companies RENAME COLUMN strphone TO phone') if exists $$data2{strphone} and ! exists $$data2{phone};
+		$dbh->do('ALTER TABLE Companies RENAME COLUMN strfax TO fax') if exists $$data2{strfax} and ! exists $$data2{fax};
+
+
+    column_rename('Companies', 'strprovstate', 'state');
+    column_rename('Companies', 'lngsalesperson', 'salesrep_id');
+    column_rename('Companies', 'ysnmailinglist', 'mailinglist');
+    column_rename('Companies', 'strweburl', 'url');
+    column_rename('Companies', 'strcustomgreeting', 'greeting');
+    column_rename('Companies', 'dblpricingpercent', 'discount');
+    column_rename('Companies', 'strbusinesstype', 'business_type');
+    column_rename('Companies', 'strlegalbusname', 'business_name');
+    column_rename('Companies', 'legalform', 'business_form');
+    column_rename('Companies', 'strpresidentowner', 'president_owner');
+    column_rename('Companies', 'dtmbusinessstartdate', 'established');
+    column_rename('Companies', 'stremployees', 'employees');
+    column_rename('Companies', 'strannualsales', 'annual_sales');
+    column_rename('Companies', 'strbankname', 'bank_name');
+    column_rename('Companies', 'strbankbranch', 'bank_branch');
+    column_rename('Companies', 'strbankphone', 'bank_phone');
+    column_rename('Companies', 'strbankemail', 'bank_email');
+    column_rename('Companies', 'strbankfax', 'bank_fax');
+    column_rename('Companies', 'strbankaccount', 'bank_account');
+    column_rename('Companies', 'strbankaccountno', 'bank_account');
+    column_rename('Companies', 'strbankmanager', 'bank_manager');
+    column_rename('companies', 'lngcustomerid', 'id');
+    column_rename('companies', 'index', 'id');
+
 		$dbh->do('CREATE SEQUENCE companies_id_seq');
 		$dbh->do(q`SELECT setval('companies_id_seq', (SELECT MAX(id) FROM Companies))`);
 		$dbh->do(q`ALTER TABLE companies alter id set default nextval('companies_id_seq')`);
 		$dbh->do('DROP SEQUENCE IF EXISTS tbl_Customer_lngCustomerID_seq') if sets::isin( 'tbl_customer_lngcustomerid_seq', \@sequences );
 		$dbh->do('DROP SEQUENCE IF EXISTS companyindex_seq') if sets::isin( 'companyindex_seq', \@sequences );
 		sql::end_transaction( $dbh, $ac );
+  }  else {
+		$dbh->do( misc::load_file( $log, q{../../sql/Companies.sql}) );
+		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='companies'", 'column_name');
@@ -260,136 +293,160 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
     }
 	} # end if
 	if ( ! exists $$data{$openprint::Company::fields{last_order_id}} ) {
-if ( ! sets::isin( 'orders', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/Orders.sql}) ) or die $dbh->errstr();
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
-}
-		$dbh->do('ALTER TABLE companies ADD last_order_id INTEGER');
-		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_order_id) REFERENCES Orders (id)');
-		$dbh->do('UPDATE companies SET last_order_id = (SELECT MAX(id) FROM Orders WHERE company_id=companies.id)');
-		die $dbh->errstr() if $dbh->errstr();
+    if ( sets::isin( 'orders', \@tables ) ) {
+      $dbh->do('ALTER TABLE companies ADD last_order_id INTEGER');
+      $dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_order_id) REFERENCES Orders (id)');
+      $dbh->do('UPDATE companies SET last_order_id = (SELECT MAX(id) FROM Orders WHERE company_id=companies.id)');
+      die $dbh->errstr() if $dbh->errstr();
+    }
 	} # end if
 	if ( ! exists $$data{$openprint::Company::fields{last_quote_id}} ) {
-if ( ! sets::isin( 'quotes', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/Quotes.sql}) ) or die $dbh->errstr();
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
-}
-		$dbh->do('ALTER TABLE companies ADD last_quote_id INTEGER');
-		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_quote_id) REFERENCES Quotes (id)');
-		$dbh->do('UPDATE companies SET last_quote_id = (SELECT MAX(id) FROM Quotes WHERE companyindex=companies.id)');
-		die $dbh->errstr() if $dbh->errstr();
+    if ( sets::isin( 'quotes', \@tables ) ) {
+      $dbh->do('ALTER TABLE companies ADD last_quote_id INTEGER');
+      $dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_quote_id) REFERENCES Quotes (id)');
+      $dbh->do('UPDATE companies SET last_quote_id = (SELECT MAX(id) FROM Quotes WHERE company_id=companies.id)');
+      die $dbh->errstr() if $dbh->errstr();
+    }
 	} # end if
 	if ( ! exists $$data{$openprint::Company::fields{last_invoice_id}} ) {
-		$dbh->do('ALTER TABLE companies ADD last_invoice_id INTEGER');
-		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_invoice_id) REFERENCES Invoices (id)');
-		$dbh->do('UPDATE companies SET last_invoice_id = (SELECT MAX(id) FROM Invoices WHERE invoicee_id=companies.id)');
-		die $dbh->errstr() if $dbh->errstr();
-	} # end if
+    if ( sets::isin( 'invoices', \@tables ) ) {
+      $dbh->do('ALTER TABLE companies ADD last_invoice_id INTEGER');
+      $dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_invoice_id) REFERENCES Invoices (id)');
+      $dbh->do('UPDATE companies SET last_invoice_id = (SELECT MAX(id) FROM Invoices WHERE invoicee_id=companies.id)');
+      die $dbh->errstr() if $dbh->errstr();
+    }
+  } # end if
 
 } # end if
-
-
 
 if ( ! sets::isin( 'user_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/User_Types.sql}) );
 }
 
 if ( ! sets::isin( 'users', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/Users.sql}) ) or die $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
-	if ( $data ) {
-		if ( ! exists $$data{deleted} ) {
-			$log->debug("Adding deleted to Users");
-			my $ac = sql::start_transaction( $dbh );
-			$dbh->do(q`alter table Users add deleted boolean`);
-			$dbh->do(q`alter table Users alter deleted set default false`);
-			$dbh->do(q`update Users set deleted=false`);
-			$dbh->do(q`alter table Users alter deleted set not null`);
-			sql::end_transaction( $dbh, $ac );
-		} 
-		if ( ! exists $$data{wage} ) {
-			$log->debug("Adding wage to Users");
-			$dbh->do(q`alter table Users add wage float`);
-		} # end if
-		if ( exists $$data{strfirstname} ) {
-			$log->debug("renameing various columns getting rid of str");
-			my $ac = sql::start_transaction( $dbh );
-			$dbh->do(q`alter table Users rename column strfirstname to firstname`);
-			$dbh->do(q`alter table Users rename column strlastname to lastname`);
-			$dbh->do(q`alter table Users rename column stremail to email`);
-			$dbh->do(q`alter table Users rename column strphone to phone`);
-			$dbh->do(q`alter table Users rename column strfax to fax`);
-			$dbh->do(q`alter table Users rename column strtitle to title`);
-			$dbh->do(q`alter table Users rename column strsalutation to salutation`);
-			$dbh->do(q`alter table Users rename column dtmdateentered to created_on`);
-			$dbh->do(q`alter table Users rename column dtmlastmodified to updated_on`);
-			$dbh->do(q`alter table Users rename column chrtype to type`);
-			sql::end_transaction( $dbh, $ac );
-		}
-		$dbh->do(q`alter table Users rename column strpassword to password`) if exists $$data{strpassword};
-		$dbh->do(q{alter table Users drop column ysnHTMLEmails}) if exists $$data{ysnhtmlemails};
-		$dbh->do(q{alter table Users drop column stremployeetype}) if exists $$data{stremployeetype};
-		$dbh->do(q{alter table Users drop column strmailserverusername}) if exists $$data{strmailserverusername};
-		$dbh->do(q{alter table Users drop column strmailserverpassword}) if exists $$data{strmailserverpassword};
-		$dbh->do(q{alter table Users drop column lastlogin}) if exists $$data{lastlogin};
-		$dbh->do(q{alter table Users rename column index to id}) if exists $$data{index};
-		$dbh->do(q`alter table users add deleted boolean`) if ! exists $$data{deleted};
-		$dbh->do(q`alter table users add email_quotes_to_myself boolean default false`) if ! exists $$data{email_quotes_to_myself};
-		$dbh->do('ALTER TABLE USERS RENAME COLUMN ysnaccountactivation TO web_active') if exists $$data{ysnaccountactivation};
-		$dbh->do('ALTER TABLE USERS RENAME COLUMN companyindex TO company_id') if exists $$data{companyindex};
-		if ( ! exists $$data{purchasing_limit} ) {
-			$dbh->do(q`alter table Users add purchasing_limit	float`);
-		} # end if
-		if ( ! exists $$data{purchasing_total_limit} ) {
-			$dbh->do(q`alter table Users add purchasing_total_limit	float`);
-		} # end if
-		if ( exists $$data{usertype} and ! exists $$data{type} ) {
-			$dbh->do(q`alter table Users rename column usertype to type`);
-		} # end if
-		if ( exists $$data{strcustomgreeting} ) {
-			if ( exists $$data{greeting} ) {
-				$dbh->do(q`alter table Users DROP column strcustomgreeting`);
-			} else {
-				$dbh->do(q`alter table Users rename column strcustomgreeting to greeting`);
-			} # end if
-		}
-		$dbh->do(q{alter table users add howdidyouhearaboutusother text}) if ! exists $$data{howdidyouhearaboutusother};
-		if ( ! exists $$data{quote_level} ) {	
-			$dbh->do(q`alter table Users add quote_level integer`);
-			$dbh->do(q`alter table Users add foreign key (quote_level) REFERENCES QuoteLevels (id)`);
-		} # end if
-		if ( ! exists $$data{notes} ) {
-			$dbh->do('alter table users add notes text');
-		} # end if
-		if ( ! exists $$data{extension} ) {
-			$dbh->do('alter table users add extension text');
-		} # end if
-		if ( ! exists $$data{password_changed_on} ) {
-			$dbh->do('alter table users add password_changed_on TIMESTAMP WITH TIME ZONE');
-		} # end if
-		if ( ! exists $$data{asset_id} ) {
-			$dbh->do('ALTER TABLE users ADD asset_id INTEGER');
-		} # end if
-		if ( ! exists $$data{ftp_root} ) {
-			$dbh->do(q`alter table users add ftp_root text not null default ''`);
-		} # end if
-		if ( ! exists $$data{email_valid} ) {
-			$dbh->do(q`alter table users add email_valid BOOLEAN`);
-		} # end if
-	} # end if
-	if ( sets::isin( 'users_index_seq', \@sequences ) ) {
-		$log->debug("Adding users_id_seq");
-		if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {
-			$dbh->do('CREATE SEQUENCE users_id_seq');
-		} # end if
-		$dbh->do("ALTER TABLE Users ALTER id set default nextval('users_id_seq')" );
-		$dbh->do('DROP SEQUENCE users_index_seq');
-		$dbh->do(q`SELECT setval('users_id_seq', (SELECT max(id) FROM users))` );
-		@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
-	} # end if
-	$dbh->do('ALTER TABLE Users ALTER email DROP NOT NULL');
+  if ( sets::isin( 'tbl_customer_users', \@tables ) ) {
+    $dbh->do('ALTER TABLE tbl_customer_users RENAME to users');
+    column_rename('tbl_customer_users', 'lngcustomerid', 'company_id');
+    column_rename('tbl_customer_users', 'stremail', 'email');
+    column_rename('tbl_customer_users', 'strpassword', 'password');
+    column_rename('tbl_customer_users', 'strtitle', 'title');
+    column_rename('tbl_customer_users', 'strfirstname', 'firstname');
+    column_rename('tbl_customer_users', 'strlastname', 'lastname');
+    column_rename('tbl_customer_users', 'strsalutation', 'salutation');
+    column_rename('tbl_customer_users', 'strphone', 'phone');
+    column_rename('tbl_customer_users', 'strext', 'ext');
+    column_rename('tbl_customer_users', 'strfax', 'fax');
+    column_rename('tbl_customer_users', 'dtmdateentered', 'created_on');
+    column_rename('tbl_customer_users', 'dtmlastmodified', 'updated_on');
+    column_rename('tbl_customer_users', 'chrtype', 'type');
+    column_rename('tbl_customer_users', 'lnguserid', 'id');
+    column_rename('tbl_customer_users', 'lngcustomerid', 'company_id');
+    #column_rename('tbl_customer_users', 'ysnchangepassword', 'changepassword');
+		$dbh->do('CREATE SEQUENCE users_id_seq');
+		$dbh->do(q`SELECT setval('users_id_seq', (SELECT MAX(id) FROM Users))`);
+		$dbh->do(q`ALTER TABLE users alter id set default nextval('users_id_seq')`);
+		$dbh->do('DROP SEQUENCE IF EXISTS tbl_customer_users_lnguserid_se') if sets::isin( 'tbl_customer_users_lnguserid_se', \@sequences );
+  } else {
+    $dbh->do( misc::load_file( $log, q{../../sql/Users.sql}) ) or die $dbh->errstr();
+  }
+}
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
+if ( $data ) {
+  if ( ! exists $$data{deleted} ) {
+    $log->debug("Adding deleted to Users");
+    my $ac = sql::start_transaction( $dbh );
+    $dbh->do(q`alter table Users add deleted boolean`);
+    $dbh->do(q`alter table Users alter deleted set default false`);
+    $dbh->do(q`update Users set deleted=false`);
+    $dbh->do(q`alter table Users alter deleted set not null`);
+    sql::end_transaction( $dbh, $ac );
+    $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
+  } 
+  if ( ! exists $$data{wage} ) {
+    $log->debug("Adding wage to Users");
+    $dbh->do(q`alter table Users add wage float`);
+  } # end if
+  if ( exists $$data{strfirstname} ) {
+    $log->debug("renameing various columns getting rid of str");
+    my $ac = sql::start_transaction( $dbh );
+    $dbh->do(q`alter table Users rename column strfirstname to firstname`);
+    $dbh->do(q`alter table Users rename column strlastname to lastname`);
+    $dbh->do(q`alter table Users rename column stremail to email`);
+    $dbh->do(q`alter table Users rename column strphone to phone`);
+    $dbh->do(q`alter table Users rename column strfax to fax`);
+    $dbh->do(q`alter table Users rename column strtitle to title`);
+    $dbh->do(q`alter table Users rename column strsalutation to salutation`);
+    $dbh->do(q`alter table Users rename column dtmdateentered to created_on`);
+    $dbh->do(q`alter table Users rename column dtmlastmodified to updated_on`);
+    $dbh->do(q`alter table Users rename column chrtype to type`);
+    sql::end_transaction( $dbh, $ac );
+  }
+  $dbh->do('alter table Users rename column strpassword to password') if exists $$data{strpassword};
+  $dbh->do(q{alter table Users drop column ysnHTMLEmails}) if exists $$data{ysnhtmlemails};
+  $dbh->do(q{alter table Users drop column stremployeetype}) if exists $$data{stremployeetype};
+  $dbh->do(q{alter table Users drop column strmailserverusername}) if exists $$data{strmailserverusername};
+  $dbh->do(q{alter table Users drop column strmailserverpassword}) if exists $$data{strmailserverpassword};
+  $dbh->do(q{alter table Users drop column lastlogin}) if exists $$data{lastlogin};
+  $dbh->do(q{alter table Users rename column index to id}) if exists $$data{index};
+  $dbh->do(q`alter table users add deleted boolean`) if ! exists $$data{deleted};
+  $dbh->do(q`alter table users add email_quotes_to_myself boolean default false`) if ! exists $$data{email_quotes_to_myself};
+  $dbh->do('ALTER TABLE USERS RENAME COLUMN ysnaccountactivation TO web_active') if exists $$data{ysnaccountactivation};
+  $dbh->do('ALTER TABLE USERS RENAME COLUMN companyindex TO company_id') if exists $$data{companyindex};
+  if ( ! exists $$data{purchasing_limit} ) {
+    $dbh->do(q`alter table Users add purchasing_limit	float`);
+  } # end if
+  if ( ! exists $$data{purchasing_total_limit} ) {
+    $dbh->do(q`alter table Users add purchasing_total_limit	float`);
+  } # end if
+  if ( exists $$data{usertype} and ! exists $$data{type} ) {
+    $dbh->do(q`alter table Users rename column usertype to type`);
+  } # end if
+  if ( exists $$data{strcustomgreeting} ) {
+    if ( exists $$data{greeting} ) {
+      $dbh->do(q`alter table Users DROP column strcustomgreeting`);
+    } else {
+      $dbh->do(q`alter table Users rename column strcustomgreeting to greeting`);
+    } # end if
+  }
+  $dbh->do(q{alter table users add ftp_active  boolean not null default false}) if ! exists $$data{ftp_active};
+  $dbh->do(q{alter table users add mobile text}) if ! exists $$data{mobile};
+  $dbh->do(q{alter table users add sms text}) if ! exists $$data{sms};
+  $dbh->do(q{alter table users add howdidyouhearaboutus text}) if ! exists $$data{howdidyouhearaboutus};
+  $dbh->do(q{alter table users add howdidyouhearaboutusother text}) if ! exists $$data{howdidyouhearaboutusother};
+  if ( ! exists $$data{quote_level} ) {	
+    $dbh->do(q`alter table Users add quote_level integer`);
+    $dbh->do(q`alter table Users add foreign key (quote_level) REFERENCES QuoteLevels (id)`);
+  } # end if
+  if ( ! exists $$data{notes} ) {
+    $dbh->do('alter table users add notes text');
+  } # end if
+  if ( ! exists $$data{extension} ) {
+    $dbh->do('alter table users add extension text');
+  } # end if
+  if ( ! exists $$data{password_changed_on} ) {
+    $dbh->do('alter table users add password_changed_on TIMESTAMP WITH TIME ZONE');
+  } # end if
+  if ( ! exists $$data{asset_id} ) {
+    $dbh->do('ALTER TABLE users ADD asset_id INTEGER');
+  } # end if
+  if ( ! exists $$data{ftp_root} ) {
+    $dbh->do(q`alter table users add ftp_root text not null default ''`);
+  } # end if
+  if ( ! exists $$data{email_valid} ) {
+    $dbh->do(q`alter table users add email_valid BOOLEAN`);
+  } # end if
 } # end if
+if ( sets::isin( 'users_index_seq', \@sequences ) ) {
+  $log->debug("Adding users_id_seq");
+  if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {
+    $dbh->do('CREATE SEQUENCE users_id_seq');
+  } # end if
+  $dbh->do("ALTER TABLE Users ALTER id set default nextval('users_id_seq')" );
+  $dbh->do('DROP SEQUENCE users_index_seq');
+  $dbh->do(q`SELECT setval('users_id_seq', (SELECT max(id) FROM users))` );
+  @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
+} # end if
+$dbh->do('ALTER TABLE Users ALTER email DROP NOT NULL');
 
 if ( ! sets::isin( 'assets', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Assets.sql' ) );
@@ -959,6 +1016,11 @@ if ( sets::isin( 'projecttype_categories', \@tables ) ) {
 } else {
 	$dbh->do( misc::load_file( $log, q{../../sql/ProjectType_Categories.sql}) );
 } # end if
+
+if ( sets::isin( 'tbl_projecttypes', \@tables ) and !sets::isin( 'project_types', \@tables )) {
+  $dbh->do('ALTER TABLE tbl_projecttypes RENAME to project_types');
+  push @tables, 'project_types';
+}
 if ( sets::isin( 'project_types', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_types'", 'column_name');
 	if ( exists $$data{lngindex} ) {
@@ -971,6 +1033,9 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 		$dbh->do(q`SELECT setval('project_types_id_seq', (SELECT MAX(id) FROM PRoject_Types))` );
 		$dbh->do(q`DROP SEQUENCE IF EXISTS ProjectTypeIndex` );
 	} # end if
+  if (exists $$data{strurl} and !exists $$data{url}) {
+    $dbh->do('ALTER TABLE Project_Types RENAME strurl to url');
+  }
 	if ( exists $$data{strbasicurl} ) {
 		$dbh->do('ALTER TABLE Project_Types drop strbasicurl');
 	}
@@ -984,6 +1049,10 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 	if ( ! exists $$data{please_call} ) {
 		$dbh->do('ALTER TABLE Project_Types add please_call boolean not null default false');
 	} # endif
+	if ( ! exists $$data{category_id} ) {
+		$dbh->do('ALTER TABLE Project_Types add category_id integer');
+		$dbh->do('ALTER TABLE Project_Types add FOREIGN KEY (category_id) REFERENCES projecttype_categories (id)');
+	} # endif
 	if ( ! exists $$data{type} ) {
 		$dbh->do('ALTER TABLE project_types add type text');
 		$dbh->do(q`UPDATE project_types SET type='SinglePage'`);
@@ -996,14 +1065,6 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 	} # end if
 } else {
 	$dbh->do( misc::load_file( $log, q{../../sql/Project_Types.sql}) );
-} # end if
-if ( sets::isin( 'projecttype_categories', \@tables ) ) {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
-	if ( $data and ! exists $$data{sort} ) {
-		$dbh->do('ALTER TABLE projecttype_categories ADD sort integer');
-	} # end if
-} else {
-	$dbh->do( misc::load_file( $log, q{../../sql/ProjectType_Categories.sql}) );
 } # end if
 if ( ! sets::isin( 'project_statuses', \@tables ) ) {
 	$log->debug("Adding Project_Statuses");
@@ -1090,6 +1151,18 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 } # end if
+
+if ( ! sets::isin( 'host_types', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../../sql/Host_Types.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+}
+if ( ! sets::isin( 'manufacturers', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../../sql/Manufacturers.sql' ) ) or die $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manufacturers'", 'column_name');
+} 
+
+
 my $hosts_table;
 if ( ! sets::isin( 'hosts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Hosts.sql}) );
@@ -1147,11 +1220,27 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 }
 if ( sets::isin( 'tbl_projects', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_projects'", 'column_name');
-	if ( $data ) {
-		$dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
+	if ($data) {
+		$dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`) or die $dbh->errstr();
 	} # end if
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 } # end if
+
+$dbh->do('DROP FUNCTION IF EXISTS project_last_modified CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS service_type_equipment CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS project_division CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS remove_old_ri CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS last_modified CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS delivery_date CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS delivery_time CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS mtime CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS order_content_mtime CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS project_contents_mtime CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS project_valid_press CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS order_mtime CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS paper_family CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS pqs_version CASCADE');
+
 if ( ! sets::isin( 'projects', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Projects.sql}) ) or die;
 } else {
@@ -1181,13 +1270,20 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{markup} ) {
 		$dbh->do('ALTER TABLE projects add markup float');
 	}
-	if ( ! exists $$data{production_comments} ) {
-		$dbh->do('ALTER TABLE projects add production_comments TEXT');
-	}
-	if ( exists $$data{index} ) {
+	if ( exists $$data{lngprojectindex} ) {
+		$dbh->do('ALTER TABLE Projects rename column lngprojectindex to id');
+  } elsif ( exists $$data{index} ) {
 		$dbh->do('ALTER TABLE Projects rename column index to id');
+  }
+	if ( exists $$data{lngcustomerid} ) {
+		$dbh->do('ALTER TABLE Projects rename column lngcustomerid to company_id');
+  } elsif ( exists $$data{companyindex} ) {
 		$dbh->do('ALTER TABLE Projects rename column companyindex to company_id');
-		$dbh->do('ALTER TABLE Projects rename column userindex to user_id');
+  }
+	if ( exists $$data{lnguserindex} ) {
+		$dbh->do('ALTER TABLE Projects rename column lnguserindex to user_id') or die $dbh->errstr();
+  } elsif ( exists $$data{userindex} ) {
+		$dbh->do('ALTER TABLE Projects rename column userindex to user_id') or die $dbh->errstr();
 	} # end if
 	if ( ! exists $$data{summary} ) {
 		$dbh->do(q`alter table Projects add summary text`) or $log->error($dbh->errstr());
@@ -1211,6 +1307,12 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 		$log->debug("Add reprint_description to Projects");
 		$dbh->do(q`ALTER TABLE projects ADD reprint_description TEXT`) or $log->error($dbh->errstr());
 	} # end if
+  if (!exists $$data{currency_id}) {
+    print "Add currency_id to projects\n";
+    $dbh->do('ALTER TABLE projects add currency_id INTEGER');
+    $dbh->do('ALTER TABLE projects add FOREIGN KEY (currency_id) REFERENCES Currencies (id)');
+    $dbh->do("update projects set currency_id=(SELECT id from currencies where short='CAD')");
+  }
 	foreach my $field ( 'credit_card_fee', 'csr_commission', 'discount' ) {
 		if ( ! $openprint::Project::fields{$field} ) {
 			die "Want to add $field to Project but it's not in fields";
@@ -1226,27 +1328,48 @@ if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 }
 
 if ( sets::isin( 'tbl_service_types', \@tables ) ) {
-	$dbh->do(q{alter table tbl_Service_Types rename column strid to name});
-	$dbh->do(q{alter table tbl_Service_Types rename column strname to description});
-	$dbh->do(q{alter table tbl_service_types drop column strbasicurl});
-	$dbh->do(q{alter table tbl_service_types drop column strtemplateurl});
-	$dbh->do(q{alter table tbl_service_types drop column stremployeeurl});
-	$dbh->do(q{alter table tbl_Service_types add create_visible boolean});
-	$dbh->do(q{update tbl_Service_types set create_visible=true where ysncreatevisible='Y'});
-	$dbh->do(q{update tbl_Service_types set create_visible=true where ysncreatevisible='Y'});
-	$dbh->do(q{alter table tbl_Service_Types add view_visible boolean});
-	$dbh->do(q{update tbl_Service_types set view_visible=true where ysnviewvisible='Y'});
-	$dbh->do(q{alter table tbl_Service_Types rename column lngsort to sorting});
-	$dbh->do(q{alter table tbl_service_types drop ysncreatevisible});
-	$dbh->do(q{alter table tbl_service_types drop ysnviewvisible});
-	$dbh->do(q{alter table tbl_service_types rename column lngindex to id});
-	$dbh->do(q{alter table tbl_Service_Types rename to Service_Types});
-	$dbh->do(q{alter table service_types rename column strcategory to category});
-	$dbh->do(q`ALTER TABLE service_types ADD type TEXT`);
-	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`);
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_service_types LIMIT 1', {} );
+  if (exists $$data{strid}) {
+    $dbh->do(q{alter table tbl_Service_Types rename column strid to name}) or die $openprint::dbh->errstr();
+  }
+  if (exists $$data{strname}) {
+    $dbh->do(q{alter table tbl_Service_Types rename column strname to description}) or die $openprint::dbh->errstr();
+  }
+  if (exists $$data{strbasicurl}) {
+    $dbh->do(q{alter table tbl_service_types drop column strbasicurl}) or die $openprint::dbh->errstr();
+  }
+  if (exists $$data{strtemplateurl}) {
+    $dbh->do(q{alter table tbl_service_types drop column strtemplateurl}) or die $openprint::dbh->errstr();
+  }
+  if (exists $$data{stremployeeurl}) {
+    $dbh->do(q{alter table tbl_service_types drop column stremployeeurl}) or die $openprint::dbh->errstr();
+  }
+  if (exists $$data{strurl}) {
+    $dbh->do(q{alter table tbl_service_types rename column strurl to url}) or die $openprint::dbh->errstr();
+  }
+  if (!exists $$data{create_visible}) {
+    $dbh->do(q{alter table tbl_Service_types add create_visible boolean}) or die $openprint::dbh->errstr();
+    $dbh->do(q{update tbl_Service_types set create_visible=true where ysncreatevisible='Y'}) or die $openprint::dbh->errstr();
+    $dbh->do(q{alter table tbl_service_types drop ysncreatevisible}) or die $openprint::dbh->errstr();
+  }
+  if (!exists $$data{view_visible}) {
+    $dbh->do(q{alter table tbl_Service_Types add view_visible boolean}) or die $openprint::dbh->errstr();
+    $dbh->do(q{update tbl_Service_types set view_visible=true where ysnviewvisible='Y'}) or die $openprint::dbh->errstr();
+    $dbh->do(q{alter table tbl_service_types drop ysnviewvisible}) or die $openprint::dbh->errstr();
+  }
+  if (exists $$data{lngsort}) {
+    $dbh->do(q{alter table tbl_Service_Types rename column lngsort to sorting}) or die $openprint::dbh->errstr();
+  }
+  if (exists $$data{lngindex}) {
+    $dbh->do(q{alter table tbl_service_types rename column lngindex to id}) or die $openprint::dbh->errstr();
+  }
+	$dbh->do(q{alter table tbl_Service_Types rename to Service_Types}) or die $openprint::dbh->errstr();
+	$dbh->do(q{alter table service_types rename column strcategory to category}) or die $openprint::dbh->errstr();
+	$dbh->do(q`ALTER TABLE service_types ADD type TEXT`) or die $openprint::dbh->errstr();
+	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`) or die $openprint::dbh->errstr();
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 } elsif ( ! sets::isin( 'service_types', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/Service_Types.sql}) );
+	$dbh->do( misc::load_file( $log, '../../sql/Service_Types.sql') );
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 } # end if
 
@@ -1284,13 +1407,13 @@ if ( ! sets::isin( 'service_types', \@tables ) ) {
 	if ( ! exists $$data{allow_delete} ) {
 		$dbh->do('ALTER TABLE service_types add allow_delete BOOLEAN NOT NULL default true');
 	} # end if
+  if (exists $$data{strurl}) {
+    $dbh->do('ALTER TABLE service_types rename column strurl to url');
+  } elsif (exists $$data{strdetailedurl}) {
+    $dbh->do('ALTER TABLE service_types rename column strdetailedurl to url');
+  }
 }# end if
-if ( ! sets::isin( 'service_categories_id_seq', \@sequences ) ) {
-	$dbh->do('create sequence service_categories_id_seq;');
-	$dbh->do(q`alter table service_categories alter id set default nextval('service_categories_id_seq')`);
-	$dbh->do(q`select setval('service_categories_id_seq', (select max(id) from service_categories) )`);
-	$dbh->do(q`drop sequence servicecategoriesindex_seq`) if sets::isin( 'servicecategoriesindex_seq', \@sequences );
-} # en dif
+
 
 if ( ! sets::isin( 'projecttype_requiredservices', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/ProjectType_RequiredServices.sql}) );
@@ -1302,7 +1425,10 @@ if ( ! sets::isin( 'tbl_project_contents', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_project_contents'", 'column_name');
 	if ( ! exists $$data{servicetype_id} ) {
 		$log->debug("Adding servicetype_id to tbl_project_contents");
-		$dbh->do('ALTER TABLE tbl_project_contents add servicetype_id INTEGER NOT NULL');
+		$dbh->do('ALTER TABLE tbl_project_contents add servicetype_id INTEGER');
+    if (exists $$data{strservicetype}) {
+      $dbh->do('UPDATE tbl_project_contents SET servicetype_id=(SELECT id from service_types where name=strservicetype)');
+    }
 	} 
 	if ( ! exists $$data{operator_id} ) {
 		$log->debug("Adding operator_id to tbl_project_contents");
@@ -1369,17 +1495,24 @@ if ( ! sets::isin( 'project_files', \@tables ) ) {
 		$dbh->do('ALTER TABLE project_files ADD company_id INTEGER');
 		$dbh->do('ALTER TABLE project_files ADD FOREIGN KEY (company_id) REFERENCES Companies (id)');
 	} # end if
-	$dbh->do('ALTER TABLE project_files ALTER project_id DROP NOT NULL');
-	$dbh->do('ALTER TABLE project_files ALTER description DROP NOT NULL');
-	
+  if (!$$data{id}) {
+    $dbh->do('ALTER TABLE project_files DROP CONSTRAINT project_files_pkey') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE project_files ADD id serial') or die $dbh->errstr();
+    $dbh->do('CREATE INDEX project_files_project_id on project_files (project_id)') or die $dbh->errstr();
+    $dbh->do('ALTER table project_files add primary key (id)');
+  }
+  if (!exists $$data{project_id}) {
+    if (exists $$data{pid}) {
+      $dbh->do('ALTER TABLE project_files RENAME pid to project_id') or die $dbh->errstr();
+    } else {
+      $dbh->do('ALTER TABLE project_files ADD project_id INTEGER');
+    }
+  } else {
+    $dbh->do('ALTER TABLE project_files ALTER project_id DROP NOT NULL') or die $dbh->errstr();
+  }
+	$dbh->do('ALTER TABLE project_files ALTER description DROP NOT NULL') or die $dbh->errstr();
 }
 
-
-if ( ! sets::isin( 'manufacturers', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../../sql/Manufacturers.sql' ) ) or die $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manufacturers'", 'column_name');
-} 
 
 if ( ! sets::isin( 'todos', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Todos.sql' ) ) or die $dbh->errstr();
@@ -1580,14 +1713,14 @@ if ( sets::isin( 'tbl_material_categories', \@tables ) ) {
 	$dbh->do('ALTER TABLE tbl_material_categories RENAME to material_categories');
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 } # end if
+
 if ( ! sets::isin( 'material_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Material_Categories.sql}) ) or die $dbh->errstr();
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='material_categories'", 'column_name' );
-	$dbh->do(q{alter table tbl_Material_Categories rename column lngindex to id}) if exists $$data{lngindex};
-	$dbh->do(q{alter table tbl_Material_Categories rename column strid to name}) if exists $$data{strid};
-	$dbh->do(q{alter table tbl_Material_Categories drop column strname}) if exists $$data{strname};
-	$dbh->do(q{ALTER TABLE Materials ADD foreign key (category_id) REFERENCES Material_Categories (id)});
+	$dbh->do(q{alter table Material_Categories rename column lngindex to id}) if exists $$data{lngindex};
+	$dbh->do(q{alter table Material_Categories rename column strid to name}) if exists $$data{strid};
+	$dbh->do(q{alter table Material_Categories drop column strname}) if exists $$data{strname};
 	$dbh->do(q{alter table material_categories alter column id drop default});
 	if ( sets::isin('materialcategoriesindex_seq', \@sequences ) ) {
 		$dbh->do('drop sequence materialcategoriesindex_seq') 
@@ -1608,13 +1741,17 @@ if ( ! sets::isin( 'materials', \@tables ) ) {
 			$dbh->do(q{alter table tbl_Materials rename column strname to description}) if ! exists $$data{description};
 			$dbh->do(q{alter table tbl_Materials drop column strdetails}) if exists $$data{strdetails};
 			$dbh->do(q{alter table tbl_Materials drop column strdescription}) if exists $$data{strdescription};
-			$dbh->do(q{alter table tbl_Materials rename column lngsupplierindex to supplier_id}) if ! exists $$data{supplied_id};
-			$dbh->do(q{alter table tbl_Materials rename column lngcategoryindex to category_id}) if ! exists $$data{category_id};
+      $dbh->do(q{alter table tbl_Materials rename column lngsupplierindex to supplier_id}) if ! exists $$data{supplied_id};
+      if (exists $$data{lngcategoryindex}) {
+        $dbh->do(q{alter table tbl_Materials rename column lngcategoryindex to category_id}) if ! exists $$data{category_id};
+        $dbh->do(q{ALTER TABLE tbl_materials ADD foreign key (category_id) REFERENCES Material_Categories (id)});
+      }
 
 			$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt1 to taxexempt1}) if exists $$data{ysntaxexempt1};
 			$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt2 to taxexempt2}) if exists $$data{ysntaxexempt2};
 			$dbh->do(q{alter table tbl_Materials rename to Materials});
 		} # endif
+		sql::end_transaction( $dbh, $ac );
 	} else {
 		$dbh->do(misc::load_file( $log, '../../sql/Materials.sql') ) or die $dbh->errstr();
 	} # end if
@@ -1703,12 +1840,19 @@ if ( ! sets::isin( 'tbl_service_defaults', \@tables ) ) {
 }
 
 if ( sets::isin( 'tbl_services', \@tables ) ) {
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_services'", 'column_name');
 	$dbh->do(q{alter table tbl_Services rename column lngindex to id});
 	$dbh->do(q{alter table tbl_Services rename column strid to name});
 	$dbh->do(q{alter table tbl_Services rename column strname to description});
-	$dbh->do(q{alter table tbl_Services drop column strdetails});
-	$dbh->do(q{alter table tbl_Services drop column strdescription});
-	$dbh->do(q{alter table tbl_Services rename column lngsupplierindex to supplier_id});
+  if (exists $$data{strdetails}) {
+    $dbh->do(q{alter table tbl_Services drop column strdetails});
+  }
+  if (exists $$data{strdescription}) {
+    $dbh->do(q{alter table tbl_Services drop column strdescription});
+  }
+  if (exists $$data{lngsupplierindex}) {
+    $dbh->do(q{alter table tbl_Services rename column lngsupplierindex to supplier_id});
+  }
 	$dbh->do(q{alter table tbl_Services rename column lngcategoryindex to category_id});
 	$dbh->do(q{alter table tbl_Services rename column ysntaxexempt1 to taxexempt1});
 	$dbh->do(q{alter table tbl_Services rename column ysntaxexempt2 to taxexempt2});
@@ -1756,14 +1900,14 @@ if ( ! sets::isin( 'inks', \@tables ) ) {
 		$dbh->do(q{alter table inks alter id set NOT NULL});
 		$dbh->do(q{alter table inks add service_id INTEGER});
 		$dbh->do(q{alter table inks add material_id INTEGER});
-		$dbh->do(q{update inks set service_id=(SELECT lngindex from tbl_Services where strid=strserviceid)});
-		$dbh->do(q{update inks set material_id=(SELECT lngindex from tbl_Materials where strid=strmaterialid)});
+		$dbh->do(q{update inks set service_id=(SELECT id from Services where name=strserviceid)});
+		$dbh->do(q{update inks set material_id=(SELECT id from Materials where name=strmaterialid)});
 		$dbh->do(q{alter table inks add washups integer});
 		$dbh->do(q{alter table inks drop strserviceid});
 		$dbh->do(q{alter table inks drop strmaterialid});
 		$dbh->do(q{alter table inks rename column strpmsid to pmsid});
-		$dbh->do(q{alter table inks add foreign key (material_id) REFERENCES tbl_Materials (lngIndex)});
-		$dbh->do(q{alter table inks add foreign key (service_id) REFERENCES tbl_Services (lngIndex)});
+		$dbh->do(q{alter table inks add foreign key (material_id) REFERENCES Materials (id)});
+		$dbh->do(q{alter table inks add foreign key (service_id) REFERENCES Services (id)});
 		$dbh->do(q{alter table inks add PRIMARY key (id)});
 		$dbh->do(q{update inks set washups=1});
 		$dbh->do('ALTER TABLE inks add mix BOOLEAN NOT NULL default false') or die $dbh->errstr();
@@ -1810,6 +1954,12 @@ if ( sets::isin( 'tbl_service_categories', \@tables ) ) {
 if ( ! sets::isin( 'service_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Service_Categories.sql}) );
 } # end if
+if ( ! sets::isin( 'service_categories_id_seq', \@sequences ) ) {
+	$dbh->do('create sequence service_categories_id_seq;') or die $openprint::dbh->errstr();
+	$dbh->do(q`alter table service_categories alter id set default nextval('service_categories_id_seq')`) or die $openprint::dbh->errstr();
+	$dbh->do(q`select setval('service_categories_id_seq', (select max(id) from service_categories) )`) or die $openprint::dbh->errstr();
+	$dbh->do(q`drop sequence servicecategoriesindex_seq`) if sets::isin( 'servicecategoriesindex_seq', \@sequences );
+} # en dif
 
 if ( 0 ) {
 sql::insert(undef,undef,'configuration', [
@@ -2354,6 +2504,18 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	} # end if
 } # end if
 
+if ( ! sets::isin( 'rfidscanners', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../../sql/RFIDScanners.sql}) ) or die $dbh->errstr();
+	push @tables, 'rfidscanners';
+} else {
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM RFIDScanners LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{monitor} ) {
+		$dbh->do('ALTER TABLE RFIDScanners ADD monitor boolean not null default false');
+	} # end if
+} # end if
+}
+
 if ( ! sets::isin( 'rfidtags', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, q{../../sql/RFID.sql}) );
 } # end if
@@ -2370,104 +2532,123 @@ if ( ! sets::isin( 'user_service_defaults', \@tables ) ) {
 
 
 if ( ! sets::isin( 'product_categories', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/Product_Categories.sql}) );
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='product_categories'", 'column_name');
-	$dbh->do('ALTER TABLE Product_Categories ADD deleted boolean') if ! exists $$data{deleted};
-	if ( ! exists $$data{parent_ids} ) {
-		$log->debug("Adding parent_ids t product_categories");
-		$dbh->do('ALTER TABLE Product_Categories ADD parent_ids INTEGER[]') or die $dbh->errstr();
-	}
-	if ( exists $$data{parent_id} ) {
-		$log->debug("Adding  parent_id t product_categories");
-		$dbh->do("UPDATE product_categories set parent_ids = ARRAY[parent_id]") or die $dbh->errstr();
-		$dbh->do("ALTER TABLE Product_Categories DROP parent_id");
-	}
-	if ( ! exists $$data{deleted} ) {
-		$log->debug("Add deleted to Product_Categories");
-		$dbh->do('ALTER TABLE Product_Categories ADD deleted BOOLEAN NOT NULL default false') or die $dbh->errstr();
-  } elsif ( $$data{deleted}{is_nullable} ) {
-		$log->debug("Add deleted not null to Product_Categories");
-		$dbh->do('UPDATE Product_Categories SET deleted = false') or die $dbh->errstr();
-		$dbh->do('ALTER TABLE Product_Categories ALTER deleted SET NOT NULL') or die $dbh->errstr();
-	}
-	if ( ! exists $$data{sorting} ) {
-		$log->debug("Add sorting to Product_Categories");
-		$dbh->do('ALTER TABLE Product_Categories ADD sorting INTEGER') or die $dbh->errstr();
-	}
-	if ( ! exists $$data{album_id} ) {
-		$log->debug("Add album_id to Product Categories");
-		$dbh->do('ALTER TABLE Product_Categories ADD album_id    INTEGER');
-		$dbh->do('ALTER TABLE Product_Categories ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
-	}
-} # end if
+  if (sets::isin('categories', \@tables)) {
+    $dbh->do('ALTER TABLE categories RENAME to product_categories');
+  } else {
+    $dbh->do( misc::load_file( $log, q{../../sql/Product_Categories.sql}) );
+  }
+}
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='product_categories'", 'column_name');
+if ( ! exists $$data{parent_ids} ) {
+  $log->debug("Adding parent_ids t product_categories");
+  $dbh->do('ALTER TABLE Product_Categories ADD parent_ids INTEGER[]') or die $dbh->errstr();
+}
+if ( exists $$data{parent_id} ) {
+  $log->debug("Adding  parent_id t product_categories");
+  $dbh->do("UPDATE product_categories set parent_ids = ARRAY[parent_id]") or die $dbh->errstr();
+  $dbh->do("ALTER TABLE Product_Categories DROP parent_id");
+}
+if ( ! exists $$data{deleted} ) {
+  $log->debug("Add deleted to Product_Categories");
+  $dbh->do('ALTER TABLE Product_Categories ADD deleted BOOLEAN NOT NULL default false') or die $dbh->errstr();
+} elsif ( $$data{deleted}{is_nullable} ) {
+  $log->debug("Add deleted not null to Product_Categories");
+  $dbh->do('UPDATE Product_Categories SET deleted = false') or die $dbh->errstr();
+  $dbh->do('ALTER TABLE Product_Categories ALTER deleted SET NOT NULL') or die $dbh->errstr();
+}
+if ( ! exists $$data{sorting} ) {
+  $log->debug("Add sorting to Product_Categories");
+  $dbh->do('ALTER TABLE Product_Categories ADD sorting INTEGER') or die $dbh->errstr();
+}
+if ( ! exists $$data{album_id} ) {
+  $log->debug("Add album_id to Product Categories");
+  $dbh->do('ALTER TABLE Product_Categories ADD album_id    INTEGER');
+  $dbh->do('ALTER TABLE Product_Categories ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
+}
 
 if ( ! sets::isin( 'products', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/Products.sql}) );
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='products'", 'column_name');
-	if ( ! $data ) { die $openprint::dbh->errstr(); }
-	$dbh->do('ALTER TABLE Products ADD deleted boolean') if ! exists $$data{deleted};
-	$dbh->do('ALTER TABLE Products ADD sort INTEGER') if ! exists $$data{sort};
-	if ( ! exists $$data{project_id} ) {
-		$dbh->do('ALTER TABLE Products ADD project_id INTEGER');
-		$dbh->do('ALTER TABLE Products ADD FOREIGN KEY (project_id) REFERENCES projects (id)');
-	} # en dif
-	if ( ! exists $$data{owner_id} ) {
-		$dbh->do('ALTER TABLE Products ADD owner_id INTEGER');
-		$dbh->do('ALTER TABLE Products ADD FOREIGN KEY (owner_id) REFERENCES companies (id)');
-	}
-	if ( exists $$data{ysntaxexempt1} ) {
-		if ( ! exists $$data{taxexempt1} ) {
-			$dbh->do(q{alter table products rename column ysntaxexempt1 to taxexempt1});
-		} else {
-			$dbh->do(q{alter table products drop column ysntaxexempt1});
-		} # end if
-	} elsif ( ! exists $$data{taxexempt1} ) {
-		$dbh->do(q{alter table products add ysntaxexempt1 CHAR(1) default 'N'});
-	} # end if
-	if ( exists $$data{ysntaxexempt2} ) {
-		if ( ! exists $$data{taxexempt2} ) {
-			$dbh->do(q{alter table products rename column ysntaxexempt2 to taxexempt2});
-		} else {
-			$dbh->do(q{alter table products drop column ysntaxexempt2});
-		} # end if
-	} elsif ( ! exists $$data{taxexempt2} ) {
-		$dbh->do(q{alter table products add ysntaxexempt2 CHAR(1) default 'N'});
-	} # end if
-	if ( ! exists $$data{created_on} ) {
-		$dbh->do('alter table products add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
-	} # end if
-	if ( ! exists $$data{id} ) {
-		$dbh->do('ALTER TABLE products ADD id SERIAL');
-		$dbh->do('ALTER TABLE products ADD PRIMARY KEY (id)');
-	} # end if
-	if ( ! exists $$data{album_id} ) {
-		$dbh->do('ALTER TABLE products ADD album_id INTEGER');
-		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
-	} # end if
-	if ( ! exists $$data{manufacturer_id} ) {
-		$dbh->do('ALTER TABLE products ADD manufacturer_id INTEGER');
-		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
-	} # end if
-	if ( ! exists $$data{category_id} ) {
-		$dbh->do('ALTER TABLE products ADD category_id INTEGER');
-		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (category_id) REFERENCES Product_Categories (id)');
-	} # end if
-	if ( ! exists $$data{weight} ) {
-		$dbh->do('ALTER TABLE products ADD weight float');
-	} # end if
-	if ( ! exists $$data{supplier_id} ) {
-		print "Adding supplier_id to Products\n";
-		$dbh->do('ALTER TABLE Products ADD supplier_id INTEGER');
-		$dbh->do('ALTER TABLE Products ADD FOREIGN KEY (supplier_id) REFERENCES companies (id)');
-	}
+  if (sets::isin('tbl_products', \@tables)) {
+    my $ac = sql::start_transaction( $dbh );
+    $dbh->do('ALTER TABLE tbl_products RENAME to products');
+    my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='products'", 'column_name');
+    if (!exists $$data{description} and exists $$data{name} and exists $$data{strid}) {
+      #$dbh->do('ALTER TABLE products rename COLUMN name TO description') or die $dbh->errstr();
+      #$dbh->do('ALTER TABLE products RENAME COLUMN strid to name') or die $dbh->errstr();
+    }
+    sql::end_transaction( $dbh, $ac );
+  } else {
+    $dbh->do( misc::load_file( $log, q{../../sql/Products.sql}) );
+  }
+} 
+
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='products'", 'column_name');
+if ( ! $data ) { die $openprint::dbh->errstr(); }
+$dbh->do('ALTER TABLE Products ADD deleted boolean NOT NULL DEFAULT FALSE') if ! exists $$data{deleted};
+$dbh->do('ALTER TABLE Products ADD sort INTEGER') if ! exists $$data{sort};
+if ( ! exists $$data{project_id} ) {
+  $dbh->do('ALTER TABLE Products ADD project_id INTEGER');
+  $dbh->do('ALTER TABLE Products ADD FOREIGN KEY (project_id) REFERENCES projects (id)');
+} # en dif
+if ( ! exists $$data{owner_id} ) {
+  $dbh->do('ALTER TABLE Products ADD owner_id INTEGER');
+  $dbh->do('ALTER TABLE Products ADD FOREIGN KEY (owner_id) REFERENCES companies (id)');
+}
+if ( exists $$data{ysntaxexempt1} ) {
+  if ( ! exists $$data{taxexempt1} ) {
+    $dbh->do(q{alter table products rename column ysntaxexempt1 to taxexempt1});
+  } else {
+    $dbh->do(q{alter table products drop column ysntaxexempt1});
+  } # end if
+} elsif ( ! exists $$data{taxexempt1} ) {
+  $dbh->do(q{alter table products add ysntaxexempt1 CHAR(1) default 'N'});
 } # end if
+if ( exists $$data{ysntaxexempt2} ) {
+  if ( ! exists $$data{taxexempt2} ) {
+    $dbh->do(q{alter table products rename column ysntaxexempt2 to taxexempt2});
+  } else {
+    $dbh->do(q{alter table products drop column ysntaxexempt2});
+  } # end if
+} elsif ( ! exists $$data{taxexempt2} ) {
+  $dbh->do(q{alter table products add ysntaxexempt2 CHAR(1) default 'N'});
+} # end if
+if ( ! exists $$data{created_on} ) {
+  $dbh->do('alter table products add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+} # end if
+if ( ! exists $$data{id} ) {
+  $dbh->do('ALTER TABLE products ADD id SERIAL');
+  $dbh->do('ALTER TABLE products ADD PRIMARY KEY (id)');
+} # end if
+if ( ! exists $$data{album_id} ) {
+  $dbh->do('ALTER TABLE products ADD album_id INTEGER');
+  $dbh->do('ALTER TABLE products ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
+} # end if
+if ( ! exists $$data{manufacturer_id} ) {
+  $dbh->do('ALTER TABLE products ADD manufacturer_id INTEGER');
+  $dbh->do('ALTER TABLE products ADD FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
+} # end if
+if ( ! exists $$data{category_id} ) {
+  if (exists $$data{category}) {
+  $dbh->do('ALTER TABLE products RENAME COLUMN category TO category_id');
+  } else {
+  $dbh->do('ALTER TABLE products ADD category_id INTEGER');
+  $dbh->do('ALTER TABLE products ADD FOREIGN KEY (category_id) REFERENCES Product_Categories (id)');
+}
+} # end if
+if ( ! exists $$data{weight} ) {
+  $dbh->do('ALTER TABLE products ADD weight float');
+} # end if
+if ( ! exists $$data{supplier_id} ) {
+  print "Adding supplier_id to Products\n";
+  $dbh->do('ALTER TABLE Products ADD supplier_id INTEGER');
+  $dbh->do('ALTER TABLE Products ADD FOREIGN KEY (supplier_id) REFERENCES companies (id)');
+}
 
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {
+  print "Adding product_specifications\n";
 	$dbh->do( misc::load_file( $log, q{../../sql/Product_Specifications.sql}) );
 } # end if
 if ( ! sets::isin( 'product_prices', \@tables ) ) {
+  print "Adding product_pricess\n";
 	$dbh->do( misc::load_file( $log, q{../../sql/Product_Prices.sql}) );
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='product_prices'", 'column_name');
@@ -2486,6 +2667,7 @@ if ( ! sets::isin( 'invoiced_products', \@tables ) ) {
 	} # end if
 } # end if
 if ( ! sets::isin( 'sessions', \@tables ) ) {
+  print "Adding sessions\n";
 	$dbh->do( misc::load_file( $log, q{../../sql/Sessions.sql}) );
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='sessions'", 'column_name');
@@ -2499,16 +2681,46 @@ if ( ! sets::isin( 'sessions', \@tables ) ) {
 } # end if
 
 if ( sets::isin( 'tbl_quotes', \@tables ) ) {
-	$dbh->do('ALTER TABLE tbl_Quotes rename to Quotes');
-	$dbh->do('ALTER TABLE Quotes rename column index to id');
-	$dbh->do('ALTER TABLE tbl_Quote_Users_For rename column quoteindex to quote_id');
-	$dbh->do('ALTER TABLE tbl_Quote_Users_By rename column quoteindex to quote_id');
-	$dbh->do('ALTER TABLE tbl_Quote_Details rename column quoteindex to quote_id');
-	$dbh->do('ALTER TABLE tbl_Quote_Details rename column projectindex to project_id');
-	$dbh->do('DROP SEQUENCE IF EXISTS quotes_id_seq');
+  my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_quotes'", 'column_name');
+  if (exists $$data{lngquoteid}) {
+    $dbh->do('ALTER TABLE tbl_quotes rename column lngquoteid to id');
+  } elsif (exists $$data{index}) {
+    $dbh->do('ALTER TABLE tbl_quotes rename column index to id');
+  }
+  if (exists $$data{lngcustomerid}) {
+    $dbh->do('ALTER TABLE tbl_quotes RENAME COLUMN lngcustomerid to company_id');
+  }
+  if (exists $$data{lnguserid}) {
+    $dbh->do('ALTER TABLE tbl_quotes RENAME COLUMN lnguserid to user_id');
+  }
+  $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_quote_user_for'", 'column_name');
+  if (exists $$data{lngquoteid}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Users_For rename column lngquoteid to quote_id');
+  } elsif (exists $$data{quoteindex}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Users_For rename column quoteindex to quote_id');
+  }
+  $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_quote_user_by'", 'column_name');
+  if (exists $$data{lngquoteid}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Users_For rename column lngquoteid to quote_id');
+  } elsif (exists $$data{quoteindex}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Users_By rename column quoteindex to quote_id');
+  }
+  $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_quote_details'", 'column_name');
+  if (exists $$data{lngquoteid}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Details rename column lngquoteid to quote_id');
+  } elsif (exists $$data{quoteindex}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Details rename column quoteindex to quote_id');
+  }
+  if (exists $$data{lngprojectindex}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Details rename column lngprojectindex to project_id');
+  } else {
+    $dbh->do('ALTER TABLE tbl_Quote_Details rename column projectindex to project_id');
+  }
+  $dbh->do('DROP SEQUENCE IF EXISTS quotes_id_seq');
 	$dbh->do('CREATE SEQUENCE quotes_id_seq');
-	$dbh->do("SELECT setval('quotes_id_seq', (select MAX(id) FROM Quotes) )");
-	$dbh->do("ALTER TABLE Quotes alter column id set default nextval('quotes_id_seq')");
+	$dbh->do("SELECT setval('quotes_id_seq', (select MAX(id) FROM tbl_quotes) )");
+	$dbh->do("ALTER TABLE tbl_quotes alter column id set default nextval('quotes_id_seq')");
+	$dbh->do('ALTER TABLE tbl_quotes rename to quotes');
 	push @tables, 'quotes';
 } # end if
 
@@ -2523,7 +2735,7 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 		if ( ! exists $$data{currency_id} ) {
 			$dbh->do('ALTER TABLE quotes add currency_id INTEGER');
 			$dbh->do('ALTER TABLE quotes add FOREIGN KEY (currency_id) REFERENCES Currencies (id)');
-			$dbh->do('UPDATE TABLE Quotes set currency_id = (SELECT id FROM currencies where name=strcurrencyname)');
+			$dbh->do('UPDATE Quotes set currency_id = (SELECT id FROM currencies where name=strcurrencyname)');
 		} # end if
 		$dbh->do('ALTER TABLE quotes DROP column strcurrencyname') if ( exists $$data{strcurrencyname} );
 		$dbh->do('ALTER TABLE quotes DROP column strcurrencysymbol') if ( exists $$data{strcurrencysymbol} );
@@ -2532,7 +2744,7 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 		if ( ! exists $$data{for_company_id} ) {
 			$dbh->do('ALTER TABLE quotes add for_company_id INTEGER');
 			$dbh->do('ALTER TABLE quotes add FOREIGN KEY (for_company_id) REFERENCES Companies (id)');
-			$dbh->do('UPDATE TABLE Quotes set for_company_id = companyindex');
+			$dbh->do('UPDATE Quotes set for_company_id = company_id') or die $dbh->errstr();
 		} # end if
 	} # end if
 
@@ -2579,6 +2791,150 @@ if ( $data ) {
 	$dbh->do(q`ALTER TABLE tbl_Quote_Details rename projectindex to project_id`) if exists $$data{projectindex};
 	sql::end_transaction( $dbh, $ac );
 } # end if
+
+if (!sets::isin( 'log_actions', \@tables ) ) {
+  $dbh->do( misc::load_file( $log, '../../sql/Log_Actions.sql' ) );
+}
+
+if ( sets::isin( 'log', \@tables ) ) {
+	$dbh->do('ALTER TABLE log RENAME TO logs');
+	$dbh->do('ALTER sequence log_id_seq RENAME TO logs_id_seq');
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+} # en dif
+
+if ( ! sets::isin( 'logs', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../../sql/Logs.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='logs'", 'column_name');
+	if ( exists $$data{action_type} ) {
+		$dbh->do('ALTER TABLE Logs rename action_type to action_id');
+		$dbh->do('ALTER TABLE Logs ADD FOREIGN KEY (action_id) REFERENCES Log_Actions (id)');
+  } elsif (!exists $$data{action_id}) {
+    $dbh->do('ALTER TABLE Logs add action_id INTEGER');
+		$dbh->do('ALTER TABLE Logs ADD FOREIGN KEY (action_id) REFERENCES Log_Actions (id)');
+	} # end if
+	if ( ! exists $$data{object_type_id} ) {
+		$dbh->do('ALTER TABLE Logs add object_type_id INTEGER');
+		$dbh->do('ALTER TABLE Logs add FOREIGN KEY (object_type_id) REFERENCES Object_types (id)');
+	}
+	if (  exists $$data{object} ) {
+		$dbh->do('UPDATE Logs set object_type_id = (SELECT id FROM object_types where name=object)');
+		$dbh->do('ALTER TABLE Logs DROP object');
+	}
+	if ( ! exists $$data{object_id} ) {
+		$dbh->do('ALTER TABLE Logs add object_id INTEGER');
+	} # end if
+  if (!exists $$data{id}) {
+    $dbh->do('ALTER TABLE Logs add id serial');
+    $dbh->do('ALTER TABLE Logs add PRIMARY KEY (id)');
+  }
+	if ( ! exists $$data{company_id} ) {
+		$dbh->do('ALTER TABLE Logs add company_id INTEGER');
+		$dbh->do('ALTER TABLE Logs add FOREIGN KEY (company_id) REFERENCES Companies (id)');
+	}
+	if ( ! exists $$data{host_id} ) {
+		$dbh->do('ALTER TABLE Logs add host_id INTEGER');
+		$dbh->do('ALTER TABLE Logs add FOREIGN KEY (host_id) REFERENCES Hosts (id)') or die $dbh->errstr();
+	}
+	if ( ! exists $$data{user_id} ) {
+    if (exists $$data{userid}) {
+      $dbh->do('ALTER TABLE Logs rename column userid to user_id');
+    }
+		$dbh->do('ALTER TABLE Logs add user_id INTEGER');
+		$dbh->do('ALTER TABLE Logs add FOREIGN KEY (user_id) REFERENCES Users (id)');
+	}
+  if (!exists $$data{url}) {
+    if (exists $$data{page}) {
+      $dbh->do('ALTER TABLE Logs rename column page to url');
+    } else {
+      $dbh->do('ALTER TABLE Logs add url TEXT');
+    }
+  }
+  if (!exists $$data{note}) {
+    if (exists $$data{params}) {
+      $dbh->do('ALTER TABLE Logs rename column params to note');
+    } else {
+      $dbh->do('ALTER TABLE Logs add note TEXT');
+    }
+  }
+  if (!exists $$data{date_time}) {
+    if (exists $$data{reqtim}) {
+      $dbh->do('ALTER TABLE Logs rename column reqtime to date_time');
+    } else {
+      $dbh->do('ALTER TABLE Logs add date_time timestamp with time zone not null default NOW()');
+    }
+  }
+} # end if
+my %config_actions = (
+	'Add Currency'			=>	76,
+	'Update Configuration' => 77,
+	'Login Failed'	=> 78,
+	'Switch Company'	=>	79,
+	'Login'		=>	2,
+	'Logout'	=>	3,
+	'Service Copy'	=>	27,
+	'Host blacklisted'	=>	99,
+	'Host online'	=>	100,
+	'Host offline'	=>	101,
+	'Host rebooted'	=>	102,
+	'Long response time'	=>	103,
+	'Credit Information Imported'	=>	104,
+	'Credit Information Changed'	=>	105,
+	'Copy Material'	=>	43,
+	'Copy Product'	=>	60,
+	'Update ProjectType Template'	=>	52,
+	'New ProjectType Template'	=>	55,
+	'Export ProjectType Templates'	=>	54,
+	'License Assigned'	=>	200,
+	'License Unassigned'	=>	201,
+	'Intrusion'		=>	202,
+);
+foreach my $config_action ( keys %config_actions ) {
+	my $Action = openprint::Log_Action->find_one( name=>$config_action);
+	if ( $Action ) {
+		if ( $Action->id() != $config_actions{$config_action} ) {
+			$log->debug("Must renumber the action: $config_action want $config_actions{$config_action} have $$Action{id}");
+
+			# Look for existing actions with this id
+			my $RealAction = openprint::Log_Action->find_one(id=>$config_actions{$config_action});
+			if ( ! $RealAction ) {
+				# No existing action
+				$log->debug("No existing");
+
+				# Create an action type with the right name, and the right id, but we already have one with the right name, and the wrong id, so... we are renumbering?
+				my $ac = sql::start_transaction( $dbh );
+				my $New = $Action->copy();
+				$New->save({id=>$config_actions{$config_action}}, 1 );
+				foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
+					$Log->save({action_id=>$config_actions{$config_action}});
+				} # end foreach Log
+				sql::end_transaction( $dbh, $ac );
+			} elsif ( $RealAction->name() eq $config_action ) {
+				# Shouldnt happen, basically means that there must be duplicates
+				foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
+					$Log->save({'action_id'=>$config_actions{$config_action}});
+				} # end foreach Log
+			} else {
+				die "Need to manually update $config_actions{$config_action} $config_action entries";
+			} # end if
+			$Action->destroy();
+		} # end if
+	} else {
+		$log->debug("Adding new action");	
+		$Action = new openprint::Log_Action();
+		$_ = $Action->save({name=>$config_action,description=>$config_action, id=>$config_actions{$config_action}}, 1);
+    die $_ if $_;
+	} # end if
+} # end foreach config_action
+
+$dbh->do(q`UPDATE Logs SET action_id=(SELECT id FROM log_actions WHERE name='Edit Company') WHERE action_id=(SELECT id FROM Log_Actions WHERE name='Update Company Profile')`);
+$dbh->do(q`DELETE FROM Log_Actions WHERE name='Update Company Profile'`);
+$dbh->do(q`UPDATE Logs SET action_id=(SELECT id FROM log_actions WHERE name='Edit Company') WHERE action_id=(SELECT id FROM Log_Actions WHERE name='Update Company')`);
+$dbh->do(q`DELETE FROM Log_Actions WHERE name='Update Company'`);
+die $dbh->errstr() if $dbh->errstr();
+
+
 new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>8}) if ! openprint::ServiceType_Category->find('name'=>'Materials');
 if ( my $ServiceType = openprint::ServiceType->find_one('name'=>'Paper') ) {
 	$ServiceType->save({'category'=>'Materials'}) if $ServiceType->category() ne 'Materials';
@@ -2996,18 +3352,6 @@ print "Adding predefined to Projects\n";
 	$dbh->do(q`alter table Projects alter predefined set not null`);
 	sql::end_transaction( $dbh, $ac );
 } # end if
-
-if ( ! sets::isin( 'rfidscanners', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/RFIDScanners.sql}) ) or die $dbh->errstr();
-	push @tables, 'rfidscanners';
-} else {
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM RFIDScanners LIMIT 1', {} );
-if ( $data ) {
-	if ( ! exists $$data{monitor} ) {
-		$dbh->do('ALTER TABLE RFIDScanners ADD monitor boolean not null default false');
-	} # end if
-} # end if
-}
 
 if ( ! sets::isin( 'surveys', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Surveys.sql}) ) or die $dbh->errstr();
@@ -4818,10 +5162,6 @@ if ( sets::isin('users', \@tables ) ) {
 } # end if
 
 
-if ( ! sets::isin( 'host_types', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../../sql/Host_Types.sql' ) );
-	die $dbh->errstr() if $dbh->errstr();
-}
 if ( sets::isin( 'hosts', \@tables ) ) {
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='hosts'", 'column_name');
 if ( ! exists $$data{count} ) {
@@ -5029,97 +5369,7 @@ if ( ! sets::isin( 'messages', \@tables ) ) {
 		$dbh->do('ALTER TABLE Messages add conversation_id INTEGER');
 	} # end if
 } # end if
-if ( sets::isin( 'log', \@tables ) ) {
-	$dbh->do('ALTER TABLE log RENAME TO logs');
-	$dbh->do('ALTER sequence log_id_seq RENAME TO logs_id_seq');
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
-} # en dif
-if ( ! sets::isin( 'logs', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../../sql/Logs.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='logs'", 'column_name');
-	if ( exists $$data{action_type} ) {
-		$dbh->do('ALTER TABLE Logs rename action_type to action_id');
-		$dbh->do('ALTER TABLE Logs ADD FOREIGN KEY (action_id) REFERENCES Log_Actions (id)');
-	} # end if
-	if ( ! exists $$data{object_type_id} ) {
-		$dbh->do('ALTER TABLE Logs add object_type_id INTEGER');
-		$dbh->do('ALTER TABLE Logs add FOREIGN KEY (object_type_id) REFERENCES Object_types (id)');
-	}
-	if (  exists $$data{object} ) {
-		$dbh->do('UPDATE Logs set object_type_id = (SELECT id FROM object_types where name=object)');
-		$dbh->do('ALTER TABLE Logs DROP object');
-	}
-	if ( ! exists $$data{object_id} ) {
-		$dbh->do('ALTER TABLE Logs add object_id INTEGER');
-	} # end if
-} # end if
-my %config_actions = (
-	'Add Currency'			=>	76,
-	'Update Configuration' => 77,
-	'Login Failed'	=> 78,
-	'Switch Company'	=>	79,
-	'Login'		=>	2,
-	'Logout'	=>	3,
-	'Service Copy'	=>	27,
-	'Host blacklisted'	=>	99,
-	'Host online'	=>	100,
-	'Host offline'	=>	101,
-	'Host rebooted'	=>	102,
-	'Long response time'	=>	103,
-	'Credit Information Imported'	=>	104,
-	'Credit Information Changed'	=>	105,
-	'Copy Material'	=>	43,
-	'Copy Product'	=>	60,
-	'Update ProjectType Template'	=>	52,
-	'New ProjectType Template'	=>	55,
-	'Export ProjectType Templates'	=>	54,
-	'License Assigned'	=>	200,
-	'License Unassigned'	=>	201,
-	'Intrusion'		=>	202,
-);
-foreach my $config_action ( keys %config_actions ) {
-	my $Action = openprint::Log_Action->find_one( name=>$config_action);
-	if ( $Action ) {
-		if ( $Action->id() != $config_actions{$config_action} ) {
-			$log->debug("Must renumber the action: $config_action want $config_actions{$config_action} have $$Action{id}");
 
-			# Look for existing actions with this id
-			my $RealAction = openprint::Log_Action->find_one('id'=>$config_actions{$config_action});
-			if ( ! $RealAction ) {
-				# No existing action
-				$log->debug("No existing");
-
-				# Create an action type with the right name, and the right id, but we already have one with the right name, and the wrong id, so... we are renumbering?
-				my $ac = sql::start_transaction( $dbh );
-				my $New = $Action->copy();
-				$New->save({'id'=>$config_actions{$config_action}}, 1 );
-				foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
-					$Log->save({'action_id'=>$config_actions{$config_action}});
-				} # end foreach Log
-				sql::end_transaction( $dbh, $ac );
-			} elsif ( $RealAction->name() eq $config_action ) {
-				# Shouldnt happen, basically means that there must be duplicates
-				foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
-					$Log->save({'action_id'=>$config_actions{$config_action}});
-				} # end foreach Log
-			} else {
-				die "Need to manually update $config_actions{$config_action} $config_action entries";
-			} # end if
-			$Action->destroy();
-		} # end if
-	} else {
-		$log->debug("Adding new action");	
-		$Action = new openprint::Log_Action();
-		$Action->save({name=>$config_action,id=>$config_actions{$config_action}}, 1);
-	} # end if
-} # end foreach config_action
-$dbh->do(q`UPDATE Logs SET action_id=(SELECT id FROM log_actions WHERE name='Edit Company') WHERE action_id=(SELECT id FROM Log_Actions WHERE name='Update Company Profile')`);
-$dbh->do(q`DELETE FROM Log_Actions WHERE name='Update Company Profile'`);
-$dbh->do(q`UPDATE Logs SET action_id=(SELECT id FROM log_actions WHERE name='Edit Company') WHERE action_id=(SELECT id FROM Log_Actions WHERE name='Update Company')`);
-$dbh->do(q`DELETE FROM Log_Actions WHERE name='Update Company'`);
-die $dbh->errstr() if $dbh->errstr();
 
 
 if ( ! sets::isin( 'comments', \@tables ) ) {
@@ -5818,6 +6068,10 @@ if ( ! sets::isin('software', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Software.sql}) );
 	die if $dbh->errstr();
 } # end if
+if ( ! sets::isin('sites', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../../sql/Sites.sql}) );
+	die if $dbh->errstr();
+} # end if
 if ( ! sets::isin('licenses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Licenses.sql}) );
 	die if $dbh->errstr();
@@ -5855,7 +6109,7 @@ if ( ! sets::isin('backups', \@tables ) ) {
 	my $data = $dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='backups'", 'column_name');
   if ( ! exists $$data{type} ) {
     $dbh->do('ALTER TABLE Backups ADD type TEXT') or die $dbh->errstr();
-    if ( exists $$data{type_id} ) {
+    if ( exists $$data{type_id} and sets::isin('backup_types', \@tables)) {
       $dbh->do('UPDATE Backups SET type=(SELECT lc(name) FROM Backup_Types WHERE backup_types.id=backups.type_id)') or die $dbh->errstr();
     }
   }
