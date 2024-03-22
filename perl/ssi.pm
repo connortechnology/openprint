@@ -1373,6 +1373,9 @@ sub bootstrap_navmenu {
   }
 $log->error("categoryies @categories");
 	foreach my $category ( @categories ) {
+    my $category_id = $category;
+    $category_id =~ s/\s+//g;
+
 		if ( ref $$menu{$category} eq 'HASH' ) {
 			my %urls = %{$$menu{$category}};
 			my $submenu_html = '';
@@ -1393,9 +1396,10 @@ $log->error("categoryies @categories");
 			if ( $submenu_html ) {
 				$html .= join( $submenu_html,
 						sprintf(q`
-							<li class="nav-item dropdown %2$s">
-							<a href="#" id="%1$sMenu" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">%1$s</a>
+							<li class="nav-item dropdown %3$s">
+							<a href="#" id="%1$sMenu" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">%2$s</a>
 							<ul id="%1$sSubMenu" class="dropdown-menu" aria-labelledby="%1$sMenu">`,
+              $category_id,
 							$category,
 							( $on ? ('active','true' ) : ( '', 'collapse' ) ),
 							),'</ul></li>' );
@@ -1420,15 +1424,16 @@ $log->error("categoryies @categories");
       if ($submenu_html) {
         $html .= join($submenu_html,
             sprintf(q`
-              <li class="nav-item dropdown %2$s">
-              <a href="#" id="%1$sMenu" class="nav-link dropdown-toggle" %4$s role="button" data-bs-toggle="dropdown" aria-expanded="false">%1$s</a>
+              <li class="nav-item dropdown %3$s">
+              <a href="#" id="%1$sMenu" class="nav-link dropdown-toggle" %5$s role="button" data-bs-toggle="dropdown" aria-expanded="false">%2$s</a>
               <ul id="%1$sSubMenu" class="dropdown-menu list-unstyled" aria-labelledby="%1$sMenu">`,
+              $category_id,
               $category,
               ( $on ? ('active','true','aria-current="page"' ) : ( '', 'false', 'collapse', '' ) ),
               ),'</ul></li>' );
       }
 		} else {
-			$html .= sprintf( q`<li id="%1$sMenu" class="nav-item %2$s"><a href="%2$s">%1$s</a></li>`, $category, $$menu{$category} );
+			$html .= sprintf( q`<li id="%1$sMenu" class="nav-item %3$s"><a href="%3$s">%2$s</a></li>`, $category_id, $category, $$menu{$category} );
 		}
 	} # end foreach category
   #$log->error($html);

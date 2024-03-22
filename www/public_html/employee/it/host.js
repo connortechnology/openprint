@@ -75,6 +75,34 @@ function toggle_monitored(e) {
   var checkboxes = $j('.option_monitor input').prop("checked", e.value == '1' ? true : false );
 }
 
+
+function updateMarker() {
+  const latitude = document.getElementById('newMonitor[Latitude]').value;
+  const longitude = document.getElementById('newMonitor[Longitude]').value;
+  console.log("Updating marker at ", latitude, longitude);
+  const latlng = new L.LatLng(latitude, longitude);
+  marker.setLatLng(latlng);
+  map.setView(latlng, 8, {animation: true});
+  setTimeout(function() { map.invalidateSize(true); }, 100);
+}
+
+function updateLatitudeAndLongitude(latitude, longitude) {
+  const form = document.getElementById('f1');
+  form.elements['latitude'].value = latitude;
+  form.elements['longitude'].value = longitude;
+  updateMarker(latitude, longitude);
+}
+
+function getLocation() {
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition((position) => {
+      updateLatitudeAndLongitude(position.coords.latitude, position.coords.longitude);
+    });
+  } else {
+    console.log("Geolocation not available");
+  }
+}
+
 window.addEventListener('DOMContentLoaded',initPage);
 
 function initPage() {

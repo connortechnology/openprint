@@ -124,10 +124,11 @@ sub build_city_prov_country {
 } # end sub build_city_prov_country
 
 sub data_to_csv {
-	my ( $header, $data ) = @_;
+	my ( $header, $data, $options ) = @_;
+  $options = {'binary'=>1} if ! $options;
 
 	my @data;
-	my $csv = Text::CSV_XS->new( {'binary'=>1});
+	my $csv = Text::CSV_XS->new($options);
 
 	my $columns = scalar @{$header};
 	$csv->combine( @{$header} );	# combine columns into a string
@@ -145,6 +146,14 @@ sub data_to_csv {
 
 	return @data;
 } # end sub data_to_csv
+
+sub csv_to_file {
+  my ($file, $header, $data, $options) = @_;
+  my @output = data_to_csv($header, $data, $options);
+  open (my $fh, '>', $file) or die "Unable to open file $file $!";
+  print $fh  join('', @output);
+  close $fh;
+}
 
 sub export_csv {
 	my ( $r, $log, $variable, $filename, $header, $data ) = @_;

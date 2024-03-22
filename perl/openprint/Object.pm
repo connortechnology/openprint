@@ -208,6 +208,8 @@ sub load {
 		my %keys = map { (defined $$fields{$_} ? ($_=>$$fields{$_}) : (exists $$data{$_} ? ($_=>$_) : ()) ) } keys %$fields;
     #$log->debug(join(',', map { $_ .'=>'.$keys{$_} } sort { $a cmp $b} keys %keys));
 		@$self{keys %keys} = @$data{ values %keys };
+  } else {
+    $log->warn("No data? ".ref $data);
 	} # end if
 } # end sub load
 
@@ -348,12 +350,6 @@ sub save {
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
-      if ( ! ( $type =~ /Log/i ) ) {
-        my ( $caller, undef, $line ) = caller;
-        if ( $caller ne 'openprint::Log' ) {
-          (new openprint::Log())->save({Object=>$self, action=>'Created'});
-        }
-      }
 			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
@@ -389,6 +385,14 @@ sub save {
 
   # Isn't this inefficient?
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
+  if ($serial) {
+    if ( ! ( $type =~ /Log/i ) ) {
+      my ( $caller, undef, $line ) = caller;
+      if ( $caller ne 'openprint::Log' ) {
+        (new openprint::Log())->save({Object=>$self, action=>'Created'});
+      }
+    }
+  }
 	return '';
 } # end sub save
 

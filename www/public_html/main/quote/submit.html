@@ -38,7 +38,8 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 				</p>
 			</fieldset>
 		<? endif ( sets::isin( $session{user_type}, ['A', 'E'] ) ) ?>
-		<div style="width:49%; float: right; text-align: right;"><br/><span class="Currency">All prices listed in <? echo ( $$variable{Quote}->Currency()->name(); ) ?>.</span><br class="spacer"/>
+		<div style="width:49%; float: right; text-align: right;"><br/>
+      <span class="Currency">All prices listed in <? echo ( $$variable{Quote}->Currency()->name(); ) ?>.</span><br class="spacer"/>
 			Prices are subject to applicable taxes.<br/>
 		</div>
 		<br class="spacer"/>
