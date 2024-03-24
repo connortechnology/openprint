@@ -11,7 +11,7 @@ CREATE TABLE Service_Types (
 	sorting			INTEGER,
 	type			TEXT,
 	allow_delete BOOLEAN NOT NULL default true,
-  deleted BOOLEAN NOT NULL default false
+  deleted BOOLEAN NOT NULL default false,
 	PRIMARY KEY (id)
 );
 
