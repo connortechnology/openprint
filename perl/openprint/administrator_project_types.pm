@@ -1,6 +1,7 @@
 package openprint::administrator_project_types;
 
 use strict;
+use warnings;
 
 require openprint::ProjectType;
 require openprint::ProjectTypeCategory;
@@ -25,113 +26,115 @@ sub edit {
 
 	my $ProjectType = new openprint::ProjectType( $param{ddmProjectType} );
 
-	if ( $param{btnFunction} eq 'Previous' ) {
-		$ProjectType = $ProjectType->prev();
-	} elsif ( $param{btnFunction} eq 'Next' ) {
-		$ProjectType = $ProjectType->next();
-	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		$variable{error} .= $ProjectType->delete();
-		if ( ! $variable{error} ) {
-			$ProjectType = $ProjectType->next();
-			$variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
-		} # end if
-	} elsif ( $param{btnFunction} eq 'Copy' ) {
-		my @recommendations = sql::execute(undef,undef,'SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() );
+  if ($param{btnFunction}) {
+    if ( $param{btnFunction} eq 'Previous' ) {
+      $ProjectType = $ProjectType->prev();
+    } elsif ( $param{btnFunction} eq 'Next' ) {
+      $ProjectType = $ProjectType->next();
+    } elsif ( $param{btnFunction} eq 'Delete' ) {
+      $variable{error} .= $ProjectType->delete();
+      if ( ! $variable{error} ) {
+        $ProjectType = $ProjectType->next();
+        $variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
+      } # end if
+    } elsif ( $param{btnFunction} eq 'Copy' ) {
+      my @recommendations = sql::execute(undef,undef,'SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() );
 
-		$ProjectType = $ProjectType->copy();
-		$ProjectType->name('Copy of ' . $ProjectType->name() );
+      $ProjectType = $ProjectType->copy();
+      $ProjectType->name('Copy of ' . $ProjectType->name() );
 
-		my @required_services = $ProjectType->required_services();
-		my @blocked_services = $ProjectType->blocked_services();
+      my @required_services = $ProjectType->required_services();
+      my @blocked_services = $ProjectType->blocked_services();
 
-		$variable{error} .= $ProjectType->save({required_services=>\@required_services, blocked_services=>\@blocked_services });
+      $variable{error} .= $ProjectType->save({required_services=>\@required_services, blocked_services=>\@blocked_services });
 
-		foreach my $paper_id ( @recommendations ) {
-			sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$paper_id,'lngProjectTypeIndex', $ProjectType->id() );
-		} # end foreach
-		$variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
-	} elsif ( $param{btnFunction} eq 'Save' ) {
-		if ( $param{category} ) {
-			delete $param{category_id};
-		} else {
-			delete $param{category};
-		}
-		my @changes = $ProjectType->changes( \%param );
-		$variable{error} .= $ProjectType->save( \%param );
-
-		sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() ) if $param{ddmProjectType};
-		foreach my $key ( keys %param ) {
-			if ( $key =~ /^Paper\d*$/ ) {
-				sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$param{$key},'lngProjectTypeIndex', $ProjectType->id() );
-
-			} # end if
-		} # end foreach
-		(new openprint::Log())->save({
-        Object=>$ProjectType, action=>($param{ddmProjectType}?'Edited ProjectType':'Saved ProjectType'), note=>join('<br/>', @changes) });
-		$variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
-	} elsif ( $param{btnFunction} eq 'Import' ) {
-		my $error = '';
-		if ( $param{fileImport} ) {
-			my $upload = $r->upload('fileImport');
-      if ( ! $upload ) {
-        $variable{error} .= "No upload for file $param{fileImport}<br/>";
-        return;
+      foreach my $paper_id ( @recommendations ) {
+        sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$paper_id,'lngProjectTypeIndex', $ProjectType->id() );
+      } # end foreach
+      $variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
+    } elsif ( $param{btnFunction} eq 'Save' ) {
+      if ( $param{category} ) {
+        delete $param{category_id};
+      } else {
+        delete $param{category};
       }
-			my $io = $upload->io();
-			$_ = <$io>;
+      my @changes = $ProjectType->changes( \%param );
+      $variable{error} .= $ProjectType->save( \%param );
 
-			my $csv = Text::CSV_XS->new();
-			my %cache = map { $_->name(), $_ } openprint::ProjectType->find();
+      sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() ) if $param{ddmProjectType};
+      foreach my $key ( keys %param ) {
+        if ( $key =~ /^Paper\d*$/ ) {
+          sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$param{$key},'lngProjectTypeIndex', $ProjectType->id() );
+
+        } # end if
+      } # end foreach
+      (new openprint::Log())->save({
+          Object=>$ProjectType, action=>($param{ddmProjectType}?'Edited ProjectType':'Saved ProjectType'), note=>join('<br/>', @changes) });
+      $variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
+    } elsif ( $param{btnFunction} eq 'Import' ) {
+      my $error = '';
+      if ( $param{fileImport} ) {
+        my $upload = $r->upload('fileImport');
+        if ( ! $upload ) {
+          $variable{error} .= "No upload for file $param{fileImport}<br/>";
+          return;
+        }
+        my $io = $upload->io();
+        $_ = <$io>;
+
+        my $csv = Text::CSV_XS->new();
+        my %cache = map { $_->name(), $_ } openprint::ProjectType->find();
 
 
-			my $ac = sql::start_transaction( $dbh );
-			while ( <$io> ) {
-				my $status = $csv->parse($_);
-				my ( $name, $desc, $category, $url, $sort ) = misc::trim( $csv->fields() );
+        my $ac = sql::start_transaction( $dbh );
+        while ( <$io> ) {
+          my $status = $csv->parse($_);
+          my ( $name, $desc, $category, $url, $sort ) = misc::trim( $csv->fields() );
 
-				if ( ! $cache{$name} ) {
-					$cache{$name} = new openprint::ProjectType();
-				}
-				my $PT = $cache{$name};
+          if ( ! $cache{$name} ) {
+            $cache{$name} = new openprint::ProjectType();
+          }
+          my $PT = $cache{$name};
 
-				my %changes = (
-						name        =>  $name,
-						description =>  $desc,
-						category	  =>	$category,
-						url         =>  $url,
-						sorting     =>  $sort,
-						);
+          my %changes = (
+            name        =>  $name,
+            description =>  $desc,
+            category	  =>	$category,
+            url         =>  $url,
+            sorting     =>  $sort,
+          );
 
-				my @changes = $PT->changes( \%changes );
+          my @changes = $PT->changes( \%changes );
 
-				if ( ! @changes ) {
-					$variable{information} .= "No changes for $$PT{name}<br/>";
-					next;
-				}
+          if ( ! @changes ) {
+            $variable{information} .= "No changes for $$PT{name}<br/>";
+            next;
+          }
 
-				if ( $_ .= $PT->save( \%changes ) ) {
-					$error .= "Error saving Project Type $name : $_<br/>";
-				} else {
-					$variable{information} .=
-					(new openprint::Log())->save({ Object=>$PT, action=>'Edit Project Type', note => join('<br/>', @changes ) });
-				} # end if
-			} # end foreach
-			sql::end_transaction( $dbh, $ac );
-      $variable{ExternalRedirect} = '/administrator/project_types/index.html';
-		} else {
-			$log->warn( "No file given to upload." );
-		} # end if
-		if ( $error ne '' ) {
-			$variable{error} = $error;
-		} # end if
+          if ( $_ .= $PT->save( \%changes ) ) {
+            $error .= "Error saving Project Type $name : $_<br/>";
+          } else {
+            $variable{information} .=
+            (new openprint::Log())->save({ Object=>$PT, action=>'Edit Project Type', note => join('<br/>', @changes ) });
+          } # end if
+        } # end foreach
+        sql::end_transaction( $dbh, $ac );
+        $variable{ExternalRedirect} = '/administrator/project_types/index.html';
+      } else {
+        $log->warn( "No file given to upload." );
+      } # end if
+      if ( $error ne '' ) {
+        $variable{error} = $error;
+      } # end if
 
-	} elsif ( $param{btnFunction} eq 'Export' ) {
-	    my @header = ( 'Name', 'Description', 'Category', 'URL', 'Sort Order');
-	    my @data = map { $_->name(), $_->description(), $_->category(), $_->url(), $_->sorting() } openprint::ProjectType->find( order=>'sorting');
-    	misc::export_csv( $r, $log, \%variable, 'ProjectTypes.csv', \@header, \@data );
-		# Add record to audit log - action "Export Project Types".
-		#openprint::logs::insertLogRecord('40',);
-	} # end if
+    } elsif ( $param{btnFunction} eq 'Export' ) {
+      my @header = ( 'Name', 'Description', 'Category', 'URL', 'Sort Order');
+      my @data = map { $_->name(), $_->description(), $_->category(), $_->url(), $_->sorting() } openprint::ProjectType->find( order=>'sorting');
+      misc::export_csv( $r, $log, \%variable, 'ProjectTypes.csv', \@header, \@data );
+      # Add record to audit log - action "Export Project Types".
+      #openprint::logs::insertLogRecord('40',);
+    } # end if
+  }
 	$variable{ProjectType} = $ProjectType;
 } # end sub edit
 
