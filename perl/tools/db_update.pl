@@ -1705,8 +1705,12 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 } # end if
 
 if ( ! sets::isin( 'paper_recommendations', \@tables ) ) {
-	$dbh->do(misc::load_file( $log, '../../sql/Paper_Recommendations.sql') );
-	die $dbh->errstr() if $dbh->errstr();
+  if (sets::isin('tbl_paper_recommendations', \@tables)) {
+    $dbh->do('ALTER TABLE tbl_paper_recommendations RENAME to paper_recommendations');
+  } else {
+    $dbh->do(misc::load_file( $log, '../../sql/Paper_Recommendations.sql') );
+    die $d>bh->errstr() if $dbh->errstr();
+  }
 }
 
 if ( sets::isin( 'tbl_material_categories', \@tables ) ) {
