@@ -7,6 +7,7 @@ require logger;
 require openprint::Object;
 require openprint::Project;
 require openprint::service;
+require openprint::Material;
 
 use openprint ();
 use vars qw( $log $dbh );
