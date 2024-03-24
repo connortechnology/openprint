@@ -5,3 +5,17 @@
 	padding: 0;
 	
 }
+
+#Service_TypesList {
+  display: table;
+  width: 100%;
+}
+.Project_Type {
+  display:table-row;
+}
+.Project_Type .Name,
+.Project_Type .Description,
+.Project_Type .Category {
+  display: table-cell;
+}
+
