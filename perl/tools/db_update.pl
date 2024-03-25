@@ -209,6 +209,10 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 	} # end if
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='companies'", 'column_name');
+  if ( !exists $$data{category_id} and sets::isin( 'company_categories', \@tables ) ) {
+    $dbh->do(q`ALTER TABLE Companies add category_id INTEGER`);
+    $dbh->do(q`ALTER TABLE Companies add FOREIGN KEY (category_id) REFERENCES company_categories (id)`);
+  }
 	if ( ! exists $$data{mailinglist} ) {
 		if ( exists $$data{ysnmailinglist} ) {
 			$dbh->do(q`alter table companies rename column ysnmailinglist to mailinglist`);
@@ -1709,7 +1713,7 @@ if ( ! sets::isin( 'paper_recommendations', \@tables ) ) {
     $dbh->do('ALTER TABLE tbl_paper_recommendations RENAME to paper_recommendations');
   } else {
     $dbh->do(misc::load_file( $log, '../../sql/Paper_Recommendations.sql') );
-    die $d>bh->errstr() if $dbh->errstr();
+    die $dbh->errstr() if $dbh->errstr();
   }
 }
 
@@ -3085,7 +3089,7 @@ if ( my $S = openprint::ServiceType->find_one('name'=>'Aqueous') ) {
 } # end if
 
 foreach my $ST ( openprint::ServiceType->find('name'=>'DieCutting') ) {
-	my $error = $ST->save({'url'=>'bind/DieCutting.html'}) if $ST->url() ne 'bind/DieCutting.html';
+	my $error = $ST->save({url=>'bind/DieCutting.html'}) if $ST->url() ne 'bind/DieCutting.html';
 	die 'Error saving '.$ST->to_string().': '.$error if $error;
 }
 
