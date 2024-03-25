@@ -564,23 +564,24 @@ sub Manufacturer {
 	return openprint::Manufacturer( $_[0]{manufacturer_id} );
 }
 sub manufacturer {
-	if ( defined $_[1] ) {
-		$_[1] = openprint::Manufacturer->transform( 'name', $_[1] );
-		if ( ! $_[0]{custom} ) {
-			my $Manufacturer = openprint::Manufacturer->find_one('name lc'=> lc $_[1] );
+  my $self = shift;
+	if ( @_ ) {
+		my $new = openprint::Manufacturer->transform( 'name', shift );
+		if ( ! $$self{custom} ) {
+			my $Manufacturer = openprint::Manufacturer->find_one('name lc'=> lc $new );
 			if ( $Manufacturer ) {
-				@{$_[0]}{'manufacturer_id','manufacturer'} = @$Manufacturer{'id','name'};
+				@$self{'manufacturer_id','manufacturer'} = @$Manufacturer{'id','name'};
 			} else {
-				@{$_[0]}{'manufacturer_id','manufacturer'} = ( undef, $_[1] );
+				@$self{'manufacturer_id','manufacturer'} = ( undef, $new );
 			} # end if
 		} else {
-			$_[0]{manufacturer} = $_[1];
-			$_[0]{manufacturer_id} = undef;
+			$$self{manufacturer} = $new;
+			$$self{manufacturer_id} = undef;
 		} # end if
-	} elsif ( $_[0]{manufacturer_id} and ! $_[0]{manufacturer} ) {
-		$_[0]{manufacturer} = new openprint::Manufacturer( $_[0]{manufacturer_id} )->name();
+	} elsif ( $$self{manufacturer_id} and ! $$self{manufacturer} ) {
+		$$self{manufacturer} = new openprint::Manufacturer( $$self{manufacturer_id} )->name();
 	} # end if
-	return $_[0]{manufacturer};
+	return $$self{manufacturer};
 } # end sub manufacturer
 
 sub Finish {
