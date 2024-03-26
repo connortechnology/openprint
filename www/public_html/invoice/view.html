@@ -109,8 +109,8 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 					$html .= '<td class="PO">'.html_escape($Timetrack->po()) . '</td>';
 					$html .= '<td class="Interval">'.$Timetrack->elapsed_formatted().'</td>';
 					my $Price = $Timetrack->Price();
-					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
-					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
+					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{price} ), $$Price{units} );
+					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{total} ) );
 					$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
           if ( $Timetrack->date_associated() ) {
             $html .= '<td>'. $formatted_start . ( ( $formatted_start ne $formatted_end ) ? ( '<br/>through<br/>' .  $formatted_end ) : '' ) .  '</td>';
