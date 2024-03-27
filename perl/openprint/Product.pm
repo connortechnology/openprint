@@ -9,7 +9,7 @@ require openprint::Log;
 require sql;
 
 use vars qw( $log $dbh $debug $table $serial %fields %find_fields %defaults %transforms );
-$debug = 0;
+$debug = 1;
 $table = 'products';
 $serial = 'products_id_seq';
 
@@ -234,6 +234,48 @@ sub Supplier {
 sub link_to {
 	return sprintf('<a href="/product/view.html?product_id=%d">%s</a>', $_[0]{id}, ( @_ > 1 ? $_[1] : $_[0]{name} ) );
 }
+
+sub Specifications {
+  return openprint::Product_Specification->find({product_id=>$_[0]{id}});
+} # end sub Specifications
+
+sub specifications {
+  my $self = shift;
+  if ( ! exists $$self{'Specifications'} ) {
+    $_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
+    %{$$self{'Specifications'}} = sql::execute( $log, $dbh, $_, $$self{'id'});
+  } # end if
+  return $$self{'Specifications'};
+} # end sub specifications
+
+sub specification {
+  my $self = shift;
+  my $spec = shift;
+  if ( ! exists $$self{'Specifications'} ) {
+    $_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
+    %{$$self{'Specifications'}} = sql::execute( $log, $dbh, $_, $$self{'id'});
+  } # end if
+  return $$self{'Specifications'}{$spec};
+} # end sub
+
+sub add_specification {
+  my $self = shift;
+  my $spec = shift;
+  if ( ! exists $$self{'Specifications'} ) {
+    $_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
+    %{$$self{'Specifications'}} = sql::execute( $log, $dbh, $_, $$self{'id'});
+  } # end if
+  return $$self{'Specifications'}{$spec} = shift;
+} # end sub add_specification
+sub del_specification {
+  my $self = shift;
+  my $spec = shift;
+  if ( ! exists $$self{'Specifications'} ) {
+    $_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
+    %{$$self{'Specifications'}} = sql::execute( $log, $dbh, $_, $$self{'id'});
+  } # end if
+  delete $$self{'Specifications'}{$spec};
+} # end sub del_specification
 
 1;
 __END__
