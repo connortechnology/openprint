@@ -61,8 +61,8 @@ function calc_from_markup(element) {
     const index = matches[1];
 
     const cost = parseFloat(floatize(elements['cost-'+index]));
-    if ( cost != '' ) {
-      const markup = parseFloat(1*floatize(element));
+    if (cost != '') {
+      const markup = parseFloat(1*floatize(element))/100;
       const quantity = elements['quantity-'+index] ?parseFloat(1*floatize(elements['quantity-'+index])) : 1;
 
       if (elements['total-'+index]) {
@@ -74,7 +74,7 @@ function calc_from_markup(element) {
     } // end if
 
     if (elements['chk-'+index]) {
-      elements['chk-'+index].checked=true;
+      elements['chk-'+index].checked = true;
     } // end if
   } // end if matches
 } // end function
