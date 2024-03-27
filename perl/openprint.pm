@@ -170,6 +170,7 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
   my $ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
   if ($ip) {
     my $safe_ip = openprint::Host_Interface->transform(ip=>$ip);
+    # FIXME :ipv6
     if ($safe_ip and ($safe_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
       openprint::Host_Interface->lock();
       my @Interfaces = openprint::Host_Interface->find(ip=>$safe_ip);
