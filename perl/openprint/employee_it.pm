@@ -998,7 +998,7 @@ sub _interface {
           ) {
             (new openprint::Log())->save( {
                 Object  =>  $Host,
-                note    =>  'IP Address changed from '.(defined($$Interface{ip}?$$Interface{ip}:'undef').' to '.$param{ip},
+                note    =>  'IP Address changed from '.(defined($$Interface{ip})?$$Interface{ip}:'undef').' to '.$param{ip},
                 action  =>  'IP Changed',
               } );
             $Interface->save({ip=>$param{ip}});
