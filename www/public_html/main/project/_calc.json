@@ -10,5 +10,6 @@ $log->warn("No servicetype in params in calc");
 
 	$param{callback} = 'cbFillResults' if ! $param{callback};
 	my $json = JSON->new;
-	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{callback}(results);";
+  $log->debug($json->encode( \%specs ));
+	return $json->encode( \%specs );
 ) ?>
