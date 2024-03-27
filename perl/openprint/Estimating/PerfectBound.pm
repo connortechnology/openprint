@@ -526,7 +526,8 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition Discount: '. $price{'Imposition Discount'} .'%<br/>' if $price{'Imposition Discount'};
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Spine Length Discount: ' . $price{'SpineLength Discount'} . '%<br/>' if $price{'SpineLength Discount'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', $price{'Calliper Markup'} ) if $price{'Calliper Markup'};
-			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . Math::Round::nearest( 0.01, $price{MakeReady}).',<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . Math::Round::nearest( 0.01, $price{MakeReady}).'<br/>';
+
 			if ( my $servicePrice = $price{ServicePrice} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s %d passes at $%.2f%s=$%.2f<br/>', $$servicePrice{Service}->name(), $price{Passes} -1, @$servicePrice{'Price','units','Total'});
 			} # end if
@@ -605,9 +606,14 @@ sub get_price {
 	if ( ! %MakeReady ) {
 		%MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
 	} # end if
-	$price{MakeReady} = $MakeReady{Price} if %MakeReady and $MakeReady{Price};
+  $price{MakeReadyObject} = \%MakeReady;
+	$price{MakeReady} = $MakeReady{Price}; # if %MakeReady and $MakeReady{Price};
 	my $pocketMakeReady = openprint::service::get_price( $$specs{ServiceType}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
-	$price{MakeReady} += ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 )) if $pocketMakeReady;
+
+  if ($pocketMakeReady) {
+    $price{MakeReady} += ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 ));
+    $price{PocketMakeReady} = $pocketMakeReady;
+  }
 
 	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
 	my $neededPockets = $$specs{"txtPockets$qty_index"};
