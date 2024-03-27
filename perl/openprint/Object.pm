@@ -204,12 +204,13 @@ sub load {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
+
 	if ( $data and %$data ) {
 		my %keys = map { (defined $$fields{$_} ? ($_=>$$fields{$_}) : (exists $$data{$_} ? ($_=>$_) : ()) ) } keys %$fields;
     #$log->debug(join(',', map { $_ .'=>'.$keys{$_} } sort { $a cmp $b} keys %keys));
 		@$self{keys %keys} = @$data{ values %keys };
   } else {
-    $log->warn("No data? ".ref $data);
+    $log->warn('No data for ? '.$self->to_string() . ' ref data: '.ref $data);
 	} # end if
 } # end sub load
 

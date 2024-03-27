@@ -20,7 +20,7 @@
 			my $desc = $Timetrack->description();
 			$desc =~ s/"/&quot;/gm;
       my $Price = $Timetrack->Price();
-            $html .= sprintf( q`
+      $html .= sprintf( q`
 <tr title="%13$s">
     <td class="Employee"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%2$d">%3$s</a></td>
     <td class="Service"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%2$d">%4$s</a></td>
@@ -41,11 +41,11 @@ Date::Format::time2str( $Timetrack->time_associated() ? $config{DateTimeFormat} 
 ) : ( '','' ),
 $Timetrack->elapsed_formatted(),
 #misc::seconds_to_pretty_interval( $Timetrack->elapsed() ),
-openprint::Currency::format( $$Price{Price} ) . $Timetrack->Currency()->short(), $$Price{units},
-openprint::Currency::format( $$Price{Total} ),
+openprint::Currency::format( $$Price{price} ) . $Timetrack->Currency()->short(), $Price->units(),
+openprint::Currency::format( $$Price{total} ),
 button( 'del'.$Timetrack->id(), { 'data-on-click-this'=>'del_timetrack', 'data-id'=>$$Timetrack{id}, text=>'-' } ),
 $desc );
-			$$variable{service_total} += $$Price{Total};
+			$$variable{service_total} += $$Price{total};
 			$$variable{elapsed_total} += $Timetrack->elapsed();
 		} # end foreach Timetrack
 		return $html;
