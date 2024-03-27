@@ -33,7 +33,8 @@
 			'project_type_id not any' => $$variable{ProjectType}->id(),
 			( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'brand_id', 'finish_id', 'colour_id', 'weight_id', 'group_id', 'material_id' ) ),
 			order	=> 'brand,finish,colour,weight,width,height');
-    my %prices = misc::make_hash_from_array(paper_id=>openprint::PaperPrice->find(paper_id=>[map { $$_{id} } @all_papers]));
+
+    my %prices = misc::make_hash_from_array(paper_id=>openprint::PaperPrice->find(paper_id=>[map { $$_{id} } @all_papers])) if @all_papers;
 		foreach my $Paper ( @all_papers ) {
       next if ! exists $prices{$$Paper{id}};
 			#next if $Paper->recommendations();
