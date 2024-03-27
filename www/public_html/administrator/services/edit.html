@@ -18,6 +18,8 @@
 				<option value="">All</option>
 				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $session{$r->uri().'?equipment_id'} ); ) ?>
 			</select>
+      <?if($session{$r->uri().'?equipment_id'})?>
+      <a href="/administrator/equipment/edit.html?ddmEquipment=<?echo($session{$r->uri().'?equipment_id'})?>">Go</a>
 		</li>
 <? endif ( @{$$variable{Equipment}} = openprint::Equipment->find( order=>'lower(strid)') ) ?>
 		<li> 
