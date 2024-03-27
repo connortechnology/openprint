@@ -347,6 +347,11 @@ sub save {
 	foreach my $rec ( @recommendations ) {
 		next if ! $rec;
 		sql::insert( undef, undef, 'Paper_Recommendations', 'lngPaperIndex', $$self{id},'lngProjectTypeIndex', $rec );
+    if ( $openprint::dbh->errstr() ) {
+      $openprint::dbh->rollback();
+      sql::end_transaction( $openprint::dbh, $ac );
+      return $openprint::dbh->errstr();
+    } # end if
 	} # end foreach
 
 	foreach my $Price ( $self->Prices() ) {
