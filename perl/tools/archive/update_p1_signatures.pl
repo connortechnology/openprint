@@ -17,8 +17,8 @@ $log = new logger( 'debug' );
 my %sql_server;
 $sql_server{'database'} = $ARGV[0];
 $sql_server{'driver'}   = 'Pg';
-$sql_server{'login'}    = 'point-one';
-$sql_server{'password'} = 'point-1';
+$sql_server{'login'}    = $ARGV[1];
+$sql_server{'password'} = $ARGV[2];
 
 $openprint::Object::no_cache = 1;
 
@@ -26,7 +26,7 @@ $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
 #push @projects, map { new openprint::Project( $_ ); } sql::execute( undef, undef, q{SELECT DISTINCT projectindex from Schedule} );
 #push @projects, openprint::Project->find( 'id'=>222386, 'company_id'=>6, 'id_start'=>200000, 'order'=>'index desc');
-push @projects, openprint::Project->find( 'id_end'=>'150000', 'order'=>'index desc');
+push @projects, openprint::Project->find( 'id >='=>'162801', order=>'id desc');
 #@projects = sets::union( @projects );
 
 foreach my $Project ( @projects ) {
