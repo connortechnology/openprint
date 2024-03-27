@@ -8,6 +8,7 @@ require openprint::Fold;
 require openprint::Location;
 require openprint::Equipment_Stock_Setting;
 require openprint::Equipment_Operator;
+require openprint::Equipment_Shift;
 require sql;
 
 #use Memoize;
