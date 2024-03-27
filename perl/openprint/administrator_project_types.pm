@@ -373,9 +373,9 @@ sub category {
 
     my %projecttype_ids = map { $_=>$_ } ( ref $param{projecttype_id} eq 'ARRAY' ? @{$param{projecttype_id}} : $param{projecttype_id} );
 
-		foreach my $Type ( $ProjectTypeCategory->ProjectTypes() ) {
+		foreach my $type ( $ProjectTypeCategory->ProjectTypes() ) {
 			next if $projecttype_ids{$$type{id}};
-			$variable{error} .= $Type->save({category_id=>undef});
+			$variable{error} .= $type->save({category_id=>undef});
 		} # end if
 		foreach my $pt_id ( keys %projecttype_ids ) {
 			my $ProjectType = openprint::ProjectType->find_one(id=> $pt_id);
