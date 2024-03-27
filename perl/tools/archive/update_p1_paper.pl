@@ -25,7 +25,7 @@ $dbh = sql::open_sql( $log, %sql_server );
 configuration::init( $log, $dbh );
 
 $dbh->do( q{alter table paper_prices drop constraint "tbl_paper_prices_lngpaperindex_fkey";});
-$dbh->do( q{alter table paper_purchase_order_contents drop constraint "$2";});
+#$dbh->do( q{alter table paper_purchase_order_contents drop constraint "$2";});
 $dbh->do( q{DELETE FROM paper_recommendations where lngpaperindex NOT IN (SELECT lngIndex FROM tbl_Paper)});
 # Update paper db now
 my %types = sql::execute( undef, undef, q{SELECT name, id FROM Project_Types} );
@@ -62,15 +62,15 @@ foreach my $paper ( @$data ) {
 		$Paper->manufacturer( 'unknown');
     $Paper->quality('new');
 		$Paper->owner_id( $config{owner_id} );
-		$Paper->created_on('2007-01-01 00:00:00');
-		@{$$Paper{'recommendations'}} = sql::execute( undef, undef, q{SELECT name FROM Project_Types WHERE id IN ( SELECT lngProjectTypeIndex FROM paper_recommendations WHERE lngPaperIndex=?)}, $$paper{lngindex} );
+    #$Paper->created_on('2007-01-01 00:00:00');
+		@{$$Paper{'recommendations'}} = sql::execute( undef, undef, q{SELECT lngProjectTypeIndex FROM paper_recommendations WHERE lngPaperIndex=?}, $$paper{lngindex} );
 	$log->warn("Recommended for: @{$$Paper{'recommendations'}}");
-		@{$$Paper{'Prices'}} = openprint::PaperPrice->find( 'paper_id' => $$paper{'lngindex'} );
+		@{$$Paper{'Prices'}} = openprint::PaperPrice->find(paper_id=> $$paper{'lngindex'} );
 		$_ = $Paper->save();
 		if ( $_ ) {
       die $_;
 		} # end if
-		sql::execute( undef, undef, q{UPDATE paper_purchase_order_contents set paper_id=? WHERE paper_id=?}, $Paper->id(), $$paper{lngindex} );
+    #sql::execute( undef, undef, q{UPDATE paper_purchase_order_contents set paper_id=? WHERE paper_id=?}, $Paper->id(), $$paper{lngindex} );
 	} else {
 		foreach my $Paper ( @papers ) {
 			$Paper->mweight($$paper{'strmweight'});
@@ -83,7 +83,7 @@ foreach my $paper ( @$data ) {
 			$Paper->taxexempt1( $$paper{'ysntaxexempt1'} eq 'Y' ? 1 : 0 );
 			$Paper->taxexempt2( $$paper{'ysntaxexempt2'} eq 'Y' ? 1 : 0 );
 
-			@{$$Paper{'recommendations'}} = sql::execute( undef, undef, q{SELECT strName FROM Project_Types WHERE lngIndex IN ( SELECT lngProjectTypeIndex FROM paper_recommendations WHERE lngPaperIndex=?)}, $$paper{lngindex} );
+			@{$$Paper{'recommendations'}} = sql::execute( undef, undef, q{SELECT lngProjectTypeIndex FROM paper_recommendations WHERE lngPaperIndex=?}, $$paper{lngindex} );
 			@{$$Paper{'Prices'}} = openprint::PaperPrice->find( 'paper_id' => $$paper{'lngindex'} );
 			$Paper->manufacturer( 'unknown') if ! $Paper->manufacturer();
 			$_ = $Paper->save();
@@ -91,27 +91,27 @@ foreach my $paper ( @$data ) {
 	} # end if
 } # end foreach paper
 $log->warn("Cleaning Up");
-$openprint::dbh->do( q{DELETE FROM paper_purchase_order_contents WHERE Paper_Id IN (SELECT lngindex from tbl_Paper)} );
-$openprint::dbh->do( q{DELETE FROM paper_purchase_order_contents WHERE Paper_Id NOT IN (SELECT id from Papers)} );
-$openprint::dbh->do( q{DELETE FROM paper_recommendations WHERE lngPaperIndex IN (SELECT lngindex from tbl_Paper)} );
-$openprint::dbh->do( q{DELETE FROM paper_prices WHERE lngPaperIndex IN (SELECT lngindex from tbl_Paper)} );
-$openprint::dbh->do( q{DELETE FROM tbl_Paper} );
-$dbh->do( q{alter table paper_purchase_order_contents add foreign key (paper_id) references papers (id);});
-$dbh->do( q{alter table paper_prices add foreign key (lngpaperindex) references papers(id)});
-$dbh->do( q{update papers set type='Sheet' where width>0 and height>0});
-$dbh->do( q{update papers set grade=1 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Gloss%')});
-$dbh->do( q{update papers set grade=1 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%GLOSS%')});
-$dbh->do( q{update papers set grade=1 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%C1S%')});
-$dbh->do( q{update papers set grade=1 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%C2S%')});
-$dbh->do( q{update papers set grade=1 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE 'Coated%')});
-$dbh->do( q{update papers set grade=2 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Matte%')});
-$dbh->do( q{update papers set grade=2 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Silk%')});
-$dbh->do( q{update papers set grade=2 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Dull%')});
-$dbh->do( q{update papers set grade=2 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Satin%')});
-$dbh->do( q{update papers set grade=4 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Offset%')});
-$dbh->do( q{update papers set grade=4 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%offset%')});
-$dbh->do( q{update papers set grade=4 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%UnCoated%')});
-$dbh->do( q{update papers set grade=4 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Smooth%')});
-$dbh->do( q{update papers set grade=4 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Opaque%')});
-$dbh->do( q{update papers set grade=4 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Vellum%')});
-$dbh->do( q{update papers set type='Roll' where type IS NULL and height IS NULL});
+$openprint::dbh->do( q{DELETE FROM paper_purchase_order_contents WHERE Paper_Id IN (SELECT lngindex from tbl_Paper)} ) or die $openprint::dbh->errstr();
+$openprint::dbh->do( q{DELETE FROM paper_purchase_order_contents WHERE Paper_Id NOT IN (SELECT id from Papers)} ) or die $openprint::dbh->errstr();
+$openprint::dbh->do( q{DELETE FROM paper_recommendations WHERE lngPaperIndex IN (SELECT lngindex from tbl_Paper)} ) or die $openprint::dbh->errstr();
+$openprint::dbh->do( q{DELETE FROM paper_prices WHERE lngPaperIndex IN (SELECT lngindex from tbl_Paper)} ) or die $openprint::dbh->errstr();
+$openprint::dbh->do( q{DELETE FROM tbl_Paper} ) or die $openprint::dbh->errstr();
+$dbh->do( q{alter table paper_purchase_order_contents add foreign key (paper_id) references papers (id);}) or die $openprint::dbh->errstr();
+$dbh->do( q{alter table paper_prices add foreign key (lngpaperindex) references papers(id)}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set type='Sheet' where width>0 and height>0}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=1 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Gloss%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=1 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%GLOSS%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=1 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%C1S%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=1 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%C2S%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=1 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE 'Coated%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=2 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Matte%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=2 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Silk%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=2 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Dull%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=2 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Satin%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=4 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Offset%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=4 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%offset%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=4 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%UnCoated%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=4 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Smooth%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=4 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Opaque%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set grade=4 where finish_id IN (SELECT id FROM paperfinishes where shortname LIKE '%Vellum%')}) or die $openprint::dbh->errstr();
+$dbh->do( q{update papers set type='Roll' where type IS NULL and height IS NULL}) or die $openprint::dbh->errstr();
