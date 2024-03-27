@@ -320,7 +320,10 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
       die $dbh->errstr() if $dbh->errstr();
     }
   } # end if
-
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='companies'", 'column_name');
+  if (!$$data{pricelist_id}{is_nullable} ) {
+    $dbh->do('ALTER TABLE companies ALTER pricelist_id DROP NOT NULL');
+  }
 } # end if
 
 if ( ! sets::isin( 'user_types', \@tables ) ) {
@@ -1307,6 +1310,9 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{reprint_reason} ) {
 		$dbh->do(q`ALTER TABLE projects ADD reprint_reason TEXT`) or $log->error($dbh->errstr());
 	} # end if
+	if ( ! exists $$data{due_date} ) {
+		$dbh->do(q`ALTER TABLE projects ADD due_date DATE`) or $log->error($dbh->errstr());
+	} # end if
 	if ( ! exists $$data{reprint_description} ) {
 		$log->debug("Add reprint_description to Projects");
 		$dbh->do(q`ALTER TABLE projects ADD reprint_description TEXT`) or $log->error($dbh->errstr());
@@ -1327,6 +1333,8 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 		} # end if
 	} # end foreach
 } # end if
+
+
 if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/ServiceType_Categories.sql}) );
 }
@@ -1711,6 +1719,18 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 if ( ! sets::isin( 'paper_recommendations', \@tables ) ) {
   if (sets::isin('tbl_paper_recommendations', \@tables)) {
     $dbh->do('ALTER TABLE tbl_paper_recommendations RENAME to paper_recommendations');
+    ( $_ ) = sql::execute( undef, undef, "SELECT EXISTS ( SELECT * FROM information_schema.table_constraints WHERE constraint_name='tbl_paper_recommendations_pkey' AND table_name='paper_recommendations' ) " );
+    $dbh->do( 'ALTER TABLE paper_recommendations DROP Constraint tbl_paper_recommendations_pkey') if $_;
+    ( $_ ) = sql::execute( undef, undef, "SELECT EXISTS ( SELECT * FROM information_schema.table_constraints WHERE constraint_name='equipment_type' AND table_name='paper_recommendations' ) " );
+    $dbh->do( 'ALTER TABLE paper_recommendations DROP Constraint equipment_type') if $_;
+    my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_recommendations'", 'column_name' );
+    if (exists $$data{lngpresstype}) {
+      $dbh->do('alter table paper_recommendations alter lngpresstype drop not null');
+    }
+    if (exists $$data{lngpresstype}) {
+      $dbh->do('alter table paper_recommendations alter lngpresstype drop not null');
+    }
+
   } else {
     $dbh->do(misc::load_file( $log, '../../sql/Paper_Recommendations.sql') );
     die $dbh->errstr() if $dbh->errstr();
@@ -1768,6 +1788,10 @@ if ( ! sets::isin( 'materials', \@tables ) ) {
 	if ( ! exists $$data{manufacturer_id} ) {
 		$dbh->do('ALTER TABLE materials add manufacturer_id INTEGER');
 		$dbh->do('ALTER TABLE materials add FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
+	} 
+	if ( ! exists $$data{category_id} ) {
+		$dbh->do('ALTER TABLE materials add category_id INTEGER');
+		$dbh->do('ALTER TABLE materials add FOREIGN KEY (category_id) REFERENCES Material_Categories (id)');
 	} 
 	if ( ! exists $$data{activity_code} ) {
 		$dbh->do('ALTER TABLE materials add activity_code text');
@@ -1845,6 +1869,11 @@ if ( ! sets::isin( 'paper_allocations', \@tables ) ) {
 
 if ( ! sets::isin( 'tbl_service_defaults', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/tbl_Service_Defaults.sql}) ) or die;
+} else {
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_service_defaults'", 'column_name');
+  if (exists $$data{lngserviceindex} and !exists $$data{lngservicetypeindex}) {
+    $dbh->do('alter table tbl_service_defaults rename column lngserviceindex to lngservicetypeindex') or die $dbh->errstr();
+  }
 }
 
 if ( sets::isin( 'tbl_services', \@tables ) ) {
