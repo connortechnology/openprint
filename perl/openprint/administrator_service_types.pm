@@ -84,6 +84,7 @@ sub edit {
             my @sd_changes = $SD->changes($changes);
             if ( @sd_changes ) {
               $variable{error} .= $SD->save($changes) if @sd_changes;
+              last if $variable{error};
               push @changes, @sd_changes;
             } # end if changes
           } # end if
