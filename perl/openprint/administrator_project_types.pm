@@ -358,7 +358,7 @@ sub categories {
 		$variable{error} .= $ProjectTypeCategory->save(\%param);
 		foreach my $pt_id ( ref $param{projecttype_id} eq 'ARRAY' ? @{$param{projecttype_id}} : $param{projecttype_id} ) {
 			my $ProjectType = new openprint::ProjectType( $pt_id );
-			$variable{error} .= $ProjectType->save({'category_id'=>$ProjectTypeCategory->id()});
+			$variable{error} .= $ProjectType->save({category_id=>$ProjectTypeCategory->id()});
 		} # end foreach pt_id
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $ProjectTypeCategory->delete();
@@ -370,12 +370,16 @@ sub category {
 	my $ProjectTypeCategory = $variable{ProjectTypeCategory} = new openprint::ProjectTypeCategory( $param{category_id} );
 	if ( $param{btnFunction} eq 'Save' ) {
 		$variable{error} .= $ProjectTypeCategory->save(\%param);
+
+    my %projecttype_ids = map { $_=>$_ } ( ref $param{projecttype_id} eq 'ARRAY' ? @{$param{projecttype_id}} : $param{projecttype_id} );
+
 		foreach my $Type ( $ProjectTypeCategory->ProjectTypes() ) {
-			next if sets::isin( $$Type{id}, $param{projecttype_id} );
+			next if $projecttype_ids{$$type{id}};
 			$variable{error} .= $Type->save({category_id=>undef});
 		} # end if
-		foreach my $pt_id ( ref $param{projecttype_id} eq 'ARRAY' ? @{$param{projecttype_id}} : $param{projecttype_id} ) {
-			my $ProjectType = new openprint::ProjectType( $pt_id );
+		foreach my $pt_id ( keys %projecttype_ids ) {
+			my $ProjectType = openprint::ProjectType->find_one(id=> $pt_id);
+      next if ! $ProjectType;
 			$variable{error} .= $ProjectType->save({ category_id=>$ProjectTypeCategory->id()});
 		} # end foreach pt_id
 		$variable{ExternalRedirect} = '/administrator/project_types/categories.html' if ! $variable{error};
