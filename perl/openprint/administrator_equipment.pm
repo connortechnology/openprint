@@ -102,8 +102,9 @@ sub edit {
       if ( $Equipment->id() ) {
         $Equipment = $Equipment->copy();
       } else {
-        $variable{error} .= "No equipment specified. No copy made.";
+        $variable{error} .= 'No equipment specified. No copy made.<br/>';
       }
+      $param{ddmEquipment} = $Equipment->id();
     } elsif ( $param{btnFunction} eq 'Save' ) {
       $param{servicetype_id} = [ $param{servicetype_id} ] if ref $param{servicetype_id} ne 'ARRAY';
       $param{category_id} = [ $param{category_id} ] if ref $param{category_id} ne 'ARRAY';
@@ -259,7 +260,7 @@ sub edit {
       sql::end_transaction( $dbh, $ac );
       $variable{error} = $error;
     } # end if
-  } # end if bntFunction
+  } # end if btnFunction
 
 	$variable{Equipment} = $Equipment;
 } # end sub equipment_edit
