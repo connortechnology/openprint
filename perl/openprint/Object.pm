@@ -386,7 +386,7 @@ sub save {
   # Isn't this inefficient?
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
   if ($serial) {
-    if ( ! ( $type =~ /Log/i ) ) {
+    if ($type !~ /Log/i) {
       my ( $caller, undef, $line ) = caller;
       if ( $caller ne 'openprint::Log' ) {
         (new openprint::Log())->save({Object=>$self, action=>'Created'});
