@@ -35,15 +35,41 @@ function get_value( obj ) {
 			} // end if
 		}
 
-    /*
 		if ( value.length == 0 ) return;
 		if ( value.length == 1 ) return value[0];
-    */
 		return value;
 	} else {
 		return obj.innerHTML;
 	} // end if
 	return obj.value;
+}
+
+function get_values(obj) {
+  if (!obj) return [];
+  if ( obj.type == 'select-one' ) {
+    return get_ddm_value( obj );
+  } else if ( obj.type == 'radio' || obj.type == 'checkbox' ) {
+    if ( obj.checked ) {
+      return [obj.value];
+    } else {
+      return [];
+    }
+  } else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'textarea' ) {
+    return [obj.value];
+  } else if (obj.length) {
+    const values = [];
+    for ( let x = 0, len=obj.length; x < len; x += 1 ) {
+      if ( obj[x].checked ) {
+        if ( obj[x].type == 'radio' ) return [obj[x].value];
+        values[values.length] = obj[x].value;
+      } // end if
+    }
+
+    return values;
+  } else {
+    return [obj.innerHTML];
+  } // end if
+  return [obj.value];
 }
 
 function set_value( obj, value ) {
@@ -135,6 +161,7 @@ function fill_ddm ( ddm, options, onchange ) {
 		ddm.disabled = false;
 	} // end if
 } // end function fill_ddm
+
 function fill_ddm_from_array ( ddm, options, onchange ) {
 	if ( ddm ) {
 		ddm.disabled = true;
@@ -147,15 +174,12 @@ function fill_ddm_from_array ( ddm, options, onchange ) {
 } // end function fill_ddm_from_array
 
 function clear_ddm ( ddm ) {
-
 	if ( ddm ) {
-		var disabled = ddm.disabled;
-		if ( ! disabled ) {
-			ddm.disabled = true;
-		} // end if
+		const disabled = ddm.disabled;
+		if ( ! disabled ) ddm.disabled = true;
 
 		if ( ddm.options ) {
-			for ( var index = ddm.options.length; index >= 0; index -- ) {
+			for ( let index = ddm.options.length; index >= 0; index -- ) {
 				// this last if eliminates the mac problem.
 				if (ddm.options[index])
 					ddm.options[index] = null;
@@ -192,7 +216,6 @@ function sort_ddm(ddm) {
 		//add_option( ddm, copyOption[i][0], copyOption[i][1] );
 	ddm_select_by_value( ddm, selectedValue, 0 );
 }
-
 
 function add_option( ddm, value, text, selectedValue ) {
 	if ( ddm ) {
@@ -463,6 +486,7 @@ function setDaysDropDown(year, month, dayDropDown, selectedDay, previousMonth ) 
 	ddm_select_by_value( dayDropDown, selectedDay );
 }
 
+// FIXME: What uses this? replace with jquery
 function Serialize( form ) {
 	var parameters = new Array();
 	for ( var index = 0, len = form.elements.length; index <len ; index += 1 ) {
@@ -498,7 +522,7 @@ function Serialize( form ) {
 		} // end if
 	} // end for
 	return parameters;
-} // end function serialize
+} // end function Serialize
 
 function select_all_this(element) {
   return select_all(element.form, element.name, element.checked);
@@ -518,7 +542,7 @@ function select_all( form, name, checked ) {
 }
 
 function clearSelect( ddm ) {
-	for ( var i = 0, len = ddm.options.length; i < len; i++ ) {
+	for ( let i = 0, len = ddm.options.length; i < len; i++ ) {
 		ddm.options[i].selected = 0;
 	} 
 	ddm.options[0].selected = 1;
@@ -526,8 +550,8 @@ function clearSelect( ddm ) {
 
 function clearForm(form) {
 	form = $(form);
-	for ( var i=0, len = form.elements.length; i < len; i += 1 ) {
-		var e = form.elements[i];
+	for ( let i=0, len = form.elements.length; i < len; i += 1 ) {
+		const e = form.elements[i];
 		if ( ! e.type )
 			continue;
 		if ( e.type == 'checkbox' || e.type == 'radio' ) {
@@ -553,6 +577,7 @@ function update_changed( element ) {
 	if ( element_changed(element) ) {
 	}
 }
+
 function element_changed( element ) {
 	if ( ! element ) {
 //alert('Null element passed to element_changed');
@@ -560,7 +585,7 @@ function element_changed( element ) {
 	}
 
 	if ( element.type == 'select-one' ) {
-		for ( var i = 0, len = element.options.length; i < len; i += 1 ) {
+		for ( let i = 0, len = element.options.length; i < len; i += 1 ) {
 			if ( element.options[i].selected != element.options[i].defaultSelected ) {
 				return true;
 			} // end if
@@ -670,8 +695,8 @@ function submitElementsFormIfHasValue(element) {
 }
 
 function summary(summaryPage) {
-var summaryPage;
-window.open(summaryPage,'pop','newWin,left=140,width=640,top=50,height=400,resizable=yes,scrollbars=yes,menubar=no,toolbar=yes,location=no,directories=yes,status=yes');
+  var summaryPage;
+  window.open(summaryPage,'pop','newWin,left=140,width=640,top=50,height=400,resizable=yes,scrollbars=yes,menubar=no,toolbar=yes,location=no,directories=yes,status=yes');
 }
 
 function checkLoginData( usernameInput, passwordInput ) {
@@ -932,12 +957,10 @@ function pad_with_zeros(rounded_value, decimal_places) {
 }
 
 function getFormObj( formName ) {
-	var form = document.forms[formName];
-	return form;
+	return document.forms[formName];
 }
  
 function disableDiv(elm) {
-
 	while (elm.tagName !="DIV") {
 		elm = elm.parentNode
 	}
@@ -1239,6 +1262,7 @@ function convert_lbs_to_kg( from, to ) {
 	} // end for
 	to.value = qtys.join(',');
 } // end function convert_lbs_to_kg
+
 function convert_kg_to_lbs( from, to ) {
 	var qtys = from.value.split(',');
 	for ( var i=0; i< qtys.length; i+=1 ) {
@@ -1544,10 +1568,8 @@ function changed( e, div ) {
 	} // end if
 } // end function changed
 
-if (!Array.prototype.map)
-{
-	Array.prototype.map = function(fun /*, thisp*/)
-	{
+if (!Array.prototype.map) {
+	Array.prototype.map = function(fun /*, thisp*/) {
 	var len = this.length;
 	if (typeof fun != "function")
 		throw new TypeError();
