@@ -502,7 +502,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 						if ( my $function = ('openprint::'.$module)->can($proc) ) {
 							$function->($r, $log, $dbh, \%variable );
 						} else {
-							$log->error("Eval error of require $module :: $proc, Reason: ");
+							$log->debug("$module :: $proc is not a function");
 						}
 						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
 					} else {
