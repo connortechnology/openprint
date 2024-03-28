@@ -1,25 +1,25 @@
 <div class="PageTitle">
 <h1>Printing</h1>
 </div>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/printing.js') ) ?>"></script>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/paper.js') ) ?>"></script>
-<script type="text/javascript">
-	var quantities=new Array();
+<script src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script src="<? echo ( hash_link('/javascripts/printing.js') ) ?>"></script>
+<script src="<? echo ( hash_link('/javascripts/proj/paper.js') ) ?>"></script>
+<script>
+	const quantities=new Array();
 	<?QUANTITIES?>
-	var projectType = '<?ProjectTypeID?>';
+	const projectType = '<?ProjectTypeID?>';
 </script>
 <?include(/main/project/prin/_templates.html)?>
 <? if ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/calc_presentation_folder.js') ) ?>"></script>
-<script type="text/javascript">
+<script src="<? echo ( hash_link('/javascripts/proj/calc_presentation_folder.js') ) ?>"></script>
+<script>
 	function calc() {
 		calc_presentation_folder('f1');
 	}
 </script>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/templates/presentation_folders.js') ) ?>"></script>
+<script src="<? echo ( hash_link('/javascripts/templates/presentation_folders.js') ) ?>"></script>
 <? else ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
-<script type="text/javascript">
+<script>
 	function calc( formName, force ) {
 		calc_print( formName, force );
 	}
