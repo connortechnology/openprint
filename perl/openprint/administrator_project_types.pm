@@ -213,6 +213,7 @@ sub templates {
 
 	my $status = 'Error: ';
 
+  return if !$param{btnFunction};
 	if ( $param{btnFunction} eq 'Save' ) {
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Template ( openprint::ProjectType_Template->find( projecttype_id=>$param{ddmProjectType}) ) {
