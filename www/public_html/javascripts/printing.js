@@ -72,8 +72,8 @@ function SpecialColour_onchange( element, side, index, signature ) {
 			var t = document.getElementById('ColourCoatingType'+i+side+signature);
 			if ( ! t ) continue;
 
-			for ( var m = 0; m < type_element.options.length; m += 1 ) {
-				var v = type_element.options[m].value;
+			for ( let m = 0; m < type_element.options.length; m += 1 ) {
+				const v = type_element.options[m].value;
 				// see if it is in there
 				if ( ! isin_ddm( t, v ) ) {
 					add_option( t, v, type_element.options[m].text );
@@ -114,25 +114,25 @@ function chkSpecial_onClick(chkBox) {
 } // end function
 
 function validate_data(formName) {
-	var form = getFormObj( formName );
-	var text = '';
-    if ( form.txtWidth && ! ( 0 < parseFloat(form.txtWidth.value) ) ) {
-        text += "Please enter the Width of your Project\n";
-    } // end if
-    if ( form.txtHeight && ! ( 0 < parseFloat(form.txtHeight.value) ) ) {
-        text += "Please enter the Height of your Project\n";
-    } // end if
-	if ( form.txtWidth && form.txtHeight && form.txtFinalWidth && form.txtFinalHeight ) {
-	   if ( form.txtWidth.value * form.txtHeight.value < form.txtFinalWidth.value * form.txtFinalHeight.value ) {
-	   		text += "Your Finished Dimenstions may not exceed your Flat Dimensions.\n";
-	 	} // end if		
+	const form = getFormObj(formName);
+	let text = '';
+  if ( form.txtWidth && ! ( 0 < parseFloat(form.txtWidth.value) ) ) {
+    text += "Please enter the Width of your Project\n";
+  } // end if
+  if ( form.txtHeight && ! ( 0 < parseFloat(form.txtHeight.value) ) ) {
+    text += "Please enter the Height of your Project\n";
+  } // end if
+  if ( form.txtWidth && form.txtHeight && form.txtFinalWidth && form.txtFinalHeight ) {
+    if ( form.txtWidth.value * form.txtHeight.value < form.txtFinalWidth.value * form.txtFinalHeight.value ) {
+      text += "Your Finished Dimenstions may not exceed your Flat Dimensions.\n";
+    } // end if		
 	} // end if
 
-	var stockBrand = form.ddmStockBrand ? get_ddm_value(form.ddmStockBrand) : '';
-	var stockFinish = form.ddmStockFinish ? get_ddm_value(form.ddmStockFinish) : '';
-	var stockColour = form.ddmStockColour ? get_ddm_value(form.ddmStockColour) : '';
+	let stockBrand = form.ddmStockBrand ? get_ddm_value(form.ddmStockBrand) : '';
+	let stockFinish = form.ddmStockFinish ? get_ddm_value(form.ddmStockFinish) : '';
+	let stockColour = form.ddmStockColour ? get_ddm_value(form.ddmStockColour) : '';
 
-	var stockWeight = form.ddmStockWeight ? get_ddm_value(form.ddmStockWeight) : '';
+	let stockWeight = form.ddmStockWeight ? get_ddm_value(form.ddmStockWeight) : '';
 	if ( stockBrand == 'Customer Supplied' && form.txtSpecificStockCalliper && form.txtSpecificStockCalliper.value ) {
 		stockWeight = form.txtSpecificStockCalliper.value;
 	} // end if
@@ -185,8 +185,7 @@ function get_impositions( form, qty_index ) {
 } 
 
 function calc_print( formName, force, options ) {
-
-	var form = getFormObj( formName );
+	const form = getFormObj( formName );
 
 	if ( timeout ) {
 		clearTimeout( timeout );
@@ -208,38 +207,51 @@ function calc_print( formName, force, options ) {
 	} // end if
 
 	clear_price_data(form);
-	var AlertDiv = $('AlertDiv');
+	const AlertDiv = $('AlertDiv');
 	if ( AlertDiv ) {
 		AlertDiv.innerHTML = '';
 		AlertDiv.hide();
 	} // end if
-	var div = $('InformationDiv');
+	const div = $('InformationDiv');
 	if ( div ) {
 		div.innerHTML = 'Calculating....';
 		div.show();
 	} // end if
 	gettingNewPrice = true;
-	var blah = Form.serialize( form, true );
-	var h = $H(blah);
-	h.each(function(pair) {
-		if ( pair.value == '' ) 
-			h.unset(pair.key);
-		if ( pair.key == 'btnFunction' ) 
-			h.unset(pair.key);
-		if ( pair.key == 'alert' ) 
-			h.unset(pair.key);
-	});
-	if ( options ) {
-		$H(options).each(function(pair) {
-			h.set(pair.key, pair.value);
-		} );
-	} // end if options
-	h.set('ServiceType','Printing' );
-	h.set('callback', 'cbFillPrintResults' );
-	pendingCalc = new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+
+  const data = $j(form).serializeArray();
+  //if ( options ) {
+  //data.merge( options );
+  //}
+  for (let i=0; i < data.length; i++) {
+    const pair = data[i];
+    if (
+      (pair.value == '')
+      ||
+      (pair.name == 'btnFunction')
+      ||
+      (pair.name == 'alert')
+    ) {
+      data.splice(i,1);
+    }
+  }
+	//pendingCalc = new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+  pendinfCalc = $j.ajax({
+        type: 'POST',
+        url: '/main/project/_calc.json',
+        data: data,
+        dataType: 'json',
+        success: function(data, textStatus, jqXHR) {
+          console.log(data);
+          cbFillPrintResults(data);
+        }
+      }).done(function(data) {
+          console.log(data);
+      }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.log("fail", jqXHR, textStatus);
+      });
 	return true;
 } // end calc_print
-
 
 function clear_price_data( form ) {
 
@@ -371,11 +383,11 @@ var FoldingQuestionFlag = true;
 var CuttingQuestionFlag = true;
 
 function selectProjectTemplate( formName ) {
-	var form = getFormObj( formName );
-	var ddm = form.ddmProjectSize;
+	const form = getFormObj( formName );
+	const ddm = form.ddmProjectSize;
 	if ( ddm ) {
-		var TemplateType = get_value( form.rdbTemplateType );
-		var selected_size = get_value( form.ddmProjectSize );
+		const TemplateType = get_value( form.rdbTemplateType );
+		const selected_size = get_value( form.ddmProjectSize );
 		clear_ddm(ddm);
 		add_option( form.ddmProjectSize, 'Custom','Custom' );
 		if ( TemplateType ) {
@@ -389,7 +401,8 @@ function selectProjectTemplate( formName ) {
 					add_option( ddm, options[TemplateType][x].text, options[TemplateType][x].value );
 				} // end for
 			} else {
-				alert("We do not have dimensions for the selected project template at this time.\n\nPlease select custom in the size pull down and input your finished and flat dimensions in the supplied text boxes.");	
+        console.log(TemplateType);
+				alert("We do not have dimensions for the selected project template "+TemplateType+" at this time.\n\nPlease select custom in the size pull down and input your finished and flat dimensions in the supplied text boxes.");	
 			} // end if
 		} // end if TemplateType
 		ddm_select_by_value( form.ddmProjectSize, selected_size );
