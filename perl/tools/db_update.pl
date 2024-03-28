@@ -38,7 +38,7 @@ $ARGV[2] = $ARGV[1] if ! $ARGV[2];
 $ARGV[4] = 5432 if ! $ARGV[4];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3], port=>$ARGV[4]) );
-my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+my @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 $log->debug("Tables: @tables");
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 
@@ -47,7 +47,7 @@ sub load_sql {
 		my ( $caller, undef, $line ) = caller;
 		die ( $dbh->errstr() . ' from line ' . $line );
 	}
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+  @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 	@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 }
 
@@ -123,7 +123,7 @@ if ( ! sets::isin( 'company_categories', \@tables ) ) {
 
 if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/QuoteLevels.sql}) );
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+  @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
 } # end if
 
@@ -150,9 +150,9 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
       $dbh->do('ALTER TABLE tbl_customer RENAME to companies') or die $dbh->errstr();
     } else {
       print "Renaming company to companies\n";
-      $dbh->do('ALTER TABLE Company RENAME TO Companies');
+      $dbh->do('ALTER TABLE Company RENAME TO Companies') or die $dbh->errstr();
     }
-    @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+    @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 
 		my $data2 = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='companies'", 'column_name');
     column_rename('Companies', 'strcompanyname', 'name');
@@ -207,124 +207,124 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		$dbh->do( misc::load_file( $log, q{../../sql/Companies.sql}) );
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='companies'", 'column_name');
-  if ( !exists $$data{category_id} and sets::isin( 'company_categories', \@tables ) ) {
-    $dbh->do(q`ALTER TABLE Companies add category_id INTEGER`);
-    $dbh->do(q`ALTER TABLE Companies add FOREIGN KEY (category_id) REFERENCES company_categories (id)`);
-  }
-	if ( ! exists $$data{mailinglist} ) {
-		if ( exists $$data{ysnmailinglist} ) {
-			$dbh->do(q`alter table companies rename column ysnmailinglist to mailinglist`);
-		} else {
-			$dbh->do(q`alter table companies add mailinglist CHAR(1) DEFAULT 'N'`);
-		}
-		$$data{mailinglist} = '';
-	} # end if
-	$dbh->do('alter table companies drop column strftplogin') if ( exists $$data{strftplogin} );
-	$dbh->do('alter table companies drop column strftppassword') if ( exists $$data{strftppassword} );
-	$dbh->do('alter table companies drop column strftphomedir') if ( exists $$data{strftphomedir} );
+}
 
-	if ( ! exists $$data{asset_id} ) {
-		$dbh->do('ALTER TABLE companies ADD asset_id INTEGER');
-	} # end if
-	foreach my $field ( 'name', 'address1', 'address2', 'city','country','state', 'postalcode', 'gst_number', 'pst_number',
-			'accountnumber','phone','extension','fax','greeting','business_type','business_name','business_form','president_owner',
-			'bank_name','bank_branch','bank_account','bank_manager','bank_phone','bank_fax','bank_email','notes' ) {
-		if ( ! $openprint::Company::fields{$field} ) {
-			die "Want to add $field to Company but it's not in fields";
-		} # end if
-		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
-			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.' TEXT');
-			die $dbh->errstr() if $dbh->errstr();
-		} # end if
-	} # end foreach
-	foreach my $field ( 'created_on', 'updated_on' ) {
-		if ( ! $openprint::Company::fields{$field} ) {
-			die "Want to add $field to Company but it's not in fields";
-		} # end if
-		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
-			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.' TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
-			die $dbh->errstr() if $dbh->errstr();
-		} # end if
-	} # end foreach
-	foreach my $field ( 'supplier','reseller', 'gst_exempt','pst_exempt', 'activation', 'mailinglist', 'quote_project_breakdown' ) {
-		if ( ! $openprint::Company::fields{$field} ) {
-			die "Want to add $field to Company but it's not in fields";
-		} # end if
-		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
-			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` CHAR(1) default 'N'`);
-			die $dbh->errstr() if $dbh->errstr();
-		} # end if
-	} # end foreach
-	foreach my $field ( 'deleted', 'offers_credit' ) { 
-		if ( ! $openprint::Company::fields{$field} ) {
-			die "Want to add $field to Company but it's not in fields";
-		} # end if
-		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
-			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` BOOLEAN NOT NULL DEFAULT FALSE`);
-			die $dbh->errstr() if $dbh->errstr();
-		} # end if
-	} # end foreach
-	foreach my $field ( 'salesrep_id', 'pricelist_id', 'currency_id', 'detail_level',  ) { 
-		if ( ! $openprint::Company::fields{$field} ) {
-			die "Want to add $field to Company but it's not in fields";
-		} # end if
-		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
-			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` INTEGER`);
-			die $dbh->errstr() if $dbh->errstr();
-		} # end if
-	} # end foreach
-	if ( ! exists $$data{$openprint::Company::fields{established}} ) {
-		$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{established}.q` date`);
-		die $dbh->errstr() if $dbh->errstr();
-	} # end if
-	foreach my $field ( 'credit_card_fee', 'csr_commission' ) {
-		if ( ! $openprint::Company::fields{$field} ) {
-			die "Want to add $field to Company but it's not in fields";
-		} # end if
-		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
-			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` FLOAT`);
-			die $dbh->errstr() if $dbh->errstr();
-		} # end if
-	} # end foreach
-	if ( ! exists $$data{$openprint::Company::fields{last_project_id}} ) {
-		$dbh->do('ALTER TABLE companies ADD last_project_id INTEGER');
-    if (sets::isin( 'projects', \@tables ) ) {
-      $dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_project_id) REFERENCES Projects (id)');
-      $dbh->do('UPDATE companies SET last_project_id = (SELECT MAX(id) FROM projects WHERE company_id=companies.id)');
-      die $dbh->errstr() if $dbh->errstr();
-    }
-	} # end if
-	if ( ! exists $$data{$openprint::Company::fields{last_order_id}} ) {
-    if ( sets::isin( 'orders', \@tables ) ) {
-      $dbh->do('ALTER TABLE companies ADD last_order_id INTEGER');
-      $dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_order_id) REFERENCES Orders (id)');
-      $dbh->do('UPDATE companies SET last_order_id = (SELECT MAX(id) FROM Orders WHERE company_id=companies.id)');
-      die $dbh->errstr() if $dbh->errstr();
-    }
-	} # end if
-	if ( ! exists $$data{$openprint::Company::fields{last_quote_id}} ) {
-    if ( sets::isin( 'quotes', \@tables ) ) {
-      $dbh->do('ALTER TABLE companies ADD last_quote_id INTEGER');
-      $dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_quote_id) REFERENCES Quotes (id)');
-      $dbh->do('UPDATE companies SET last_quote_id = (SELECT MAX(id) FROM Quotes WHERE company_id=companies.id)');
-      die $dbh->errstr() if $dbh->errstr();
-    }
-	} # end if
-	if ( ! exists $$data{$openprint::Company::fields{last_invoice_id}} ) {
-    if ( sets::isin( 'invoices', \@tables ) ) {
-      $dbh->do('ALTER TABLE companies ADD last_invoice_id INTEGER');
-      $dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_invoice_id) REFERENCES Invoices (id)');
-      $dbh->do('UPDATE companies SET last_invoice_id = (SELECT MAX(id) FROM Invoices WHERE invoicee_id=companies.id)');
-      die $dbh->errstr() if $dbh->errstr();
-    }
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='companies'", 'column_name');
+if ( !exists $$data{category_id} and sets::isin( 'company_categories', \@tables ) ) {
+  $dbh->do(q`ALTER TABLE Companies add category_id INTEGER`);
+  $dbh->do(q`ALTER TABLE Companies add FOREIGN KEY (category_id) REFERENCES company_categories (id)`);
+}
+if ( ! exists $$data{mailinglist} ) {
+  if ( exists $$data{ysnmailinglist} ) {
+    $dbh->do(q`alter table companies rename column ysnmailinglist to mailinglist`);
+  } else {
+    $dbh->do(q`alter table companies add mailinglist CHAR(1) DEFAULT 'N'`);
+  }
+  $$data{mailinglist} = '';
+} # end if
+$dbh->do('alter table companies drop column strftplogin') if ( exists $$data{strftplogin} );
+$dbh->do('alter table companies drop column strftppassword') if ( exists $$data{strftppassword} );
+$dbh->do('alter table companies drop column strftphomedir') if ( exists $$data{strftphomedir} );
+
+if ( ! exists $$data{asset_id} ) {
+  $dbh->do('ALTER TABLE companies ADD asset_id INTEGER');
+} # end if
+foreach my $field ( 'name', 'address1', 'address2', 'city','country','state', 'postalcode', 'gst_number', 'pst_number',
+    'accountnumber','phone','extension','fax','greeting','business_type','business_name','business_form','president_owner',
+    'bank_name','bank_branch','bank_account','bank_manager','bank_phone','bank_fax','bank_email','notes' ) {
+  if ( ! $openprint::Company::fields{$field} ) {
+    die "Want to add $field to Company but it's not in fields";
   } # end if
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='companies'", 'column_name');
-  if (!$$data{pricelist_id}{is_nullable} ) {
-    $dbh->do('ALTER TABLE companies ALTER pricelist_id DROP NOT NULL');
+  if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+    $dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.' TEXT');
+    die $dbh->errstr() if $dbh->errstr();
+  } # end if
+} # end foreach
+foreach my $field ( 'created_on', 'updated_on' ) {
+  if ( ! $openprint::Company::fields{$field} ) {
+    die "Want to add $field to Company but it's not in fields";
+  } # end if
+  if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+    $dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.' TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+    die $dbh->errstr() if $dbh->errstr();
+  } # end if
+} # end foreach
+foreach my $field ( 'supplier','reseller', 'gst_exempt','pst_exempt', 'activation', 'mailinglist', 'quote_project_breakdown' ) {
+  if ( ! $openprint::Company::fields{$field} ) {
+    die "Want to add $field to Company but it's not in fields";
+  } # end if
+  if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+    $dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` CHAR(1) default 'N'`);
+    die $dbh->errstr() if $dbh->errstr();
+  } # end if
+} # end foreach
+foreach my $field ( 'deleted', 'offers_credit' ) { 
+  if ( ! $openprint::Company::fields{$field} ) {
+    die "Want to add $field to Company but it's not in fields";
+  } # end if
+  if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+    $dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` BOOLEAN NOT NULL DEFAULT FALSE`);
+    die $dbh->errstr() if $dbh->errstr();
+  } # end if
+} # end foreach
+foreach my $field ( 'salesrep_id', 'pricelist_id', 'currency_id', 'detail_level',  ) { 
+  if ( ! $openprint::Company::fields{$field} ) {
+    die "Want to add $field to Company but it's not in fields";
+  } # end if
+  if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+    $dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` INTEGER`);
+    die $dbh->errstr() if $dbh->errstr();
+  } # end if
+} # end foreach
+if ( ! exists $$data{$openprint::Company::fields{established}} ) {
+  $dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{established}.q` date`);
+  die $dbh->errstr() if $dbh->errstr();
+} # end if
+foreach my $field ( 'credit_card_fee', 'csr_commission' ) {
+  if ( ! $openprint::Company::fields{$field} ) {
+    die "Want to add $field to Company but it's not in fields";
+  } # end if
+  if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+    $dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` FLOAT`);
+    die $dbh->errstr() if $dbh->errstr();
+  } # end if
+} # end foreach
+if ( ! exists $$data{$openprint::Company::fields{last_project_id}} ) {
+  $dbh->do('ALTER TABLE companies ADD last_project_id INTEGER');
+  if (sets::isin( 'projects', \@tables ) ) {
+    $dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_project_id) REFERENCES Projects (id)');
+    $dbh->do('UPDATE companies SET last_project_id = (SELECT MAX(id) FROM projects WHERE company_id=companies.id)');
+    die $dbh->errstr() if $dbh->errstr();
   }
 } # end if
+if ( ! exists $$data{$openprint::Company::fields{last_order_id}} ) {
+  if ( sets::isin( 'orders', \@tables ) ) {
+    $dbh->do('ALTER TABLE companies ADD last_order_id INTEGER');
+    $dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_order_id) REFERENCES Orders (id)');
+    $dbh->do('UPDATE companies SET last_order_id = (SELECT MAX(id) FROM Orders WHERE company_id=companies.id)');
+    die $dbh->errstr() if $dbh->errstr();
+  }
+} # end if
+if ( ! exists $$data{$openprint::Company::fields{last_quote_id}} ) {
+  if ( sets::isin( 'quotes', \@tables ) ) {
+    $dbh->do('ALTER TABLE companies ADD last_quote_id INTEGER');
+    $dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_quote_id) REFERENCES Quotes (id)');
+    $dbh->do('UPDATE companies SET last_quote_id = (SELECT MAX(id) FROM Quotes WHERE company_id=companies.id)');
+    die $dbh->errstr() if $dbh->errstr();
+  }
+} # end if
+if ( ! exists $$data{$openprint::Company::fields{last_invoice_id}} ) {
+  if ( sets::isin( 'invoices', \@tables ) ) {
+    $dbh->do('ALTER TABLE companies ADD last_invoice_id INTEGER');
+    $dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_invoice_id) REFERENCES Invoices (id)');
+    $dbh->do('UPDATE companies SET last_invoice_id = (SELECT MAX(id) FROM Invoices WHERE invoicee_id=companies.id)');
+    die $dbh->errstr() if $dbh->errstr();
+  }
+} # end if
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='companies'", 'column_name');
+if (!$$data{pricelist_id}{is_nullable} ) {
+  $dbh->do('ALTER TABLE companies ALTER pricelist_id DROP NOT NULL');
+}
 
 if ( ! sets::isin( 'user_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/User_Types.sql}) );
@@ -332,7 +332,7 @@ if ( ! sets::isin( 'user_types', \@tables ) ) {
 
 if ( ! sets::isin( 'users', \@tables ) ) {
   if ( sets::isin( 'tbl_customer_users', \@tables ) ) {
-    $dbh->do('ALTER TABLE tbl_customer_users RENAME to users');
+    my $ac = sql::start_transaction( $dbh );
     column_rename('tbl_customer_users', 'lngcustomerid', 'company_id');
     column_rename('tbl_customer_users', 'stremail', 'email');
     column_rename('tbl_customer_users', 'strpassword', 'password');
@@ -349,10 +349,12 @@ if ( ! sets::isin( 'users', \@tables ) ) {
     column_rename('tbl_customer_users', 'lnguserid', 'id');
     column_rename('tbl_customer_users', 'lngcustomerid', 'company_id');
     #column_rename('tbl_customer_users', 'ysnchangepassword', 'changepassword');
-		$dbh->do('CREATE SEQUENCE users_id_seq');
-		$dbh->do(q`SELECT setval('users_id_seq', (SELECT MAX(id) FROM Users))`);
-		$dbh->do(q`ALTER TABLE users alter id set default nextval('users_id_seq')`);
+    $dbh->do('ALTER TABLE tbl_customer_users RENAME to users');
+		$dbh->do('CREATE SEQUENCE users_id_seq') or die $dbh->errstr();
+		$dbh->do(q`SELECT setval('users_id_seq', (SELECT MAX(id) FROM Users))`) or die $dbh->errstr();
+		$dbh->do(q`ALTER TABLE users alter id set default nextval('users_id_seq')`) or die $dbh->errstr();
 		$dbh->do('DROP SEQUENCE IF EXISTS tbl_customer_users_lnguserid_se') if sets::isin( 'tbl_customer_users_lnguserid_se', \@sequences );
+    sql::end_transaction( $dbh, $ac );
   } else {
     $dbh->do( misc::load_file( $log, q{../../sql/Users.sql}) ) or die $dbh->errstr();
   }
@@ -1230,23 +1232,27 @@ if ( sets::isin( 'tbl_projects', \@tables ) ) {
 	if ($data) {
 		$dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`) or die $dbh->errstr();
 	} # end if
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+  @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 } # end if
 
-$dbh->do('DROP FUNCTION IF EXISTS project_last_modified CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS service_type_equipment CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS project_division CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS remove_old_ri CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS last_modified CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS delivery_date CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS delivery_time CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS mtime CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS order_content_mtime CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS project_contents_mtime CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS project_valid_press CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS order_mtime CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS paper_family CASCADE');
-$dbh->do('DROP FUNCTION IF EXISTS pqs_version CASCADE');
+$dbh->do('DROP FUNCTION IF EXISTS project_last_modified CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS service_type_equipment CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS project_division CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS last_modified CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS delivery_date CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS completion_date CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS delivery_time CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS mtime CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS order_content_mtime CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS project_contents_mtime CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS project_valid_press CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS order_mtime CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS paper_family(tbl_paper_roll) CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS paper_family(tbl_paper) CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS public.remove_old_ri(name) CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS public.remove_old_ri(name, text) CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS pqs_version CASCADE') or die $dbh->errstr();
+$dbh->do('DROP FUNCTION IF EXISTS public.state_to_status() CASCADE') or die $dbh->errstr();
 
 if ( ! sets::isin( 'projects', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Projects.sql}) ) or die;
@@ -1274,8 +1280,31 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{externalrefnumber} ) {
 		$dbh->do('ALTER TABLE projects add externalrefnumber text');
 	}
+	if ( ! exists $$data{strmode} ) {
+		$dbh->do('ALTER TABLE projects add strmode text');
+	}
+	if ( exists $$data{lngpresstype} ) {
+		$dbh->do('ALTER TABLE projects alter lngpresstype DROP NOT NULL');
+	}
 	if ( ! exists $$data{markup} ) {
 		$dbh->do('ALTER TABLE projects add markup float');
+	}
+
+	if ( ! exists $$data{price1} ) {
+		$dbh->do('ALTER TABLE projects add price1 NUMERIC(10,2)');
+	}
+	if ( ! exists $$data{price2} ) {
+		$dbh->do('ALTER TABLE projects add price2 NUMERIC(10,2)');
+	}
+	if ( ! exists $$data{price3} ) {
+		$dbh->do('ALTER TABLE projects add price3 NUMERIC(10,2)');
+	}
+	if ( ! exists $$data{lngdocketnumber} ) {
+		$dbh->do('ALTER TABLE projects ADD lngDocketNumber     INTEGER');
+	}
+	if ( ! exists $$data{order_id} ) {
+		$dbh->do('ALTER TABLE projects ADD order_id        INTEGER');
+    $dbh->do('ALTER TABLE projects ADD FOREIGN KEY (order_id) REFERENCES orders (id)');
 	}
 	if ( exists $$data{lngprojectindex} ) {
 		$dbh->do('ALTER TABLE Projects rename column lngprojectindex to id');
@@ -1317,6 +1346,13 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 		$log->debug("Add reprint_description to Projects");
 		$dbh->do(q`ALTER TABLE projects ADD reprint_description TEXT`) or $log->error($dbh->errstr());
 	} # end if
+  if (!exists $$data{type_id}) {
+    if (exists $$data{lngprojecttype}) {
+      $dbh->do('ALTER TABLE projects RENAME COLUMN lngprojecttype to type_id');
+    } else {
+      $dbh->do('ALTER TABLE projects ADD type_id INTEGER');
+    }
+  }
   if (!exists $$data{currency_id}) {
     print "Add currency_id to projects\n";
     $dbh->do('ALTER TABLE projects add currency_id INTEGER');
@@ -1340,6 +1376,8 @@ if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 }
 
 if ( sets::isin( 'tbl_service_types', \@tables ) ) {
+		my $ac = sql::start_transaction( $dbh );
+  $dbh->do('DROP TABLE service_types CASCADE') or die $dbh->errstr();
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_service_types LIMIT 1', {} );
   if (exists $$data{strid}) {
     $dbh->do(q{alter table tbl_Service_Types rename column strid to name}) or die $openprint::dbh->errstr();
@@ -1379,10 +1417,12 @@ if ( sets::isin( 'tbl_service_types', \@tables ) ) {
 	$dbh->do(q{alter table service_types rename column strcategory to category}) or die $openprint::dbh->errstr();
 	$dbh->do(q`ALTER TABLE service_types ADD type TEXT`) or die $openprint::dbh->errstr();
 	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`) or die $openprint::dbh->errstr();
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+  sql::end_transaction( $dbh, $ac );
+
+  @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 } elsif ( ! sets::isin( 'service_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Service_Types.sql') );
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 } # end if
 
 if ( ! sets::isin('service_types_id_seq', \@sequences) ) {
@@ -1510,7 +1550,6 @@ if ( ! sets::isin( 'project_files', \@tables ) ) {
   if (!$$data{id}) {
     $dbh->do('ALTER TABLE project_files DROP CONSTRAINT project_files_pkey') or die $dbh->errstr();
     $dbh->do('ALTER TABLE project_files ADD id serial') or die $dbh->errstr();
-    $dbh->do('CREATE INDEX project_files_project_id on project_files (project_id)') or die $dbh->errstr();
     $dbh->do('ALTER table project_files add primary key (id)');
   }
   if (!exists $$data{project_id}) {
@@ -1519,6 +1558,7 @@ if ( ! sets::isin( 'project_files', \@tables ) ) {
     } else {
       $dbh->do('ALTER TABLE project_files ADD project_id INTEGER');
     }
+    $dbh->do('CREATE INDEX project_files_project_id on project_files (project_id)') or die $dbh->errstr();
   } else {
     $dbh->do('ALTER TABLE project_files ALTER project_id DROP NOT NULL') or die $dbh->errstr();
   }
@@ -1584,6 +1624,8 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 	if ( exists $$data{useinestimation} ) {
 		$log->debug("Renaming useinestimation to useinestimating");
 		$dbh->do('ALTER TABLE tbl_Equipment RENAME column useinestimation to useinestimating') or die $dbh->errstr();
+	} elsif ( !exists $$data{useinestimating} ) {
+		$dbh->do('ALTER TABLE tbl_Equipment ADD useinestimating boolean') or die $dbh->errstr();
 	}
 	
 	if ( exists $$data{strcategory} ) {
@@ -1739,7 +1781,7 @@ if ( ! sets::isin( 'paper_recommendations', \@tables ) ) {
 
 if ( sets::isin( 'tbl_material_categories', \@tables ) ) {
 	$dbh->do('ALTER TABLE tbl_material_categories RENAME to material_categories');
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 } # end if
 
 if ( ! sets::isin( 'material_categories', \@tables ) ) {
@@ -1894,7 +1936,7 @@ if ( sets::isin( 'tbl_services', \@tables ) ) {
 	$dbh->do(q{alter table tbl_Services rename column ysntaxexempt1 to taxexempt1});
 	$dbh->do(q{alter table tbl_Services rename column ysntaxexempt2 to taxexempt2});
 	$dbh->do(q{alter table tbl_Services rename to Services});
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 } # end if
 
 if ( sets::isin( 'services', \@tables ) ) {
@@ -1985,7 +2027,7 @@ if ( sets::isin( 'tbl_service_categories', \@tables ) ) {
 		$dbh->do(q{update Services set category_id=NULL where category_id NOT IN (SELECT id FROM Service_Categories)});
 		$dbh->do(q{ALTER TABLE Services ADD foreign key (category_id) REFERENCES Service_Categories (id)});
 		sql::end_transaction( $dbh, $ac );
-		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 	} # end if
 } # end if
 if ( ! sets::isin( 'service_categories', \@tables ) ) {
@@ -2111,7 +2153,7 @@ if ( sets::isin( 'tbl_service_prices', \@tables ) ) {
 		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmin TO min');
 		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmax TO max');
 		sql::end_transaction( $dbh, $ac );
-		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 	} # end if
 } # end if
 if ( ! sets::isin( 'service_prices',\@tables )  ) {
@@ -2781,7 +2823,7 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 		if ( ! exists $$data{for_company_id} ) {
 			$dbh->do('ALTER TABLE quotes add for_company_id INTEGER');
 			$dbh->do('ALTER TABLE quotes add FOREIGN KEY (for_company_id) REFERENCES Companies (id)');
-			$dbh->do('UPDATE Quotes set for_company_id = company_id') or die $dbh->errstr();
+			$dbh->do('UPDATE Quotes set for_company_id = (SELECT id FROM Companies where Companies.id=company_id)') or die $dbh->errstr();
 		} # end if
 	} # end if
 
@@ -2836,7 +2878,7 @@ if (!sets::isin( 'log_actions', \@tables ) ) {
 if ( sets::isin( 'log', \@tables ) ) {
 	$dbh->do('ALTER TABLE log RENAME TO logs');
 	$dbh->do('ALTER sequence log_id_seq RENAME TO logs_id_seq');
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 } # en dif
 
 if ( ! sets::isin( 'logs', \@tables ) ) {
@@ -3741,7 +3783,7 @@ if ( sets::isin('shifts',\@tables) and ! sets::isin( 'equipment_shifts', \@table
 	die if $dbh->errstr();
 } # end if
 
-@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+@tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 if ( sets::isin( 'equipment_shifts', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
 	if ( ! exists $$data{id} ) {
@@ -3864,7 +3906,7 @@ if ( $version < 1910 ) {
 if ( $version < 1914 ) {
 	print "Updating to version 1914\n";
 	my $ac = sql::start_transaction( $dbh );
-	sql::update( undef, undef, 'service_types',['strdetailedurl=?','bind/padding.html'], 'strdetailedurl', 'bind/Padding.html' );
+	sql::update( undef, undef, 'service_types',['url=?','bind/padding.html'], 'url', 'bind/Padding.html' );
 	sql::insert( undef, undef, 'database_info', 'version', 1914, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1914;
@@ -3939,7 +3981,7 @@ if ( ! sets::isin( 'projecttype_blockedservices', \@tables ) ) {
 
 if ( sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
 	$dbh->do('alter table tbl_projecttype_defaults rename to projecttype_defaults');
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 } 
 
 if ( ! sets::isin( 'projecttype_defaults', \@tables ) ) {
@@ -3970,9 +4012,28 @@ foreach my $PT ( openprint::ProjectType->find() ) {
 		$PT->save();
 	} # end if
 } # end foreach
+
 if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/ProjectType_Templates.sql}) );
-	die if $dbh->errstr();
+  print "Does not have projecttemplate\n";
+  if (sets::isin('tbl_project_templates', \@tables)) {
+  print "have tbl_project_template\n";
+    $dbh->do('ALTER TABLE tbl_project_templates RENAME TO projecttemplate') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE projecttemplate RENAME COLUMN lngindex to id') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE projecttemplate RENAME COLUMN strtemplatetype to type') or die $dbh->errstr();
+
+    $dbh->do('ALTER TABLE projecttemplate ADD projecttype_id INTEGER') or die $dbh->errstr();
+    $dbh->do('UPDATE projecttemplate SET projecttype_id = (SELECT id FROM project_types WHERE name=strprojecttype)') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE projecttemplate DROP COLUMN strprojecttype') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE projecttemplate ADD name TEXT') or die $dbh->errstr();
+		$dbh->do('UPDATE projecttemplate set name=type') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE projecttemplate ADD message TEXT') or die $dbh->errstr();
+    column_rename('projecttemplate', 'strdimensions', 'desscription');
+
+  } else {
+    print "No tbl_project_templates in @tables\n";
+    $dbh->do( misc::load_file( $log, q{../../sql/ProjectType_Templates.sql}) );
+    die if $dbh->errstr();
+  }
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='projecttemplate'", 'column_name');
 	if ( ! exists $$data{message} ) {
@@ -3983,7 +4044,6 @@ if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
 		$dbh->do('UPDATE projecttemplate set name=type');
 	}
 } # end if
-
 
 if ( ! sets::isin( 'host_config', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Host_Config.sql}) );
@@ -4583,7 +4643,7 @@ if ( sets::isin( 'upgrade_type', \@tables ) ) {
 	$dbh->do('ALTER TABLE upgrade_types RENAME ucategory to category') or die $dbh->errstr();
 	$dbh->do('ALTER SEQUENCE upgrade_type_id_seq RENAME TO upgrade_types_id_seq') or die $dbh->errstr();
 	$dbh->do(q`ALTER TABLE Upgrade_Types ALTER ID SET DEFAULT nextval('upgrade_types_id_seq')`) or die $dbh->errstr();
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 	@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 } # end if
 if ( ! sets::isin( 'upgrade_types', \@tables ) ) {
@@ -5521,7 +5581,7 @@ $log->warn("Renaming paper$thingy");
 	} # end if
 } # end if
 } # end foreach thingy
-@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 if ( sets::isin( 'stocknames', \@tables ) ) {
 	$dbh->do('ALTER TABLE stocknames rename to stockbrands');
 } # end if
@@ -5988,119 +6048,138 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 $dbh->do( 'update service_prices set units=lower(units)');
 $dbh->do( 'update paper_prices set strunits=lower(strunits)');
 $log->debug("Updating locations for all companies");
-foreach my $Company ( openprint::Company->find() ) {
-	my $Country;
-	if ( $Company->country() ) {
-		$Company->country('Canada') if $Company->country() eq 'CANADA';
-		if ( $Company->country() =~ /\./ ) {
-			$_ = $Company->country();
-			$_ =~ s/\.//g;
-			$Company->country($_);
-		} 
-		$Company->country(openprint::Location->transform('name',$Company->country()));
+
+my %countries_by_short = map { $_->short() => $_ } openprint::Location->find(type=>'country', 'short is null'=>0 );
+if (!%countries_by_short) {
+  my %countries = map { lc $_->name() => $_ } openprint::Location->find(type=>'country');
+  my %states = map { lc $_->name() => $_ } openprint::Location->find(type=>'states');
+  my %provinces = map { lc $_->name() => $_ } openprint::Location->find(type=>'provinces');
+  my %cities = map { lc $_->name() => $_ } openprint::Location->find(type=>'city');
+
+  foreach my $Company ( openprint::Company->find() ) {
+    my $Country;
+    if ( $Company->country() ) {
+      $Company->country('Canada') if $Company->country() eq 'CANADA';
+      if ( $Company->country() =~ /\./ ) {
+        $_ = $Company->country();
+        $_ =~ s/\.//g;
+        $Company->country($_);
+      } 
+      $Company->country(openprint::Location->transform('name',$Company->country()));
 
 
-		if ( $countries::countries{$Company->country} ) {
-			if ( ! ( $Country = openprint::Location->find_one(short=>$Company->country(),type=>'country' ) ) ) {
-				$Country = new openprint::Location();
-				$_ = $Country->save({
-						short=>$Company->country(),
-						name=> $countries::countries{$Company->country},
-						type=> 'country',
-						});
-				die $_ if $_;
-			} # end if
-		} else {
-			if ( ! ( $Country = openprint::Location->find_one('name lc'=>lc $Company->country(),type=>'country' ) ) ) {
-				$Country = new openprint::Location();
-				$_ = $Country->save({
-						name	=> $Company->country(),
-						type=> 'country',
-				});
-				die $_ if $_;
-			} # end if
-		} # end if
-		my $State;
-		if ( $Company->country() eq 'CA' ) {
-			if ( $provinces::provinces{$Company->state()} ) {
-				if ( $Company->state() and ! ( $State = openprint::Location->find_one(short=>$Company->state(),type=>'province' ) ) ) {
-					$State = new openprint::Location();
-					$_ = $State->save({
-							parent_id	=>	$Country->id(),
-							short=>$Company->state(),
-							name=> $provinces::provinces{$Company->state()},
-							type=> 'province',
-							});
-					die $_ if $_;
-				} # end if
-			} else {
-				if ( $Company->state() and ! ( $State = openprint::Location->find_one('name lc'=>lc $Company->state(),type=>'province' ) ) ) {
-					$State = new openprint::Location();
-					$_ = $State->save({
-							parent_id	=>	$Country->id(),
-							#short=>$Company->state(),
-							name=> $Company->state(),
-							type=> 'province',
-							});
-					die $_ if $_;
-				} # end if
-			} # end if
-		} else {
-			if ( $states::states{$Company->state()} ) {
-				if ( $Company->state() and ! ( $State = openprint::Location->find_one(short=>$Company->state(),type=>'state' ) ) ) {
-					$State = new openprint::Location();
-					$_ = $State->save({
-							parent_id	=>	$Country->id(),
-							short=>$Company->state(),
-							name=> $states::states{$Company->state()},
-							type=> 'state',
-							});
-					die $_ if $_;
-				} # end if
-			} else {
-				if ( $Company->state() and ! ( $State = openprint::Location->find_one('name lc'=>lc $Company->state(),type=>'state' ) ) ) {
-					$State = new openprint::Location();
-					$_ = $State->save({
-							parent_id	=>	$Country->id(),
-#short=>$Company->state(),
-							name=> $Company->state(),
-							type=> 'state',
-							});
-					die $_ if $_;
-				} # end if
-			} # end if
-		} # end if
-		next if ! $State;
-		my $City;
-		$Company->city(openprint::Location->transform('name', $Company->city() ));
-		if ( $Company->city() and ! ( $City = openprint::Location->find_one('name lc'=>lc $Company->city(),type=>'city' ) ) ) {
-			$City = new openprint::Location();
-			$_ = $City->save({
-					parent_id	=>	$State->id(),
-					name=> $Company->city(),
-					type=> 'city',
-					});
-					die $_ if $_;
-		} # end if
-		next if ! $City;
-		$Company->address1( openprint::Location->transform('address', $Company->address1() ) );
+      if ( $countries::countries{$Company->country} ) {
+        if ( ! ( $Country = $countries_by_short{$Company->country()} ) ) {
+          $log->debug("Adding new country location ".$Company->country. ' '.$countries::countries{$Company->country});
+          $Country = new openprint::Location();
+          $_ = $Country->save({
+              short=>$Company->country(),
+              name=> $countries::countries{$Company->country},
+              type=> 'country',
+            });
+          $countries_by_short{$Country->short()} = $Country;
+          die $_ if $_;
+        } # end if
+      } else {
+        if ( ! ( $Country = $countries{lc $Company->country()}) ) {
+          $log->debug("Adding new country location ".$Company->country);
+          $Country = new openprint::Location();
+          $_ = $Country->save({
+              name	=> $Company->country(),
+              type=> 'country',
+            });
+          die $_ if $_;
+          $countries{lc $Company->country()} = $Country;
+        } # end if
+      } # end if
+      my $State;
+      if ( $Company->country() eq 'CA' ) {
+        if ( $provinces::provinces{$Company->state()} ) {
+          if ($Company->state() and ! ($State = $provinces{lc $Company->state()})) {
+            $log->debug("Adding new state location ".$Company->state);
+            $State = new openprint::Location();
+            $_ = $State->save({
+                parent_id	=>	$Country->id(),
+                short=>$Company->state(),
+                name=> $provinces::provinces{$Company->state()},
+                type=> 'province',
+              });
+            $provinces{lc $Company->state()} = $State;
+            die $_ if $_;
+          } # end if
+        } else {
+          if ( $Company->state() and ! ( $State = $provinces{lc $Company->state()} ) ) {
+            $State = new openprint::Location();
+            $_ = $State->save({
+                parent_id	=>	$Country->id(),
+                #short=>$Company->state(),
+                name=> $Company->state(),
+                type=> 'province',
+              });
+            die $_ if $_;
+            $provinces{lc $Company->state} = $State;
+          } # end if
+        } # end if
+      } else {
+        if ( $states::states{$Company->state()} ) {
+          if ( $Company->state() and ! ( $State = $states{lc $Company->state()} ) ) {
+            $State = new openprint::Location();
+            $_ = $State->save({
+                parent_id	=>	$Country->id(),
+                short=>$Company->state(),
+                name=> $states::states{$Company->state()},
+                type=> 'state',
+              });
+            die $_ if $_;
+            $states{lc $Company->state()} = $State;
+          } # end if
+        } else {
+          if ( $Company->state() and ! ( $State = $states{lc $Company->state()} ) ) {
+            $State = new openprint::Location();
+            $_ = $State->save({
+                parent_id	=>	$Country->id(),
+                #short=>$Company->state(),
+                name=> $Company->state(),
+                type=> 'state',
+              });
+            die $_ if $_;
+            $states{lc $Company->state()} = $State;
+          } # end if
+        } # end if
+      } # end if
+      next if ! $State;
+      my $City;
+      $Company->city(openprint::Location->transform('name', $Company->city() ));
+      if ( $Company->city() and ! ( $City = $cities{lc $Company->city()} ) ) {
+        $City = new openprint::Location();
+        $_ = $City->save({
+            parent_id	=>	$State->id(),
+            name=> $Company->city(),
+            type=> 'city',
+          });
+        die $_ if $_;
+        $cities{lc $Company->city()} = $City;
+      } # end if
+      next if ! $City;
+      $Company->address1( openprint::Location->transform('address', $Company->address1() ) );
 
-		if ( $Company->address1() ) {
-			my $Address = openprint::Location->find_one('address lc'=>lc ($Company->address1() . ( $Company->address2() ? ( ' ' . $Company->address2() ) : '' )),type=>'place');
-			if ( ! $Address ) {
-				$Address = new openprint::Location();
-				$_ = $Address->save({
-					address		=>	($Company->address1() ? $Company->address1() : '' ) . ( $Company->address2() ? (  ' ' . $Company->address2() ) : '' ),
-					postalcode	=>	$Company->postalcode(),
-					type		=>	'place',
-					parent_id	=>	$City->id(),
-				});
-					die $_ if $_;
-			} # end if
-		} # end if
-	} # end if has coutnry
-	
-} # end foreach $Company
+      if ( $Company->address1() ) {
+        my $Address = openprint::Location->find_one('address lc'=>lc ($Company->address1() . ( $Company->address2() ? ( ' ' . $Company->address2() ) : '' )),type=>'place');
+        if ( ! $Address ) {
+          $Address = new openprint::Location();
+          $_ = $Address->save({
+              address		=>	($Company->address1() ? $Company->address1() : '' ) . ( $Company->address2() ? (  ' ' . $Company->address2() ) : '' ),
+              postalcode	=>	$Company->postalcode(),
+              type		=>	'place',
+              parent_id	=>	$City->id(),
+            });
+          die $_ if $_;
+        } # end if
+      } # end if
+    } # end if has coutnry
+
+  } # end foreach $Company
+}
 if ( ! sets::isin('software', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Software.sql}) );
 	die if $dbh->errstr();
