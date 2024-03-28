@@ -213,6 +213,7 @@ sub templates {
 
 	my $status = 'Error: ';
 
+  return if !$param{btnFunction};
 	if ( $param{btnFunction} eq 'Save' ) {
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Template ( openprint::ProjectType_Template->find( projecttype_id=>$param{ddmProjectType}) ) {
@@ -354,15 +355,17 @@ sub _paper_recommendations {
 
 sub categories {
 	my $ProjectTypeCategory = new openprint::ProjectTypeCategory( $param{category_id} );
-	if ( $param{btnFunction} eq 'Save' ) {
-		$variable{error} .= $ProjectTypeCategory->save(\%param);
-		foreach my $pt_id ( ref $param{projecttype_id} eq 'ARRAY' ? @{$param{projecttype_id}} : $param{projecttype_id} ) {
-			my $ProjectType = new openprint::ProjectType( $pt_id );
-			$variable{error} .= $ProjectType->save({category_id=>$ProjectTypeCategory->id()});
-		} # end foreach pt_id
-	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		$variable{error} .= $ProjectTypeCategory->delete();
-	} # end if
+  if ($param{btnFunction}) {
+    if ( $param{btnFunction} eq 'Save' ) {
+      $variable{error} .= $ProjectTypeCategory->save(\%param);
+      foreach my $pt_id ( ref $param{projecttype_id} eq 'ARRAY' ? @{$param{projecttype_id}} : $param{projecttype_id} ) {
+        my $ProjectType = new openprint::ProjectType( $pt_id );
+        $variable{error} .= $ProjectType->save({category_id=>$ProjectTypeCategory->id()});
+      } # end foreach pt_id
+    } elsif ( $param{btnFunction} eq 'Delete' ) {
+      $variable{error} .= $ProjectTypeCategory->delete();
+    } # end if
+  } # end if
 	$variable{ProjectTypeCategory} = $ProjectTypeCategory;
 } # end sub categories
 

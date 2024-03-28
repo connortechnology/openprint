@@ -60,7 +60,7 @@ content: "";
 .ProcessColours,
 .SpecialColour {
 	margin: 5px 0px;
-	padding-left: 155px;
+	padding-left: 165px;
 }
 .SpotColours:after,
 .ProcessColours:after {
@@ -73,8 +73,8 @@ content: "";
 }
 .Inks .checkOption {
 	float: left;
-	width: 155px;
-	margin-left: -155px;
+	width: 165px;
+	margin-left: -165px;
 }
 .SpecialColour .Mileage,
 .SpecialColour .Price
