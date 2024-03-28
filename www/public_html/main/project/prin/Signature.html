@@ -5,14 +5,12 @@
 <script src="<?hash_link(/javascripts/printing.js)?>"></script>
 <script src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
 <script nonce="<?echo($config{CSP_NONCE})?>">
-	var quantities = new Array();
+	const quantities = new Array();
 	<?QUANTITIES?>
-	var projectType = '<?ProjectTypeID?>';
+	const projectType = '<?ProjectTypeID?>';
 	function calc( formName, force, options ) {
-  console.log("alcl");
 		calc_print( formName, force, options );
 	}
-  console.log("alcl1");
 </script>
 <?include(/main/project/prin/_templates.html)?>
 <div class="Service">
