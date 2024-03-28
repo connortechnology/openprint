@@ -263,9 +263,9 @@ sub print_prices {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-    $$variable{Cutting} = $$services{Cutting} ? 'YES' : 'NO';
-    $$variable{Folding} = $$services{Folding} ? 'YES' : 'NO';
-    $$variable{NoPrinting} = $$services{NoPrinting};
+  $$variable{Cutting} = $$services{Cutting} ? 'YES' : 'NO';
+  $$variable{Folding} = $$services{Folding} ? 'YES' : 'NO';
+  $$variable{NoPrinting} = $$services{NoPrinting};
 
 	$$variable{Mode} = $Project->mode();
 
@@ -279,7 +279,7 @@ sub multipage_signatures {
 	my ( $param, $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 #deprecate
-return;;
+return;
 
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
