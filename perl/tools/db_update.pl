@@ -80,26 +80,28 @@ if ( ! sets::isin( 'object_types', \@tables ) ) {
 configuration::init( $log, $dbh );
 $config{db_name} = $ARGV[0];
 
+my $ac = sql::start_transaction( $dbh );
 if ( ! sets::isin( 'currencies', \@tables ) ) {
   if ( sets::isin( 'currency', \@tables ) ) {
-    $dbh->do('ALTER TABLE Currency RENAME TO Currencies');
+    $dbh->do('ALTER TABLE Currency RENAME TO Currencies') or die $dbh->errstr();
   } else {
     $dbh->do( misc::load_file( $log, q{../../sql/Currencies.sql}) );
   }
 } 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='currencies'", 'column_name');
 if ( ! exists $$data{short} ) {
-  $dbh->do('ALTER TABLE Currencies ADD short TEXT');
+  $dbh->do('ALTER TABLE Currencies ADD short TEXT') or die $dbh->errstr();
 } # end if
 
-$dbh->do('ALTER TABLE currencies ADD sy varchar(4)');
-$dbh->do('UPDATE currencies set sy=symbol');
-$dbh->do('ALTER TABLE currencies DROP COLUMN symbol');
-$dbh->do('ALTER TABLE currencies RENAME COLUMN sy TO symbol');
+$dbh->do('ALTER TABLE currencies ADD sy varchar(4)') or die $dbh->errstr();
+$dbh->do('UPDATE currencies set sy=symbol') or die $dbh->errstr();
+$dbh->do('ALTER TABLE currencies DROP COLUMN symbol') or die $dbh->errstr();
+$dbh->do('ALTER TABLE currencies RENAME COLUMN sy TO symbol') or die $dbh->errstr();
 if ( ! exists $$data{precision} ) {
   $log->debug("Add precision to currencies");
-  $dbh->do('ALTER TABLE currencies ADD precision smallint NOT NULL default 2');
+  $dbh->do('ALTER TABLE currencies ADD precision smallint NOT NULL default 2') or die $dbh->errstr();
 }
+sql::end_transaction( $dbh, $ac );
 
 if ( ! sets::isin( 'annualsales', \@tables ) ) {
   print "Adding annualsales\n";
@@ -1377,7 +1379,7 @@ if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 
 if ( sets::isin( 'tbl_service_types', \@tables ) ) {
 		my $ac = sql::start_transaction( $dbh );
-  $dbh->do('DROP TABLE service_types CASCADE') or die $dbh->errstr();
+  $dbh->do('DROP TABLE IF EXISTS service_types CASCADE') or die $dbh->errstr();
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_service_types LIMIT 1', {} );
   if (exists $$data{strid}) {
     $dbh->do(q{alter table tbl_Service_Types rename column strid to name}) or die $openprint::dbh->errstr();
@@ -1691,6 +1693,10 @@ if ( ! sets::isin( 'stockqualities', \@tables ) ) {
 }
 if ( ! sets::isin( 'stockgroups', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/StockGroups.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'stockmaterials', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../../sql/StockMaterials.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
 
@@ -2550,11 +2556,13 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	if ( ! exists $$data{material_id} ) {
 		my $ac = sql::start_transaction( $dbh );
 		print "Adding material_id to Papers";
-		$dbh->do(q`alter table Papers add material_id INTEGER`);
-		$dbh->do( misc::load_file( $log, q{../../sql/StockMaterials.sql}) );
-		$dbh->do(q`insert into stockmaterials (name) values ('Paper')`);
-		$dbh->do(q`alter table Papers add foreign key (material_id) REFERENCES Stockmaterials (id)`);
-		$dbh->do(q`update Papers set material_id=1`);
+    $dbh->do(q`alter table Papers add material_id INTEGER`) or die $dbh->errstr();
+    if (!sets::isin('stockmaterials', \@tables)) {
+      $dbh->do( misc::load_file( $log, q{../../sql/StockMaterials.sql}) ) or die $dbh->errstr();
+      $dbh->do(q`insert into stockmaterials (name) values ('Paper')`) or die $dbh->errstr();
+    }
+		$dbh->do(q`alter table Papers add foreign key (material_id) REFERENCES Stockmaterials (id)`) or die $dbh->errstr();
+		$dbh->do(q`update Papers set material_id=1`) or die $dbh->errstr();
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 	$dbh->do(q{alter table papers add minimum_order integer}) if ! exists $$data{minimum_order};
@@ -3265,7 +3273,7 @@ foreach my $S ( openprint::Service->find('name'=>'AqueousMakeReady') ) {
 		my $S2 = $S->copy();
 		$S2->name('Aqueous SoftTouch Overall MakeReady');
 		$S2->description('Aqueous Overall SoftTouch MakeReady');
-		$S2->save();
+		$S2->save() or die $_;
 		foreach my $P ( $S->prices() ) {
 			$P = $P->copy();
 			$P->service_id( $S2->id() );
