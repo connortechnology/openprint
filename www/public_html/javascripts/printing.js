@@ -1,5 +1,7 @@
 var pendingCalc;
-
+var ScoringQuestionFlag = true;
+var FoldingQuestionFlag = true;
+var CuttingQuestionFlag = true;
 
 function versions_onkeyup( e ) {
 	new Ajax.Updater( 'Version_Descriptions', '_version_descriptions.html', { parameters: Form.serialize(e.form, true) } );
@@ -140,7 +142,10 @@ function validate_data(formName) {
 	if ( stockBrand == '' && form.txtSpecificStockBrand && form.txtSpecificStockBrand.value == '' ) {
 		text += "Please Select a Paper Brand\n";
 	} // end if
-	if ( form.elements['txtSpecificStockWidth'] && form.elements['txtSpecificStockHeight'] && form.txtSpecificStockWidth.value && form.txtSpecificStockHeight.value ) {
+	if ( form.elements['txtSpecificStockWidth'] &&
+    form.elements['txtSpecificStockHeight'] &&
+    form.txtSpecificStockWidth.value &&
+    form.txtSpecificStockHeight.value ) {
 		if ( (parseFloat(form.txtWidth.value) <= parseFloat(form.txtSpecificStockWidth.value) && parseFloat(form.txtHeight.value) <= parseFloat(form.txtSpecificStockHeight.value) )  ||
 				(parseFloat(form.txtWidth.value) <= parseFloat(form.txtSpecificStockHeight.value) && parseFloat(form.txtHeight.value) <= parseFloat(form.txtSpecificStockWidth.value)) ) { 
 			// we have good sheet size
@@ -173,7 +178,7 @@ function validate_data(formName) {
 
 function get_impositions( form, qty_index ) {
 	form = $(form);
-	var h = $H(Form.serialize(form,true));
+	var h = $H(Form.serialize(form, true));
 	h.each(function(pair) {
 		if ( pair.value == '' ) 
 			h.unset(pair.key);
@@ -192,12 +197,11 @@ function calc_print( formName, force, options ) {
 		timeout = null;
 	}
 	if ( gettingNewPrice && ! force ) {
-		if ( pendingCalc ) {
-			pendingCalc.transport.abort();
+		if (pendingCalc) {
+			pendingCalc.abort();
 		} else {
-
 			// This prevents concurrent price getting
-			if ( options ) {
+			if (options) {
 				timeout = setTimeout("calc_print('f1', 0, " + Object.toJSON( options ) + ");", 1000 );	
 			} else {
 				timeout = setTimeout("calc_print('f1' );", 1000 );	
@@ -205,24 +209,21 @@ function calc_print( formName, force, options ) {
 			return;
 		}
 	} // end if
+	gettingNewPrice = true;
 
 	clear_price_data(form);
 	const AlertDiv = $('AlertDiv');
-	if ( AlertDiv ) {
+	if (AlertDiv) {
 		AlertDiv.innerHTML = '';
 		AlertDiv.hide();
 	} // end if
 	const div = $('InformationDiv');
-	if ( div ) {
+	if (div) {
 		div.innerHTML = 'Calculating....';
 		div.show();
 	} // end if
-	gettingNewPrice = true;
 
   const data = $j(form).serializeArray();
-  //if ( options ) {
-  //data.merge( options );
-  //}
   for (let i=0; i < data.length; i++) {
     const pair = data[i];
     if (
@@ -235,27 +236,33 @@ function calc_print( formName, force, options ) {
       data.splice(i,1);
     }
   }
+  if (options) {
+    for (const [key, value] of Object.entries(options)) {
+      console.log("Adding ", key, value);
+      data[data.length] = {name: key, value: value};
+    }
+  }
+  console.log('options', options);
 	//pendingCalc = new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-  pendinfCalc = $j.ajax({
-        type: 'POST',
-        url: '/main/project/_calc.json',
-        data: data,
-        dataType: 'json',
-        success: function(data, textStatus, jqXHR) {
-          console.log(data);
-          cbFillPrintResults(data);
-        }
-      }).done(function(data) {
-          console.log(data);
-      }).fail(function(jqXHR, textStatus, errorThrown) {
-        console.log("fail", jqXHR, textStatus);
-      });
+  pendingCalc = $j.ajax({
+    type: 'POST',
+    url: '/main/project/_calc.json',
+    data: data,
+    dataType: 'json',
+    success: function(data, textStatus, jqXHR) {
+      console.log(data);
+      cbFillPrintResults(data);
+    }
+  }).done(function(data) {
+    console.log(data);
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    console.log("fail", textStatus, errorThrown);
+  });
 	return true;
 } // end calc_print
 
 function clear_price_data( form ) {
-
-	for ( var qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
+	for ( let qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
 		if ( quantities[qtyNum-1] > 0 ) {
 			if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! get_value(form.elements['OverridePrice'+qtyNum]) ) form.elements["txtPrice"+qtyNum].value = '';
 			continue;
@@ -338,7 +345,7 @@ function cbFillPrintResults( results ) {
 	block_calc = false;
 	gettingNewPrice = false;
 
-	var addServices = new Array();
+	const addServices = new Array();
 	var cancelAddFolding = false;
 	if ( form.NeedFolding.value > 0 ) {
 		if ( form.HasFolding.value == 0 ) {
@@ -374,13 +381,12 @@ function cbFillPrintResults( results ) {
 
 	if ( addServices.length ) {
 		calc_print( 'f1', 0, { action: 'add_service', service_name: addServices } );
+  } else {
+    console.log("Not adding servics");
 	} // end if
 
 } // end function cbFillPrintResults( results )
 
-var ScoringQuestionFlag = true;
-var FoldingQuestionFlag = true;
-var CuttingQuestionFlag = true;
 
 function selectProjectTemplate( formName ) {
 	const form = getFormObj( formName );
