@@ -27,13 +27,13 @@ sub get_price_object {
 	my ( $service, $range, $Equipment ) = @_;
 	$service_name_cache{$service} = openprint::Service->find_one( name=>$service ) if ! exists $service_name_cache{$service};
 	my $Service = $service_name_cache{$service};
-	if ( ! $Service ) {
+	if (!$Service) {
 		if ( 0 and Debug ) {
 			$openprint::log->debug("No Service for $service");
 		};
 		return;
 	}
-	return $Service->get_price( $range, $Equipment );
+	return $Service->get_price($range, $Equipment);
 } # end sub get_price_object
 
 sub save_service {
