@@ -1,6 +1,6 @@
 use strict;
 package openprint::pricing;
-#require Memoize;
+use Memoize;
 use Carp qw( cluck );
 
 require openprint::pricelist;
@@ -25,8 +25,8 @@ sub clear_cache {
 
 sub init_cache {
 	$price_cache{$config{db_name}} = {};
-	my @Services = openprint::Service->find(); # for cachine	
-	my @Materials = openprint::Material->find(); # for cachine	
+	my @Services = openprint::Service->find();
+	my @Materials = openprint::Material->find();
 	my @Pricelists = openprint::Pricelist->find();
 	foreach my $Pricelist ( @Pricelists ) {
 		foreach my $S ( openprint::ServicePrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST') ) {
@@ -79,7 +79,7 @@ sub get_pricelist_id {
 	return $list_id;
 } # end sub get_pricelist_id
 
-#memoize('find_price');
+memoize('find_price');
 # returns an index into the passed array of the price entry that fits the specified quantity.
 # if $qty = '' then it will return the last entry
 # if the price array is empty, it will return -4, which isn't good.
