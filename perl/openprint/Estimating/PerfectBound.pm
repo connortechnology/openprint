@@ -529,11 +529,11 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . Math::Round::nearest( 0.01, $price{MakeReady}).'<br/>';
 
 			if ( my $servicePrice = $price{ServicePrice} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s %d passes at $%.2f%s=$%.2f<br/>', $$servicePrice{Service}->name(), $price{Passes} -1, @$servicePrice{'Price','units','Total'});
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s %d passes at $%.2f%s=$%.2f<br/>', $$servicePrice{Service}->name(), $price{Passes}-1, @$servicePrice{'Price','units','Total'});
 			} # end if
 			my $servicePrice = $price{LastPassServicePrice};
-			if ( ! $$servicePrice{Service} ) {
-				$openprint::log->error("WHy does LastPass have no service?");
+			if (!$$servicePrice{Service}) {
+				$openprint::log->error("Why does LastPass have no service?");
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: 1 pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s 1 pass at $%.2f%s=$%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','Total'});
