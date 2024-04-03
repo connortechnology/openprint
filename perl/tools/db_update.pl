@@ -3500,13 +3500,13 @@ if ( ! sets::isin( 'skid_contents', \@tables ) ) {
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='skid_contents'", 'column_name');
 	if ( ! exists $$data{id} ) {
-		$dbh->do('alter table skid_contents add id serial');
-		$dbh->do('alter table skid_contents drop constraint skid_contents_pkey');
-		$dbh->do('alter table skid_contents add primary key (id)');
-		$dbh->do('create index skid_contents_skid_id_idx on skid_contents (skid_id)');
+		$dbh->do('alter table skid_contents add id serial') or die $dbh->errstr();
+		$dbh->do('alter table skid_contents drop constraint if exists skid_contents_pkey') or die $dbh->errstr();
+		$dbh->do('alter table skid_contents add primary key (id)') or die $dbh->errstr();
+		$dbh->do('create index skid_contents_skid_id_idx on skid_contents (skid_id)') or die $dbh->errstr();
 	} # end if
 	if ( ! exists $$data{needs_verification} ) {
-		$log->debug("Adding needs_verification to skid_contents");
+		$log->debug("Adding needs_verification to skid_contents") or die $dbh->errstr();
 		$dbh->do('ALTER TABLE skid_contents ADD needs_verification BOOLEAN NOT NULL DEFAULT false') or die $dbh->errstr();
 	}
 } # end if
@@ -4218,12 +4218,30 @@ if ( ! sets::isin( 'users_in_usergroups', \@tables ) ) {
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
 if ( ! sets::isin( 'marketing_categories', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/Marketing_Categories.sql}) );
-	die $dbh->errstr() if $dbh->errstr();
+  if ( sets::isin( 'tbl_marketing_categories', \@tables ) ) {
+    my $ac = sql::start_transaction( $dbh );
+    $dbh->do('ALTER TABLE tbl_marketing_categories RENAME TO marketing_categories') or die $dbh->errstr();
+    column_rename( 'marketing_categories', 'lngindex', 'id');
+    column_rename( 'marketing_categories', 'strname', 'name');
+    column_rename( 'marketing_categories', 'strdescription', 'description');
+    column_rename( 'marketing_categories', 'strgreeting', 'greeting');
+    sql::end_transaction( $dbh, $ac );
+  } else {
+    $dbh->do( misc::load_file( $log, q{../../sql/Marketing_Categories.sql}) );
+    die $dbh->errstr() if $dbh->errstr();
+  }
 } # end if
 if ( ! sets::isin( 'users_in_marketing_categories', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/Users_In_Marketing_Categories.sql}) );
-	die $dbh->errstr() if $dbh->errstr();
+  if ( sets::isin( 'tbl_users_in_categories', \@tables ) ) {
+    my $ac = sql::start_transaction( $dbh );
+    $dbh->do('ALTER TABLE tbl_users_in_categories RENAME TO users_in_marketing_categories') or die $dbh->errstr();
+    column_rename( 'users_in_marketing_categories', 'lnguserindex', 'user_id');
+    column_rename( 'users_in_marketing_categories', 'lngcategoryindex', 'category_id');
+    sql::end_transaction( $dbh, $ac );
+  } else {
+    $dbh->do( misc::load_file( $log, q{../../sql/Users_In_Marketing_Categories.sql}) );
+    die $dbh->errstr() if $dbh->errstr();
+  } # end if
 } # end if
 if ( ! sets::isin( 'companies_in_marketing_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Companies_In_Marketing_Categories.sql}) );
