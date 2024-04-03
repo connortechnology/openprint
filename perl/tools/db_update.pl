@@ -70,6 +70,8 @@ if ( ! sets::isin( 'configuration', \@tables ) ) {
     column_rename('configuration', 'strconfigtitle', 'name');
     column_rename('configuration', 'strconfigdata', 'value');
     $dbh->do('ALTER TABLE configuration ADD description TEXT');
+    $dbh->do('ALTER TABLE configuration ADD type TEXT');
+    $dbh->do("UPDATE configuration set type='text' WHERE type IS NULL");
     sql::end_transaction( $dbh, $ac );
   } else {
     $log->debug("Adding Configuration table");
@@ -89,26 +91,39 @@ if ( ! sets::isin( 'object_types', \@tables ) ) {
 configuration::init( $log, $dbh );
 $config{db_name} = $ARGV[0];
 if ( ! $config{Timezone} ) {
-$dbh->do(q`INSERT INTO Configuration (Name,Value,type,category,description) VALUES ('Timezone', 'America/Toronto', 'text', 'Timezone','Miscellaneous Settings' );` );
+$dbh->do(q`INSERT INTO Configuration (Name,Value,type,category,description) VALUES ('Timezone', 'America/Toronto', 'text', 'Timezone','Miscellaneous Settings' );` ) or die $dbh->errstr();
 } # end if
 
 my $ac = sql::start_transaction( $dbh );
 if ( ! sets::isin( 'currencies', \@tables ) ) {
   if ( sets::isin( 'currency', \@tables ) ) {
     $dbh->do('ALTER TABLE Currency RENAME TO Currencies') or die $dbh->errstr();
+
   } else {
     $dbh->do( misc::load_file( $log, q{../../sql/Currencies.sql}) );
   }
 } 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='currencies'", 'column_name');
 if ( ! exists $$data{short} ) {
-  $dbh->do('ALTER TABLE Currencies ADD short TEXT') or die $dbh->errstr();
+  if (exists $$data{code}) {
+    $dbh->do('ALTER TABLE Currencies RENAME COLUMN code TO short') or die $dbh->errstr();
+  } else {
+    $dbh->do('ALTER TABLE Currencies ADD short TEXT') or die $dbh->errstr();
+  }
 } # end if
 
 $dbh->do('ALTER TABLE currencies ADD sy varchar(4)') or die $dbh->errstr();
 $dbh->do('UPDATE currencies set sy=symbol') or die $dbh->errstr();
 $dbh->do('ALTER TABLE currencies DROP COLUMN symbol') or die $dbh->errstr();
 $dbh->do('ALTER TABLE currencies RENAME COLUMN sy TO symbol') or die $dbh->errstr();
+if ( ! exists $$data{id} ) {
+  $log->debug("Add id to currencies");
+  $dbh->do('ALTER TABLE country DROP CONSTRAINT IF EXISTS "$1"');
+  $dbh->do('ALTER TABLE pricelist DROP CONSTRAINT IF EXISTS "in_currency"');
+  $dbh->do('ALTER TABLE currencies DROP CONSTRAINT IF EXISTS currency_pkey');
+  $dbh->do('ALTER TABLE currencies ADD id serial') or die $dbh->errstr();
+  $dbh->do('ALTER TABLE currencies ADD PRIMARY KEY (id)') or die $dbh->errstr();
+}
 if ( ! exists $$data{precision} ) {
   $log->debug("Add precision to currencies");
   $dbh->do('ALTER TABLE currencies ADD precision smallint NOT NULL default 2') or die $dbh->errstr();
@@ -1713,68 +1728,109 @@ if ( ! sets::isin( 'stockmaterials', \@tables ) ) {
 } # end if
 
 if ( ! sets::isin( 'papers', \@tables ) ) {
-	$log->debug("Adding Papers");
-	$dbh->do(misc::load_file( $log, '../../sql/Papers.sql') );
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='papers'", 'column_name');
-	if ( ! exists $$data{bladecleaning} ) {
-		$dbh->do('alter table papers add bladecleaning boolean');
-		sql::update( undef, undef, 'papers', 'bladecleaning IS NULL', 'bladecleaning', 'false' );
-    } # end if
-	if ( ! exists $$data{grain_direction} ) {
-		$dbh->do('alter table papers add grain_direction text');
-		sql::update( undef, undef, 'papers', 'width > height', 'grain_direction', 'Short' );
-		sql::update( undef, undef, 'papers', 'width < height', 'grain_direction', 'Long' );
-	} # end if
-	if ( ! exists $$data{allocated} ) {
-		$dbh->do('alter table papers add allocated integer');
-	} # end if
-	if ( ! exists $$data{available_to_order} ) {
-		$dbh->do('alter table papers add available_to_order integer');
-	} # end if
-	if ( ! exists $$data{manufacturers_name} ) {
-		$dbh->do('ALTER TABLE papers add manufacturers_name TEXT');
-	} # end if
-	$dbh->do('alter table papers add basis_width float') if ! exists $$data{basis_width};
-	$dbh->do('alter table papers add basis_height float') if ! exists $$data{basis_height};
-	$dbh->do('alter table papers add basis_mweight float') if ! exists $$data{basis_mweight};
-	$dbh->do('alter table papers add grade integer') if ! exists $$data{grade};
-	$dbh->do('alter table papers add die_score_required  BOOLEAN NOT NULL default false') if ! exists $$data{die_score_required};
-	if ( ! exists $$data{user_type} ) {
-		$dbh->do(q`ALTER TABLE papers add user_type char(1) default ''`);
-	} else {
-		$dbh->do(q`ALTER TABLE papers ALTER user_type DROP NOT NULL`);
-	} # end if
-	if ( ! exists $$data{supplier_id} ) {
-		print "Adding supplier_id to Papers\n";
-		$dbh->do(q`ALTER TABLE papers add supplier_id INTEGER`);
-		$dbh->do(q`ALTER TABLE papers add FOREIGN KEY (supplier_id) REFERENCES companies (id)`);
-	} # end nif
-	if ( ! exists $$data{supplied} ) {
-		print "Adding supplied to Papers\n";
-		$dbh->do(q`ALTER TABLE papers add supplied boolean`);
-	} # end nif
-	if ( ! exists $$data{digital} ) {
-		print "Adding digital to Papers\n";
-		$dbh->do(q`ALTER TABLE papers add digital boolean`);
-	} # end nif
-	if ( ! exists $$data{wpsi} ) {
-		print "Adding wpsi to Papers\n";
-		$dbh->do(q`ALTER TABLE papers add wpsi float`);
-	} # end nif
-	if ( ! exists $$data{type} ) {
-		print "Adding type to Papers\n";
-		$dbh->do(q`ALTER TABLE papers add type text`);
-	} # end nif
-	if ( ! exists $$data{created_on} ) {
-		print "Adding created_on to Papers\n";
-		$dbh->do(q`ALTER TABLE papers add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()`);
-	} # end nif
-	if ( ! exists $$data{department_id} ) {
-		print "Adding department_id to Papers\n";
-		$dbh->do(q`ALTER TABLE papers add department_id TEXT`);
-	} # end nif
+  if (sets::isin( 'tbl_paper', \@tables ) ) {
+		my $ac = sql::start_transaction( $dbh );
+    $dbh->do('ALTER TABLE tbl_paper RENAME TO papers') or die $dbh->errstr();
+    column_rename('papers', 'lngindex', 'id');
+    $dbh->do('ALTER TABLE papers ADD mweight NUMERIC(10,4)') or die $dbh->errstr();
+    $dbh->do('UPDATE papers set mweight=strmweight :: numeric') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE papers ADD calliper NUMERIC(10,4)') or die $dbh->errstr();
+    $dbh->do('UPDATE papers set calliper=strcalliper :: numeric') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE papers ADD perfecting boolean NOT NULL default false') or die $dbh->errstr();
+    $dbh->do("UPDATE papers set perfecting=true where ysnperfecting='Y'") or die $dbh->errstr();
+    $dbh->do('ALTER TABLE papers ADD taxexempt1 boolean NOT NULL default false') or die $dbh->errstr();
+    $dbh->do("UPDATE papers set taxexempt1=true where ysntaxexempt1='Y'") or die $dbh->errstr();
+    $dbh->do('ALTER TABLE papers ADD taxexempt2 boolean NOT NULL default false') or die $dbh->errstr();
+    $dbh->do("UPDATE papers set taxexempt2=true where ysntaxexempt2='Y'") or die $dbh->errstr();
+    $dbh->do('ALTER TABLE papers ADD doublesided boolean NOT NULL default true') or die $dbh->errstr();
+    $dbh->do("UPDATE papers set doublesided=false where ysndoublesided='N'") or die $dbh->errstr();
+    $dbh->do('ALTER TABLE papers ADD cuttable boolean NOT NULL default true') or die $dbh->errstr();
+    $dbh->do("UPDATE papers set cuttable=false where ysncutpaper='N'") or die $dbh->errstr();
+    $dbh->do('ALTER TABLE papers ADD multipart boolean NOT NULL default false') or die $dbh->errstr();
+    $dbh->do("UPDATE papers set multipart=true where lngmultipart > 1") or die $dbh->errstr();
+    column_rename('papers', 'dblwidth', 'width') or die $dbh->errstr();
+    column_rename('papers', 'dblheight', 'height') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE papers ADD brand_id INTEGER') or die $dbh->errstr();
+    $dbh->do('INSERT INTO stockbrands (name) SELECT distinct strname from papers where strname NOT in (SELECT name from stockbrands)') or die $dbh->errstr();
+    $dbh->do('UPDATE papers set brand_id=(SELECT id FROM stockbrands where name=strname)') or die $dbh->errstr();
+
+    $dbh->do('ALTER TABLE papers ADD finish_id INTEGER') or die $dbh->errstr();
+    $dbh->do('INSERT INTO stockfinishes (name) SELECT distinct strfinish from papers where strfinish NOT in (SELECT name from stockfinishes)') or die $dbh->errstr();
+    $dbh->do('UPDATE papers set finish_id=(SELECT id FROM stockfinishes where name=strfinish)') or die $dbh->errstr();
+
+    $dbh->do('ALTER TABLE papers ADD colour_id INTEGER') or die $dbh->errstr();
+    $dbh->do('INSERT INTO stockcolours (name) SELECT distinct strcolour from papers where strcolour NOT in (SELECT name from stockcolours)') or die $dbh->errstr();
+    $dbh->do('UPDATE papers set colour_id=(SELECT id FROM stockcolours where name=strcolour)') or die $dbh->errstr();
+
+    $dbh->do('ALTER TABLE papers ADD weight_id INTEGER') or die $dbh->errstr();
+    $dbh->do('INSERT INTO stockweights (name) SELECT distinct strweight from papers where strweight NOT in (SELECT name from stockweights)');
+    $dbh->do('UPDATE papers set weight_id=(SELECT id FROM stockweights where name=strweight)') or die $dbh->errstr();
+    sql::end_transaction( $dbh, $ac );
+    push @tables, 'papers';
+  } else {
+    $log->debug("Adding Papers");
+    $dbh->do(misc::load_file( $log, '../../sql/Papers.sql') );
+  }
+}
+
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='papers'", 'column_name');
+if ( ! exists $$data{bladecleaning} ) {
+  $dbh->do('alter table papers add bladecleaning boolean');
+  sql::update( undef, undef, 'papers', 'bladecleaning IS NULL', 'bladecleaning', 'false' );
 } # end if
+if ( ! exists $$data{grain_direction} ) {
+  $dbh->do('alter table papers add grain_direction text');
+  sql::update( undef, undef, 'papers', 'width > height', 'grain_direction', 'Short' );
+  sql::update( undef, undef, 'papers', 'width < height', 'grain_direction', 'Long' );
+} # end if
+if ( ! exists $$data{allocated} ) {
+  $dbh->do('alter table papers add allocated integer');
+} # end if
+if ( ! exists $$data{available_to_order} ) {
+  $dbh->do('alter table papers add available_to_order integer');
+} # end if
+if ( ! exists $$data{manufacturers_name} ) {
+  $dbh->do('ALTER TABLE papers add manufacturers_name TEXT');
+} # end if
+$dbh->do('alter table papers add basis_width float') if ! exists $$data{basis_width};
+$dbh->do('alter table papers add basis_height float') if ! exists $$data{basis_height};
+$dbh->do('alter table papers add basis_mweight float') if ! exists $$data{basis_mweight};
+$dbh->do('alter table papers add grade integer') if ! exists $$data{grade};
+$dbh->do('alter table papers add die_score_required  BOOLEAN NOT NULL default false') if ! exists $$data{die_score_required};
+if ( ! exists $$data{user_type} ) {
+  $dbh->do(q`ALTER TABLE papers add user_type char(1) default ''`);
+} else {
+  $dbh->do(q`ALTER TABLE papers ALTER user_type DROP NOT NULL`);
+} # end if
+if ( ! exists $$data{supplier_id} ) {
+  print "Adding supplier_id to Papers\n";
+  $dbh->do(q`ALTER TABLE papers add supplier_id INTEGER`) or die $dbh->errstr();
+  $dbh->do(q`ALTER TABLE papers add FOREIGN KEY (supplier_id) REFERENCES companies (id)`);
+} # end nif
+if ( ! exists $$data{supplied} ) {
+  print "Adding supplied to Papers\n";
+  $dbh->do(q`ALTER TABLE papers add supplied boolean`);
+} # end nif
+if ( ! exists $$data{digital} ) {
+  print "Adding digital to Papers\n";
+  $dbh->do(q`ALTER TABLE papers add digital boolean`);
+} # end nif
+if ( ! exists $$data{wpsi} ) {
+  print "Adding wpsi to Papers\n";
+  $dbh->do(q`ALTER TABLE papers add wpsi float`);
+} # end nif
+if ( ! exists $$data{type} ) {
+  print "Adding type to Papers\n";
+  $dbh->do(q`ALTER TABLE papers add type text`);
+} # end nif
+if ( ! exists $$data{created_on} ) {
+  print "Adding created_on to Papers\n";
+  $dbh->do(q`ALTER TABLE papers add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()`);
+} # end nif
+if ( ! exists $$data{department_id} ) {
+  print "Adding department_id to Papers\n";
+  $dbh->do(q`ALTER TABLE papers add department_id TEXT`);
+} # end nif
 
 if ( ! sets::isin( 'paper_recommendations', \@tables ) ) {
   if (sets::isin('tbl_paper_recommendations', \@tables)) {
@@ -2573,8 +2629,8 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
       $dbh->do( misc::load_file( $log, q{../../sql/StockMaterials.sql}) ) or die $dbh->errstr();
       $dbh->do(q`insert into stockmaterials (name) values ('Paper')`) or die $dbh->errstr();
     }
-		$dbh->do(q`alter table Papers add foreign key (material_id) REFERENCES Stockmaterials (id)`) or die $dbh->errstr();
-		$dbh->do(q`update Papers set material_id=1`) or die $dbh->errstr();
+		$dbh->do(q`ALTER TABLE Papers add foreign key (material_id) REFERENCES StockMaterials (id)`) or die $dbh->errstr();
+		$dbh->do(q`update Papers set material_id=(SELECT id FROM StockMaterials where name='Paper')`) or die $dbh->errstr();
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 	$dbh->do(q{alter table papers add minimum_order integer}) if ! exists $$data{minimum_order};
@@ -4043,12 +4099,11 @@ if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
 
     $dbh->do('ALTER TABLE projecttemplate ADD projecttype_id INTEGER') or die $dbh->errstr();
     $dbh->do('UPDATE projecttemplate SET projecttype_id = (SELECT id FROM project_types WHERE name=strprojecttype)') or die $dbh->errstr();
-    $dbh->do('ALTER TABLE projecttemplate DROP COLUMN strprojecttype') or die $dbh->errstr();
+    #$dbh->do('ALTER TABLE projecttemplate DROP COLUMN strprojecttype') or die $dbh->errstr();
 		$dbh->do('ALTER TABLE projecttemplate ADD name TEXT') or die $dbh->errstr();
 		$dbh->do('UPDATE projecttemplate set name=type') or die $dbh->errstr();
 		$dbh->do('ALTER TABLE projecttemplate ADD message TEXT') or die $dbh->errstr();
-    column_rename('projecttemplate', 'strdimensions', 'desscription');
-
+    column_rename('projecttemplate', 'strdimensions', 'description');
   } else {
     print "No tbl_project_templates in @tables\n";
     $dbh->do( misc::load_file( $log, q{../../sql/ProjectType_Templates.sql}) );
