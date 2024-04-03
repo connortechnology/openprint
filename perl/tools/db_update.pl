@@ -64,8 +64,17 @@ my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT ver
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
 
 if ( ! sets::isin( 'configuration', \@tables ) ) {
-	$log->debug("Adding Configuration table");
-	$dbh->do( misc::load_file( $log, q{../../sql/Configuration.sql}) );
+  if ( sets::isin( 'tbl_configuration', \@tables ) ) {
+    my $ac = sql::start_transaction( $dbh );
+    $dbh->do('ALTER TABLE tbl_configuration RENAME TO configuration') or die $dbh->errstr();
+    column_rename('configuration', 'strconfigtitle', 'name');
+    column_rename('configuration', 'strconfigdata', 'value');
+    $dbh->do('ALTER TABLE configuration ADD description TEXT');
+    sql::end_transaction( $dbh, $ac );
+  } else {
+    $log->debug("Adding Configuration table");
+    $dbh->do( misc::load_file( $log, q{../../sql/Configuration.sql}) );
+  }
 }
 
 if ( ! sets::isin( 'object_types', \@tables ) ) {
@@ -79,6 +88,9 @@ if ( ! sets::isin( 'object_types', \@tables ) ) {
 
 configuration::init( $log, $dbh );
 $config{db_name} = $ARGV[0];
+if ( ! $config{Timezone} ) {
+$dbh->do(q`INSERT INTO Configuration (Name,Value,type,category,description) VALUES ('Timezone', 'America/Toronto', 'text', 'Timezone','Miscellaneous Settings' );` );
+} # end if
 
 my $ac = sql::start_transaction( $dbh );
 if ( ! sets::isin( 'currencies', \@tables ) ) {
@@ -5799,10 +5811,6 @@ if ( sets::isin( 'paper_purchase_orders', \@tables ) ) {
 	}
 	$dbh->do('DROP TABLE paper_purchase_orders');
 }
-if ( ! $config{Timezone} ) {
-$dbh->do(q`insert into Configuration values ('Timezone', 'America/Toronto', 'text', 'Timezone','Miscellaneous Settings' );` );
-	
-} # end if
 
 if ( ! sets::isin( 'order_invoices', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Order_Invoices.sql}) );
