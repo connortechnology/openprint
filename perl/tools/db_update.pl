@@ -2207,8 +2207,18 @@ if ( ! sets::isin( 'stockpurposes', \@tables ) ) {
 } # end if
 
 if ( ! sets::isin( 'pricelists', \@tables ) ) {
+if ( sets::isin( 'pricelist', \@tables ) ) {
+		my $ac = sql::start_transaction( $dbh );
+    $dbh->do('ALTER TABLE pricelist RENAME to pricelists') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE pricelists ADD currency_id integer');
+    $dbh->do('UPDATE pricelists set currency_id = (SELECT id from Currencies where short=currency)') or die $dbh->errstr();
+		sql::end_transaction( $dbh, $ac );
+		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+} else {
+
 	$dbh->do(misc::load_file( $dbh, '../../sql/Pricelists.sql' ) );
 	die if $dbh->errstr();
+}
 }
 
 if ( sets::isin( 'tbl_service_prices', \@tables ) ) {
