@@ -35,19 +35,19 @@ require misc;
 
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_PRESSES => 0;
-use constant DEBUG_FILTERING => 0;
-use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_AFTER_FILTERING => 0;
+use constant DEBUG_PRESSES => 1;
+use constant DEBUG_FILTERING => 1;
+use constant DEBUG_INITIAL_FILTERING => 1;
+use constant DEBUG_AFTER_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
 use constant USE_PRICE_CACHE => 1;
-use constant DEBUG_IMPOSITIONS => 0;
+use constant DEBUG_IMPOSITIONS => 1;
 
 %ServicePrices = (
 	Roll2Sheet => {
@@ -1307,7 +1307,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		if ( ( $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} ) and ( $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} ne $printing_type ) ) {
 			$log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) is not the book overriden type " . $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} ) if DEBUG_IMPOSITIONS;
 			next;
-		} # en dif
+		} # end if
 		if ( ( defined $$specs{'OverridePrintingType'.$qty_index} ) and ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) ) {
 			if ( $printing_type ne $$specs{'PrintingType'.$qty_index} ) {
 				$log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if DEBUG_IMPOSITIONS;
@@ -1333,9 +1333,12 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			$log->warn("Press Plate Type ");
 			next;
 		} # end if
-		if ( (! $$project{HasFolding} ) and ($Press->specification('Sheeter') ne 'Y' ) ) {
-			$log->error("No Sheeter on $$Press{strid}");
-			next;
+    if (!$$project{HasFolding}) {
+      my $sheeter = $Press->specification('Sheeter');
+      if ($sheeter and ($sheeter ne 'Y')) {
+        $log->error("No Sheeter on $$Press{strid} ".(defined $sheeter?$sheeter :'undef'));
+        next;
+      }
 		} # end if
 
 		my @side_one_colours = @{$$project{side_one_colours}};
@@ -1368,7 +1371,8 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		my $number_of_colours = $Press->specification('Number of Colours');
 		$$project{Runstyles} = $Press->specification('Runstyles');
 		if ( ! $$project{Runstyles} ) {
-			$log->warn("NO runstyles set on $$Press{strid}");
+			$log->warn("No runstyles set on $$Press{strid}, defaulting to sheet work");
+      $$project{Runstyles} = 'Sheet Work';
 		}
 		if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 			$$project{Runstyles} = $$specs{"ddmRunStyle$qty_index"};
@@ -1619,7 +1623,8 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 				next;
 			} # end if
 			my @imps;
-			if ( ! $feeds{$$Paper{type}} ) {
+
+			if ( %feeds and ! $feeds{$$Paper{type}} ) {
 				if ( DEBUG_IMPOSITIONS ) {
 					$log->debug('Not in feeds: ' . $Paper->to_string() . ' on ' . $$Press{strid} );
 				} # end if
@@ -2814,6 +2819,7 @@ $log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_
 $log->debug('after sorting presses: ' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs there are ' . @possible_presses);
 
 	my @available_printingtypes = sets::union( map { $_->specification('Printing Type') } @possible_presses );
+  $log->debug("Available printing types: @available_printingtypes");
 
 #$log->debug("Master time before qty: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	my %threads;
@@ -2828,7 +2834,7 @@ $log->debug('after sorting presses: ' . ( sprintf('%.4f', tv_interval( [$master_
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		$qty = $Project->quantity($qty_index) if $qty eq '';
 		if ( ! $qty ) {
-			$log->error("There must be a qty heref or qty $qty_index!");
+			$log->error("There must be a qty here for qty $qty_index!");
 			next;
 		} # end if
 
@@ -2880,7 +2886,7 @@ $log->debug('after sorting presses: ' . ( sprintf('%.4f', tv_interval( [$master_
 			if ( $$specs{PrintingTypes} ) {
 				$log->debug("Printing TYpes for qty$qty_index " . join(',', @{$$specs{PrintingTypes}}));
 			} else {
-				$log->debug('No printing types');
+				$log->debug('No printing types in specs');
 			} # end if
 			$log->debug('after get printing_types: ' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 		} # end if
@@ -3100,9 +3106,9 @@ $I->display("The price for this impo is $price left " . @{$$best_price{prices}})
 			$stock_breakdown = $$price{'Paper Breakdown'} if $$price{'Paper Breakdown'};
 			$stitching_breakdown = $$price{'Stitching Breakdown'} if $$price{'Stitching Breakdown'};
 		} # end foreach
-if ( ! $stock_breakdown ) {
-$log->error("No stock breakdown $stock_breakdown for $qty_index");
-} 
+    if ( ! $stock_breakdown ) {
+      $log->error("No stock breakdown $stock_breakdown for $qty_index");
+    } 
 
 		$price = $best_price if ! $price;
 
