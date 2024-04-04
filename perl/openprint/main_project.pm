@@ -171,13 +171,13 @@ sub _calc {
 		}
 		if ( $param{action} eq 'add_service' ) {
       my $services = $Project->services();
-      foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : $param{service_name} ) {
+      foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : split(',',$param{service_name}) ) {
         next if $$services{$service_name};
         $Project->add_service( $service_name );
       } # end foreach service_name
     } elsif ( $param{action} eq 'del service' ) {
       my $services = $Project->services();
-      foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : $param{service_name} ) {
+      foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : split(',',$param{service_name}) ) {
         next if ! $$services{$service_name};
         foreach ( @{$$services{$service_name}} ) {
           my $Service = new openprint::Project_Service( { project_id=>$$Project{id}, service_id=>$_ } );

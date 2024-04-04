@@ -84,7 +84,6 @@ $serial	= 'paper_id_seq';
 		parts				=>	'parts',
 		material_id			=>	'material_id',
 		user_type			=>	'user_type',
-		manufacturers_name	=>	'manufacturers_name',
 		available_to_order	=>	'available_to_order',
 		department_id		=>	'department_id',
 		Supplied			=>	undef,

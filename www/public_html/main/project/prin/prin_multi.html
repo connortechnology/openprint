@@ -2,30 +2,48 @@
 <script src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
 <script src="<?hash_link(/javascripts/printing.js)?>"></script>
 <script nonce="<?echo($config{CSP_NONCE})?>">
-	function calc( formName, force ) {
-		var form = getFormObj( formName );
-		if ( gettingNewPrice && ! force ) {
-			if ( timeout ) {
-				clearTimeout( timeout );
-			} // end if
-			setTimeout( "calc('"+formName+"');", 1000 );
-			return;
-		} // end if
-		timeout = null;
-		gettingNewPrice = true;
-		var h = $H(form.serialize(true));
-		h.each(function(pair) {
-				if ( pair.value == '' )
-					h.unset(pair.key);
-				if ( pair.key == 'alert' ) 
-					h.unset(pair.key);
-				if ( pair.key == 'btnFunction' ) 
-					h.unset(pair.key);
-				});
-		h.set('ServiceType','MultiPage');
-		h.set('callback','cbBookResults');
-		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-	}
+  function calc( formName, force ) {
+    const form = getFormObj( formName );
+    if ( gettingNewPrice && ! force ) {
+      if ( timeout ) {
+        clearTimeout( timeout );
+      } // end if
+      setTimeout( "calc('"+formName+"');", 1000 );
+      return;
+    } // end if
+    timeout = null;
+    gettingNewPrice = true;
+
+    const data = $j(form).serializeArray();
+    for (let i=0; i < data.length; i++) {
+      const pair = data[i];
+      if (
+        (pair.value == '')
+        ||
+        (pair.name == 'btnFunction')
+        ||
+        (pair.name == 'alert')
+      ) {
+        data.splice(i,1);
+      }
+    }
+    data[data.length] = { name: 'ServiceType', value: 'MultiPage' };
+
+    pendingCalc = $j.ajax({
+      type: 'POST',
+      url: '/main/project/_calc.json',
+      data: data,
+      dataType: 'json',
+      success: function(data, textStatus, jqXHR) {
+        console.log(data);
+        cbBookResults(data);
+      }
+    }).done(function(data) {
+      console.log(data);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      console.log("fail", textStatus, errorThrown);
+    });
+  } // end function calc
 
 	function cbBookResults( results ) {
 		cbFillResults(results);

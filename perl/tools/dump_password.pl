@@ -61,7 +61,7 @@ foreach my $user (openprint::User->find()) {
   print "Decrypting password for $$user{id} $$user{email} $$user{password} .. \n";
   if ($$user{password} =~ /\%/) {
     eval {
-    print "Decrypting password for $$user{id} $$user{email} $$user{password} .. ".$crypt->decrypt(unescape($user->password()))."\n";
+      print "Decrypting password for $$user{id} $$user{email} $$user{password} .. ".$crypt->decrypt(unescape($user->password()))."\n";
       $user->save({password=>$crypt->decrypt(unescape($user->password()))});
     };
   }

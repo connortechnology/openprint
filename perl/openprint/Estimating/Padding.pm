@@ -203,12 +203,16 @@ sub calc {
 			my %CardboardPrice = $Material->get_price( $qty, undef );
 			if ( $CardboardPrice{units} eq 'per square inch' ) {
 				$CardboardPrice{Total} = Math::Round::nearest( 0.01, $CardboardPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $$specs{"txtQuantity$qty_index"} );
+        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%1$.2f%2$s * %4$sx%5$s = $%3$.2f<br/>', @CardboardPrice{'Price','units','Total'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'} );
 			} elsif ( $CardboardPrice{units} eq 'per square foot' ) {
 				$CardboardPrice{Total} = Math::Round::nearest( 0.01, $CardboardPrice{Price} * ($$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight}/144) * $$specs{"txtQuantity$qty_index"} );
-			} elsif ( $CardboardPrice{units} eq 'per pad' ) {
-				$CardboardPrice{Total} = $qty * $CardboardPrice{Price};
-			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%1$.2f%2$s * %4$sx%5$s = $%3$.2f<br/>', @CardboardPrice{'Price','units','Total'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'} );
+			} elsif ( $CardboardPrice{units} eq 'per pad' or $CardboardPrice{units} eq 'each') {
+				$CardboardPrice{Total} = $qty * $CardboardPrice{Price};
+        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%1$.2f%2$s * %4$s = $%3$.2f<br/>', @CardboardPrice{'Price','units','Total'}, $qty );
+      } else {
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Unknown units for cardboard.<br/>';
+			} # end if
 			$price += $CardboardPrice{Total};
 		} # end if Material
 

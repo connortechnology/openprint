@@ -41,7 +41,7 @@ my @variables = (
 	'type_id', 'cross_type_id',
 );
 sub variables {
-    return @variables;
+  return @variables;
 }
 
 my @no_outputs = (
@@ -95,7 +95,7 @@ sub calc {
 		} else {
 			$$specs{alert} .= 'Please enter the # of items in each ' . $ServiceType->name();
 		} # end if
-        return $$specs{Status} = 'uncalculated';
+    return $$specs{Status} = 'uncalculated';
 	} # end if
 	if ( ! $$specs{rdbCardboardBacking} ) {
 		$$specs{alert} = 'Please select whether you need cardboard backing.';
@@ -108,12 +108,12 @@ sub calc {
 	my $Service = openprint::Service->find_one( name=>$ServiceType->name() );
 	my $minCharge = openprint::service::get_price( $ServiceType->name().'Minimum', undef, undef );
 	if ( ! $minCharge ) {
-		$log->error("No minimum charge let's do debug $$specs{ServiceType} " . $ServiceType->to_string() );
+		$log->error('No minimum charge lets do debug '.$$specs{ServiceType}.' '.$ServiceType->to_string());
 		my $Minimum = openprint::Service->find_one( name=>$ServiceType->name().'Minimum' );
 		if ( $Minimum ) {
-			$log->error( "Service: " . $Minimum->to_string() );
+			$log->error('Service: ' . $Minimum->to_string());
 		} else {
-			$log->error("No ServiceMinimum ");
+			$log->error('No ServiceMinimum');
 		} # end if
 	}
 	my @Materials;

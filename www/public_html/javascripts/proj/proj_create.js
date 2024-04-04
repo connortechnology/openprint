@@ -199,13 +199,13 @@ function checkSelections (form){
 
 	if ( projectType == 'PresentationFolders' ) {
 		if ( form.chkServicesDieCutting && ! form.chkServicesDieCutting.checked ) {
-			if (confirm ("Your project requires a die cutting service in order for us to fufill your request for Presentation Folders.\n\nIf you would like to add die cutting to your project please click OK, otherwise click Cancel.")){
+			if (confirm ("Your project requires a die cutting service in order for us to fulfill your request for Presentation Folders.\n\nIf you would like to add die cutting to your project please click OK, otherwise click Cancel.")){
 				form.chkServicesDieCutting.checked = true;
 			} // end if			
 		} // end if
 	} else if ( projectType == 'ScratchPads' ) {
 		if ( form.chkServicesPadding && ! form.chkServicesPadding.checked ) {
-			if (confirm ("Your project requires a padding service in order for us to fufill your request for scratch pads.\n\nIf you would like to add padding to your project please click OK, otherwise click Cancel.")){
+			if (confirm ("Your project requires a padding service in order for us to fulfill your request for scratch pads.\n\nIf you would like to add padding to your project please click OK, otherwise click Cancel.")){
 				form.chkServicesPadding.checked=true;
 			} // end if			
 		} // end if

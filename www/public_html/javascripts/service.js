@@ -23,7 +23,7 @@ function show_breakdown( index ) {
 		breakdownWin[breakdownWin[index]] = index;
 
 		// Set up a windows observer, check our debug window to get messages
-		myObserver = {
+		const myObserver = {
 			onDestroy: function(eventName, win) {
 				if ( win == breakdownWin[breakdownWin[win]] ) {
 					breakdownWin[breakdownWin[win]] = null;
