@@ -182,38 +182,38 @@ if ( ( exists $config{RFID} ) and $config{RFID} ) {
 
 # Paper maintenance
 foreach my $Paper ( openprint::Paper->find( 'project_type_id exists' => 1 ) ) {
-	if ( (! $$Paper{basis_mweight} ) and $Paper->basis_mweight() ) {
-				$log->debug("Updating basis_weight");
-		$Paper->save();
-	}
-	
-	my $check = $Paper->check();
-	if ( $check ) {
-		if ( $check =~ /basis/ ) {
-			if ( $Paper->weight() =~ /(\d+)lb/ ) {
-				$log->debug("Updating based on basis_mweight");
-				$$Paper{gsm} = undef;
-				$$Paper{wpsi} = undef;
-				$$Paper{mweight} = undef;
-				$Paper->gsm();
-				$Paper->mweight();
-				$Paper->basis_mweight( 2*$1 );
-				$Paper->save();
-			}
-	$check = $Paper->check();
-		}
-		$log->error($Paper->to_string() . ' ' . $check . " id:$$Paper{id}");
-		#sleep 1;
-	}
+  if ( (! $$Paper{basis_mweight} ) and $Paper->basis_mweight() ) {
+    $log->debug("Updating basis_weight");
+    $Paper->save();
+  }
 
-	my $old_wpsi = $Paper->wpsi();
-	$old_wpsi = '' if ! defined $old_wpsi;
-	next if ! $Paper->wpsi(undef);
-	if ( $old_wpsi ne $Paper->wpsi() ) {
-$openprint::log->debug("Updating wpsi (old: $old_wpsi, new: $$Paper{wpsi}) for " . $Paper->to_string() );
-		$Paper->save();
-		last if $dbh->errstr();
-	} # end if
+  my $check = $Paper->check();
+  if ( $check ) {
+    if ( $check =~ /basis/ ) {
+      if ( $Paper->weight() =~ /(\d+)lb/ ) {
+        $log->debug("Updating based on basis_mweight");
+        $$Paper{gsm} = undef;
+        $$Paper{wpsi} = undef;
+        $$Paper{mweight} = undef;
+        $Paper->gsm();
+        $Paper->mweight();
+        $Paper->basis_mweight( 2*$1 );
+        $Paper->save();
+      }
+      $check = $Paper->check();
+    }
+    $log->error($Paper->to_string() . ' ' . $check . " id:$$Paper{id}");
+    #sleep 1;
+  }
+
+  my $old_wpsi = $Paper->wpsi();
+  $old_wpsi = '' if ! defined $old_wpsi;
+  next if ! $Paper->wpsi(undef);
+  if ( $old_wpsi ne $Paper->wpsi() ) {
+    $openprint::log->debug("Updating wpsi (old: $old_wpsi, new: $$Paper{wpsi}) for " . $Paper->to_string() );
+    $Paper->save();
+    last if $dbh->errstr();
+  } # end if
 } # end foreach my Paper
 
 if ( 1 ) {

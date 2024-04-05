@@ -6,6 +6,7 @@
 		input( type=>'cardinal', name=>'max-'.$param{pricelist_id}.'-'.$param{id} ),
 		) ) ?>
 	</td>
+  <td class="RangeUnits"><?echo( input(type=>'text', name=>join('-','units',$param{pricelist_id},$param{id}));)?></td>
 	<td class="Cost"><? echo ( input( type=>'float', name=>join('-','cost',$param{pricelist_id},$param{id} ), oninput=>'calc_price(this);' ); ) ?></td>
 	<td class="Markup"><? echo ( input( type=>'float', name=>join('-','markup',$param{pricelist_id},$param{id} ), oninput=>'calc_price(this);' ); ) ?></td>
 	<td class="Price"><? echo ( input( type=>'float', name=>join('-', 'price',$param{pricelist_id},$param{id} ), oninput=>'calc_price(this);' ); ) ?></td>

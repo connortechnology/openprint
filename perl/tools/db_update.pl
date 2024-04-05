@@ -2028,6 +2028,12 @@ if ( sets::isin( 'tbl_services', \@tables ) ) {
 } # end if
 
 if ( sets::isin( 'services', \@tables ) ) {
+	if ( sets::isin( 'tbl_services_lngindex_seq', \@sequences ) ) {
+		$dbh->do('DROP SEQUENCE tbl_services_lngindex_seq');
+		$dbh->do('CREATE SEQUENCE services_id_seq');
+		$dbh->do("ALTER TABLE Services alter column id set default nextval('services_id_seq')");
+		$dbh->do("SELECT setval('services_id_seq', (SELECT MAX(id) FROM Services))");
+	} # end if
 	if ( sets::isin( 'serviceindex_seq', \@sequences ) ) {
 		$dbh->do('DROP SEQUENCE serviceindex_seq');
 		$dbh->do('CREATE SEQUENCE services_id_seq');
@@ -2039,6 +2045,11 @@ if ( sets::isin( 'services', \@tables ) ) {
 		$dbh->do('ALTER TABLE Services add owner_id INTEGER');
 		$dbh->do('ALTER TABLE Services add FOREIGN KEY(owner_id) REFERENCES companies (id)');
 	} # end if
+
+	if ( ! $$data{supplier_id} ) {
+		$dbh->do('ALTER TABLE services ADD supplier_id INTEGER');
+		$dbh->do('ALTER TABLE services ADD FOREIGN KEY (supplier_id) REFERENCES Companies (Id)');
+	} # end if
 	if ( ! exists $$data{activity_code} ) {
 		$dbh->do('ALTER TABLE Services ADD activity_code TEXT');
 	} # end if
@@ -2046,6 +2057,10 @@ if ( sets::isin( 'services', \@tables ) ) {
 		$log->debug("Adding servicetype_id to Services");
 		$dbh->do('ALTER TABLE Services ADD servicetype_id  INTEGER');
 		$dbh->do('ALTER TABLE Services ADD FOREIGN KEY (servicetype_id) REFERENCES service_types (id)');
+    if (sets::isin('service_type_equipment', \@tables)) {
+      $dbh->do('update tbl_equipment set servicetype_id =ARRAY(SELECT service_type from service_type_equipment WHERE equipment=id)');
+      $dbh->do('DROP TABLE service_type_equipment');
+    }
 	} # end if
 	if ( ! exists $$data{deleted} ) {
 		$log->debug("Adding deleted to Services");

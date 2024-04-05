@@ -1,9 +1,10 @@
+"use strict";
 
 function check_price( element ) {
-	var form = element.form;
-	var matches;
-	if ( matches = element.name.match( /^\w+\-(\d+)$/ ) ) {
-		var id = matches[1];
+	const form = element.form;
+  const matches = element.name.match( /^\w+\-(\d+)$/ );
+	if (matches) {
+		const id = matches[1];
 		if ( 
 			element_changed( form.elements['discountable-'+id] ) ||
 			element_changed( form.elements['price-'+id] ) ||
@@ -23,13 +24,13 @@ function check_price( element ) {
 }
 
 function basis_weight_to_gsm( form ) {
-	var basis_weight = parseFloat(1*form.elements['basis_mweight'].value);
-	var basis_width = parseFloat(1*form.elements['basis_width'].value);
-	var basis_height = parseFloat(1*form.elements['basis_height'].value);
-	var width = parseFloat(1*form.elements['width'].value);
-	var height = parseFloat(1*form.elements['height'].value);
+  const basis_weight = parseFloat(1*form.elements['basis_mweight'].value);
+  const basis_width = parseFloat(1*form.elements['basis_width'].value);
+	const basis_height = parseFloat(1*form.elements['basis_height'].value);
+	const width = parseFloat(1*form.elements['width'].value);
+	const height = parseFloat(1*form.elements['height'].value);
 
-	var gsm = Math.round((basis_weight/1000)/(basis_width*basis_height)*70306450)/100;
+	const gsm = Math.round((basis_weight/1000)/(basis_width*basis_height)*70306450)/100;
 	form.elements['gsm'].value = gsm;
 	form.elements['mweight'].value = Math.round((gsm/703064.5)*(width*height)*100000)/100;
 	form.elements['wpsi'].value = gsm / 703064.5;
@@ -37,9 +38,9 @@ function basis_weight_to_gsm( form ) {
 }
 
 function mweight_to_gsm( form ) {
-	var mweight;
-	var width;
-	var height;
+	let mweight;
+	let width;
+	let height;
 	if ( get_value( form.elements['type'] ) == 'Roll' ) {
 		mweight = parseFloat(1*form.elements['basis_mweight'].value);
 		width = parseFloat(1*form.elements['basis_width'].value);
@@ -50,91 +51,88 @@ function mweight_to_gsm( form ) {
 		height = parseFloat(1*form.elements['height'].value);
 	} //e nd if
 
-	var gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
+	const gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
 	form.elements['gsm'].value = gsm;
 	form.elements['wpsi'].value = gsm / 703064.5;
 
-	var mweight = Math.round(wpsi*(width*height)*100000)/100;
-	var basis_width = parseFloat(1*form.elements['basis_width'].value);
-	var basis_height = parseFloat(1*form.elements['basis_height'].value);
+	//const basis_mweight = Math.round(wpsi*(width*height)*100000)/100;
+	const basis_width = parseFloat(1*form.elements['basis_width'].value);
+	const basis_height = parseFloat(1*form.elements['basis_height'].value);
 	form.elements['basis_mweight'].value = Math.round( (gsm / 703064.5) * basis_width *basis_height *1000);
 	recalc_prices( form );
 }
 
 function gsm_to_mweight( form ) {
+	const basis_width = parseFloat(1*form.elements['basis_width'].value);
+	const basis_height = parseFloat(1*form.elements['basis_height'].value);
+	const gsm = parseFloat(1*form.elements['gsm'].value);
+	const wpsi = gsm/703064.5;
+	const basis_mweight = Math.round(wpsi*(basis_width*basis_height)*1000);
+	form.elements['basis_mweight'].value = basis_mweight;
 
-	var width = parseFloat(1*form.elements['basis_width'].value);
-	var height = parseFloat(1*form.elements['basis_height'].value);
-	var gsm = parseFloat(1*form.elements['gsm'].value);
-	var wpsi = gsm/703064.5;
-	var mweight = Math.round(wpsi*(width*height)*100000)/100;
-	form.elements['basis_mweight'].value = mweight;
-
-	width = parseFloat(1*form.elements['width'].value);
-	height = parseFloat(1*form.elements['height'].value);
-	mweight = Math.round(wpsi*(width*height)*100000)/100;
+	const width = parseFloat(1*form.elements['width'].value);
+	const height = parseFloat(1*form.elements['height'].value);
+	const mweight = Math.round(wpsi*(width*height)*1000);
 	form.elements['mweight'].value = mweight;
 	form.elements['wpsi'].value = wpsi;
-	recalc_prices( form );
+	recalc_prices(form);
 }
 
 function CommaFormatted(amount) {
-	var delimiter = ","; // replace comma if desired
-	var a = amount.split('.',2)
-	var d = a[1];
-	var i = parseInt(a[0]);
-	if(isNaN(i)) { return ''; }
-	var minus = '';
-	if(i < 0) { minus = '-'; }
+	const delimiter = ','; // replace comma if desired
+	let a = amount.split('.',2)
+	const d = a[1];
+	const i = parseInt(a[0]);
+	if (isNaN(i)) { return ''; }
+	const minus = '';
+	if (i < 0) { minus = '-'; }
 	i = Math.abs(i);
-	var n = new String(i);
-	var a = [];
-	while(n.length > 3)
-	{
-		var nn = n.substr(n.length-3);
+	let n = new String(i);
+	a = [];
+	while (n.length > 3) {
+		const nn = n.substr(n.length-3);
 		a.unshift(nn);
 		n = n.substr(0,n.length-3);
 	}
-	if(n.length > 0) { a.unshift(n); }
+	if (n.length > 0) { a.unshift(n); }
 	n = a.join(delimiter);
-	if(d.length < 1) { amount = n; }
+	if (d.length < 1) { amount = n; }
 	else { amount = n + '.' + d; }
 	amount = minus + amount;
 	return amount;
-}
-// end of function CommaFormatted()
+} // end of function CommaFormatted()
+
 function CurrencyFormatted(amount) {
-	var i = parseFloat(amount);
-	if(isNaN(i)) { i = 0.00; }
-	var minus = '';
-	if(i < 0) { minus = '-'; }
+	let i = parseFloat(amount);
+	if (isNaN(i)) { i = 0.00; }
+	let minus = '';
+	if (i < 0) { minus = '-'; }
 	i = Math.abs(i);
 	i = parseInt((i + .005) * 100);
 	i = i / 100;
-	s = new String(i);
+	let s = new String(i);
 	if(s.indexOf('.') < 0) { s += '.00'; }
 	if(s.indexOf('.') == (s.length - 2)) { s += '0'; }
 	s = minus + s;
 	return s;
-}
-// end of function CurrencyFormatted()
+} // end of function CurrencyFormatted()
 
 function recalc_prices( form ) {
-	for ( var i = 0; i < form.elements.length; i += 1 ) {
-		if ( form.elements[i].name && ( form.elements[i].name.indexOf('cost-') != -1 ) ) {
-			calc_price( form.elements[i] );
+	for (let i = 0, len=form.elements.length; i < len; i += 1) {
+		if (form.elements[i].name && (form.elements[i].name.indexOf('cost-') != -1)) {
+			calc_price(form.elements[i]);
 		} // end if
 	} // end for
 } // end function recalc_prices( form )
 
 function calc_price( element ) {
-	var form = element.form;
-	var matches;
-	if ( matches = element.name.match( /^cost-(.*)$/ ) ) {
-		var index = matches[1];
-		var costcwt = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
-		var markup = parseFloat(1*form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
-		var pricecwt = costcwt * ( 1 + markup );
+	const form = element.form;
+	const matches = element.name.match( /^cost-(.*)$/ );
+	if (matches) {
+		const index = matches[1];
+		const costcwt = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+		const markup = parseFloat(1*form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
+		const pricecwt = costcwt * ( 1 + markup );
 		form.elements['price-'+index].value = do_decimals( pricecwt, 2 ); 
 
 		if ( form.elements['wpsi'] ) {
@@ -153,10 +151,10 @@ function calc_price( element ) {
 			} // end if
 		} // end if
 	} else if ( matches = element.name.match( /costperm-(.*)/ ) ) {
-		var index = matches[1];
-		var costperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
-		var markup = parseFloat(1*form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
-		var priceperm = costperm * ( 1 + markup );
+		const index = matches[1];
+		const costperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+		const markup = parseFloat(1*form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
+		const priceperm = costperm * ( 1 + markup );
 		form.elements['priceperm-'+index].value = do_decimals( priceperm, 2 ); 
 
 		if ( form.elements['wpsi'] )  {
@@ -171,15 +169,15 @@ function calc_price( element ) {
 			form.elements['price-'+index].value = do_decimals( priceperm / (form.elements['mweight'].value / 100), 2 );
 		} // end if
 	} else if ( matches = element.name.match( /costperfoot-(.*)/ ) ) {
-		var index = matches[1];
-		var costperfoot = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
-		var wpsi = parseFloat( form.elements['wpsi'].value );
+		const index = matches[1];
+		const costperfoot = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+		const wpsi = parseFloat( form.elements['wpsi'].value );
 		if ( ! wpsi ) alert( 'No wpsi!' );
-		//var costperinch = ( costperfoot/144 ) * 100/wpsi;
+		//const costperinch = ( costperfoot/144 ) * 100/wpsi;
 		// 100/wpsi = # of inches in 100lbs.
-		var costcwt = ( 100 * costperfoot ) / ( 144 * wpsi );
-		var costperm = costcwt * wpsi * form.elements['width'].value * form.elements['height'].value * 1000;
-		var markup = parseFloat(1*form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
+		const costcwt = ( 100 * costperfoot ) / ( 144 * wpsi );
+		const costperm = costcwt * wpsi * form.elements['width'].value * form.elements['height'].value * 1000;
+		const markup = parseFloat(1*form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
 
 		form.elements['priceperfoot-'+index].value = do_decimals( costperfoot * ( 1 + markup ), 2);
 		form.elements['cost-'+index].value = do_decimals( costcwt, 5 );
@@ -189,31 +187,31 @@ function calc_price( element ) {
 			form.elements['priceperm-'+index].value = do_decimals( costperm * ( 1 + markup ), 2 ); 
 		} // end if
 	} else if ( matches = element.name.match( /markup-(.*)/ ) ) {
-		var index = matches[1];
+		const index = matches[1];
 
-		var markup = parseFloat( 1*(element.value.replace(/[^\d\-\.]/g, '' ) ) );
+		const markup = parseFloat( 1*(element.value.replace(/[^\d\-\.]/g, '' ) ) );
 
-		var costcwt = parseFloat( form.elements['cost-'+index].value.replace(/[^\d\-\.]/g, '' ) );
+		const costcwt = parseFloat( form.elements['cost-'+index].value.replace(/[^\d\-\.]/g, '' ) );
 		if ( costcwt != '' ) {
-			var newvalue = costcwt * ( markup/100 + 1 );
+			const newvalue = costcwt * ( markup/100 + 1 );
 			form.elements['price-'+index].value = do_decimals( newvalue, 2 );
 		} // end if
 		if ( form.elements['costperm-'+index] ) {
-			var costperm = parseFloat( form.elements['costperm-'+index].value.replace(/[^\d\-\.]/g, '' ) );
+			const costperm = parseFloat( form.elements['costperm-'+index].value.replace(/[^\d\-\.]/g, '' ) );
 			if ( costperm != '' ) {
-				var newvalue = costperm * ( markup/100 + 1 );
+				const newvalue = costperm * ( markup/100 + 1 );
 				form.elements['priceperm-'+index].value = do_decimals( newvalue, 2 );
 			} // end if
 		} // end if
 		if ( form.elements['costperfoot-'+index] && form.elements['priceperfoot-'+index] ) {
-			var costperfoot = parseFloat( form.elements['costperfoot-'+index].value.replace(/[^\d\-\.]/g, '' ) );
+			const costperfoot = parseFloat( form.elements['costperfoot-'+index].value.replace(/[^\d\-\.]/g, '' ) );
 			form.elements['priceperfoot-'+index].value = do_decimals( costperfoot * ( 1 + markup/100 ), 2);
 		} // end if
 	} else if ( matches = element.name.match( /price-(.*)/ ) ) {
-		var index = matches[1];
+		const index = matches[1];
 
-		var costcwt = parseFloat(form.elements['cost-'+index].value.replace(/[^\d\-\.]/g, '' ) );
-		var price = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+		const costcwt = parseFloat(form.elements['cost-'+index].value.replace(/[^\d\-\.]/g, '' ) );
+		const price = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
 		if ( costcwt ) {
 			form.elements['markup-'+index].value = do_decimals( ((price / costcwt)-1)*100, 2 );
 		
@@ -222,10 +220,10 @@ function calc_price( element ) {
 			} // end if
 		} // end if
 	} else if ( matches = element.name.match( /priceperm-(.*)/ ) ) {
-		var index = matches[1];
+		const index = matches[1];
 
-		var priceperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
-		var costperm = parseFloat(form.elements['costperm-'+index].value.replace(/[^\d\-\.]/g, '' ) );
+		const priceperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+		const costperm = parseFloat(form.elements['costperm-'+index].value.replace(/[^\d\-\.]/g, '' ) );
 		if ( costperm ) {
 			form.elements['markup-'+index].value = do_decimals( ((priceperm / costperm)-1)*100, 2 );
 			form.elements['price-'+index].value = do_decimals( form.elements['costcwt-'+index].value * ( 1 + form.elements['markup-'+index].value/100), 2 );
