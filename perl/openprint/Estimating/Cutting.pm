@@ -121,7 +121,7 @@ sub signature_needs {
 #$openprint::log->debug("Cutting sig needs: imp: " .  $$specs{'txtImposition'.$qty_index} );
 #$openprint::log->debug("Cutting sig needs: stock: " . join('x', @$specs{'hdnSuppliedStockWidth'.$qty_index,'hdnSuppliedStockHeight'.$qty_index} ) );
 #$openprint::log->debug("Cutting sig needs: ssize: " . join('x', @$specs{'txtWidth','txtHeight'} ) );
-    if ( $$sig_specs{'txtImposition'.$qty_index} > 1 ) {
+    if ( $$sig_specs{'txtImposition'.$qty_index} and ($$sig_specs{'txtImposition'.$qty_index} > 1) ) {
       $openprint::log->debug(" ** Imposition > 1, Cutting needed ! ** ") if DEBUG;
       return 1;
     } # end if
@@ -175,7 +175,7 @@ sub signature_needs_bindery_cutting {
 
 sub signature_has_cut_stock {
 	my ( $sig_specs, $qty_index ) = @_;
-	if ( ($$sig_specs{'StockType'.$qty_index} ne 'Roll') and ! (
+	if ( ((!$$sig_specs{'StockType'.$qty_index}) or ($$sig_specs{'StockType'.$qty_index} ne 'Roll')) and ! (
 				(
 				 $$sig_specs{'hdnSuppliedStockWidth'.$qty_index} == $$sig_specs{txtWidth}
 				 and

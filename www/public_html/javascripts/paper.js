@@ -39,26 +39,27 @@ function filter_onChange( element, id, selected ) {
 } // end function Name_onChange()
 
 function cbStockFillResults( results ) {
-	var form = $(results.get('form'));
-	if ( ! form ) {
+  console.log('cbStockFillResults');
+	const form = $(results.get('form'));
+	if (!form) {
 		alert('No form for ' + results.get('form') );
 		return;
 	} // end if
 	results.unset('form');
 
-	var id = '';
+	let id = '';
 	if ( id = results.get('id') ) {
 		results.unset('id');
 	} else {
 		id = '';
 	}
 
-	var keys = results.keys();
-	for ( var index = 0, len = keys.length; index < len; ++index ) {
-		var key = keys[index];
-		var value = results.get(key);
+	const keys = results.keys();
+	for ( let index = 0, len = keys.length; index < len; ++index ) {
+		const key = keys[index];
+		const value = results.get(key);
 
-		var ddm = null;
+		let ddm = null;
 		if ( ! ddm ) { ddm = form.elements[key+'_id'+id]; } // end if
 		if ( ! ddm ) { ddm = form.elements[key.toLowerCase()+'_id'+id]; } // end if
 		if ( ! ddm ) { ddm = form.elements[key+id]; } // end if

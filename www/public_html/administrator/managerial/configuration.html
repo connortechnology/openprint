@@ -42,6 +42,8 @@
 		$name =~ s/ /%20/g;
         if ( $$C{type} eq 'Supplier' ) {
             $html .= ssi::select( [ map { $_->id(), $_->name() } @Suppliers ], $$C{value}, { name=>$name, prepend=>[ '', 'select one' ] } );
+        } elsif ( $$C{type} eq 'Owner' ) {
+            $html .= ssi::select( [ map { $_->id(), $_->name() } @Owners ], $$C{value}, { name=>$name, prepend=>[ '', 'select one' ] } );
         } elsif ( $$C{type} eq 'pricelist' ) {
             $html .= ssi::select( $Pricelists, $$C{value}, { name=>$name, prepend=>[ '', 'select one' ] } );
         } elsif ( $$C{type} eq 'currency' ) {

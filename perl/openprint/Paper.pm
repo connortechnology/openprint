@@ -35,7 +35,7 @@ use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %g
 
 use constant DEBUG_PRICING => 0;
 
-$debug = 0;
+$debug = 1;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
