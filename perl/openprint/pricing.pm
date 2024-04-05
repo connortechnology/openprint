@@ -79,7 +79,7 @@ sub get_pricelist_id {
 	return $list_id;
 } # end sub get_pricelist_id
 
-memoize('find_price');
+#memoize('find_price');
 # returns an index into the passed array of the price entry that fits the specified quantity.
 # if $qty = '' then it will return the last entry
 # if the price array is empty, it will return -4, which isn't good.
@@ -145,7 +145,7 @@ $log->debug("Filling in price maxs $$price2{max} < $$price1{max}") if DEBUG;
 # builds an array of prices with a linear quantity range.
 # the prices for each quantity range are the lowest possible.
 sub build_lowest_price_list {
-	my @returned = shift @_;
+	my @returned = (shift @_);
 
 	# basically, we process each entry in the huge list of prices, and fit them into a returned list
 	while ( @_ ) {
