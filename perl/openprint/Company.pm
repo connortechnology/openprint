@@ -179,7 +179,7 @@ sub destroy {
 	sql::end_transaction( $dbh, $ac );
 
    # Add record to audit log - action "Delete Company Profile".
-   new openprint::Log()->save({'action'=>'Destroy Company', 'note'=>"Company ID: $$self{id} $$self{name}"});
+   new openprint::Log()->save({action=>'Destroy Company', note=>"Company ID: $$self{id} $$self{name}"});
 } # end sub destroy
 
 sub save {
