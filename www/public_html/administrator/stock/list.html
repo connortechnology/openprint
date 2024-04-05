@@ -12,10 +12,9 @@
 <script>
 	var popupWin;
 	function popup_window( form ) {
-		var stock_ids;
+		let stock_ids = [];
 		if ( form.chkStock ) {
 			if ( ! form.chkStock.length ) {
-				stock_ids = new Array();
 				stock_ids[0] = form.chkStock;
 			} else {
 				stock_ids = $A(form.chkStock).filter(function(e){return e.checked});
@@ -26,9 +25,9 @@
 			return;
 		} // end if
 		if ( ! popupWin ) {
-			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:700, height: 350} );
+			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:900, height: 350} );
 			// Set up a windows observer, check ou debug window to get messages
-			myObserver = {
+			const myObserver = {
 				onDestroy: function(eventName, win) {
 					if (win == popupWin) {
 						popupWin = null;
