@@ -88,11 +88,7 @@ Please select a Paper to view/edit.<br>
  };
 		my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
 		# Validate the filter
-		$session{$uri.'?'.$option_id} = undef if ! (
-				$session{$uri.'?'.$option_id}
-				and
-				sets::isin($session{$uri.'?'.$option_id}, [ map { $$_{$option_id} } @Papers ] )
-				);
+		$session{$uri.'?'.$option_id} = undef if $session{$uri.'?'.$option_id} and !sets::isin($session{$uri.'?'.$option_id}, [ map { $$_{$option_id} } @Papers ] );
 
 		foreach my $Stock ( @Papers ) {
 			# Load up the filter
@@ -132,9 +128,9 @@ Please select a Paper to view/edit.<br>
 		<div class="rightColumn">
 			<ul>
 				<li><label>Type</label>
-					<input type="checkbox" id="typeSheet" name="type" value="Sheet" <? echo ( checked( sets::isin( 'Sheet', split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ) ); ) ?> onclick="calc('f1');"/>
+          <input type="checkbox" id="typeSheet" name="type" value="Sheet" <? echo ( checked( sets::isin( 'Sheet', split( ',', $session{$r->uri().'?type'} ) ) ); ) ?> onclick="calc('f1');"/>
 					<label class="radio" for="typeSheet">Sheet</label>
-					<input type="checkbox" id="typeRoll" name="type" value="Roll" <? echo ( checked( sets::isin( 'Roll', split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ) ); ) ?> onclick="calc('f1');"/>
+          <input type="checkbox" id="typeRoll" name="type" value="Roll" <? echo ( checked( sets::isin( 'Roll', split( ',', $session{$r->uri().'?type'} ) ) ); ) ?> onclick="calc('f1');"/>
 					<label class="radio" for="typeRoll">Roll</label>
 				</li>
 				<li>
@@ -179,7 +175,7 @@ Please select a Paper to view/edit.<br>
 					<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form);">
 					<? echo ( 
 						my @options =	('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find(company_id=>$openprint::Owner->id(), type=>'place', order=>'parent_id NULLS FIRST,lower(name)') );
-						$session{'/employee/inventory/available_paper.html?location_id'} = undef if ! sets::isin( $session{'/employee/inventory/available_paper.html?location_id'}, \@options );
+						$session{'/employee/inventory/available_paper.html?location_id'} = undef if $session{'/employee/inventory/available_paper.html?location_id'} and ! sets::isin( $session{'/employee/inventory/available_paper.html?location_id'}, \@options );
 						my @selected = split(',', $session{'/employee/inventory/available_paper.html?location_id'} );
 						if ( ! @selected ) {
 							foreach my $L ( openprint::Location->find( type=>'place' ) ) {
