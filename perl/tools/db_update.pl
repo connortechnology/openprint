@@ -1795,7 +1795,13 @@ if ( ! exists $$data{manufacturers_name} ) {
 $dbh->do('alter table papers add basis_width float') if ! exists $$data{basis_width};
 $dbh->do('alter table papers add basis_height float') if ! exists $$data{basis_height};
 $dbh->do('alter table papers add basis_mweight float') if ! exists $$data{basis_mweight};
-$dbh->do('alter table papers add grade integer') if ! exists $$data{grade};
+if (! exists $$data{grade}) {
+$dbh->do('alter table papers add grade integer');
+$dbh->do('update papers set grade=1 where (select name from stockfinishes where id=finish_id) ilike \'%Gloss%\'');
+$dbh->do('update papers set grade=2 where (select name from stockfinishes where id=finish_id) ilike \'%Matte%\'');
+$dbh->do('update papers set grade=4 where NOT ( (select name from stockfinishes where id=finish_id) ilike \'%Matte%\' and (select name from stockfinishes where id=finish_id) ilike \'%Gloss%\')');
+}
+
 $dbh->do('alter table papers add die_score_required  BOOLEAN NOT NULL default false') if ! exists $$data{die_score_required};
 if ( ! exists $$data{user_type} ) {
   $dbh->do(q`ALTER TABLE papers add user_type char(1) default ''`);
@@ -1806,6 +1812,14 @@ if ( ! exists $$data{supplier_id} ) {
   print "Adding supplier_id to Papers\n";
   $dbh->do(q`ALTER TABLE papers add supplier_id INTEGER`) or die $dbh->errstr();
   $dbh->do(q`ALTER TABLE papers add FOREIGN KEY (supplier_id) REFERENCES companies (id)`);
+} # end nif
+if ( ! exists $$data{owner_id} ) {
+  print "Adding owner_id to Papers\n";
+  $dbh->do(q`ALTER TABLE papers add owner_id INTEGER`) or die $dbh->errstr();
+  $dbh->do(q`ALTER TABLE papers add FOREIGN KEY (owner_id) REFERENCES companies (id)`);
+  if ($config{owner_id}) {
+    $dbh->do('UPDATE papers set owner_id='.$config{owner_id});
+  }
 } # end nif
 if ( ! exists $$data{supplied} ) {
   print "Adding supplied to Papers\n";
@@ -4032,18 +4046,25 @@ if ( $version < $new_version ) {
 } # end if
 
 if ( ! sets::isin( 'paper_prices', \@tables ) ) {
-	load_sql( 'Paper_Prices' );
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
-	if ( ! exists $$data{equipment_id} ) {
-		$dbh->do('ALTER TABLE paper_prices add equipment_id INTEGER');
-		$dbh->do('ALTER TABLE paper_prices add FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (id)');
-	} # end if
-	if ( ! exists $$data{service} ) {
-		$dbh->do('ALTER TABLE paper_prices add service text');
-		$dbh->do(q`UPDATE paper_prices set service='Material'`);
-	} # end if
+  if (sets::isin('tbl_paper_prices', \@tables)) {
+    $dbh->do('ALTER TABLE tbl_paper_prices RENAME to paper_prices') or die $dbh->errstr();
+  } else {
+    load_sql( 'Paper_Prices' );
+  }
+}
+
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
+if ( ! exists $$data{equipment_id} ) {
+  $dbh->do('ALTER TABLE paper_prices add equipment_id INTEGER');
+  $dbh->do('ALTER TABLE paper_prices add FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (id)');
 } # end if
+if ( ! exists $$data{service} ) {
+  $dbh->do('ALTER TABLE paper_prices add service text');
+  $dbh->do(q`UPDATE paper_prices set service='Material'`);
+} # end if
+if (!exists $$data{interpolate}) {
+  $dbh->do('ALTER TABLE paper_prices add interpolate boolean not null default false') or die $dbh->errstr();
+}
 foreach my $PP ( openprint::PaperPrice->find('units'=>'Per M') ) {
 	$PP->cost( sprintf('%.2f', $PP->cost() * 100 / $PP->Paper()->mweight() ) );
 	$PP->price( sprintf('%.2f', $PP->price() * 100 / $PP->Paper()->mweight() ) );
