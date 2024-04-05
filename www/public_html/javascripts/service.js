@@ -2,6 +2,8 @@
 // The following are GLOBAL variables
 var gettingNewPrice = false;
 var submitForm = false;
+// Default, can be overriden in services
+var results_callback = cbFillResults;
 
 var breakdownWin = new Array();
 
@@ -89,6 +91,7 @@ function body_onLoad() {
 
 function calc( formName, force, options ) {
 	if ( block_calc ) return;
+
 	const form = getFormObj( formName );
 	if ( form && form.ServiceType ) {
 		if ( gettingNewPrice && ! force ) {
@@ -135,7 +138,7 @@ function calc( formName, force, options ) {
         dataType: 'json',
         success: function(data, textStatus, jqXHR) {
           console.log(data);
-          cbFillResults(data);
+          results_callback(data);
         }
       }).done(function(data) {
           console.log(data);
