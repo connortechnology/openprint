@@ -397,6 +397,10 @@ sub delete {
 	$error .= $openprint::dbh->errstr();
 	sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE paper_id=?}, $$self{id} );
 	$error .= $openprint::dbh->errstr();
+	sql::execute( undef, undef, q{DELETE FROM inventory_check_entries WHERE paper_id=?}, $$self{id} );
+	$error .= $openprint::dbh->errstr();
+	sql::execute( undef, undef, q{UPDATE manifest_content_types SET paper_id=NULL WHERE paper_id=?}, $$self{id});
+	$error .= $openprint::dbh->errstr();
 	foreach my $ESS ( openprint::Equipment_Stock_Setting->find( stock_id=>$$self{id} ) ) {
 		$ESS->destroy();
 	} # end foreach
