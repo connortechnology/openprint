@@ -87,6 +87,7 @@ sub export_specs {
 } # end sub export_specs
 
 sub edit {
+  require openprint::Estimating::Folding; # for fold_types
 	my $Equipment = $variable{Equipment} = openprint::Equipment->find_one( id=>$param{ddmEquipment}, deleted=>[0,1] ) if $param{ddmEquipment};
 	if ( ! $Equipment ) {
 		$variable{error} .= "Equipment $param{ddmEquipment} not found.<br/>" if $param{ddmEquipment};
@@ -314,6 +315,7 @@ sub _specification {
 } # end sub _specification
 
 sub _fold {
+  require openprint::Estimating::Folding; # for fold_types
 	my $Fold = new openprint::Fold( $param{id} );
 	if ( $param{action} eq 'add' ) {
 		foreach my $k ( 'equipment_id' ) {
