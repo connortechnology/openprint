@@ -1172,6 +1172,7 @@ sub _companies {
 } # end sub _companies
 
 sub folds {
+  require openprint::Estimating::Folding; # for fold_types
 	_folds();
 } # end sub folds
 
