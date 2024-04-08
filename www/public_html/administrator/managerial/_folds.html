@@ -27,7 +27,7 @@
 	my $rowclass;
 	foreach my $Fold ( @{$$variable{Folds}} ) {
 		$html .= sprintf(q`
-<tr%1$s onclick="popup_window('%2$s');"> 
+<tr%1$s onclick="popup_fold('%2$s');"> 
 	<td class="Equipment">%3$s</td>
 	<td class="Fold">%4$s</td>
 	<td class="Type">%5$s</td>
