@@ -82,7 +82,7 @@ sub ip_address {
 		if ( !$Interface ) {
 			$Host = openprint::Host->find_one(hostname=>$_[1]);
 			if ( ! $Host ) {
-				$Host = new openprint::Host();
+				$Host = new openprint::Host({hostname=>$_[1], name=>$_[1]});
 				$Host->save();
 			}
 			$Interface = new openprint::Host_Interface();
