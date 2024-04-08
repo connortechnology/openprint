@@ -1371,7 +1371,6 @@ sub bootstrap_navmenu {
   } else {
     @categories = sort keys %{$menu};
   }
-$log->error("categoryies @categories");
 	foreach my $category ( @categories ) {
     my $category_id = $category;
     $category_id =~ s/\s+//g;
@@ -1413,7 +1412,7 @@ $log->error("categoryies @categories");
           if ($Page_Setting->can_view()) {
             $submenu_html .= sprintf('<li><a class="dropdown-item" href="%1$s">%2$s</a></li>', $url, $text )."\n";
           } else {
-            $log->error("Not permitted to view $url");
+            $log->debug("Not permitted to view $url");
           } # end if
           #} else {
           #$log->error("No text for $url");
