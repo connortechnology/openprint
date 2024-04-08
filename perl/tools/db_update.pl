@@ -1860,7 +1860,8 @@ if ( ! sets::isin( 'paper_recommendations', \@tables ) ) {
     if (exists $$data{lngpresstype}) {
       $dbh->do('alter table paper_recommendations alter lngpresstype drop not null');
     }
-
+    $dbh->do('CREATE INDEX PR_Paper_Index ON Paper_Recommendations (lngPaperIndex)');
+    $dbh->do('CREATE INDEX PR_ProjectType_Index ON Paper_recommendations (lngProjectTypeIndex)');
   } else {
     $dbh->do(misc::load_file( $log, '../../sql/Paper_Recommendations.sql') );
     die $dbh->errstr() if $dbh->errstr();
