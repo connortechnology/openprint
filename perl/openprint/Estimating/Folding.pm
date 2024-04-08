@@ -16,12 +16,13 @@
 
 package openprint::Estimating::Folding;
 use strict;
+use warnings;
+
 use vars qw( %config $log $dbh %ServicePrices @folds %fold_types );
 
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-#use warnings;
 use Data::Dumper;
 
 require POSIX;
@@ -29,9 +30,10 @@ require Math::Round;
 require openprint::Project;
 require openprint::service;
 require openprint::ServiceType;
+use openprint::Imposition;
 require openprint::Estimating::Perforating;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -410,7 +412,6 @@ sub has_overrides {
 	} # end if
 
 	return @v;
-
 } # end sub has_overrides
 
 sub init {
@@ -504,7 +505,7 @@ sub signature_calc {
 	if ( $$sig_specs{txtSignatureType} and ( $SignatureImposition->pages() == 2 ) ) {
 		# Does not need folding
 		$results{Status}		= 'calculated';
-		$results{Breakdown}		= '2 page does not require folding';
+		$results{Breakdown}	= '2 page does not require folding';
 		return \%results;
 	} # end if
 
@@ -552,21 +553,22 @@ sub signature_calc {
 			return \%results;
 		} # end if
 	} else {
-		if ( $Press->specification('Sheeter') eq 'Y' ) {
+    my $sheeter = $Press->specification('Sheeter');
+		if ($sheeter and ($sheeter eq 'Y')) {
 			if ( $$calc_hash{'Folding::signature_calc::equipment'} ) {
 				@my_equipment = @{$$calc_hash{'Folding::signature_calc::equipment'}};
 			} else {
 				@my_equipment = @equipment;
 			} # end if
 		} elsif ( DEBUG ) {
-			$openprint::log->debug("No sheeter");
+			$openprint::log->debug('No sheeter');
+			@my_equipment = @equipment;
 		} # end if
 
 		$openprint::log->debug("Press: $$sig_specs{'ddmPress'.$qty_index}" . $$Press{strid} ) if DEBUG;
 		my $add = 1;
 		my $capable = $Press->specification('Folding Capable');
 		if ( $capable and ( $capable ne 'N' ) ) {
-
 			if ( $$services{UVCoating} and openprint::Estimating::UVCoating::signature_needs( $Project, $sig_specs ) ) {
 				if ( $$calc_hash{UVCoatingSpecs}{"ddmEquipment-$form-$qty_index"} != $$Press{id} ) {
 					$add = 0;
@@ -577,7 +579,7 @@ sub signature_calc {
 					$add = 0;
 				} # end if
 			} # end if
-			if ( $add ) {
+			if ($add) {
 				@my_equipment = ( $Press, map { $$_{id} == $$Press{id} ? () : $_ } @my_equipment );
 			} else {
 				# Can't do inline when UV or AQ
@@ -596,7 +598,7 @@ sub signature_calc {
 		}
 	}
 
-	if ( ! @my_equipment ) {
+	if (!@my_equipment) {
 		$results{alert} .= 'There is no Folding capable equipment.<br/>';
 		return \%results;
 	} # end if
@@ -658,7 +660,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 		$height_folds = 0;
 	} # end if
 	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
-	$openprint::log->debug("FOlds: $width_folds x $height_folds from $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} and height: $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
+	$openprint::log->debug("Folds: $width_folds x $height_folds from $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} and height: $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
 
 	if ( ( ! $width_folds ) and ( $$sig_specs{txtWidth} != $$sig_specs{txtFinalWidth} ) ) {
 		$width_folds = 1;
@@ -1111,7 +1113,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 							});
 
 						if ( ! $Fold ) {
-							if ( $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
+							if ( (!$$specs{"chkOverrideLimits-$form-$qty_index"} ) or ($$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y') ) {
 # Don't do this, because we may be printing a 2x2 8pg fold, but this will allow us to fold a parallel 8pg
 if ( 0 ) {
 							$Fold = $Equipment->Fold({
@@ -1239,7 +1241,9 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 
 						$complete = 0;
 
-					} else { # No template, might be a book
+					}
+          if (!$complete) {
+           # No template, might be a book
 						#$Imposition->display("Trying: $$Equipment{name}") if DEBUG;
 						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',
 									@$Imposition{'columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height'} ).' on ' . $$Equipment{name}) if DEBUG;
@@ -1279,7 +1283,7 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 									rows					=>	$$Imposition{rows},
 									printing_type	=>	$ppt,
 									});
-							if ( ( ! $Fold ) and ( $$specs{"chkOverrideLimits-$form-$qty_index"} eq 'Y' ) ) {
+							if ( ( ! $Fold ) and ( $$specs{"chkOverrideLimits-$form-$qty_index"} and ($$specs{"chkOverrideLimits-$form-$qty_index"} eq 'Y')) ) {
 							$Fold = $Equipment->Fold({
 									pages			=>	$Imposition->pages(),
 									page_columns	=>	$Imposition->page_columns(),
@@ -1598,7 +1602,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? 
 				} elsif ( $servicePrice{units} eq 'per hour' ) {
 					$servicePrice{Total} = $servicePrice{Price} * $runTime;
 					$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %.2d:%.2d:%.2d =</td><td class="Price">$%.2f</td></tr>', @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{Total} );
-				} elsif ( $servicePrice{units} eq 'per m' or $servicePrice{units} eq 'per 1000' ) {
+				} elsif ( $servicePrice{units} eq 'per m' or $servicePrice{units} eq 'per 1000' or $servicePrice{units} eq 'per 1000 sheets') {
 					# Need adjustment
 					my $Adjustment = 1;
 					if ( my $Base = $Fold->RunSpeed( 0 ) ) {
@@ -1935,7 +1939,7 @@ $i->display() if DEBUG;
 					) {
 $$specs{$k} = '';
 				};
-				$$specs{"FoldRunspeed-$form-$qty_index-$index"} = '' if $$specs{"OverrideRunspeed-$form-$qty_index-$index"} ne 'Y';
+				$$specs{"FoldRunspeed-$form-$qty_index-$index"} = '' if (!$$specs{"OverrideRunspeed-$form-$qty_index-$index"}) or $$specs{"OverrideRunspeed-$form-$qty_index-$index"} ne 'Y';
 				} # end for
 			} # end if
 		} # end foreach signature
@@ -1949,7 +1953,7 @@ $$specs{$k} = '';
 
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition.</fieldset>';
-$openprint::log->debug("No impositionf for form $form") if DEBUG;
+$openprint::log->debug("No imposition for form $form") if DEBUG;
 				next;
 			} # endif
 
