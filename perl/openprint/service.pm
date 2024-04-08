@@ -256,6 +256,19 @@ sub auto_calculate {
 		delete $$services{PerfectBound};
 	} # end if
 
+	require openprint::Estimating::Spiral;
+	if ( openprint::Estimating::Spiral::neccessary( $Project ) ) {
+		if ( ! $$services{Spiral} ) {
+			$_ = $Project->add_service( 'Spiral' );
+			push @{$$services{Spiral}}, $_ if ! $$services{Spiral};
+		} # end if
+	} elsif ( $$services{Spiral} ) {
+		while ( my $si = shift @{$$services{Spiral}} ) {
+			openprint::print_project::delete_service( $Project, $si );
+		} # end while
+		delete $$services{Spiral};
+	} # end if
+
 	require openprint::Estimating::SpinePaste;
 	if ( openprint::Estimating::SpinePaste::neccessary( $Project ) ) {
 		if ( ! $$services{SpinePaste} ) {
@@ -402,7 +415,7 @@ sub auto_calculate {
 			}
 			next if $ServiceType->category() eq 'Shipping';
 			my $service_type = $ServiceType->type();
-			if ( sets::isin($service_type, ['', 'Signature']) ) {
+			if ($service_type and sets::isin($service_type, ['', 'Signature']) ) {
 				$openprint::log->debug("Next because it's a printing service: $type " . join(',', @{$$services{$type}}));
 				next;
 			}
