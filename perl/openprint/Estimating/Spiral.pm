@@ -45,8 +45,22 @@ sub neccessary {
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 	my $services = $Project->services();
 
-	return 1 if ! $$services{'PlasticCoil'};
-	return 1 if ! $$services{'MetalCoil'};
+	return 1 if ! $$services{PlasticCoil};
+	return 1 if ! $$services{MetalCoil};
+
+	my $printing_service_index = $$services{''}[0] if $$services{''};
+	my $specs = openprint::service::get_specs_ref( $Project, $printing_service_index );
+	if (
+    $$specs{rdbTemplateType} eq 'DoubleLoopWire'
+      or
+    $$specs{rdbTemplateType} eq 'MetalCoil'
+      or
+    $$specs{rdbTemplateType} eq 'PlasticCoil'
+      or
+    $$specs{rdbTemplateType} eq 'Cerlox'
+  ) {
+		return 1;
+	} # end if
 
 	return 0;
 } # end sub neccessary
@@ -175,16 +189,16 @@ sub summary {
 }
 
 sub has_overrides {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-    my @v;
-	push @v, map { $$specs{$_} ? $_ : () } ( 'chkOverrideFinalHeight', 'chkOverrideFinishedCalliper', 'chkOverrideMaterialLength' );
-    if ( $qty_index ) {
-		push @v, map { $$specs{$_.$qty_index} ? $_.$qty_index : () } ( 'OverridePrice' );
-    } # end if
+  my @v;
+  push @v, map { $$specs{$_} ? $_ : () } ( 'chkOverrideFinalHeight', 'chkOverrideFinishedCalliper', 'chkOverrideMaterialLength' );
+  if ( $qty_index ) {
+    push @v, map { $$specs{$_.$qty_index} ? $_.$qty_index : () } ( 'OverridePrice' );
+  } # end if
 
-    return @v;
+  return @v;
 
 } # end sub has_overrides
 
