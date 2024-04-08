@@ -15,7 +15,7 @@
 	<? echo ( button( 'deletefoldspec'.$$variable{Specification}->id(), { onclick=>"delete_fold_spec($$variable{Specification}{id});", text=>'Delete' } ); ) ?>
 	</td>
 </tr>
-<script type="text/javascript">
+<script>
 	  new Ajax.InPlaceEditor( 'min_weight-<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=min_weight',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
 	  new Ajax.InPlaceEditor( 'max_weight-<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=max_weight',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
 	  new Ajax.InPlaceEditor( 'weight_units-<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=weight_units',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});

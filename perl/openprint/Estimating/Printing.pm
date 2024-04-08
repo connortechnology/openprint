@@ -1837,7 +1837,7 @@ $log->debug("Cutting to " . $P->to_string() ) if DEBUG_IMPOSITIONS;
 
 					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
 					if ( DEBUG_IMPOSITIONS ) {
-						$log->error("Got " . @i . " impositions on $$Press{strid} " . $P->to_string() );
+						$log->debug("Got " . @i . " impositions on $$Press{strid} " . $P->to_string() );
 						foreach my $i ( @i ) {
 							$i->display("initial for $$Press{strid}");
 						}

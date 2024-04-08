@@ -106,6 +106,30 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 			$_ =  $FS->save();
 			die $_ if $_;
 			$Spec->delete();
+		} elsif ( $Spec->name() =~ /^(.*) Fold Run Speed/ ) {
+			my $type = $1.' Fold';
+      my $name = $type;
+      $type =~ s/\s+//g;
+			$log->debug("Upgrading simple $type Page Fold on $$E{name}");
+			my $Fold = openprint::Fold->find_one('equipment_id'=>$E->id(),'name'=>$name,type=>$type);
+			if ( ! $Fold ) {
+				$Fold = new openprint::Fold();
+				$Fold->equipment_id( $E->id() );
+				$Fold->name($name );
+				$Fold->type($type);
+				$Fold->max_imposition( 6 );
+				$Fold->stitching( 1 );
+				$Fold->perfectbind( 1 );
+				$_ = $Fold->save();
+				die $_ if $_;
+			} # end if
+			my $FS = new openprint::FoldSpecification();
+			$FS->fold_id( $Fold->id() );
+			$FS->runspeed( $Spec->value() );
+			$FS->interpolate( $Spec->interpolate() );
+			$_ =  $FS->save();
+			die $_ if $_;
+			$Spec->delete();
 		} elsif ( $Spec->name() =~ /^(\w*)FoldRunSpeed/ ) {
 			my $type = $1;
 			$log->debug("Upgrading simple $type Page Fold on $$E{name}");
