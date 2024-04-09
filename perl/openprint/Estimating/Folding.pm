@@ -1489,7 +1489,8 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				$fold_specs{"FoldAngles-$form-$qty_index-$fold_index"} = $$Fold{angles};
 				$fold_specs{"FoldRunspeed-$form-$qty_index-$fold_index"} = $runspeed;
 
-				my $run_qty = $$specs{"txtQuantity$qty_index"};
+        # specs can be empty if we have added a virtual folding service. FIXME
+				my $run_qty = $$specs{"txtQuantity$qty_index"} ? $$specs{"txtQuantity$qty_index"} : $Project->quantity($qty_index);;
 				$run_qty = POSIX::ceil( $run_qty * $impo_qty/$$SignatureImposition{imposition}) if $impo_qty != $$SignatureImposition{imposition};
 
 				$openprint::log->debug("Pricing qindex $qty_index runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out	of fold $$Fold{type} on " . $Equipment->name()) if DEBUG;
@@ -2337,7 +2338,7 @@ sub remove_duplicates {
 	my %Results;
 	foreach my $Set ( @_ ) {
 		my $string = join(',', map { join('-', @$_{'quantity','columns','rows','page_columns','page_rows'}) } @{$Set} );
-		$openprint::log->debug("String representing set $string results: $Results{$string}") if DEBUG;
+		$openprint::log->debug("String representing set $string results: ".(exists($Results{$string})?$Results{$string}:'none')) if DEBUG;
 		next if $Results{$string};
 		$Results{$string} = $Set;
 	}
