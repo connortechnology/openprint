@@ -61,11 +61,15 @@ sub edit {
       my @changes = $ProjectType->changes( \%param );
       $variable{error} .= $ProjectType->save( \%param );
 
-      sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() ) if $param{ddmProjectType};
+      #sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() ) if $param{ddmProjectType};
       foreach my $key ( keys %param ) {
-        if ( $key =~ /^Paper\d*$/ ) {
-          sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$param{$key},'lngProjectTypeIndex', $ProjectType->id() );
-
+        if ( $key =~ /^paper_id(\d+)$/ ) {
+          if (int($param{$key})) {
+            sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex', $1, 'lngProjectTypeIndex', $ProjectType->id() );
+          } else {
+            sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=? AND lngPaperIndex=?',
+              $ProjectType->id(), $1 );
+          } # end if
         } # end if
       } # end foreach
       (new openprint::Log())->save({
