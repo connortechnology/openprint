@@ -525,19 +525,26 @@ function Serialize( form ) {
 } // end function Serialize
 
 function select_all_this(element) {
-  return select_all(element.form, element.name, element.checked);
+  return select_all(element.form, element.name, element.checked, element);
 }
 
-function select_all( form, name, checked ) {
-	if ( ! form.elements[name] ) {
-		return;
-	}	// end if
-	if ( form.elements[name].length ) {
-		for ( let i = 0, len = form.elements[name].length; i < len; i += 1 ) {
-			form.elements[name][i].checked = checked;
+function select_all( form, name, checked, checker ) {
+	if ( ! form.elements[name] ) return;
+  const element = form.elements[name];
+	if (element.length) {
+		for ( let i = 0, len = element.length; i < len; i += 1 ) {
+			element[i].checked = checked;
+      if (element[i] != checker) {
+        const on_click_this = element[i].getAttribute('on_click_this');
+        if (on_click_this) {
+          if (window[on_click_this]) window[on_click_this](element[i]);
+        } else {
+          console.error("No function for "+on_click_this);
+        }
+      }
 		} // end for
 	} else {
-		form.elements[name].checked = checked;
+		element.checked = checked;
 	} // end if
 }
 
@@ -1823,6 +1830,16 @@ function update_event_bindings() {
 
   document.querySelectorAll('button[data-on-click-this], input[data-on-click-this]').forEach(function(el) {
     const fnName = el.getAttribute('data-on-click-this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll('button[on_click_this], input[on_click_this]').forEach(function(el) {
+    const fnName = el.getAttribute('on_click_this');
     if ( !window[fnName] ) {
       console.error('Nothing found to bind to ' + fnName);
       return;

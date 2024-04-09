@@ -45,9 +45,6 @@ sub neccessary {
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 	my $services = $Project->services();
 
-	return 1 if ! $$services{PlasticCoil};
-	return 1 if ! $$services{MetalCoil};
-
 	my $printing_service_index = $$services{''}[0] if $$services{''};
 	my $specs = openprint::service::get_specs_ref( $Project, $printing_service_index );
 	if (
@@ -127,8 +124,10 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 				%CoilingPrice = $CoilingService->get_price( $qty, undef );
 				if ( $CoilingPrice{units} eq 'per m' ) {
 					$CoilingPrice{Total} = Math::Round::nearest( 0.01, $CoilingPrice{Price} * $qty / 1000 );
+        } elsif ( $CoilingPrice{units} eq 'each' ) {
+					$CoilingPrice{Total} = Math::Round::nearest( 0.01, $CoilingPrice{Price} * $qty );
 				} else {
-					$openprint::log->error("Unknown units for coiling");
+					$openprint::log->error("Unknown units for $$ServiceType{name} $CoilingPrice{units}");
 				} # end if
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Coiling: ' . sprintf( '%.4f%s = %.2f<br/>', @CoilingPrice{'Price','units','Total'} );
 			} # end if CoilingService
@@ -147,6 +146,8 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 					$MaterialPrice{'Total'} = Math::Round::nearest( 0.01, $MaterialPrice{'Price'} * $$specs{'txtMaterialLength'} );
 				} elsif ( $MaterialPrice{'units'} eq 'per inch' ) {
 					$MaterialPrice{'Total'} = Math::Round::nearest( 0.01, $MaterialPrice{'Price'} * $$specs{'txtMaterialLength'} );
+				} elsif ( $MaterialPrice{'units'} eq 'each' ) {
+					$MaterialPrice{'Total'} = Math::Round::nearest( 0.01, $MaterialPrice{'Price'} * $qty);
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units for material";
 				} # end if

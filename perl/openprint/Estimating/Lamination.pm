@@ -18,6 +18,7 @@ package openprint::Estimating::Lamination;
 use POSIX qw{ ceil };
 use strict;
 
+use openprint::Imposition;
 require openprint::Equipment;
 require openprint::service;
 
@@ -151,18 +152,20 @@ sub calc {
 			if ( $imposition2 > $imposition1 ) {
 				$imposition->rows($qty/$imposition2);
 				$imposition->columns($imposition2);
-				$imposition->image_orientation(Imposition::Horizontal);
+				$imposition->image_orientation(openprint::Imposition::Horizontal);
 			} elsif ( $imposition1 ) {
 				$imposition->rows($qty/$imposition1);
 				$imposition->columns($imposition1);
-				$imposition->image_orientation(Imposition::Vertical);
+				$imposition->image_orientation(openprint::Imposition::Vertical);
 			} else {
 				# doesn't fit?
+        $$specs{'hdnBreakdown'.$qty_index} .= 'Doesn\'t fit.<br/>';
+        next;
 			} # end if
 			my $area;
 
 			my $length;
-			if ( $$imposition{image_orientation} == Imposition::Vertical ) {
+			if ( $$imposition{image_orientation} == openprint::Imposition::Vertical ) {
 				$length = $item_height * $imposition->rows();
 			} else {
 				$length = $item_width * $imposition->rows();

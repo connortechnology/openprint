@@ -258,10 +258,22 @@ sub auto_calculate {
 
 	require openprint::Estimating::Spiral;
 	if ( openprint::Estimating::Spiral::neccessary( $Project ) ) {
-		if ( ! $$services{Spiral} ) {
-			$_ = $Project->add_service( 'Spiral' );
-			push @{$$services{Spiral}}, $_ if ! $$services{Spiral};
-		} # end if
+    my $type = $$project_specs{rdbTemplateType};
+    $openprint::log->debug("Have type $type for spiral");
+    if ($type) {
+      if (!$$services{$type}) {
+        $openprint::log->debug("Adding type $type for spiral");
+        $_ = $Project->add_service($type);
+        push @{$$services{$type}}, $_;
+      } else {
+        $openprint::log->debug("Have type $type for spiral");
+      } # end if
+    } else {
+      if ( ! $$services{Spiral} ) {
+        $_ = $Project->add_service( 'Spiral' );
+        push @{$$services{Spiral}}, $_;
+      } # end if
+    }
 	} elsif ( $$services{Spiral} ) {
 		while ( my $si = shift @{$$services{Spiral}} ) {
 			openprint::print_project::delete_service( $Project, $si );
@@ -407,6 +419,10 @@ sub auto_calculate {
 		next if $exclude and sets::isin($type, $exclude);
 
 		foreach my $service_index ( @{$$services{$type}} ) {
+      if (!$service_index) {
+        $openprint::log->error("Empty service index in services for $type");
+        next;
+      }
 			my $ServiceType = $Project->ServiceType( $service_index );
 			if ( $ServiceType->deleted() ) {
 				my $PS = $Project->Service( $service_index );

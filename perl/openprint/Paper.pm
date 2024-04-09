@@ -408,10 +408,6 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM Papers WHERE id=?}, $$self{id} );
 	$error .= $openprint::dbh->errstr();
 
-	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT manufacturer_id FROM Papers WHERE manufacturer_id=?}, $$self{manufacturer_id} ) ) {
-		sql::execute( undef, undef, q{DELETE FROM Manufacturers WHERE Id=?}, $$self{manufacturer_id} );
-		$error .= $openprint::dbh->errstr();
-	} # end if
 	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT brand_id FROM Papers WHERE brand_id=?}, $$self{brand_id} ) ) {
 		sql::execute( undef, undef, q{DELETE FROM StockBrands WHERE id=?}, $$self{brand_id} );
 	$error .= $openprint::dbh->errstr();

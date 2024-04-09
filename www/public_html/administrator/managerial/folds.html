@@ -6,18 +6,31 @@
 var load_page_ajax = null;
 function load_page() {
 	if ( load_page_ajax ) load_page_ajax.abort();
-	  load_page_ajax = $j('#Folds').load( '_folds.html',
-		{	
-			equipment_id: $j('#equipment_id').val(),
-			type: $j('#type').val() 
-		},
-		function() {
-			load_page_ajax = null;
-		}
-	);
-} 
+    load_page_ajax = $j('#Folds').load( '_folds.html',
+        {	
+            equipment_id: $j('#equipment_id').val(),
+            type: $j('#type').val() 
+          },
+        function() {
+            load_page_ajax = null;
+          }
+      );
+  } 
   function popup_fold(url) {
       popup_window(url, null, { width: '1000px' });
+    }
+  function add_fold() {
+      const equipment_id = $j('#equipment_id').val();
+      if (!equipment_id) {
+          alert('Please select the equipment to add the fold to.');
+          return;
+        }
+      new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id='+equipment_id, {
+          onSuccess: function(response){
+              new Insertion.Top($('Folds'), response.responseText);
+              SortableTable.load();
+            }
+        });
     }
 </script>
 <form id="f1" name="f1" method="post" action="folds.html">
@@ -45,7 +58,7 @@ function load_page() {
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
-        button( 'AddFold', { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=add', { onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );", text=>'Add' } ),
+        button( 'AddFold', { onclick=>'add_fold();', text=>'Add' } ),
         button( 'ExportFolds', { onclick=>"f1.btnFunction.value='Export Folds';f1.submit();", text=>'Export Folds' } ),
       ); ) ?>
 		</p>
