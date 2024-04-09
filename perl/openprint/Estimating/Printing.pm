@@ -7976,8 +7976,8 @@ $log->debug("Getting prnting types from $$sig_specs{SignatureIndex} group: $$sig
 $log->warn("Unknown printing type in sig $$sig_specs{SignatureIndex} : " . $$sig_specs{'PrintingType'.$qty_index} );
 					} # end if
 				} # end if
-				#o	last if $results;
-				if ( $results ) {
+
+				if ($results) {
 					$log->debug("Printing Type Results: @$results") if DEBUG;
 					return $results;
 				} # end if
@@ -8013,9 +8013,7 @@ $log->warn("Unknown printing type in sig $$sig_specs{SignatureIndex} : " . $$sig
 			} # end if
 		} # end if Spread Type
 	} # end if printing_specs{PrintingType}
-	if ( !$results ) {
-		$log->error('No results for get_printing_types');
-	} else {
+  if ($results) {
 		$log->debug("Printing Type Results: @$results") if DEBUG;
 	}
 	return $results;
