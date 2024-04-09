@@ -14,7 +14,7 @@
 <? endif ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown(order=>'lower(name)') and @{$$variable{Categories}} ) ?>
 				<li>
 					<label>Project Type</label>
-					<select name="ddmProjectType" onchange="this.form.btnFunction.value='';f1.submit();">
+					<select id="ddmProjectType" name="ddmProjectType" onchange="this.form.btnFunction.value='';f1.submit();">
 						<option value="">select one</option>
 						<? echo ( 
 								make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)',
@@ -194,13 +194,6 @@
 	<? echo ( include_logs( $$variable{ProjectType} ); ) ?>
 <? endif ( $$variable{ProjectType}->id() ) ?>
 <script src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script src="<?hash_link(/administrator/project_types/edit.js)?>"></script>
 <script>
-  function update_recommendations(r) {
-    new Ajax.Updater( 'PaperRecommendations', '_paper_recommendations.html', {
-        parameters: {
-            projecttype_id: '<?echo($param{ddmProjectType})?>',
-            recommended: r.value
-          }
-      });
-    }
 </script>
