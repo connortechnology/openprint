@@ -804,16 +804,16 @@ sub get_services {
 } # end sub get_service_hash
 
 sub servicetype_id {
-	my ( $self, $s_id ) = @_;
-	if ( ! exists $$self{service_types} ) {
+	my ($self, $s_id) = @_;
+	if (!exists $$self{service_types}) {
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	} # end if
-	if ( ! exists $$self{service_types}{$s_id} ) {
-	my ( $caller, undef, $line ) = caller;
+	if (!exists $$self{service_types}{$s_id}) {
+    my ( $caller, undef, $line ) = caller;
 		#$openprint::log->error("Request for servicetype_id for $s_id, reloading from $caller:$line");
 		Carp::cluck("No servicetype_id for $s_id Project::Service");
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
-		if ( ! $$self{service_types}{$s_id} ) {
+		if (!$$self{service_types}{$s_id}) {
 			$openprint::log->error("Request for servicetype_id for $s_id, not found ");
 		}
 	} # end if
@@ -822,8 +822,11 @@ sub servicetype_id {
 } # end sub servicetype_id
 
 sub ServiceType {
-	my ( $self, $s_id ) = @_;
-$openprint::log->error("No s_id passed to ServiceType for project $$self{id}") if ! $s_id;
+  my ( $self, $s_id ) = @_;
+  if (!$s_id) {
+    $openprint::log->error("No s_id passed to ServiceType for project $$self{id}");
+    return undef;
+  }
 	return new openprint::ServiceType( $self->servicetype_id( $s_id ) );
 } # end sub ServiceType
 
