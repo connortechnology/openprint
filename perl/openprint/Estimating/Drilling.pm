@@ -100,7 +100,7 @@ sub calc {
 		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		my %BestPrice;
-		$$specs{'hdnBreakdown'.$qty_index} = "QTY $qty_index ($qty):<br/>";
+		$$specs{'hdnBreakdown'.$qty_index} = "QTY $qty_index ($qty), ";
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{txtFinishedCalliper}.'<br/>';
 		if ( $$specs{txtPressSheetComboItems} > 1 ) {
 			$qty *= $$specs{txtPressSheetComboItems};
@@ -116,7 +116,8 @@ sub calc {
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("<br/>Equipment: %s Lift: %s<br/>", $Equipment->name(), $Equipment->specification('Maximum Lift Depth') );
+      my $spec = $Equipment->Specification('Maximum Lift Depth');
+			$$specs{'hdnBreakdown'.$qty_index} .= '<br/>Equipment: '.$Equipment->name().' Lift: '.$spec->value().$spec->units().'<br/>';
 			my $equipment_type = $Equipment->specification('Type');
 			if ( $equipment_type eq 'Stitcher' ) {
 				if ( ! $stitching_service_index ) {
