@@ -455,14 +455,14 @@ function dimensions_onChange( form ) {
 } // end function dimensions_onChange
 
 function Stock_onchange( element, id ) {
-    var form = element.form;
-    if ( gettingNewPrice ) {
-console.log("Waiting....");
-        if ( timeout ) clearTimeout( timeout );
-        timeout = setTimeout( 'Stock_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
-        return;
-    } // end if
-    timeout = null;
+  const form = element.form;
+  if ( gettingNewPrice ) {
+    console.log("Waiting for calculation....");
+    clearTimeout( timeout );
+    timeout = setTimeout( 'Stock_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
+    return;
+  } // end if
+  timeout = null;
 
 	var h = new Hash();
 	h.set('project_id', form.elements['ProjectIndex'].value );
