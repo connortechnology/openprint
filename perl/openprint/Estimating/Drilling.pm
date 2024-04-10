@@ -117,7 +117,7 @@ sub calc {
 
 		foreach my $Equipment ( @equipment ) {
       my $spec = $Equipment->Specification('Maximum Lift Depth');
-			$$specs{'hdnBreakdown'.$qty_index} .= '<br/>Equipment: '.$Equipment->name().' Lift: '.$spec->value().$spec->units().'<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= '<br/>Equipment: '.$Equipment->name().' Lift: '.$spec->value().$spec->units().'<br/>' if $spec;
 			my $equipment_type = $Equipment->specification('Type');
 			if ( $equipment_type eq 'Stitcher' ) {
 				if ( ! $stitching_service_index ) {
