@@ -1874,7 +1874,11 @@ if ( sets::isin( 'tbl_material_categories', \@tables ) ) {
 } # end if
 
 if ( ! sets::isin( 'material_categories', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/Material_Categories.sql}) ) or die $dbh->errstr();
+  if ( sets::isin( 'material_types', \@tables ) ) {
+    $dbh->do('ALTER TABLE material_types RENAME to material_categories');
+  } else {
+    $dbh->do( misc::load_file( $log, q{../../sql/Material_Categories.sql}) ) or die $dbh->errstr();
+  }
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='material_categories'", 'column_name' );
 	$dbh->do(q{alter table Material_Categories rename column lngindex to id}) if exists $$data{lngindex};
@@ -1901,6 +1905,10 @@ if ( ! sets::isin( 'materials', \@tables ) ) {
 			$dbh->do(q{alter table tbl_Materials drop column strdetails}) if exists $$data{strdetails};
 			$dbh->do(q{alter table tbl_Materials drop column strdescription}) if exists $$data{strdescription};
       $dbh->do(q{alter table tbl_Materials rename column lngsupplierindex to supplier_id}) if ! exists $$data{supplied_id};
+      if (exists $$data{lngtype}) {
+        $dbh->do(q{alter table tbl_Materials rename column lngtype to category_id}) if ! exists $$data{category_id};
+        $dbh->do(q{ALTER TABLE tbl_materials ADD foreign key (category_id) REFERENCES Material_Categories (id)});
+      }
       if (exists $$data{lngcategoryindex}) {
         $dbh->do(q{alter table tbl_Materials rename column lngcategoryindex to category_id}) if ! exists $$data{category_id};
         $dbh->do(q{ALTER TABLE tbl_materials ADD foreign key (category_id) REFERENCES Material_Categories (id)});
