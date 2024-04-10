@@ -128,17 +128,20 @@ sub signature_calc {
 	} else {
 		my @Materials = openprint::Material->find( category=>'PerfectBound Glue');
 		if ( @Materials ) {
-# Auto guss glue type
-			foreach my $I ( @$Impositions ) {
-				my $sig_specs = $$I{specs};
-				next if $$sig_specs{txtSignatureType} eq 'Cover Pages';
+# Auto guess glue type
+      MATERIAL: foreach my $Material ( @Materials ) {
+        my $stock_grand_recommendation = $Material->specification('Recommended For Stock Grade');
+        if ($stock_grand_recommendation) {
+          my %stock_grades = map { $_ => $_ } split(',', $stock_grand_recommendation);
+          foreach my $I ( @$Impositions ) {
+            my $sig_specs = $$I{specs};
+            next if $$sig_specs{txtSignatureType} eq 'Cover Pages';
 
-				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-				foreach my $Material ( @Materials ) {
-					#FIXME optimise
-					if ( sets::isin( $$Paper{grade}, misc::trim(split(',',$Material->specification('Recommended For Stock Grade'))) ) ) {
-						$$specs{glue_id} = $$Material{id};
-						last;
+            my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+            if ($stock_grades{$$Paper{grade}}) {
+              $$specs{glue_id} = $$Material{id};
+              last MATERIAL;
+            } # end if
 					} # end if
 				} # end foreach Material
 			} # end foreach sig
@@ -154,6 +157,7 @@ sub signature_calc {
 	foreach my $I ( @$Impositions ) {
 		$I->display('In PerfectBi:') if DEBUG;
 		my $sig_specs = $$I{specs};
+				next if $$sig_specs{txtSignatureType} eq 'Cover Pages';
 		my $form = $$sig_specs{SignatureIndex};
 #$printed_impositions{$$I{imposition}} = !undef;
 		if ( ! $$I{Folds} ) {
@@ -520,24 +524,28 @@ sub calc {
 			$$specs{"ddmEquipment$qty_index"} = $results{Equipment}{id};
 			$$specs{'Imposition'.$qty_index} = $results{Imposition};
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: @'.$price{Runspeed}.'/Hr = '. Math::Round::nearest( 0.1, $price{RunTime} ) . ',<br/>' if $price{Runspeed};
-			$$specs{'hdnBreakdown'.$qty_index} .= "Number of Passes: $price{Passes}<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '.scalar @{$price{Passes}}.'<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= "Imposition: $price{Imposition}out<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Run Discount' . $price{'RunCost Discount'}.'%<br/>' if $price{'RunCost Discount'};
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition Discount: '. $price{'Imposition Discount'} .'%<br/>' if $price{'Imposition Discount'};
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Spine Length Discount: ' . $price{'SpineLength Discount'} . '%<br/>' if $price{'SpineLength Discount'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', $price{'Calliper Markup'} ) if $price{'Calliper Markup'};
-			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . Math::Round::nearest( 0.01, $price{MakeReady}).'<br/>';
+      my $pass = 1;
+      foreach my $pass_price (@{$price{Passes}}) {
+        $$specs{'hdnBreakdown'.$qty_index} .= 'Pass '.$pass.'<br/>' if @{$price{Passes}}>1;
+        my $MakeReadyPrice = $$pass_price{MakeReadyPrice};
+			  $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Make Ready: $%.2f%s = $%.2f', @$MakeReadyPrice{qw(Price units Total)}).'<br/>' if $MakeReadyPrice;
+			  $$specs{'hdnBreakdown'.$qty_index} .= 'Pocket Make Ready: $' . Math::Round::nearest(0.01, $$pass_price{PocketMakeReady}).'<br/>' if $$pass_price{PocketMakeReady};
 
-			if ( my $servicePrice = $price{ServicePrice} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s %d passes at $%.2f%s=$%.2f<br/>', $$servicePrice{Service}->name(), $price{Passes}-1, @$servicePrice{'Price','units','Total'});
-			} # end if
-			my $servicePrice = $price{LastPassServicePrice};
-			if (!$$servicePrice{Service}) {
-				$openprint::log->error("Why does LastPass have no service?");
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: 1 pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
-			} else {
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s 1 pass at $%.2f%s=$%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','Total'});
+        if ( my $servicePrice = $$pass_price{ServicePrice} ) {
+          $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s $%.2f%s=$%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','Total'});
+        } # end if
+        $pass ++;
 			}
+      if ($price{GluePrice}) {
+        my $gluePrice = $price{GluePrice};
+        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Glue: %s $%.2f%s=$%.2f<br/>', $$gluePrice{Material}->name(), @$gluePrice{'Price','units','Total'});
+      }
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', Math::Round::nearest(0.01,$price{Price})).'<br/><br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Comparison: $'. sprintf('%.2f', Math::Round::nearest(0.01,$price{ComparisonPrice})).'<br/><br/>';
 		} else {
@@ -586,7 +594,7 @@ sub get_price {
 			Insert  => 0,
 			Price    => 0,
 			RunTime  => 0,
-			Passes  => 0,
+			Passes  => [],
 			MPrice  => 0,
 			Waste    => 0,  
 			Imposition => $$specs{'Imposition'.$qty_index},
@@ -602,38 +610,38 @@ sub get_price {
 		$price{Imposition} = 1;
 	} # end if
 
-	my %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady'. $$specs{"txtPockets$qty_index"}.'Pockets', $price{Imposition}, $Equipment );
-	if ( ! %MakeReady ) {
-		%MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
-	} # end if
-  $price{MakeReadyObject} = \%MakeReady;
-	$price{MakeReady} = $MakeReady{Price}; # if %MakeReady and $MakeReady{Price};
-	my $pocketMakeReady = openprint::service::get_price( $$specs{ServiceType}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+  my $maxPockets = $Equipment->specification('Number of Pockets');
+  my $neededPockets = $$specs{"txtPockets$qty_index"};
+  my $pocket_make_ready_time = $Equipment->specification( 'Pocket Make Ready' );
 
-  if ($pocketMakeReady) {
-    $price{MakeReady} += ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 ));
-    $price{PocketMakeReady} = $pocketMakeReady;
-  }
-
-	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
-	my $neededPockets = $$specs{"txtPockets$qty_index"};
-	my $pocket_make_ready_time = $Equipment->specification( 'Pocket Make Ready' );
-	$price{RunTime} += $neededPockets * $pocket_make_ready_time if $pocket_make_ready_time;
-	$openprint::log->debug("Needed Pockets: $neededPockets") if DEBUG;
-# Calculate Full Passes
+  # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
-# Loaded here, so we don't do it in the loop many times
+    my %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady'. $$specs{"txtPockets$qty_index"}.'Pockets', $price{Imposition}, $Equipment );
+    if ( ! %MakeReady ) {
+      %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+    } # end if
+    $MakeReady{Total} = $MakeReady{Price};
+    $price{MakeReady} = $MakeReady{Price}; # if %MakeReady and $MakeReady{Price};
+    my $pocketMakeReady = openprint::service::get_price( $$specs{ServiceType}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+    if ($pocketMakeReady) {
+      $price{MakeReady} += ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} ));
+    }
+
+    $price{RunTime} += $neededPockets * $pocket_make_ready_time if $pocket_make_ready_time;
+    $openprint::log->debug("Needed Pockets: $neededPockets") if DEBUG;
+
+    # Loaded here, so we don't do it in the loop many times
 		my %servicePrice;
 		if ( ! ( %servicePrice = openprint::service::get_price_object( $$specs{ServiceType}.$maxPockets.'Pockets', $qty, $Equipment ) ) ) {
 			%servicePrice = openprint::service::get_price_object( $$specs{ServiceType}, $maxPockets, $Equipment );
 		} # end if
-		$price{ServicePrice} = \%servicePrice;
 
-		my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets );
+		my $unitsPerHour = $Equipment->specification('Units Per Hour', $maxPockets);
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
-			$price{RunTime} += $runtime * 360;
+    $price{RunTime} += $runtime * 360;
+
 		my $loopbreak_pockets = $neededPockets;
-		while ( $neededPockets > $maxPockets ) {
+		while ($neededPockets > $maxPockets) {
 			if ( $servicePrice{units} eq 'per m' ) {
 				$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
 				$price{Service} += $servicePrice{Total};
@@ -651,16 +659,29 @@ sub get_price {
 # The minus 1 is because the result of the first pass, takes up one pocket
 			$neededPockets -= ( $maxPockets - 1 );
 			last if $neededPockets == $loopbreak_pockets;
-			$price{Passes} += 1;
+      push @{$price{Passes}}, {
+        MakeReadyPrice => \%MakeReady,
+        ServicePrice => \%servicePrice,
+        PocketMakeReady => $pocketMakeReady,
+      };
 		} # end while
 	} # end if
 
 # Calculate Last Pass
+  my %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady'. $$specs{"txtPockets$qty_index"}.'Pockets', $price{Imposition}, $Equipment );
+  if ( ! %MakeReady ) {
+    %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+  } # end if
+  $price{MakeReady} = $MakeReady{Price}; # if %MakeReady and $MakeReady{Price};
+  $MakeReady{Total} = $MakeReady{Price};
+  my $pocketMakeReady = openprint::service::get_price( $$specs{ServiceType}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+  if ($pocketMakeReady) {
+    $price{MakeReady} += ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} ));
+  }
 	my %servicePrice;
 	if ( ! ( %servicePrice = openprint::service::get_price_object( $$specs{ServiceType}.$neededPockets.'Pockets', $qty, $Equipment ) ) ) {
 		%servicePrice = openprint::service::get_price_object( $$specs{ServiceType}, $neededPockets, $Equipment );
 	} # end if
-	$price{LastPassServicePrice} = \%servicePrice;
 	if ( %servicePrice and $servicePrice{Price} ) {
 		my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
@@ -678,23 +699,33 @@ sub get_price {
 			$openprint::log->error("Unknown Unit Type: $servicePrice{units} for $$specs{ServiceType} range($neededPockets) equipment(".$Equipment->strid().")");
 		} # end if
 		$price{MPrice} += ( $servicePrice{Total} / $qty ) * 1000;
-		$price{Passes} += 1;
+		push @{$price{Passes}}, {
+        MakeReadyPrice => \%MakeReady,
+        ServicePrice => \%servicePrice,
+        PocketMakeReady => $pocketMakeReady,
+    }
 	} # end if
 
 	if ( $$specs{glue_id} ) {
 		my $Material = new openprint::Material( $$specs{glue_id} );
 		my %GluePrice = $Material->get_price( $$specs{"txtQuantity$qty_index"}, undef );
-		if ( $GluePrice{units} eq 'per square inch' ) {
-			$GluePrice{Total} = $GluePrice{Price} * $$specs{Width} * $$specs{txtCalliper} * $$specs{"txtQuantity$qty_index"};
-			$price{GluePrice} = \%GluePrice;
-		} elsif ( $GluePrice{units} eq 'per square foot' ) {
-			$GluePrice{Total} = $GluePrice{Price} * $$specs{Width} * $$specs{txtCalliper} * $$specs{"txtQuantity$qty_index"} / 144;
-			$price{GluePrice} = \%GluePrice;
-		} # end if
-		$price{MPrice} += ( $GluePrice{Total} / $qty ) * 1000;
-
-		$price{Glue} = $Material;
-		$price{Price} += $GluePrice{Total};
+    if (%GluePrice) {
+      if ( $GluePrice{units} eq 'per square inch' ) {
+        $GluePrice{Total} = $GluePrice{Price} * $$specs{Width} * $$specs{txtCalliper} * $$specs{"txtQuantity$qty_index"};
+        $price{GluePrice} = \%GluePrice;
+      $price{MPrice} += ( $GluePrice{Total} / $qty ) * 1000;
+      } elsif ( $GluePrice{units} eq 'per square foot' ) {
+        $GluePrice{Total} = $GluePrice{Price} * $$specs{Width} * $$specs{txtCalliper} * $$specs{"txtQuantity$qty_index"} / 144;
+        $price{GluePrice} = \%GluePrice;
+      $price{MPrice} += ( $GluePrice{Total} / $qty ) * 1000;
+      } else {
+        # one time?!
+        $GluePrice{Total} = $GluePrice{Price};
+        $price{GluePrice} = \%GluePrice;
+      } # end if
+      $price{Glue} = $Material;
+      $price{Price} += $GluePrice{Total};
+    }
 	} # end if Glues
 
 	if ( $$specs{txtInsertQuantity} and ( $$specs{txtInsertQuantity} > 0 ) ) {
