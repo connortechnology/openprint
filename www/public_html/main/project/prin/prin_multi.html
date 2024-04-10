@@ -2,52 +2,12 @@
 <script src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
 <script src="<?hash_link(/javascripts/printing.js)?>"></script>
 <script nonce="<?echo($config{CSP_NONCE})?>">
-  function calc( formName, force ) {
-    const form = getFormObj( formName );
-    if ( gettingNewPrice && ! force ) {
-      if ( timeout ) {
-        clearTimeout( timeout );
-      } // end if
-      setTimeout( "calc('"+formName+"');", 1000 );
-      return;
-    } // end if
-    timeout = null;
-    gettingNewPrice = true;
+	const quantities = new Array();
+	<?QUANTITIES?>
 
-    const data = $j(form).serializeArray();
-    for (let i=0; i < data.length; i++) {
-      const pair = data[i];
-      if (
-        (pair.value == '')
-        ||
-        (pair.name == 'btnFunction')
-        ||
-        (pair.name == 'alert')
-      ) {
-        data.splice(i,1);
-      }
-    }
-    data[data.length] = { name: 'ServiceType', value: 'MultiPage' };
-
-    pendingCalc = $j.ajax({
-      type: 'POST',
-      url: '/main/project/_calc.json',
-      data: data,
-      dataType: 'json',
-      success: function(data, textStatus, jqXHR) {
-        console.log(data);
-        cbBookResults(data);
-      }
-    }).done(function(data) {
-      console.log(data);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-      console.log("fail", textStatus, errorThrown);
-    });
-  } // end function calc
-
-	function cbBookResults( results ) {
+	results_callback = function cbBookResults( results ) {
 		cbFillResults(results);
-		var form = getFormObj('f1');
+		const form = getFormObj('f1');
 		if ( get_value( form.rdbCover ) == 'Self' ) {
 			$('SignatureGroup1').hide();
 		} else {
@@ -56,7 +16,7 @@
 	} // end function cbBookResults
 
 	function validate_data(formName) {
-		var form = getFormObj(formName);
+		const form = getFormObj(formName);
 		if ( ! form.txtTotalPageQuantity.value > 0 ) {
 			alert("Please enter the total quantity of pages.");
 			return 0;
@@ -99,7 +59,6 @@
     <div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>
 <? endif ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
-		<input type="hidden" name="groups" />
 		<fieldset><legend><?ProjectTypeName?></legend>
 			<div class="ProjectSpecifications">
 			<?include('/includes/main/proj/templates/multipage.html')?>
@@ -224,11 +183,13 @@
 		<? echo ( button( 'AddSignature', { onclick=>'add_group();', text=>'Add Another Group of Signatures' } ); ) ?>
 		<?include('/includes/main/proj/add_to_project.html')?>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+    <input type="hidden" name="ServiceType" value="<?echo($$variable{ProjectType}->type())?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ContinueProject" value="Y"/>
 		<input type="hidden" name="NewBook" value="Y"/>
 		<input type="hidden" name="remaining_pages" />
 		<input type="hidden" name="next_group_id" />
+		<input type="hidden" name="groups" />
 	</form>
 </div><!--Service-->

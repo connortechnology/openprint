@@ -1001,7 +1001,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 					$Imposition->display('trying ');
 				} # end if
 
-				# THis checks to see if the folds line up, should probably be using spine_direction instead
+				# This checks to see if the folds line up, should probably be using spine_direction instead
 				if ( $$Equipment{id} != $$Press{id} ) {
 					if ( $$Imposition{imposition} > 3 and ( $$Imposition{columns} > 1 and $$Imposition{rows} > 1 ) ) {
 						$openprint::log->debug("Can't do that impo cuz impo > 3 columns > 1 and rows > 1") if DEBUG;
@@ -1077,7 +1077,8 @@ $Imposition->display();
 					} # end if
 				} else { # Not the press
 					my $max_feed_width = $Equipment->specification('Maximum Feed Width', $$Imposition{imposition} );
-# FIgure out the fold.	Because this isn't the press, we have to figure out how it cuts...
+          # Figure out the fold.	Because this isn't the press, we have to figure out how it cuts...
+          $openprint::log->debug("Max feed: $max_feed_width");
 
 					if ( (!$$sig_specs{txtSignatureType}) and $$sig_specs{rdbTemplateType} and $fold_types{$$sig_specs{rdbTemplateType}} ) {
 $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
@@ -1241,8 +1242,8 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 
 						$complete = 0;
 
-					}
-          if (!$complete) {
+					} else {
+            #if (!$complete) {
            # No template, might be a book
 						#$Imposition->display("Trying: $$Equipment{name}") if DEBUG;
 						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',

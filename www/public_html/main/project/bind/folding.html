@@ -69,9 +69,9 @@ function Fold_onchange( element, signature, qty_index, index ) {
 
 			foreach my $ss_id ( $Project->signatures({sort=>1}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-				$html .= "<fieldset><legend>For Form $$sig_specs{SignatureIndex}:";
-				$html .= openprint::service::summary( $Project, $ss_id );
-				$html .= '</legend><ul><li><label>Printed</label>';
+        $html .= "<fieldset><legend>For Form $$sig_specs{SignatureIndex}:</legend>";
+        $html .= '<ul><li>'.openprint::service::summary( $Project, $ss_id ).'</li>';
+				$html .= '<li><label>Printed</label>';
 
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$html .= '<div class="'.$$variable{Columns}.'Columns">';
