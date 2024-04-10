@@ -151,6 +151,7 @@ sub get_price {
 
 	$price{currency_id} = $Pricelist->currency_id();
 	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
+  $price{Material} = $_[0];
 
 	return %price;
 } # end sub get_price
@@ -163,6 +164,7 @@ sub get_Price {
 	my %price = openprint::pricing::get_best_price_object( $session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{id} );
 	return if ! %price;
 
+  $price{Material} = $_[0];
 	$price{currency_id} = $Pricelist->currency_id();
 	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
 
