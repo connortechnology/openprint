@@ -143,6 +143,8 @@ sub edit {
 } # end sub edit
 
 sub defaults_edit {
+  return if ! $param{btnFunction};
+
 	my $index = $param{ddmProjectType};
 
 	if ( $param{btnFunction} eq 'Save' ) {
