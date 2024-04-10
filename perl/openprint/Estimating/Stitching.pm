@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -778,7 +778,7 @@ sub breakdown {
 		$breakdown .= 'Makeready Time: '.$price{PocketMakeReady}{value}.$price{PocketMakeReady}{units}.' per pocket * '.$price{Pockets}.' pockets = '.$mr_time.' hours<br/>';
 #$price{RunTime} -= $mr_time;
 	} # end if
-	$breakdown .= 'Number of passes: '. scalar(@{$price{Passes}}).'<br/>';
+	$breakdown .= 'Number of passes: '. scalar(@{$price{Passes}}).'<br/>' if $price{Passes};
 	my $pass_count = 1;
 	foreach my $pass ( @{$price{Passes}} ) {
 		$breakdown .= 'Pass ' . $pass_count . ', ' . $$pass{Pockets} . ' pockets:<br/>';
@@ -791,7 +791,11 @@ sub breakdown {
 				);
 
 		if ( my $MakeReadyPrice = $$pass{MakeReadyPrice} ) {
+      if ( $$MakeReadyPrice{Service}) {
 			$breakdown .= sprintf('&nbsp;%s = $%.2f<br/>', $$MakeReadyPrice{Service}->description(), $$MakeReadyPrice{Total});
+    } else {
+			$breakdown .= sprintf('&nbsp; $%.2f<br/>', $$MakeReadyPrice{Total});
+    }
 		}
 		if ( my $servicePrice = $$pass{ServicePrice} ) {
 			$breakdown .= sprintf('&nbsp;%s $%.2f%s * %s = $%.2f<br/>',
