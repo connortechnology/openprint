@@ -397,13 +397,16 @@ function selectProjectTemplate( formName ) {
 		clear_ddm(ddm);
 		add_option( form.ddmProjectSize, 'Custom','Custom' );
 		if ( TemplateType ) {
+      if (TemplateType == 'MetalCoil' || TemplateType == 'PlasticCoil' || TemplateType == 'Cerlox') {
+        $j('#SpiralOptions').show();
+      } else {
+        $j('#SpiralOptions').hide();
+      }
 			if ( options[TemplateType] ) {
 				if ( options[TemplateType][0].message ) {
 					alert(options[TemplateType][0].message);
 				}
-				for ( var x = 0, len=options[TemplateType].length; x < len; x += 1 ) {
-					var value = options[TemplateType][x].value;
-					var text = options[TemplateType][x].text;
+				for ( let x = 0, len=options[TemplateType].length; x < len; x += 1 ) {
 					add_option( ddm, options[TemplateType][x].text, options[TemplateType][x].value );
 				} // end for
 			} else {
