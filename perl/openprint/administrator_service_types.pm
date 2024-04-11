@@ -161,8 +161,8 @@ sub edit {
         $log->warn('No file given to upload.');
       } # end if
     } elsif ( $param{btnFunction} eq 'Export' ) {
-       my @header = ( 'Service Type', 'Name', 'Value' );
-       my @data = map { $_->ServiceType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{'name'});
+       my @header = ( 'Project Type', 'Name', 'Value' );
+       my @data = map { $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{'name'});
       misc::export_csv( $r, $log, \%variable, $ServiceType->name().'_ServiceTypeDefaults.csv', \@header, \@data );
       # Add record to audit log - action "Export Project Types".
       (new openprint::Log())->save({
