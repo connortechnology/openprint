@@ -15,9 +15,19 @@
 <?include('/includes/error_reporting.html')?>
 <? while ( $$variable{Fold} = shift @{$$variable{Folds}} ) ?>
 <form id="Fold<? echo ( $$variable{Fold}->id() ) ?>">
+  <input type="hidden" name="id" value="<? echo ( $$variable{Fold}->id() ) ?>"/>
 	<div class="leftColumn">
 		<fieldset><legend>Fold</legend>
 			<ul>
+      <li>
+        <label>Equipment</label>
+        <select id="equipment_id" name="equipment_id" onchange="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');}">
+          <option value="">All Equipment</option>
+  <? echo (
+           make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)', 'servicetype any'=>'Folding' ) ], $$variable{Fold}{equipment_id} );
+  ) ?>
+        </select>
+      </li>
 		<li>
 			<label>Type</label>
 			<select id="fold-<? echo ( $$variable{Fold}->id() ) ?>-type" name="type">
@@ -117,9 +127,9 @@
 		<p class="buttons">	
 <? echo ( 
 	return join("\n",
-		button( 'SaveFold'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=save&id=". $$variable{Fold}->id() ."&equipment_id=".$$variable{Fold}->equipment_id()."&' + Form.serialize('Fold".$$variable{Fold}->id()."'),
+		button( 'SaveFold'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=save&' + Form.serialize('Fold".$$variable{Fold}->id()."'),
 			{ onSuccess: function(response){\$('Fold". $$variable{Fold}->id()."').removeClassName('changed');} } );",text=>'Save' } ),
-		button( 'CopyFold'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=copy&id=". $$variable{Fold}->id() ."',
+		button( 'CopyFold'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=copy',
 			{ onSuccess: function(response){new Insertion.After(\$('Fold".$$variable{Fold}->id()."'), response.responseText);} } );",text=>'Copy' } ),
 		button( 'DeleteFold'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=delete&amp;id=".$$variable{Fold}->id()."', { onSuccess: function(){var f = \$('Fold".$$variable{Fold}->id()."'); f.remove();} } );",text=>'Delete' } ),
 );
