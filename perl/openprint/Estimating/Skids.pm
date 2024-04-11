@@ -208,9 +208,15 @@ sub calc {
 				$$results{breakdown} .= '<fieldset><legend>'.$Material->name().':'.$width.'x'.$height.'x'.$depth.'</legend>';
 
 # Make sure it's not too heavy
-				my $items_by_weight = $item_weight ? int($Material->specification('Maximum Weight') / $item_weight) : 0;
-				$$results{breakdown} .= sprintf('Items by weight: Max %d / item weight %.3f = %d per package<br/>',
-						$Material->specification('Maximum Weight'), $item_weight, $items_by_weight );
+        my $max_weight = $Material->specification('Maximum Weight');
+				my $items_by_weight = 0;
+        if ($max_weight) {
+          $items_by_weight = $item_weight ? int($max_weight / $item_weight) : 0;
+          $$results{breakdown} .= sprintf('Items by weight: Max %d / item weight %.3f = %d per package<br/>',
+            $Material->specification('Maximum Weight'), $item_weight, $items_by_weight );
+        } else {
+          $$results{breakdown} .= 'Please consider setting a Maximum Weight setting on this carton.<br/>';
+        }
 
 				if ($width and $height and $depth) {
 					my $setup = openprint::imposition::fit($item_width, $item_height, $width, $height);
