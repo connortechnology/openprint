@@ -89,64 +89,72 @@ function body_onLoad() {
 	} // end if
 }
 
-function calc( formName, force, options ) {
+function calc( formName='f1', force, options ) {
+  console.log('calc', formName);
 	if ( block_calc ) return;
 
 	const form = getFormObj( formName );
-	if ( form && form.ServiceType ) {
-		if ( gettingNewPrice && ! force ) {
-			if ( timeout ) clearTimeout( timeout );
-			if ( options ) {
-				timeout = setTimeout("calc_print('"+formName+"', 0, " + Object.toJSON( options ) + ");", 1000 );	
-			} else {
-				timeout = setTimeout( "calc('" + formName + "');", 1000 );
-			}
-		} else {
-			timeout = null;
-			const AlertDiv = document.getElementById('AlertDiv');
-			if ( AlertDiv ) {
-				AlertDiv.innerHTML = '';
-				AlertDiv.hide();
-			} // end if
-			const div = document.getElementById('InformationDiv');
-			if ( div ) {
-				div.innerHTML = 'Calculating';
-			} // end if
-			gettingNewPrice = true;
-			clear_price_data( form );
-			const data = $j(form).serializeArray();
-					//if ( options ) {
-						//data.merge( options );
-					//}
-      for (let i=0; i < data.length; i++) {
-        const pair = data[i];
-        if (
-          (pair.value == '') 
-          ||
-          (pair.name == 'btnFunction') 
-          ||
-          (pair.name == 'alert') 
-        ) {
-          data.splice(i,1);
-        }
+  if (!form) {
+    console.log("No form found for "+formName);
+    return;
+  }
+  if (!form.ServiceType) {
+    alert("No ServiceType found. Please contact your developer.");
+    return;
+  }
+
+  if ( gettingNewPrice && ! force ) {
+    if ( timeout ) clearTimeout( timeout );
+    if ( options ) {
+      timeout = setTimeout("calc_print('"+formName+"', 0, " + Object.toJSON( options ) + ");", 1000 );	
+    } else {
+      timeout = setTimeout( "calc('" + formName + "');", 1000 );
+    }
+  } else {
+    timeout = null;
+    const AlertDiv = document.getElementById('AlertDiv');
+    if ( AlertDiv ) {
+      AlertDiv.innerHTML = '';
+      AlertDiv.hide();
+    } // end if
+    const div = document.getElementById('InformationDiv');
+    if ( div ) {
+      div.innerHTML = 'Calculating';
+    } // end if
+    gettingNewPrice = true;
+    clear_price_data( form );
+    const data = $j(form).serializeArray();
+    //if ( options ) {
+    //data.merge( options );
+    //}
+    for (let i=0; i < data.length; i++) {
+      const pair = data[i];
+      if (
+        (pair.value == '') 
+        ||
+        (pair.name == 'btnFunction') 
+        ||
+        (pair.name == 'alert') 
+      ) {
+        data.splice(i,1);
       }
-			//new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-      $j.ajax({
-        type: "POST",
-        url: '/main/project/_calc.json',
-        data: data,
-        dataType: 'json',
-        success: function(data, textStatus, jqXHR) {
-          console.log(data);
-          results_callback(data);
-        }
-      }).done(function(data) {
-          console.log(data);
-      }).fail(function(jqXHR, textStatus, errorThrown) {
-        console.log("fail", jqXHR, textStatus);
-      });
-		} // end if
-	} // end if
+    }
+    //new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+    $j.ajax({
+      type: "POST",
+      url: '/main/project/_calc.json',
+      data: data,
+      dataType: 'json',
+      success: function(data, textStatus, jqXHR) {
+        console.log(data);
+        results_callback(data);
+      }
+    }).done(function(data) {
+      console.log(data);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      console.log("fail", jqXHR, textStatus);
+    });
+  } // end if
 } // end calc()
 
 function cbFillResults( results ) {
