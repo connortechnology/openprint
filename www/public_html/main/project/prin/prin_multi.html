@@ -24,6 +24,7 @@
 
 		return 1;
 	} // end function
+
 	function add_group() {
 		var form = $('f1');
 	   new Ajax.Request( '/main/project/prin/_signature.html', {
@@ -33,6 +34,7 @@
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
 			});
 	}
+
 	function copy_group( group_id ) {
 		var form = $('f1');
 		new Ajax.Request( '/main/project/prin/_signature.html', {
@@ -42,6 +44,7 @@
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
 	}
+
 	function remove_group( group_id ) {
 		var form = $('f1');
 		new Ajax.Request( '/main/project/prin/_signature.json', {
@@ -103,6 +106,18 @@
 					<? echo ( radio( 'rdbCover', [ map { $_, $_ . ' Cover' } ( 'Self', 'Different' ) ], $$variable{rdbCover}, { onclick=>q`if(this.value=='Self'){$('SignatureGroup1').hide();}else{$('SignatureGroup1').show();};calc(this.form.name);` } ); ) ?>
 				</li>
 				</ul>
+        <ul id="SpiralOptions" style="display:none;">
+        <? if (openprint::Material->find_one(name=>'Clear Acetate Front'))?>
+          <li><label>Clear Acetate Front?</label>
+            <?echo( radio('acetate_front', [Y=>'Yes',N=>'No'], $$variable{acetate_front}, {default=>'N'}); ) ?>
+          </li>
+        <? endif (openprint::Material->find_one(name=>'Clear Acetate Front'))?>
+        <? if (openprint::Material->find_one(name=>'Black Acetate Back'))?>
+          <li><label>Black Acetate Back?</label>
+            <?echo( radio('acetate_back', [Y=>'Yes',N=>'No'], $$variable{acetate_back}, {default=>'N'}); ) ?>
+          </li>
+        <? endif (openprint::Material->find_one(name=>'Black Acetate Back'))?>
+          </ul>
 				<ul id="GateInsert">
 				<li>
 					<label><? echo ( writeTip( 'Gate Folded' ); ) ?> pages</label>

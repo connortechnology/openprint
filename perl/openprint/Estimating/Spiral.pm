@@ -33,6 +33,7 @@ my @variables = (
 	'chkOverrideFinalHeight','txtFinalHeight',
 	'chkOverrideFinishedCalliper','txtFinishedCalliper',
 	'chkOverrideMaterialLength', 'txtMaterialLength',
+  'acetate_front', 'acetate_back'
 	);
 
 sub variables {
@@ -92,6 +93,8 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 	my $CoilingService = openprint::Service->find_one( name => $ServiceType->name().'Inserting' );
 	$CoilingService = openprint::Service->find_one( name => $ServiceType->name() ) if !$CoilingService;
 	my $Material = openprint::Material->find_one( name=>$ServiceType->name() );
+  my $AcetateFront = openprint::Material->find_one(name=>'Clear Acetate Front');
+  my $AcetateBack = openprint::Material->find_one(name=>'Black Acetate Back');
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
@@ -102,8 +105,8 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 		my $mprice = 0;
 
 		$$specs{'hdnBreakdown'.$qty_index} = '';
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: %.2f<br/>', $makeReadyPrice );
-		$$specs{'hdnBreakdown'.$qty_index} .= "MinimumCharge: " . sprintf( '%.2f<br/>', $minimumCharge );
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: $%.2f<br/>', $makeReadyPrice );
+		$$specs{'hdnBreakdown'.$qty_index} .= "MinimumCharge: " . sprintf('$%.2f<br/>', $minimumCharge ) if $minimumCharge;
 		$$specs{"txtQuantity$qty_index"} = int( $$specs{"txtQuantity$qty_index"} );
 
 		if ( $$specs{"txtQuantity$qty_index"} ) {
@@ -158,6 +161,29 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No material found';
 			} # end if
+
+      if ($AcetateFront and $$specs{acetate_front} and ($$specs{acetate_front} eq 'Y')) {
+        my %AcetateFrontPrice = $AcetateFront->get_price($qty, undef);
+				if ($AcetateFrontPrice{units} eq 'each') {
+					$AcetateFrontPrice{Total} = Math::Round::nearest( 0.01, $AcetateFrontPrice{Price} * $qty);
+        } elsif ($AcetateFrontPrice{units} eq 'per m') {
+					$AcetateFrontPrice{Total} = Math::Round::nearest( 0.01, $AcetateFrontPrice{Price} * $qty/1000);
+				} else {
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Unknown units for '.$AcetateFront->description().'<br/>';
+				} # end if
+        $$specs{'hdnBreakdown'.$qty_index} .= $AcetateFront->description().': ' . sprintf('$%.2f%s = $%.2f<br/>', @AcetateFrontPrice{qw(Price units Total)});
+      }
+      if ($AcetateBack and $$specs{acetate_back} and ($$specs{acetate_back} eq 'Y')) {
+        my %AcetateBackPrice = $AcetateBack->get_price($qty, undef);
+				if ($AcetateBackPrice{units} eq 'each') {
+					$AcetateBackPrice{Total} = Math::Round::nearest( 0.01, $AcetateBackPrice{Price} * $qty);
+        } elsif ($AcetateBackPrice{units} eq 'per m') {
+					$AcetateBackPrice{Total} = Math::Round::nearest( 0.01, $AcetateBackPrice{Price} * $qty/1000);
+				} else {
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Unknown units for '.$AcetateBack->description().'<br/>';
+				} # end if
+        $$specs{'hdnBreakdown'.$qty_index} .= $AcetateBack->description().': ' . sprintf('$%.2f%s = $%.2f<br/>', @AcetateBackPrice{qw(Price units Total)});
+      }
 	
 			if ( $minimumCharge > 0 and $price < $minimumCharge ) {
 				$price = $minimumCharge;
@@ -165,7 +191,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 			$unitPrice = $price / $qty;
 			$mprice += $PunchingPrice{Total} + $CoilingPrice{Total};
 			$mprice = ( $mprice / $qty ) * 1000;
-			$$specs{'hdnBreakdown'.$qty_index} .= "Qty: " . $$specs{"txtQuantity$qty_index"} . ": Price: $price<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Qty: ' . $$specs{"txtQuantity$qty_index"} . sprintf(': Total: $%.2f<br/>',$price);
 		} # end if
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $unitPrice * (1+$Project->markup()/100) );
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $mprice *(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
@@ -203,6 +229,16 @@ sub has_overrides {
   return @v;
 
 } # end sub has_overrides
+
+sub save {
+  my ( $p_id, $s_id, $param ) = @_;
+  my $Project = new openprint::Project( $p_id );
+  my $services = $Project->services();
+
+  foreach my $spec ('acetate_front','acetate_back') {
+    openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $$services{''}[0], $spec, $$param{$spec} );
+  }
+} # end sub save
 
 1;
 __END__
