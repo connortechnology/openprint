@@ -143,7 +143,7 @@ sub variable_substitution {
 					if ( $@ ) {
 						$log->error("Eval error ($@) of ($1)")
 					} else {
-						$result .= $_ if $_;
+						$result .= $_;
 					}
 				}
 			} elsif ( $command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
