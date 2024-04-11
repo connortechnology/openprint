@@ -213,8 +213,21 @@ sub display {
 }
 
 sub summary {
-	return;
-}
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+  my $summary = '';
+  if (!$qty_index) {
+    my $AcetateFront = openprint::Material->find_one(name=>'Clear Acetate Front');
+    if ($AcetateFront and $$specs{acetate_front} and ($$specs{acetate_front} eq 'Y')) {
+      $summary .= 'With '.$AcetateFront->description().'<br/>';
+    }
+    my $AcetateBack = openprint::Material->find_one(name=>'Black Acetate Back');
+    if ($AcetateBack and $$specs{acetate_back} and ($$specs{acetate_back} eq 'Y')) {
+      $summary .= 'With '.$AcetateBack->description().'<br/>';
+    }
+    return $summary;
+  } # end if qty_index
+} # end sub summary
 
 sub has_overrides {
   my ( $Project, $service_id, $specs, $qty_index ) = @_;
