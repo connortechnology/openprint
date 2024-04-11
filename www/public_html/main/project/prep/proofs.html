@@ -1,4 +1,3 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <div class="PageTitle">
 	<h1>Prepress</h1>
 	<h2>Proofs</h2>
@@ -15,6 +14,8 @@
 		<!-- The rest is done for each qty -->
 		<? echo ( 
 			my $html = '';
+      my @ddm_options = map { $_->name(), $_->description() } openprint::Service->find(servicetype_id=>$$variable{ServiceTypeId});
+
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 				my $quantity = $$variable{Project}->quantity($qty_index);
 				$html .= "<fieldset><legend>The following results are for Quantity $qty_index ($quantity)</legend>";
@@ -44,7 +45,7 @@
 							</tr>
 							`, $$variable{'CurrencySymbol'} );
 
-					while ( my ( $proof_index,$proof_quantity,$proof_width,$proof_height,$proof_type, $ddmProofType ) = splice @{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}},0,6 ) {
+					while ( my ( $proof_index,$proof_quantity,$proof_width,$proof_height,$proof_type ) = splice @{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}},0,5 ) {
 						$html .= sprintf( q`
 							<tr>
 								<td class="quantity">%4$s</td>
@@ -61,7 +62,7 @@
 								input( type=>'cardinal', name=>"txtProofQuantity-$signature_index-$proof_index-$qty_index", value=>$proof_quantity, onkeyup=>'calc(this.form.name);' ),
 								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, onkeyup=>'calc(this.form.name);', step=>'0.0001' ),
 								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, onkeyup=>'calc(this.form.name);', step=>'0.0001' ),
- $ddmProofType,
+                make_drop_down( \@ddm_options, $proof_type ),
 								input( type=>'float', name=>"MRPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', decimalplaces=>2 ),
 								input( type=>'float', name=>"ServicePrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01', decimalplaces=>2 ),
 								input( type=>'float', name=>"txtProofUnitPrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01', decimalplaces=>2 ),
@@ -117,3 +118,4 @@
 
 	</form>
 </div></div><!--Service-->
+<script src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>

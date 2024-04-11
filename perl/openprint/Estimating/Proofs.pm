@@ -538,7 +538,8 @@ sub load_proof_info {
 				"txtProofHeight-$form-$proof_index-$qty_index",
 				"ddmProofType-$form-$proof_index-$qty_index"
 		};
-		push @proof_info, $proof_index, $quantity, 1*$width, 1*$height, $type, ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service->find('category'=>'Proofs') ], $type );
+		push @proof_info, $proof_index, $quantity, 1*$width, 1*$height, $type;
+    #, ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service->find('category'=>'Proofs') ], $type );
 	} # end foreach
 	return @proof_info;
 } # end sub load_proof_info
