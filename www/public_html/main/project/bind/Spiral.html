@@ -1,4 +1,3 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<?include(/includes/main/proj/required_fields.html)?>
@@ -17,6 +16,16 @@
 							write_override( 'chkOverrideMaterialLength', $$variable{'chkOverrideMaterialLength'}, '', "if(!this.checked)calc('f1');" ),
 						); ) ?>
 				</li>
+        <? if (openprint::Material->find_one(name=>'Clear Acetate Front'))?>
+        <li><label>Clear Acetate Front?</label>
+          <?echo( radio('acetate_front', [Y=>'Yes',N=>'No'], $$variable{acetate_front}, {default=>'N', onclick=>q`calc('f1');`}); ) ?>
+        </li>
+        <? endif (openprint::Material->find_one(name=>'Clear Acetate Front'))?>
+        <? if (openprint::Material->find_one(name=>'Black Acetate Back'))?>
+        <li><label>Black Acetate Back?</label>
+          <?echo( radio('acetate_back', [Y=>'Yes',N=>'No'], $$variable{acetate_back}, {default=>'N', onclick=>q`calc('f1');`}); ) ?>
+        </li>
+        <? endif (openprint::Material->find_one(name=>'Black Acetate Back'))?>
 			</ul>
 		</fieldset>
 		<fieldset><legend>Results</legend>
@@ -32,3 +41,4 @@
 		<input type="hidden" name="ContinueProject" value="Y" />
 	</form>
 </div>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
