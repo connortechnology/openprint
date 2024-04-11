@@ -1,18 +1,19 @@
 <div class="templates">
 <? echo ( 
 		my $ProjectType = $$variable{Project}->Type();
-		my %ServiceTypes = map { $_->name(), $_->id() } openprint::ServiceType->find();
-		my %Templates = ( 
-			SaddleStitching => 'Saddle Stitching',
-			LoopStitching		=>	'Loop Stitching<br/>(For 3-Hole Binders)',
-			CornerStitching	=>	'Corner Stitching',
-			PerfectBound		=>	'Perfect Bound',
-			SpinePaste			=>	'Spine Paste',
-			Cerlox					=>	'Cerlox',
-			PlasticCoil			=>	'Plastic Coil<br/>(Spiral or Plastikoil)',
-			MetalCoil				=>	'Metal Spiral Coil',
-			Unbound					=>	'Unbound',
-			DoubleLoopWire	=>	'Double Loop Wire<br/>(Wire-O)',
+		my %ServiceTypes = map { $_->name(), $_ } openprint::ServiceType->find();
+    my %Templates = map { ($ServiceTypes{$_} ? ($_ => $ServiceTypes{$_}->description()): ()) }
+    qw(
+    SaddleStitching
+    LoopStitching
+    CornerStitching
+		PerfectBound
+    SpinePaste
+			Cerlox
+			PlasticCoil
+			MetalCoil
+			DoubleLoopWire
+			Unbound
 			);
 
 		my $html .= include( '/includes/main/proj/templates/project_template_select.html' );
