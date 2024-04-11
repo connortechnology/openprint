@@ -125,7 +125,9 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 	my $minimumCharge = openprint::service::get_price( 'CollatingMinimumCharge', undef, undef );
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Collating Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'strName');
+	my @all_equipment = openprint::Equipment->find(
+    Specifications => {'Collating Capable'=>['Y','When Printing']},
+    useinestimating=>1,order=>'strName');
 	my $error = '';
 	if ( ! @all_equipment ) {
 		$error .= 'We have no collating equipment.<br/>';
@@ -138,7 +140,7 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 		} # end if
 	} # end foreach
 
-	if ( ! @possible_equipment ) {
+	if (!@possible_equipment) {
 # alert the user that no equipment is good.
 		$$specs{alert} = "Our collating equipment cannot run this project, for the following reasons:<br/>$error<br/> Please only print flat sheets and contact another bindery.";
 		return $$specs{Status} = 'uncalculated';
@@ -150,7 +152,7 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my %bestPrice;
 
-		$$specs{'hdnBreakdown'.$qty_index} = 'MinimumCharge: $' . sprintf( '%.2f', $minimumCharge ) . '<br/>';
+		$$specs{'hdnBreakdown'.$qty_index} = 'MinimumCharge: $' . sprintf( '%.2f', $minimumCharge ) . '<br/>' if $minimumCharge;
 		$$specs{"txtQuantity$qty_index"} = int( $$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 
@@ -164,6 +166,7 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $Equipment->name().':<br/>';
 			my %price = (
 				Service		=> 0,
 				MakeReady	=> 0,
@@ -187,20 +190,36 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 					next;
 				} # end if
 			} # end if
+
 			my %MakeReadyPrice = $CollatingMakeReady->get_price( undef, $Equipment ) if $CollatingMakeReady;
 			$price{MakeReady} = $MakeReadyPrice{Price};
+      $$specs{'hdnBreakdown'.$qty_index} .= 'Make Ready: $'.sprintf('%.2f', $price{MakeReady});
+
 			my %servicePrice = $Collating->get_price( $$specs{'txtSignatureCount'.$qty_index}, $Equipment ) if $Collating;
 			if ( $servicePrice{units} and sets::isin( $servicePrice{units}, 'per m', 'per 1000' )  ) {
-				$price{Service} = $servicePrice{Price}/1000; # Service Price for Collating is per 1000
+				$price{Service} = $qty*$servicePrice{Price}/1000; # Service Price for Collating is per 1000
+      } elsif ( $servicePrice{units} and $servicePrice{units} eq 'per hour'  ) {
+        my $runspeed = $Equipment->Specification('Run Speed');
+        if ($runspeed) {
+          if (lc $$runspeed{units} eq 'per hour') {
+            $servicePrice{speed} = $$runspeed{value};
+            $servicePrice{hours} = $qty / $$runspeed{value};
+            $price{Service} = $servicePrice{Total} = $servicePrice{Price} * $qty / $$runspeed{value};
+            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s * %.2fhours @%d = $%.2f<br/>', @servicePrice{qw(Price units hours speed Total)});
+          }
+        } else {
+          $price{Service} = $servicePrice{Price};
+          $$specs{'hdnBreakdown'.$qty_index} .= 'Service: Pricing is per hour but no run speed found.<br/>';
+          $$specs{alert} .= 'Pricing is per hour but no run speed set.<br/>';
+        }
 			} else {
 				$$specs{alert} .= 'Unknown units in service price.<br/>';
 			} # end if
-			$price{Total} = $price{MakeReady} + $qty * $price{Service};
+			$price{Total} = $price{MakeReady} + $price{Service};
 
 			if ( ! $bestPrice{Total} or $price{Total} < $bestPrice{Total} ) {
 				%bestPrice = %price;
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $price{Equipment}->name().':<br/>Make Ready: $'.sprintf('%.2f Service: $%.2f%s Total: $%.2f<br/>', $price{MakeReady}, $servicePrice{Price},$servicePrice{units}, $price{Total});
 		} # end foreach equipment
 
 		if ( ! $bestPrice{Equipment} ) {
