@@ -1,5 +1,4 @@
 <?include(/includes/error_reporting.html)?>
-<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
 <form name="f1" id="f1" method="get" action="edit.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
@@ -102,7 +101,7 @@
           id=>'manufacturer_id', name=>'manufacturer_id', size=>1, prepend=>['','select'],
         }
       ),
-      input( style=>'display: none;', type=>'text', id=>'manufacturer', name=>'manufacturer', onfocus=>q`if(!this.value){this.value=get_ddm_text(f1.manufacturer_id);}ddm_select_by_index( f1.manufacturer_id, 0 );` ),
+      input( style=>'display: none;', type=>'text', id=>'manufacturer', name=>'manufacturer', onfocus=>q`ddm_select_by_index( document.getElementById('manufacturer_id'), 0 );` ),
       button('NewManufacturer', { onclick=>q`$('manufacturer_id').hide();$('manufacturer').show();`, text=>'New' } ),
       );)?>
 		</li>
@@ -137,3 +136,4 @@
 <? if ( $$variable{Material}->id() ) ?>
 <? echo ( include_logs( $$variable{Material} ); ) ?>
 <? endif ( $$variable{Material}->id() ) ?>
+<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
