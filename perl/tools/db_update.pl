@@ -1888,11 +1888,11 @@ if ( ! sets::isin( 'material_categories', \@tables ) ) {
 	if ( sets::isin('materialcategoriesindex_seq', \@sequences ) ) {
 		$dbh->do('drop sequence materialcategoriesindex_seq') 
 	} 
-	if ( ! sets::isin('material_categories_id_seq', \@sequences ) ) {
-		$dbh->do('create sequence material_categories_id_seq');
-	}
-	$dbh->do(q{select setval('material_categories_id_seq', (select max(id) from material_categories))});
-	$dbh->do(q{alter table material_categories alter column id set default nextval('material_categories_id_seq')});
+}
+if ( ! sets::isin('material_categories_id_seq', \@sequences ) ) {
+  $dbh->do('create sequence material_categories_id_seq');
+  $dbh->do(q{select setval('material_categories_id_seq', (select max(id) from material_categories))});
+  $dbh->do(q{alter table material_categories alter column id set default nextval('material_categories_id_seq')});
 }
 if ( ! sets::isin( 'materials', \@tables ) ) {
 	if ( sets::isin( 'tbl_materials', \@tables ) ) {
