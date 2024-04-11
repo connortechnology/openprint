@@ -6636,8 +6636,6 @@ sub select_presses {
 # we do not have to check Image Size here because the the imposition code will take care of that later on.
 # it may be a little faster to eliminate the press now but i'm not sure.
 
-
-
 # we do not need to do any Perfecting checks because imposition code will create or no create perfecting.
 
 # Inline Perfing & Scoring is done as a sperate run, so it dosn't affect our printing press choice.
@@ -6668,7 +6666,7 @@ sub select_presses {
 		$log->error("Nothing in presses");
 	}
 	foreach my $Press ( values %Presses ) {
-$log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
+$log->debug("Considering $$Press{strid}") if DEBUG_PRESSES;
 		my $press_id = $Press->id();
 
 		my ( $min_object_width, $min_object_length ) = ( $Press->specification( 'Minimum Object Width'), $Press->specification('Minimum Object Length') );
@@ -6714,8 +6712,13 @@ $log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 			} # end if
 		} # end if
 
-		if ( $$ProjectType{name} eq 'Envelopes' and $Press->specification('Envelope Capable') ne 'Y' ) {
-			$results{$press_id} = "Failed Envelope Check";
+		if ($$ProjectType{name} eq 'Envelopes') {
+       if ($Press->specification('Envelope Capable') ne 'Y') {
+         $results{$press_id} = "Failed Envelope Check";
+         next;
+       }
+    } elsif ($Press->specification('Envelope Only') eq 'Y') {
+			$results{$press_id} = 'Is envelope only';
 			next;
 		} # end if
 
