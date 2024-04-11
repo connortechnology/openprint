@@ -33,7 +33,7 @@ require openprint::ServiceType;
 use openprint::Imposition;
 require openprint::Estimating::Perforating;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -1854,7 +1854,7 @@ sub calc {
 	} elsif ( $$services{LoopStitching} ) {
 		%{$$calc_hash{StitchingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{LoopStitching}[0] )};
 		$$calc_hash{HasStitching} = $$services{LoopStitching}[0];
-	} elsif ( $$services{PerfectBound} ) {
+	} elsif ( $$services{PerfectBound} and $$services{PerfectBound}[0]) {
 		%{$$calc_hash{PerfectBoundSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{PerfectBound}[0] )};
 		$$calc_hash{HasPerfectBound} = $$services{PerfectBound}[0];
 	}
