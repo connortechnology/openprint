@@ -7,14 +7,6 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 <?include(/includes/error_reporting.html)?>
 <div class="Quote"><div class="Submit">
 	<form id="f1" name="f1" method="post" action="/main/quote/confirmation.html">
-		<p class="buttons Top">
-			<? echo ( join("\n",
-					button( 'Back', { href=>'/main/quote/information.html?quote_id='.$$variable{Quote}->id(), text=>'Back' } ),
-					button( 'SubmitQuote', { onclick=>"f1.btnFunction.value='Submit';f1.submit();", text=>'Submit Quote' } ),
-					button( 'CloseQuote', { onclick=>"f1.btnFunction.value='Close';f1.submit();", text=>'Close Quote Without Sending' } ),
-					button( 'SendToMe', { onclick=>"f1.action='/main/quote/submit.html';f1.btnFunction.value='SendToMe';f1.submit();", text=>'Send To Me' } ),
-					); ) ?>
-		</p>
 		<div class="Header">
 			<?include(/includes/quote_header.html)?>
 			<?include(/includes/quote_information.html)?>
@@ -62,6 +54,14 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 	} # end if
 	return $html;
 ) ?>
+		<p class="buttons">
+			<? echo ( join("\n",
+					button( 'Back', { href=>'/main/quote/information.html?quote_id='.$$variable{Quote}->id(), text=>'Back' } ),
+					button( 'SubmitQuote', { onclick=>"f1.btnFunction.value='Submit';f1.submit();", text=>'Submit Quote' } ),
+					button( 'CloseQuote', { onclick=>"f1.btnFunction.value='Close';f1.submit();", text=>'Close Quote Without Sending' } ),
+					button( 'SendToMe', { onclick=>"f1.action='/main/quote/submit.html';f1.btnFunction.value='SendToMe';f1.submit();", text=>'Send To Me' } ),
+					); ) ?>
+		</p>
 	<input type="hidden" name="btnFunction"/>
 </form>
 </div></div><!--Quote-->
