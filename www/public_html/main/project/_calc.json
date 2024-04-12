@@ -1,5 +1,6 @@
 <? echo (
-	my $debug = 0;
+
+	my $debug = 1;
 
 	if ( ! $param{ServiceType} ) {
 $log->warn("No servicetype in params in calc");
@@ -7,9 +8,13 @@ $log->warn("No servicetype in params in calc");
 	} # end if
 
 	my %specs = openprint::main_project::calc( $debug );
+  if ($debug) {
+    use Data::Dumper;
+    $log->debug(Dumper(\%specs));
+  }
 
 	$param{callback} = 'cbFillResults' if ! $param{callback};
 	my $json = JSON->new;
-  $log->debug($json->encode( \%specs ));
+  $log->debug($json->encode( \%specs )) if $debug;
 	return $json->encode( \%specs );
 ) ?>
