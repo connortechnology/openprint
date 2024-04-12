@@ -11,8 +11,10 @@ table .Qty {
     width: 27px;
 }
 table .Imp {
+  /*
 	width: auto;
 	max-width: 30px;
+  */
 }
 .Service table.Impositions input[type="text"],
 .Service table.Impositions input[type="number"] {
