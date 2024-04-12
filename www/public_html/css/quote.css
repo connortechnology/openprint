@@ -98,19 +98,11 @@ display: none;
 
 div.Quote div.Information fieldset ul li {
 	margin: .2em;
-	padding-left: 130px;
+	padding-left: 180px;
 }
-div.Quote div.Information fieldset ul li label {
-	margin: 0px 15px 0px -130px;
-	width: 130px;
-}
-div.Quote div.Information fieldset ul li label.radio {
-    width: auto;
-    margin: 0px;
-    padding: 0px;
-    float: none;
-	position: relative;
-	left: 0px;
+div.Quote div.Information fieldset ul li label:not(.radio) {
+	margin: 0px 15px 0px -180px;
+	width: 180px;
 }
 fieldset#SalesRepComments {
 	width: 49%;
@@ -147,7 +139,7 @@ div.Quote table .newprice input {
 	text-align: right;
 }
 div.Quote div.Information table .newprice {
-	width: 120px;
+	width: 150px;
 }
 div.Quote table .projects {
 	text-align: left;
