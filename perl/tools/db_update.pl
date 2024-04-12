@@ -1939,6 +1939,9 @@ if ( ! sets::isin( 'materials', \@tables ) ) {
 if ( sets::isin( 'materialindex_seq', \@sequences ) and ! sets::isin( 'materials_id_seq', \@sequences ) ) {
 	$dbh->do('alter sequence materialindex_seq rename to materials_id_seq');
 	$dbh->do("ALTER TABLE Materials alter id set default nextval('materials_id_seq')");
+} elsif ( sets::isin( 'material_seq', \@sequences ) and ! sets::isin( 'materials_id_seq', \@sequences ) ) {
+	$dbh->do('alter sequence material_seq rename to materials_id_seq');
+	$dbh->do("ALTER TABLE Materials alter id set default nextval('materials_id_seq')");
 }
 if ( ! sets::isin( 'material_specifications', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../../sql/Material_Specifications.sql') );
@@ -2893,7 +2896,13 @@ if ( sets::isin( 'tbl_quotes', \@tables ) ) {
   if (exists $$data{lngcustomerid}) {
     $dbh->do('ALTER TABLE tbl_quotes RENAME COLUMN lngcustomerid to company_id');
   }
+  if (exists $$data{companyindex}) {
+    $dbh->do('ALTER TABLE tbl_quotes RENAME COLUMN companyindex to company_id');
+  }
   if (exists $$data{lnguserid}) {
+    $dbh->do('ALTER TABLE tbl_quotes RENAME COLUMN lnguserid to user_id');
+  }
+  if (exists $$data{userindex}) {
     $dbh->do('ALTER TABLE tbl_quotes RENAME COLUMN lnguserid to user_id');
   }
   $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_quote_user_for'", 'column_name');
