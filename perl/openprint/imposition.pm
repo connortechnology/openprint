@@ -58,7 +58,9 @@ sub calc_setup {
 
 	# This test used to be for > 1 but we had a labels job that was .75... 
 	my $cols = $object_width > 0 ? int(($space_width / $object_width)) : 0;
+  $openprint::log->debug("calc_setup: space width $space_width / object width $object_width = $cols cols") if DEBUG;
 	my $rows = $object_height > 0 ? int(($space_height / $object_height)) : 0;
+  $openprint::log->debug("calc_setup: space height $space_height / object height $object_height = $rows rows") if DEBUG;
 
 	$setup->set(imposition=>$rows * $cols, rows=>$rows, columns=>$cols );
 } # end sub calc_setup
@@ -99,7 +101,7 @@ $setup->display("Trying dutch from:") if DEBUG_DUTCH;
 			$dutch_imp->display( " <= previous $previous_dutch_imp skipping") if DEBUG_DUTCH;
 			next ;
 		}
-	my $Paper = $dutch_imp->Paper();
+    my $Paper = $dutch_imp->Paper();
 		if ( ! $Paper->start_width() ) {
 			$openprint::log->debug("Setting dutch paper width to " . $dutch_imp->used_width() );
 			$Paper->width( $dutch_imp->used_width() );
