@@ -35,11 +35,24 @@ function add_product(button) {
 }
 
 window.addEventListener('DOMContentLoaded',function(){
-  tinyMCE.init({
-    mode : "specific_textareas",
-    editor_selector : "mce",
-    theme : "simple"
-  });
+  const tinymce_options = {
+  selector : 'textarea',
+    license_key: 'gpl',
+  plugins: "paste",
+  theme_advanced_toolbar_location : "top",
+  theme_advanced_buttons1 : "fontselect,fontsizeselect,bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull,bullist,numlist,outdent,indent,sub,sup,charmap",
+  theme_advanced_buttons2 : "",
+  theme_advanced_buttons3 : "",
+  force_br_newlines : true,
+  force_p_newlines : false,
+  forced_root_block : '', // Needed for 3.x
+  auto_resize : true,
+  theme : "advanced",
+    content_css : "/css/tinymce.css",
+theme_advanced_font_sizes: "10px,12px,13px,14px,16px,18px,20px",
+font_size_style_values : "10px,12px,13px,14px,16px,18px,20px",
+  };
+tinyMCE.init(tinymce_options);
 });
 
 function company_onchange( e ) {
