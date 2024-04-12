@@ -21,6 +21,7 @@ require openprint::Todo;
 require openprint::Bug;
 require openprint::service;
 require openprint::Project_Log;
+require openprint::Estimating::Printing;
 
 $debug = 0;
 
