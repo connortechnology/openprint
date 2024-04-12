@@ -30,6 +30,7 @@ $serial = 'service_types_id_seq';
 	category	=>	'(SELECT name FROM ServiceType_Categories WHERE id=category_id)',
 );
 %transforms = (
+  name => ['s/\W//g'],
 );
 %defaults = (
 	deleted			=>	0,
