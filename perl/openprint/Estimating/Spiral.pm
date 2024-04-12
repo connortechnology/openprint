@@ -133,7 +133,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 				} else {
 					$openprint::log->error("Unknown units for $$ServiceType{name} $CoilingPrice{units}");
 				} # end if
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Coiling: ' . sprintf( '$%.4f%s = $%.2f<br/>', @CoilingPrice{'Price','units','Total'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= $CoilingPrice{Service}->description().': ' . sprintf( '$%.4f%s = $%.2f<br/>', @CoilingPrice{'Price','units','Total'} );
 			} # end if CoilingService
 
 			if ( $$specs{chkOverrideMaterialLength} ne 'Y' ) {
