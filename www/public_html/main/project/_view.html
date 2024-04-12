@@ -43,6 +43,8 @@
 	foreach my $ServiceCategory ( @{$$variable{Categories}} ) {
 
 		if ( $ServiceCategory->name() eq 'Printing' ) {
+      $html .= '<tr class="category '.$ServiceCategory->name().'">
+      <td class="name">'.$ServiceCategory->name().'</td>'.join('', map { '<td></td>' } ($Project->quantities(), $Project->status(), 'actions')).'</tr>';
 			my $function_name = 'openprint::Estimating::'.$Project_Type->type();
 			my $summary = '';
 			if ( my $function = $function_name->can('summary') ) {
