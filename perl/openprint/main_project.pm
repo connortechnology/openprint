@@ -201,10 +201,11 @@ sub calc {
 	}
 	if ( ! $Service ) {
 		$Service = new openprint::Project_Service();
-		$Service->set({ project_id=>$Project->id(), service_type=>$param{ServiceType} } );
+		$Service->set({ project_id=>$Project->id(), service_type=>openprint::ServiceType->transform(name=>$param{ServiceType}) } );
 	}
 
 	eval {
+    # FIXME potential security problem here, need to sanitise service_type
 		require 'openprint/Estimating/'.$Service->service_type().'.pm';
 	};
 	$log->error("Error requiring $$Service{service_type}: $@") if $@;
@@ -246,11 +247,12 @@ sub calc {
 	} # end foreach
 	if ( $debug ) {
 		foreach my $key ( sort keys %specs ) {
-			$log->debug("values still in specs $key => $specs{$key}");
+			$log->debug("values still in specs $key => ".(defined $specs{$key} ? $specs{$key} : 'undef'));
 		} # end foreach
 	} # end if debug
-	if ( $debug ) {
+	if ( 0 and $debug ) {
 		foreach my $key ( sort { $a cmp $b } keys %specs ) {
+      next if $key eq 'alert';
 			if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
 				$log->debug("Deleting $key cuz it's the same $key = $param{$key}");
 				delete $specs{$key};
