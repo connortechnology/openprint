@@ -23,6 +23,8 @@ input[type="tel"] {
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
+    height: 30px;
+    font-size: 15px;
   /*
 	-moz-appearance: textfield;
 	border-width: 2px;
@@ -191,13 +193,13 @@ li {
 }
 fieldset p,
 fieldset li {
-	margin: 2px 0 2px 0;
-	padding: 0 0 0 175px;
+	margin: 4px 0 4px 0;
+	padding: 0 0 0 185px;
 	text-align: left;
 }
 fieldset label:not(.radio):not(.radio-inline) {
-	width: 170px;
-	margin-left: -175px;
+	width: 180px;
+	margin-left: -185px;
 	float: left;
 	text-align: left;
 }
