@@ -1,9 +1,9 @@
 @import 'quote.css';
 @import 'project.css';
 
-.changes {
+table .changes {
 	text-align: right;
-	width: 100px;
+	width: 120px;
 }
 .Quote .Information li input[type="text"],
 .Quote .Information li input[type="email"],
