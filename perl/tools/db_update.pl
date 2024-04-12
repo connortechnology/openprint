@@ -2893,41 +2893,6 @@ if ( sets::isin( 'tbl_quotes', \@tables ) ) {
   } elsif (exists $$data{index}) {
     $dbh->do('ALTER TABLE tbl_quotes rename column index to id');
   }
-  if (exists $$data{lngcustomerid}) {
-    $dbh->do('ALTER TABLE tbl_quotes RENAME COLUMN lngcustomerid to company_id');
-  }
-  if (exists $$data{companyindex}) {
-    $dbh->do('ALTER TABLE tbl_quotes RENAME COLUMN companyindex to company_id');
-  }
-  if (exists $$data{lnguserid}) {
-    $dbh->do('ALTER TABLE tbl_quotes RENAME COLUMN lnguserid to user_id');
-  }
-  if (exists $$data{userindex}) {
-    $dbh->do('ALTER TABLE tbl_quotes RENAME COLUMN lnguserid to user_id');
-  }
-  $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_quote_user_for'", 'column_name');
-  if (exists $$data{lngquoteid}) {
-    $dbh->do('ALTER TABLE tbl_Quote_Users_For rename column lngquoteid to quote_id');
-  } elsif (exists $$data{quoteindex}) {
-    $dbh->do('ALTER TABLE tbl_Quote_Users_For rename column quoteindex to quote_id');
-  }
-  $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_quote_user_by'", 'column_name');
-  if (exists $$data{lngquoteid}) {
-    $dbh->do('ALTER TABLE tbl_Quote_Users_For rename column lngquoteid to quote_id');
-  } elsif (exists $$data{quoteindex}) {
-    $dbh->do('ALTER TABLE tbl_Quote_Users_By rename column quoteindex to quote_id');
-  }
-  $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_quote_details'", 'column_name');
-  if (exists $$data{lngquoteid}) {
-    $dbh->do('ALTER TABLE tbl_Quote_Details rename column lngquoteid to quote_id');
-  } elsif (exists $$data{quoteindex}) {
-    $dbh->do('ALTER TABLE tbl_Quote_Details rename column quoteindex to quote_id');
-  }
-  if (exists $$data{lngprojectindex}) {
-    $dbh->do('ALTER TABLE tbl_Quote_Details rename column lngprojectindex to project_id');
-  } else {
-    $dbh->do('ALTER TABLE tbl_Quote_Details rename column projectindex to project_id');
-  }
   $dbh->do('DROP SEQUENCE IF EXISTS quotes_id_seq');
 	$dbh->do('CREATE SEQUENCE quotes_id_seq');
 	$dbh->do("SELECT setval('quotes_id_seq', (select MAX(id) FROM tbl_quotes) )");
@@ -2935,6 +2900,44 @@ if ( sets::isin( 'tbl_quotes', \@tables ) ) {
 	$dbh->do('ALTER TABLE tbl_quotes rename to quotes');
 	push @tables, 'quotes';
 } # end if
+
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='quotes'", 'column_name');
+if (exists $$data{lngcustomerid}) {
+  $dbh->do('ALTER TABLE quotes RENAME COLUMN lngcustomerid to company_id') or die $dbh->errstr();
+}
+if (exists $$data{lnguserid}) {
+  $dbh->do('ALTER TABLE quotes RENAME COLUMN lnguserid to user_id') or die $dbh->errstr();
+}
+if (exists $$data{companyindex}) {
+  $dbh->do('ALTER TABLE quotes RENAME COLUMN companyindex to company_id') or die $dbh->errstr();
+}
+if (exists $$data{userindex}) {
+  $dbh->do('ALTER TABLE quotes RENAME COLUMN userindex to user_id') or die $dbh->errstr();
+}
+
+  $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_quote_users_for'", 'column_name');
+  if (exists $$data{lngquoteid}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Users_For rename column lngquoteid to quote_id') or die $dbh->errstr();
+  } elsif (exists $$data{quoteindex}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Users_For rename column quoteindex to quote_id') or die $dbh->errstr();
+  }
+  $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_quote_users_by'", 'column_name');
+  if (exists $$data{lngquoteid}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Users_By rename column lngquoteid to quote_id') or die $dbh->errstr();
+  } elsif (exists $$data{quoteindex}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Users_By rename column quoteindex to quote_id') or die $dbh->errstr();
+  }
+  $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_quote_details'", 'column_name');
+  if (exists $$data{lngquoteid}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Details rename column lngquoteid to quote_id') or die $dbh->errstr();
+  } elsif (exists $$data{quoteindex}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Details rename column quoteindex to quote_id') or die $dbh->errstr();
+  }
+  if (exists $$data{lngprojectindex}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Details rename column lngprojectindex to project_id') or die $dbh->errstr();
+  } elsif (exists $$data{projectindex}) {
+    $dbh->do('ALTER TABLE tbl_Quote_Details rename column projectindex to project_id') or die $dbh->errstr();
+  }
 
 if ( ! sets::isin( 'quotes', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Quotes.sql' ) );
