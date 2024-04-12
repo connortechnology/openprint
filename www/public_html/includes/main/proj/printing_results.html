@@ -495,7 +495,7 @@ join("\n", map {
 				$html .= sprintf( '%s Out %s Dutch?: %s <br/> %s x %s + %s x %s%s<br/>%s x %s (W x H)<br/>%s%s',
 					input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, oninput=>'calc(this.form.name);' ),
 					write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
-					radio( 'dutch'.$qty_index, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'dutch'.$qty_index}, { onclick=>q`calc('f1');` } ),
+          radio( 'dutch'.$qty_index, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'dutch'.$qty_index}, { onclick=>q`calc('f1');`, default=>'N' } ),
 					input( type=>'cardinal', name=>"hdnImpositionColumns$qty_index", value=>$$variable{"hdnImpositionColumns$qty_index"}, oninput=>q`calc('f1');` ),
 					input( type=>'cardinal', name=>"hdnImpositionRows$qty_index", value=>$$variable{"hdnImpositionRows$qty_index"}, oninput=>q`calc('f1');` ),
 					input( type=>'cardinal', name=>"hdnImpositionDutchColumns$qty_index", value=>$$variable{"hdnImpositionDutchColumns$qty_index"}, oninput=>q`calc('f1');` ),
