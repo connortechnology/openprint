@@ -350,6 +350,8 @@ sub _index {
 }
 sub categories {
 	my $ServiceType_Category = new openprint::ServiceType_Category( $param{category_id} );
+	$variable{ServiceType_Category} = $ServiceType_Category;
+  return if ! $param{btnFunction};
 	if ( $param{btnFunction} eq 'Save' ) {
 		$variable{error} .= $ServiceType_Category->save(\%param);
 		foreach my $st_id ( ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : $param{servicetype_id} ) {
@@ -358,8 +360,9 @@ sub categories {
 		} # end foreach st_id
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $ServiceType_Category->delete();
+  } else {
+    $openprint::log->error("Unknown value for btnFunction $param{btnFunction}");
 	} # end if
-	$variable{ServiceType_Category} = $ServiceType_Category;
 } # end sub categories
 
 sub category {

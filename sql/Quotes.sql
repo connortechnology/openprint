@@ -3,8 +3,8 @@ DROP TABLE IF EXISTS Quotes;
 
 CREATE TABLE Quotes (
 	id				SERIAL NOT NULL,
-	CompanyIndex		INTEGER NOT NULL, FOREIGN KEY (CompanyIndex) REFERENCES Companies (id),
-	UserIndex			INTEGER NOT NULL, FOREIGN KEY (UserIndex) REFERENCES Users (id),
+	company_id		INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
+	user_id			INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
     dblModification1	NUMERIC(20,2),
     dblModification2	NUMERIC(20,2),
     dblModification3	NUMERIC(20,2),
@@ -17,9 +17,9 @@ CREATE TABLE Quotes (
 	strCustomerComments			TEXT,	/* Comments included in the emails */
 	strAdministratorComments	TEXT,	/* Comments included in the emails */
 	strAdministratorName		TEXT,
-	strCurrencyName		TEXT,
-	strCurrencySymbol	TEXT,
 	currency_id			INTEGER, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
+  reference     TEXT,
+  comments     TEXT,
 	deleted				BOOLEAN NOT NULL DEFAULT False,
   for_company_id INTEGER, FOREIGN KEY (for_company_id) REFERENCES Companies(id),
 	PRIMARY KEY (id)
