@@ -287,7 +287,7 @@ if ( $$variable{ForCountry} eq 'US' ) {
 		</div>
 	</div><!--Header-->
 
-  <? if ( $$variable{HasProjectTypes} ) ?>
+  <? if ( $$variable{ProjectTypes} ) ?>
 	<? if ( @{$$variable{PROJECTS}} == 0 ) ?>
 			No projects
 	<? else ( @{$$variable{PROJECTS}} == 0 ) ?>
@@ -406,7 +406,7 @@ $log->debug("Markup: $$variable{markup}");
 		</table>
 		<? endif ( $openprint::Company->reseller() eq 'Y' or sets::isin( $session{user_type}, [ 'A', 'E' ] ) ) ?>
 		<? endif ( @{$$variable{PROJECTS}} == 0 ) ?>
-  <? endif ( $$variable{HasProjectTypes} ) ?>
+  <? endif ( $$variable{ProjectTypes} ) ?>
 
 		<? if ( openprint::Product->find_one() ) ?>
 		<div class="Products">
@@ -418,7 +418,7 @@ $log->debug("Markup: $$variable{markup}");
 		<p class="buttons">
 				<? echo ( 
 					my $html;
-          if ( $$variable{HasProjectTypes} ) {
+          if ( $$variable{ProjectTypes} ) {
             $html .= button( 'AddFromHistory', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $session{user_id};
             $html .= button( 'CreateNewProject', { href=>'/main/project/create_edit.html', text=>'Add New Project' } );
           }
