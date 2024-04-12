@@ -38,9 +38,9 @@ my $threading = 0;
 use constant DEBUG => 1;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_PRESSES => 1;
-use constant DEBUG_FILTERING => 1;
-use constant DEBUG_INITIAL_FILTERING => 1;
+use constant DEBUG_PRESSES => 0;
+use constant DEBUG_FILTERING => 0;
+use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_AFTER_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
@@ -2133,7 +2133,7 @@ if ( 0 ) {
 }
 		%imps = ();
 		if ( DEBUG_INITIAL_FILTERING ) {
-			$log->debug("Afgter filtering by Perfecting vs Sheetwork");
+			$log->debug("After filtering by Perfecting vs Sheetwork");
 			foreach my $I ( openprint::imposition::sort ( @impositions ) ) {
 				$I->display("After filtering by paper and runstyle");
 			}
@@ -5572,12 +5572,12 @@ sub calc_price {
 	if ( $$specs{'OverrideSetup'.$qty_index} and ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) ) {
 		$setup_overs = $$specs{'OverSetup'.$qty_index};
 	} elsif ( $setup_rate ) {
-    $openprint::log->error("Have setup_rate?! $setup_rate");
+    $openprint::log->debug("Have setup_rate?! $setup_rate");
 		$setup_overs = int($setup_rate * $num_colours);
 	} else {
 		$setup_overs = $Press->specification('MakeReady Overs '.$$Imposition{runstyle}, $num_colours);
 		$setup_overs = $Press->specification('MakeReady Overs', $num_colours) if ! $setup_overs;
-    $openprint::log->error("From MakeReadye?! $setup_overs");
+    $openprint::log->debug("From MakeReady Overs?! $setup_overs") if ! $setup_overs;
 	} # end if
 
 	#$setup_overs *= ( 1 + ( $roll2sheet_setup_overs_rate / 100 ) ) if $roll2sheet_setup_overs_rate;
