@@ -147,7 +147,7 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 			} elsif ( $ServicePrice{units} eq 'each' ) {
 				$ServicePrice{Total} = $ServicePrice{Price} * $qty;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
-			} elsif ( sets::isin( $ServicePrice{units}, [ 'per bundle', 'per package' ] ) ) {
+			} elsif ( sets::isin( $ServicePrice{units}, [ 'per bundle', 'per package', 'per wrap' ] ) ) {
 				$ServicePrice{Total} = $ServicePrice{Price} * $package_qty;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $package_qty );
 			} else {
