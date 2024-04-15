@@ -1226,8 +1226,9 @@ $log->debug('Considering: ' . $P->id_string() ) if DEBUG;
 					next if ! $$specs{'OverrideStockHeight'.$qty_index};
 # Must be big enough to cut
 					next if ( ! ( 
-								( $P->start_width() >= $$specs{'OverrideStockWidth'.$qty_index} and $P->start_height() >= $$specs{'OverrideStockHeight'.$qty_index} ) or 
-								( $P->start_width() >= $$specs{'OverrideStockHeight'.$qty_index} and $P->start_height() >= $$specs{'OverrideStockWidth'.$qty_index} )
+								( $P->start_width() >= $$specs{'OverrideStockWidth'.$qty_index} and $P->start_height() >= $$specs{'OverrideStockHeight'.$qty_index} )
+                #or 
+                #( $P->start_width() >= $$specs{'OverrideStockHeight'.$qty_index} and $P->start_height() >= $$specs{'OverrideStockWidth'.$qty_index} )
 								) );
 
 				} else {
