@@ -16,6 +16,7 @@ input::-webkit-inner-spin-button {
     margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
 input[type="text"], 
+input[type="file"], 
 input[type="password"], 
 input[type="number"], 
 input[type="email"],
@@ -25,6 +26,7 @@ input[type="tel"] {
     -webkit-box-sizing: border-box;
     height: 30px;
     font-size: 15px;
+    line-height: 26.5px;
   /*
 	-moz-appearance: textfield;
 	border-width: 2px;
@@ -236,7 +238,7 @@ fieldset p textarea, fieldset li textarea {
 }
 fieldset p.buttons {
   padding: 0;
-  margin-left: 175px;
+  margin-left: 185px;
 	float: none;
 }
 input[type="radio"],
