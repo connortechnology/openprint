@@ -1,7 +1,10 @@
+
+/*
 .DieCutting .Signature {
 	float: left;
 	width: 49%;
 }
+*/
 .DieCutting .Signature input[type="text"],
 .DieCutting .Signature input[type="number"] {
 	width: 40px;
