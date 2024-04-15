@@ -14,7 +14,7 @@
 		<!-- The rest is done for each qty -->
 		<? echo ( 
 			my $html = '';
-      my @ddm_options = map { $_->name(), $_->description() } openprint::Service->find(servicetype_id=>$$variable{ServiceTypeId});
+      my @ddm_options = map { $_->name(), $_->description() } openprint::Service->find(servicetype_id=>$$variable{ServiceType}->id());
 
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 				my $quantity = $$variable{Project}->quantity($qty_index);
