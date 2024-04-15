@@ -1,5 +1,3 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
-<script type="text/javascript" src="<?hash_link(/javascripts/proj/packaging.js)?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
@@ -15,7 +13,7 @@
 			my @Materials = openprint::Material->find( category=>$$variable{ServiceTypeID}, order=>'lower(name)' );
 			if ( @Materials ) {
 				return '<li><label>Type</label>'.ssi::select( 
-				[ map{ $_->id(), $_->name() } @Materials ], $$variable{type_id}, { name=>'type_id', onchange=>'calc(this.form.name);' } ).'</li>';
+				[ map{ $_->id(), $_->description() } @Materials ], $$variable{type_id}, { name=>'type_id', onchange=>'calc(this.form.name);' } ).'</li>';
 			} 
 			return;
 		)?>
@@ -36,3 +34,5 @@
 		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
 	</form>
 </div>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script src="<?hash_link(/javascripts/proj/packaging.js)?>"></script>
