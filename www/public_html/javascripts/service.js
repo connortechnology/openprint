@@ -158,6 +158,10 @@ function calc( formName='f1', force, options ) {
 } // end calc()
 
 function cbFillResults( results ) {
+  if (!results) {
+    console.log("cbFillResults called without results.");
+    return;
+  }
 	block_calc = true;
 	const form = getFormObj('f1');
 	const AlertDiv = $('AlertDiv');
