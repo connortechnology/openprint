@@ -54,16 +54,16 @@ sub variables {
 	foreach my $s_s_id ( $Project->signatures() ) {
 		my $specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			push @v, "chkOverrideQty-$$specs{SignatureIndex}", 
+			push @v, "chkOverrideQty-$$specs{SignatureIndex}",
 				 "ddmEquipment-$$specs{SignatureIndex}-$qty_index", "chkOverrideEquipment-$$specs{SignatureIndex}-$qty_index",
 				 "txtImposition-$$specs{SignatureIndex}-$qty_index", "chkOverrideImposition-$$specs{SignatureIndex}-$qty_index",
 				 "txtLayoutWidth-$$specs{SignatureIndex}-$qty_index", "txtLayoutHeight-$$specs{SignatureIndex}-$qty_index",
 				 "MakeReadyPrice-$$specs{SignatureIndex}-$qty_index", "OverrideMakeReadyPrice-$$specs{SignatureIndex}-$qty_index",
-                 "BlanketPrice-$$specs{SignatureIndex}-$qty_index", "OverrideBlanketPrice-$$specs{SignatureIndex}-$qty_index",
-                 "ServicePrice-$$specs{SignatureIndex}-$qty_index", "OverrideServicePrice-$$specs{SignatureIndex}-$qty_index",
-                 "MaterialPrice-$$specs{SignatureIndex}-$qty_index", "OverrideMaterialPrice-$$specs{SignatureIndex}-$qty_index",
-                 "SignaturePrice-$$specs{SignatureIndex}-$qty_index", "OverrideSignaturePrice-$$specs{SignatureIndex}-$qty_index",
-		} # end foreach
+         "BlanketPrice-$$specs{SignatureIndex}-$qty_index", "OverrideBlanketPrice-$$specs{SignatureIndex}-$qty_index",
+         "ServicePrice-$$specs{SignatureIndex}-$qty_index", "OverrideServicePrice-$$specs{SignatureIndex}-$qty_index",
+         "MaterialPrice-$$specs{SignatureIndex}-$qty_index", "OverrideMaterialPrice-$$specs{SignatureIndex}-$qty_index",
+         "SignaturePrice-$$specs{SignatureIndex}-$qty_index", "OverrideSignaturePrice-$$specs{SignatureIndex}-$qty_index";
+       } # end foreach
 	} # end foreach
     return @v;
 } # end sub variables
@@ -415,7 +415,7 @@ sub signature_calc {
 		my %BestPricePerImposition;
 		my %minimum = $MinimumCharge->get_price( undef, $Equipment ) if $MinimumCharge;
 		my $BlanketCutPrice;
-		my $runspeed = $Equipment->specification('UVCoatingRunSpeed', $Stock->gsm() );
+		my $runspeed = $Equipment->Specification('UVCoatingRunSpeed', $Stock->gsm() );
 		my $equipment_id = $$Equipment{id};
 		my $equipment_wt = $Equipment->specification('WT UVCoating');
 
@@ -447,7 +447,7 @@ sub signature_calc {
 				$openprint::log->debug('Trying: ' . $breakdown ) if DEBUG;
 
 				if ( ! ( $$imp{rows} * $$imp{columns} ) ) {
-					$openprint::log->error("Invalid Imposition in UVCoating");
+					$openprint::log->error('Invalid Imposition in UVCoating');
 					$imp->display();
 					$complete = 0;
 					last;
@@ -553,9 +553,22 @@ $openprint::log->debug("Types: @types") if DEBUG;
 						if ( $ServicePrice{units} eq 'per m' ) {
 							$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/1000;
 						} elsif ( $ServicePrice{units} eq 'per hour' or $ServicePrice{units} eq '/Hr' or $ServicePrice{units} eq '/hr' ) {
-							if ( $runspeed ) {
-								$breakdown .= sprintf('<tr><td> %d @ %d/Hr = %.1fhours', $run_qty, $runspeed, $run_qty/$runspeed );
-								$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/$runspeed if $runspeed;
+							if ( $runspeed and $$runspeed{value}) {
+                if ($$runspeed{units} eq 'inches per hour') {
+                  my $length;
+                  if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
+                    $length = $Imposition->layout_height();
+                  } else {
+                    $length = $Imposition->layout_width();
+                  } # end if
+                  my $inches = $length * ( $qty / $$Imposition{imposition} );
+                  my $hours = Math::Round::nearest( 0.01, $inches / $$runspeed{value} );
+                  $breakdown .= sprintf('<tr><td>Service: %s image length = %dinches @ %d/Hr = %.1fhours', $length, $inches, $$runspeed{value}, $inches/$$runspeed{value} );
+                  $ServicePrice{Total} = $ServicePrice{Price}*$inches/$$runspeed{value}
+                } else {
+                  $breakdown .= sprintf('<tr><td>Service: %d @ %d/Hr = %.1fhours', $run_qty, $$runspeed{value}, $run_qty/$$runspeed{value} );
+                  $ServicePrice{Total} = $ServicePrice{Price}*$run_qty/$$runspeed{value}
+                }
 							} else {
 								$breakdown .= sprintf('<tr><td>No runspeed for %dgsm. Cant use this price.</td></tr>', $Stock->gsm() );
 								$ServicePrice{Total} = 1000000;
@@ -579,20 +592,20 @@ $openprint::log->error("Unknown units on Service Price $ServicePrice{Service} $S
 							my $area;
 							if ( $type =~ /Overall/i ) {
 								$area = $imp->sheet_area() * $run_qty;
-								$breakdown .= sprintf( '<tr><td>%sx%s = %d sq inches = %d total sq inches', $imp->sheet_width(), $imp->sheet_height(), $imp->sheet_area(), $area );
+								$breakdown .= sprintf( '<tr><td>Material: %sx%s = %d sq inches = %d total sq inches', $imp->sheet_width(), $imp->sheet_height(), $imp->sheet_area(), $area );
 							} else {
 								$area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100);
-								$breakdown .= sprintf( '<tr><td>%sx%s = %d sq inches = %d total sq inches', $imp->object_width(), $imp->object_height(), $imp->object_area(), $area );
+								$breakdown .= sprintf( '<tr><td>Material: %sx%s = %d sq inches = %d total sq inches', $imp->object_width(), $imp->object_height(), $imp->object_area(), $area );
 							} 
 							$MaterialPrice{Total} = $MaterialPrice{Price} * $run_qty * $area;
 						} elsif ( lc $MaterialPrice{units} eq 'per square foot' ) {
 							my $area;
 							if ( $type =~ /Overall/i ) {
 								$area = $imp->sheet_area() * $run_qty / 144;
-								$breakdown .= sprintf( '<tr><td>%sx%s = %d sq feet = %d total sq feet', $imp->sheet_width(), $imp->sheet_height(), $imp->sheet_area(), $area );
+								$breakdown .= sprintf( '<tr><td>Material: %sx%s = %d sq feet = %d total sq feet', $imp->sheet_width(), $imp->sheet_height(), $imp->sheet_area(), $area );
 							} else {
 								$area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100) / 144;
-								$breakdown .= sprintf( '<tr><td>%sx%s = %d sq feet = %d total sq feet', $imp->object_width(), $imp->object_height(), $imp->object_area(), $area );
+								$breakdown .= sprintf( '<tr><td>Material: %sx%s = %d sq feet = %d total sq feet', $imp->object_width(), $imp->object_height(), $imp->object_area(), $area );
 							} 
 							$MaterialPrice{Total} = $MaterialPrice{Price} * $area;
 						} elsif ( lc $MaterialPrice{units} eq 'per m' ) {
