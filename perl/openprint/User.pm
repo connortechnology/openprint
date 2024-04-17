@@ -167,17 +167,11 @@ sub destroy {
 	my $ac = sql::start_transaction( $dbh );
 	sql::execute( undef, undef, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{id} );
 
-	foreach my $Quote ( openprint::Quote->find(user_id=>$$self{id}) ) {
-		$Quote->delete();
-	} # end foreach
-	foreach my $Order ( openprint::Order->find(user_id=>$$self{id}) ) {
-		$Order->delete();
-	} # end foreach
+  sql::update(undef, undef, 'quotes', ['user_id=?', $$self{id}], user_id=>undef);
+  sql::update(undef, undef, 'orders', ['user_id=?', $$self{id}], user_id=>undef);
 	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{id}], user_id=> undef );
 	sql::execute( undef, undef, 'DELETE FROM order_notifications WHERE user_id=?', $$self{id});
-	foreach my $Project ( openprint::Project->find(user_id=>$$self{id}) ) {
-		$Project->delete();
-	} # end foreach
+  sql::update(undef, undef, 'projects', ['user_id=?', $$self{id}], user_id=>undef);
 	sql::execute( $log, $dbh, 'DELETE FROM users_in_usergroups WHERE user_id=?', $$self{id} );
 	sql::execute( $log, $dbh, 'DELETE FROM Project_Log WHERE user_id=?', $$self{id} );
 	sql::update( undef, undef, 'barcode_log', ['operator_id=?', $$self{id} ], 'operator_id', undef );
@@ -185,6 +179,7 @@ sub destroy {
 	sql::update( undef, undef, 'performance_reports', ['operator_id=?', $$self{id} ], 'operator_id', undef );
 	sql::update( undef, undef, 'skids', ['created_by_id=?',$$self{id}], 'created_by_id', undef );
 	sql::update( undef, undef, 'purchaseorders', ['contact_id=?',$$self{id}], contact_id=> undef );
+  sql::update(undef, undef, 'purchaseorder_logs', ['user_id=?', $$self{id}], user_id=>undef);
 
 	sql::execute( $log, $dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{id} );
 	sql::execute( $log, $dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{id} );
