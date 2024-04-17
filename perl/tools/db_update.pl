@@ -38,8 +38,14 @@ $ARGV[2] = $ARGV[1] if ! $ARGV[2];
 $ARGV[4] = 5432 if ! $ARGV[4];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3], port=>$ARGV[4]) );
-my @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
-$log->debug("Tables: @tables");
+
+my @tables;
+
+sub get_tables {
+  @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+  $log->debug("Tables: @tables");
+}
+get_tables();
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 
 sub load_sql {
@@ -47,7 +53,7 @@ sub load_sql {
 		my ( $caller, undef, $line ) = caller;
 		die ( $dbh->errstr() . ' from line ' . $line );
 	}
-  @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+  get_tables();
 	@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 }
 
@@ -152,7 +158,7 @@ if ( ! sets::isin( 'company_categories', \@tables ) ) {
 
 if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/QuoteLevels.sql}) );
-  @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+  get_tables();
 	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
 } # end if
 
@@ -181,7 +187,7 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
       print "Renaming company to companies\n";
       $dbh->do('ALTER TABLE Company RENAME TO Companies') or die $dbh->errstr();
     }
-    @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+    get_tables();
 
 		my $data2 = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='companies'", 'column_name');
     column_rename('Companies', 'strcompanyname', 'name');
@@ -1448,10 +1454,8 @@ if ( sets::isin( 'tbl_service_types', \@tables ) ) {
 	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`) or die $openprint::dbh->errstr();
   sql::end_transaction( $dbh, $ac );
 
-  @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 } elsif ( ! sets::isin( 'service_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Service_Types.sql') );
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 } # end if
 
 if ( ! sets::isin('service_types_id_seq', \@sequences) ) {
@@ -1621,6 +1625,11 @@ if ( ! sets::isin( 'tbl_addresses', \@tables ) ) {
 	print "Adding tbl_Addresses @tables\n";
 	$dbh->do( misc::load_file( $log, q{../../sql/tbl_Addresses.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
+}
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_addresses'", 'column_name');
+if (!exists $$data{company_id}) {
+  $dbh->do('ALTER TABLE tbl_addresses ADD company_id integer') or die $dbh->errstr();
+  $dbh->do('ALTER TABLE tbl_addresses ADD FOREIGN KEY (company_id) REFERENCES companies (id)') or die $dbh->errstr();
 }
 if ( ! sets::isin( 'equipment_categories', \@tables ) ) {
 	load_sql( 'Equipment_Categories' );
@@ -1886,7 +1895,7 @@ if ( ! sets::isin( 'paper_recommendations', \@tables ) ) {
 if ( sets::isin( 'tbl_material_categories', \@tables ) ) {
   print "Renaming material categories\n";
 	$dbh->do('ALTER TABLE tbl_material_categories RENAME to material_categories');
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+  get_tables();
 } # end if
 
 if ( ! sets::isin( 'material_categories', \@tables ) ) {
@@ -2052,7 +2061,7 @@ if ( sets::isin( 'tbl_services', \@tables ) ) {
 	$dbh->do(q{alter table tbl_Services rename column ysntaxexempt1 to taxexempt1});
 	$dbh->do(q{alter table tbl_Services rename column ysntaxexempt2 to taxexempt2});
 	$dbh->do(q{alter table tbl_Services rename to Services});
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+  get_tables();
 } # end if
 
 if ( sets::isin( 'services', \@tables ) ) {
@@ -2158,7 +2167,7 @@ if ( sets::isin( 'tbl_service_categories', \@tables ) ) {
 		$dbh->do(q{update Services set category_id=NULL where category_id NOT IN (SELECT id FROM Service_Categories)});
 		$dbh->do(q{ALTER TABLE Services ADD foreign key (category_id) REFERENCES Service_Categories (id)});
 		sql::end_transaction( $dbh, $ac );
-		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+    get_tables();
 	} # end if
 } # end if
 if ( ! sets::isin( 'service_categories', \@tables ) ) {
@@ -2270,7 +2279,7 @@ if ( sets::isin( 'pricelist', \@tables ) ) {
     $dbh->do('ALTER TABLE pricelists ADD currency_id integer');
     $dbh->do('UPDATE pricelists set currency_id = (SELECT id from Currencies where short=currency)') or die $dbh->errstr();
 		sql::end_transaction( $dbh, $ac );
-		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+    get_tables();
 } else {
 
 	$dbh->do(misc::load_file( $dbh, '../../sql/Pricelists.sql' ) );
@@ -2294,7 +2303,7 @@ if ( sets::isin( 'tbl_service_prices', \@tables ) ) {
 		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmin TO min');
 		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmax TO max');
 		sql::end_transaction( $dbh, $ac );
-		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+    get_tables();
 	} # end if
 } # end if
 if ( ! sets::isin( 'service_prices',\@tables )  ) {
@@ -3025,12 +3034,13 @@ if ( $data ) {
 
 if (!sets::isin( 'log_actions', \@tables ) ) {
   $dbh->do( misc::load_file( $log, '../../sql/Log_Actions.sql' ) );
+  $dbh->do(q`select setval('log_actions_id_seq'::regclass, (SELECT MAX(id) FROM log_actions))`);
 }
 
 if ( sets::isin( 'log', \@tables ) ) {
 	$dbh->do('ALTER TABLE log RENAME TO logs');
 	$dbh->do('ALTER sequence log_id_seq RENAME TO logs_id_seq');
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+  get_tables();
 } # en dif
 
 if ( ! sets::isin( 'logs', \@tables ) ) {
@@ -3930,12 +3940,12 @@ if ( ! sets::isin( 'labels', \@tables ) ) {
 
 if ( sets::isin('shifts',\@tables) and ! sets::isin( 'equipment_shifts', \@tables ) ) {
 	$dbh->do( 'ALTER TABLE Shifts rename to Equipment_Shifts' );
+  get_tables();
 } elsif ( ! sets::isin( 'equipment_shifts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Equipment_Shifts.sql}) );
 	die if $dbh->errstr();
 } # end if
 
-@tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 if ( sets::isin( 'equipment_shifts', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
 	if ( ! exists $$data{id} ) {
@@ -4144,7 +4154,7 @@ if ( ! sets::isin( 'projecttype_blockedservices', \@tables ) ) {
 
 if ( sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
 	$dbh->do('alter table tbl_projecttype_defaults rename to projecttype_defaults');
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+  get_tables();
 } 
 
 if ( ! sets::isin( 'projecttype_defaults', \@tables ) ) {
@@ -4823,7 +4833,7 @@ if ( sets::isin( 'upgrade_type', \@tables ) ) {
 	$dbh->do('ALTER TABLE upgrade_types RENAME ucategory to category') or die $dbh->errstr();
 	$dbh->do('ALTER SEQUENCE upgrade_type_id_seq RENAME TO upgrade_types_id_seq') or die $dbh->errstr();
 	$dbh->do(q`ALTER TABLE Upgrade_Types ALTER ID SET DEFAULT nextval('upgrade_types_id_seq')`) or die $dbh->errstr();
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+  get_tables();
 	@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 } # end if
 if ( ! sets::isin( 'upgrade_types', \@tables ) ) {
@@ -5761,7 +5771,7 @@ $log->warn("Renaming paper$thingy");
 	} # end if
 } # end if
 } # end foreach thingy
-@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
+  get_tables();
 if ( sets::isin( 'stocknames', \@tables ) ) {
 	$dbh->do('ALTER TABLE stocknames rename to stockbrands');
 } # end if
@@ -6063,8 +6073,9 @@ if ( ! sets::isin( 'wall', \@tables ) ) {
 	} 
 }
 if ( ! sets::isin( 'views', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/Views.sql}) );
-	die if $dbh->errstr();
+	$dbh->do( misc::load_file( $log, q{../../sql/Views.sql}) ) or die $dbh->errstr();
+} else {
+  print "views was in @tables\n";
 } # en dif
 if ( ! sets::isin( 'opinion_availability', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Opinion_Availability.sql}) );
