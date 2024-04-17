@@ -87,33 +87,35 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
+  my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
 
-   my @possible_equipment;
-   my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
+  my @possible_equipment;
+  my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
 
-    if ( ! @all_equipment ) {
-      	$$specs{'alert'} = 'We have no laminating equipment.';
-		return $$specs{'Status'} = 'uncalculated';
+  if ( ! @all_equipment ) {
+    $$specs{'alert'} = 'We have no laminating equipment.';
+    return $$specs{'Status'} = 'uncalculated';
+  } # end if
+  my $error = '';
+  foreach my $Equipment ( @all_equipment ) {
+    if ( 
+      (my $reason1 = $Equipment->fits( $$specs{'txtFinalWidth'} ) ) and
+      (my $reason2 = $Equipment->fits( $$specs{'txtFinalHeight'} ) ) 
+    ) {
+      $error .= 'For ' . $Equipment->name() . ': '. $reason1  . '<br/>' . $reason2;
+    } else {
+      push @possible_equipment, $Equipment
     } # end if
-    my $error = '';
-    foreach my $Equipment ( @all_equipment ) {
-        if ( 
-			(my $reason1 = $Equipment->fits( $$specs{'txtFinalWidth'} ) ) and
-			(my $reason2 = $Equipment->fits( $$specs{'txtFinalHeight'} ) ) 
-		   ) {
-            $error .= 'For ' . $Equipment->name() . ': '. $reason1  . '<br/>' . $reason2;
-        } else {
-            push @possible_equipment, $Equipment
-        } # end if
-    } # end foreach
+  } # end foreach
 
 	if ( ! @possible_equipment ) {
 		$$specs{'alert'} = "Our equipment cannot run this project, for the following reasons:\n$error\n Please only print flat sheets and contact another bindery.";
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	# So we can do multiple items at once, as many as will fit in the wiwdth of the laminator.  We need a certain amount of space between the items.  I suspect that this should be an input, not a fixed value, but for now we will make it fixed.
+	# So we can do multiple items at once, as many as will fit in the width of the laminator.
+  # We need a certain amount of space between the items.  I suspect that this should be an 
+  # input, not a fixed value, but for now we will make it fixed.
 	my $item_width = $$specs{'txtFinalWidth'};
 	my $item_height = $$specs{'txtFinalHeight'};
 
@@ -173,13 +175,13 @@ sub calc {
 			if ( $maximum_sheet_width ) {
 				$area = $length * $maximum_sheet_width;
 			} else {
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("No Maximum Sheet Width set for %s<br/>", $Equipment->strid() );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No Maximum Sheet Width set for %s<br/>', $Equipment->strid() );
 				$area = $length;
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Items across: ( %s x %s ) %d<br/>', $item_width, $item_height, $imposition->columns() );
 			my %SetupPrice = $MakeReady->get_price( undef, $Equipment ) if $MakeReady;
-			my $price = $SetupPrice{'Price'};
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $SetupPrice{'Price'});
+			my $price = $SetupPrice{Price};
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $SetupPrice{Price});
 
 			my $MPrice = 0;
 
@@ -190,11 +192,11 @@ sub calc {
 					$price += $serviceprice;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %f = $%.2f<br/>', @ServicePrice{'Price','units'}, $qty, $serviceprice );
 					$MPrice += $serviceprice;
-				} elsif ( $ServicePrice{units} eq '/Hr' ) {
+				} elsif ( $ServicePrice{units} eq '/Hr' or $ServicePrice{units} eq 'per hour') {
 					my $inches_per_hour;
-					my $Speed = $Equipment->Specification( 'Speed' ) ;
+					my $Speed = $Equipment->Specification( 'Run Speed' ) ;
 					if ( $Speed ) {
-						if ( $$Speed{units} eq 'Inches Per Hour' ) {
+						if ( lc $$Speed{units} eq 'inches per hour' ) {
 							$inches_per_hour = $$Speed{value};
 						} else {
 							$$specs{'hdnBreakdown'.$qty_index} .= "Unknown speed units ($$Speed{units}<br/>";
@@ -211,10 +213,10 @@ sub calc {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %.2fhours = $%.2f<br/>', @ServicePrice{'Price','units'}, $hours, $serviceprice );
 					$MPrice += Math::Round::nearest( 0.01, $ServicePrice{Price} * ( $length * ( 1000 / $$imposition{imposition} ) ) / $inches_per_hour );
 				} else {
-					$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units ($ServicePrice{'units'}) for $$specs{'ServiceType'}<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units ($ServicePrice{units}) for $$specs{ServiceType}<br/>";
 				} # end if
 			} else {
-				$$specs{'hdnBreakdown'.$qty_index} .= "No Service price for $$specs{'ServiceType'}<br/>";
+				$$specs{'hdnBreakdown'.$qty_index} .= "No Service price for $$specs{ServiceType}<br/>";
 			} # end if
 			if ( $$specs{TypeFront} ne 'None' ) {
 				my %FrontMaterialPrice;

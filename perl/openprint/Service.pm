@@ -146,12 +146,15 @@ sub prices {
 } # end sub prices
 
 sub get_Price {
-    my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
+  my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
 
-    my %price = $self->get_price($quantity, $Equipment, $Pricelist, $period);
+  my %price = $self->get_price($quantity, $Equipment, $Pricelist, $period);
+  if (%price) {
     my $price = \%price;
     bless $price, 'openprint::ServicePrice';
     return $price;
+  }
+  return undef;
 } # end sub get_Price
 
 sub get_price {

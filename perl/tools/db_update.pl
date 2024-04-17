@@ -1795,6 +1795,7 @@ if ( ! exists $$data{manufacturers_name} ) {
 $dbh->do('alter table papers add basis_width float') if ! exists $$data{basis_width};
 $dbh->do('alter table papers add basis_height float') if ! exists $$data{basis_height};
 $dbh->do('alter table papers add basis_mweight float') if ! exists $$data{basis_mweight};
+$dbh->do('alter table papers add gsm float') if ! exists $$data{gsm};
 if (! exists $$data{grade}) {
 $dbh->do('alter table papers add grade integer');
 $dbh->do('update papers set grade=1 where (select name from stockfinishes where id=finish_id) ilike \'%Gloss%\'');
@@ -1803,6 +1804,7 @@ $dbh->do('update papers set grade=4 where NOT ( (select name from stockfinishes 
 }
 
 $dbh->do('alter table papers add die_score_required  BOOLEAN NOT NULL default false') if ! exists $$data{die_score_required};
+$dbh->do('alter table papers add score_required  BOOLEAN NOT NULL default false') if ! exists $$data{score_required};
 if ( ! exists $$data{user_type} ) {
   $dbh->do(q`ALTER TABLE papers add user_type char(1) default ''`);
 } else {
@@ -1813,6 +1815,15 @@ if ( ! exists $$data{supplier_id} ) {
   $dbh->do(q`ALTER TABLE papers add supplier_id INTEGER`) or die $dbh->errstr();
   $dbh->do(q`ALTER TABLE papers add FOREIGN KEY (supplier_id) REFERENCES companies (id)`);
 } # end nif
+	if ( ! exists $$data{manufacturer_id} ) {
+		$dbh->do('ALTER TABLE papers add manufacturer_id INTEGER');
+		$dbh->do('ALTER TABLE papers add FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
+	} 
+	if ( ! exists $$data{quality_id} ) {
+		$dbh->do('ALTER TABLE papers add quality_id INTEGER');
+		$dbh->do('ALTER TABLE papers add FOREIGN KEY (quality_id) REFERENCES StockQualities (id)');
+    $dbh->do('UPDATE papers set quality_id=(SELECT id from StockQualities where name=\'new\') WHERE quality_id is null');
+	} 
 if ( ! exists $$data{owner_id} ) {
   print "Adding owner_id to Papers\n";
   $dbh->do(q`ALTER TABLE papers add owner_id INTEGER`) or die $dbh->errstr();
@@ -1832,6 +1843,10 @@ if ( ! exists $$data{digital} ) {
 if ( ! exists $$data{wpsi} ) {
   print "Adding wpsi to Papers\n";
   $dbh->do(q`ALTER TABLE papers add wpsi float`);
+} # end nif
+if ( ! exists $$data{fsc_code} ) {
+  print "Adding fsc_code to Papers\n";
+  $dbh->do(q`ALTER TABLE papers add fsc_code text`);
 } # end nif
 if ( ! exists $$data{type} ) {
   print "Adding type to Papers\n";
@@ -1869,6 +1884,7 @@ if ( ! sets::isin( 'paper_recommendations', \@tables ) ) {
 }
 
 if ( sets::isin( 'tbl_material_categories', \@tables ) ) {
+  print "Renaming material categories\n";
 	$dbh->do('ALTER TABLE tbl_material_categories RENAME to material_categories');
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
 } # end if
@@ -4100,6 +4116,10 @@ if ( ! exists $$data{service} ) {
 } # end if
 if (!exists $$data{interpolate}) {
   $dbh->do('ALTER TABLE paper_prices add interpolate boolean not null default false') or die $dbh->errstr();
+}
+if (!exists $$data{id}) {
+  $dbh->do("ALTER TABLE paper_prices add id serial") or die $dbh->errstr();
+  $dbh->do("ALTER TABLE paper_prices add PRIMARY KEY (id)") or die $dbh->errstr();
 }
 foreach my $PP ( openprint::PaperPrice->find('units'=>'Per M') ) {
 	$PP->cost( sprintf('%.2f', $PP->cost() * 100 / $PP->Paper()->mweight() ) );
