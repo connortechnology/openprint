@@ -29,7 +29,7 @@ $log->debug("Have a price definition for $service");
 }
 
 
-$debug = 0;
+$debug = 1;
 $cached = 0;
 
 $table = 'services';
@@ -156,7 +156,10 @@ sub get_Price {
 
 sub get_price {
   my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
-  return if ! $$self{id};
+  if (! $$self{id}) {
+    $openprint::log->error("Service::get_price called without id");
+    return ;
+  }
 
 	if ( ! $period ) {
 		$period = 'NOW()';
@@ -170,6 +173,10 @@ sub get_price {
 			$openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
 
 	if ( ! %price ) {
+		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
+		return;
+	} # end if
+	if ( ! $price{Price} ) {
 		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
 		return;
 	} # end if
