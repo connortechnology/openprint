@@ -428,12 +428,12 @@ sub variables {
 		push @v, $k if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
 
-	if ( $new_specs ) {
+	if ($new_specs) {
 		foreach my $side ( 'SideOne','SideTwo' ) {
 			foreach my $k ( keys %$new_specs ) {
-	#$log->debug("Variables: $side $k old: $$specs{$k} new: $$new_specs{$k}");
-				if ( my ( $index ) = $k =~ /ColourCoating(\d+)$side/ ) {
-	#$log->debug("Saving $side $k $$new_specs{$k} $index");
+	$log->debug("Variables: $side $k old: $$specs{$k} new: $$new_specs{$k}");
+				if ( my ( $index ) = $k =~ /^ColourCoating(\d+)$side/ ) {
+	$log->debug("Saving $side $k $$new_specs{$k} $index");
 					push @v, 'chkColourCoating'.$index.$side;
 					push @v, 'ColourCoatingType'.$index.$side;
 					push @v, 'ColourCoatingColour'.$index.$side;
@@ -444,8 +444,9 @@ sub variables {
 			} # end foreach k
 		} # end foreach side
 		my $Project = new openprint::Project( $project_index );
-		if ( $$new_specs{versions} ) {
+		if ( $$new_specs{versions} and ($$new_specs{versions} > 0) and ($$new_specs{versions} < 10)) {
 			foreach my $version ( 1 .. $$new_specs{versions} ) {
+        $openprint::log->debug("Version: $version");
 				push @v, "version-$version-description";
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					push @v, "version-$version-quantity$qty_index";
@@ -3120,7 +3121,7 @@ $I->display("The price for this impo is $price left " . @{$$best_price{prices}})
 				( defined $$best_price{'SpinePaste Breakdown'} ? $$best_price{'SpinePaste Breakdown'} : '' ),
 				( defined $$best_price{'PerfectBound Breakdown'} ? $$best_price{'PerfectBound Breakdown'} : '' ),
 				$stock_breakdown,
-				sprintf('Comparison Cost: %.2f<br/>', $$best_price{ComparisonCost}),
+				sprintf('Comparison Cost: $%.2f<br/>', $$best_price{ComparisonCost}),
 				( defined $$best_price{'Comparison Log'} ? sprintf('Comparison Log: %s total: %s<br/>', @$best_price{'Comparison Log','ComparisonCost'}) : '' ),
 			);
 

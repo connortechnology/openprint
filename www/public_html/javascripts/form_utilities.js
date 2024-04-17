@@ -1797,6 +1797,15 @@ function update_event_bindings() {
     console.log("Setting up onchangefor " + el.name + " to " + fnName);
     el.onchange = window[fnName].bind(el, el);
   });
+  document.querySelectorAll('select[on_change_this]').forEach(function(el) {
+    const fnName = el.getAttribute('on_change_this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    console.log("Setting up onchangefor " + el.name + " to " + fnName);
+    el.onchange = window[fnName].bind(el, el);
+  });
 
   document.querySelectorAll("input[data-on-input]").forEach(function(el) {
     const fnName = el.getAttribute("data-on-input");

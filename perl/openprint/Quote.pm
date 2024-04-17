@@ -346,7 +346,12 @@ sub send {
 		$variable{ReplacementText} = ssi::variable_substitution( \$variable{ReplacementText}, \%var );
 		$Email->add_pdf_attachment_from_html( sprintf('Project%d.html',$Project->project_id()), ssi::variable_substitution( \$email_template, \%variable ));
 	} # for each Project
-	
+
+  my $from = sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'});
+  if (index(lc $$self{by_email}, lc $openprint::config{domain}) == -1) {
+    $from = $openprint::config{QuotingEmail};
+  }
+
 	if ( @_ ) {
 		$quote{ReplacementText} = ssi::include( '/email_content/quote_end_user_body.html', \%quote );
 		my $email_template = ssi::slurp_content( '/email_template.html' );
@@ -359,8 +364,9 @@ sub send {
       $Email->add_html_attachment( "Quote$$self{id}.html", $html);
     }
 
+
 		$results .= $Email->send(
-				FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+				FROM    => $from,
 				TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}) ),
 				SUBJECT => "$openprint::config{SiteTitle}:Quote $$self{id}",
 				);
@@ -379,7 +385,7 @@ sub send {
 			}
 
 			$results .= $Email->send(
-					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					FROM    => $from,
 					BCC		=>	'iconnor@connortechnology.com',
 					TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}) ),
 					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
@@ -443,7 +449,7 @@ sub send {
 		$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
 
 		$results .= $Email->send(
-				FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+				FROM    => $from,
 				#TO    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
         TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}) ),
         #TO		=>	'iconnor@connortechnology.com',
