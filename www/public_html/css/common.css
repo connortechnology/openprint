@@ -296,12 +296,12 @@ input[type="checkbox"] {
 }
 
 .filters p, .filters li {
-	padding: 0 0 0 175px;
+	padding: 0 0 0 185px;
 	text-align: left;
 }
 .filters label:not(.radio):not(.radio-inline) {
-	width: 170px;
-	margin-left: -175px;
+	width: 180px;
+	margin-left: -185px;
 }
 .filters input[type="number"] ,
 .filters input[type="text"] {
@@ -550,7 +550,9 @@ fieldset p input.CompanyFilter {
 .inplaceeditor-form a { /* The cancel link */
 }
 #Versions {
+  /*
 	display: none;
+  */
 }
 .changed {
 	background-color: yellow;
@@ -580,7 +582,7 @@ span.required:after {
 	float: right;
 }
 img.Override {
-	height: 20px;
+	height: 31px;
 }
 
 th.When {
