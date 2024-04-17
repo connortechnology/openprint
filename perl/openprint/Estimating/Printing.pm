@@ -37,7 +37,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 1;
 use constant DEBUG_PLATES => 0;
-use constant DEBUG_VERSIONS => 0;
+use constant DEBUG_VERSIONS => 1;
 use constant DEBUG_PRESSES => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
@@ -60,8 +60,7 @@ use constant DEBUG_IMPOSITIONS => 1;
 		units	=> [ 'per 100lbs', 'per sheet', 'per m' ],
 		},
 	Film	=> { },
-	'Version Setup'	=> { units=> [ 'each', 'total' ],
-		},
+	'Version Setup'	=> { units=> [ 'each', 'total' ] },
 	BlanketCut	=> { },
 	Washup		=> { units=> [ 'each' ] },
 	WebSetup	=> { units => [ ] },
@@ -520,7 +519,7 @@ $log->debug("In get_unspecified_pages Project: $$Project{id}, service_id: $servi
 
 sub get_unspecified_versions {
 	my ( $Project, $service_index, $printing_specs, $specs, $qty_index ) = @_;
-$log->debug("Un get_unspecified_versions Project: $Project, service_id: $service_index, $printing_specs, $specs, qty_index: $qty_index") if DEBUG;
+  $log->debug("Un get_unspecified_versions Project: $Project, service_id: $service_index, $printing_specs, $specs, qty_index: $qty_index") if DEBUG;
 
 	my $specified = 0;
 	foreach my $ssid ( $Project->signatures( { Group=>$$specs{Group} } ) ) {
