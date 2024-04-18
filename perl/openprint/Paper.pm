@@ -1566,10 +1566,11 @@ $log->debug("Didn't find specific paper $params{width} x $params{height} $$specs
 			and
 			( ( $$Paper{height} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{width} != $$specs{'StockHeight'.$qty_index} ) )
 		   ) {
-#Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
-#$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
+         #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
+$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$$Paper{Supplied} = $Supplied;
 			if ( ! $Supplied->start_width() ) {
+        $openprint::log->debug("No start width?");
 				$Supplied->width( $$specs{'StockWidth'.$qty_index} );
 				$Supplied->start_width( $Supplied->width() );
 			} 
@@ -1791,11 +1792,13 @@ sub init_cache {
 }
 
 sub link_to {
-	if ( $openprint::variable{uri} and ( $openprint::variable{uri} =~ /administrator/ ) ) {
+  my $self = shift;
+  my $text = @_ ? shift : $self->to_string();
 
-	return sprintf('<a href="/administrator/stock/stock.html?stock_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
+	if ( $openprint::variable{uri} and ( $openprint::variable{uri} =~ /administrator/ ) ) {
+	  return '<a href="/administrator/stock/stock.html?stock_id='.$$self{id}.'">'.$text.'</a>';
 	} else {
-	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
+	  return '<a href="/employee/inventory/paper_details.html?paper_id='.$$self{id}.'">'.$text.'</a>';
 	} # end if
 } # end sub link_to
 
