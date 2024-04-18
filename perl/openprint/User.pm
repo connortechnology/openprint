@@ -238,6 +238,7 @@ sub destroy {
   sql::update(undef,undef, 'bugs', ['user_id=?', $$self{id}], user_id=>undef);
   sql::update(undef,undef, 'logs', ['user_id=?', $$self{id}], user_id=>undef);
   sql::update(undef,undef, 'pressactivities', ['operator_id=?', $$self{id}], operator_id=>undef);
+  sql::update(undef,undef, 'skid_verifications', ['user_id=?', $$self{id}], user_id=>undef);
 
 	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE id=?', $$self{id} );
 
