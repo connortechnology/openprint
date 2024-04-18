@@ -1525,18 +1525,19 @@ console.log("txt is visible");
 }
 function getValues( form, element_names, more_values ) {
 	form = $(form);
-	var results = new Hash( more_values );
+	const results = new Hash( more_values );
 	if ( element_names.constructor == Array ) {
-		for ( var index = element_names.length; index; index -- ) {
-			var form_element = form.elements[element_names[index-1]];
+		for ( let index = element_names.length; index; index -- ) {
+			const form_element = form.elements[element_names[index-1]];
 			if ( form_element ) {
+        console.log(form_element.name, get_value( form_element ));
 				results.set(element_names[index-1], get_value( form_element ) );
 			} else {
 				console.log(element_names[index-1] + ' was not found in form' );
 			} // end if
 		} // end for
 	} else if ( element_names.constructor == RegExp ) {
-		for ( var index = 0, len = form.elements.length; index < len; index += 1 ) {
+		for ( let index = 0, len = form.elements.length; index < len; index += 1 ) {
 			if ( element_names.exec( form.elements[index].name ) ) {
 				results.set(form.elements[index].name, get_value( form.elements[index] ) );
 			} // end if	
