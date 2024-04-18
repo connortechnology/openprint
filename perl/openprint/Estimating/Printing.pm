@@ -930,7 +930,7 @@ $log->debug("$key => $c and set output");
 				my $type = $$specs{"ColourCoatingType$index$side"};
 				next if ! $type;
 
-				my $coverage_key = join('', 'ColourCoatingCoverage'.$index.$side);
+				my $coverage_key = 'ColourCoatingCoverage'.$index.$side;
 				$$specs{$coverage_key} =~ s/[^\d\.]//g if $$specs{$coverage_key};
 
 				if ( $type =~ /Overall/ ) {
@@ -943,13 +943,13 @@ $log->debug("$key => $c and set output");
 					$type =~ s/ /_/g;
 					my $coverage;
 					if ( $openprint::config{"Default${type}Coverage$ProjectTypeName"} ) {
-						#$log->debug("Got default for $type ProjectTypeName");
+						$log->debug("Got default for $type ProjectTypeName");
 						$coverage = $openprint::config{"Default${type}Coverage$ProjectTypeName"};
 					} elsif ( $openprint::config{"Default${type}Coverage"} ) {
-						#$log->debug('Got default for '.$type);
+						$log->debug('Got default for '.$type);
 						$coverage = $openprint::config{"Default${type}Coverage"};
 					} else {
-						#$log->debug('Using regular default instead of '.$type);
+						$log->debug('Using regular default instead of '.$type);
 						$coverage = $DefaultInkCoverage;
 					}
 					$$specs{$coverage_key} = $coverage;
@@ -1389,7 +1389,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				( ($number_of_colours%2) and ( (@side_one_colours > int($number_of_colours/2)+1) or (@side_two_colours > int($number_of_colours/2)+1) ) )
 				or ( @side_one_colours == int($number_of_colours/2)+1 and @side_two_colours == int($number_of_colours/2)+1 )
 				) {
-			$log->debug("** Too many colours to	Perfect	***") if DEBUG_IMPOSITIONS;
+			$log->debug("** Too many colours to Perfect	***") if DEBUG_IMPOSITIONS;
 			$do_perfecting = 0;
 		} elsif ( ! sets::isin('Perfecting', [ split(',',$$project{Runstyles} ) ] ) ) {
 			$log->debug("** $$Press{strid} Can't Perfect - Perfecting not in runstyles ***") if DEBUG_IMPOSITIONS;
@@ -3163,6 +3163,9 @@ $log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval(
 	# This is down here because it is a function of the results...
 	$$specs{NeedCutting} = openprint::Estimating::Cutting::signature_needs( $Project, $$project{CuttingSpecs}, $specs ) if ! $$project{HasCutting};
 $log->debug("Leaving Printing::calc status: $$specs{Status}");
+if ($$specs{Status} eq 'uncalculated' and ! $$specs{alert}) {
+  $$specs{alert} = 'We were unable to calculate.<br/>';
+}
 	return $$specs{Status};
 } # end sub calc
 
