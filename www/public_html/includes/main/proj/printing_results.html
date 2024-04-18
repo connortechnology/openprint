@@ -5,14 +5,14 @@
 	<label>Stock Format</label>
 	<? echo ( my $html = '';
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= sprintf('<span class="%sColumns">', $$variable{Columns} );
+			$html .= sprintf('<div class="%sColumns">', $$variable{Columns} );
 			$html .= radio( 'StockType'.$qty_index, ['Sheet','Sheet', 'Roll','Roll'], $$variable{'StockType'.$qty_index}, { onclick=>'calc(this.form.name);' } );
 			if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
 				$html .= write_override( 'OverrideStockType'.$qty_index, $$variable{'OverrideStockType'.$qty_index}, '', "calc('f1');" );
 			} else {
 				$html .= sprintf('<input type="hidden" name="OverrideStockType%1$d" value="%2$s" />', $qty_index, $$variable{'OverrideStockType'.$qty_index} );
 			} # end if
-			$html .= '</span>';
+			$html .= '</div>';
 		} # end foreach qty_index
 		return $html;
 	) ?>
@@ -59,7 +59,7 @@
 		$$variable{'OverrideStockWidth'.$qty_index} =~ s/[^\d\.]//g;
 		$$variable{'OverrideStockHeight'.$qty_index} =~ s/[^\d\.]//g;
 		$html .= sprintf(q`
-			<span class="%1$sColumns">
+			<div class="%1$sColumns">
 				<select name="ddmStockSheetSize%2$d" size="1" onchange="this.form.OverrideStockWidth%2$d.value='';this.form.OverrideStockHeight%2$d.value='';ddmStockSheetSize_onchange();"><option value="">Please select one</option>%3$s</select>
 				`, $$variable{Columns}, $qty_index, make_drop_down( [ 
 					map { $_, join(' x ', map { $_.'"' } split('x', $_) ) } @sizes ], $$variable{'ddmStockSheetSize'.$qty_index}, { encode=>1 } ),
@@ -88,7 +88,7 @@
 			);
 	} # end if A or E
 	$html .= sprintf('
-	</span>
+	</div>
 <input type="hidden" name="hdnSuppliedStockWidth%1$d"/>
 <input type="hidden" name="hdnSuppliedStockHeight%1$d"/>
 <input type="hidden" name="StockWidth%1$d"/>
@@ -101,9 +101,9 @@
 <? eval ( $$variable{QTYIndex} = 1 ) ?>
 <? while ( $$variable{QTYIndex} <= 3 ) ?>
 <? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
-	<span class="<?Columns?>Columns">
+	<div class="<?Columns?>Columns">
 	<span id="minimum_stock_size<?QTYIndex?>"></span>
-	</span>
+	</div>
 <? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 		<? eval ( $$variable{QTYIndex} += 1 ) ?>
 <? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
@@ -113,10 +113,10 @@
 	<? echo (
 		my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+			$html .= '<div class="'.$$variable{Columns}.'Columns">';
 			$html .= input( type=>'float', id=>"CutOff$qty_index", name=>"CutOff$qty_index", value=>$$variable{'CutOff'.$qty_index}, oninput=>'calc(this.form.name);' );
 			$html .= write_override( 'OverrideCutOff'.$qty_index, $$variable{'OverrideCutOff'.$qty_index},'', "calc('f1');" );
-			$html .= '</span>';
+			$html .= '</div>';
 		} # end foreah qty_index
 		return $html;
 	) ?>
