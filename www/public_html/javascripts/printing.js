@@ -256,6 +256,7 @@ function calc_print( formName, force, options ) {
   }).done(function(data) {
     console.log(data);
   }).fail(function(jqXHR, textStatus, errorThrown) {
+	  gettingNewPrice = false;
     console.log("fail", textStatus, errorThrown);
   });
 	return true;
@@ -315,17 +316,16 @@ function clear_price_data( form ) {
 function cbFillPrintResults( results ) {
 	cbFillResults( results );
 	block_calc = true;
-	var form = getFormObj( 'f1' );
+	const form = getFormObj( 'f1' );
 
-	for ( var i = 1; i <= 3; i += 1 ) {
-		var ddm = form.elements['ddmStockSheetSize'+i];
-		if ( ! ddm ) {
-			continue;
-		} // end if
+  // If nothing get selected for sheet size, it may be a custom stock, so add the custom size to the ddm
+	for (let i = 1; i <= 3; i += 1) {
+		const ddm = form.elements['ddmStockSheetSize'+i];
+		if (!ddm) continue;
 		if ( ddm.selectedIndex == -1 || ddm.selectedIndex == 0 ) {
-			var width = form.elements['StockWidth'+i].value;
-			var height = form.elements['StockHeight'+i].value;
-			var type = get_value( form.elements['StockType'+i] );
+			const width = form.elements['StockWidth'+i].value;
+			const height = form.elements['StockHeight'+i].value;
+			const type = get_value( form.elements['StockType'+i] );
 		
 			if ( type == 'Sheet' ) {
 				if ( ! ddm_select_by_value( ddm, width + 'x' + height, false ) ) {
@@ -338,10 +338,9 @@ function cbFillPrintResults( results ) {
 					ddm_select_by_value( ddm, width );
 				} // end if
 			} // end if
-		} else {
-			alert(ddmSelectedIndex);
 		} // end if
 	} // end for
+ 
 	block_calc = false;
 	gettingNewPrice = false;
 
@@ -457,6 +456,21 @@ function dimensions_onChange( form ) {
 	calc(form.name);
 } // end function dimensions_onChange
 
+function StockPopup_onchange(data) {
+  const form = document.getElementById(data.form);
+	const filters = new Array( 'Brand','Finish','Colour','Weight','Quality', 'Group', 'SheetSize', 'Size' );
+	for ( let index = 0, len = filters.length; index < len; ++index ) {
+    const filter = form.elements['ddmStock'+filters[index]+data.signature_id];
+    if ( filter ) {
+      filter.disabled = false;
+    } // end if filter exists
+	} // end for 
+	gettingNewPrice = false;
+  $j('#StockPopupResults').load('/main/project/prin/_stocks.html', 
+    $j(form).serialize()
+  );
+}
+
 function Stock_onchange( element, id ) {
   const form = element.form;
   if ( gettingNewPrice ) {
@@ -467,75 +481,97 @@ function Stock_onchange( element, id ) {
   } // end if
   timeout = null;
 
-	var h = new Hash();
-	h.set('project_id', form.elements['ProjectIndex'].value );
-	h.set('selected', element.name );
-	h.set('form', form.id );
-	h.set('signature_id', id );
+  data = [
+    {name: 'project_id', value: form.elements['ProjectIndex'].value},
+    {name: 'selected', value: element.name },
+    {name: 'form', value: form.id },
+    {name: 'signature_id', value: id }
+  ];
 	if ( form.elements['txtWidth'] ) 
-		h.set( 'width', form.elements['txtWidth'].value );
+		data[data.length] = {name: 'width', value: form.elements['txtWidth'].value };
 	if ( form.elements['txtHeight'] ) 
-		h.set( 'height', form.elements['txtHeight'].value );
+		data[data.length] = {name: 'height', value: form.elements['txtHeight'].value };
 	if ( form.elements['rdbSuppliedStock'+id] ) {
-		h.set('Supplied', get_value( form.elements['rdbSuppliedStock'+id] ) );
+		data[data.length] = {name: 'Supplied', value: get_value( form.elements['rdbSuppliedStock'+id] ) };
 	} // end if
 	if ( form.elements['projecttype_id'] ) {
-		h.set('projecttype_id', get_value( form.elements['projecttype_id'] ) );
+		data[data.length] = {name: 'projecttype_id', value: get_value( form.elements['projecttype_id'] ) };
 	} // end if
 
-	var filters = new Array( 'Brand','Finish','Colour','Weight','Quality', 'Group', 'Size' );
-	for ( var index = 0, len = filters.length; index < len; ++index ) {
-		var filter = form.elements['ddmStock'+filters[index]+id];
+	const filters = new Array( 'Brand','Finish','Colour','Weight','Quality', 'Group', 'Size' );
+	for ( let index = 0, len = filters.length; index < len; ++index ) {
+		const filter = form.elements['ddmStock'+filters[index]+id];
 		if ( filter ) {
-			h.set(filters[index], filter.getValue() );
+			data[data.length] = { name: filters[index], value: filter.getValue() };
 			filter.disabled = true;
 		//} else {
 			//alert('filter ' + 'ddmStock'+filters[index]+id );
 		} // end if filter exists
 	} // end for 
-	h.set( 'callback', 'cbStockFillResults' );
-	new Ajax.Request( '/main/project/prin/_paper.json', { parameters: h, evalScripts: true } );
+	//h.set( 'callback', 'cbStockFillResults' );
+	//new Ajax.Request( '/main/project/prin/_paper.json', { parameters: h, evalScripts: true } );
+  pendingCalc = $j.ajax({
+    type: 'POST',
+    url: '/main/project/prin/_paper.json',
+    data: data,
+    dataType: 'json',
+    success: function(data, textStatus, jqXHR) {
+      if (form.callback) {
+        if (window[form.callback.value] instanceof Function) {
+          window[form.callback.value](data);
+        } else {
+          console.log(form.callback.value, window[form.callback.value]);
+        }
+      } else {
+        cbStockFillResults(data);
+      }
+    }
+  }).done(function(data) {
+    console.log(data);
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    gettingNewPrice = false;
+    console.log("fail", textStatus, errorThrown);
+  });
 } // end function Stock_onchange
 
 function cbStockFillResults( results ) {
-	var form = $(results.get('form'));
+	const form = $(results.form);
 	if ( ! form ) {
-		alert('No form for ' + results.get('form') );
+		alert('No form for ' + results.form );
 		gettingNewPrice = false;
 		return;
 	} // end if
-	results.unset('form');
-	var signature_id = results.get('signature_id');
-	var suffixes = new Array ( '', '1', '2', '3' );
+	//results.unset('form');
+	const signature_id = results.signature_id;
+	const suffixes = new Array ( '', '1', '2', '3' );
 
-    var keys = results.keys();
-
-    for ( var index = 0, len = keys.length; index < len; ++index ) {
-        var key = keys[index];
-        var value = results.get(key);
-		var options = new Array();
+  for (const [key, value] of Object.entries(results)) {
+    //for ( var index = 0, len = keys.length; index < len; ++index ) {
+        //var key = keys[index];
+        //var value = results.get(key);
+		const options = new Array();
 		options[0] = create_option( '', 'select one' );
 
 		if ( key == 'SheetSize' ) {
-			for ( var val_index = 0, val_len = value.length; val_index < val_len; ++val_index ) {
-				var size = value[val_index].split('x');
+			for ( let val_index = 0, val_len = value.length; val_index < val_len; ++val_index ) {
+				const size = value[val_index].split('x');
 				if ( size.length == 1 ) {
 					//Roll
 					options[options.length] = create_option( value[val_index], size[0]+'" Roll' );
 				} else {
-					var dimensions = new Array();
+					const dimensions = new Array();
 					size.each(function(item){ dimensions[dimensions.length] = item+'"';});
 
 					options[options.length] = create_option( value[val_index], dimensions.join( ' x ' ) );
 				} // end if
 			} // end for
-			for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
-				var ddm = form.elements['ddmStock'+key+suffix_index];
+			for ( let suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
+				const ddm = form.elements['ddmStock'+key+suffix_index];
 				if ( ! ddm ) {
 	//alert('No ddmStock'+key+suffix);
 					continue;
 				} // end if
-				var selectedValue = ddm.getValue();
+				const selectedValue = ddm.getValue();
 				fill_ddm( ddm, options );
 				if ( options.length == 2 ) {
 					ddm_select_by_index( ddm, 1 );
@@ -544,14 +580,14 @@ function cbStockFillResults( results ) {
 				} // end if
 			} // end for suffix
 		} else {
-			var ddm = form.elements['ddmStock'+key+signature_id];
+			const ddm = form.elements['ddmStock'+key+signature_id];
 			if ( ! ddm ) {
 //alert('No ddmStock'+key+suffix);
 				continue;
 			} // end if
-			var selectedValue = ddm.getValue();
+			const selectedValue = ddm.getValue();
 
-			for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
+			for ( let ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
 				options[options.length] = create_option( value[ddm_index], value[ddm_index] );
 			} // end for
 			fill_ddm( ddm, options );
@@ -564,11 +600,11 @@ function cbStockFillResults( results ) {
 	} // end for each key
 
 	// turn drop downs back on
-	var filters = new Array( 'Brand','Finish','Colour','Weight','Quality', 'Group', 'SheetSize', 'Size' );
-	for ( var index = 0, len = filters.length; index < len; ++index ) {
-		for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
-			var suffix = suffixes[suffix_index];
-			var filter = form.elements['ddmStock'+filters[index]+signature_id+suffix];
+	const filters = new Array( 'Brand','Finish','Colour','Weight','Quality', 'Group', 'SheetSize', 'Size' );
+	for ( let index = 0, len = filters.length; index < len; ++index ) {
+		for ( let suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
+			const suffix = suffixes[suffix_index];
+			const filter = form.elements['ddmStock'+filters[index]+signature_id+suffix];
 			if ( filter ) {
 				filter.disabled = false;
 			} // end if filter exists
