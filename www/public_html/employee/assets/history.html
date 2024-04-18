@@ -1,9 +1,6 @@
-<script type="text/javascript">
+<script>
 	function load_page( form ) {
-		form = $(form);
-		var div = $('Results');
-		div.innerHTML = 'Please wait, loading.....';
-		new Ajax.Updater( 'Results', '_history.html', { parameters: form.serialize() } );
+		LoadContent('Results', '_history.html', $j(form).serialize());
 	} // end function load
 </script>
 <?include('/includes/error_reporting.html')?>
@@ -25,7 +22,7 @@
 				<option value="">All</option>
 				<? echo ( 
 my @company_ids = sql::execute( undef, undef, 'SELECT DISTINCT company_id FROM ASSETS' );
-make_drop_down( openprint::Company->dropdown(id=>\@company_ids), $session{$r->uri().'?company_id'} ); ) ?>
+make_drop_down( openprint::Company->dropdown(id=>\@company_ids), $session{$r->uri().'?company_id'} ) if @company_ids; ) ?>
 			</select>
 		</li>
 		<li><label>Created By</label>
