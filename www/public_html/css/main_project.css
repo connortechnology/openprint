@@ -198,3 +198,15 @@ svg.Imposition rect.sheet {
 	border: 1px solid black;
 	color: white;
 }
+.link-outer {
+  margin: 2ex 25% -4.5ex 25%;
+  border: 2px solid #0B0D60;
+  border-bottom: 0;
+}
+.link-inner {
+  position: relative;
+  margin: -2ex auto 1ex auto;
+  padding-bottom: 3ex;
+  border: 0;
+  text-align: center;
+}
