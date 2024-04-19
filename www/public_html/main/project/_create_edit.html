@@ -75,7 +75,7 @@
 		<? echo ( 
 			my $html = '';
 			foreach my $ServiceType (@{$$variable{OptionServiceTypes}}) {
-				$html .= sprintf('<li><input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %2$s /> <label for="chkServices%1$s">%3$s</label></li>', 
+				$html .= sprintf('<li><input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" on_click_this="service_onclick" %2$s /> <label for="chkServices%1$s">%3$s</label></li>', 
 				$ServiceType->name(),
 				(sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ? 'checked="checked"' : ''),
 				writeTip( $ServiceType->description() ),
@@ -95,7 +95,7 @@
 	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Prepress','create_visible'=>1,'order'=>'sorting,lower(description)') ) {
 		$html .= sprintf(q`
 			<li>
-				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
+				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" on_click_this="service_onclick" %3$s />
 				<label for="chkServices%1$s">%2$s</label>
 			</li>
 		`, $ServiceType->name(), writeTip( $ServiceType->description() ), checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
@@ -111,7 +111,7 @@
 	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Bindery','create_visible'=>1,'order'=>'sorting,lower(description)') ) {
 		$html .= sprintf(q`
 			<li class="%1$s">
-				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
+				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" on_click_this="service_onclick" %3$s />
 				<label for="chkServices%1$s">%2$s</label>
 			</li>
 		`, $ServiceType->name(), writeTip( $ServiceType->description() ), checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
@@ -129,7 +129,7 @@
 	foreach my $ServiceType ( @{$$variable{SpecialtyServiceTypes}} ) {
 		$html .= sprintf(q`
 			<li>
-				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
+				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" on_click_this="service_onclick" %3$s />
 				<label for="chkServices%1$s">%2$s</label>
 			</li>
 		`, $ServiceType->name(), writeTip( $ServiceType->description() ), checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
@@ -151,7 +151,7 @@
 		foreach my $ServiceType ( @ServiceTypes ) {
 			$html .= sprintf(q`
 				<li>
-					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
+					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" on_click_this="service_onclick" %3$s />
 					<label for="chkServices%1$s">%2$s</label>
 				</li>
 			`, $ServiceType->name(), writeTip( $ServiceType->description() ), checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
@@ -163,15 +163,15 @@
 
 <? echo ( 
 	my $html = '';
-	my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping','create_visible'=>1,'order'=>'sorting,lower(description)');
-	
+	my @ServiceTypes = openprint::ServiceType->find(category=>'Shipping',create_visible=>1,order=>'sorting,lower(description)');
+
 	if ( @ServiceTypes ) {
 		$html .= '<fieldset><legend>Please select your delivery method</legend><ul>';
 
 		foreach my $ServiceType ( @ServiceTypes ) {
 			$html .= sprintf(q`
 				<li>
-					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
+					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" on_click_this="service_onclick" %3$s />
 					<label for="chkServices%1$s">%2$s</label>
 				</li>
 			`, $ServiceType->name(), writeTip( $ServiceType->description() ), checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
