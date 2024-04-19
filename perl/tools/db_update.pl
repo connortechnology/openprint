@@ -4217,6 +4217,16 @@ if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
 	}
 } # end if
 
+if ( ! sets::isin( 'projecttemplate_id_seq', \@sequences ) ) {
+  if ( sets::isin( 'Project_TemplateIndex', \@sequences ) ) {
+    $dbh->do('ALTER SEQUENCE Project_TemplateIndex RENAME TO projecttemplate_id_seq');
+  } else {
+    $dbh->do('CREATE SEQUENCE projecttemplate_id_seq');
+  } # end if
+  $dbh->do(q`ALTER TABLE projecttemplate ALTER id SET default nextval('projecttemplate_id_seq')` );
+  $dbh->do(q`SELECT setval( 'projecttemplate_id_seq', (SELECT max(id) FROM projecttemplate) )`);
+} # end if
+
 if ( ! sets::isin( 'host_config', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Host_Config.sql}) );
 } else {
