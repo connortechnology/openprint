@@ -584,10 +584,10 @@ sub button {
       delete $$options{text};
 		} # end if
     delete $$options{image};
-	} elsif ( $openprint::config{SimpleButtons} eq 'Y' ) {
-		$html .= $$options{text};
-	} else {
+	} elsif ( $openprint::config{SimpleButtons} ne 'N' ) {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
+	} else {
+		$html .= $$options{text};
 	}
 	$html .= $$options{type} ? '</button>' : '</a>';
   if ( $$options{onclick} ) {

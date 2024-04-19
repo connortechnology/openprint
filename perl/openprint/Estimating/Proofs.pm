@@ -329,7 +329,6 @@ sub signature_calc {
 				%price = $ProofService->get_price($$totals{$type}{Quantity});
 			} # end if
 		} # end if
-    $openprint::log->debug("Price: $price{Price}");
     $price{Price} = 0 if ! defined $price{Price};
 		$price{units} = 'each' if ! $price{units};
 		$$specs{join('-','ServicePrice',$form,$proof_index,$qty_index)} = $price{Price};

@@ -61,7 +61,7 @@
 						( $$printing_specs{alert} ? join( $$printing_specs{alert}, '<span class="error">','</span>' ) : '' ),
 						);
 				} else {
-					$html .= sprintf('<tr%s><td class="description">Printing</td>', $rowclass );
+        $html .= '<tr'.$rowclass.'><td class="description">'.$Project_Type->name().'</td>';
 				} # end if
 			} else {
 					$html .= sprintf('<tr%s><td class="description"><span class="service_name">Printing</span><br/>%s%s</td>', $rowclass,

@@ -1,6 +1,6 @@
 <? echo (
 
-	my $debug = 1;
+	my $debug = 0;
 
 	if ( ! $param{ServiceType} ) {
 $log->warn("No servicetype in params in calc");
@@ -8,7 +8,7 @@ $log->warn("No servicetype in params in calc");
 	} # end if
 
 	my %specs = openprint::main_project::calc( $debug );
-  if ($debug) {
+  if ($debug or 1) {
     use Data::Dumper;
     $log->debug(Dumper(\%specs));
   }

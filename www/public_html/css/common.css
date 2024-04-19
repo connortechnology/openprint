@@ -582,7 +582,8 @@ span.required:after {
 	float: right;
 }
 img.Override {
-	height: 31px;
+	height: 30px;
+  margin-left: 1px;
 }
 
 th.When {

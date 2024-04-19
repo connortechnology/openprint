@@ -930,7 +930,7 @@ $log->debug("$key => $c and set output");
 				my $type = $$specs{"ColourCoatingType$index$side"};
 				next if ! $type;
 
-				my $coverage_key = join('', 'ColourCoatingCoverage'.$index.$side);
+				my $coverage_key = 'ColourCoatingCoverage'.$index.$side;
 				$$specs{$coverage_key} =~ s/[^\d\.]//g if $$specs{$coverage_key};
 
 				if ( $type =~ /Overall/ ) {
@@ -943,13 +943,13 @@ $log->debug("$key => $c and set output");
 					$type =~ s/ /_/g;
 					my $coverage;
 					if ( $openprint::config{"Default${type}Coverage$ProjectTypeName"} ) {
-						#$log->debug("Got default for $type ProjectTypeName");
+						$log->debug("Got default for $type ProjectTypeName");
 						$coverage = $openprint::config{"Default${type}Coverage$ProjectTypeName"};
 					} elsif ( $openprint::config{"Default${type}Coverage"} ) {
-						#$log->debug('Got default for '.$type);
+						$log->debug('Got default for '.$type);
 						$coverage = $openprint::config{"Default${type}Coverage"};
 					} else {
-						#$log->debug('Using regular default instead of '.$type);
+						$log->debug('Using regular default instead of '.$type);
 						$coverage = $DefaultInkCoverage;
 					}
 					$$specs{$coverage_key} = $coverage;
@@ -1363,7 +1363,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				push @side_two_colours, @side_two_varnishes;
 			} # end if
 		}
-		if ( 0 ) {
+		if ( 1 ) {
 			$log->debug("$$Press{strid} Side One varnihses @side_one_varnishes");
 			$log->debug("$$Press{strid} Side Two varnihses @side_two_varnishes");
 			$log->debug("$$Press{strid} Side One colours @side_one_colours");
@@ -1389,7 +1389,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				( ($number_of_colours%2) and ( (@side_one_colours > int($number_of_colours/2)+1) or (@side_two_colours > int($number_of_colours/2)+1) ) )
 				or ( @side_one_colours == int($number_of_colours/2)+1 and @side_two_colours == int($number_of_colours/2)+1 )
 				) {
-			$log->debug("** Too many colours to	Perfect	***") if DEBUG_IMPOSITIONS;
+			$log->debug("** Too many colours to Perfect	***") if DEBUG_IMPOSITIONS;
 			$do_perfecting = 0;
 		} elsif ( ! sets::isin('Perfecting', [ split(',',$$project{Runstyles} ) ] ) ) {
 			$log->debug("** $$Press{strid} Can't Perfect - Perfecting not in runstyles ***") if DEBUG_IMPOSITIONS;
@@ -1425,10 +1425,11 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		} # end if
 
 		my $do_work_turn = $$project{print_sides} == 2 ? 1 : 0;
+    $openprint::log->debug("Do W&T $do_work_turn because sides: $$project{print_sides}");
 		if ( $do_work_turn ) {
 # Coatings like AQ and Varnish are done in a separate pass.	So we don't count them in this check
 			if ( ! $$Papers[0]->doublesided() ) {
-				$log->debug("No W&T due to doublesided" . $$Papers[0]->brand() );
+				$log->debug('No W&T due to doublesided' . $$Papers[0]->brand() );
 				$do_work_turn = 0;
 			} elsif ( $$project{filtered_colours}
 					and ( @{$$project{filtered_colours}} > $number_of_colours )
@@ -1436,8 +1437,18 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				$log->debug("No W&T on $$Press{strid} due to multipass colors:".(scalar@{$$project{filtered_colours}})." > $number_of_colours " . $$Papers[0]->gsm() );
 				$do_work_turn = 0;
 			} elsif ( $$specs{sides_the_same} eq 'Y' ) {
-				# No point in doing W&T, should just do sheetwork
-				$do_work_turn = 0;
+        if (
+          ($$specs{chkOverrideRunStyle1} and $$specs{chkOverrideRunStyle1} eq 'Y')
+            or
+          ($$specs{chkOverrideRunStyle2} and $$specs{chkOverrideRunStyle2} eq 'Y')
+            or
+          ($$specs{chkOverrideRunStyle3} and $$specs{chkOverrideRunStyle3} eq 'Y')
+        ) {
+
+        } else {
+          # No point in doing W&T, should just do sheetwork
+          $do_work_turn = 0;
+        }
 			} # end if
 		} # end if
 
@@ -3163,6 +3174,9 @@ $log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval(
 	# This is down here because it is a function of the results...
 	$$specs{NeedCutting} = openprint::Estimating::Cutting::signature_needs( $Project, $$project{CuttingSpecs}, $specs ) if ! $$project{HasCutting};
 $log->debug("Leaving Printing::calc status: $$specs{Status}");
+if ($$specs{Status} eq 'uncalculated' and ! $$specs{alert}) {
+  $$specs{alert} = 'We were unable to calculate.<br/>';
+}
 	return $$specs{Status};
 } # end sub calc
 
