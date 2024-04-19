@@ -129,12 +129,6 @@
 				include('/includes/main/proj/templates/tags_tickets.html'),
 				include('/includes/main/proj/dimensions.html'),
 			);
-		} elsif ( $$variable{ProjectType}->name() eq 'Maps' ) {
-			return join("\n",
-				include('/includes/main/proj/templates/project_template_select.html'),
-				include('/includes/main/proj/templates/maps.html'),
-				include('/includes/main/proj/dimensions.html'),
-			);
 		} elsif ( $$variable{ProjectType}->name() eq 'Forms' ) {
 			return join("\n",
 				include('/includes/main/proj/templates/project_template_select.html'),
