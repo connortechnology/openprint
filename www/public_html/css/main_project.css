@@ -199,8 +199,7 @@ svg.Imposition rect.sheet {
 	color: white;
 }
 .link-outer {
-  margin: 2ex 25% -4.5ex 25%;
-  border: 2px solid #0B0D60;
+  margin: 2ex 25% -2.5ex 25%;
   border-bottom: 0;
 }
 .link-inner {
@@ -209,4 +208,10 @@ svg.Imposition rect.sheet {
   padding-bottom: 3ex;
   border: 0;
   text-align: center;
+}
+.linkage {
+  float: none;
+  display: inline;
+  padding: 0 1em;
+  background-color: #FFFFFF;
 }
