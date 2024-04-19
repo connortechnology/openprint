@@ -1363,7 +1363,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				push @side_two_colours, @side_two_varnishes;
 			} # end if
 		}
-		if ( 0 ) {
+		if ( 1 ) {
 			$log->debug("$$Press{strid} Side One varnihses @side_one_varnishes");
 			$log->debug("$$Press{strid} Side Two varnihses @side_two_varnishes");
 			$log->debug("$$Press{strid} Side One colours @side_one_colours");
@@ -1425,10 +1425,11 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		} # end if
 
 		my $do_work_turn = $$project{print_sides} == 2 ? 1 : 0;
+    $openprint::log->debug("Do W&T $do_work_turn because sides: $$project{print_sides}");
 		if ( $do_work_turn ) {
 # Coatings like AQ and Varnish are done in a separate pass.	So we don't count them in this check
 			if ( ! $$Papers[0]->doublesided() ) {
-				$log->debug("No W&T due to doublesided" . $$Papers[0]->brand() );
+				$log->debug('No W&T due to doublesided' . $$Papers[0]->brand() );
 				$do_work_turn = 0;
 			} elsif ( $$project{filtered_colours}
 					and ( @{$$project{filtered_colours}} > $number_of_colours )
@@ -1436,8 +1437,18 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				$log->debug("No W&T on $$Press{strid} due to multipass colors:".(scalar@{$$project{filtered_colours}})." > $number_of_colours " . $$Papers[0]->gsm() );
 				$do_work_turn = 0;
 			} elsif ( $$specs{sides_the_same} eq 'Y' ) {
-				# No point in doing W&T, should just do sheetwork
-				$do_work_turn = 0;
+        if (
+          ($$specs{chkOverrideRunStyle1} and $$specs{chkOverrideRunStyle1} eq 'Y')
+            or
+          ($$specs{chkOverrideRunStyle2} and $$specs{chkOverrideRunStyle2} eq 'Y')
+            or
+          ($$specs{chkOverrideRunStyle3} and $$specs{chkOverrideRunStyle3} eq 'Y')
+        ) {
+
+        } else {
+          # No point in doing W&T, should just do sheetwork
+          $do_work_turn = 0;
+        }
 			} # end if
 		} # end if
 
