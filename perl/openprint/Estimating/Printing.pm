@@ -181,6 +181,7 @@ my %variables = (
 	Markup1 => ['save'], Markup2 => ['save'], Markup3 => ['save'],
 	OverridePrice1 => ['save'], OverridePrice2 => ['save'], OverridePrice3 => ['save'],
 	MPrice1 => ['save','output'], MPrice2 => ['save','output'], MPrice3 => ['save','output'],
+  side_link => ['save'],
 	SideOneColours		=>	 [],
 	SideTwoColours		=>	 [],
 	chkCyanSideOne => ['save'],
@@ -612,7 +613,7 @@ sub setup_project {
 			my $group_specs = $project{"Group$$sig_specs{Group}Specs"} = {};
 
 			my @sig_side_one_colours = get_colours($sig_specs, 'SideOne');
-			my @sig_side_two_colours = get_colours($sig_specs, 'SideTwo');
+			my @sig_side_two_colours = get_colours($sig_specs, $$sig_specs{side_link} ? 'SideOne' : 'SideTwo');
 			foreach my $Colour ( @sig_side_one_colours, @sig_side_two_colours ) {
 				$mixed_colours{$$Colour{name}} = 1;
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -758,7 +759,7 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 				my $s_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 				my @aq_colours = sets::union(
 						openprint::Estimating::Aqueous::get_colours( $s_specs, 'SideOne' ),
-						openprint::Estimating::Aqueous::get_colours( $s_specs, 'SideTwo' ),
+						openprint::Estimating::Aqueous::get_colours( $s_specs, $$s_specs{side_link} ? 'SideOne' : 'SideTwo' ),
 						);
 
 				my $form = $$s_specs{SignatureIndex};
@@ -2635,7 +2636,7 @@ sub calc {
 	my %inkCoverage = get_inkcoverage( $Project, $specs );
 
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
-	my @side_two_colours = get_colours( $specs, 'SideTwo' );
+	my @side_two_colours = get_colours( $specs, $$specs{side_linked} ? 'SideOne' : 'SideTwo' );
 	$$specs{SideOneColours} = \@side_one_colours;
 	$$specs{SideTwoColours} = \@side_two_colours;
 
@@ -5163,7 +5164,7 @@ $imp->display('[warn]');
 								} else {
 									set_size($Project, $$Setup{specs}, $printing_specs);
 									$$Setup{side_one_colours} = [ get_colours($$Setup{specs}, 'SideOne') ];
-									$$Setup{side_two_colours} = [ get_colours($$Setup{specs}, 'SideTwo') ];
+									$$Setup{side_two_colours} = [ get_colours($$Setup{specs}, $$Setup{specs}{side_link} ? 'SideOne' : 'SideTwo') ];
 									foreach my $q_index ( $Project->quantity_indexes() ) {
 										$$subsig_specs{'txtUnspecifiedPageQuantity'.$q_index} = get_unspecified_pages($Project, $sigs[0], $subsig_specs, $q_index);
 										$log->error("Subsig upq " . $$subsig_specs{'txtUnspecifiedPageQuantity'.$q_index});
@@ -7383,7 +7384,7 @@ sub runtime {
 	} # end if
 
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
-	my @side_two_colours = get_colours( $specs, 'SideTwo' );
+	my @side_two_colours = get_colours( $specs, $$specs{side_link} ? 'SideOne' : 'SideTwo' );
 	my @colours;
 	if ( $$specs{'ddmRunStyle'.$qty_index} and ( $$specs{'ddmRunStyle'.$qty_index} eq 'Work & Turn' or $$specs{'ddmRunStyle'.$qty_index} eq 'Work & Tumble' ) ) {
 		@colours = filter_colours(\@side_one_colours, \@side_two_colours);

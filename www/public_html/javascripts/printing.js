@@ -618,3 +618,62 @@ function cbStockFillResults( results ) {
 window.addEventListener('DOMContentLoaded', function() {
 	calc('f1');
 });
+
+// Register side linking and set initial page state.
+Event.observe(window, 'load', function () {
+    const link = $('side_link');
+    const side = $('InksOnBackQuestions');
+
+    if (! (side && link) ) return;
+
+    // Set the initial status on page load.
+    if (link.checked) link_sides.apply(link);
+
+    Event.observe(link, 'click', link_sides.bind(link));
+
+    return true;
+});
+
+// Gray out/disable side two when it's "linked" to side one. The server
+// handles replicating the fields across when they are linked.
+function link_sides (e) {
+  const linked = this.checked;
+  const side   = $('InksOnBackQuestions');
+  const colour = linked ? '#999999' : '';
+
+  // When disabled we grey out the side.
+  side.style.backgroundColor = linked ? '#EEEEEE' : '';
+  side.style.color           = colour;
+  side.style.borderColor     = colour;
+
+  // Display a message to the user if we're disabled.
+  const side2_linked = $('side2_linked');
+  if (side2_linked) side2_linked.style.display = linked ? 'block' : 'none';
+
+  side.descendants().each(function (elem) {
+    // If we're disabling grey out or disable elems, otherwise undo.
+    switch (elem.tagName.toLowerCase()) {
+      case 'fieldset':
+        elem.style.borderColor = colour;
+        break;
+
+      case 'legend':
+        elem.style.color = colour;
+        break;
+
+      case 'input':
+      case 'select':
+      case 'textarea':
+      case 'button':
+        if (linked) {
+          elem.was_disabled = elem.disabled;
+          elem.disabled = true;
+        } else {
+          elem.disabled = elem.was_disabled;
+        }
+        break;
+      default:
+        console.log("Unknown element", elem);
+    }
+  });
+}
