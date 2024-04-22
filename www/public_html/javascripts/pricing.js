@@ -129,17 +129,48 @@ function copy_price ( form, pricelist_id, equipment_id, price_id ) {
 
 function add_new_price ( service_id, pricelist_id, equipment_id ) {
 
-	if ( $('prices-'+pricelist_id+'-'+equipment_id) ) {
-		new Ajax.Updater( 'prices-'+pricelist_id+'-'+equipment_id, '_price.html', {
-			parameters: {
-				pricelist_id: pricelist_id,
-				equipment_id: equipment_id,
-				service_id: service_id,
-				action: 'add'
-			 },
-			insertion: 'bottom' }
-			);
-	} else {
+  const prices = $j('#prices-'+pricelist_id+'-'+equipment_id);
+
+  if (prices.length) {
+    $j.get('_price.html', {
+      pricelist_id: pricelist_id,
+      equipment_id: equipment_id,
+      service_id: service_id,
+      action: 'add'
+    }).done(function(data) {
+      prices.append(data);
+      update_event_bindings();
+    }).fail(function(data) {
+      alert("Failed adding price");
+      console.log(data);
+    });
+
+    /*
+    new Ajax.Updater( 'prices-'+pricelist_id+'-'+equipment_id, '_price.html', {
+      parameters: {
+        pricelist_id: pricelist_id,
+        equipment_id: equipment_id,
+        service_id: service_id,
+        action: 'add'
+       },
+      insertion: 'bottom' }
+      );
+      */
+  } else {
+    $j.get('_prices_per_equipment.html', {
+      pricelist_id: pricelist_id,
+      equipment_id: equipment_id,
+      service_id: service_id,
+      action: 'add'
+    }).done(function(data) {
+      $j('#pricelist-'+pricelist_id).append(data);
+      update_event_bindings();
+    }).fail(function(data) {
+      alert("Failed adding equipment price");
+    console.log(data);
+    });
+
+    /*
 		new Ajax.Updater( 'pricelist-'+pricelist_id, '_prices_per_equipment.html', {
 			parameters: {
 				pricelist_id: pricelist_id,
@@ -149,6 +180,7 @@ function add_new_price ( service_id, pricelist_id, equipment_id ) {
 			 },
 			insertion: 'bottom' }
 			);
+      */
 	} // end if
 } // end function add_new_price ( service_id, pricelist_id, equipment_id )
 
