@@ -8,13 +8,8 @@ div.Quote div.Header {
 }
 div.Quote div.Header fieldset {
     margin-right: .5em;
-	border-top: none;
 }
 div.Quote div.Header fieldset legend {
-	width: 100%;
-	display: block;
-	margin-right: auto;
-	text-align: left;
 }
 div.Quote div.Header fieldset ul {
 	margin: 0px;
