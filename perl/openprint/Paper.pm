@@ -475,13 +475,13 @@ sub to_string {
 					$self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight(),
 					) );
 		if ( $self->type() eq 'Roll' ) {
-			$string .= ' ' . $self->width.'"' if $$self{width};
+			$string .= ' ' . 1*$self->width.'"' if $$self{width};
 			$string .= ' Roll ';
 		} else {
 			if ( $$self{start_width} and ( ( $$self{width} != $$self{start_width} ) or ( $$self{height} != $$self{start_height} ) ) ) {
 				$string .= ' ' . $$self{start_width}.'x'.$$self{start_height} . ' => '. $$self{width}.'x'.$$self{height};
 			} else {
-				$string .= ' ' . $$self{width}.'x'.$$self{height};
+				$string .= ' ' . 1*$$self{width}.'x'.1*$$self{height};
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
