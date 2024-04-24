@@ -321,7 +321,7 @@ sub send {
 	openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 	my $email_template = ssi::slurp_content('/email_template.html');
   if (!$email_template) {
-    $openprint::log->error("Have no email template!");
+    $openprint::log->error('Have no email template!');
   }
 
 	my $Email = new openprint::Email();
@@ -364,7 +364,6 @@ sub send {
       $Email->add_html_attachment( "Quote$$self{id}.html", $html);
     }
 
-
 		$results .= $Email->send(
 				FROM    => $from,
 				TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}) ),
@@ -372,71 +371,73 @@ sub send {
 				);
 		$Email->attachments(undef);
   } else {
-	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $session{user_type}, ['A', 'E']) ) {
-		if ( $openprint::User->email_quotes_to_myself() ) {
-			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_body.html', \%quote );
-			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
+    if ( $self->Company()->reseller() eq 'Y' or sets::isin( $session{user_type}, ['A', 'E']) ) {
+      if ( $openprint::User->email_quotes_to_myself() ) {
+        $quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_body.html', \%quote );
+        $Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
-			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_invoice.html', \%quote );
-			my $html = ssi::variable_substitution( \$email_template, \%quote );
-			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
-			if ( ( $openprint::User->email() =~ /iconnor/ ) and @_ ) {
-				$Email->add_html_attachment( "Quote$$self{id}.html", $html );
-			}
+        $quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_invoice.html', \%quote );
+        my $html = ssi::variable_substitution( \$email_template, \%quote );
+        $Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
+        if ( ( $openprint::User->email() =~ /iconnor/ ) and @_ ) {
+          $Email->add_html_attachment( "Quote$$self{id}.html", $html );
+        }
 
-			$results .= $Email->send(
-					FROM    => $from,
-					BCC		=>	'iconnor@connortechnology.com',
-					TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}) ),
-					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
-					);
-			$Email->attachments(undef);
-		} # end if
+        $results .= $Email->send(
+            FROM    => $from,
+            BCC		=>	'iconnor@connortechnology.com',
+            TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}) ),
+            SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
+            );
+        $Email->attachments(undef);
+      } # end if send_to_myself
 
-		if ( $quote{ForEmail} ne '' and (
-					( $quote{ByFirstName} ne $quote{ForFirstName} ) or
-					( $quote{ByLastName} ne $quote{ForLastName} ) or
-					( $quote{ByCompanyName} ne $quote{ForCompanyName} ) or
-					( $quote{ByTitle} ne $quote{ForTitle} ) or
-					( $quote{BySalutation} ne $quote{ForSalutation} ) or
-					( $quote{ByAddress1} ne $quote{ForAddress1} ) or
-					( $quote{ByAddress2} ne $quote{ForAddress2} ) or
-					( $quote{ByCity} ne $quote{ForCity} ) or
-					( $quote{ByStateProvince} ne $quote{ForStateProvince} ) or
-					( $quote{ByCountry} ne $quote{ForCountry} ) or
-					( $quote{ByPostalCode} ne $quote{ForPostalCode} ) or
-					( $quote{ByPhone}  ne $quote{ForPhone} ) or
-					( $quote{ByExtension} ne $quote{ForExtension} ) or
-					( $quote{ByFax} ne $quote{ForFax} ) or
-					( $quote{ByEmail} ne $quote{ForEmail} )
-					) ) {
-			openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
+      if ( $quote{ForEmail} ne '' and (
+            ( $quote{ByFirstName} ne $quote{ForFirstName} ) or
+            ( $quote{ByLastName} ne $quote{ForLastName} ) or
+            ( $quote{ByCompanyName} ne $quote{ForCompanyName} ) or
+            ( $quote{ByTitle} ne $quote{ForTitle} ) or
+            ( $quote{BySalutation} ne $quote{ForSalutation} ) or
+            ( $quote{ByAddress1} ne $quote{ForAddress1} ) or
+            ( $quote{ByAddress2} ne $quote{ForAddress2} ) or
+            ( $quote{ByCity} ne $quote{ForCity} ) or
+            ( $quote{ByStateProvince} ne $quote{ForStateProvince} ) or
+            ( $quote{ByCountry} ne $quote{ForCountry} ) or
+            ( $quote{ByPostalCode} ne $quote{ForPostalCode} ) or
+            ( $quote{ByPhone}  ne $quote{ForPhone} ) or
+            ( $quote{ByExtension} ne $quote{ForExtension} ) or
+            ( $quote{ByFax} ne $quote{ForFax} ) or
+            ( $quote{ByEmail} ne $quote{ForEmail} )
+            ) ) {
+        openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 
-			my $For_User = openprint::User->find_one( email=>$quote{ForEmail} );
+        my $For_User = openprint::User->find_one( email=>$quote{ForEmail} );
 
-			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_body.html', \%quote );
-			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
-			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
-			my $html = ssi::variable_substitution( \$email_template, \%quote );
-			$Email->add_pdf_attachment_from_html( 'Quote'.$$self{id}, $html );
-			if ( $For_User and sets::isin( $For_User->type(), [ 'E', 'A' ] ) ) {
-				$Email->add_html_attachment('Quote'.$$self{id}.'.html', $html);
-			} elsif ( scalar @_ and (
-        ( $openprint::User->email() =~ /iconnor/ ) or
-        ( $openprint::User->email() =~ /isaac/ ) 
-      )
-      ) {
-				$Email->add_html_attachment( "Quote$$self{id}.html", $html );
-			}
+        $quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_body.html', \%quote );
+        $Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
+        $quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
+        my $html = ssi::variable_substitution( \$email_template, \%quote );
+        $Email->add_pdf_attachment_from_html( 'Quote'.$$self{id}, $html );
+        if ( $For_User and sets::isin( $For_User->type(), [ 'E', 'A' ] ) ) {
+          $Email->add_html_attachment('Quote'.$$self{id}.'.html', $html);
+        } elsif ( scalar @_ and (
+          ( $openprint::User->email() =~ /iconnor/ ) or
+          ( $openprint::User->email() =~ /isaac/ ) 
+        )
+        ) {
+          $Email->add_html_attachment( "Quote$$self{id}.html", $html );
+        }
 
-			$results .= $Email->send(
-					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					BCC		=>	'iconnor@connortechnology.com',
-          TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}) ),
-					SUBJECT => "Quote $$self{id} : " . $self->reference(),
-					);
-			$Email->attachments(undef);
-		} # end if for someone else
+        $results .= $Email->send(
+            FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+            BCC		=>	'iconnor@connortechnology.com',
+            TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}) ),
+            SUBJECT => "Quote $$self{id} : " . $self->reference(),
+            );
+        $Email->attachments(undef);
+      } else {
+        $results .= 'Not sending to myself.<br/>';
+      } # end if for someone else
 
 	} else {
 # Not a reseller
