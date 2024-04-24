@@ -33,7 +33,7 @@ require openprint::ServiceType;
 use openprint::Imposition;
 require openprint::Estimating::Perforating;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -1080,7 +1080,7 @@ $Imposition->display();
 				} else { # Not the press
 					my $max_feed_width = $Equipment->specification('Maximum Feed Width', $$Imposition{imposition} );
           # Figure out the fold.	Because this isn't the press, we have to figure out how it cuts...
-          $openprint::log->debug("Max feed: $max_feed_width");
+          $openprint::log->debug("Max feed: $max_feed_width") if $max_feed_width;
 
 					if ( (!$$sig_specs{txtSignatureType}) and $$sig_specs{rdbTemplateType} and $fold_types{$$sig_specs{rdbTemplateType}} ) {
 $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
@@ -1255,7 +1255,7 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 						# See if it fits
 						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height() );
 						if ( $rc )	{
-							if ( $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
+							if ( !$$specs{"chkOverrideLimits-$form-$qty_index"} or $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
 								if ( @my_equipment == 1 ) {
 									$Breakdown .= $Imposition->to_string()."Doesn't fit $rc.<br/>";
 								}
@@ -1267,26 +1267,26 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 							}
 						} # end if fits
 
-							$openprint::log->debug("Fits") if DEBUG;
-							my $fits = '';;
-							my $Fold = $Equipment->Fold({
-									pages			=>	$Imposition->pages(),
-									page_columns	=>	$Imposition->page_columns(),
-									page_rows	=>	$Imposition->page_rows(),
-									page_width		=>	$$Imposition{page_width},
-									page_height		=>	$$Imposition{page_height},
-									spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
-									stitching		=>	(($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0),
-									perfectbind		=>	($$services{PerfectBound} ? 1 : 0),
-									spinepaste		=>	($$services{SpinePaste} ? 1 : 0),
-									gsm						=>	$$Paper{gsm},
-									calliper				=>	$$Paper{calliper},
-									imposition		=>	$$Imposition{imposition},
-									columns				=>	$$Imposition{columns},
-									rows					=>	$$Imposition{rows},
-									printing_type	=>	$ppt,
-									});
-							if ( ( ! $Fold ) and ( $$specs{"chkOverrideLimits-$form-$qty_index"} and ($$specs{"chkOverrideLimits-$form-$qty_index"} eq 'Y')) ) {
+            $openprint::log->debug('Fits') if DEBUG;
+            my $fits = '';
+            my $Fold = $Equipment->Fold({
+                pages			=>	$Imposition->pages(),
+                page_columns	=>	$Imposition->page_columns(),
+                page_rows	=>	$Imposition->page_rows(),
+                page_width		=>	$$Imposition{page_width},
+                page_height		=>	$$Imposition{page_height},
+                spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+                stitching		=>	(($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0),
+                perfectbind		=>	($$services{PerfectBound} ? 1 : 0),
+                spinepaste		=>	($$services{SpinePaste} ? 1 : 0),
+                gsm						=>	$$Paper{gsm},
+                calliper				=>	$$Paper{calliper},
+                imposition		=>	$$Imposition{imposition},
+                columns				=>	$$Imposition{columns},
+                rows					=>	$$Imposition{rows},
+                printing_type	=>	$ppt,
+              });
+            if ( ( ! $Fold ) and ( $$specs{"chkOverrideLimits-$form-$qty_index"} and ($$specs{"chkOverrideLimits-$form-$qty_index"} eq 'Y')) ) {
 							$Fold = $Equipment->Fold({
 									pages			=>	$Imposition->pages(),
 									page_columns	=>	$Imposition->page_columns(),
@@ -1302,90 +1302,89 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 									columns				=>	$$Imposition{columns},
 									rows					=>	$$Imposition{rows},
 									printing_type	=>	$ppt,
-									});
-								$$specs{alert} .= "Fold for form $form may exceed equipment specifications.<br/>";
-							}
-							if ( $Fold and $max_feed_width ) {
+                });
+              $$specs{alert} .= "Fold for form $form may exceed equipment specifications.<br/>";
+            }
+            if ($Fold) {
+              if ( $$Fold{page_columns} and $$Fold{page_rows} ) {
+                $width_folds = $$Fold{page_columns}-1;
+                $height_folds = $$Fold{page_rows}-1;
+                $openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") if DEBUG;
+              } else {
+                $openprint::log->debug("Fold does not have page_rows and page_columns filled in" . $Fold->to_string() ) if DEBUG;
+                $openprint::log->debug("old: $width_folds x $height_folds source: $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} x $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight} ") if DEBUG;
+                if ( 1 ) {
+                  $width_folds = Math::Round::nearest( 1, $$Imposition{layout_width} / $$Imposition{object_width} )-1 if $$Imposition{object_width};
+                  if ( $width_folds < 0 ) {
+                    $openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
+                    $width_folds = 0;
+                  } # end if
+                  $height_folds = Math::Round::nearest( 1, $$Imposition{layout_height}/ $$Imposition{object_height} )-1 if $$Imposition{object_height};
+                  if ( $height_folds < 0 ) {
+                    $openprint::log->debug("Got negative width_folkds from $$Imposition{layout_height}/ $$Imposition{object_height}-1");
+                    $height_folds = 0;
+                  } # end if
+                  $openprint::log->debug("new: $width_folds x $height_folds x $$Imposition{layout_width} / $$Imposition{object_width} x $$Imposition{layout_height}/ $$Imposition{object_height}") if DEBUG;
+                }
+              }
 
-								if ( $$Fold{page_columns} and $$Fold{page_rows} ) {
-									$width_folds = $$Fold{page_columns}-1;
-									$height_folds = $$Fold{page_rows}-1;
-									$openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") if DEBUG;
-								} else {
-									$openprint::log->debug("Fold does not have page_rows and page_columns filled in" . $Fold->to_string() ) if DEBUG;
-									$openprint::log->debug("old: $width_folds x $height_folds source: $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} x $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight} ") if DEBUG;
-									if ( 1 ) {
-										$width_folds = Math::Round::nearest( 1, $$Imposition{layout_width} / $$Imposition{object_width} )-1 if $$Imposition{object_width};
-										if ( $width_folds < 0 ) {
-											$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
-											$width_folds = 0;
-										} # end if
-										$height_folds = Math::Round::nearest( 1, $$Imposition{layout_height}/ $$Imposition{object_height} )-1 if $$Imposition{object_height};
-										if ( $height_folds < 0 ) {
-											$openprint::log->debug("Got negative width_folkds from $$Imposition{layout_height}/ $$Imposition{object_height}-1");
-											$height_folds = 0;
-										} # end if
-										$openprint::log->debug("new: $width_folds x $height_folds x $$Imposition{layout_width} / $$Imposition{object_width} x $$Imposition{layout_height}/ $$Imposition{object_height}") if DEBUG;
-									}
-
-								}
-								if ( $orientation ) {
-									if (
-											( $orientation eq 'Portrait' and $Imposition->layout_width() <= $Imposition->layout_height() ) or
-											( $orientation eq 'Landscape' and $Imposition->layout_width() >= $Imposition->layout_height() )
-										) {
-										if ( $Imposition->layout_width() >= $max_feed_width ) {
-											$fits = "Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{txtWidth}).";
-											$Fold = undef;
-										} # end if
-									} else {
-										if ( $Imposition->layout_height() >= $max_feed_width ) {
-											$fits = "Fold no good due to max feed width ($max_feed_width) on height ($$sig_specs{txtHeight}).";
-											$Fold = undef;
-										} # end if
-									} # end if
-								} else {
-
-# decide whether it's running portrait or landscape basessd on which way the folds go
-									$openprint::log->debug("Has max feed width width_folds: $width_folds height_folds: $height_folds final_width $$sig_specs{txtWidth} final_heigh $$sig_specs{txtHeight} max_feed $max_feed_width") if DEBUG;
-									if (
-											( $width_folds and ! $height_folds )
-											#or ( ((!defined $$Fold{folds}) or ($width_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($height_folds == $$Fold{angles})) and ( $width_folds < $height_folds ) )
-										 ) {
-										#$if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
-# If folds are on width, we grip on height...
-											if ( $$Imposition{layout_height} >= $max_feed_width ) {
-												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
-												$Fold = undef;
-											} # end if
-										#$} else {
-											#$if ( $$Imposition{layout_width} >= $max_feed_width ) {
-												#$$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
-												#$$Fold = undef;
-											#$} # end if
-										#$} # end if
-									} elsif (
-											( $height_folds and ! $width_folds )
-#or ( (!defined $$Fold{folds}) or ($height_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($width_folds == $$Fold{angles}) )
-											) {
-										#$if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
-#$$openprint::log->debug("Vertical $$Imposition{layout_width} >= $max_feed_width");
-											if ( $$Imposition{layout_width} >= $max_feed_width ) {
-												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
-												$Fold = undef;
-											} # end if
-										#$} else {
-											#$if ( $$Imposition{layout_height} >= $max_feed_width ) {
-												#$$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
-												#$$Fold = undef;
-											#$} # end if
-										#$} # end if
-									} else {
-										$openprint::log->warn("No fold match width_folds: $width_folds, height_folds: $height_folds Fold:$$Fold{name} folds: $$Fold{folds} angles:$$Fold{angles}") if DEBUG;
-									} # end if
-								} # end if has an orientation
-								$openprint::log->debug($fits) if $fits and DEBUG;
-							} # end if
+              if ($max_feed_width) {
+                if ( $orientation ) {
+                  if (
+                    ( $orientation eq 'Portrait' and $Imposition->layout_width() <= $Imposition->layout_height() ) or
+                    ( $orientation eq 'Landscape' and $Imposition->layout_width() >= $Imposition->layout_height() )
+                  ) {
+                    if ( $Imposition->layout_width() >= $max_feed_width ) {
+                      $fits = "Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{txtWidth}).";
+                      $Fold = undef;
+                    } # end if
+                  } else {
+                    if ( $Imposition->layout_height() >= $max_feed_width ) {
+                      $fits = "Fold no good due to max feed width ($max_feed_width) on height ($$sig_specs{txtHeight}).";
+                      $Fold = undef;
+                    } # end if
+                  } # end if
+                } else {
+                  # decide whether it's running portrait or landscape basessd on which way the folds go
+                  $openprint::log->debug("Has max feed width width_folds: $width_folds height_folds: $height_folds final_width $$sig_specs{txtWidth} final_heigh $$sig_specs{txtHeight} max_feed $max_feed_width") if DEBUG;
+                  if ( ( $width_folds and ! $height_folds )
+                    #or ( ((!defined $$Fold{folds}) or ($width_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($height_folds == $$Fold{angles})) and ( $width_folds < $height_folds ) )
+                  ) {
+                    #$if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
+                    # If folds are on width, we grip on height...
+                    if ( $$Imposition{layout_height} >= $max_feed_width ) {
+                      $fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
+                      $Fold = undef;
+                    } # end if
+                    #$} else {
+                    #$if ( $$Imposition{layout_width} >= $max_feed_width ) {
+                    #$$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
+                    #$$Fold = undef;
+                    #$} # end if
+                    #$} # end if
+                  } elsif (
+                    ( $height_folds and ! $width_folds )
+                    #or ( (!defined $$Fold{folds}) or ($height_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($width_folds == $$Fold{angles}) )
+                  ) {
+                    #$if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
+                    #$$openprint::log->debug("Vertical $$Imposition{layout_width} >= $max_feed_width");
+                    if ( $$Imposition{layout_width} >= $max_feed_width ) {
+                      $fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
+                      $Fold = undef;
+                    } # end if
+                    #$} else {
+                    #$if ( $$Imposition{layout_height} >= $max_feed_width ) {
+                    #$$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
+                    #$$Fold = undef;
+                    #$} # end if
+                    #$} # end if
+                  } else {
+                    $openprint::log->warn("No fold match width_folds: $width_folds, height_folds: $height_folds Fold:$$Fold{name} folds: $$Fold{folds} angles:$$Fold{angles}") if DEBUG;
+                  } # end if
+                } # end if has an orientation
+                $openprint::log->debug($fits) if $fits and DEBUG;
+              } # end if orientation
+            } # end if max_feed_width
 
 							if ( $Fold ) {
 								$Fold = $Fold->clone();
@@ -1528,8 +1527,10 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 					$openprint::log->debug("Got MakeReady for " . $Fold->type().'MakeReady' . ' imp:' . $imposition . " \$$setupPrice{Price} $setupPrice{units}" ) if DEBUG;
 				} # end if
 				$Breakdown .= '<table><tr><td class="Description">MR: ';
-				if ( ! $setupPrice{units} ) {
-					$Breakdown .= 'No Makeready</td><td></td></tr>';
+				if (!$setupPrice{units} and ! $makereadies{$$Equipment{id}}{$$Fold{type}.$imposition}) {
+          # This is the most common so test for it first.
+          $setupPrice{Total} = $setupPrice{Price};
+          $Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
 				} elsif ( $setupPrice{units} eq 'per form' ) {
 					$setupPrice{Total} = $setupPrice{Price};
 					$total_MR += $setupPrice{Total};
@@ -1904,8 +1905,8 @@ sub calc {
 		next if ! int $$specs{"txtQuantity$qty_index"};
 		$$specs{'hdnBreakdown'.$qty_index} = '';
 
-		my $price;
-		my $mprice;
+		my $price = 0;
+		my $mprice = 0;
 
 		my @signatures = $Project->signatures( { sort => 1 } );
 $openprint::log->debug("Signatures: @signatures") if DEBUG;
@@ -1922,7 +1923,7 @@ $openprint::log->debug("Signatures: @signatures") if DEBUG;
 			$i->load( $sig_specs, $qty_index, $Project );
 			$$i{Folds} = [ get_Folds( $specs, $i, $qty_index ) ];
 			push @Signature_Impositions, $i;
-$i->display() if DEBUG;
+      $i->display() if DEBUG;
 
 			$Impositions{$sig_id} = $i;
 			$$i{service_id} = $sig_id;
@@ -2090,13 +2091,14 @@ sub signature_summary {
 			} # end foreach
 			my $html = join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
 			my $Press = openprint::Equipment->find_one( strid => $$sig_specs{"ddmPress$qty_index"} );
-			if ( $Press and ( $$Press{id} != $$Equipment{id} ) 
-and ( $Equipment->specification('Type') eq 'Folder' )
-#and ($Press->specification('Folding Capable') eq 'When Printing')
- ) {
-				$html .= '<br/><span class="warning">Folding Offline</span>';
-			}
-			return $html;
+      if ( $Press and ( $$Press{id} != $$Equipment{id} ) ) {
+        my $type = $Equipment->specification('Type');
+        if ($type and $type eq 'Folder') {
+          #and ($Press->specification('Folding Capable') eq 'When Printing')
+          $html .= '<br/><span class="warning">Folding Offline</span>';
+        }
+      }
+      return $html;
 		} # end if
 	} # end if
 	return '';
@@ -2826,15 +2828,15 @@ foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
 $openprint::log->debug('Has no equipment_id') if DEBUG;
 		return ();
 	} # end if has equipment
-	my $Folder = new openprint::Equipment($$folding_specs{"ddmEquipment-$form-$qty_index"});
 
+	my $Folder = new openprint::Equipment($$folding_specs{"ddmEquipment-$form-$qty_index"});
 	my $services = $$Source_Imposition{Project}->services();
 
 	foreach my $fold_index ( 1 .. 4 ) {
 		my $fold_qty = $$folding_specs{join('-','FoldQty',$form,$qty_index,$fold_index)};
 		next if ! $fold_qty;
 
-		my $fold_type =$$folding_specs{join('-','FoldType',$form,$qty_index,$fold_index)};
+		my $fold_type = $$folding_specs{join('-','FoldType',$form,$qty_index,$fold_index)};
 		next if ! $fold_type;
 
 		my $Imposition = $Source_Imposition->copy();
@@ -2877,7 +2879,7 @@ $openprint::log->debug('Has no equipment_id') if DEBUG;
 			$Fold = $Folder->Fold( $find );
 		}
 		if ( ! $Fold ) {
-			if ( $$folding_specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
+			if ( $$folding_specs{"chkOverrideFold-$form-$qty_index"} and $$folding_specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
 				$openprint::log->debug('Was overriden');
 			} else {
 				$_ = Data::Dumper::Dumper($find);
@@ -2918,9 +2920,8 @@ $openprint::log->debug('Has no equipment_id') if DEBUG;
 		} # end if Found fold
 #$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$form-$qty_index-$fold_index"} ) if DEBUG;
 	} # end foreach fold_index
-  if ( ! @folds ) {
-    $openprint::log->error("Got no folds for sig $form : " . $Source_Imposition->to_string() );
-  }
+
+  $openprint::log->error("Got no specified folds for sig $form : " . $Source_Imposition->to_string() ) if ! @folds;
 	return @folds;
 } # end sub get_Folds
 
