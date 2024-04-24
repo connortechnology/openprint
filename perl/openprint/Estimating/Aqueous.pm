@@ -121,22 +121,22 @@ sub neccessary {
 } # end sub neccessary
 
 sub get_colours {
-  my ( $specs, $side ) = @_;
-  my @colours;
-  if ( ( defined $$specs{sides_the_same} ) and ( $$specs{sides_the_same} eq 'Y' ) and ( $side eq 'SideTwo' ) ) {
-    $side = 'SideOne';
-  } # end if
-
-  foreach my $k ( keys %$specs ) {
-    #$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
-    if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
-      next if ! $$specs{"chkColourCoating$index$side"};
-      if ( $$specs{"ColourCoatingType$index$side"} =~ /Aqueous/i ) {
-        push @colours, $$specs{"ColourCoatingType$index$side"};
-      } # end if
+    my ( $specs, $side ) = @_;
+    my @colours;
+    if ( ( defined $$specs{sides_the_same} ) and ( $$specs{sides_the_same} eq 'Y' ) and ( $side eq 'SideTwo' ) ) {
+        $side = 'SideOne';
     } # end if
-  } # end foreach
-  return @colours;
+
+    foreach my $k ( keys %$specs ) {
+#$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
+        if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+            next if ! $$specs{"chkColourCoating$index$side"};
+			if ( $$specs{"ColourCoatingType$index$side"} =~ /Aqueous/i ) {
+				push @colours, $$specs{"ColourCoatingType$index$side"};
+            } # end if
+        } # end if
+    } # end foreach
+    return @colours;
 } # end sub get_colours
 
 sub signature_needs {
@@ -320,15 +320,24 @@ sub signature_calc {
 	$bestPrice{Status} = 'uncalculated';
 
 	my @front_aq;
+	my %front_aq;
 	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideOne')] if ! $$sig_specs{SideOneColours};
-  @front_aq = get_colours($sig_specs, 'SideOne');
-  my %front_aq = map { $$_{name} => $_ } @front_aq;
+	foreach ( @{$$sig_specs{SideOneColours}} ) {
+		if ( -1 != index($$_{name}, 'Aqueous') ) {
+			push @front_aq, $_;
+			$front_aq{$$_{name}} = $_;
+		} # end if
+	} # end foreach colour
 
 	my @back_aq;
 	my %back_aq;
 	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideTwo')] if ! $$sig_specs{SideTwoColours};
-  @back_aq = get_colours($sig_specs, 'SideTwo');
-  my %back_aq = map { $$_{name} => $_ } @back_aq;
+	foreach ( @{$$sig_specs{SideTwoColours}} ) {
+		if ( -1 != index($$_{name}, 'Aqueous') ) {
+			push @back_aq, $_;
+			$back_aq{$$_{name}} = $_;
+		} # end if
+	} # end foreach colour
 
 	if ( ! ( @front_aq or @back_aq ) ) {
 		my ( $caller, undef, $line ) = caller;
