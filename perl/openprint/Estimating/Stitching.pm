@@ -1151,7 +1151,7 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 	foreach my $pass ( @{$price{Passes}} ) {
 		my $servicePrice = $$pass{ServicePrice};
 
-		if ( $$servicePrice{units} eq 'per m' ) {
+		if ( $$servicePrice{units} eq 'per m' or $$servicePrice{units} eq 'per 1000' ) {
 			$$servicePrice{quantity} = $qty/1000;
 			$$servicePrice{Total} = $$servicePrice{Price} * $qty/1000;
 		} elsif ( $$servicePrice{units} eq 'per hour' ) {
