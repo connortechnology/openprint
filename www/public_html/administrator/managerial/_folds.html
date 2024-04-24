@@ -4,6 +4,9 @@
 		order	=>	'lower(name)',
 		( $session{$uri.'?equipment_id'} ? ( equipment_id => $session{$uri.'?equipment_id'} ) : () ),
 		( $session{$uri.'?type'} ? ( type => $session{$uri.'?type'} ) : () ),
+    ( $session{$uri.'?imposition'} ? (
+    'min_imposition <='=>$session{$uri.'?imposition'},
+    'max_imposition <=' => $session{$uri.'?imposition'} ) : () ),
 		);
 
     $$variable{Folds} = [ openprint::Fold->find( %filters ) ];
@@ -27,7 +30,7 @@
 	my $rowclass;
 	foreach my $Fold ( @{$$variable{Folds}} ) {
 		$html .= sprintf(q`
-<tr%1$s onclick="popup_fold('%2$s');"> 
+<tr%1$s onclick="popup_fold(%2$d);"> 
 	<td class="Equipment">%3$s</td>
 	<td class="Fold">%4$s</td>
 	<td class="Type">%5$s</td>
@@ -39,7 +42,7 @@
 	<td class="MRTime">%11$d</td>
 	<td class="Speed">%12$s</td>
 </tr>
-`, $rowclass, '/administrator/equipment/_fold.html?fold_id='.$$Fold{id}, $Fold->Equipment()->link_to(), $$Fold{name}, 
+`, $rowclass, $$Fold{id}, $Fold->Equipment()->name(), $$Fold{name}, 
 $Fold->type(), $Fold->pages(), $Fold->folds(), $Fold->angles(),
 join(' ',
 	join('x',

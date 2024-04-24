@@ -33,7 +33,7 @@ require openprint::ServiceType;
 use openprint::Imposition;
 require openprint::Estimating::Perforating;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -167,51 +167,51 @@ sub outputs {
 
 
 %fold_types = (
-	'2PanelFold', '2 Panel Fold',
-	'3PanelFold', '3 Panel Fold',
-	'3PanelZFold', '3 Panel Z Fold',
-	'4PanelFold', '4 Panel Fold',
-	'4PanelZFold', '4 Panel Z Fold',
-	'5PanelFold', '5 Panel Fold',
-	'5PanelZFold', '5 Panel Z Fold',
-	'6PanelFold', '6 Panel Fold',
-	'6PanelZFold', '6 Panel Z Fold',
-	'7PanelFold', '7 Panel Fold',
-	'7PanelZFold', '7 Panel Z Fold',
-	'8PanelFold', '8 Panel Fold',
-	'8PanelZFold', '8 Panel Z Fold',
-	'SingleGateFold', 'Single Gate Fold',
-	'DoubleGateFold', 'Double Gate Fold',
-	'4PageFold', '4 Page Fold',
-	'6PageFold', '6 Page Fold',
-	'8PageFold', '8 Page Fold',
-	'10PageFold', '10 Page Fold',
-	'12PageFold', '12 Page Fold',
-	'12Page3PanelRollFold',	'12 Page 3 Panel Roll Fold',
-	'12Page3PanelZFold',	'12 Page 3 Panel Z Fold',
-	'16PageFold', '16 Page Fold',
-	'18PageFold', '18 Page Fold',
-	'20PageFold', '20 Page Fold',
-	'22PageFold', '22 Page Fold',
-	'24PageFold', '24 Page Fold',
-	'28PageFold', '28 Page Fold',
-	'30PageFold', '30 Page Fold',
-	'32PageFold', '32 Page Fold',
-	'36PageFold', '36 Page Fold',
-	'40PageFold', '40 Page Fold',
-	'42PageFold', '42 Page Fold',
-	'44PageFold', '44 Page Fold',
-	'48PageFold', '48 Page Fold',
-	'56PageFold', '56 Page Fold',
-	'60PageFold', '60 Page Fold',
-	'64PageFold', '64 Page Fold',
-	'72PageFold', '72 Page Fold',
-	'2Panel1Pocket', 'Single Pocket',
-	'2Panel2Pocket', '2 Pocket',
-	'2Panel2PocketGusset', '2 Pocket w/Gussets',
-	'3Panel2Pocket', '3 Panel 2 Pocket',
-	'3Panel2PocketGusset', '3 Panel 2 Pocket w/Gussets',
-	'MapFold','Map Fold',
+	'2PanelFold'=> '2 Panel Fold',
+	'3PanelFold'=> '3 Panel Fold',
+	'3PanelZFold'=> '3 Panel Z Fold',
+	'4PanelFold'=> '4 Panel Fold',
+	'4PanelZFold'=> '4 Panel Z Fold',
+	'5PanelFold'=> '5 Panel Fold',
+	'5PanelZFold'=> '5 Panel Z Fold',
+	'6PanelFold'=> '6 Panel Fold',
+	'6PanelZFold'=> '6 Panel Z Fold',
+	'7PanelFold'=> '7 Panel Fold',
+	'7PanelZFold'=> '7 Panel Z Fold',
+	'8PanelFold'=> '8 Panel Fold',
+	'8PanelZFold'=> '8 Panel Z Fold',
+	'SingleGateFold'=> 'Single Gate Fold',
+	'DoubleGateFold'=> 'Double Gate Fold',
+	'4PageFold'=> '4 Page Fold',
+	'6PageFold'=> '6 Page Fold',
+	'8PageFold'=> '8 Page Fold',
+	'10PageFold'=> '10 Page Fold',
+	'12PageFold'=> '12 Page Fold',
+	'12Page3PanelRollFold'=>	'12 Page 3 Panel Roll Fold',
+	'12Page3PanelZFold'=>	'12 Page 3 Panel Z Fold',
+	'16PageFold'=> '16 Page Fold',
+	'18PageFold'=> '18 Page Fold',
+	'20PageFold'=> '20 Page Fold',
+	'22PageFold'=> '22 Page Fold',
+	'24PageFold'=> '24 Page Fold',
+	'28PageFold'=> '28 Page Fold',
+	'30PageFold'=> '30 Page Fold',
+	'32PageFold'=> '32 Page Fold',
+	'36PageFold'=> '36 Page Fold',
+	'40PageFold'=> '40 Page Fold',
+	'42PageFold'=> '42 Page Fold',
+	'44PageFold'=> '44 Page Fold',
+	'48PageFold'=> '48 Page Fold',
+	'56PageFold'=> '56 Page Fold',
+	'60PageFold'=> '60 Page Fold',
+	'64PageFold'=> '64 Page Fold',
+	'72PageFold'=> '72 Page Fold',
+	'2Panel1Pocket'=> 'Single Pocket',
+	'2Panel2Pocket'=> '2 Pocket',
+	'2Panel2PocketGusset'=> '2 Pocket w/Gussets',
+	'3Panel2Pocket'=> '3 Panel 2 Pocket',
+	'3Panel2PocketGusset'=> '3 Panel 2 Pocket w/Gussets',
+	'MapFold'=>'Map Fold',
 );
 my %short_fold_names = (
 	'2PanelFold', '2panel',
@@ -226,6 +226,7 @@ my %short_fold_names = (
 	'7PanelFold', '7Panel',
 	'7PanelZFold', '7PanelZ',
 	'8PanelFold', '8Panel',
+	'10PanelMapFold', '10 Panel Map Fold',
 	'8PanelZFold', '8PanelZ',
 	'SingleGateFold', 'Single Gate Fold',
 	'DoubleGateFold', 'Double Gate Fold',
@@ -651,12 +652,13 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 
 	my $width_folds = Math::Round::nearest(1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1;
 	if ( $width_folds < 0 ) {
-		$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
+		$openprint::log->debug("Got negative width_folds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
 		$width_folds = 0;
 	} # end if
+
 	my $height_folds = Math::Round::nearest(1, $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight})-1;
 	if ( $height_folds < 0 ) {
-		$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight})-1");
+		$openprint::log->debug("Got negative width_folds from Math::Round::nearest( 1, $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight})-1");
 		$height_folds = 0;
 	} # end if
 	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
@@ -1949,7 +1951,10 @@ $$specs{$k} = '';
 		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $form = $$sig_specs{SignatureIndex};
-			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $form $$sig_specs{txtSignatureType} Ref: $$sig_specs{txtServiceDescription}:</legend>";
+			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $form ";
+      $$specs{'hdnBreakdown'.$qty_index} .= $$sig_specs{txtSignatureType} if $$sig_specs{txtSignatureType};
+      $$specs{'hdnBreakdown'.$qty_index} .= ' Ref: '.$$sig_specs{txtServiceDescription} if $$sig_specs{txtServiceDescription};
+      $$specs{'hdnBreakdown'.$qty_index} .= ':</legend>';
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index ) . '<br/>';
 			#$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
 
@@ -2867,7 +2872,7 @@ $openprint::log->debug('Has no equipment_id') if DEBUG;
 #printing_type	=>	$ppt,
 		};
 		my $Fold = $Folder->Fold( $find );
-		if ( (!$Fold) and ( $$folding_specs{"chkOverrideLimits-$form-$qty_index"} eq 'Y' ) ) {
+		if ( (!$Fold) and ( $$folding_specs{"chkOverrideLimits-$form-$qty_index"} and $$folding_specs{"chkOverrideLimits-$form-$qty_index"} eq 'Y' ) ) {
 			delete $$find{calliper};
 			$Fold = $Folder->Fold( $find );
 		}

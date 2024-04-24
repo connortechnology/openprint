@@ -198,11 +198,13 @@ sub calc {
 					"txtProofQuantity-$form-$proof_index-$qty_index",
 						"ddmProofType-$form-$proof_index-$qty_index",
 				};
-				if ( ! $proof_totals{$type} ) {
-					$proof_totals{$type} = { Quantity => 0, Price => 0 };
-				} # end if
-				$proof_totals{$type}{Quantity} += $quantity;
-				$totalQuantity += $quantity;
+        if ($type) {
+          if ( ! $proof_totals{$type} ) {
+            $proof_totals{$type} = { Quantity => 0, Price => 0 };
+          } # end if
+          $proof_totals{$type}{Quantity} += $quantity;
+				  $totalQuantity += $quantity;
+        }
 			} # end foreach my $proof_index
 		} # end foreach my $signature_service_index
 

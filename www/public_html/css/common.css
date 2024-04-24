@@ -240,6 +240,10 @@ fieldset p.buttons {
   padding: 0;
   margin-left: 185px;
 	float: none;
+  clear: both;
+}
+p.buttons {
+  clear: both;
 }
 input[type="radio"],
 .checkbox input[type="checkbox"],
@@ -554,7 +558,9 @@ fieldset p input.CompanyFilter {
 	display: none;
   */
 }
-.changed {
+.changed,
+input.changed ,
+input.changed:focus {
 	background-color: yellow;
 }
 

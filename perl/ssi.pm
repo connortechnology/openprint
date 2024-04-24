@@ -552,7 +552,8 @@ sub button {
     # Default non-a types to a button
     $$options{type} = 'button';
 	} # end if
-	$$options{text} = $name if ! exists $$options{text};
+	$$options{text} = $$options{value} if ! $$options{text};
+	$$options{text} = $name if ! $$options{text};
   if ( $$options{text} and ! $$options{value}) {
     $$options{value} = $$options{text};
   }
@@ -584,7 +585,7 @@ sub button {
       delete $$options{text};
 		} # end if
     delete $$options{image};
-	} elsif ( $openprint::config{SimpleButtons} ne 'N' ) {
+	} elsif ( $openprint::config{SimpleButtons} and $openprint::config{SimpleButtons} ne 'N' ) {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
 	} else {
 		$html .= $$options{text};

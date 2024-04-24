@@ -128,6 +128,7 @@ sub delete {
 		delete $openprint::Object::cache{ref $self}{$$self{id}};
 	} # end if
 	sql::end_transaction( $dbh, $ac );
+  return 0;
 } # end sub delete
 
 sub copy {
@@ -149,7 +150,8 @@ sub Equipment {
 
 sub Specifications {
 	if ( ! $_[0]{Specifications} ) {
-		@{$_[0]{Specifications}} = openprint::FoldSpecification->find( fold_id=>$_[0]{id},order=>'min_weight NULLS FIRST,max_weight NULLS FIRST' );
+		$_[0]{Specifications} = $_[0]{id} ? [openprint::FoldSpecification->find(
+      fold_id=>$_[0]{id},order=>'min_weight NULLS FIRST,max_weight NULLS FIRST' )] : [];
 	} # end if
 	return @{$_[0]{Specifications}};
 } # end sub Equipment

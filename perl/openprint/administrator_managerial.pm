@@ -1177,7 +1177,7 @@ sub folds {
 } # end sub folds
 
 sub _folds {
-	ssi::save_params( '/administrator/managerial/folds.html', ( 'equipment_id', 'type' ) );
+	ssi::save_params( '/administrator/managerial/folds.html', ( 'equipment_id', 'type', 'imposition' ) );
 } # end sub _folds
 
 sub shipping_rates {
@@ -1383,6 +1383,48 @@ $log->debug("sudo /usr/sbin/postsuper -d $queue_id");
 		}
 	}
 } # end sub mailqueue
+
+sub fold {
+  require openprint::Estimating::Folding; # for fold_types
+  require openprint::Fold; # for fold_types
+	my $Fold = $variable{Fold} = new openprint::Fold( $param{id} );
+  return if !$param{action};
+
+	if ( $param{action} eq 'add' ) {
+		foreach my $k ( 'equipment_id' ) {
+			$$Fold{$k} = $param{$k};
+		} # end foreach
+		$Fold->save();
+		$variable{Fold} = $Fold;
+	} elsif ( $param{action} eq 'copy' ) {
+		my $NewFold = $Fold->copy();
+		delete $param{id};
+		$variable{error} .= $NewFold->save(\%param);
+		if ( ! $variable{error} ) {
+		foreach my $Spec ( $NewFold->Specifications() ) {
+			$_ = $Spec->save( {fold_id=>$NewFold->id() });
+		} # end foreach Spec
+		}
+		$variable{Fold} = $NewFold;
+		$param{id} = $NewFold->id();
+		
+	} elsif ( $param{action} eq 'save' ) {
+		my @changes = $Fold->changes( \%param );
+		$variable{error} = $Fold->save(\%param);
+		if ( ! $variable{error} ) {
+			my $Equipment = $Fold->Equipment();
+			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>'Save Fold', 
+				note=>$$Fold{name} . ' ' . join('<br/>', @changes ) });
+      $variable{ExternalRedirect} = '/administrator/managerial/folds.html';
+		} # end if
+		$variable{Fold} = $Fold;
+	} elsif ( $param{action} eq 'delete' ) {
+		$variable{error} = $Fold->delete();
+    if (!$variable{error}) {
+      $variable{ExternalRedirect} = '/administrator/managerial/folds.html';
+    }
+	} # end if
+} # end sub _fold
 
 1;
 __END__
