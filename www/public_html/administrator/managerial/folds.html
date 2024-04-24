@@ -16,8 +16,10 @@ function load_page() {
           }
       );
   } 
-  function popup_fold(url) {
-      popup_window(url, null, { width: '1000px' });
+  function popup_fold(fold_id) {
+      window.location.href='fold.html?id='+fold_id;
+      return;
+      popup_window('/administrator/equipment/_fold.html?fold_id='+fold_id, null, { width: '1000px' });
     }
   function add_fold() {
       const equipment_id = $j('#equipment_id').val();
@@ -25,9 +27,20 @@ function load_page() {
           alert('Please select the equipment to add the fold to.');
           return;
         }
+      window.location.href='fold.html?action=add&equipment_id='+equipment_id;
+      return;
       new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id='+equipment_id, {
           onSuccess: function(response){
               new Insertion.Top($('Folds'), response.responseText);
+              SortableTable.load();
+            }
+        });
+    }
+  function add_fold_spec(btn) {
+      const form_id = btn.form.fold_id;
+      new Ajax.Request('/administrator/equipment/_fold_specification.html?action=add&fold_id='+fold_id, {
+          onSuccess: function(response){
+              new Insertion.Bottom($('FoldSpecifications'+fold_id), response.responseText);
               SortableTable.load();
             }
         });
@@ -42,7 +55,7 @@ function load_page() {
         <select id="equipment_id" name="equipment_id" onchange="load_page();">
           <option value="">All Equipment</option>
   <? echo (
-      make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)', 'servicetype any'=>'Folding' ) ], $param{equipment_id} );
+                  make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)', 'servicetype any'=>'Folding' ) ], $session{$r->uri().'?equipment_id'} );
   ) ?>
         </select>
       </li>
@@ -50,16 +63,21 @@ function load_page() {
         <select id="type" name="type" onchange="load_page();">
           <option value="">All</option>
   <? echo ( 
-    make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types ] );
+    make_drop_down( [ 
+                  map { $_, $openprint::Estimating::Folding::fold_types{$_} } 
+                  sort keys %openprint::Estimating::Folding::fold_types ],
+                  $session{$r->uri().'?type'});
   ) ?>
         </select>
       </li>
+      <li><label>Imposition</label>
+        <input type="number" step="1" min="1" name="imposition" value="<?echo($session{$r->uri().'?imposition'})?>" on_change="load_page"/>
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
-				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
-        button( 'AddFold', { onclick=>'add_fold();', text=>'Add' } ),
-        button( 'ExportFolds', { onclick=>"f1.btnFunction.value='Export Folds';f1.submit();", text=>'Export Folds' } ),
+				button( 'ShowResults', { on_click=>'load_page', text=>'Show Results' } ),
+        button( 'AddFold', { on_click=>'add_fold', text=>'Add' } ),
+        #button( 'ExportFolds', { onclick=>"f1.btnFunction.value='Export Folds';f1.submit();", text=>'Export Folds' } ),
       ); ) ?>
 		</p>
 	</fieldset>
