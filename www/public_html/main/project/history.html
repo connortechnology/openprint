@@ -63,7 +63,7 @@
 				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
 				<select id="company_id" name="company_id" onchange="stop_filter_companies();load_projects();">
 					<option value="">All</option>
-<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(),'last_project_id is null'=>0}), $session{$r->uri().'?company_id'}, { encode=>1} ) ) ?>
+<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(),'last_project_id is null'=>0}), $session{$r->uri().'?company_id'} ) ) ?>
 				</select>
 			</li>
 <? eval ( 
