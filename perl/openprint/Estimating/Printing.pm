@@ -7546,10 +7546,10 @@ sub summary {
 			#$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
 			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
 				if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
-					$html .= sprintf( ' on %s" Roll.	Cut Off: %s"',	@$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+					$html .= sprintf( ' on %s" Roll.	Cut Off: %s"',	1*$$specs{'StockWidth'.$qty_index},1*$$specs{'StockHeight'.$qty_index});
 				} # end if
 			} else {
-				$html .= sprintf(' on %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+				$html .= sprintf(' on %s" x %s"', 1*$$specs{'StockWidth'.$qty_index}, 1*$$specs{'StockHeight'.$qty_index});
 			} # end if
 		} # end if
 		if ( 0 and sets::isin( $openprint::session{user_type}, [ 'E', 'A' ] ) ) {
