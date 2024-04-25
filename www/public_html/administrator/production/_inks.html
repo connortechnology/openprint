@@ -36,6 +36,7 @@
 				foreach my $Pricelist ( @{$$variable{'Pricelists'}} ) {
 					$html .= 'Prices for pricelist: ' . $Pricelist->name(). '<br/>';
 					foreach my $Price ( openprint::MaterialPrice->find('pricelist_id'=>$Pricelist->id(), 'material_id'=>$Ink->material_id() ) ) {
+          next if $Price->Equipment()->deleted();
 						$html .= $Price->Equipment()->name().': ' if $Price->equipment_id();
 						$html .= sprintf( '$%.2f*%.2f% = $%.2f%s<br/>', $Price->cost(), $Price->markup(), $Price->price(), $Price->units() );
 					} # end foreach Price
@@ -46,6 +47,7 @@
 				foreach my $Pricelist ( @{$$variable{Pricelists}} ) {
 					$html .= 'Prices for pricelist: ' . $Pricelist->name(). '<br/>';
 					foreach my $Price ( openprint::ServicePrice->find('pricelist_id'=>$Pricelist->id(), 'service_id'=>$Ink->service_id() ) ) {
+            next if $Price->Equipment()->deleted();
 						$html .= $Price->Equipment()->name().': ' if $Price->equipment_id();
 						$html .= sprintf( '$%.2f*%.2f% = $%.2f%s<br/>', $Price->cost(), $Price->markup(), $Price->price(), $Price->units() );
 					} # end foreach Price
