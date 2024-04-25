@@ -18,6 +18,7 @@ package openprint::Estimating::Aqueous;
 use strict;
 use warnings;
 use vars qw( %ServicePrices );
+
 %ServicePrices = (
 	AqueousMinimumCharge	=> { },
 	AqueousMakeReady		=> { },
@@ -511,7 +512,6 @@ sub signature_calc {
 					$colour_total += $SetupPrice{Price};
 				} # end if makereadies
 				push @{$Price{SetupPrices}}, \%SetupPrice;
-				
 				my %BlanketCutPrice;
 				if ((-1 != index($type_name, 'Spot')) or ($$type{coverage} < 100)) {
           if ($BlanketCutService) {
@@ -519,13 +519,15 @@ sub signature_calc {
           } else {
             $openprint::log->warn("No blankcut service found");
           }
-				} elsif ( index($type_name, 'W&T') ) {
+				} elsif ( -1 != index($type_name, 'W&T') ) {
 					%BlanketCutPrice = $BlanketCutServiceWT->get_price(undef, $Equipment) if $BlanketCutServiceWT;
 				} # end if type is spot
 				if ( %BlanketCutPrice ) {
           $BlanketCutPrice{Total} = $BlanketCutPrice{Price};
 					$Price{BlanketCut} += $BlanketCutPrice{Price};
 					$colour_total += $BlanketCutPrice{Price};
+        } else {
+          $BlanketCutPrice{Total} = 0;
 				} # end if
 				push @{$Price{BlanketCutPrices}}, \%BlanketCutPrice;	
 
@@ -618,8 +620,6 @@ sub signature_calc {
 				push @{$Price{MaterialPrices}}, \%MaterialPrice;
 			} # end foreach type
 
-
-
 			my $ImpressionPrice;
       my $impression_service;
 			$Price{Impression} = 0;
@@ -711,13 +711,13 @@ sub breakdown {
 		my $MaterialPrice = $$Price{MaterialPrices}[$i];
 
 		my $colour_total = $$SetupPrice{Total} + $$BlanketCutPrice{Total} + $$ServicePrice{Total} + $$MaterialPrice{Total};
-		$breakdown .= $$MaterialPrice{Breakdown}.'<br/>' if $$MaterialPrice{Breakdown};
+		$$MaterialPrice{Breakdown} = sprintf('$%.2f%s = $%.2f', @$MaterialPrice{'Price','units','Total'}) if !$$MaterialPrice{Breakdown};
 		$breakdown .= sprintf(
-				'%s MakeReady: $%.2f + Blanket Cut: $%.2f + Service: ($%.2f%s*%d)=$%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
+				'%s MakeReady: $%.2f<br/>Blanket Cut: $%.2f<br/>Service: ($%.2f%s*%d)=$%.2f<br/>Material: %s<br/>Total: $%.2f<br/>',
 			$type,
 			$$SetupPrice{Price}, $$BlanketCutPrice{Price},
 			@$ServicePrice{'Price','units','Quantity','Total'},
-			@$MaterialPrice{'Price','units','Total'}, $colour_total );
+			$$MaterialPrice{Breakdown}, $colour_total );
 	} # end foreach aq type
 
 	foreach my $ImpressionPrice ( $$Price{ImpressionPrices} ? @{$$Price{ImpressionPrices}} : () ) {
