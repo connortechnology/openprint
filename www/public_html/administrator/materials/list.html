@@ -86,7 +86,8 @@ function load_page() {
 				button( 'ShowResults', { on_click=>'load_page', text=>'Show Results' } ),
 				button( 'New', { href=>'/administrator/materials/edit.html', text=>'New' } ),
 				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
-); ) ?>
+        button( 'delete', { onclick=>q`jQuery('#Results').load('/administrator/materials/_list.html?btnFunction=delete', { material_id: get_value( document.getElementById('f1').material_ids ) } );`, text=>'Delete Checked' } ),
+        ); ) ?>
 		</p>
 	</fieldset>
 	<div id="Results"><?include(_list.html)?></div>
