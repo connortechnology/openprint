@@ -13,7 +13,13 @@
 			my $html = '';
 			my $rowclass;
 			$$variable{Equipment} = [ map { $_->id(), $_->strid() . $_->name() } openprint::Equipment->find( order=>'lower(strid)') ] if ! $$variable{Equipment};
-			foreach my $Spec ( $$variable{'Material'}->Specifications(), { } ) {
+      my @specifications = sort {
+      $a->name() cmp $b->name()
+      ||
+      $a->Equipment()->name() cmp $b->Equipment()->name
+      } $$variable{Material}->Specifications();
+
+			foreach my $Spec ( @specifications, { } ) {
 				$html .= sprintf( q`
 				<tr%1$s> 
 					<td class="Name"><input type="text" name="txtSpecificationName%2$s" value="%3$s" /></td>
