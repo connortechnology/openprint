@@ -64,7 +64,7 @@ $openprint::log->debug("Module is: $module");
 	my @variables = eval( $module.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
 #$log->debug("variables: @variables");
-# We cannot locak tbl_service_specifications or tbl_project_contents.  Just too nasty.  So use tbl_Projects as the contention point.
+# We cannot lock tbl_service_specifications or tbl_project_contents.  Just too nasty.  So use tbl_Projects as the contention point.
 	# make this fast by doing it in one transaction, locking does the tranasaction for us
 	$Project->lock();
 	my @changes;
@@ -76,12 +76,12 @@ $openprint::log->debug("Module is: $module");
 			delete_service_spec( $project_index, $service_index, $key );
 		} else {
 			s/^\s+//, s/\s+$// for $openprint::param{$key};
-			push @changes, "$key : $$specs{$key} => $openprint::param{$key}" if $$specs{$key} ne $openprint::param{$key};;
+			push @changes, "$key : $$specs{$key} => $openprint::param{$key}" if $$specs{$key} ne $openprint::param{$key};
 			insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $openprint::param{$key}, 0 );
 		} # end if
 	} # end foreach
 	if ( my $function = $module->can('save') ) {
-		$function->( $project_index, $service_index, \%openprint::param );
+		$function->($project_index, $service_index, \%openprint::param);
 	} # end if
 	$Project->unlock();
 
@@ -89,8 +89,7 @@ $openprint::log->debug("Module is: $module");
 	if ( $openprint::param{Additional} eq 'Y' or $openprint::param{additional_service} eq 'Y' ) {
 		$Project->add_service( $service_type );
 	} # end if
-	$Project->add_to_log(@openprint::session{'company_id','user_id'},
-			$service_type. ' service saved: '.join('<br/>', @changes));
+	$Project->add_to_log(@openprint::session{'company_id','user_id'}, $service_type. ' service saved: '.join('<br/>', @changes));
 
 	$log->debug('***** END  OF  save_service ************');
 } # end sub save_service
