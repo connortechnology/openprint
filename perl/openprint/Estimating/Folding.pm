@@ -2219,9 +2219,9 @@ sub summary {
 			}
 			my $summary = signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef );
 			if ( $sig_count > 1 ) {
-				$html .= ($sig_count) . ' Forms ' . $$sig_specs{txtServiceDescription} ;
+				$html .= ($sig_count) . ' Forms ' . ($$sig_specs{txtServiceDescription} ? $$sig_specs{txtServiceDescription} :'');
 			} else {
-				$html .= 'Form ' . $form . ' ' . $$sig_specs{txtServiceDescription};
+				$html .= 'Form ' . $form . ($$sig_specs{txtServiceDescription} ? ' ' . $$sig_specs{txtServiceDescription} : '');
 			} # end if
 			$html .= ' ' . ( $summary eq 'not folded' ? $summary : ' ' . $summary ) . "\n";
 		} # end foreach
