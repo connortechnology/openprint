@@ -61,8 +61,8 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 				$Fold->type( $pages . 'PageFold' );
 				$Fold->pages( $pages );
 				$Fold->max_imposition( 2 );
-				$Fold->stitching( 1 );
-				$Fold->perfectbind( 1 );
+        #$Fold->stitching();
+        #$Fold->perfectbind();
 				$_ = $Fold->save();
 				die $_ if $_;
 			} # end if
@@ -85,8 +85,8 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 				$Fold->type( $pages . 'PageFold' );
 				$Fold->pages( $pages );
 				$Fold->max_imposition( 2 );
-				$Fold->stitching( 1 );
-				$Fold->perfectbind( 1 );
+        #$Fold->stitching( 1 );
+        #$Fold->perfectbind( 1 );
 				if ( $_ = $E->Specification($pages.'PageSignatureFoldPrintingType') ) {
 					$Fold->printing_type( $_->value() );
 					$_->delete();
