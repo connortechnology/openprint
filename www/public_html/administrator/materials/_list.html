@@ -1,54 +1,55 @@
 <? eval (
-	my $uri = '/administrator/services/list.html';
+	my $uri = '/administrator/materials/list.html';
     my %filters = (
 		order	=>	'lower(name)',
-		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
-		( $session{$uri.'?servicetype_id'} ne '' ? ( 'servicetype_id' => $session{$uri.'?servicetype_id'} ) : () ),
+		#( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+		#( $session{$uri.'?materialtype_id'} ne '' ? ( 'materialtype_id' => $session{$uri.'?materialtype_id'} ) : () ),
 		( $session{$uri.'?category_id'} ne '' ? ( 'category_id' => $session{$uri.'?category_id'} ) : () ),
 		);
-	if (  $session{$uri.'?service_name'} ) {
-		if ( ! ( $session{$uri.'?service_name'}  =~ /%/ ) ) {
-			$filters{'name ilike'} = $session{$uri.'?service_name'}.'%';
+	if (  $session{$uri.'?material_name'} ) {
+		if ( ! ( $session{$uri.'?material_name'}  =~ /%/ ) ) {
+			$filters{'name ilike'} = $session{$uri.'?material_name'}.'%';
 		} else {
-			$filters{'name ilike'} = $session{$uri.'?service_name'};
+			$filters{'name ilike'} = $session{$uri.'?material_name'};
 		}
 	}
 
-    $$variable{Service} = [ openprint::Service->find( %filters ) ];
+    $$variable{Material} = [ openprint::Material->find( %filters ) ];
 ) ?>	
-<? if ( @{$$variable{Service}} ) ?>
+<? if ( @{$$variable{Material}} ) ?>
 	<table class="List sortable">
 		<tr> 
-			<th class="ServiceID">ID #</th>
-			<th class="ServiceName">Name</th>
+      <th class="checkbox"><input type="checkbox" onclick="select_all(this.form, 'material_ids', this.checked);"/></th>
+			<th class="MaterialID">ID #</th>
+			<th class="MaterialName">Name</th>
 			<th class="Description">Description</th>
 			<th class="Categories">Categories</th>
-			<th class="Services">Services</th>
+			<th class="CompanyName Manufacturer">Manufacturer</th>
 			<th class="CompanyName Supplier">Supplier</th>
 		</tr>
 <? echo (
 	my $html;
 	my $rowclass;
-	my %ServiceTypes = map { $$_{id}, $_ } openprint::ServiceType->find();
 
-	foreach my $Service ( @{$$variable{Service}} ) {
+	foreach my $Material ( @{$$variable{Material}} ) {
 		$html .= sprintf(q`
 <tr%1$s> 
-	<td class="ServiceID">%2$s</td>
-	<td class="ServiceName">%3$s</td>
-	<td class="Description">%4$s</td>
-	<td class="Categories">%5$s</td>
-	<td class="Services">%6$s</td>
-	<td class="CompanyName Supplier">%7$s</td>
+  <td class="checkbox"><input type="checkbox" name="material_ids" value="%2$d"/></td>
+	<td class="MaterialID">%3$s</td>
+	<td class="MaterialName">%4$s</td>
+	<td class="Description">%5$s</td>
+	<td class="Categories">%6$s</td>
+	<td class="CompanyName Manufacturer">%7$s</td>
+	<td class="CompanyName Supplier">%8$s</td>
 </tr>
 `, $rowclass, 
-	$Service->link_to( $$Service{id} ),
-	$Service->link_to( $$Service{name} ), 
-	$Service->link_to( $$Service{description} ), 
-  $Service->link_to( $Service->Category()->name() ), 
-  $Service->ServiceType()->name(),
-	format_date( $$Service{created_on} ),
-  $Service->Supplier()->name(),
+  $Material->id(),
+	$Material->link_to( $$Material{id} ),
+	$Material->link_to( $$Material{name} ), 
+	$Material->link_to( $$Material{description} ), 
+  $Material->link_to( $Material->Category()->name() ), 
+  $Material->Manufacturer()->name(),
+  $Material->Supplier()->name(),
  );
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -56,6 +57,6 @@
 	return $html;
 ) ?>
 </table>
-<? else ( @{$$variable{Service}} ) ?>
+<? else ( @{$$variable{Material}} ) ?>
 There were no results matching your criteria.<br>
-<? endif ( @{$$variable{Service}} ) ?>
+<? endif ( @{$$variable{Material}} ) ?>
