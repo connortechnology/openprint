@@ -76,8 +76,8 @@
 	</fieldset>
 </div>
 <div class="InksBack">
-	<fieldset><legend>Back image same as front image?
-<? echo ( radio( 'sides_the_same'.$$variable{Signature}, [ 'Y','Yes','N','No' ], $$variable{"sides_the_same$$variable{Signature}"}, { default=>'N', onclick=>qq`if(this.value=='Y'){\$('InksOnBackQuestions$$variable{Signature}').hide();}else{\$('InksOnBackQuestions$$variable{Signature}').show();};calc(this.form.name);` } ); ) ?>
+  <fieldset><legend>Back<span id="sides_the_same"> image same as front image?
+        <? echo ( radio( 'sides_the_same'.$$variable{Signature}, [ 'Y','Yes','N','No' ], $$variable{"sides_the_same$$variable{Signature}"}, { default=>'N', onclick=>qq`if(this.value=='Y'){\$('InksOnBackQuestions$$variable{Signature}').hide();}else{\$('InksOnBackQuestions$$variable{Signature}').show();};calc(this.form.name);` } ); ) ?></span>
 </legend>
 <div id="side2_linked"<?echo($$variable{'side_link'.$$variable{Signature}} ? '' : ' style="display: none;"')?>>
     This side shares the same specifications as the front.<br />
