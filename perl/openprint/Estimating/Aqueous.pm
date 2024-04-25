@@ -16,6 +16,7 @@
 
 package openprint::Estimating::Aqueous;
 use strict;
+use warnings;
 use vars qw( %ServicePrices );
 %ServicePrices = (
 	AqueousMinimumCharge	=> { },
@@ -32,7 +33,6 @@ use vars qw( %ServicePrices );
 	'Aqueous Soft Touch W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
 	'Aqueous Soft Touch Overall'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
 );
-#use warnings;
 
 require openprint::service;
 require openprint::Material;
@@ -41,7 +41,7 @@ require openprint::Imposition;
 require openprint::Ink;
 
 use vars qw( @outputs );
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use Storable 'dclone';
 
 my %Inks;
@@ -171,7 +171,9 @@ sub init {
 	%Services = ();
 	$Services{AqueousMakeReady} = openprint::Service->find_one(name=>'AqueousMakeReady');
 	$Services{AqueousMinimumCharge} = openprint::Service->find_one(name=>'AqueousMinimumCharge');
-	$Services{BlanketCutService} = openprint::Service->find_one(name=>'AqueousBlanketCut');
+	$Services{AqueousBlanketCut} = openprint::Service->find_one(name=>'AqueousBlanketCut');
+	$Services{'AqueousBlanketCutW&T'} = openprint::Service->find_one(name=>'AqueousBlanketCutW&T');
+	$Services{BlanketCut} = openprint::Service->find_one(name=>'BlanketCut');
 	%Inks = ();
 }
 
@@ -498,7 +500,8 @@ sub signature_calc {
 					} else {
 						%SetupPrice = $MRService->get_price($run_qty, $Equipment);
 					} # end if
-					$Price{MakeReady} += $SetupPrice{Price};
+          $SetupPrice{Total} = $SetupPrice{Price};
+					$Price{MakeReady} += $SetupPrice{Total};
 					if ( ! $$mrs{$type_name} ) {
 						$openprint::log->debug("Adding a washup for $$Equipment{id} $type_name") if DEBUG;
 						$Price{washups} += 1;
@@ -510,12 +513,17 @@ sub signature_calc {
 				push @{$Price{SetupPrices}}, \%SetupPrice;
 				
 				my %BlanketCutPrice;
-				if ( index($type_name, 'Spot') ) {
-					%BlanketCutPrice = $BlanketCutService->get_price(undef, $Equipment) if $BlanketCutService;
+				if ((-1 != index($type_name, 'Spot')) or ($$type{coverage} < 100)) {
+          if ($BlanketCutService) {
+            %BlanketCutPrice = $BlanketCutService->get_price(undef, $Equipment) if $BlanketCutService;
+          } else {
+            $openprint::log->warn("No blankcut service found");
+          }
 				} elsif ( index($type_name, 'W&T') ) {
 					%BlanketCutPrice = $BlanketCutServiceWT->get_price(undef, $Equipment) if $BlanketCutServiceWT;
 				} # end if type is spot
 				if ( %BlanketCutPrice ) {
+          $BlanketCutPrice{Total} = $BlanketCutPrice{Price};
 					$Price{BlanketCut} += $BlanketCutPrice{Price};
 					$colour_total += $BlanketCutPrice{Price};
 				} # end if
@@ -616,10 +624,9 @@ sub signature_calc {
       my $impression_service;
 			$Price{Impression} = 0;
 
-      if (($Equipment->specification('HasCoater') ne 'Y')
-          and ((@front_aq>1) or (@back_aq>1)) 
-      ) {
+      my $has_coater = $Equipment->specification('HasCoater');
 
+      if ((!$has_coater  or $has_coater ne 'Y') and ((@front_aq>1) or (@back_aq>1)) ) {
         if ( !index($$imp{runstyle}, 'Work') ) {
           if ( @filtered_colours > $number_of_colours ) {
             # Then AQ is done as a separate run
