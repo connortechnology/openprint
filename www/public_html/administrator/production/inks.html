@@ -1,11 +1,12 @@
 <?include('/includes/error_reporting.html')?>
-<script type="text/javascript">
+<script>
 	function load_ddm( type, ink_id ) {
 		new Ajax.Updater( type+'_id-'+ink_id, '_'+type+'_id_ddm.html', { parameters: { ink_id: ink_id } } );
 		$(type+'_id-'+ink_id).onclick="";
 	} // end function load_ddm
+
 	function load_results() {
-		LoadContent('Results','_inks.html', $('f2') );
+		LoadContent('Results', '_inks.html', $j('#f2').serialize());
 	}
 </script>
 <div class="PageTitle">
