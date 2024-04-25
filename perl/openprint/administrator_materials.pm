@@ -258,9 +258,16 @@ sub _list {
   ssi::save_params( '/administrator/materials/list.html', (
       'deleted', 'material_name', 'equipment_id', 'category_id',
     ) );
+  return if ! $param{btnFunction};
+
+  if ($param{btnFunction} eq 'delete') {
+    my @ids = exists($param{'material_id[]'}) ? @{$param{'material_id[]'}} : (
+      ref $param{material_ids} eq 'ARRAY' ? @{$param{material_ids}} : ($param{material_ids}) );
+    foreach my $material ( openprint::Material->find(id=>\@ids) ) {
+      $variable{error} .= $material->delete();
+    }
+  }
 }
-
-
 
 1;
 __END__
