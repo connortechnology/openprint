@@ -1428,7 +1428,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		my $do_work_turn = $$project{print_sides} == 2 ? 1 : 0;
     $openprint::log->debug("Do W&T $do_work_turn because sides: $$project{print_sides}");
 		if ( $do_work_turn ) {
-# Coatings like AQ and Varnish are done in a separate pass.	So we don't count them in this check
+# Coatings like AQ are done in a separate pass.	So we don't count them in this check
 			if ( ! $$Papers[0]->doublesided() ) {
 				$log->debug('No W&T due to doublesided' . $$Papers[0]->brand() );
 				$do_work_turn = 0;
@@ -6341,7 +6341,8 @@ $log->debug("Colour: $real_colour impressions $colour_impressions $$Imposition{r
 			} # end if
 
 $log->debug("Varnish $real_colour") if DEBUG_INKS;
-			if ( $real_colour =~ /Spot/ ) {
+# MPI Brendan says Varnish uses a plate, not a blanket
+			if ( 0 and ($real_colour =~ /Spot/) ) {
 				# Add Blanket Cut
 				my $BlanketCutService = $Services{$real_colour.' BlanketCut'};
 				$BlanketCutService = $Services{$real_colour} if ! $BlanketCutService;
