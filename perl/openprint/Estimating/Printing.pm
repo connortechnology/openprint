@@ -562,6 +562,7 @@ sub setup_project {
 	my %coatings = map { $_->name(), 1 } $CoatingsCategory->Services() if $CoatingsCategory;
 
 	# Split out colours vs coatings, but Varnish is not a coating like AQ
+  # It only runs on press, requires a plate but no blanket.
 
 	$project{side_one_colours} = [];
 	$project{side_one_coatings} = [];
