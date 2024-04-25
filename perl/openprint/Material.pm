@@ -63,6 +63,7 @@ sub delete {
 	my $ac = sql::start_transaction( $dbh );
 	sql::execute( undef, undef, q{DELETE FROM Material_Specifications WHERE material_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngMaterialIndex=?}, $$self{id} );
+	sql::update( undef, undef, 'Inks', ['material_id = ?'=>$$self{id}], material_id=>undef );
 	sql::execute( undef, undef, q{DELETE FROM Materials WHERE id=?}, $$self{id} );
 	(new openprint::Log())->save({action=>'Delete', Object=>$self, note=>"Material Id: $$self{id} Material Name: $$self{name}"});
 	sql::end_transaction( $dbh, $ac );
