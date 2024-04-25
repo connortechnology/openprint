@@ -104,6 +104,7 @@ sub edit {
 					} # end if
 				} # end if
 			} # end if
+
 			my @changes = $Material->changes( \%param );
 
 			if ( @changes or ! $$Material{id} ) {	
@@ -248,6 +249,18 @@ sub edit {
 	$variable{Material} = $Material;
 
 } # end sub edit
+
+sub list {
+  _list();
+  $openprint::session{$r->uri().'?deleted'} = '0' if ! exists $openprint::session{$r->uri().'?deleted'};
+}
+sub _list {
+  ssi::save_params( '/administrator/materials/list.html', (
+      'deleted', 'material_name', 'equipment_id', 'category_id',
+    ) );
+}
+
+
 
 1;
 __END__
