@@ -9,7 +9,7 @@
 		my @Prices = openprint::MaterialPrice->find( material_id=>$$variable{Material}->id(), pricelist_id=>$$Pricelist{id} );
 		my @Equipment = sort { $$a{strid} cmp $$b{strid} } map { $_ ? new openprint::Equipment( $_ ) : () } sets::union( map{ $_->equipment_id() } @Prices );
 		foreach my $Equipment ( @Equipment, { } ) {
-    next if $$Equipment{deleted};
+      next if $$Equipment{deleted};
 			$html .= '<fieldset class="Equipment">
 				<p>
 					<label>Equipment</label>';
