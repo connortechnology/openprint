@@ -1,26 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<?if is_staff?>
-<head>
-	<title>
-		<!--#include virtual="/includes/web_page_title.html" -->
-		DASHBOARD
-		<!--#include virtual="/includes/web_page_title_end.html" -->
-	</title>
-
-	<!--#include virtual="/includes/web_page_meta.html" -->
-	<!--#include virtual="/includes/h1-main-css.html" -->
-
-	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
-
-	<!--#include virtual="/includes/h2-js.html" -->
-
-	<script type="text/javascript" src="/javascripts/other.js"></script>
-	
-	<!--#include virtual="/includes/datepicker.html" -->
-
-
-	<script type="text/javascript">
+	<script>
 		function delete_confirm(form) {
 			var count = 0;
 			var len = form['delete'].length;
@@ -36,9 +14,6 @@
 			alert("To Delete Projects, click the checkbox beside the project.");
 			return false;
 		}
-
-	</script>
-	<script type="text/javascript">
 		function form_actions() {
 			var list = document.querySelectorAll('.confirm-action');
 			
@@ -66,14 +41,21 @@
 		$('sortfield').value = field;
 	 	$('f1').submit();
 	}
+function select_all(source) {
+  	var boxlist = document.getElementsByName('actionpid');
+
+	for (i = 0; i < boxlist.length; i++){
+        boxlist[i].checked = source.checked;
+    }
+
+}
+    form_actions();
 	</script>
 
 
 	<style>
 		#expander { min-width: 1750px; }
 		#sizer {max-width: none; } 
-	</style>
-<style>
 	.lgfield {
 		width: 14em;
 		border: none;
@@ -104,21 +86,7 @@
 	div.button-bar { margin-top: 3em;}
 </style>
 
-<script language="JavaScript">
-function select_all(source) {
-  	var boxlist = document.getElementsByName('actionpid');
-
-	for (i = 0; i < boxlist.length; i++){
-        boxlist[i].checked = source.checked;
-    }
-
-}
-</script>
-
 </head>
-<body onLoad="form_actions();">
-	<!--#include virtual="/includes/c1-main-nav.html" -->
-
 	<h1><span class="title-section">Dashboard</h1>
 
 
@@ -154,7 +122,7 @@ function select_all(source) {
 			<label>Filters</label><br>
 			<select name="ddmCSR" id ="ddmCSR">
 				<option value="">CSR Name</option>
-				<?EmployeeList?>
+        <?echo(ssi::select('ddmCSR', [ openprint::User->dropdown(type=>'E') ], $param{ddmCSR}, {id=>'ddmCSR', prepend=>[''=>'CSR Name']});
 			</select>
 
 			<select name="ddmCompanyName" id="ddmCompanyName">
