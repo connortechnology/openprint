@@ -1212,20 +1212,23 @@ sub to_string {
 sub dropdown {
 	my $self = shift;
 	my %params = @_;
+
+  my $type = ref($self);
+  $type = $self if ! $type;
 	if ( ! $params{order} ) {
-		my $type = ref($self);
-		$type = $self if ! $type;
 		my $order = eval '$'.$type.'::default_sort';
 #$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
 		$params{order} = $order if $order;
 	}
+  my $field = eval '$'.$type.'::dropdown_field';
+  $field = 'name' if ! $field;
 
 	# User has firstname,lastname
 	#if ( ( ! $params{columns} ) {
 		#$params{columns} = 'id,name';
 	#}
 
-	return [ map { $$_{id}, ssi::html_escape($_->name()) } $self->find(%params) ];
+	return [ map { $$_{id}, ssi::html_escape($_->$field()) } $self->find(%params) ];
 } # end sub dropdown
 
 sub sort_value {
