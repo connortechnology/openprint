@@ -1,286 +1,174 @@
-	<script>
-		function delete_confirm(form) {
-			var count = 0;
-			var len = form['delete'].length;
 
-			for (var i=0; i < len; i++) {
-				if (form['delete'][i].checked) { count++; }
-			}
+<h1><span class="title-section">Dashboard</h1>
+<form action="/main/dashboard/dashboard.html" method="get" name="f1" id="f1">
+  <fieldset><legend> Search Area </legend>
+    <div id="SearchOptions">
+      <ul>
+        <li><label>Text Search</label>
+          <input type="text" name="textsearch" id="textsearch" value="<?echo($param{textsearch})?>" />
+          <?echo( ssi::select(['strprojectreference'=>'Project Name', 'lngprojectindex'=>'Project Id', 'lngorderid'=>'Order Id', 'lngquoteid'=>'Quote Id'],
+$param{search_type}, { name=>'search_type', id=>'search_type'}); ) ?>
+          <input type="submit" class="button" value="Go">
+        </li>
+        <li>
+          <label class="paddingTop">Date</label>
+          <input type="text" name="startdate" id="DPC_startdate"  value="<?startdate?>" style="float:left; margin-right: -10px" placeholder="start date" class="datepicker"/>
+          <span></span>
+          <input type="text" name="enddate"   id="DPC_enddate"    value="<?enddate?>" style="margin: 0 10px 0 10px"placeholder="end date" class="datepicker"/>
+        </li>
+        <li><label>Filters</label>
+          <div class="filters">
+          <div>
+            <?echo(ssi::select(
+            [ openprint::User->dropdown(type=>'E') ], $param{ddmCSR},
+            {id=>'ddmCSR', name=>'ddmCSR', prepend=>[''=>'CSR Name']});
+            ) ?>
+          </div>
+          <div>
+        <input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+        <select id="company_id" name="company_id" onchange="stop_filter_companies();">
+          <option value="">Company Name</option>
+<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(),'last_project_id is null'=>0}),
+$param{company_id},
+ #$session{$r->uri().'?company_id'}
+ );
+) ?>
+        </select>
+          </div>
 
-			if (count) {
-				return confirm("Are you sure you wish to delete these " + count + " projects from history?");
-			}
-			
-			alert("To Delete Projects, click the checkbox beside the project.");
-			return false;
-		}
-		function form_actions() {
-			var list = document.querySelectorAll('.confirm-action');
-			
-			for (var i = 0; i < list.length; i++) {
-				list[i].addEventListener('change', function(event) {
-				  event.preventDefault();
+          <!--
+          <select name="ddmQuotedFor" id="ddmQuotedFOr">
+            <option value="">Quoted For</option>
+            <?QuotedFor?>
+          </select>
+          -->
+          <div>
+          <select name="ddmOrderBy" id="ddmOrderBy">
+            <option value="">Ordered By</option>
+            <?CustomerList?>
+          </select>
+          </div>
+          <div>
+            <select name="ddmProjectStatus" id="ddmProjectStatus">
+              <option value="">Project Status</option>
+  <?echo(
+  my $sql = $dbh->selectall_arrayref(q{ SELECT Distinct  strStatus, strStatus  FROM projects ORDER BY 1 }, {});
+    return ssi::make_drop_down($sql);
+  )?>
+            </select>
+            </div>
+            <div>
+            <select name="ddmSalesRep" id="ddmSalesRep">
+              <option value="">Sales Rep</option>
+              <?EmployeeList?>
+            </select>
+          </div>
+          </div>
+        </li>
+      </ul>
 
-				  var choice = confirm(this.getAttribute('data-confirm'));
+      <!--
+      <div>
+        <input type="radio" value="Order" name="reportType" id="SelectOrder">Orders</input>
+        <input type="radio" value="Quote" name="reportType" id="SelectQuote">Quotes</input>
+      </div>
+      -->
+      <p class="buttons">
+        <input type="reset" class="button" value="Reset" />
+        <input type="submit" class="button" value="Search" />
+      </p>
+    </fieldset>
+    <fieldset>
+      <div class="leftColumn">
+      <legend> Actions </legend>
+      <select name="action" id="action" onChange="$('f1').submit();" 
+        class="confirm-action"
+        data-confirm="Are you sure you want to Update the selected Projects?" >
 
-				  if (choice) {
-					$('f1').submit();
-				  }
-			  });
-			}
-		}
-		
-	function do_sort(field) {
-			
-		if ( $('sortfield').value == field ) {
-			$('sortdirection').value *= -1; 
-		} else { 
-			$('sortdirection').value = 1; 
-		}
+        <option>Please Select</option>
+        <optgroup label="Status">
+          <option value="PidStatus:Complete">Complete</option>
+          <option value="PidStatus:In Production">In Production</option>
+          <option value="PidStatus:Waiting For Files">Waiting For Files</option>
+          <option value="PidStatus:Canceled">Cancel</option>
+        </optgroup>
+        <!--
+        <optgroup label="Order">
+        <option value="OrderStatus:Cancel">Cancel Order</option>
+        <option value="OrderStatus:Complete">Complete</option>
+        <option value="OrderStatus:In Production">In Production</option>
+        <option value="OrderStatus:Pedinig Deposit">Pedinig Deposit</option>
+        <option value="OrderStatus:Waiting For File">Waiting For Files</option>
+        </optgroup>
+        -->
+        <optgroup label="Priority">
+          <option value="PriorityStatus:4">Urgent</option>
+          <option value="PriorityStatus:3">High</option>
+          <option value="PriorityStatus:2">Medium</option>
+          <option value="PriorityStatus:1">Normal</option>
+          <option value="PriorityStatus:0">Low</option>
+          </optgroup>
+      </select>
+    </div>
+    <div class="leftColumn">
+      <legend> Reports </legend>
+      <select>
+        <option>Sales Rep</option>
+      </select>
+    </div>
 
-		$('sortfield').value = field;
-	 	$('f1').submit();
-	}
-function select_all(source) {
-  	var boxlist = document.getElementsByName('actionpid');
+    <br/>
+    <div style="width:300px">
+    <input type="text" name="duedate"   id="DPC_duedate"    value="<?duedate?>" style="float:left"/>
 
-	for (i = 0; i < boxlist.length; i++){
-        boxlist[i].checked = source.checked;
-    }
+    <button name="change_duedate" value=1 style="float:right" class="confirm-action" 
+      data-confirm="Are you sure you want to update the Due Date for the selected Projects?" >Change Due Date</button>
+    </div>
 
-}
-    form_actions();
-	</script>
+    </fieldset>
 
-
-	<style>
-		#expander { min-width: 1750px; }
-		#sizer {max-width: none; } 
-	.lgfield {
-		width: 14em;
-		border: none;
-	}
-	.rgfield {
-		width: 8em;
-		border: none;
-	}
-	.smfield {
-		width: 100%;
-		border: none;
-	}
-	.srfield {
-		width: 5em;
-		border: none;
-	}
-	.tifield {
-		width: 2em;
-		border: none;
-	}
-
-	.paddingTop { 
-		padding-top: 1em;
-	}
-	th { padding: 0.2em 0.2em 0.2em 0.2em; white-space: normal; min-width: 1em; }
-	td { padding: 0.2em 0.2em 0.2em 0.2em; text-align: center }
-	select { width: 18em; }
-	div.button-bar { margin-top: 3em;}
-</style>
-
-</head>
-	<h1><span class="title-section">Dashboard</h1>
-
-
-		<fieldset style="height: 23em;">
-			<legend>
-				Search Area
-			</legend>
-		
-			<div id="SearchOptions" style="border: 0px solid black">
-
-	<form action="/main/dashboard/dashboard.html" method="get" name="f1" id="f1">
-			<label>Text Search</label><br>
-			<input type="text" name="textsearch" id="textsearch" value="" style="float:left" />
-			<select name="search_type" id="search_type">
-				<option value="strprojectreference">Project Name</option>
-				<option value="lngprojectindex">Project Id</option>
-				<option value="lngorderid">Order Id</option>
-				<option value="lngquoteid">Quote Id</option>
-			</select>
-			<input type="submit" class="button" value="Go">
-
-
-			<br/>
-
-
-			<label class="paddingTop" >Date</label><br/>
-			<input type="text" name="startdate" id="DPC_startdate"  value="<?startdate?>" style="float:left; margin-right: -10px" />
-			<span></span>
-			<input type="text" name="enddate"   id="DPC_enddate"    value="<?enddate?>" style="margin: 0 10px 0 10px"/>
-
-			<br/>
-
-			<label>Filters</label><br>
-			<select name="ddmCSR" id ="ddmCSR">
-				<option value="">CSR Name</option>
-        <?echo(ssi::select('ddmCSR', [ openprint::User->dropdown(type=>'E') ], $param{ddmCSR}, {id=>'ddmCSR', prepend=>[''=>'CSR Name']});
-			</select>
-
-			<select name="ddmCompanyName" id="ddmCompanyName">
-				<option value="">Company Name</option>
-				<?Company_Name?>
-			</select>
-
-			<!--
-			<select name="ddmQuotedFor" id="ddmQuotedFOr">
-				<option value="">Quoted For</option>
-				<?QuotedFor?>
-			</select>
-			-->
-
-			<select name="ddmOrderBy" id="ddmOrderBy">
-				<option value="">Ordred By</option>
-				<?CustomerList?>
-			</select>
-
-			<select name="ddmProjectStatus" id="ddmProjectStatus">
-				<option value="">Project Status</option>
-				<?ProjectStatus?>
-			</select>
-
-			<select name="ddmSalesRep" id="ddmSalesRep">
-				<option value="">Sales Rep</option>
-				<?EmployeeList?>
-			</select>
-
-
-			</div>
-
-			<br/>
-
-			<!--
-			<div>
-				<input type="radio" value="Order" name="reportType" id="SelectOrder">Orders</input>
-				<input type="radio" value="Quote" name="reportType" id="SelectQuote">Quotes</input>
-			</div>
-			-->
-
-
-			<div class="button-bar">
-				<input type="reset" class="button" value="Reset" />
-				<input type="submit" class="button" value="Search" />
-				<br />
-				</div>
-			<br />
-		</fieldset>
-
-		<fieldset>
-		<div>
-		<legend> Actions </legend>
-			<select name="action" id="action" onChange="$('f1').submit();" 
-				class="confirm-action"
-				data-confirm="Are you sure you want to Update the selected Projects?" >
-
-				<option>Please Select</option>
-				<optgroup label="Status">
-					<option value="PidStatus:Complete">Complete</option>
-					<option value="PidStatus:In Production">In Production</option>
-					<option value="PidStatus:Waiting For Files">Waiting For Files</option>
-					<option value="PidStatus:Canceled">Cancel</option>
-				</optgroup>
-				<!--
-				<optgroup label="Order">
-				<option value="OrderStatus:Cancel">Cancel Order</option>
-				<option value="OrderStatus:Complete">Complete</option>
-				<option value="OrderStatus:In Production">In Production</option>
-				<option value="OrderStatus:Pedinig Deposit">Pedinig Deposit</option>
-				<option value="OrderStatus:Waiting For File">Waiting For Files</option>
-				</optgroup>
-				-->
-				<optgroup label="Priority">
-					<option value="PriorityStatus:4">Urgent</option>
-					<option value="PriorityStatus:3">High</option>
-					<option value="PriorityStatus:2">Medium</option>
-					<option value="PriorityStatus:1">Normal</option>
-					<option value="PriorityStatus:0">Low</option>
-					</optgroup>
-			</select>
-		</div>
-		<div>
-		<legend> Reports </legend>
-			<select>
-				<option>Sales Rep</option>
-			</select>
-		</div>
-
-		<br/>
-		<div style="width:300px">
-		<input type="text" name="duedate"   id="DPC_duedate"    value="<?duedate?>" style="float:left"/>
-
-		<button name="change_duedate" value=1 style="float:right" class="confirm-action" 
-			data-confirm="Are you sure you want to update the Due Date for the selected Projects?" >Change Due Date</button>
-		</div>
-
-		</fieldset>
-
-
-	
-
-<!-- ******************* START ****************************** -->
-<input type="hidden" name="sortfield" 		id="sortfield" value="aaa" />
-<input type="hidden" name="sortdirection" 	id="sortdirection" value="1" />
- <table>
+  <input type="hidden" name="sortfield"     id="sortfield" value="aaa" />
+  <input type="hidden" name="sortdirection"   id="sortdirection" value="1" />
+  <table class="List">
     <tr>
-		<th><input type="checkbox" id="selectall" name="selectall"  onClick="select_all(this);" /></th>
-
-		<?loop fields?>
-		<th><a href="#" onClick="do_sort('<?id?>');" style="color: white;" ><?desc?></a></th>
-		<?endloop fields?>
-
-     
+      <th class="checkbox"><input type="checkbox" id="selectall" name="selectall"  on_click_this="select_all" /></th>
+    <?echo(
+      return join("\n", map {
+        '<th><a href="#" onClick="do_sort(\''.$$_{id}.'\');" style="color: white;" >'.$$_{desc}.'</a></th>';
+      } @{$$variable{fields}});
+    )?>
+                                                                  
     </tr>
-    <?loop data?>
-			<tr>
-             <td>
-				 <input type="checkbox" name="actionpid" value="<?pid?>" id="actionpid-<?pid?>" />
-			</td>
-		<?loop fields?>
-
-			<td>
-			<?if ro?>
-			<div class="<?class?>" ><?if link?><a href="<?link?>"><?endif link?><?value?><?if link?></a><?endif link?></div>
-			<?else ro?>
-			 <?if big?>
-				<textarea name="<?fname?>[<?id?>]" cols=50><?value?> </textarea>
-			 <?else big?>
-
-			 	<?if ( $variable->{type} eq 'bool' ) ?>
-					<input type="checkbox" name="<?fname?>[<?id?>]" value="1" size="<?size?>" <?if value?>checked<?endif value?> />
-			 	<?else ( $variable->{type} eq 'bool' ) ?>
-					<!-- ***** -->
-					<input name="<?fname?>[<?id?>]" value="<?value?>" class="<?class?>"  />
-			 	<?endif ( $variable->{type} eq 'bool' ) ?>
-
-			 <?endif big?>
-				
-			<?endif ro?>
-
-			</td>		
-	
-		<?endloop fields?>
-        
-			</tr>
-    <?endloop data?>
-
+<?echo(
+  my $html = '';
+  foreach my $d (@{$$variable{data}}) {
+    $html .= '<tr><td class="checkbox"><input type="checkbox" name="actionpid" value="'.$$d{pid}.'" id="actionpid-'.$$d{pid}.'" /></td>';
+    foreach my $field (@{$$d{fields}}) {
+      $html .= '<td>';
+      if ($$field{ro}) {
+        $html .= '<div class="'.$$field{class}.'">';
+        $html .= '<a href="'.$$field{link}.'">' if $$field{link};
+        $html .= $$field{value};
+        $html .= '</a>' if $$field{link};
+        $html .= '</div>';
+      } else {
+        if ($$field{big}) {
+          $html .= '<textarea name="'.$$field{fname}.'['.$$field{id}.']" cols=50>'.$$field{value}.'</textarea>';
+        } else {
+          if ( $$field{type} eq 'bool' ) {
+            $html .= '<input type="checkbox" name="'.$$field{fname}.'['.$$field{id}.']" value="1" '.($$field{value}?'checked="checked"':'').'/>';
+          } else {
+            $html .= input($$field{name}.'['.$$field{id}.']', value=>$$field{value}, class=>$$field{class});
+          }
+        } # end if big
+      } # end if ro
+      $html .= '</td>';
+     } # end foreach field
+     $html .= '</tr>';
+  } # end foreach data
+  return $html;
+) ?>
   </table>
-<!-- ******************* END ****************************** -->
-
-<button onClick="window.realod" name="Reload" style="margin-top: 200px; width: 300px; height: 300px">Reload</button>
-	</form>
-
-	<!--#include virtual="/includes/f1-main.html" -->
-	<!--#include virtual="/includes/main/account.html" -->
-	<!--#include virtual="/includes/f2-main.html" -->
-</body>
-<?endif is_staff?>
-
-</html>
+  <button onClick="window.reload" name="Reload" style="margin-top: 200px; width: 300px; height: 300px">Reload</button>
+</form>
+<script src="dashboard.js"></script>
