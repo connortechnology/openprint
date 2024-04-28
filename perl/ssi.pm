@@ -268,7 +268,7 @@ sub encode_html {
 
 sub make_drop_down {
 	require HTML::Entities;
-	my ( $search_data, $checkval, $options ) = @_;
+	my ( $data, $checkval, $options ) = @_;
 	$options = {} if ! $options;
 	my $check_array;
 	if ( ref $checkval eq 'ARRAY' ) {
@@ -279,37 +279,50 @@ sub make_drop_down {
 
 	my %selected = map { $_ => $_ } @$check_array;
 
-	my $temp = '';
+	my $html = '';
 	if ( $$options{prepend} ) {
 		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2 ) {
-			$temp .= sprintf('<option value="%s"%s>%s</option>',
+			$html .= sprintf('<option value="%s"%s>%s</option>',
 					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])) : $$options{prepend}[$n] ),
 					( $selected{ $$options{prepend}[$n] } ? ' selected="selected"' : '' ),
 					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) : $$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ),
 					);
 		} # end for
 	} # end if
-	for ( my $n = 0; $n < @{$search_data}; $n += 2 ) {
+
+  while (@{$data}) {
+    my $value;
+    my $label;
+    if ( ref $$data[0] eq 'ARRAY' ) {
+      my $row = shift @$data;
+      $value = shift @$row;
+      $label = shift @$row;
+    } else {
+      $value = shift @$data;
+      $label = shift @$data;
+    }
+  
+    if ($$options{length}) {
+      $label = substr($label,0, $$options{length});
+    }
+    if ($$options{encode}) {
+      $value = HTML::Entities::encode_entities(Encode::encode('utf-8', $value));
+      $label = HTML::Entities::encode_entities(Encode::encode('utf-8', $label));
+    }
 		
-		$temp .= join('','<option value="',
-				( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])) : $$search_data[$n] ),
-				'"',
-				( $selected{ $$search_data[$n] } ? ' selected="selected"' : '' ),
-				'>',
-				( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) : ( $$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ),
-				'</option>',
-				);
+		$html .= join('','<option value="', $value, '"', ( $selected{ $value } ? ' selected="selected"' : '' ), '>', $label, '</option>');
 	} # end for
+
 	if ( $$options{append} ) {
 		for ( my $n = 0; $n < @{$$options{append}}; $n += 2 ) {
-			$temp .= sprintf('<option value="%s"%s>%s</option>',
+			$html .= sprintf('<option value="%s"%s>%s</option>',
 					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{append}[$n])) : $$options{append}[$n] ),
 					( $selected{ $$options{append}[$n] } ? ' selected="selected"' : '' ),
 					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ) ) : $$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ),
 					);
 		} # end for
 	} # end if
-	return $temp;
+	return $html;
 } # sub make_drop_down
 
 sub fill_drop_down {
