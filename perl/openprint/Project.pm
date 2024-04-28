@@ -180,7 +180,7 @@ sub Type {
 } # end sub Type
 
 sub type {
-	return new openprint::ProjectType( $_[0]{type_id} );
+	return new openprint::ProjectType( $_[0]{type_id} )->name();
 } # end sub type
 
 sub get_project_type_service_index {
@@ -830,6 +830,15 @@ sub ServiceType {
   }
 	return new openprint::ServiceType( $self->servicetype_id( $s_id ) );
 } # end sub ServiceType
+
+sub has_service {
+	my $self = shift;
+  my $service = shift;
+
+  my $services = $self->services();
+  return $$services{$service} ? @{$$services{$service}} : () if wantarray;
+  return $$services{$service} ? $$services{$service}[0] : undef;
+}
 
 sub services {
 	my $self = $_[0];
@@ -2084,6 +2093,13 @@ sub is_fsc {
 		}
 	}
 	return 0;
+}
+sub stock_name {
+  my $self = shift;
+  my $services = $self->services();
+  if ($$services{Paper}) {
+    return openprint::Estimating::Paper->summary($self, $$services[Paper}[0]);
+  }
 }
 
 1;
