@@ -7602,31 +7602,10 @@ if ( 0 ) {
 			$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'txtWidth','txtHeight'});
 		} # end if
 
-		my $string = sprintf( '%s %s', ($$specs{txtServiceDescription} ? $$specs{txtServiceDescription} . ':' : ''), $dimensions );
+		my $string = join(' ', ($$specs{txtServiceDescription} ? $$specs{txtServiceDescription} . ':' : ''), $dimensions );
 		if ( ! $$services{NoPrinting} ) {
-			$string .= sprintf( ' %s on %s %s',
-					get_colour_description($Project, $specs),
-					( ( $$specs{rdbSuppliedStock} and ( $$specs{rdbSuppliedStock} eq 'Y' ) ) ? '<b>Customer Supplied</b>' : '' ),
-					( ( $$specs{rdbSpecificStock} and ( $$specs{rdbSpecificStock} eq 'Y' ) ) ? '<b>Custom:</b>' .
-					join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
-					join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ),
-					) );
-
-			if ( $openprint::config{Show_Stock_Calliper} ne 'N' ) {
-        if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/ ) ) {
-          if ( $$specs{txtSpecificStockCalliper} ) {
-            $string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
-          } # end if
-        } else {
-          my $c = $$specs{txtSpecificStockCalliper}*1000;
-          if ( $1 ne $c ) {
-            $log->debug("$1 is !- $$specs{txtSpecificStockCalliper} c1($c)");
-            $string .= ' (' .$c.'PT)';
-          } # end if
-        } # end if
-			} # end if show stock calliper
-			$string .= ' ' . $$specs{txtStockGSM}.'gsm' if $openprint::config{Show_Stock_GSM} ne 'N';
-		} # end if ! NoPrinting
+			$string .= get_colour_description($Project, $specs) . ' on '.get_stock_description($specs);
+    }
 
 		if ( $$specs{pages_supplied} and ( $$specs{pages_supplied} eq 'Y' ) ) {
 			$string .= ' pages supplied by customer as ';
@@ -7654,6 +7633,31 @@ if ( 0 ) {
 	} # end if qty_index
 } # end sub summary
 
+sub get_stock_description {
+  my $specs = shift;
+  my $string = join('',
+    ( ( $$specs{rdbSuppliedStock} and ( $$specs{rdbSuppliedStock} eq 'Y' ) ) ? '<b>Customer Supplied</b>' : '' ),
+    ( ( $$specs{rdbSpecificStock} and ( $$specs{rdbSpecificStock} eq 'Y' ) ) ? '<b>Custom:</b>' .
+      join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
+      join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ),
+    ) );
+
+  if ( $openprint::config{Show_Stock_Calliper} ne 'N' ) {
+    if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/ ) ) {
+      if ( $$specs{txtSpecificStockCalliper} ) {
+        $string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
+      } # end if
+    } else {
+      my $c = $$specs{txtSpecificStockCalliper}*1000;
+      if ( $1 ne $c ) {
+        $log->debug("$1 is !- $$specs{txtSpecificStockCalliper} c1($c)");
+        $string .= ' (' .$c.'PT)';
+      } # end if
+    } # end if
+  } # end if show stock calliper
+  $string .= ' ' . $$specs{txtStockGSM}.'gsm' if $openprint::config{Show_Stock_GSM} ne 'N';
+  return $string;
+}
 
 sub save {
 	my ( $p_id, $s_id, $param ) = @_;
