@@ -579,11 +579,11 @@ $openprint::log->debug("Service : " . $Service->service_type() . ' ' . $Service-
 				if ( openprint::service::status( $$self{id}, $services{CustomerPickUp}[0] ) eq 'Complete' ) {
 					$new_status = 'Picked Up';
 				} # end if
-			} elsif ( $self->shippingtype() eq 'CustomerPickup' ) {
+			} elsif ( $self->shipping_type() eq 'CustomerPickup' ) {
 				if ( $$self{status} ne 'Picked Up' ) {
 					$new_status = 'Waiting For Pickup';
 				} # end if
-			} elsif ( $self->shippingtype() eq 'Delivery' ) {
+			} elsif ( $self->shipping_type() eq 'Delivery' ) {
 				$new_status = 'Shipped';
 			} else {
 				if ( ! sets::isin( $$self{status}, [ 'Shipped', 'Picked Up' ] ) ) {
@@ -973,7 +973,7 @@ sub requested_for {
 	return $$OP{requested_for};
 } # end sub requested_for
 
-sub shippingtype {
+sub shipping_type {
 	my $OP = $_[0]->Ordered_Project();
 	
 	if ( @_ > 1 ) {
@@ -984,7 +984,7 @@ sub shippingtype {
 		$$OP{shipping_type} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find(project_id=>$_[0]{id},category=>'Shipping') );
 	} # end if
 	return $$OP{shipping_type};
-} # end sub shippingtype
+} # end sub shipping_type
 
 sub ordered_quantity {
 	my $qty_index = $_[0]->ordered_quantity_index();
