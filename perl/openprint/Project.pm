@@ -2098,8 +2098,23 @@ sub stock_name {
   my $self = shift;
   my $services = $self->services();
   if ($$services{Paper}) {
-    return openprint::Estimating::Paper->summary($self, $$services[Paper}[0]);
+    return openprint::Estimating::Paper->summary($self, $$services{Paper}[0]);
   }
+}
+
+sub ink_sum {
+  my $self = shift;
+  my $services = $self->services();
+  my $ink_sum = '';
+  foreach my $sig_id ($self->signatures()) {
+    my $sig_specs = openprint::service::get_specs_ref($self, $sig_id);
+    $ink_sum .= openprint::Estimating::Printing::get_colour_description_no_coverage($self, $sig_specs);
+  }
+  return $ink_sum;
+}
+
+sub parent_sheet_count {
+  my $self = shift;
 }
 
 1;
