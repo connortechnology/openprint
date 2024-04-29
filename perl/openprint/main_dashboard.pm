@@ -105,12 +105,10 @@ sub get_data {
   my $sql_filter = sql_filters($param);
 
   my $sql = qq{
-    SELECT *, p.strstatus as status, to_char(created_on, 'YY-MM-DD') as dtmcreationdate 
-    FROM projects p, tbl_project_contents pc, companies c
+    SELECT *, p.strstatus as status, p.id as project_id, to_char(created_on, 'YY-MM-DD') as dtmcreationdate 
+    FROM projects p, companies c
     WHERE 1>0 
-    AND   p.id = pc.lngprojectindex
     AND   p.company_id = c.id
-    AND   servicetype_id = (SELECT id from service_types where name='Signature')
 
     $sql_filter
 
@@ -124,12 +122,12 @@ sub get_data {
 $log->debug("HAVE SQL: $sql sort field $sortfield");
 
   foreach my $l ( @{$lines} ) {
-    my $p = new openprint::Project($l->{lngprojectindex});
+    my $p = new openprint::Project($l);
 
     $l->{lngorderid} = $p->order_id;
     $l->{lngquoteid} = join(',',map {$_->quote_id()} openprint::QuotedProject->find(project_id=>$p->id));
     $l->{ptype} = $p->type();
-    $l->{inks} = $p->ink_sum($l->{lngserviceindex});
+    $l->{inks} = $p->ink_sum();
     $l->{finished} = $p->dims_finished($l->{lngserviceindex});
     $l->{time} = '0:00';
     $l->{equipment} = '--';
