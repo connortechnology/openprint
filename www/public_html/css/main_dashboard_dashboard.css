@@ -24,8 +24,16 @@
 .paddingTop { 
 padding-top: 1em;
 }
-th { padding: 0.2em 0.2em 0.2em 0.2em; white-space: normal; min-width: 1em; }
-td { padding: 0.2em 0.2em 0.2em 0.2em; text-align: center }
+table.List th {
+padding: 0.2em;
+white-space: normal;
+min-width: 1em;
+text-align: center
+ }
+table.List td {
+padding: 0.2em;
+text-align: center
+ }
 select { width: 18em; }
 div.button-bar { margin-top: 3em;}
 
