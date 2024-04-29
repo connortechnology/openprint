@@ -179,10 +179,6 @@ sub get_price {
 		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
 		return;
 	} # end if
-	if ( ! $price{Price} ) {
-		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
-		return;
-	} # end if
 
 	$price{currency_id} = $Pricelist->currency_id();
 	$price{ServiceName} = $$self{name};
