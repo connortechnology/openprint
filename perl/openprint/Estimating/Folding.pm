@@ -1590,7 +1590,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? 
 				$openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name} $runspeed $$Paper{gsm}" ) if DEBUG;
 
 #$Breakdown .= sprintf( '&nbsp;Folds: QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', $qty, $imposition, $$RunSpeed{runspeed}, $runTime );
-# We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
+# We are assuming at this point, that all these folds are posible on this equipment, so any errors are soft errors
 				my %servicePrice = openprint::service::get_price_object( 'Folding'.$imposition.'out', $run_qty, $Equipment );
 				if ( ! %servicePrice ) {
 					%servicePrice = openprint::service::get_price_object( $$Fold{type}, $run_qty, $Equipment );
@@ -1602,7 +1602,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? 
 				%AnglePrice = openprint::service::get_price_object( 'FoldingAngle', $imposition, $Equipment ) if ! %AnglePrice;
 
 				if ( ! $servicePrice{units} ) {
-					$Breakdown .= qq`<tr><td colspan="2">No Units given for `.$$Fold{name}.' on '.$$Equipment{name}.'</td></tr>';
+					$Breakdown .= qq`<tr><td colspan="2">No units given for `.$servicePrice{ServiceName}.' on '.$$Equipment{name}.'</td></tr>';
 					$servicePrice{Total} += 1000000;
 				} elsif ( $servicePrice{units} eq 'per hour' ) {
 					$servicePrice{Total} = $servicePrice{Price} * $runTime;
