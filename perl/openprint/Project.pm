@@ -2153,5 +2153,15 @@ sub dims_finished {
   return 'unknown';
 }
 
+sub equipment {
+  my $self = shift;
+  my %equipment;
+	foreach my $sig_id ( $self->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $self, $sig_id );
+    $equipment{$$sig_specs{'ddmPress'.$self->ordered_quantity_index()}} = 1;
+	}
+  return join(', ', keys %equipment;
+}
+
 1;
 __END__
