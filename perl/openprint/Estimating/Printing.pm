@@ -5724,6 +5724,14 @@ sub calc_price {
       } else {
         $log->warn("Unknown Per setting $unit");
       } # end if
+    } elsif ( lc $$RunSpeed{units} eq 'impressions' ) {
+      $run_speed = $Press->specification($$RunSpeed{name}, $impressions);
+
+      if (!$run_speed) {
+        $log->debug("No run speed on $$Press{strid} for $$RunSpeed{units} $impressions") if DEBUG;
+        $run_speed = $$RunSpeed{value};
+      } # end if
+
     } elsif ( lc $$RunSpeed{units} eq 'calliper' ) {
       $run_speed = $Press->specification($$RunSpeed{name}, $$Paper{calliper});
 
@@ -7458,6 +7466,9 @@ sub runspeed {
 			if ( lc $$RunSpeed{units} eq 'calliper' ) {
 				$runspeed = $Equipment->specification($$RunSpeed{name}, $$Paper{calliper});
 				$log->debug("Found runspeed for $$Equipment{strid}: $runspeed on calliper:" . $$Paper{calliper} );
+			} elsif (lc $$RunSpeed{units} eq 'impressions' ) {
+				$runspeed = int($Equipment->specification($$RunSpeed{name}, $$sig_specs{'hdnImpressionQuantity'.$qty_index}) );
+				$log->debug("Found runspeed for $$Equipment{strid}: $runspeed on gsm:" . $Paper->gsm());
 			} else {
 				$runspeed = int($Equipment->specification($$RunSpeed{name}, $Paper->gsm()) );
 				$log->debug("Found runspeed for $$Equipment{strid}: $runspeed on gsm:" . $Paper->gsm());
