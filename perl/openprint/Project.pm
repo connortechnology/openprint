@@ -2098,7 +2098,7 @@ sub stock_name {
   my $self = shift;
   my $services = $self->services();
   if ($$services{Paper}) {
-    return openprint::Estimating::Paper->summary($self, $$services{Paper}[0]);
+    return join('<br/>', openprint::Estimating::Paper::summary($self, $$services{Paper}[0]));
   }
 }
 
@@ -2106,15 +2106,51 @@ sub ink_sum {
   my $self = shift;
   my $services = $self->services();
   my $ink_sum = '';
-  foreach my $sig_id ($self->signatures()) {
-    my $sig_specs = openprint::service::get_specs_ref($self, $sig_id);
+  my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
+
+
+  my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{id}, 'Group' );
+  if (@groups) {
+# I believe the point of this is to stick the Printed Web or Sheetfed into the summary. Nastily executed.
+# The logic is, each group has to be either all sheetfed, or all web (or digital, etc). 
+    foreach my $group_id ( sort @groups ) {
+      my @sigs = $self->signatures({Group=>$group_id});
+      if ( ! @sigs ) {
+        $openprint::log->error( "No sigs for Group $group_id, but there pretty much to be since we have this group index.  Signatures must be out of date");
+      } # end if
+
+      my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
+      $ink_sum .= openprint::Estimating::Printing::get_colour_description_no_coverage($self, $sig_specs);
+    }
+  } else {
+    my @sigs = $self->signatures();
+    my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
     $ink_sum .= openprint::Estimating::Printing::get_colour_description_no_coverage($self, $sig_specs);
   }
+
   return $ink_sum;
 }
 
 sub parent_sheet_count {
   my $self = shift;
+  my $services = $self->services();
+  if ($$services{Paper}) {
+    return join('<br/>', openprint::Estimating::Paper::summary($self, $$services{Paper}[0], undef, $self->ordered_quantity_index()) );
+  }
+}
+
+sub dims_finished {
+  my $self = shift;
+  my $services = $self->services();
+  if ( $$services{''} and @{$$services{''}} ) {
+    my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
+    return $$printing_specs{txtWidth}.'x'.$$printing_specs{txtHeight};
+  }
+  foreach my $sig_id ($self->signatures()) {
+    my $printing_specs = openprint::service::get_specs_ref($self, $sig_id);
+    return $$printing_specs{txtWidth}.'x'.$$printing_specs{txtHeight};
+  }
+  return 'unknown';
 }
 
 1;
