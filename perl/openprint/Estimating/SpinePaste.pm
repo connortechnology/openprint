@@ -16,6 +16,7 @@
 
 package openprint::Estimating::SpinePaste;
 use strict;
+use warnings;
 
 use constant DEBUG => 1;
 require openprint::service;
@@ -35,7 +36,7 @@ my @variables = (
 		'OverrideRunspeed1', 'OverrideRunspeed2', 'OverrideRunspeed3',
 		);
 sub variables {
-    return @variables;
+  return @variables;
 }
 
 sub neccessary {
@@ -72,7 +73,7 @@ sub signature_calc {
 	if ( $$specs{'chkOverrideEquipment'.$qty_index} eq 'Y' ) {
 		if ( ! sets::isin( $$specs{'ddmEquipment'.$qty_index}, [ map { $_->id() } @Equipment ] ) ) {
 			$Results{Status} = 'uncalculated';
-			$Results{alert} .= 'Overriden equipment s not good for Spine Pasting<br/>';
+			$Results{alert} .= 'Overriden equipment is not good for Spine Pasting<br/>';
 			return \%Results;
 		} # end if
 		@Equipment = ( new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} ) );
@@ -122,11 +123,9 @@ sub signature_calc {
 		} # end if
 	} # end foreach Equipment
 	if ( ! %best ) {
-$openprint::log->debug("Nopt best");
 		$Results{Status} = 'uncalculated';
 		$Results{alert} .= 'Unable to calculate.<br/>';
 	} else {
-$openprint::log->debug("best %best");
 		$Results{Status} = 'calculated';
 		$Results{Equipment} = $best{Equipment};
 		$Results{Price} = $best{Price}{Total};
@@ -135,7 +134,6 @@ $openprint::log->debug("best %best");
 		$Results{MakeReadyOvers} = $best{Price}{MakeReadyOvers};
 	} # end if
 	return \%Results;
-
 } # end sub signature_calc
 
 sub calc {
@@ -337,7 +335,6 @@ sub calc_price {
 			$openprint::log->debug("No Runspeed set");
 		} # end if Runspeed
 		if ( ( my $MaxRunSpeed = $Equipment->specification('SpinePaste Maximum RunSpeed') ) ) {
-$openprint::log->debug("Max run speed $MaxRunSpeed");
 			$Price{'Gluing RunSpeed'} = $MaxRunSpeed;
 		} # end if Maximum Run SPeed
 		#$openprint::log->debug("Runspeed is " . $Price{RunSpeed});
