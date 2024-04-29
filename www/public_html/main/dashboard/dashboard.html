@@ -1,4 +1,3 @@
-
 <h1><span class="title-section">Dashboard</h1>
 <form action="/main/dashboard/dashboard.html" method="get" name="f1" id="f1">
   <fieldset><legend> Search Area </legend>
@@ -144,13 +143,11 @@ $param{company_id},
   foreach my $d (@{$$variable{data}}) {
     $html .= '<tr><td class="checkbox"><input type="checkbox" name="actionpid" value="'.$$d{pid}.'" id="actionpid-'.$$d{pid}.'" /></td>';
     foreach my $field (@{$$d{fields}}) {
-      $html .= '<td>';
+      $html .= '<td class="'.$$field{class}.'">';
       if ($$field{ro}) {
-        $html .= '<div class="'.$$field{class}.'">';
         $html .= '<a href="'.$$field{link}.'">' if $$field{link};
         $html .= $$field{value};
         $html .= '</a>' if $$field{link};
-        $html .= '</div>';
       } else {
         if ($$field{big}) {
           $html .= '<textarea name="'.$$field{fname}.'['.$$field{id}.']" cols=50>'.$$field{value}.'</textarea>';
