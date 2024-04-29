@@ -132,7 +132,7 @@ $log->debug("HAVE SQL: $sql sort field $sortfield");
     $l->{inks} = $p->ink_sum($l->{lngserviceindex});
     $l->{finished} = $p->dims_finished($l->{lngserviceindex});
     $l->{time} = '0:00';
-    $l->{equipment} = '--';
+    $l->{equipment} = $p->equipment();
     $l->{duedate}  = $p->due_date();
     $l->{delivery} = $p->shipping_type();
     $l->{stock} = $p->stock_name($l->{lngserviceindex});
