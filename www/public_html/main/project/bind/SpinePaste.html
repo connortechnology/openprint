@@ -1,4 +1,4 @@
-<script type="text/javascript" src="<?hash_link('/javascripts/service.js)?>"></script>
+<script src="<?hash_link('/javascripts/service.js)?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
@@ -28,7 +28,7 @@
 								name	=>	"Runspeed$qty_index",
 								id		=>	"Runspeed$qty_index", value=>$$variable{'Runspeed'.$qty_index},
 								oninput	=>	'calc(this.form.name);' ).'/Hr';
-							$html .= write_override( 'OverrideRunspeed'.$qty_index, 'Y', '', "calc(\$('f1').name);" );
+                $html .= write_override( 'OverrideRunspeed'.$qty_index, $$variable{'OverrideRunspeed'.$qty_index}, '', "calc(\$('f1').name);" );
 							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
@@ -47,4 +47,3 @@
 		<input type="hidden" name="Status" value="<?Status?>" />
 	</form>
 </div>
-
