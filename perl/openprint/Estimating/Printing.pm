@@ -5797,6 +5797,7 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 				$$project{FoldingSpecs}{"ddmEquipment-$$specs{SignatureIndex}-$qty_index"} = $$folding_results{Equipment}{id};
 				
 				if ( $$folding_results{Equipment}{id} == $$Press{id} ) {
+
 					my $FI = $$folding_results{FoldedImpositions}[0];
 					if ( ! $FI ) {
 						$log->error("WTF FI is empty! maybe caching issue? Fold equipment is FI: " . $FI);
@@ -5807,6 +5808,7 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 						$log->error("WTF Equipment in Fold is not the press, but the folding results equipment is. maybe caching issue? Fold equipment is " . $$FI{Equipment}->strid() . ' FI: ' . $FI->to_string() );
 					} else {
 					$FI->display( "Runspeed: $$FI{runspeed}") if DEBUG;
+          $$folding_results{RunSpeed} = $$FI{runspeed}; # For spine paste
 #$log->debug("Runspeed: $folding_results{RunSpeed}");
 					$$specs{Runspeed} = $price{Runspeed} = $$FI{runspeed} if $$FI{runspeed};
 					} # end if
