@@ -1457,20 +1457,9 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 				my $Fold = $$Imposition{Fold};
 				my $impo_qty = $$Imposition{quantity};
 				my $imposition = $$Imposition{imposition};
-				my $runspeed;
 				my $fold_index = $imp_index + 1;
-				if ( $$specs{"OverrideRunspeed-$form-$qty_index-$fold_index"} and ( $$specs{"OverrideRunspeed-$form-$qty_index-$fold_index"} eq 'Y' ) ) {
-					$runspeed = $$specs{"FoldRunspeed-$form-$qty_index-$fold_index"};
-$openprint::log->debug("Override speed to $runspeed for $form $qty_index $fold_index ");
-					$runspeed = int($Fold->runspeed($$Fold{runspeed_units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm})) if ! $runspeed;
-foreach my $k ( keys %{$specs} ) {
-$openprint::log->debug(" $k => $$specs{$k}");
-}
-				} else {
-					$runspeed = int($Fold->runspeed($$Fold{runspeed_units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm})) if ! $runspeed;
-				}
 
-				$$Imposition{Folder} = $Equipment;
+        $$Imposition{Folder} = $Equipment;
 $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 
 				if ( $$Fold{undesired} ) {
@@ -1489,7 +1478,6 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				$fold_specs{"FoldPageRows-$form-$qty_index-$fold_index"} = $$Imposition{page_rows};
 				$fold_specs{"FoldFolds-$form-$qty_index-$fold_index"} = $$Fold{folds};
 				$fold_specs{"FoldAngles-$form-$qty_index-$fold_index"} = $$Fold{angles};
-				$fold_specs{"FoldRunspeed-$form-$qty_index-$fold_index"} = $runspeed;
 
         # specs can be empty if we have added a virtual folding service. FIXME
 				my $run_qty = $$specs{"txtQuantity$qty_index"} ? $$specs{"txtQuantity$qty_index"} : $Project->quantity($qty_index);;
@@ -1505,6 +1493,21 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 					$openprint::log->debug("Run Overs runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out	of fold $$Fold{type} on " . $$Equipment{name}) if DEBUG;
 				} # end if
 				$$Imposition{impressions} = $run_qty;
+
+				my $runspeed;
+				if ( $$specs{"OverrideRunspeed-$form-$qty_index-$fold_index"} and ( $$specs{"OverrideRunspeed-$form-$qty_index-$fold_index"} eq 'Y' ) ) {
+					$runspeed = $$specs{"FoldRunspeed-$form-$qty_index-$fold_index"};
+        } else {
+          if ($$Fold{runspeed_units} eq 'calliper') {
+            $runspeed = int($Fold->runspeed($$Paper{calliper}));
+          } elsif ( $$Fold{runspeed_units} eq 'gsm') {
+            $runspeed = int($Fold->runspeed($$Paper{gsm}));
+          } elsif ( $$Fold{runspeed_units} eq 'impressions') {
+            $runspeed = int($Fold->runspeed($run_qty));
+          } # end if units
+        }
+				$fold_specs{"FoldRunspeed-$form-$qty_index-$fold_index"} = $runspeed;
+
 				$fold_specs{"FoldImpressions-$form-$qty_index-$fold_index"} = $run_qty;
 
 				# Why are we doing this?  Did we not already do it?
