@@ -25,7 +25,7 @@
     }
 </script>
 <form id="Fold" action="fold.html" method="post">
-  <input type="hidden" name="id" value="<? echo ( $$variable{Fold}->id() ) ?>"/>
+  <input type="hidden" name="fold_id" value="<? echo ( $$variable{Fold}->id() ) ?>"/>
 	<div class="leftColumn">
 		<fieldset><legend>Fold</legend>
 			<ul>
@@ -101,15 +101,15 @@
       Max: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-max_height', name=>'max_height', value=>$$variable{Fold}->max_height()); ) ?> inches
 		</li>
 		<li class="orientation"><label>Orientation</label>
-			<? echo ( checkboxes( 'orientation', [ map { $_, $_ } ( 'Landscape','Portrait','Square' ) ],
-      [ split(',',$$variable{Fold}->orientation())], { id=>'orientation-'.$$variable{Fold}->id() } ); ) ?>
+			<? echo (
+        checkboxes( 'orientation', [ map { $_, $_ } ( 'Landscape','Portrait','Square' ) ],
+      [ split(',',$$variable{Fold}->orientation())]
+      ); ) ?>
 		</li>
 		<li class="calliper">
 			<label>Caliper</label>
-			Min: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-min_calliper', name=>'min_calliper',
-      value=>$$variable{Fold}->min_calliper(), step=>'0.00001', min=>'0.0000', max=>'0.1' ); ) ?>
-			Max: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-max_calliper', name=>'max_calliper',
-      value=>$$variable{Fold}->max_calliper(), step=>'0.00001', min=>'0.0000', max=>'0.1' ); ) ?> inches
+			Min: <? echo ( input( type=>'float', name=>'min_calliper', value=>$$variable{Fold}->min_calliper(), step=>'0.00001', min=>'0.0000', max=>'0.1' ); ) ?>
+			Max: <? echo ( input( type=>'float', name=>'max_calliper', value=>$$variable{Fold}->max_calliper(), step=>'0.00001', min=>'0.0000', max=>'0.1' ); ) ?> inches
 		</li>
 		<li class="printing_type">
 			<label>Printing Type</label>
@@ -162,12 +162,12 @@
       </ul>
 		</fieldset>
 		<fieldset><legend>Runspeeds</legend>
-      <p><label>Runspeed Units</label><?echo( ssi::select( [ map { $_, $_ } ( 'unknown', 'gsm','calliper')], $$variable{Fold}{runspeed_units}, { name=>'runspeed_units' } ); ) ?></p>
+      <p><label>Min/Max Units</label><?echo( ssi::select( [ map { $_, $_ } ( 'unknown', 'gsm','calliper','impressions')], $$variable{Fold}{runspeed_units}, { name=>'runspeed_units' } ); ) ?></p>
 		<table id="FoldSpecifications" class="FoldRunSpeed List sortable">
 			<thead>
 				<tr>
-					<th align="left">Min Weight</th>
-					<th align="left">Max Weight</th>
+					<th align="left">Min</th>
+					<th align="left">Max</th>
 					<th align="left">Units</th>
 					<th align="left">Runspeed</th>
 					<th align="left">Interpolate</th>
