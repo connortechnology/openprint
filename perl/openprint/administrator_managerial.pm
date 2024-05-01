@@ -1178,6 +1178,12 @@ sub folds {
 
 sub _folds {
 	ssi::save_params( '/administrator/managerial/folds.html', ( 'equipment_id', 'type', 'imposition' ) );
+  return if !$param{action};
+  if ($param{action} eq 'delete') {
+    foreach my $fold ( openprint::Fold->find(id=>$param{'fold_id[]'}) ) {
+      $variable{error} .= $fold->delete();
+    }
+  }
 } # end sub _folds
 
 sub shipping_rates {
@@ -1387,7 +1393,7 @@ $log->debug("sudo /usr/sbin/postsuper -d $queue_id");
 sub fold {
   require openprint::Estimating::Folding; # for fold_types
   require openprint::Fold; # for fold_types
-	my $Fold = $variable{Fold} = new openprint::Fold( $param{id} );
+	my $Fold = $variable{Fold} = new openprint::Fold( $param{fold_id} );
   return if !$param{action};
 
 	if ( $param{action} eq 'add' ) {
@@ -1398,7 +1404,7 @@ sub fold {
 		$variable{Fold} = $Fold;
 	} elsif ( $param{action} eq 'copy' ) {
 		my $NewFold = $Fold->copy();
-		delete $param{id};
+		delete $param{fold_id};
 		$variable{error} .= $NewFold->save(\%param);
 		if ( ! $variable{error} ) {
 		foreach my $Spec ( $NewFold->Specifications() ) {
@@ -1406,7 +1412,7 @@ sub fold {
 		} # end foreach Spec
 		}
 		$variable{Fold} = $NewFold;
-		$param{id} = $NewFold->id();
+		$param{fold_id} = $NewFold->id();
 		
 	} elsif ( $param{action} eq 'save' ) {
 		my @changes = $Fold->changes( \%param );

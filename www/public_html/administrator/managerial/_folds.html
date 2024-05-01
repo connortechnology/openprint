@@ -14,14 +14,16 @@
 <? if ( @{$$variable{Folds}} ) ?>
 	<table class="List">
 		<tr> 
+      <th class="checkbox"><input type="checkbox" onclick="select_all(this.form, 'fold_id', this.checked);"/></th>
 			<th class="Equipment">Equipment</th>
 			<th class="Fold">Name</th>
 			<th class="Type">Type</th>
 			<th class="Pages">Pages</th>
 			<th class="Folds">Folds</th>
 			<th class="Angles">Angles</th>
-			<th class="MinImposition">Min Imposition</th>
-			<th class="MaxImposition">Max Imposition</th>
+			<th class="MinMaxImposition">Min/Max Imposition</th>
+			<th class="MinMaxWidth">Min/Max Width</th>
+			<th class="MinMaxHeight">Min/Max Height</th>
 			<th class="MRMinutes">MR Minutes</th>
 			<th class="Speed">Speed</th>
 		</tr>
@@ -30,17 +32,19 @@
 	my $rowclass;
 	foreach my $Fold ( @{$$variable{Folds}} ) {
 		$html .= sprintf(q`
-<tr%1$s onclick="popup_fold(%2$d);"> 
-	<td class="Equipment">%3$s</td>
-	<td class="Fold">%4$s</td>
-	<td class="Type">%5$s</td>
-	<td class="Pages">%6$s</td>
+<tr%1$s> 
+  <td class="checkbox"><input type="checkbox" name="fold_id" value="%2$d"/></td>
+	<td class="Equipment" onclick="popup_fold(%2$d);">%3$s</td>
+	<td class="Fold" onclick="popup_fold(%2$d);">%4$s</td>
+	<td class="Type" onclick="popup_fold(%2$d);">%5$s</td>
+	<td class="Pages" onclick="popup_fold(%2$d);">%6$s</td>
 	<td class="Folds">%7$s</td>
 	<td class="Angles">%8$s</td>
-	<td class="MinImposition">%9$s</td>
-	<td class="MaxImposition">%10$s</td>
-	<td class="MRTime">%11$d</td>
-	<td class="Speed">%12$s</td>
+	<td class="MinMaxImposition">%9$s / %10$s</td>
+	<td class="MinMaxWidth">%11$s / %12$s</td>
+	<td class="MinMaxHeight">%13$s / %14$s</td>
+	<td class="MRTime">%15$d</td>
+	<td class="Speed">%16$s</td>
 </tr>
 `, $rowclass, $$Fold{id}, $Fold->Equipment()->name(), $$Fold{name}, 
 $Fold->type(), $Fold->pages(), $Fold->folds(), $Fold->angles(),
@@ -58,14 +62,20 @@ join(' ',
 		) ,
  ( $Fold->max_imposition() ? $Fold->max_imposition() : () ),
 ),
+$Fold->min_width(), $Fold->max_width(),
+$Fold->min_height(), $Fold->max_height(),
 $Fold->makeready_time(),
-join( '<br/>', map { sprintf('%s to %s gsm => %d/Hr', $_->min_weight(), $_->max_weight(), $_->runspeed() ) } $Fold->Specifications() ),
+join( '<br/>', map { sprintf('%s to %s %s => %d/Hr', $_->min_weight(), $_->max_weight(), $_->weight_units(), $_->runspeed() ) } $Fold->Specifications() ),
 );
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 	} # end foreach
 	return $html;
 ) ?>
+<tr class="totals">
+  <td class="checkbox"></td>
+  <td colspan="11"><?echo(scalar @{$$variable{Folds}})?> folds</td>
+</tr>
 </table>
 <? else ( @{$$variable{Folds}} ) ?>
 There were no results matching your criteria.<br>
