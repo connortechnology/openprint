@@ -639,26 +639,14 @@ sub summary {
 	return '' if ! $ServiceType->summary_visible();
 
 	my $specs = get_specs_ref( $Project, $service_id );
-	if ( $$specs{ServiceType} eq 'Signature' or ( $$specs{ServiceType} eq '' and ! $$specs{txtTotalPageQuantity}  ) ) {
-		require openprint::Estimating::Printing;
-		return openprint::Estimating::Printing::summary($Project, $service_id, $specs, $qty_index );
-	} elsif ( sets::isin( $$specs{ServiceType}, ['KraftWrap','Bundling','Banding','CrossBanding'] ) ) {
-		require openprint::Estimating::Packaging;
-		return openprint::Estimating::Packaging::summary($Project, $service_id, $specs, $qty_index );
-	} elsif ( sets::isin( $$specs{ServiceType}, ['SaddleStitching','LoopStitching'] ) ) {
-		require openprint::Estimating::Stitching;
-		return openprint::Estimating::Stitching::summary($Project, $service_id, $specs, $qty_index );
-	} else {
-		my $ServiceTypeType = $ServiceType->type();
-		return if ! $ServiceTypeType;
-		
-		eval('require openprint::Estimating::'.$ServiceTypeType.';' );
-		$openprint::log->error("ERror requiring openprint::Estimating::$ServiceTypeType ::summary: $@)") if $@;
-		my $summary = eval('openprint::Estimating::'.$ServiceTypeType.'::summary( $Project, $service_id, $specs, $qty_index );' );
-		$openprint::log->error("ERror evalling openprint::Estimating:: $ServiceTypeType ::summary: $@)") if $@;
-		return $summary;
-	} # end if
-	return;
+  my $ServiceTypeType = $ServiceType->type();
+  return if ! $ServiceTypeType;
+
+  eval('require openprint::Estimating::'.$ServiceTypeType.';' );
+  $openprint::log->error("ERror requiring openprint::Estimating::$ServiceTypeType ::summary: $@)") if $@;
+  my $summary = eval('openprint::Estimating::'.$ServiceTypeType.'::summary( $Project, $service_id, $specs, $qty_index );' );
+  $openprint::log->error("ERror evalling openprint::Estimating:: $ServiceTypeType ::summary: $@)") if $@;
+  return $summary;
 } # end sub summary
 
 sub breakupsummary {
