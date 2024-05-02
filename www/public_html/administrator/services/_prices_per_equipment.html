@@ -2,6 +2,7 @@
 	my $html;
 	my $Pricelist = $$variable{Pricelist};
 	my $Equipment = $$variable{Equipment};
+  my $Service = $$variable{Service};
 
 	$html .= '<fieldset class="Equipment">';
 	$html .= sprintf( '<a href="/administrator/equipment/edit.html?ddmEquipment=%d">%s</a><br/>',$Equipment->id(), $Equipment->strid().': '.$Equipment->name().' '.$Equipment->description() );
@@ -19,7 +20,7 @@
 				<th class="Mode">Mode</th>
 				<th class="buttons">
 	'.
-  button( 'a'.$$Pricelist{id}.'_'.$$Equipment{id}, { onclick=>qq`add_price( \$('f2'), '$$Pricelist{id}', '$$Equipment{id}' );`, text=>'+', title=>'Add New Price to '.$Equipment->strid() } ) . qq`</th>
+  button( 'a'.$$Pricelist{id}.'_'.$$Equipment{id}, { onclick=>qq`add_price( \$('f2'), '$$Pricelist{id}', '$$Equipment{id}', '$$Service{id}' );`, text=>'+', title=>'Add New Price to '.$Equipment->strid() } ) . qq`</th>
 			</tr></thead><tbody id="prices-$$Pricelist{id}-$$Equipment{id}">
 			`;
 	$$variable{Equipment} = $Equipment;

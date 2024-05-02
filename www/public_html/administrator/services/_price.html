@@ -33,7 +33,7 @@
 :
 		input( type=>'text', name=>join('-', 'range_units', $$Price{id} ), value=>$Price->range_units() )
 ),
-input( type=>'float', name=>join('-', 'cost', $$Price{id} ), value=>$Currency->format($Price->cost(),5,''), onkeyup=>'calc_from_cost(this);', oninput=>'this.onkeyup();' ),
+  input( type=>'float', name=>join('-', 'cost', $$Price{id} ), value=>$Currency->format($Price->cost(),5,''), onkeyup=>'calc_from_cost(this);', oninput=>'this.onkeyup();' ),
 		input( type=>'float', name=>join('-', 'markup', $$Price{id} ), value=>$Price->markup(), onkeyup=>'calc_from_markup(this);', oninput=>'this.onkeyup();' ),
 		input( type=>'float', name=>join('-', 'price', $$Price{id} ), value=>$Currency->format($Price->price(),5,''), onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
 ( $Configuration ? 
@@ -45,8 +45,8 @@ input( type=>'float', name=>join('-', 'cost', $$Price{id} ), value=>$Currency->f
 		ssi::select( [ '', 'Basic', 'Stepped', 'Stepped', 'Interpolate', 'Interpolate' ], $Price->mode(), { name=>'mode-'.$$Price{id}, id=>'mode-'.$$Price{id} } ),
 		($Price->id() ? 
 		join("\n", 
-			button( 'x'.$Price->id(), { onclick=>qq`del_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, text=>'X', title=>'Delete' } ),
-			button( 'c'.$Price->id(), { onclick=>qq`copy_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, text=>'C', title=>'Copy' } ),
+			button( 'x'.$Price->id(), { onclick=>qq`del_price( this.form, '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', '$$variable{Service}{id}', $$Price{id} );`, text=>'X', title=>'Delete', type=>'button' } ),
+			button( 'c'.$Price->id(), { onclick=>qq`copy_price( this.form, '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', '$$variable{Service}{id}', $$Price{id} );`, text=>'C', title=>'Copy', type=>'button' } ),
 			) : ''),
 	);
 	return $html;
