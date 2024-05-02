@@ -290,16 +290,17 @@ sub make_drop_down {
 		} # end for
 	} # end if
 
-  while (@{$data}) {
+  for (my $i = 0; $i < @{$data}; $i++) {
     my $value;
     my $label;
-    if ( ref $$data[0] eq 'ARRAY' ) {
-      my $row = shift @$data;
-      $value = shift @$row;
-      $label = shift @$row;
+    if ( ref $$data[$i] eq 'ARRAY' ) {
+      my $row = $$data[$i];
+      $value = $$row[0];
+      $label = $$row[1];
     } else {
-      $value = shift @$data;
-      $label = shift @$data;
+      $value = $$data[$i];
+      $i++;
+      $label = $$data[$i];
     }
   
     if ($$options{length}) {
