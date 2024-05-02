@@ -222,7 +222,7 @@ sub auto_calculate {
 		} # end if
 	} else {
 		if ( ! $$services{Folding} ) {
-			#push @{$$services{Folding}}, $Project->add_service( 'Folding' );
+			push @{$$services{Folding}}, $Project->add_service( 'Folding' );
 		} # end if
 	} # end if
 
