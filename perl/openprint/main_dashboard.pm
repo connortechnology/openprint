@@ -22,7 +22,7 @@ use DateTime::Format::Strptime;
 our @cols = (
   { desc=>"Order",         id=>"order_id",       class=> "srfield", ro=>1 },
   { desc=>"Quote",         id=>"lngquoteid",       class=> "srfield", ro=>1 },
-  { desc=>"Project",         id=>"lngprojectindex",     class=> "srfield", ro=>1 },
+  { desc=>"Project",         id=>"project_id",     class=> "srfield", ro=>1 },
   { desc=>"Customer",       id=>"name",     class=> "lgfield", ro=>1 },
   { desc=>"Contact",         id=>"contact",         class=> "rgfield", ro=>1 },
   { desc=>"Status",         id=>"status",         class=> "rgfield", ro=>1 },
@@ -46,8 +46,8 @@ sub add_link {
   my $x = shift;
   my $l = shift;
 
-  $x->{link} = "/main/order/history_details.html?order_id=$x->{value};ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'lngorderid';
-  $x->{link} = "/main/project/view.html?project_id=$x->{value}" if $x->{id} eq 'lngprojectindex';
+  $x->{link} = "/main/order/history_details.html?order_id=$x->{value};ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'order_id';
+  $x->{link} = "/main/project/view.html?project_id=$x->{value}" if $x->{id} eq 'project_id';
   $x->{link} = "/administrator/managerial/company_profiles.html?ddmCustomer=$l->{company_id}" if $x->{id} eq 'name';
   $x->{link} = "/administrator/managerial/user_profiles.html?ddmUser=$l->{contactid}" if $x->{id} eq 'contact';
   $x->{link} = "/main/project/view.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'strprojectreference';
@@ -83,9 +83,9 @@ sub sql_filters {
   } # end if reference
 
   if ( $param->{startdate} and $param->{enddate} ) {
-    $text .= q{AND p.created_on BETWEEN '} . $param->{startdate} . q{ 1:00am' AND '} . $param->{enddate} . q{ 11:59pm'};
+    $text .= q{AND p.dtmcreationdate BETWEEN '} . $param->{startdate} . q{ 1:00am' AND '} . $param->{enddate} . q{ 11:59pm'};
   } elsif( $param->{startdate} ) {
-    $text .= q{AND p.created_on > '} . $param->{startdate} . q{ 1:00am'};
+    $text .= q{AND p.dtmcreationdate > '} . $param->{startdate} . q{ 1:00am'};
   }
   $log->debug("HAVE TEXT: $text");
   return $text;
@@ -105,9 +105,9 @@ sub get_data {
   my $sql_filter = sql_filters($param);
 
   my $sql = qq{
-    SELECT *, p.strstatus as status, p.id as project_id, to_char(created_on, 'YY-MM-DD') as dtmcreationdate 
+    SELECT *, p.strstatus as status, p.id as project_id, to_char(p.dtmcreationdate, 'YY-MM-DD') as dtmcreationdate 
     FROM projects p, companies c
-    WHERE 1>0 
+    WHERE p.order_id IS NOT NULL
     AND   p.company_id = c.id
 
     $sql_filter
@@ -118,8 +118,9 @@ sub get_data {
 
   my @data;
   my $lines = $dbh->selectall_arrayref( $sql, {Slice => {}} );
+  $lines = [] if !$lines;
   my $sortfield = $param->{sortfield};
-$log->debug("HAVE SQL: $sql sort field $sortfield");
+$log->debug("HAVE SQL: $sql sort field $sortfield lines ".@{$lines});
 
   foreach my $l ( @{$lines} ) {
     my $p = new openprint::Project($l);
