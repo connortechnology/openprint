@@ -1,4 +1,4 @@
-<p><label>Finished Calliper</label><span id="txtCalliper"><?txtCalliper?></span>&quot;</p>
+<p><label>Finished Calliper</label><span id="txtCalliper"><?echo($$variable{Project}->calliper() )?></span>&quot;</p>
 <? if ( $$variable{Project}->signatures({type=>'GateFolded Spreads'}) ) ?>
 <div id="GateFoldFit">
 		Will your <? echo ( writeTip('Gate Folded'); ) ?>
