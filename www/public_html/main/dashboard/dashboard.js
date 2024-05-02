@@ -46,6 +46,9 @@ function select_all(source) {
     boxlist[i].checked = source.checked;
   }
 }
+function reload_window() {
+  window.reload();
+}
 
 addEventListener('DOMContentLoaded', (event) => {
   form_actions();

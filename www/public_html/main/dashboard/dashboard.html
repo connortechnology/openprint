@@ -118,7 +118,7 @@ $param{company_id},
 
     <br/>
     <div style="width:300px">
-    <input type="text" name="duedate"   id="DPC_duedate"    value="<?duedate?>" style="float:left"/>
+    <input type="text" name="duedate"   id="DPC_duedate"    value="<?echo($param{duedate})?>" style="float:left"/>
 
     <button name="change_duedate" value=1 style="float:right" class="confirm-action" 
       data-confirm="Are you sure you want to update the Due Date for the selected Projects?" >Change Due Date</button>
@@ -166,6 +166,6 @@ $param{company_id},
   return $html;
 ) ?>
   </table>
-  <button onClick="window.reload" name="Reload" style="margin-top: 200px; width: 300px; height: 300px">Reload</button>
+  <button on_click="reload_window" name="Reload" style="margin-top: 200px; width: 300px; height: 300px">Reload</button>
 </form>
 <script src="dashboard.js"></script>
