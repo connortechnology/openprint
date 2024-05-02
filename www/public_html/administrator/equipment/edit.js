@@ -70,3 +70,10 @@ function copy_spec( id ) {
 function delete_fold_spec( id ) {
   new Ajax.Request('/administrator/equipment/_fold_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('FoldSpecification-'+id); tr.parentNode.removeChild(tr);} } );
 } // end function delete_fold_spec
+
+function toggle_service_prices() {
+  $j('#show_service_prices').toggle();
+}
+function toggle_specifications() {
+  $j('#show_specifications').toggle();
+}

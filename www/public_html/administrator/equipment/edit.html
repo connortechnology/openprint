@@ -173,7 +173,11 @@
 		</div>
 	</fieldset>
 <? if ( $$variable{Equipment}->id() ) ?>
-	<fieldset><legend>Specifications</legend>
+  <fieldset><legend>Service Prices <span id="toggle_service_prices" on_click="toggle_service_prices">+</span></legend>
+    <div id="show_service_prices"><?include(_service_prices.html)?></div>
+  </fieldset>
+	<fieldset><legend>Specifications <span on_click="toggle_specifications">+</span></legend>
+<div id="show_specifications">
 		Changes made below take effect immediately.<br/>
 		<table id="specifications" class="List sortable">
 			<thead>
@@ -214,6 +218,7 @@
 			) ?>
 			</tbody>
 		</table>
+</div>
 	</fieldset>
 <? endif ( $$variable{Equipment}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
@@ -262,6 +267,7 @@
 	<? echo ( include_logs( $$variable{Equipment} ); ) ?>
 <? endif ( $$variable{Equipment}->id() ) ?>
 <script src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
 <script src="<?hash_link(edit.js)?>"></script>
 <script>
   const equipment_id='<?echo($$variable{Equipment}->id())?>';
