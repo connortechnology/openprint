@@ -1188,7 +1188,7 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
         if ( !%setup ) {
           $log->error("No Cutting Makeready for $$Equipment{strid}");
         } else {
-          if ( $setup{units} eq 'per cut' ) {
+          if (!$setup{units} or ($setup{units} eq 'per cut')) {
             %setup = $CuttingMakeReady->get_price( $cuts, $Equipment );
             $setup{Total} = $setup{Price} * $cuts;
             $results{Breakdown} .= sprintf('Make Ready: $%1$.2f%2$s * %4$d cuts = $%3$.2f<br/>',
