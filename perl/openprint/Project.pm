@@ -663,8 +663,8 @@ sub save {
 } # eend sub save
 
 sub quantity_indexes {
-	my ( $self ) = @_;
-	$$self{quantity_indexes} = $_[1] if @_ > 1;
+	my $self = shift;
+	$$self{quantity_indexes} = shift if @_;
 	if ( ! $$self{quantity_indexes} ) {
 		$$self{quantity_indexes} = [];
 		foreach my $qty_index ( 1 .. 3 ) {
@@ -872,18 +872,18 @@ sub summary {
 		if ( $$services{''} and @{$$services{''}} ) {
 			my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
 			if ( $$printing_specs{Versions} ) {
-				$summary .= $$printing_specs{Versions} .= ' versions ';
+				$summary .= ' '.$$printing_specs{Versions}.' versions ';
 			} # end if
 			if ( $$printing_specs{PageQuantity} ) {
-				$summary .= $$printing_specs{PageQuantity} .= 'pg ';
+				$summary .= ' '.$$printing_specs{PageQuantity}.'pg ';
 			} # end if
 
 			if ( $self->Type()->name() eq 'PresentationFolders' ) {
-				$summary .= $$printing_specs{rdbPanels} . ' Panel ' . $$printing_specs{PocketSize} . '&quot; ';
+				$summary .= ' '.$$printing_specs{rdbPanels} . ' Panel ' . $$printing_specs{PocketSize} . '&quot; ';
 			} # end if
 
 			if ( $$printing_specs{txtTotalPageQuantity} ) {
-				$summary .= sprintf( '%s&quot;x%s&quot; ', 1*$$printing_specs{txtFinalWidth},1*$$printing_specs{txtFinalHeight});
+				$summary .= sprintf(' %s&quot;x%s&quot; ', 1*$$printing_specs{txtFinalWidth},1*$$printing_specs{txtFinalHeight});
 				if ( $$printing_specs{rdbCover} eq 'Different' ) {
 					my $cover_pages = 0;
 					foreach my $ss_id ( $self->signatures({Group=>1}) ) {
