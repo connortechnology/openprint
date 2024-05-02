@@ -69,3 +69,38 @@ table .Description,
 table .Services {
 	text-align: left;
 }
+
+.Period,
+.Supplier {
+display: none;
+}
+
+table .PeriodStart, table .PeriodEnd, table .Period {
+  width: 255px;
+  text-align: left;
+}
+table .Range {
+  text-align: center;
+  width: 215px;
+}
+table .Range_Units {
+  text-align: center;
+  width: 200px;
+}
+
+table .Units {
+  text-align: center;
+  width: 200px;
+}
+table .Discount {
+  text-align: center;
+}
+table .Cost,
+table .Price,
+table .Markup {
+  width: 100px;
+  text-align: center;
+}
+#Prices table .buttons {
+  width: 80px;
+}
