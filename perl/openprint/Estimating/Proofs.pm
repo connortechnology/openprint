@@ -123,6 +123,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
+  $$specs{alert} = '';
 
 	$log->debug("START PROOFS!!!!!!!!!!!!!!!!!! ($project_index) ($service_index)") if DEBUG;
 	my $Project = new openprint::Project($project_index);
@@ -470,7 +471,7 @@ sub insert_colour_proof {
 			$quantity *= $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize} if $$sig_specs{txtSpreadSize};
 		} # end if
 
-		if ( $$specs{RequireColourProofs} eq 'N' ) {
+		if ( $$specs{RequireColourProofs} and($$specs{RequireColourProofs} eq 'N')) {
 			$quantity = 0;
 		} # end if
 	} # end if
