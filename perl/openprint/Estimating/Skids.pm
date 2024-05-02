@@ -424,7 +424,7 @@ sub summary {
 
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	my $package = 'skid';
-	if ( $$specs{ServiceType} eq 'Gaylords' ) {
+	if ( $$specs{ServiceType} and ($$specs{ServiceType} eq 'Gaylords')) {
 		$package = 'gaylord';
 	}
 	my $summary;
