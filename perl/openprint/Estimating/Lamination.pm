@@ -23,6 +23,12 @@ require openprint::Equipment;
 require openprint::service;
 
 require sql;
+use vars qw( %ServicePrices %MaterialPrices );
+%ServicePrices = (
+LaminatingMinimumCharge => { units=>[] },
+LaminatingMakeReady => { units => [] }
+Laminating => { units => ['per m','per hour'] }
+);
 
 my @variables = (
 	'txtFinalWidth','txtFinalHeight','chkOverrideDimensions',
