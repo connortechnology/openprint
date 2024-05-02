@@ -40,7 +40,7 @@ my %variables = (
 	'Backing'=>['save','output'],
 	'txtSpreadSize'=>['save','output'],'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output'],
-	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
+	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[],
 	'remaining_pages'=>['output'],'next_group_id'=>['output'],
 );
 my @signature_variables = (
