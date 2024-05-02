@@ -160,7 +160,8 @@ sub get_Price {
 sub get_price {
   my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
   if (! $$self{id}) {
-    $openprint::log->error("Service::get_price called without id");
+    my ( $caller, undef, $line ) = caller;
+    $openprint::log->error("Service::get_price called without id from $caller:$line");
     return ;
   }
 
