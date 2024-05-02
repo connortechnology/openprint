@@ -113,10 +113,42 @@ sub edit {
       if (@changes) {
         if ( ! ( $variable{error} = $Equipment->save( \%param ) ) ) {
           (new openprint::Log())->save({ Object=>$Equipment, action=>($param{ddmEquipment}?'Edited Equipment':'Saved Equipment'), note=>join('<br/>', @changes) });
-          $variable{ExternalRedirect} = '/administrator/equipment/edit.html?ddmEquipment='.$Equipment->id();
         }
       } else {
         $variable{information} .= 'No changes made!<br/>';
+      }
+      my %prices = misc::make_hash_from_array('service_id', openprint::ServicePrice->find(
+            equipment_id=>$Equipment->id(),
+            order=>'pricelist_id, min NULLS FIRST,max NULLS FIRST' ));
+      foreach my $service (openprint::Service->find(id=>[keys %prices])) {
+        my @service_changes;
+        foreach my $Price ( @{$prices{$service->id()}} ) {
+          next if ! exists $param{"price-$$Price{id}"};
+          my $new_values = {
+            period_start  =>  ( Date::Calc::check_date( map { $param{"period_start-$$Price{id}_$_"} ? $param{"period_start-$$Price{id}_$_"} : 0 } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
+            period_end    =>  ( Date::Calc::check_date( map { $param{"period_end-$$Price{id}_$_"} ? $param{"period_end-$$Price{id}_$_"} : 0} ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
+            min           =>  $param{"min-$$Price{id}"},
+            max           =>  $param{"max-$$Price{id}"},
+            range_units   =>  $param{"range_units-$$Price{id}"},
+            units         =>  $param{"units-$$Price{id}"},
+            cost          =>  $param{"cost-$$Price{id}"},
+            markup        =>  $param{"markup-$$Price{id}"},
+            price         =>  $param{"price-$$Price{id}"},
+            discountable  =>  $param{"discountable-$$Price{id}"},
+            mode          =>  $param{"mode-$$Price{id}"},
+            supplier_id   =>  ($param{"supplier_id-$$Price{id}"} ? $param{"supplier_id-$$Price{id}"} : undef)
+          };
+          my @price_changes = $Price->changes( $new_values );
+          if ( @price_changes ) {
+            $variable{error} .= $Price->save( $new_values );
+            push @changes, ('Change price for ' .$Price->id_string() . ': ' .  join(', ', map { $_ } @price_changes));
+            push @service_changes, ('Change price for ' .$Price->id_string() . ': ' .  join(', ', map { $_ } @price_changes));
+          } # end if
+        } # end foreach price
+        (new openprint::Log())->save({Object=>$service, action=>'Edit Service', note=>join('<br/>', @service_changes) }) if @service_changes;
+      } # end foreach service
+      if (!$variable{errors}) {
+        $variable{ExternalRedirect} = '/administrator/equipment/edit.html?ddmEquipment='.$Equipment->id();
       }
     } elsif ( $param{btnFunction} eq 'UnDelete' ) {
       $Equipment->undelete();
