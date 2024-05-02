@@ -6408,7 +6408,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			$log->debug('Got INK: '.$Ink->to_string());
 		} # end if
 
-		my $InkService = $Ink->Service() ? $Ink->Service() : $Services{$real_colour};
+		my $InkService = ($Ink->Service() and $Ink->Service()->id()) ? $Ink->Service() : $Services{$real_colour};
 		my %InkService;
 		if ( $InkService and %InkService = $InkService->get_price( $colour_impressions, $Press ) ) {
 			if ( $InkService{units} eq 'per m' ) {
