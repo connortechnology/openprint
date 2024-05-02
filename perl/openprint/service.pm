@@ -644,9 +644,12 @@ sub summary {
 
   eval('require openprint::Estimating::'.$ServiceTypeType.';' );
   $openprint::log->error("ERror requiring openprint::Estimating::$ServiceTypeType ::summary: $@)") if $@;
-  my $summary = eval('openprint::Estimating::'.$ServiceTypeType.'::summary( $Project, $service_id, $specs, $qty_index );' );
-  $openprint::log->error("ERror evalling openprint::Estimating:: $ServiceTypeType ::summary: $@)") if $@;
-  return $summary;
+
+  my $module = 'openprint::Estimating::'.$ServiceTypeType;
+	if ( my $function = $module->can('summary') ) {
+		return $function->($Project, $service_id, $specs, $qty_index);
+  }
+  return '';
 } # end sub summary
 
 sub breakupsummary {
