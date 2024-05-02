@@ -40,7 +40,7 @@ my %variables = (
 	ReplyCardQuantity=>['save'],
 	PrintingType=>['save'],rdbTemplateType=>['save'],
 	help=>['output'],alert=>['output','save'],
-	ProjectIndex=>[], ServiceIndex=>[], ServiceType=>[], NewBook=>[],
+	ProjectIndex=>[], ServiceIndex=>[], ServiceType=>[],
 	remaining_pages=>['output'],next_group_id=>['output'],groups=>['output','save'],
 	spine	=>	 ['save'],
 
