@@ -425,10 +425,11 @@ $log->warn('Object::changes called on an object with no fields');
 		}
 		if ( ref $$self{$field} eq 'ARRAY'  ) {
       my @new_value = (ref $$params{$field} eq 'ARRAY' ? @{$$params{$field}} : ( $$params{$field} ));
-			if ( @{$$self{$field}} != sets::intersection(@{$$self{$field}}, @new_value) ) {
+      my @intersection = sets::intersection(@{$$self{$field}}, @new_value);
+			if ( @{$$self{$field}} != @intersection or @new_value != @intersection) {
 				push @results, $field.' changed from '.join(',',@{$$self{$field}}).' to '.join(',', @new_value);
       } elsif ( $debug ) {
-        $log->debug( "$field not changed from ".join(',',@{$$self{$field}}).' to '.join(',', @new_value));
+        $log->debug( "$field not changed from ".join(',',@{$$self{$field}}).' to '.join(',', @new_value).' intersection:'.join(',',sets::intersection(@{$$self{$field}}, @new_value)));
 			}
 		} elsif ( $$self{$field} ne $$params{$field} ) {
 			if ( $field eq 'password' ) {
