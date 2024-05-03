@@ -555,12 +555,13 @@ $openprint::log->debug("Types: @types") if DEBUG;
 						} elsif ( $ServicePrice{units} eq 'per hour' or $ServicePrice{units} eq '/Hr' or $ServicePrice{units} eq '/hr' ) {
 							if ( $runspeed and $$runspeed{value}) {
                 if ($$runspeed{units} eq 'inches per hour') {
-                  my $length;
-                  if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
-                    $length = $Imposition->layout_height();
-                  } else {
-                    $length = $Imposition->layout_width();
-                  } # end if
+                  # Feed in with height being the shortest
+                  my $length = $Imposition->sheet_height() > $Imposition->sheet_width() ? $Imposition->sheet_width() : $Imposition->sheet_height();
+                  #if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
+                  #$length = $Imposition->layout_height();
+                  #} else {
+                  #$length = $Imposition->layout_width();
+                  #} # end if
                   my $inches = $length * ( $qty / $$Imposition{imposition} );
                   my $hours = Math::Round::nearest( 0.01, $inches / $$runspeed{value} );
                   $breakdown .= sprintf('<tr><td>Service: %s image length = %dinches @ %d/Hr = %.1fhours', $length, $inches, $$runspeed{value}, $inches/$$runspeed{value} );
