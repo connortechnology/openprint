@@ -1,10 +1,9 @@
-<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Gluing Services</legend>
 		<? eval ( @{$$variable{SignatureGroups}} = $$variable{Project}->signatures(); ) ?>
 		<? while ( $$variable{SignatureServiceIndex} = shift @{$$variable{SignatureGroups}}; ) ?>
-			<? eval ( 
+			<? eval (
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $$variable{SignatureServiceIndex} );
 					@$variable{'SignatureIndex','Reference'} = @$sig_specs{'SignatureIndex','txtServiceDescription'};
 					) ?>
@@ -15,8 +14,8 @@
 				<ul>
 				<li>
 					<label>Glued Area (square inches)</label>
-					<input type="number" name="txtArea-<?SignatureIndex?>" value="<? echo ( $$variable{'txtArea-'.$$variable{SignatureIndex}} ) ?>" oninput="calc(this.form.name);"/>
-					<input type="checkbox" id="chkOverrideArea-<?SignatureIndex?>" name="chkOverrideArea-<?SignatureIndex?>" value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" 
+					<input type="number" name="txtArea-<?SignatureIndex?>" value="<? echo ( $$variable{'txtArea-'.$$variable{SignatureIndex}} ) ?>" oninput="calc(this.form.name);" step="any" min="0"/>
+					<input type="checkbox" id="chkOverrideArea-<?SignatureIndex?>" name="chkOverrideArea-<?SignatureIndex?>" value="Y" onclick="if ( ! this.checked ) calc(this.form.name);"
 					<? echo ( $$variable{'chkOverrideArea-'.$$variable{SignatureIndex}} eq 'Y' ? 'checked="checked"' : '' ) ?>
 					/>
 					<label class="radio" for="chkOverrideArea-<?SignatureIndex?>">Override</label>
@@ -26,7 +25,9 @@
 		<? endwhile ( $$variable{SignatureServiceIndex} = shift @{$$variable{SignatureGroups}}; ) ?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
-			<?include('/includes/main/proj/quantities_prices.html')?>
+      <ul>
+      <?include(/includes/main/proj/quantities_equipment_prices.html) ?>
+      </ul>
 		</fieldset>
 		<hr/>
 		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
@@ -37,4 +38,4 @@
 		<input type="hidden" name="ContinueProject" value="Y" />
 	</form>
 </div>
-
+<script src="<?hash_link('/javascripts/service.js')?>"></script>
