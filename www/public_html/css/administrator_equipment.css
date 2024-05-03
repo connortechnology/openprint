@@ -98,7 +98,7 @@ table .Discount {
 table .Cost,
 table .Price,
 table .Markup {
-  width: 100px;
+  width: 110px;
   text-align: center;
 }
 #Prices table .buttons {
