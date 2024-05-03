@@ -149,7 +149,7 @@
 			</li>
 			<li>
 				<label>CIP3 Integration</label>
-        <?echo(radio('cip3_monitor', ['1','Yes','0','No'], $$variable{Equipment}->cip3_monitor(), { onclick=>q`if(this.value==1){$('CIP3').show();}else{$('CIP3').hide();}` } );)?>
+        <?echo(radio('cip3_monitor', ['1','Yes','0','No'], $$variable{Equipment}->cip3_monitor(), { onclick=>q`if(this.value==1){$('CIP3').show();}else{$('CIP3').hide();}`, default=>'0' } );)?>
 			</li>
       </ul>
 			<ul id="CIP3" <? echo ( $$variable{Equipment}->cip3_monitor() ? '' : 'style="display: none;"' ) ?>>
