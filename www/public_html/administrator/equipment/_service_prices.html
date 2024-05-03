@@ -38,8 +38,9 @@ foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
       $$variable{Price} = $price;
       $html .= include('/administrator/services/_price.html', $variable);
     } # end foreach price
-    $html .= '</tbody></table></fieldset>';
+    $html .= '</tbody></table></fieldset><!--service-->';
   } # end foreach service
+    $html .= '</div></fieldset><!--pricelist-->';
 } # end foreach Pricelist
 return $html;
 ) ?>
