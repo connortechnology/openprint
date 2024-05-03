@@ -1,4 +1,4 @@
-<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
+<script src="<?hash_link('/javascripts/service.js')?>"></script>
 <div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
@@ -20,7 +20,7 @@
 					$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onclick=>qq`if(get_rdb_value(f1.elements['Needed-$form']) == 'Y' ) { \$('Stripping-$form').show();}else{\$('Stripping-$form').hide();};calc(this.form.name);` } );
 					$html .= qq`</li>
 					</ul>
-					<div id="Stripping-$form" `. ( $$variable{'Needed-'.$form} ne 'Y' ? 'style="display:none;"' : '' ). '><ul>';
+					<div id="Stripping-$form" `. ( $$variable{'Needed-'.$form} eq 'N' ? 'style="display:none;"' : '' ). '><ul>';
 					$html .= include('/includes/main/proj/signature_equipment.html');
 					$html .= '<li><label>Imposition</label>';
 					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
