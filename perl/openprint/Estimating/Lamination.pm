@@ -15,20 +15,35 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Lamination;
-use POSIX qw{ ceil };
 use strict;
+use warnings;
 
 use openprint::Imposition;
 require openprint::Equipment;
 require openprint::service;
 
 require sql;
-use vars qw( %ServicePrices %MaterialPrices );
+use vars qw( %ServicePrices %MaterialPrices %Specifications);
 %ServicePrices = (
-LaminatingMinimumCharge => { units=>[] },
-LaminatingMakeReady => { units => [] },
-Laminating => { units => ['per m','per hour'] },
+LaminationMinimumCharge => { units=>[] },
+LaminationMakeReady => { units => [] },
+Lamination => { units => ['per m','per hour'] },
 );
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
+}
+
+sub SpecificationConfiguration {
+  my $name = shift;
+  return $Specifications{$name} if $Specifications{$name};
+  return undef;
+}
 
 my @variables = (
 	'txtFinalWidth','txtFinalHeight','chkOverrideDimensions',
@@ -69,8 +84,9 @@ sub calc {
 	my @sigs = $Project->signatures();
 
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $sigs[0] );
+  my $sig_specs = $printing_specs;
 	
-	if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
+	if ( $$specs{chkOverrideDimensions} ne 'Y' ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	} # end if
 
@@ -79,10 +95,10 @@ sub calc {
 	} # end if
 
 	$$specs{alert} = '';
-	$$specs{alert} .= 'Please select lamination type for front.<br/>' if ! $$specs{'TypeFront'};
-	$$specs{alert} .= 'Please select lamination type for back.<br/>' if ! $$specs{'TypeBack'};
-	$$specs{alert} .= 'Please enter object width.<br/>' if ! $$specs{'txtFinalWidth'};
-	$$specs{alert} .= 'Please enter object height.<br/>' if ! $$specs{'txtFinalHeight'};
+	$$specs{alert} .= 'Please select lamination type for front.<br/>' if ! $$specs{TypeFront};
+	$$specs{alert} .= 'Please select lamination type for back.<br/>' if ! $$specs{TypeBack};
+	$$specs{alert} .= 'Please enter object width.<br/>' if ! $$specs{txtFinalWidth};
+	$$specs{alert} .= 'Please enter object height.<br/>' if ! $$specs{txtFinalHeight};
 
 	if ( $$specs{alert} ) {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -90,23 +106,27 @@ sub calc {
 			$$specs{'MPrice'.$qty_index} = '';
 			$$specs{'txtUnitPrice'.$qty_index} = '';
 		} # end foreach qty_index
-		return $$specs{'Status'} = 'uncalculated';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
-  my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
+  my %MinimumCharge = openprint::service::get_price_object( $$specs{ServiceType}.'MinimumCharge', undef, undef );
 
   my @possible_equipment;
-  my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
+  my @all_equipment = openprint::Equipment->find(
+    Specifications => {
+      'Laminating Capable'=>'Y'
+    },
+    'useinestimating'=>1,'order'=>'lower(strName)');
 
   if ( ! @all_equipment ) {
-    $$specs{'alert'} = 'We have no laminating equipment.';
-    return $$specs{'Status'} = 'uncalculated';
+    $$specs{alert} = 'We have no laminating equipment.';
+    return $$specs{Status} = 'uncalculated';
   } # end if
   my $error = '';
   foreach my $Equipment ( @all_equipment ) {
     if ( 
-      (my $reason1 = $Equipment->fits( $$specs{'txtFinalWidth'} ) ) and
-      (my $reason2 = $Equipment->fits( $$specs{'txtFinalHeight'} ) ) 
+      (my $reason1 = $Equipment->fits( $$specs{txtFinalWidth} ) ) and
+      (my $reason2 = $Equipment->fits( $$specs{txtFinalHeight} ) ) 
     ) {
       $error .= 'For ' . $Equipment->name() . ': '. $reason1  . '<br/>' . $reason2;
     } else {
@@ -115,15 +135,15 @@ sub calc {
   } # end foreach
 
 	if ( ! @possible_equipment ) {
-		$$specs{'alert'} = "Our equipment cannot run this project, for the following reasons:\n$error\n Please only print flat sheets and contact another bindery.";
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} = "Our equipment cannot run this project, for the following reasons:\n$error\n Please only print flat sheets and contact another bindery.";
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	# So we can do multiple items at once, as many as will fit in the width of the laminator.
   # We need a certain amount of space between the items.  I suspect that this should be an 
   # input, not a fixed value, but for now we will make it fixed.
-	my $item_width = $$specs{'txtFinalWidth'};
-	my $item_height = $$specs{'txtFinalHeight'};
+	my $item_width = $$specs{txtFinalWidth};
+	my $item_height = $$specs{txtFinalHeight};
 
 	my $MakeReady = openprint::Service->find_one( name=>$$specs{ServiceType}.'MakeReady' );
 	my $Service = openprint::Service->find_one( name=>$$specs{ServiceType} );
@@ -153,21 +173,22 @@ sub calc {
 			my $maximum_sheet_width = $Equipment->specification('Maximum Sheet Width');
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s Width: %s<br/>', $Equipment->name(), $maximum_sheet_width );
 
-			my $imposition = new openprint::Imposition( );
+      my $imposition = new openprint::Imposition();
+      $imposition->load( $sig_specs, $qty_index, $Project );
+      $_ = equipment_fits($Equipment, $imposition, $imposition->Paper());
 			# How many can we fit in the width?
-			my $imposition1 = int( $maximum_sheet_width / $item_width );
-			my $imposition2 = int( $maximum_sheet_width / $item_height );
-			if ( $imposition2 > $imposition1 ) {
-				$imposition->rows($qty/$imposition2);
-				$imposition->columns($imposition2);
-				$imposition->image_orientation(openprint::Imposition::Horizontal);
-			} elsif ( $imposition1 ) {
-				$imposition->rows($qty/$imposition1);
-				$imposition->columns($imposition1);
-				$imposition->image_orientation(openprint::Imposition::Vertical);
-			} else {
-				# doesn't fit?
-        $$specs{'hdnBreakdown'.$qty_index} .= 'Doesn\'t fit.<br/>';
+      #my $imposition1 = int( $maximum_sheet_width / $item_width );
+      #my $imposition2 = int( $maximum_sheet_width / $item_height );
+      #if ( $imposition2 > $imposition1 ) {
+      #$imposition->rows($qty/$imposition2);
+      #$imposition->columns($imposition2);
+      #$imposition->image_orientation(openprint::Imposition::Horizontal);
+      #} elsif ( $imposition1 ) {
+      #$imposition->rows($qty/$imposition1);
+      #$imposition->columns($imposition1);
+      #$imposition->image_orientation(openprint::Imposition::Vertical);
+      if ($_) {
+        $$specs{'hdnBreakdown'.$qty_index} .= 'Doesn\'t fit.'.$_.'<br/>';
         next;
 			} # end if
 			my $area;
@@ -193,8 +214,8 @@ sub calc {
 
 			my %ServicePrice = $Service->get_price( undef, $Equipment ) if $Service;
 			if ( %ServicePrice ) {
-				if ( $ServicePrice{'units'} eq 'per m' ) {
-					my $serviceprice = ($ServicePrice{'Price'} * $qty)/1000;
+				if ( $ServicePrice{units} eq 'per m' ) {
+					my $serviceprice = ($ServicePrice{Price} * $qty)/1000;
 					$price += $serviceprice;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %f = $%.2f<br/>', @ServicePrice{'Price','units'}, $qty, $serviceprice );
 					$MPrice += $serviceprice;
@@ -272,35 +293,35 @@ sub calc {
 
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: %.2f<br/><br/>', $price );
 
-			if ( ( ! $bestPrice{'Price'} ) or $bestPrice{'Price'} > $price ) {
-				$bestPrice{'Price'} = $price;
-				$bestPrice{'MPrice'} = $MPrice;
-				$bestPrice{'Equipment'} = $Equipment;
+			if ( ( ! $bestPrice{Price} ) or $bestPrice{Price} > $price ) {
+				$bestPrice{Price} = $price;
+				$bestPrice{MPrice} = $MPrice;
+				$bestPrice{Equipment} = $Equipment;
 			} # end if
 		} # end foreach equipment
 
-		if ( $bestPrice{'Price'} < $MinimumCharge{Price} ) {
+		if ( $bestPrice{Price} < $MinimumCharge{Price} ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>Using minimum charge: $%.2f<br/>', $MinimumCharge{Price} );
-			$bestPrice{'Price'} = $MinimumCharge{Price};
+			$bestPrice{Price} = $MinimumCharge{Price};
 		} # end if
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment}->strid() if $bestPrice{Equipment};
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
 			if ( $$specs{"Markup$qty_index"} ) {
-				$bestPrice{'Price'} *= 1+$$specs{"Markup$qty_index"}/100;
+				$bestPrice{Price} *= 1+$$specs{"Markup$qty_index"}/100;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Using %s% markup = $%.2f<br/>', $$specs{"Markup$qty_index"}, $bestPrice{Price} );
 			}
 			if ( $Project->markup() ) {
-				$bestPrice{'Price'} *= 1+$Project->markup()/100;
+				$bestPrice{Price} *= 1+$Project->markup()/100;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Using %s% project markup = $%.2f<br/>', $Project->markup(), $bestPrice{Price} );
 			} 
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{Price} );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $bestPrice{Price} );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # en dif
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{'Price'}/$qty ) * (1+$Project->markup()/100) );
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'MPrice'} * (1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $bestPrice{Price}/$qty ) * (1+$Project->markup()/100) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $bestPrice{MPrice} * (1+$Project->markup()/100) );
 	} # end foreach qty_index
-	return $$specs{'Status'} = 'calculated';
+	return $$specs{Status} = 'calculated';
 } # end sub calc
 
 sub display {
@@ -318,6 +339,24 @@ sub summary {
 
 sub save {
 } # end sub save
+
+sub equipment_fits {
+  my ( $Equipment, $I, $Stock ) = @_;
+  if ( ( $_ = $Equipment->fits( $I->sheet_width(), $I->sheet_height() ) ) and ( $_ = $Equipment->fits( $I->layout_width(), $I->layout_height() ) ) ) {
+    return $_;
+  }
+  if ( my $min_calliper = $Equipment->specification( 'Minimum Calliper')) {
+    if ( $min_calliper > $$Stock{calliper} ) {
+      return "Calliper too thin stock calliper $$Stock{calliper} < minimum($min_calliper).";
+    }
+  }
+  if ( my $max_calliper = $Equipment->specification('Maximum Calliper')) {
+    if ( $max_calliper < $$Stock{calliper} ) {
+      return "Calliper too thick stock calliper $$Stock{calliper} > maximum($max_calliper).";
+    }
+  }
+  return;
+}
 
 1;
 __END__
