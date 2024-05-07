@@ -25,7 +25,7 @@ use Storable 'dclone';
 use POSIX qw(ceil);
 use List::Util qw(sum);
 use openprint ();
-use vars qw( %config $log $dbh %ServicePrices );
+use vars qw( %config $log $dbh %ServicePrices %Specifications);
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -95,6 +95,13 @@ use constant DEBUG_IMPOSITIONS => 1;
 	#'PlateMakeReadyWork & Tumble'					=>	{ units => [ 'per hour', 'per plate' ] },
 	#'PlateMakeReadySheet Work'					=>	{ units => [ 'per hour', 'per plate' ] },
 );
+
+sub ServicePriceConfiguration {
+  return $ServicePrices{shift};
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
 
 
 my $master_time;
