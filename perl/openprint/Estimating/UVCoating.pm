@@ -15,13 +15,34 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::UVCoating;
-use vars qw( %ServicePrices );
 use strict;
 #use warnings;
+use vars qw( %ServicePrices %Specifications);
 %ServicePrices = (
 	UVCoatingMinimumCharge => {},
 	'UV(.*)MakeReady' => {},
 );
+%Specifications = (
+  UVCoatingRunSpeed => {range_units => [ 'gsm' ]},
+  'WT UVCoating' => { values=>['Y','N'] },
+  'UVCoating Overs' => {range_units => [ 'impressions' ]},
+  'UVCoating Capable' => { value=>['Y','N'] },
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
+}
+
+sub SpecificationConfiguration {
+  my $name = shift;
+  return $Specifications{$name} if $Specifications{$name};
+  return undef;
+}
 
 require openprint::service;
 require openprint::Material;
@@ -333,6 +354,7 @@ sub get_uv_colours {
 	} # end foreach
 	return @colours;
 } # end sub get_colours
+
 sub get_uv_inkcoverage {
 	my ( $specs ) = @_;
 
@@ -489,12 +511,17 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if DEBUG;
 				$breakdown .= '<tr><td colspan="2">impressions: ' . $run_qty .'</td></tr>';
 		
 				if ( my $Overs = $Equipment->Specification('UVCoating Overs', $run_qty ) ) {
+          my $overs;
 					if ( $$Overs{units} eq 'Sheets' ) {
-						my $overs = $$Overs{value};
-						$run_qty += $overs;
-						$ImpositionPrice{Overs} += $overs;
-						$breakdown .= ' Overs: ' . $overs;
+						$overs = $$Overs{value};
+          } elsif ($$Overs{units} eq 'percent') {
+						$overs = int($run_qty * $$Overs{value} / 100);
+          } else {
+            $openprint::log->error('Unknown units in UVCoating Overs');
 					} # endif
+          $run_qty += $overs;
+          $ImpositionPrice{Overs} += $overs;
+          $breakdown .= ' Overs: ' . $overs;
 				} # end if
 				my @types;
 				if ( $wt ) {
@@ -562,7 +589,8 @@ $openprint::log->debug("Types: @types") if DEBUG;
                   #} else {
                   #$length = $Imposition->layout_width();
                   #} # end if
-                  my $inches = $length * ( $qty / $$Imposition{imposition} );
+
+                  my $inches = $length * $run_qty;
                   my $hours = Math::Round::nearest( 0.01, $inches / $$runspeed{value} );
                   $breakdown .= sprintf('<tr><td>Service: %s image length = %dinches @ %d/Hr = %.1fhours', $length, $inches, $$runspeed{value}, $inches/$$runspeed{value} );
                   $ServicePrice{Total} = $ServicePrice{Price}*$inches/$$runspeed{value}
