@@ -163,8 +163,12 @@ sub neccessary {
 #$log->debug(" ** Project is marked as No bindery, Scoring not needed ! ** ");
 		return 0;
 	} # end if
+	if ( $$services{DieCutting} ) {
+#$log->debug(" ** Project hash DueCutting bindery, Scoring not needed ! ** ");
+		return 0;
+	} # end if
 
-# Only need scoring if it's being folded.
+  # Only need scoring if it's being folded.
 	if ( $$services{Folding} and @{$$services{Folding}} ) {
 		my $specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] ) if $$services{Scoring};
 		foreach my $signature_service_index ( $Project->signatures() ) {
