@@ -20,6 +20,27 @@ use warnings;
 use POSIX qw( ceil );
 use constant DEBUG => 1;
 
+use vars qw( %ServicePrices %Specifications);
+%ServicePrices = (
+  DieCuttingMinimumCharge => {},
+  'DieCuttingMakeReady' => {},
+  'DieCutting' => { units=> ['per hour']},
+);
+%Specifications = (
+  UVCoatingRunSpeed => {range_units => [ 'gsm' ]},
+  'WT UVCoating' => { values=>['Y','N'] },
+  'UVCoating Overs' => {range_units => [ 'impressions' ]},
+  'UVCoating Capable' => { value=>['Y','N'] },
+);
+
+sub ServicePriceConfiguration {
+  return $ServicePrices{shift};
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
+
+
 require openprint::Equipment;
 require openprint::service;
 
