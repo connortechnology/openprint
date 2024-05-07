@@ -16,11 +16,37 @@
 
 package openprint::Estimating::Stripping;
 use strict;
-#use warnings;
-use POSIX qw( ceil );
+use warnings;
 use constant DEBUG => 1;
+use Data::Dumper;
 
 # Stripping tends to be a manual process.  There are tools to help... 
+my %ServicePrices = (
+  StrippingMinimumCharge => {},
+  'Stripping(.*)MakeReady' => { units => [ 'per hour' ] },
+  'Stripping' => { units=> ['per hour', 'per lb','per m']},
+);
+my %Specifications = (
+  'Stripping Capable' => { values=>['Y','N','When DieCutting'] },
+  'Stripping MakeReadyTime' => { units => 'minutes' },
+  'Stripping Runspeed' => {},
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  $openprint::log->debug("Finding for $name");
+  $openprint::log->debug( Data::Dumper::Dumper(\%ServicePrices));
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    $openprint::log->debug("Trying $name =~ $key/");
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  $openprint::log->debug("Not found for ($name)");
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
 
 require openprint::Equipment;
 require openprint::service;
@@ -115,7 +141,7 @@ sub calc {
 				$$specs{'rdbStripping-'.$form} = 'Complex';
 			} # end if
 		} # end if
-		if ( ( $$specs{'rdbSuppliedDie-'.$form} eq 'N' ) and ( ! $$specs{'rdbStripping-'.$form} ) ) {
+		if ( (!$$specs{'rdbSuppliedDie-'.$form} or  $$specs{'rdbSuppliedDie-'.$form} eq 'N' ) and ( ! $$specs{'rdbStripping-'.$form} ) ) {
 			$$specs{alert} .= 'Please select the complexity of the die.<br/>';
 			return 'uncalculated';
 		} # end if
@@ -137,7 +163,7 @@ sub calc {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $form = $$sig_specs{SignatureIndex};
 
-			$$specs{'hdnBreakdown'.$qty_index} .= "Form $form: $$sig_specs{txtServiceDescription}<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= "Form $form: ".($$sig_specs{txtServiceDescription}?$$sig_specs{txtServiceDescription}:'').'<br/>';
 			my $SignatureImposition = new openprint::Imposition();
 			$SignatureImposition->load( $sig_specs, $qty_index, $Project );
 			$$specs{'hdnBreakdown'.$qty_index} .= $SignatureImposition->to_string() . '<br/>';
@@ -168,6 +194,8 @@ sub calc {
 					} # end if
 					if ( $$Price{ServicePrice}{units} eq 'per hour' ) {
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d impressions/%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{Runspeed}{value} );
+          } elsif ( $$Price{ServicePrice}{units} eq 'per lb' ) {
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%.4f * %5$d impressions=%6$.2flbs) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $Project->finished_weight(), $$Price{Impressions}, $Project->finished_weight()*$$Price{Impressions}, $$Price{Runspeed}{value} );
 					} else {
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions} );
 					} # end if
@@ -245,7 +273,7 @@ sub signature_needs {
 				return 1;
 			} # end if
 		} else {
-			$openprint::log->error("No ServiceType for Stripping");
+			$openprint::log->error('No ServiceType for Stripping');
 		}
 	} # end if
 	return $$specs{"Needed-$form"} eq 'Y' ? 1 : 0;
@@ -267,24 +295,38 @@ sub signature_calc {
 
 	my $services = $Project->services();
 
+	$$Imposition{impressions} = int( $$specs{"txtQuantity$qty_index"} / ( $$Imposition{quantity} * $$Imposition{imposition} ) );
 	my @Impositions;
+  my $DieCutting_specs = {};
 	if ( $$services{DieCutting} and @{$$services{DieCutting}} ) {
-		my $DieCutting_specs = openprint::service::get_specs_ref( $Project, $$services{DieCutting}[0] );
-		@Impositions = load_Impositions( $DieCutting_specs, $form, $qty_index );
+		$DieCutting_specs = openprint::service::get_specs_ref( $Project, $$services{DieCutting}[0] );
+		@Impositions = load_Impositions( $Imposition, $DieCutting_specs, $form, $qty_index );
 	} else {
 		@Impositions = ( $Imposition );
-		$$Imposition{impressions} = int( $$specs{"txtQuantity$qty_index"} / ( $$Imposition{quantity} * $$Imposition{imposition} ) );
 	} # end if
 
-	foreach my $Equipment ( @Equipment ) {
+  foreach my $Equipment ( @Equipment ) {
+    my $capable = $Equipment->specification('Stripping Capable');
+    if ($capable) {
+      if ($capable eq 'When DieCutting') {
+        if ($$DieCutting_specs{'ddmEquipment'.$qty_index} and
+          ($$DieCutting_specs{'ddmEquipment'.$qty_index} != $Equipment->id())) {
+          $results{breakdown} .= ' Not being DieCut on '.$Equipment->name().', on '.new openpprint::Equipment($$DieCutting_specs{'ddmEquipment'.$qty_index})->name().'<br/>';
+          next;
+        }
+      } elsif ($capable eq 'N') {
+        $results{breakdown} .= ' Not capable on '.$Equipment->name().'<br/>';
+        next;
+      }
+    }
 
-		my %price;
-		for( my $impo_index = 0; $impo_index < @Impositions; $impo_index += 1 ) {
-			my $Imposition = $Impositions[$impo_index];
+    my %price;
+    for( my $impo_index = 0; $impo_index < @Impositions; $impo_index += 1 ) {
+      my $Imposition = $Impositions[$impo_index];
 
-			#my $width = $imposition->layout_width();
-			#my $height = $imposition->layout_height();
-			#if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{txtSpecificStockCalliper} ) ) {
+      #my $width = $imposition->layout_width();
+      #my $height = $imposition->layout_height();
+      #if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{txtSpecificStockCalliper} ) ) {
 				#if ( 1 == @equipment ) {
 					#$results{breakdown} .= "Doesn't fit. $_<br/>";
 				#} # end if
@@ -295,7 +337,7 @@ sub signature_calc {
 				#$complete = 0;
 				#last;
 			#} # end if
-			my %p = calc_price( $specs, $Equipment, $qty_index, $Imposition, $form );
+			my %p = calc_price( $Project, $specs, $Equipment, $qty_index, $Imposition, $form );
 			push @{$price{Prices}}, \%p;
 			$price{Total} += $p{Total};
 		} # end foreach imposition
@@ -317,9 +359,9 @@ sub signature_calc {
 } # end sub signature_calc
 
 sub calc_price {
-    my ( $specs, $Equipment, $qty_index, $Imposition, $form ) = @_;
+  my ( $project, $specs, $Equipment, $qty_index, $Imposition, $form ) = @_;
 
-	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'' );
+	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'', Impressions=>$$Imposition{impressions} );
 
 	my $MakeReadyService = openprint::Service->find_one( name => 'Stripping-'.$$specs{'Complexity-'.$form}.'MakeReady' ) if $$specs{'Complexity-'.$form};
 	$MakeReadyService = openprint::Service->find_one( name => 'StrippingMakeReady' ) if ! $MakeReadyService;
@@ -347,13 +389,16 @@ sub calc_price {
 	} # en dif
 
 	if ( ( ! defined $$specs{'OverridePrice'.$qty_index} ) or ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) ) {
-		my $StrippingService = openprint::Service->find_one( name=>'Stripping'.$$specs{'Complexity-'.$form}.'Stripping' );
+		my $StrippingService = openprint::Service->find_one( name=>'Stripping'.$$specs{'Complexity-'.$form}.'Stripping' ) if $$specs{'Complexity-'.$form};
 		$StrippingService = openprint::Service->find_one( name=>'Stripping' ) if ! $StrippingService;
 		if ( $StrippingService ) {
 			my $ServicePrice = $StrippingService->get_Price( undef, $Equipment );
 			if ( $ServicePrice ) {
 				if ( $$ServicePrice{units} eq 'per m' ) {
 					$$ServicePrice{Total} = Math::Round::nearest( 0.01, $$ServicePrice{Price} * $$Imposition{impressions} / 1000 );
+        } elsif ( $$ServicePrice{units} eq 'per lb' ) {
+          my $weight = $project->finished_weight();
+					$$ServicePrice{Total} = Math::Round::nearest( 0.01, $$ServicePrice{Price} * $$Imposition{impressions} * $weight );
 				} elsif ( $$ServicePrice{units} eq 'per hour' ) {
 					my $Runspeed = $Equipment->Specification( 'Stripping Runspeed' );
 					if ( $Runspeed and $$Runspeed{value} ) {
@@ -376,7 +421,7 @@ sub calc_price {
 				$Total{alert} .= "No service price in the system for $$StrippingService{name}<br/>";
 			} # end if
 		} else {
-			$Total{alert} .= "No Stripping service in the system.<br/>";
+			$Total{alert} .= 'No Stripping service in the system.<br/>';
 		} # en dif
 	} else {
 		$Total{MPrice} += ( $$specs{"Price$qty_index"} / $$Imposition{impressions} ) * 1000;
@@ -387,6 +432,7 @@ sub calc_price {
     return %Total;
 
 } # end sub calc_price
+
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;	
 
@@ -394,73 +440,74 @@ sub display {
 	my $Service = $Project->Service( $service_index );
 	my $ServiceType = $Service->ServiceType();
 
-	$$variable{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)', useinestimating=>1,
+	$$variable{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)',
+      useinestimating=>1,
 			'servicetype_id any'=>$Service->servicetype_id(),
 			) ];
 
 } # end sub display
 
 sub signature_summary {
-    my ( $Project, $service_index, $specs, $qty_index, $s_id, $sig_specs ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
-    $sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
-    my $form = $$sig_specs{SignatureIndex};
-    if ( $qty_index ) {
-        if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
-            return '';
-        } # end if
-        my @folds;
-        my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
-        foreach my $imp_index ( 1 .. 4 ) {
-            next if ! $$specs{"ImpQty-$form-$qty_index-$imp_index"};
-            push @folds, sprintf('%1$d @ %2$dout', @$specs{"ImpQty-$form-$qty_index-$imp_index","ImpOut-$form-$qty_index-$imp_index"},
-                    );
-        } # end foreach
-        return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
+  my ( $Project, $service_index, $specs, $qty_index, $s_id, $sig_specs ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
+  $sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
+  my $form = $$sig_specs{SignatureIndex};
+  if ( $qty_index ) {
+    if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
+      return '';
     } # end if
+    my @folds;
+    my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
+    foreach my $imp_index ( 1 .. 4 ) {
+      next if ! $$specs{"ImpQty-$form-$qty_index-$imp_index"};
+      push @folds, sprintf('%1$d @ %2$dout', @$specs{"ImpQty-$form-$qty_index-$imp_index","ImpOut-$form-$qty_index-$imp_index"},
+      );
+    } # end foreach
+    return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
+  } # end if
 
-	return '';
+  return '';
 } # end sub signature_summary
 
 sub summary {
-	my ( $Project, $service_id, $specs, $qty_index ) = @_;
-	#$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
-	if ( $qty_index ) {
-		my $html;
-        my @signatures = $Project->signatures( { sort=>1 } );
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+  #$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+  if ( $qty_index ) {
+    my $html;
+    my @signatures = $Project->signatures( { sort=>1 } );
 
-        for ( my $sig_index = 0; $sig_index < @signatures; $sig_index += 1 ) {
-            my $s_s_id = $signatures[$sig_index];
-            my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-            my $form = $$sig_specs{SignatureIndex};
-			if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
-				next;
-			} # end if
-            my $sig_count = 1;
+    for ( my $sig_index = 0; $sig_index < @signatures; $sig_index += 1 ) {
+      my $s_s_id = $signatures[$sig_index];
+      my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+      my $form = $$sig_specs{SignatureIndex};
+      if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
+        next;
+      } # end if
+      my $sig_count = 1;
 
-            if ( $sig_index < @signatures - 1 ) {
-                for ( my $sig_index2 = $sig_index + 1; $sig_index2 < @signatures; $sig_index2 += 1 ) {
-                    my $sig_specs2 = openprint::service::get_specs_ref( $Project, $signatures[$sig_index2] );
-                    if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $qty_index ) ) {
-                        $sig_count += 1;
-                    } else {
-                        last;
-                    } # end if
-                } # end for
-                splice @signatures, $sig_index+1,$sig_count-1 if $sig_count > 1;
-            }
-            my $summary = signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef );
-            if ( $sig_count > 1 ) {
-                $html .= ($sig_count) . ' Forms ' . $$sig_specs{txtServiceDescription} ;
-            } else {
-                $html .= 'Form ' . $form . ' ' . $$sig_specs{txtServiceDescription};
-            } # end if
-			$html .= $summary . "\n";
-        } # end foreach
-        return $html;
-	} # end if
+      if ( $sig_index < @signatures - 1 ) {
+        for ( my $sig_index2 = $sig_index + 1; $sig_index2 < @signatures; $sig_index2 += 1 ) {
+          my $sig_specs2 = openprint::service::get_specs_ref( $Project, $signatures[$sig_index2] );
+          if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $qty_index ) ) {
+            $sig_count += 1;
+          } else {
+            last;
+          } # end if
+        } # end for
+        splice @signatures, $sig_index+1,$sig_count-1 if $sig_count > 1;
+      }
+      my $summary = signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef );
+      if ( $sig_count > 1 ) {
+        $html .= ($sig_count) . ' Forms ' . $$sig_specs{txtServiceDescription} ;
+      } else {
+        $html .= 'Form ' . $form.($$sig_specs{txtServiceDescription} ?' ' . $$sig_specs{txtServiceDescription}:'');
+      } # end if
+      $html .= $summary . "\n";
+    } # end foreach
+    return $html;
+  } # end if
 
-	return '';
+  return '';
 } # end sub summary
 
 sub save {
@@ -468,14 +515,14 @@ sub save {
 } # end sub save
 
 sub load_Impositions($$$) {
-	my ( $specs, $form, $qty_index ) = @_;
+	my ( $Imposition, $specs, $form, $qty_index ) = @_;
 
 	my @impos;
 	my @results;
 	foreach my $imp_index ( 1 .. 4 ) {
 		next if ! $$specs{"ImpQty-$form-$qty_index-$imp_index"};
 
-		my $imp = new openprint::Imposition();
+		my $imp = $Imposition->copy();
 		$imp->columns( $$specs{"ImpColumns-$form-$qty_index-$imp_index"} );
 		$imp->rows( $$specs{"ImpRows-$form-$qty_index-$imp_index"} );
 
@@ -499,30 +546,33 @@ sub load_Impositions($$$) {
 } # end sub load_Impositions
 
 sub has_overrides {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-    my @v;
-    if ( $qty_index ) {
-        foreach my $s_s_id ( $Project->signatures() ) {
-            my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-            my $form = $$sig_specs{SignatureIndex};
-            push @v, map { $$specs{$_} ? $_ : () } (
-                    "chkOverrideEquipment-$form-$qty_index",
-                    "chkOverrideImposition-$form-$qty_index",
-                    "OverrideMakeReadyPrice-$form-$qty_index",
-                    "OverridePrice-$form-$qty_index",
-                    "OverrideServicePrice-$form-$qty_index",
-                    );
-        } # end foreach sig
-    } # end if
+  my @v;
+  if ( $qty_index ) {
+    foreach my $s_s_id ( $Project->signatures() ) {
+      my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+      my $form = $$sig_specs{SignatureIndex};
+      push @v, map { $$specs{$_} ? $_ : () } (
+        "chkOverrideEquipment-$form-$qty_index",
+        "chkOverrideImposition-$form-$qty_index",
+        "OverrideMakeReadyPrice-$form-$qty_index",
+        "OverridePrice-$form-$qty_index",
+        "OverrideServicePrice-$form-$qty_index",
+      );
+    } # end foreach sig
+  } # end if
 
-    return @v;
-
+  return @v;
 } # end sub has_overrides
 
 sub neccessary {
-	my ( $Project ) = @_;
+  my ( $Project, $Service ) = @_;
+  my $services = $Project->services( );
+  if ($$services{DieCutting}) {
+    return 1;
+  }
 	return 0;
 } # end sub neccessary
 
