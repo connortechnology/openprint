@@ -18,10 +18,10 @@ use openprint ();
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-foreach my $Service ( 'UVCoating' ) {
+foreach my $Service ( 'UVCoating', 'ThreeKnifeTrim' ) {
 	eval "
 		my \@keys = keys %openprint::Estimating::${Service}::ServicePrices;
-		\@ServicePrices{\@keys} = values %openprint::Estimating::${Service}::ServicePrices if \@keys;
+		\@Configuration{\@keys} = values %openprint::Estimating::${Service}::ServicePrices if \@keys;
 	";
 }
 foreach my $service ( keys %ServicePrices) {
