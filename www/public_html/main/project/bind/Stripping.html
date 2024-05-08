@@ -1,4 +1,3 @@
-<script src="<?hash_link('/javascripts/service.js')?>"></script>
 <div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
@@ -29,12 +28,12 @@
 						next if ! $$sig_specs{"txtImposition$qty_index"};
 						$html .= '<div class="'.$$variable{Columns}.'Columns">';
 
-                        $html .= '<table><tr><th class="Qty">Qty</th><th class="Imp">Imposition</th></tr>';
-                        foreach my $index ( 1 .. 4 ) {
-                            $$variable{index} = $index;
-                            $html .= variable_substitution( \$fragment, $variable );
-                        } # end foreach
-                        $html .= '</table>';
+            $html .= '<table><tr><th class="Qty">Qty</th><th class="Imp">Imposition</th></tr>';
+            foreach my $index ( 1 .. 4 ) {
+                $$variable{index} = $index;
+                $html .= variable_substitution( \$fragment, $variable );
+            } # end foreach
+            $html .= '</table>';
 						$html .= '</div>';
 					} # end foreach qty_index
 
@@ -60,3 +59,4 @@
 		<input type="hidden" name="Status" value="<?Status?>" />
 	</form>
 </div>
+<script src="<?hash_link('/javascripts/service.js')?>"></script>
