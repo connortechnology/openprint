@@ -1,59 +1,29 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
-<script type="text/javascript">
-    function calc( formName, force ) {
-        var form = getFormObj( formName );
-        if ( gettingNewPrice ) {
-            if ( timeout ) {
-                clearTimeout( timeout );
-            } // end if
-            if ( ! force ) {
-                setTimeout( "calc('"+formName+"');", 1000 );
-                return;
-            } // end if
-        } // end if
-        timeout = null;
-        gettingNewPrice = true;
-
-        var blah = Form.serialize( form, true );
-        var h = $H(blah);
-        h.each(function(pair) {
-            if ( pair.value == '' )
-                h.unset(pair.key);
-            if ( pair.key == 'btnFunction' )
-                h.unset(pair.key);
-            if ( pair.key == 'alert' )
-                h.unset(pair.key);
-        });
-        h.set('ServiceType','Scoring' );
-        h.set('callback', 'cbScoringResults' );
- 
-        new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-    }
-    function cbScoringResults( results ) {
-        var form = getFormObj('f1');
-        var re = /ImpQty-(\d+)-(\d+)-(\d+)/;
-        var keys = results.keys();
-        for ( var index = 0, len = keys.length; index < len; index += 1 ) {
-            var key = keys[index];
-            var value = results.get(keys[index]);
-
-            var matches = re.exec( key );
-            if ( matches ) {
-                var f = $('Imp-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
-                if ( f ) {
-                    if ( matches[3] == 1 || value > 0 ) {
-                        f.show();
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script>
+  results_callback = function cbScoringResults( results ) {
+      cbFillResults(results);
+      const form = getFormObj('f1');
+      const re = /ImpQty-(\d+)-(\d+)-(\d+)/;
+      const keys = results.keys();
+      for ( let index = 0, len = keys.length; index < len; index += 1 ) {
+          const key = keys[index];
+          const matches = re.exec( key );
+          if ( matches ) {
+              const f = $('Imp-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
+              if ( f ) {
+                  const value = form.elements[index].value;
+                  if ( matches[3] == 1 || value > 0 ) {
+                      f.show();
                     } else {
                         f.hide();
-                    } // end if
+                      } // end if
                 } else {
                     alert('debug mesage: No html for imp ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
-                } // end if f
+                  } // end if f
             } // end if matches
         } // end foreach pair
-        cbFillResults(results);
-
     } // end fucntion
+
 function show_extra_imposition( signature, qty_index ) {
     var f = $('Imp-'+signature+'-'+qty_index+'-'+'2');
     f.show();
