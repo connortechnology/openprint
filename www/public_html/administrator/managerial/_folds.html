@@ -2,8 +2,8 @@
   my $uri = '/administrator/managerial/folds.html';
     my %filters = (
 		order	=>	'lower(name)',
-		( $session{$uri.'?equipment_id'} ? ( equipment_id => $session{$uri.'?equipment_id'} ) : () ),
-		( $session{$uri.'?type'} ? ( type => $session{$uri.'?type'} ) : () ),
+		( $session{$uri.'?equipment_id'} ? ( equipment_id => [split(',',$session{$uri.'?equipment_id'})] ) : () ),
+		( $session{$uri.'?type'} ? ( type => [split(',',$session{$uri.'?type'})] ) : () ),
     ( $session{$uri.'?imposition'} ? (
     'min_imposition <='=>$session{$uri.'?imposition'},
     'max_imposition <=' => $session{$uri.'?imposition'} ) : () ),
@@ -31,6 +31,7 @@
 	my $html;
 	my $rowclass;
 	foreach my $Fold ( @{$$variable{Folds}} ) {
+    next if $Fold->Equipment()->deleted();
 		$html .= sprintf(q`
 <tr%1$s> 
   <td class="checkbox"><input type="checkbox" name="fold_id" value="%2$d"/></td>
