@@ -58,21 +58,22 @@ function load_page() {
       <ul>
       <li>
         <label>Equipment</label>
-        <select id="equipment_id" name="equipment_id" onchange="load_page();">
+        <select id="equipment_id" name="equipment_id" onchange="load_page();" class="chosen" multiple="multiple">
           <option value="">All Equipment</option>
   <? echo (
-                  make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)', 'servicetype any'=>'Folding' ) ], $session{$r->uri().'?equipment_id'} );
+                  make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)', 'servicetype any'=>'Folding' ) ],
+                  [split(',',$session{$r->uri().'?equipment_id'})] );
   ) ?>
         </select>
       </li>
       <li><label>Type</label>
-        <select id="type" name="type" onchange="load_page();">
+        <select id="type" name="type" onchange="load_page();" class="chosen" multiple="multiple">
           <option value="">All</option>
   <? echo ( 
     make_drop_down( [ 
                   map { $_, $openprint::Estimating::Folding::fold_types{$_} } 
                   sort keys %openprint::Estimating::Folding::fold_types ],
-                  $session{$r->uri().'?type'});
+                  [split(',',$session{$r->uri().'?type'})]);
   ) ?>
         </select>
       </li>
