@@ -93,7 +93,9 @@ sub handler {
 	%param = ();
 	# Here we copy the param data into a hash that is sligthly more useful to use.	Wish we didn't have to do this.
 	foreach my $key ( $r->param ) {
+
 		my @values = $r->param($key);
+    $key = substr($key,0,-2) if (substr($key, -2, 2) eq '[]');
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
 			#$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
