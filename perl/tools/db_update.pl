@@ -675,7 +675,76 @@ if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
 
 
 if ( ! sets::isin( 'orders', \@tables ) ) {
-	load_sql( 'Orders' );
+  if (sets::isin('tbl_orders',\@tables)) {
+		my $ac = sql::start_transaction( $dbh );
+    $dbh->do('ALTER TABLE tbl_orders rename to orders') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN lngorderid to id') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN lngcustomerid to company_id') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN lnguserid to user_id') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN lngemployeeid to salesrep_id') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN curtotalsale to total') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN curdownpayment to downpayment') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN dtmorderdate to created_on') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN strponumber  to po') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN strcompanyname  to company_name') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN strfirstname  to firstname') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN strlastname  to lastname') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN strsalutation to salutation') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN straddress1 to address1') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN straddress2 to address2') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN strcity to city') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN strstate to state') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN strcountry to country') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN strpostalcode to postalcode') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN strphone to phone') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN strext to extension') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN strfax to fax') or die $dbh->errstr();
+$dbh->do('ALTER TABLE orders RENAME COLUMN stremail to email') or die $dbh->errstr();
+		sql::end_transaction( $dbh, $ac );
+  } else {
+	  load_sql( 'Orders' );
+  }
+} else {
+  my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
+  if (exists $$data{strfirstname} and !exists $$data{firstname}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN strfirstname  to firstname') or die $dbh->errstr();
+  }
+  if (exists $$data{strlastname} and !exists $$data{lastname}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN strlastname  to lastname') or die $dbh->errstr();
+  }
+  if (exists $$data{strsalutation} and !exists $$data{salutation}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN strsalutation to salutation') or die $dbh->errstr();
+  }
+  if (exists $$data{straddress1} and !exists $$data{address1}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN straddress1 to address1') or die $dbh->errstr();
+  }
+  if (exists $$data{straddress2} and !exists $$data{address2}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN straddress2 to address2') or die $dbh->errstr();
+  }
+  if (exists $$data{strcity} and !exists $$data{city}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN strcity to city') or die $dbh->errstr();
+  }
+  if (exists $$data{strstate} and !exists $$data{state}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN strstate to state') or die $dbh->errstr();
+  }
+  if (exists $$data{strcountry} and !exists $$data{country}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN strcountry to country') or die $dbh->errstr();
+  }
+  if (exists $$data{strpostalcode} and !exists $$data{postalcode}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN strpostalcode to postalcode') or die $dbh->errstr();
+  }
+  if (exists $$data{strphone} and !exists $$data{phone}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN strphone to phone') or die $dbh->errstr();
+  }
+  if (exists $$data{strext} and !exists $$data{extension}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN strext to extension') or die $dbh->errstr();
+  }
+  if (exists $$data{strfax} and !exists $$data{fax}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN strfax to fax') or die $dbh->errstr();
+  }
+  if (exists $$data{stremail} and !exists $$data{email}) {
+    $dbh->do('ALTER TABLE orders RENAME COLUMN stremail to email') or die $dbh->errstr();
+  }
 }
 
 if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
@@ -1105,6 +1174,7 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Magazines'`);
 		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Newsletters'`);
 		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Calendars'`);
+		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE ysnmultipage=true`);
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 } else {
@@ -1453,9 +1523,11 @@ if ( sets::isin( 'tbl_service_types', \@tables ) ) {
 	$dbh->do(q`ALTER TABLE service_types ADD type TEXT`) or die $openprint::dbh->errstr();
 	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`) or die $openprint::dbh->errstr();
   sql::end_transaction( $dbh, $ac );
+  push @tables, 'service_types';
 
 } elsif ( ! sets::isin( 'service_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Service_Types.sql') );
+  push @tables, 'service_types';
 } # end if
 
 if ( ! sets::isin('service_types_id_seq', \@sequences) ) {
@@ -1664,6 +1736,26 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 		$dbh->do('ALTER TABLE tbl_Equipment RENAME column useinestimation to useinestimating') or die $dbh->errstr();
 	} elsif ( !exists $$data{useinestimating} ) {
 		$dbh->do('ALTER TABLE tbl_Equipment ADD useinestimating boolean') or die $dbh->errstr();
+    $dbh->do('UPDATE tbl_Equipment set useinestimating=true');
+	}
+	if ( !exists $$data{useinscheduling} ) {
+		$dbh->do('ALTER TABLE tbl_Equipment ADD useinscheduling boolean') or die $dbh->errstr();
+	}
+	if ( !exists $$data{jmf_enabled} ) {
+		$dbh->do('ALTER TABLE tbl_Equipment ADD jmf_enabled boolean') or die $dbh->errstr();
+	}
+	if ( !exists $$data{instantgate_enabled} ) {
+		$dbh->do('ALTER TABLE tbl_Equipment ADD instantgate_enabled boolean') or die $dbh->errstr();
+	}
+	if ( !exists $$data{cost_center} ) {
+		$dbh->do('ALTER TABLE tbl_Equipment ADD cost_center text') or die $dbh->errstr();
+	}
+	if ( !exists $$data{image} ) {
+		$dbh->do('ALTER TABLE tbl_Equipment ADD image text') or die $dbh->errstr();
+	}
+	if ( !exists $$data{location_id} ) {
+		$dbh->do('ALTER TABLE tbl_Equipment ADD location_id integer') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE tbl_Equipment ADD foreign key (location_id) references Locations (id)') or die $dbh->errstr();
 	}
 	
 	if ( exists $$data{strcategory} ) {
@@ -1760,19 +1852,19 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
     column_rename('papers', 'dblwidth', 'width') or die $dbh->errstr();
     column_rename('papers', 'dblheight', 'height') or die $dbh->errstr();
     $dbh->do('ALTER TABLE papers ADD brand_id INTEGER') or die $dbh->errstr();
-    $dbh->do('INSERT INTO stockbrands (name) SELECT distinct strname from papers where strname NOT in (SELECT name from stockbrands)') or die $dbh->errstr();
+    $dbh->do('INSERT INTO stockbrands (name) SELECT distinct strname from papers where strname IS NOT NULL AND strname NOT in (SELECT name from stockbrands)') or die $dbh->errstr();
     $dbh->do('UPDATE papers set brand_id=(SELECT id FROM stockbrands where name=strname)') or die $dbh->errstr();
 
     $dbh->do('ALTER TABLE papers ADD finish_id INTEGER') or die $dbh->errstr();
-    $dbh->do('INSERT INTO stockfinishes (name) SELECT distinct strfinish from papers where strfinish NOT in (SELECT name from stockfinishes)') or die $dbh->errstr();
+    $dbh->do('INSERT INTO stockfinishes (name) SELECT distinct strfinish from papers where strfinish IS NOT NULL AND strfinish NOT in (SELECT name from stockfinishes)') or die $dbh->errstr();
     $dbh->do('UPDATE papers set finish_id=(SELECT id FROM stockfinishes where name=strfinish)') or die $dbh->errstr();
 
     $dbh->do('ALTER TABLE papers ADD colour_id INTEGER') or die $dbh->errstr();
-    $dbh->do('INSERT INTO stockcolours (name) SELECT distinct strcolour from papers where strcolour NOT in (SELECT name from stockcolours)') or die $dbh->errstr();
+    $dbh->do('INSERT INTO stockcolours (name) SELECT distinct strcolour from papers where strcolour IS NOT NULL AND strcolour NOT in (SELECT name from stockcolours)') or die $dbh->errstr();
     $dbh->do('UPDATE papers set colour_id=(SELECT id FROM stockcolours where name=strcolour)') or die $dbh->errstr();
 
     $dbh->do('ALTER TABLE papers ADD weight_id INTEGER') or die $dbh->errstr();
-    $dbh->do('INSERT INTO stockweights (name) SELECT distinct strweight from papers where strweight NOT in (SELECT name from stockweights)');
+    $dbh->do('INSERT INTO stockweights (name) SELECT distinct strweight from papers where strweight IS NOT NULL AND strweight NOT in (SELECT name from stockweights)');
     $dbh->do('UPDATE papers set weight_id=(SELECT id FROM stockweights where name=strweight)') or die $dbh->errstr();
     sql::end_transaction( $dbh, $ac );
     push @tables, 'papers';
@@ -1789,8 +1881,9 @@ if ( ! exists $$data{bladecleaning} ) {
 } # end if
 if ( ! exists $$data{grain_direction} ) {
   $dbh->do('alter table papers add grain_direction text');
-  sql::update( undef, undef, 'papers', 'width > height', 'grain_direction', 'Short' );
-  sql::update( undef, undef, 'papers', 'width < height', 'grain_direction', 'Long' );
+  sql::update( undef, undef, 'papers', 'width > height', 'grain_direction', 'height' );
+  #sql::update( undef, undef, 'papers', 'width > height', 'grain_direction', 'Short' );
+  #sql::update( undef, undef, 'papers', 'width < height', 'grain_direction', 'Long' );
 } # end if
 if ( ! exists $$data{allocated} ) {
   $dbh->do('alter table papers add allocated integer');
@@ -1899,8 +1992,8 @@ if ( sets::isin( 'tbl_material_categories', \@tables ) ) {
 } # end if
 
 if ( ! sets::isin( 'material_categories', \@tables ) ) {
-  if ( sets::isin( 'material_types', \@tables ) ) {
-    $dbh->do('ALTER TABLE material_types RENAME to material_categories');
+  if ( sets::isin( 'material_type', \@tables ) ) {
+    $dbh->do('ALTER TABLE material_type RENAME to material_categories');
   } else {
     $dbh->do( misc::load_file( $log, q{../../sql/Material_Categories.sql}) ) or die $dbh->errstr();
   }
@@ -1912,7 +2005,20 @@ if ( ! sets::isin( 'material_categories', \@tables ) ) {
 	$dbh->do(q{alter table material_categories alter column id drop default});
 	if ( sets::isin('materialcategoriesindex_seq', \@sequences ) ) {
 		$dbh->do('drop sequence materialcategoriesindex_seq') 
-	} 
+	}
+  if (!exists $$data{price_unit}) {
+    $dbh->do('ALTER TABLE material_categories ADD price_unit INTEGER');
+  } else {
+    $dbh->do('ALTER TABLE material_categories ALTER price_unit DROP NOT NULL');
+  }
+  if (!exists $$data{ranged_unit}) {
+    $dbh->do('ALTER TABLE material_categories ADD ranged_unit INTEGER');
+  } else {
+    $dbh->do('ALTER TABLE material_categories ALTER ranged_unit DROP NOT NULL');
+  }
+  if ($$data{id}{column_default} ne "nextval('material_categories_id_seq')") {
+    $dbh->do(q{ALTER TABLE material_categories ALTER id set default nextval('material_categories_id_seq')});
+  }
 }
 if ( ! sets::isin('material_categories_id_seq', \@sequences ) ) {
   $dbh->do('create sequence material_categories_id_seq');
@@ -1941,8 +2047,9 @@ if ( ! sets::isin( 'materials', \@tables ) ) {
 
 			$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt1 to taxexempt1}) if exists $$data{ysntaxexempt1};
 			$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt2 to taxexempt2}) if exists $$data{ysntaxexempt2};
-			$dbh->do(q{alter table tbl_Materials rename to Materials});
+			$dbh->do(q{alter table tbl_Materials rename to Materials}) or die $dbh->errstr();
 		} # endif
+    die $dbh->errstr() if $dbh->errstr();
 		sql::end_transaction( $dbh, $ac );
 	} else {
 		$dbh->do(misc::load_file( $log, '../../sql/Materials.sql') ) or die $dbh->errstr();
@@ -1960,6 +2067,9 @@ if ( ! sets::isin( 'materials', \@tables ) ) {
 	if ( ! exists $$data{activity_code} ) {
 		$dbh->do('ALTER TABLE materials add activity_code text');
 	} 
+  if ($$data{id}{column_default} ne "nextval('materials_id_seq')") {
+    $dbh->do(q{ALTER TABLE materials ALTER id set default nextval('materials_id_seq')});
+  }
 } # end if
 if ( sets::isin( 'materialindex_seq', \@sequences ) and ! sets::isin( 'materials_id_seq', \@sequences ) ) {
 	$dbh->do('alter sequence materialindex_seq rename to materials_id_seq');
@@ -2091,13 +2201,20 @@ if ( sets::isin( 'services', \@tables ) ) {
 		$dbh->do('ALTER TABLE Services ADD activity_code TEXT');
 	} # end if
 	if ( ! exists $$data{servicetype_id} ) {
-		$log->debug("Adding servicetype_id to Services");
-		$dbh->do('ALTER TABLE Services ADD servicetype_id  INTEGER');
-		$dbh->do('ALTER TABLE Services ADD FOREIGN KEY (servicetype_id) REFERENCES service_types (id)');
-    if (sets::isin('service_type_equipment', \@tables)) {
-      $dbh->do('update tbl_equipment set servicetype_id =ARRAY(SELECT service_type from service_type_equipment WHERE equipment=id)');
-      $dbh->do('DROP TABLE service_type_equipment');
+    if (exists $$data{lngtype}) {
+      $dbh->do('ALTER TABLE services RENAME COLUMN lngtype to servicetype_id') or die $dbh->errstr();
+      $dbh->do('ALTER TABLE services alter servicetype_id DROP NOT NULL') or die $dbh->errstr();
+    } else {
+      $log->debug("Adding servicetype_id to Services");
+      $dbh->do('ALTER TABLE Services ADD servicetype_id  INTEGER');
+      $dbh->do('ALTER TABLE Services ADD FOREIGN KEY (servicetype_id) REFERENCES service_types (id)');
+      if (sets::isin('service_type_equipment', \@tables)) {
+        $dbh->do('update tbl_equipment set servicetype_id =ARRAY(SELECT service_type from service_type_equipment WHERE equipment=id)');
+        $dbh->do('DROP TABLE service_type_equipment');
+      }
     }
+  } elsif ($$data{servicetype_id}{is_nullable} eq 'NO') {
+    $dbh->do('ALTER TABLE services alter servicetype_id DROP NOT NULL') or die $dbh->errstr();
 	} # end if
 	if ( ! exists $$data{deleted} ) {
 		$log->debug("Adding deleted to Services");
@@ -2323,6 +2440,16 @@ if ( ! sets::isin( 'service_prices',\@tables )  ) {
 	#if ( ! exists $$data{interpolate} ) {
 		#$dbh->do('ALTER TABLE Service_Prices ADD interpolate boolean default false');
 	#} # end if
+  if ($$data{price} and $$data{price}{data_type} ne 'float') {
+    $dbh->do('ALTER TABLE service_prices ALTER COLUMN price TYPE float');
+  }
+  if ($$data{cost} and $$data{cost}{data_type} ne 'float') {
+    $dbh->do('ALTER TABLE service_prices ALTER COLUMN cost TYPE float');
+  }
+  if ($$data{markup} and $$data{markup}{data_type} ne 'float') {
+    $dbh->do('ALTER TABLE service_prices ALTER COLUMN markup TYPE float');
+  }
+
 	if ( ! exists $$data{period_start} ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD period_start TIMESTAMP WITH TIME ZONE');
 	} # end if
@@ -3639,12 +3766,23 @@ if ( ! sets::isin( 'order_id_seq', \@sequences ) ) {
 }
 
 if ( ! sets::isin( 'order_contents', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../../sql/Order_Contents.sql' ) ) or die;
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='order_contents'", 'column_name');
-	if ( ! $$data{id} ) {
-		$dbh->do('ALTER TABLE order_contents add id SERIAL');
-	} # end if
+  if (sets::isin('tbl_order_contents', \@tables)) {
+    $dbh->do('ALTER TABLE tbl_order_contents RENAME to order_contents') or die $dbh->errstr();
+    column_rename('order_contents', 'lngorderid', 'orderindex');
+    column_rename('order_contents', 'lngcontentindex', 'id');
+  } else {
+    $dbh->do( misc::load_file( $log, '../../sql/Order_Contents.sql' ) ) or die;
+  }
+}
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='order_contents'", 'column_name');
+if ( ! $$data{id} ) {
+  $dbh->do('ALTER TABLE order_contents add id SERIAL');
+} # end if
+if (!exists $$data{shippingtype}) {
+  $dbh->do('ALTER TABLE order_contents add shippingtype text');
+}
+if (!exists $$data{duedate}) {
+  $dbh->do('ALTER TABLE order_contents add duedate date');
 }
 
 
