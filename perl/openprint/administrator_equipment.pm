@@ -114,8 +114,6 @@ sub edit {
         if ( ! ( $variable{error} = $Equipment->save( \%param ) ) ) {
           (new openprint::Log())->save({ Object=>$Equipment, action=>($param{ddmEquipment}?'Edited Equipment':'Saved Equipment'), note=>join('<br/>', @changes) });
         }
-      } else {
-        $variable{information} .= 'No changes made!<br/>';
       }
       my %prices = misc::make_hash_from_array('service_id', openprint::ServicePrice->find(
             equipment_id=>$Equipment->id(),
@@ -147,6 +145,7 @@ sub edit {
         } # end foreach price
         (new openprint::Log())->save({Object=>$service, action=>'Edit Service', note=>join('<br/>', @service_changes) }) if @service_changes;
       } # end foreach service
+      $variable{information} .= 'No changes made!<br/>' if !@changes;
       if (!$variable{errors}) {
         $variable{ExternalRedirect} = '/administrator/equipment/edit.html?ddmEquipment='.$Equipment->id();
       }
