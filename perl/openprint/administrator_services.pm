@@ -230,7 +230,7 @@ sub list {
 }
 sub _list {
   ssi::save_params( '/administrator/services/list.html', (
-      'deleted', 'service_name', 'equipment_id', 'category_id',
+      'deleted', 'service_name', 'equipment_id', 'category_id','servicetype_id'
     ) );
 }
 
