@@ -7,7 +7,7 @@
 */
 .DieCutting .Signature input[type="text"],
 .DieCutting .Signature input[type="number"] {
-	width: 40px;
+	width: 60px;
 }
 @media only screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:portrait) {
 .DieCutting .Signature {

@@ -242,6 +242,13 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
+	require openprint::Estimating::Padding;
+	if ( openprint::Estimating::Padding::neccessary( $Project ) ) {
+		if ( ! $$services{Padding} ) {
+			push @{$$services{Padding}}, $Project->add_service( 'Padding' );
+		} # end if
+	} # end if
+
 	require openprint::Estimating::PerfectBound;
 	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $$services{PerfectBound} ) {

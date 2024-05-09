@@ -467,8 +467,10 @@ sub insert_colour_proof {
 		if ( $$sig_specs{txtNameQuantity} and ( $$sig_specs{txtNameQuantity} > 1) ) {
 			$quantity *= $$sig_specs{txtNameQuantity};
 		} # end if
-		if ( $$sig_specs{'PageQuantity'.$qty_index} and ( $$sig_specs{'PageQuantity'.$qty_index} > 1) ) {
-			$quantity *= $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize} if $$sig_specs{txtSpreadSize};
+    if ($Project->Type()->type() eq 'MultiPage') {
+      if ( $$sig_specs{'PageQuantity'.$qty_index} and ( $$sig_specs{'PageQuantity'.$qty_index} > 1) ) {
+        $quantity *= $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize} if $$sig_specs{txtSpreadSize};
+      } # end if
 		} # end if
 
 		if ( $$specs{RequireColourProofs} and($$specs{RequireColourProofs} eq 'N')) {
