@@ -102,6 +102,7 @@
 	text-align: center;
 	margin: 0 5px 10px 5px;
 	padding: 0;
+display: block;
 }
 .Service .templates p label:not(.radio):not(.radio-inline) {
 	clear: none;

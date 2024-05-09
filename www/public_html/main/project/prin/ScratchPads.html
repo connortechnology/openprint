@@ -1,33 +1,13 @@
 <script src="<?hash_link('/javascripts/service.js')?>"></script>
 <script src="<?hash_link('/javascripts/proj/paper.js')?>"></script>
 <script src="<?hash_link('/javascripts/printing.js')?>"></script>
-<script>
- function calc( formName, force ) {
-        if ( gettingNewPrice && ! force ) {
-            if ( timeout ) {
-                clearTimeout( timeout );
-            } // end if
-
-			setTimeout( "calc('"+formName+"');", 1000 );
-			return;
-		} // end if
-		timeout = null;
-		gettingNewPrice = true;
-		var form = getFormObj( formName );
-		var h = $H(form.serialize(true));
-		h.each(function(pair) {
-				if ( pair.value == '' )
-				h.unset(pair.key);
-				if ( pair.key == 'btnFunction' ) 
-				h.unset(pair.key);
-				});
-		h.set('ServiceType','ScratchPads');
-		h.set('callback','cbBookResults');
-		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-	}
-	function cbBookResults( results ) {
+<script nonce="<?echo($config{CSP_NONCE})?>">
+	const quantities = new Array();
+	<?QUANTITIES?>
+	results_callback = function cbBookResults( results ) {
 		cbFillResults(results);
-		var form = getFormObj('f1');
+
+		const form = getFormObj('f1');
 		if ( get_value( form.Backing ) == 'Cardboard' || get_value( form.Backing ) == 'None' ) {
 			$('SignatureGroup1').hide();
 		} else {
@@ -41,10 +21,11 @@
 					} );
 		} // end if
 	} // end function cbBookResults
+
 	function validate_data(formName) {
 		var form = getFormObj(formName);
 		if ( ! form.PageQuantity.value > 0 ) {
-			alert("Please enter the total quantity of pages.");
+			alert('Please enter the total quantity of pages.');
 			return 0;
 		} // end if
 
@@ -119,6 +100,7 @@
 		<?include(/includes/main/proj/add_to_project.html)?>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+    <input type="hidden" name="ServiceType" value="<?echo($$variable{ProjectType}->type())?>"/>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ContinueProject" value="Y"/>
 		<input type="hidden" name="remaining_pages" />
