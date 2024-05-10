@@ -106,6 +106,7 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	my $status = 'calculated';
+	my $ProjectService = $Project->Service( $service_index );
 
 	if ( ! $$services{''} ) {
 		$$specs{alert} .= 'Unable to find Project Service.<br/>';
@@ -216,12 +217,14 @@ sub calc {
     if ( (defined $$specs{"chkOverrideEquipment$qty_index"}) and ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) ) {
       @equipment = ( new openprint::Equipment( $$specs{"ddmEquipment$qty_index"} ) );
     } else {
-      @equipment = openprint::Equipment->find( useinestimating=>1, 'servicetype_id any'=>$Service->servicetype_id() );
+      @equipment = openprint::Equipment->find( useinestimating=>1, 'servicetype_id any'=>$ProjectService->servicetype_id() );
+      @equipment = (new openprint::Equipment()) if ! @equipment;
     } # end if
     foreach my $equipment (@equipment) {
       $$specs{'hdnBreakdown'.$qty_index} .= "<b>$$equipment{name}</b><br/>";
       my $max_width = $equipment->specification('Maximum Sheet Width') || 40;
       my $maximum_thickness =$equipment->specification('Maximum Calliper') || 4;
+      if (0) {
       my $max_imp = $equipment->specification('Maximum Padding Imposition');
 
       my $padding_imposition = $max_imp == 1 ? 1
@@ -235,6 +238,7 @@ sub calc {
         $$specs{'hdnBreakdown'.$qty_index} .= "Too thick $calliper > $maximum_thickness<br/>";
         next;
       }
+    }
 
       my $price = 0;
 
@@ -285,6 +289,16 @@ sub calc {
       } # end if Material
 
       if ( $$specs{rdbDTape} eq 'Y' ) {
+        if (my $DTapeMRService = openprint::Service->find_one(name=>'PaddingDTapeMakeReady')) {
+          my $DTapeMRPrice = $DTapeMRService->get_Price($qty, undef);
+          $$DTapeMRPrice{Total} = $$DTapeMRPrice{Price};
+          $$specs{'hdnBreakdown'.$qty_index} .= sprintf('DTape MakeReady Price: $%1$.2f%2$s = $%3$.2f<br/>', @$DTapeMRPrice{'Price','units','Total'} );
+        }
+        if (my $DTapeService = openprint::Service->find_one(name=>'PaddingDTape')) {
+          my $DTapePrice = $DTapeService->get_Price($qty, undef);
+          $$DTapePrice{Total} = $$DTapePrice{Price} * $qty;
+          $$specs{'hdnBreakdown'.$qty_index} .= sprintf('DTape Service Price: $%1$.2f%2$s = $%3$.2f<br/>', @$DTapePrice{'Price','units','Total'} );
+        }
         if ( my $Material = openprint::Material->find_one(name=>'DTape') ) {
           my %DTapePrice = $Material->get_price( $qty, undef );
           $DTapePrice{Total} = $DTapePrice{Price} * $$printing_specs{txtFinalWidth};
