@@ -21,7 +21,7 @@
 				<th class="buttons">
 	'.
   button( 'a'.$$Pricelist{id}.'_'.$$Equipment{id}, { onclick=>qq`add_price( \$('f2'), '$$Pricelist{id}', '$$Equipment{id}', '$$Service{id}' );`, text=>'+', title=>'Add New Price to '.$Equipment->strid() } ) . qq`</th>
-			</tr></thead><tbody id="prices-$$Pricelist{id}-$$Equipment{id}">
+      </tr></thead><tbody id="prices-$$Pricelist{id}-$$Equipment{id}-$$Service{id}">
 			`;
 	$$variable{Equipment} = $Equipment;
 	$$variable{Pricelist} = $Pricelist;
