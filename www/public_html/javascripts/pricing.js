@@ -27,7 +27,6 @@ function calc_from_quantity(element) {
 function calc_from_cost(element) {
   let precision = element.getAttribute('precision');
   if (!precision) precision = 5;
-  console.log("Using precision: " + precision);
   const elements = element.form.elements;
   const re = /cost-(.*)/;
   const matches = re.exec(element.name);
@@ -107,16 +106,16 @@ function calc_from_price(element) {
 	} // end if
 } // end function
 
-function add_price (form, pricelist_id, equipment_id, service_id) {
+function add_price(form, pricelist_id, equipment_id, service_id) {
   const prices_id = '#prices-'+pricelist_id+'-'+equipment_id+'-'+service_id;
   const div = $j(prices_id);
   div.html('Please wait...loading.');
   const data = Object.fromEntries(new FormData(form));
   if (service_id) data.service_id = service_id;
 	div.load('/administrator/services/_prices_table_body.html?action=add&pricelist_id='+pricelist_id+'&equipment_id='+equipment_id, data);
-} /* end function del_price() */
+} /* end function add_price() */
 
-function del_price ( form, pricelist_id, equipment_id, service_id, price_id ) {
+function del_price( form, pricelist_id, equipment_id, service_id, price_id ) {
   const prices_id = '#prices-'+pricelist_id+'-'+equipment_id+'-'+service_id;
   const div = $j(prices_id);
   div.html('Please wait...loading.');
@@ -124,7 +123,7 @@ function del_price ( form, pricelist_id, equipment_id, service_id, price_id ) {
 	div.load('/administrator/services/_prices_table_body.html?action=delete&price_id='+price_id, data);
 } /* end function del_price() */
 
-function copy_price ( form, pricelist_id, equipment_id, service_id, price_id ) {
+function copy_price( form, pricelist_id, equipment_id, service_id, price_id ) {
   const prices_id = '#prices-'+pricelist_id+'-'+equipment_id+'-'+service_id;
   const div = $j(prices_id);
   div.html('Please wait...loading.');
