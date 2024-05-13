@@ -202,6 +202,7 @@ sub calc {
 			my $maximum_sheet_length= $Equipment->specification('Maximum Sheet Width');
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s max Width: %s Length: %s<br/>',
           $Equipment->name(), $maximum_sheet_width, $maximum_sheet_length);
+      my $sheets = 0;
 
 			my $length;
       my $imposition = new openprint::Imposition();
@@ -225,6 +226,7 @@ sub calc {
           $length = $item_width * $imposition->rows();
         } # end if
         $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items across: ( %s x %s ) %d style:%s<br/>', $item_width, $item_height, $imposition->columns(), $style );
+        $sheets = $qty;
       } else {
         $imposition->load( $sig_specs, $qty_index, $Project );
         $_ = equipment_fits($Equipment, $imposition, $imposition->Paper());
@@ -232,7 +234,9 @@ sub calc {
           $$specs{'hdnBreakdown'.$qty_index} .= 'Doesn\'t fit.'.$_.'<br/>';
           next;
         } # end if
-        $length = ($imposition->sheet_width() > $imposition->sheet_height ? $imposition->sheet_width() : $imposition->sheet_height());
+        $length = ($imposition->sheet_width() > $imposition->sheet_height ? $imposition->sheet_height() : $imposition->sheet_width());
+        $sheets = $$imposition{net_sheets} ? $$imposition{net_sheets} : $$imposition{impressions};
+        $sheets = $qty if ! $sheets;
       }
 
 			my $area;
@@ -258,8 +262,8 @@ sub calc {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %f = $%.2f<br/>', @ServicePrice{'Price','units'}, $qty, $serviceprice );
 					$MPrice += $serviceprice;
         } elsif ( $ServicePrice{units} eq 'per inch' ) {
-          my $linear_length = Math::Round::nearest(0.01, $length * $$imposition{net_sheets});
-          $$specs{'hdnBreakdown'.$qty_index} .= "Linear length $length * $$imposition{net_sheets} = $linear_length inches<br/>";
+          my $linear_length = Math::Round::nearest(0.01, $length * $sheets);
+          $$specs{'hdnBreakdown'.$qty_index} .= "Linear length $length * $sheets = $linear_length inches<br/>";
           $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $linear_length );
           $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f %2$s * %4$d inches = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $linear_length);
           $MPrice += Math::Round::nearest( 0.01, $ServicePrice{Price} * ( $length * ( 1000 / $$imposition{imposition} ) ));
@@ -293,8 +297,8 @@ sub calc {
             }
             $MPrice += Math::Round::nearest( 0.01, $ServicePrice{Price} * ( $length * ( 1000 / $$imposition{imposition} ) ) / $inches_per_hour );
           } else {
-            my $hours = Math::Round::nearest(0.01, $length * $$imposition{net_sheets} / $inches_per_hour);
-            $$specs{'hdnBreakdown'.$qty_index} .= "Runtime = length $length * $$imposition{net_sheets} / $inches_per_hour<br/>";
+            my $hours = Math::Round::nearest(0.01, $length * $sheets / $inches_per_hour);
+            $$specs{'hdnBreakdown'.$qty_index} .= "Runtime = length $length * $sheets / $inches_per_hour<br/>";
             $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $hours );
             if ($sides eq 'Single' and $$specs{TypeFront} ne 'None' and $$specs{TypeBack} ne 'None') {
               $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Front $%1$.2f %4$s * %2$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
@@ -302,7 +306,7 @@ sub calc {
               $ServicePrice{Total} *= 2;
             $ServicePrice{Price} *= 2;
             } else {
-              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Both sides: $%1$.2f %4$s * %2$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Both sides: $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
             }
             $MPrice += Math::Round::nearest( 0.01, $ServicePrice{Price} * ( $length * ( 1000 / $$imposition{imposition} ) ) / $inches_per_hour );
           }
