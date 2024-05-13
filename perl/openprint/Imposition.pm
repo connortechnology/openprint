@@ -51,6 +51,7 @@ my @fields = (
 	'Folds', 'Fold',
 	'runspeed',
 	'impressions',
+  'net_sheets',
 	'equipment_id', 'Equipment',
 	'inkCoverage',
 	'folio_lip',
