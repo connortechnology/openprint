@@ -81,14 +81,18 @@
 		</li>
 		</ul>
 	</fieldset>
-	<input type="hidden" name="btnFunction"/>
 	<fieldset><legend>Defaults</legend>
 		<div id="Defaults">
 		<?include('_defaults.html')?>
 		</div>
 	</fieldset>
+<fieldset><legend>Service Prices</legend>
+		<?include('_service_prices.html')?>
+</fieldset>
+	<input type="hidden" name="btnFunction"/>
 </form>
 <? if ( $$variable{ServiceType}->id() ) ?>
 <? echo ( include_logs( $$variable{ServiceType} ); ) ?>
 <? endif ( $$variable{ServiceType}->id() ) ?>
 
+<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
