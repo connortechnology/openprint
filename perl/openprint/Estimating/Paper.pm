@@ -440,7 +440,6 @@ sub summary {
 sub save {
 } # end sub save
 
-
 sub se_quantity_summary {
 	my ( $Stock_Entry, $specs, $qty_index ) = @_;
 	my $html = '';
@@ -453,11 +452,11 @@ sub se_quantity_summary {
 			$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
 		} # end if
 		if ( $$specs{"qty-$stock_id-$qty_index"} < 10 ) {
-		$html .= Number::Format::format_number( Math::Round::nearest(.1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
-		} else {
-		$html .= Number::Format::format_number( Math::Round::nearest(1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
-		}
-		$$Stock_Entry{"Price$qty_index"} = $Paper->get_price( weight=>$$specs{"qty-$stock_id-$qty_index"}, service=>'Material' ) if ! $$Stock_Entry{"Price$qty_index"};
+      $html .= Number::Format::format_number( Math::Round::nearest(.1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
+    } else {
+      $html .= Number::Format::format_number( Math::Round::nearest(1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
+    }
+    $$Stock_Entry{"Price$qty_index"} = $Paper->get_price( weight=>$$specs{"qty-$stock_id-$qty_index"}, service=>'Material' ) if ! $$Stock_Entry{"Price$qty_index"};
 		my $Price = $$Stock_Entry{"Price$qty_index"};
 
 		if ( $$Price{units} eq 'per square foot' ) {
@@ -472,6 +471,7 @@ sub se_quantity_summary {
 					$html .= ' ' . Number::Format::format_number( int( ( ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() ) / 12 ) ). ' feet';
 				}
 			} # end if
+    } elsif ($$Price{units} eq 'sheets' || $$Price{units} eq 'lbs') {
 		} elsif ( $$Price{units} ) {
 			$html .= 'unknown units: ' . $$Price{units};
 		} elsif ( sets::isin( $$Stock_Entry{Project}->Type()->name(), [ 'Banners' ] ) ) {
