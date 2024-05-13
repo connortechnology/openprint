@@ -27,7 +27,7 @@ use vars qw( %ServicePrices %MaterialPrices %Specifications);
 %ServicePrices = (
 LaminationMinimumCharge => { units=>[] },
 LaminationMakeReady => { units => [] },
-Lamination => { units => ['per m','per hour'] },
+Lamination => { units => ['per m','per hour', 'per inch'] },
 );
 
 sub ServicePriceConfiguration {
@@ -40,6 +40,7 @@ sub ServicePriceConfiguration {
 }
 
 %Specifications = (
+  'Laminating Waste'  => { units => 'Percent' },
   'Laminating Style' => { values => [ 'Sheet','Final Pieces' ] },
   'Laminating Capable' => { values => [ 'Y'|'N' ] },
   'Laminating Sides' => { values => ['Both', 'Single'] },
@@ -245,6 +246,13 @@ sub calc {
 					$price += $serviceprice;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %f = $%.2f<br/>', @ServicePrice{'Price','units'}, $qty, $serviceprice );
 					$MPrice += $serviceprice;
+        } elsif ( $ServicePrice{units} eq 'per inch' ) {
+            my $linear_inches = Math::Round::nearest(0.01, $length * $$imposition{impressions});
+            $$specs{'hdnBreakdown'.$qty_index} .= "Linear length $length * $$imposition{impressions} = $linear_length inches<br/>";
+            $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $linear_length );
+            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f %4$s * %2$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+            $MPrice += Math::Round::nearest( 0.01, $ServicePrice{Price} * ( $length * ( 1000 / $$imposition{imposition} ) ));
+
 				} elsif ( $ServicePrice{units} eq '/Hr' or $ServicePrice{units} eq 'per hour') {
 					my $inches_per_hour;
 					my $Speed = $Equipment->Specification( 'Run Speed' ) ;
