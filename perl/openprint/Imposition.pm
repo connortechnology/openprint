@@ -436,6 +436,8 @@ $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}
 		$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	} # end if
 	$self->spine_direction();
+$$specs{impressions} = $$specs{"hdnImpressionQuantity$qty_index"};
+$$specs{net_sheets} = $$specs{"hdnNetSheetCount$qty_index"};
 $self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
