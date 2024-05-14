@@ -538,7 +538,7 @@ sub calc {
 			  $$specs{'hdnBreakdown'.$qty_index} .= 'Pocket Make Ready: $' . Math::Round::nearest(0.01, $$pass_price{PocketMakeReady}).'<br/>' if $$pass_price{PocketMakeReady};
 
         if ( my $servicePrice = $$pass_price{ServicePrice} ) {
-          $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s $%.2f%s=$%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','Total'});
+          $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s $%.2f%s @%d per hour %.2fhours =$%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','RunSpeed','RunTime','Total'});
         } # end if
         $pass ++;
 			}
@@ -683,8 +683,8 @@ sub get_price {
 		%servicePrice = openprint::service::get_price_object( $$specs{ServiceType}, $neededPockets, $Equipment );
 	} # end if
 	if ( %servicePrice and $servicePrice{Price} ) {
-		my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
-		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
+		my $unitsPerHour = $servicePrice{RunSpeed} = $Equipment->specification( 'Units Per Hour', $neededPockets );
+		my $runtime = $servicePrice{RunTime} = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 			$price{RunTime} += $runtime * 360;
 		if ( $servicePrice{units} eq 'per m' ) {
 			$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
@@ -692,7 +692,7 @@ sub get_price {
 		} elsif ( $servicePrice{units} eq 'each' ) {
 			$servicePrice{Total} = $servicePrice{Price} * $qty;
 			$price{Service} += $servicePrice{Total};
-		} elsif ( $servicePrice{units} =~ /per hour/i ) {
+		} elsif ( $servicePrice{units} =~ 'per hour' ) {
 			$servicePrice{Total} = $servicePrice{Price} * $runtime;
 			$price{Service} += $servicePrice{Total}
 		} else {
