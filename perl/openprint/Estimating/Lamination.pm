@@ -235,7 +235,7 @@ sub calc {
           next;
         } # end if
         $length = ($imposition->sheet_width() > $imposition->sheet_height ? $imposition->sheet_height() : $imposition->sheet_width());
-        $sheets = $$imposition{net_sheets} ? $$imposition{net_sheets} : $$imposition{impressions};
+        $sheets = $$imposition{impressions} ? $$imposition{impressions} : $$imposition{net_sheets};
         $sheets = $qty if ! $sheets;
       }
 
@@ -384,7 +384,7 @@ sub calc {
 			$bestPrice{Price} = $MinimumCharge{Price};
 		} # end if
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment}->strid() if $bestPrice{Equipment};
-		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+		if ((!$$specs{"OverridePrice$qty_index"}) or ( $$specs{"OverridePrice$qty_index"} ne 'Y')) {
       $bestPrice{UnitPrice} = $bestPrice{Price}/$qty;
 			if ( $$specs{"Markup$qty_index"} ) {
 				$bestPrice{Price} *= 1+$$specs{"Markup$qty_index"}/100;
