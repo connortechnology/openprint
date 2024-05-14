@@ -2325,8 +2325,14 @@ sub set_size {
 
 			# Technically, something like a coil bound could be 2pg spread, just need two of them.	
 			if ( ! $$specs{OverrideSpreadSize} ) {
-				$$specs{txtSpreadSize} = ( $$specs{GroupPageQuantity} > 6 ? 4 : $$specs{GroupPageQuantity} );
-				$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
+        if ( $$specs{rdbTemplateType} eq 'SingleGateFold' ) {
+          $$specs{txtSpreadSize} = 6;
+        } elsif ( $$specs{rdbTemplateType} eq 'DoubleGateFold' ) {
+          $$specs{txtSpreadSize} = 8;
+        } else {
+          $$specs{txtSpreadSize} = ( $$specs{GroupPageQuantity} > 6 ? 4 : $$specs{GroupPageQuantity} );
+        }
+        $variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
 			} else {
 				if ( $$specs{txtSpreadSize} > $$specs{GroupPageQuantity} ) {
 					$$specs{GroupPageQuantity} = $$specs{txtSpreadSize};

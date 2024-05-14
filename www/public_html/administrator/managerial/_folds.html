@@ -48,7 +48,9 @@
 	<td class="Speed">%16$s</td>
 </tr>
 `, $rowclass, $$Fold{id}, $Fold->Equipment()->name(), $$Fold{name}, 
-$Fold->type(), $Fold->pages(), $Fold->folds(), $Fold->angles(),
+$Fold->type(), 
+($Fold->page_columns() ? $Fold->page_columns().'x'.$Fold->page_rows().'='.$Fold->pages() : $Fold->pages()),
+$Fold->folds(), $Fold->angles(),
 join(' ',
 	join('x',
 		( $Fold->min_imposition_columns() ? $Fold->min_imposition_columns() : () ),

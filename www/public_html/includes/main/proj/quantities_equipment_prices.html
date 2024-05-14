@@ -10,15 +10,19 @@
 	<option value="">Equipment Options</option>
 `;
 	if ( $$variable{Equipment} ) {
+  $log->error("aking ddm from Equipment");
 		$html .= make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $$variable{'ddmEquipment'.$qty_index} ? $$variable{'ddmEquipment'.$qty_index} : $$variable{'Equipment'.$qty_index} );
-	} elsif ( $$variable{"ddmEquipment$qty_index"} ) {
-		$html .= $$variable{"ddmEquipment$qty_index"};
+	#} elsif ( $$variable{"ddmEquipment$qty_index"} ) {
+#$log->error("Should deprecate use ofddmEquipment$qty_index");
+		#$html .= $$variable{"ddmEquipment$qty_index"};
 	} elsif ( $$variable{EquipmentArray} ) {
 $log->error("Should deprecate use of fill_dropdown");
 		$html .= fill_drop_down( $log, $dbh, "SELECT strID, strName FROM tbl_Equipment WHERE lngIndex IN (".join(',', @{$$variable{'EquipmentArray'}}).") ORDER BY lower(strName)", $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$qty_index"} ); 
 	} elsif ( $$variable{'ddmEquipment'} ) {
-		$html .= $$variable{'ddmEquipment'};
+  $log->error("aking ddm from ddmEquipment");
+		$html .= $$variable{ddmEquipment};
 	} else {
+  $log->error("aking ddm from servicetype_id");
 		$html .= make_drop_down( openprint::Equipment->dropdown( 'servicetype_id any'=>$$variable{ServiceType}->id(), useinestimating=>1), $$variable{'ddmEquipment'.$qty_index} );
 	}
 	$html .= '</select>';

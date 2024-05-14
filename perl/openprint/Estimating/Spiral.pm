@@ -22,6 +22,8 @@ require openprint::Material;
 require openprint::Project;
 
 my @variables = (
+  'alert',
+  'hdnBreakdown1', 'hdnBreakdown2', 'hdnBreakdown3',
 	'Markup1', 'Markup2', 'Markup3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
@@ -67,6 +69,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
+  $$specs{alert} = '';
 
 $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 	# Currently there is no equipmnet for spiral
@@ -97,8 +100,8 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
   my $AcetateBack = openprint::Material->find_one(name=>'Black Acetate Back');
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
-		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.\-]//g;
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"txtPrice$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		my $price = 0;
 		my $unitPrice = 0;
@@ -155,7 +158,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units for material";
 				} # end if
-				$$specs{'hdnBreakdown'.$qty_index} .= "Material: " . sprintf( '$%.2f%s = $%.2f<br/>', @MaterialPrice{qw(Price units Total)});
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Material: '.$Material->description().' '. sprintf( '$%.2f%s = $%.2f<br/>', @MaterialPrice{qw(Price units Total)});
 				$price += $MaterialPrice{Total};
 				$mprice += $MaterialPrice{Total};
 			} else {

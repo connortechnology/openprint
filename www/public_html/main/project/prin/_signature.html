@@ -17,6 +17,7 @@
 				write_override( 'OverrideGroupPageQuantity'.$$variable{Signature}, $$variable{'OverrideGroupPageQuantity'.$$variable{Signature}}, '', q`calc('f1');` ),
 			); ) ?>
 		</li>
+    <input type="hidden" name="txtSpreadSize<?Signature?>" value="<?echo($$variable{'txtSpreadSize'.$$variable{Signature}})?>"/>
 		<li class="Description">
 			<label>Description</label>
 			<input type="text" name="txtServiceDescription<?Signature?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ) ?>" />

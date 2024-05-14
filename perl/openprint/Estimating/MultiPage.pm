@@ -73,7 +73,7 @@ my %variables = (
 		'CustomStockPrice', 'StockPricePerM', 'txtStockGSM','CustomSheetDoubleSided',
 		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package','full_packages',
 		'sides_the_same','rdbPressProof','PressApproval',
-		'pages_supplied','supplied_format',
+		'pages_supplied','supplied_format','rdbTemplateType','txtSpreadSize',
 		);
 
 sub variables {
@@ -187,6 +187,7 @@ sub calc {
 	my $remaining_pages = $$specs{txtTotalPageQuantity};
 	my %override_pages;
 	foreach my $group_id ( @Groups ) {
+
 		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} and $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
 			if ( ! $$specs{'GroupPageQuantity'.$group_id} ) {
 # We still set override so that it doesn't auto-fill	
@@ -223,21 +224,29 @@ sub calc {
 			if ( $$specs{"PageQuantity-$group_id"} and ( $$specs{"PageQuantity-$group_id"} > $$specs{'GroupPageQuantity'.$group_id} ) ) {
 				$$specs{alert} .= "You have specified to print more pages per signature than are required for group $group_id.<br/>";
 			} # end if
-		} else {
+    } else {
 			$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
 		} # end if override
 	} # end foreach group
 
 	# if there is a cover, then force it to be non-zero
 	if ( (! $override_pages{1}) and ($$specs{OverrideGroupPageQuantity1} ne 'Y') and ($$specs{rdbCover} eq 'Different') ) {
-		my $new_remaining = int(($remaining_pages-4) / $$specs{txtSpreadSize} ) * $$specs{txtSpreadSize} if $$specs{txtSpreadSize};
+    my $pages = 4;
+      if ($$specs{'rdbTemplateType1'} eq 'SingleGateFold') {
+        $pages = $$specs{'GroupPageQuantity1'} = 6;
+        $$specs{txtSpreadSize1} = 6;
+      } elsif ($$specs{'rdbTemplateType1'} eq 'DoubleGateFold') {
+        $pages = $$specs{'GroupPageQuantity1'} = 8;
+        $$specs{txtSpreadSize1} = 8;
+      }
+		my $new_remaining = int(($remaining_pages-$pages) / $$specs{txtSpreadSize1} ) * $$specs{txtSpreadSize1} if $$specs{txtSpreadSize1};
 		if ( 0 ) {
 # I think the idea here is to give the cover either 4 or 6 pages... depending on the total # of pages.
 			$override_pages{1} = $remaining_pages - $new_remaining;
 			$remaining_pages = $new_remaining;
 		} else {
 # Not sure what else we can do. I suppose we could try to figure out if it a 6pg or 8pg.. but really how often is that going to happen?
-			$override_pages{1} = 4;
+			$override_pages{1} = $pages;
 			$remaining_pages -= $override_pages{1};
 			#$openprint::log->warn("FIXM E using coverages = 4 instead of " . ( $remaining_pages - $new_remaining ) );
 		} # end if

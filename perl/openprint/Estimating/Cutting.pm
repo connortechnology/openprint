@@ -36,12 +36,14 @@ my @PreFoldingEquipment;
 
 my @variables = (
     'txtPrice1', 'txtPrice2', 'txtPrice3',
+    'hdnBreakdown1', 'hdnBreakdown2', 'hdnBreakdown3',
     'Markup1','Markup2','Markup3',
     'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
     'MPrice1', 'MPrice2', 'MPrice3',
     'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
     'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
     'txtFinishedCalliper',
+    'alert',
     );
 
 my $CuttingService;
@@ -1244,6 +1246,7 @@ sub calc {
   my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
   $$specs{Status} = 'calculated';
+  $$specs{alert} = '';
 
   if ( ! $$specs{txtNameQuantity} ) {
     $$specs{txtNameQuantity} = 1;

@@ -151,10 +151,10 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 			$$specs{"txtArea-$form"} = 0;
       # Figure out square area of gluing
 			if ( sets::isin( $$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
-				if ( $$sig_specs{chkPocketLeft} eq 'Left' ) {
+				if ( $$sig_specs{chkPocketLeft}  and ($$sig_specs{chkPocketLeft} eq 'Left')) {
 					$$specs{"txtArea-$form"} += .5 * $$sig_specs{PocketSize};
 				} # end if
-				if ( $$sig_specs{chkPocketRight} eq 'Right' ) {
+				if ( $$sig_specs{chkPocketRight} and ($$sig_specs{chkPocketRight} eq 'Right')) {
 					$$specs{"txtArea-$form"} += .5 * $$sig_specs{PocketSize};
 				} # end if
 			} elsif ( $Project->Type()->name() eq 'ScratchPads' ) {
@@ -301,6 +301,7 @@ sub display {
 
 sub save {
 } # end sub save
+
 sub has_overrides {
     my ( $Project, $service_id, $specs, $qty_index ) = @_;
     $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;

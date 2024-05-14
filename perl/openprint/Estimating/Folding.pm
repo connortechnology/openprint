@@ -1986,7 +1986,7 @@ $openprint::log->debug("Not needed for form $form") if DEBUG;
 				$$specs{'hdnBreakdown'.$qty_index} .= $$results{Breakdown};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>MR Waste: %d, Run Waste: %d<br/>', @$results{'MakeReadyOvers','RunOvers'} );
 				$$specs{"Price-$form-$qty_index"} = $$results{Price};
-				$price += $$results{Price};
+				$price += $$results{Price} if $$results{Price};
 				$mprice += $$results{MPrice};
 				if ( $$results{Equipment} ) {
 					if ( (!$$specs{"chkOverrideEquipment-$form-$qty_index"}) or ($$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y') ) {
