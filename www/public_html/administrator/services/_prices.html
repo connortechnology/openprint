@@ -5,7 +5,7 @@
 
 	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
 
-	my $prices_per_equipment = slurp_content( '_prices_per_equipment.html' );
+	my $prices_per_equipment = slurp_content( '/administrator/services/_prices_per_equipment.html' );
 
 	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
 		$$variable{Pricelist} = $Pricelist;
