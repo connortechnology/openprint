@@ -382,7 +382,8 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>Using minimum charge: $%.2f<br/>', $MinimumCharge{Price} );
 			$bestPrice{Price} = $MinimumCharge{Price};
 		} # end if
-		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment}->strid() if $bestPrice{Equipment};
+
+		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment}->id() if $bestPrice{Equipment};
 		if ((!$$specs{"OverridePrice$qty_index"}) or ( $$specs{"OverridePrice$qty_index"} ne 'Y')) {
       $bestPrice{UnitPrice} = $bestPrice{Price}/$qty;
 			if ( $$specs{"Markup$qty_index"} ) {
