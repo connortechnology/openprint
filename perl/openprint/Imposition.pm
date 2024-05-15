@@ -5,7 +5,7 @@ package openprint::Imposition;
 require Math::Round;
 require Data::Dumper;
 use vars qw( $AUTOLOAD %Orientations @RunStyles);
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;
@@ -437,8 +437,9 @@ $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}
 		$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	} # end if
 	$self->spine_direction();
-$$specs{impressions} = $$specs{"hdnImpressionQuantity$qty_index"};
-$$specs{net_sheets} = $$specs{"hdnNetSheetCount$qty_index"};
+$$self{impressions} = $$specs{"hdnImpressionQuantity$qty_index"};
+$$self{net_sheets} = $$specs{"hdnNetSheetCount$qty_index"};
+$$self{gross_sheets} = $$specs{"StockQuantity$qty_index"};
 $self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
