@@ -2064,6 +2064,10 @@ if ( ! sets::isin( 'materials', \@tables ) ) {
 		$dbh->do('ALTER TABLE materials add category_id INTEGER');
 		$dbh->do('ALTER TABLE materials add FOREIGN KEY (category_id) REFERENCES Material_Categories (id)');
 	} 
+	if ( ! exists $$data{servicetype_id} ) {
+		$dbh->do('ALTER TABLE materials add servicetype_id INTEGER');
+		$dbh->do('ALTER TABLE materials add FOREIGN KEY (servicetype_id) REFERENCES service_types (id)');
+	} 
 	if ( ! exists $$data{activity_code} ) {
 		$dbh->do('ALTER TABLE materials add activity_code text');
 	} 
