@@ -7,10 +7,14 @@ var load_page_ajax = null;
 function load_page() {
 	if ( load_page_ajax ) load_page_ajax.abort();
     load_page_ajax = $j('#Folds').load( '_folds.html',
+        $j('#f1').serialize(),
+        /*
         {	
             equipment_id: $j('#equipment_id').val(),
             type: $j('#type').val() 
+            imposition: 
           },
+ */
         function() {
             load_page_ajax = null;
           }
@@ -55,7 +59,7 @@ function load_page() {
 <form id="f1" name="f1" method="post" action="folds.html">
   <input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Report Criteria</legend>
-      <ul>
+      <ul class="column">
       <li>
         <label>Equipment</label>
         <select id="equipment_id" name="equipment_id" onchange="load_page();" class="chosen" multiple="multiple">
@@ -79,7 +83,19 @@ function load_page() {
       </li>
       <li><label>Imposition</label>
         <input type="number" step="1" min="1" name="imposition" value="<?echo($session{$r->uri().'?imposition'})?>" on_change="load_page"/>
-		</ul>
+      </li>
+      </ul>
+      <ul class="column">
+        <li><label>Stitching</label>
+          <?echo(radio('stitching', ['1'=>'yes', '0'=>'no',''=>'Both'], $session{$r->uri().'?stitching'}, {on_click=>'load_page'});)?>
+        </li>
+        <li><label>Perfect Bind</label>
+          <?echo(radio('perfectbind', ['1'=>'yes', '0'=>'no',''=>'Both'], $session{$r->uri().'?perfectbind'}, {on_click=>'load_page'});)?>
+        </li>
+        <li><label>Spine Paste</label>
+          <?echo(radio('spinepaste', ['1'=>'yes', '0'=>'no',''=>'Both'], $session{$r->uri().'?spinepaste'}, {on_click=>'load_page'});)?>
+        </li>
+      </ul>
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'ShowResults', { on_click=>'load_page', text=>'Show Results' } ),

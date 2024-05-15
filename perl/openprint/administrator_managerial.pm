@@ -1177,7 +1177,8 @@ sub folds {
 } # end sub folds
 
 sub _folds {
-	ssi::save_params( '/administrator/managerial/folds.html', ( 'equipment_id', 'type', 'imposition' ) );
+	ssi::save_params( '/administrator/managerial/folds.html', ( 'equipment_id', 'type', 'imposition',
+   'stitching','perfectbind','spinepaste' ) );
   return if !$param{action};
   if ($param{action} eq 'delete') {
     foreach my $fold ( openprint::Fold->find(id=>$param{fold_id}) ) {

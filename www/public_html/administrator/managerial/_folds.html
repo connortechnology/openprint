@@ -7,6 +7,7 @@
     ( $session{$uri.'?imposition'} ? (
     'min_imposition <='=>$session{$uri.'?imposition'},
     'max_imposition <=' => $session{$uri.'?imposition'} ) : () ),
+    map { $session{$uri.'?'.$_} ne '' ? ($_ => $session{$uri.'?'.$_}) : () } ( 'stitching','perfectbind','spinepaste' ),
 		);
 
     $$variable{Folds} = [ openprint::Fold->find( %filters ) ];
