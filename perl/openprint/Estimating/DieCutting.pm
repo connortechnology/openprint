@@ -24,13 +24,12 @@ use vars qw( %ServicePrices %Specifications);
 %ServicePrices = (
   DieCuttingMinimumCharge => {},
   'DieCuttingMakeReady' => {},
-  'DieCutting' => { units=> ['per hour']},
+  'DieCutting' => { units=> ['per hour', 'per m']},
 );
 %Specifications = (
-  UVCoatingRunSpeed => {range_units => [ 'gsm' ]},
-  'WT UVCoating' => { values=>['Y','N'] },
-  'UVCoating Overs' => {range_units => [ 'impressions' ]},
-  'UVCoating Capable' => { value=>['Y','N'] },
+  'Runspeed' => {range_units => [ 'calliper'], units=>'per hour'},
+  'DieCutting Overs' => {range_units => [ 'impressions' ], units=>['percent']},
+  'DieCutting Capable' => { value=>['Y','N'] },
 );
 
 sub ServicePriceConfiguration {
@@ -202,10 +201,12 @@ sub calc_price {
 	
 	if ( my $Overs = $Equipment->Specification('DieCutting Overs') ) {
 		my $overs;
-		if ( $$Overs{units} eq 'Percent' ) {
+		if ( $$Overs{units} eq 'percent' ) {
 			$overs = int( $impressions * ($$Overs{value}/100) );
-		} elsif ( $$Overs{units} eq 'Sheets' ) {
+		} elsif ( $$Overs{units} eq 'sheets' ) {
 			$overs = int( $$Overs{value} );
+    } else {
+      $openprint::log->error("Unknown units $$Overs{units} in DieCutting Overs");
 		} # end if
 		$Total{Overs} = $overs;
 		$impressions += $overs;
@@ -482,7 +483,7 @@ sub signature_calc {
 	if ( (defined $$specs{"chkOverrideEquipment-$form-$qty_index"}) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) ) {
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} ) );
 	} else {
-		@equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'Die Cutting Capable'=>'Y'} );
+		@equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'DieCutting Capable'=>'Y'} );
 	} # end if
 
 	my $services = $Project->services();
