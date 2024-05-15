@@ -3,26 +3,31 @@
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<ul>
-			<li><label>Trimming</label>
-				<input type="radio" id="TrimmingY" name="Trimming" value="Y" onclick="calc(this.form.name);" <? echo ( $$variable{'Trimming'} ne 'N' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="TrimmingY">Yes</label>
-				<input type="radio" id="TrimmingN" name="Trimming" value="N" onclick="calc(this.form.name);" <? echo ( $$variable{'Trimming'} eq 'N' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="TrimmingN">No</label>
-			</li>
-			<li><label>Gluing</label>
-				<input type="radio" id="GluingY" name="Gluing" value="Y" onclick="calc(this.form.name);" <? echo ( $$variable{'Gluing'} ne 'N' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="GluingY">Yes</label>
-				<input type="radio" id="GluingN" name="Gluing" value="N" onclick="calc(this.form.name);" <? echo ( $$variable{'Gluing'} eq 'N' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="GlueingN">No</label>
-			</li>
+        <!--
+        <li class="complexity"><label>Complexity</label>
+          <?echo(radio('complexity', [map { $_ => $_ } ('Simple','Average','Complex')], $$variable{complexity}, {onclick=>'calc(\'f1\')'});)?>
+        </li>
+        -->
+        <li><label>Trimming</label>
+          <input type="radio" id="TrimmingY" name="Trimming" value="Y" onclick="calc(this.form.name);" <? echo ( $$variable{Trimming} ne 'N' ? 'checked="checked"' : '' ) ?> />
+          <label class="radio" for="TrimmingY">Yes</label>
+          <input type="radio" id="TrimmingN" name="Trimming" value="N" onclick="calc(this.form.name);" <? echo ( $$variable{Trimming} eq 'N' ? 'checked="checked"' : '' ) ?> />
+          <label class="radio" for="TrimmingN">No</label>
+        </li>
+        <li><label>Gluing</label>
+          <input type="radio" id="GluingY" name="Gluing" value="Y" onclick="calc(this.form.name);" <? echo ( $$variable{Gluing} ne 'N' ? 'checked="checked"' : '' ) ?> />
+          <label class="radio" for="GluingY">Yes</label>
+          <input type="radio" id="GluingN" name="Gluing" value="N" onclick="calc(this.form.name);" <? echo ( $$variable{Gluing} eq 'N' ? 'checked="checked"' : '' ) ?> />
+          <label class="radio" for="GlueingN">No</label>
+        </li>
 			</ul>
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<ul>
 				<li><label>Runspeed</label>
 					<? echo ( my $html = '';
-						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-							$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+						foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
 							$html .= input( 
 								type	=>	'cardinal',
 								name	=>	"Runspeed$qty_index",
