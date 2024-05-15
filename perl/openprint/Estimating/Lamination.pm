@@ -190,7 +190,6 @@ sub calc {
     }
 
 		foreach my $Equipment ( @equipment ) {
-      $openprint::log->error($Equipment->name);
       my $sides = $Equipment->specification('Laminating Sides') || '';
 			if ((( $$specs{TypeFront} eq 'None' ) or ( $$specs{TypeBack} eq 'None' )) and ( $sides eq 'Both' ) ) {
 				if ( $$specs{"chkOverrideEquipment$qty_index"} and ($$specs{"chkOverrideEquipment$qty_index"} eq 'Y')) {
@@ -288,8 +287,8 @@ sub calc {
             my $hours = Math::Round::nearest( 0.01, $length * ( $qty / $$imposition{imposition} ) / $inches_per_hour );
             $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $hours );
             if ($sides eq 'Single' and $$specs{TypeFront} ne 'None' and $$specs{TypeBack} ne 'None') {
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Front $%1$.2f %4$s * %2$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Back $%1$.2f %4$s * %2$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Front $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Back $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
             $ServicePrice{Total} *= 2;
             $ServicePrice{Price} *= 2;
             } else {
@@ -301,8 +300,8 @@ sub calc {
             $$specs{'hdnBreakdown'.$qty_index} .= "Runtime = length $length * $sheets / $inches_per_hour<br/>";
             $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $hours );
             if ($sides eq 'Single' and $$specs{TypeFront} ne 'None' and $$specs{TypeBack} ne 'None') {
-              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Front $%1$.2f %4$s * %2$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
-              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Back $%1$.2f %4$s * %2$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Front $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Back $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
               $ServicePrice{Total} *= 2;
             $ServicePrice{Price} *= 2;
             } else {
@@ -370,7 +369,7 @@ sub calc {
 				} # end if Material Found
 			} # end if TypeFront
 
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: %.2f<br/><br/>', $price );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/><br/>', $price );
 
 			if ( ( ! $bestPrice{Price} ) or $bestPrice{Price} > $price ) {
 				$bestPrice{Price} = $price;
