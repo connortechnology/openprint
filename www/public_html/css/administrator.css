@@ -41,9 +41,10 @@ fieldset p label {
 	width: 160px;
 	text-align: center;
 }
+th.Cost,
 .Cost {
 	width: 90px;
-	text-align: right;
+	text-align: center;
 }
 .Markup {
 	width: 80px;
@@ -53,6 +54,7 @@ fieldset p label {
 	width: 90px;
 	text-align: right;
 }
+th.Discount,
 .Discount {
 	width: 150px;
 	text-align: center;
