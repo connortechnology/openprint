@@ -276,7 +276,7 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
         my $specs = $Service->specs();
 
         my @summaries;
-        my $summary = openprint::service::summary( $Project->id(),$service_id );
+        my $summary = openprint::service::summary( $Project->id(), $service_id );
         if ( ref $summary eq 'ARRAY' ) {
           @summaries = @{$summary};
           $summary = shift @summaries;

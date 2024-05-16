@@ -1128,7 +1128,7 @@ sub input {
 	$html .= ' readonly="readonly"' if $options{readonly};
 	$html .= '/>';
 	if ( $options{with_clear} ) {
-		$html .= qq`<span class="input-clear" onclick="console.log(this.previousSibling);this.previousSibling.value='';this.previousSibling.focus();">x</span>`;
+		$html .= qq`<span class="input-clear" title="clear input" onclick="this.previousSibling.value='';this.previousSibling.focus();">x</span>`;
 		#$html .= qq`<span class="input-clear" onclick="this.parentNode.value='';this.parentNode.focus();\$j('[name=$options{name}]').val('').focus();">x</span>`;
 	}
 	return $html;

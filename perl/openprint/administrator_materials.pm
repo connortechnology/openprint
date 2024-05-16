@@ -126,7 +126,7 @@ sub edit {
 							equipment_id=>$$Equipment{id},
 							material_id=>$$Material{id}
 							});
-					push @NewPrices,$NewPrice;
+					push @NewPrices, $NewPrice;
 				} # end foreach Equipment
 			} # end foreach Pricelist;
 
@@ -142,20 +142,7 @@ sub edit {
 				} else {
 					my %data = (
 							equipment_id => $param{join('-', 'equipment_id', $$Price{pricelist_id}, ($$Price{equipment_id}?$$Price{equipment_id}:''))},
-									( map { $_ => $param{join('-', $_,
-											$$Price{pricelist_id},
-											($$Price{equipment_id}?$$Price{equipment_id}:''),
-											($$Price{id}?$$Price{id}:'')
-											)} } qw(
-												min					
-												max					
-												units				
-												cost				
-												markup			
-												price				
-												discountable
-												)
-									)
+									( map { $_ => $param{join('-', $_, $$Price{id})} } qw( min					max					units				cost				markup			price				discountable))
 									);
 		
 					my @price_changes = $Price->changes( \%data );
@@ -170,6 +157,8 @@ sub edit {
 							} # end if
 						} # end if
 						push @pricing_changes, @price_changes;
+          } else {
+            $log->debug("No changes to price $$Price{id}");
 					} # end if price_changes
 				} # end if delete
 			} # end foreach Price

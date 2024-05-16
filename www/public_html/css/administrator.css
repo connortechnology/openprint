@@ -29,6 +29,9 @@ fieldset p label {
 	display: none;
 }
 	
+.Equipment select {
+max-width: 100%;
+}
 
 .Equipment,
 .Min,

@@ -2,11 +2,44 @@
 	my $html = '';
 	my $equipment_array = $variable{Equipment} ? $variable{Equipment} : [ map { $_->id()=>$_->strid().': '.$_->name() } openprint::Equipment->find( order=>'lower('.$openprint::Equipment::fields{strid}.')') ];
 	my %equipment_ids = @{$equipment_array};
+  my $Material = $$variable{Material};
+
+
+ my $Configuration;
+  if ($Material->servicetype_id()) {
+    my $module = 'openprint::Estimating::'.$Material->ServiceType()->type();
+    eval ( 'require '.$module.';' );
+    $log->error("eval error $@") if $@;
+
+    if (my $function = $module->can('MaterialPriceConfiguration')) {
+      $log->debug("Has function for $module");
+      $Configuration = $function->($$Material{name});
+    }
+  }
+
+sub get_units {
+    my $price = shift;
+    my $config = shift;
+    my $field = shift;
+    if (!($config and $$config{$field})) {
+      $log->debug("Not config or not $field for $$Material{name}");
+      $openprint::log->debug( Data::Dumper::Dumper($config));
+      return input( type=>'text', name=>join('-', $field, $$price{id} ), value=>$price->$field() );
+    }
+    if (!@{$$config{$field}}) {
+      return '';
+    } elsif (@{$$config{$field}}==1) {
+      return input( type=>'hidden', name=>join('-', $field, $$price{id} ), value=>$price->$field() ).$config{$field}[0];
+    }
+    return ssi::select( [ map { $_, $_ } @{$$config{$field}} ],
+        $$price{$field} ? $$price{$field} : $$config{$field}[0],
+        { name=>join('-', $field, $$price{id}) } );
+  }
 
 	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
 
-		$html .= '<fieldset><legend>Pricing for Price List: '. $Pricelist->name() .'</legend>';
-		my @Prices = openprint::MaterialPrice->find( material_id=>$$variable{Material}->id(), pricelist_id=>$$Pricelist{id} );
+		$html .= '<fieldset><legend>Pricing for Price List: '. $Pricelist->link_to() .'</legend>';
+		my @Prices = openprint::MaterialPrice->find( material_id=>$Material->id(), pricelist_id=>$$Pricelist{id} );
 		my @Equipment = sort { $$a{strid} cmp $$b{strid} } map { $_ ? new openprint::Equipment( $_ ) : () } sets::union( map{ $_->equipment_id() } @Prices );
 		foreach my $Equipment ( @Equipment, { } ) {
       next if $$Equipment{deleted};
@@ -32,11 +65,11 @@
 						<th class="Discount">Discount?</th>
 					</tr>';
 			my @Prices = openprint::MaterialPrice->find(
-					material_id		=>	$$variable{Material}->id(), 
+					material_id		=>	$Material->id(), 
 					pricelist_id	=>	$$Pricelist{id},
 					equipment_id	=>	( $$Equipment{id} ? $$Equipment{id} : undef ),	
 					order			=>	'lngmin NULLS FIRST,lngmax NULLS FIRST, id' );
-			foreach my $Price ( @Prices, { } ) {
+			foreach my $Price ( @Prices, new openprint::MaterialPrice() ) {
 				$html .= sprintf('<tr>
 					<td class="checkbox">%1$s</td>
 					<td class="ActivityCode">%2$s</td>
@@ -49,14 +82,14 @@
 					</tr>
 ',
 checkboxes( join('-', 'chk', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), ( $$Price{id} ? [ $$Price{id} ] : undef ), $$Price{id} ),
-input( type=>'text', name=>join('-', 'activity_code', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{activity_code} ),
-input( type=>'float', name=>join('-', 'min', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{min} ),
-input( type=>'float', name=>join('-', 'max', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{max} ),
-input( type=>'text', name=>join('-', 'units', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{units} ),
-input( type=>'float', name=>join('-', 'cost', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{cost}, onkeyup=>'calc_from_cost(this);', oninput=>'this.onkeyup();' ),
-input( type=>'float', name=>join('-', 'markup', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{markup}, onkeyup=>'calc_from_markup(this);', oninput=>'this.onkeyup();' ),
-input( type=>'float', name=>join('-', 'price', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{price}, onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
-radio( 'discountable-'.$$Pricelist{id}.'-'.$$Equipment{id}.'-'.$$Price{id}, ['Y','Yes','N','No'], $$Price{discountable}, { default=>'Y' } ),
+input( type=>'text', name=>join('-', 'activity_code', $$Price{id} ), value=>$$Price{activity_code} ),
+input( type=>'float', name=>join('-', 'min', $$Price{id} ), value=>$$Price{min} ),
+input( type=>'float', name=>join('-', 'max', $$Price{id} ), value=>$$Price{max} ),
+get_units($Price, $Configuration, 'units'),
+input( type=>'float', name=>join('-', 'cost',$$Price{id} ), value=>$$Price{cost}, onkeyup=>'calc_from_cost(this);', oninput=>'this.onkeyup();' ),
+input( type=>'float', name=>join('-', 'markup', $$Price{id} ), value=>$$Price{markup}, onkeyup=>'calc_from_markup(this);', oninput=>'this.onkeyup();' ),
+input( type=>'float', name=>join('-', 'price', $$Price{id} ), value=>$$Price{price}, onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
+radio( 'discountable-'.$$Price{id}, ['Y','Yes','N','No'], $$Price{discountable}, { default=>'Y' } ),
  );
 			} # end foreach Price
 			$html .= '</table></fieldset><!--Equipment-->';

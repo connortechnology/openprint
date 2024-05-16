@@ -48,7 +48,7 @@ sub init_cache {
 	} # end foreach Service
 	foreach my $Material ( @Materials ) {
 		$Material->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} : () } @Pricelists ] );
-	} # end foreach Service
+	} # end foreach Material
 }
 
 sub get_pricelist_id {
@@ -193,10 +193,10 @@ sub get_best_prices {
 	my @pricing = ();
 	my $price_type = ref $Object;
 	if ( $price_type and $price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}} ) {
-#$log->debug("Using new style price caching" );
+$log->debug("Using new style price caching" );
 		@pricing = @{$price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}};
 	} else {
-#$log->warn("Request for old style price for $Object");
+$log->warn("Request for old style price for $Object");
 #if ( $Object eq 'openprint::service_priceset' ) {
 #my $Service = new openprint::Service( $prod_index );
 #$log->warn("Loading price for $Object $prod_index $equipment $qty " . $Service->to_string() );
@@ -364,7 +364,7 @@ sub get_best_price_object {
 	if ( DEBUG ) {
 		$openprint::log->debug("Prices in get_best_price_object for qty $qty : " . @$prices);
 		foreach my $price ( @$prices ) {
-			$openprint::log->debug("service: $$price{service_id} min: $$price{min} max: $$price{max} price:$$price{Price} interpolate: $$price{interpolate}");
+			$openprint::log->debug("service: $$price{service_id} min: $$price{min} max: $$price{max} price:$$price{Price} units: $$price{units} interpolate: $$price{interpolate}");
 		} # end foreach
 	}
 

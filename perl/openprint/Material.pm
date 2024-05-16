@@ -32,6 +32,7 @@ $serial = 'materials_id_seq';
     taxexempt2    =>  'taxexempt2',
     activity_code  =>  'activity_code',
     manufacturer_id  =>  'manufacturer_id',
+		servicetype_id	=>	'servicetype_id',
     );  
 %find_fields = (
     category    =>  '(SELECT name FROM Material_Categories WHERE id=category_id)',
@@ -164,12 +165,14 @@ sub get_Price {
   my $Pricelist = $openprint::Pricelist ? $openprint::Pricelist : openprint::Pricelist::get_current();
   my %price = openprint::pricing::get_best_price_object( $session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{id} );
   return if ! %price;
+  my $price = \%price;
+  bless $price, 'openprint::MaterialPrice';
 
-  $price{Material} = $_[0];
-  $price{currency_id} = $Pricelist->currency_id();
-  openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
+  $$price{Material} = $_[0];
+  $$price{currency_id} = $Pricelist->currency_id();
+  openprint::Currency::convert( $price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
 
-  return \%price;
+  return $price;
 }
 
 sub next {
@@ -283,6 +286,14 @@ sub supplier {
     $_[0]{supplier} = $Supplier->name();
   }
   return $_[0]{supplier};
+}
+
+sub ServiceType {
+  my $self = shift;
+  if ( !exists $$self{ServiceType} ) {
+    $$self{ServiceType} = new openprint::ServiceType($$self{servicetype_id});
+  }
+  return $$self{ServiceType};
 }
 
 1;
