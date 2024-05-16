@@ -73,8 +73,8 @@ if ( ! sets::isin( 'configuration', \@tables ) ) {
   if ( sets::isin( 'tbl_configuration', \@tables ) ) {
     my $ac = sql::start_transaction( $dbh );
     $dbh->do('ALTER TABLE tbl_configuration RENAME TO configuration') or die $dbh->errstr();
-    column_rename('configuration', 'strconfigtitle', 'name');
-    column_rename('configuration', 'strconfigdata', 'value');
+    rename_column('configuration', 'strconfigtitle', 'name');
+    rename_column('configuration', 'strconfigdata', 'value');
     $dbh->do('ALTER TABLE configuration ADD description TEXT');
     $dbh->do('ALTER TABLE configuration ADD type TEXT');
     $dbh->do("UPDATE configuration set type='text' WHERE type IS NULL");
@@ -162,7 +162,7 @@ if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
 } # end if
 
-sub column_rename {
+sub rename_column {
   my ($table, $from, $to) = @_;
   $table = lc $table;
   $from = lc $from;
@@ -190,14 +190,14 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
     get_tables();
 
 		my $data2 = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='companies'", 'column_name');
-    column_rename('Companies', 'strcompanyname', 'name');
-    column_rename('Companies', 'strname', 'name');
-    column_rename('Companies', 'straddress1', 'address1');
-    column_rename('Companies', 'straddress2', 'address2');
-    column_rename('Companies', 'strcity', 'city');
-    column_rename('Companies', 'strstate', 'state');
-    column_rename('Companies', 'strcountry', 'country');
-    column_rename('Companies', 'strpostalcode', 'postalcode');
+    rename_column('Companies', 'strcompanyname', 'name');
+    rename_column('Companies', 'strname', 'name');
+    rename_column('Companies', 'straddress1', 'address1');
+    rename_column('Companies', 'straddress2', 'address2');
+    rename_column('Companies', 'strcity', 'city');
+    rename_column('Companies', 'strstate', 'state');
+    rename_column('Companies', 'strcountry', 'country');
+    rename_column('Companies', 'strpostalcode', 'postalcode');
 		$dbh->do('ALTER TABLE Companies RENAME COLUMN dtmdateentered TO created_on') if exists $$data2{dtmdateentered} and ! exists $$data2{created_on};
 		$dbh->do('ALTER TABLE Companies RENAME COLUMN dtmlastupdated TO updated_on') if exists $$data2{dtmlastupdated} and ! exists $$data2{updated_on};
 		$dbh->do('ALTER TABLE Companies RENAME COLUMN dtmlastmodified TO updated_on') if exists $$data2{dtmlastmodified} and ! exists $$data2{updated_on};
@@ -208,29 +208,29 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		$dbh->do('ALTER TABLE Companies RENAME COLUMN strfax TO fax') if exists $$data2{strfax} and ! exists $$data2{fax};
 
 
-    column_rename('Companies', 'strprovstate', 'state');
-    column_rename('Companies', 'lngsalesperson', 'salesrep_id');
-    column_rename('Companies', 'ysnmailinglist', 'mailinglist');
-    column_rename('Companies', 'strweburl', 'url');
-    column_rename('Companies', 'strcustomgreeting', 'greeting');
-    column_rename('Companies', 'dblpricingpercent', 'discount');
-    column_rename('Companies', 'strbusinesstype', 'business_type');
-    column_rename('Companies', 'strlegalbusname', 'business_name');
-    column_rename('Companies', 'legalform', 'business_form');
-    column_rename('Companies', 'strpresidentowner', 'president_owner');
-    column_rename('Companies', 'dtmbusinessstartdate', 'established');
-    column_rename('Companies', 'stremployees', 'employees');
-    column_rename('Companies', 'strannualsales', 'annual_sales');
-    column_rename('Companies', 'strbankname', 'bank_name');
-    column_rename('Companies', 'strbankbranch', 'bank_branch');
-    column_rename('Companies', 'strbankphone', 'bank_phone');
-    column_rename('Companies', 'strbankemail', 'bank_email');
-    column_rename('Companies', 'strbankfax', 'bank_fax');
-    column_rename('Companies', 'strbankaccount', 'bank_account');
-    column_rename('Companies', 'strbankaccountno', 'bank_account');
-    column_rename('Companies', 'strbankmanager', 'bank_manager');
-    column_rename('companies', 'lngcustomerid', 'id');
-    column_rename('companies', 'index', 'id');
+    rename_column('Companies', 'strprovstate', 'state');
+    rename_column('Companies', 'lngsalesperson', 'salesrep_id');
+    rename_column('Companies', 'ysnmailinglist', 'mailinglist');
+    rename_column('Companies', 'strweburl', 'url');
+    rename_column('Companies', 'strcustomgreeting', 'greeting');
+    rename_column('Companies', 'dblpricingpercent', 'discount');
+    rename_column('Companies', 'strbusinesstype', 'business_type');
+    rename_column('Companies', 'strlegalbusname', 'business_name');
+    rename_column('Companies', 'legalform', 'business_form');
+    rename_column('Companies', 'strpresidentowner', 'president_owner');
+    rename_column('Companies', 'dtmbusinessstartdate', 'established');
+    rename_column('Companies', 'stremployees', 'employees');
+    rename_column('Companies', 'strannualsales', 'annual_sales');
+    rename_column('Companies', 'strbankname', 'bank_name');
+    rename_column('Companies', 'strbankbranch', 'bank_branch');
+    rename_column('Companies', 'strbankphone', 'bank_phone');
+    rename_column('Companies', 'strbankemail', 'bank_email');
+    rename_column('Companies', 'strbankfax', 'bank_fax');
+    rename_column('Companies', 'strbankaccount', 'bank_account');
+    rename_column('Companies', 'strbankaccountno', 'bank_account');
+    rename_column('Companies', 'strbankmanager', 'bank_manager');
+    rename_column('companies', 'lngcustomerid', 'id');
+    rename_column('companies', 'index', 'id');
 
 		$dbh->do('CREATE SEQUENCE companies_id_seq');
 		$dbh->do(q`SELECT setval('companies_id_seq', (SELECT MAX(id) FROM Companies))`);
@@ -368,22 +368,22 @@ if ( ! sets::isin( 'user_types', \@tables ) ) {
 if ( ! sets::isin( 'users', \@tables ) ) {
   if ( sets::isin( 'tbl_customer_users', \@tables ) ) {
     my $ac = sql::start_transaction( $dbh );
-    column_rename('tbl_customer_users', 'lngcustomerid', 'company_id');
-    column_rename('tbl_customer_users', 'stremail', 'email');
-    column_rename('tbl_customer_users', 'strpassword', 'password');
-    column_rename('tbl_customer_users', 'strtitle', 'title');
-    column_rename('tbl_customer_users', 'strfirstname', 'firstname');
-    column_rename('tbl_customer_users', 'strlastname', 'lastname');
-    column_rename('tbl_customer_users', 'strsalutation', 'salutation');
-    column_rename('tbl_customer_users', 'strphone', 'phone');
-    column_rename('tbl_customer_users', 'strext', 'ext');
-    column_rename('tbl_customer_users', 'strfax', 'fax');
-    column_rename('tbl_customer_users', 'dtmdateentered', 'created_on');
-    column_rename('tbl_customer_users', 'dtmlastmodified', 'updated_on');
-    column_rename('tbl_customer_users', 'chrtype', 'type');
-    column_rename('tbl_customer_users', 'lnguserid', 'id');
-    column_rename('tbl_customer_users', 'lngcustomerid', 'company_id');
-    #column_rename('tbl_customer_users', 'ysnchangepassword', 'changepassword');
+    rename_column('tbl_customer_users', 'lngcustomerid', 'company_id');
+    rename_column('tbl_customer_users', 'stremail', 'email');
+    rename_column('tbl_customer_users', 'strpassword', 'password');
+    rename_column('tbl_customer_users', 'strtitle', 'title');
+    rename_column('tbl_customer_users', 'strfirstname', 'firstname');
+    rename_column('tbl_customer_users', 'strlastname', 'lastname');
+    rename_column('tbl_customer_users', 'strsalutation', 'salutation');
+    rename_column('tbl_customer_users', 'strphone', 'phone');
+    rename_column('tbl_customer_users', 'strext', 'ext');
+    rename_column('tbl_customer_users', 'strfax', 'fax');
+    rename_column('tbl_customer_users', 'dtmdateentered', 'created_on');
+    rename_column('tbl_customer_users', 'dtmlastmodified', 'updated_on');
+    rename_column('tbl_customer_users', 'chrtype', 'type');
+    rename_column('tbl_customer_users', 'lnguserid', 'id');
+    rename_column('tbl_customer_users', 'lngcustomerid', 'company_id');
+    #rename_column('tbl_customer_users', 'ysnchangepassword', 'changepassword');
     $dbh->do('ALTER TABLE tbl_customer_users RENAME to users');
 		$dbh->do('CREATE SEQUENCE users_id_seq') or die $dbh->errstr();
 		$dbh->do(q`SELECT setval('users_id_seq', (SELECT MAX(id) FROM Users))`) or die $dbh->errstr();
@@ -1832,7 +1832,7 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
   if (sets::isin( 'tbl_paper', \@tables ) ) {
 		my $ac = sql::start_transaction( $dbh );
     $dbh->do('ALTER TABLE tbl_paper RENAME TO papers') or die $dbh->errstr();
-    column_rename('papers', 'lngindex', 'id');
+    rename_column('papers', 'lngindex', 'id');
     $dbh->do('ALTER TABLE papers ADD mweight NUMERIC(10,4)') or die $dbh->errstr();
     $dbh->do('UPDATE papers set mweight=strmweight :: numeric') or die $dbh->errstr();
     $dbh->do('ALTER TABLE papers ADD calliper NUMERIC(10,4)') or die $dbh->errstr();
@@ -1849,8 +1849,8 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
     $dbh->do("UPDATE papers set cuttable=false where ysncutpaper='N'") or die $dbh->errstr();
     $dbh->do('ALTER TABLE papers ADD multipart boolean NOT NULL default false') or die $dbh->errstr();
     $dbh->do("UPDATE papers set multipart=true where lngmultipart > 1") or die $dbh->errstr();
-    column_rename('papers', 'dblwidth', 'width') or die $dbh->errstr();
-    column_rename('papers', 'dblheight', 'height') or die $dbh->errstr();
+    rename_column('papers', 'dblwidth', 'width') or die $dbh->errstr();
+    rename_column('papers', 'dblheight', 'height') or die $dbh->errstr();
     $dbh->do('ALTER TABLE papers ADD brand_id INTEGER') or die $dbh->errstr();
     $dbh->do('INSERT INTO stockbrands (name) SELECT distinct strname from papers where strname IS NOT NULL AND strname NOT in (SELECT name from stockbrands)') or die $dbh->errstr();
     $dbh->do('UPDATE papers set brand_id=(SELECT id FROM stockbrands where name=strname)') or die $dbh->errstr();
@@ -2593,6 +2593,10 @@ if ( ! sets::isin( 'fold_specifications', \@tables ) ) {
 		$dbh->do( misc::load_file( $log, q{../../sql/Fold_Specifications.sql}) );
 	} # end if
 } 
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='fold_specifications'", 'column_name' );
+  rename_column('fold_specifications','min_weight','min');
+  rename_column('fold_specifications','max_weight','max');
+  rename_column('fold_specifications','weight_units','units');
 
 if ( ! sets::isin( 'fold_specifications_id_seq', \@sequences ) ) {
 	if ( sets::isin( 'foldspecification_id_seq', \@sequences ) ) {
@@ -3781,8 +3785,8 @@ if ( ! sets::isin( 'order_id_seq', \@sequences ) ) {
 if ( ! sets::isin( 'order_contents', \@tables ) ) {
   if (sets::isin('tbl_order_contents', \@tables)) {
     $dbh->do('ALTER TABLE tbl_order_contents RENAME to order_contents') or die $dbh->errstr();
-    column_rename('order_contents', 'lngorderid', 'orderindex');
-    column_rename('order_contents', 'lngcontentindex', 'id');
+    rename_column('order_contents', 'lngorderid', 'orderindex');
+    rename_column('order_contents', 'lngcontentindex', 'id');
   } else {
     $dbh->do( misc::load_file( $log, '../../sql/Order_Contents.sql' ) ) or die;
   }
@@ -4351,7 +4355,7 @@ if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
 		$dbh->do('ALTER TABLE projecttemplate ADD name TEXT') or die $dbh->errstr();
 		$dbh->do('UPDATE projecttemplate set name=type') or die $dbh->errstr();
 		$dbh->do('ALTER TABLE projecttemplate ADD message TEXT') or die $dbh->errstr();
-    column_rename('projecttemplate', 'strdimensions', 'description');
+    rename_column('projecttemplate', 'strdimensions', 'description');
   } else {
     print "No tbl_project_templates in @tables\n";
     $dbh->do( misc::load_file( $log, q{../../sql/ProjectType_Templates.sql}) );
@@ -4546,10 +4550,10 @@ if ( ! sets::isin( 'marketing_categories', \@tables ) ) {
   if ( sets::isin( 'tbl_marketing_categories', \@tables ) ) {
     my $ac = sql::start_transaction( $dbh );
     $dbh->do('ALTER TABLE tbl_marketing_categories RENAME TO marketing_categories') or die $dbh->errstr();
-    column_rename( 'marketing_categories', 'lngindex', 'id');
-    column_rename( 'marketing_categories', 'strname', 'name');
-    column_rename( 'marketing_categories', 'strdescription', 'description');
-    column_rename( 'marketing_categories', 'strgreeting', 'greeting');
+    rename_column( 'marketing_categories', 'lngindex', 'id');
+    rename_column( 'marketing_categories', 'strname', 'name');
+    rename_column( 'marketing_categories', 'strdescription', 'description');
+    rename_column( 'marketing_categories', 'strgreeting', 'greeting');
     sql::end_transaction( $dbh, $ac );
   } else {
     $dbh->do( misc::load_file( $log, q{../../sql/Marketing_Categories.sql}) );
@@ -4560,8 +4564,8 @@ if ( ! sets::isin( 'users_in_marketing_categories', \@tables ) ) {
   if ( sets::isin( 'tbl_users_in_categories', \@tables ) ) {
     my $ac = sql::start_transaction( $dbh );
     $dbh->do('ALTER TABLE tbl_users_in_categories RENAME TO users_in_marketing_categories') or die $dbh->errstr();
-    column_rename( 'users_in_marketing_categories', 'lnguserindex', 'user_id');
-    column_rename( 'users_in_marketing_categories', 'lngcategoryindex', 'category_id');
+    rename_column( 'users_in_marketing_categories', 'lnguserindex', 'user_id');
+    rename_column( 'users_in_marketing_categories', 'lngcategoryindex', 'category_id');
     sql::end_transaction( $dbh, $ac );
   } else {
     $dbh->do( misc::load_file( $log, q{../../sql/Users_In_Marketing_Categories.sql}) );
