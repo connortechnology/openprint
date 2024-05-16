@@ -868,11 +868,13 @@ sub datetime_text {
 
 sub save_params {
 	my ( $url, @keys ) = @_;
+  return if !%param;
 
 	foreach ( @keys ) {
 		$openprint::log->debug('save_params: key '.$_) if Debug;
 		if (!exists $param{$_}) {
 			$openprint::log->debug('save_params: does not exist in param key '.$_) if Debug;
+			undef($session{$url.'?'.$_});
 			next;
 		}
 		if (ref $param{$_} eq 'ARRAY') {
