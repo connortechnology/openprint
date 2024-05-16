@@ -247,10 +247,10 @@ sub calc {
           $$specs{'hdnBreakdown'.$qty_index} .= 'Doesn\'t fit.'.$_.'<br/>';
           next;
         } # end if
-        if ($imposition->sheet_width() > $max_sheet_width) {
-          $length = $imposition->sheet_height();
-        } elsif ($imposition->sheet_Height() > $max_sheet_width) {
+        if ($imposition->sheet_width() > $maximum_sheet_width) {
           $length = $imposition->sheet_width();
+        } elsif ($imposition->sheet_height() > $maximum_sheet_width) {
+          $length = $imposition->sheet_height();
         } else {
           # They both fit, use the shorter
           $length = ($imposition->sheet_width() > $imposition->sheet_height ? $imposition->sheet_height() : $imposition->sheet_width());
@@ -263,6 +263,12 @@ sub calc {
         }
         $sheets = $qty if ! $sheets;
       }
+      my $waste = $Equipment->Specification('Laminating Waste');
+      if ($waste) {
+        if ($$waste{units} eq 'percent') {
+          $sheets *= 1+($$waste{value}/100);
+        }
+      }
 
 			my $area;
 			if ($laminate_width) {
@@ -273,15 +279,7 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No Maximum Sheet Width set for %s<br/>', $Equipment->strid() );
 				$area = $length*$sheets;
 			} # end if
-      my $waste = $Equipment->Specification('Laminating Waste');
-      if ($waste) {
-        if ($$waste{units} eq 'percent') {
-          $area *= 1+($$waste{units}/100);
-        }
-        $$specs{'hdnBreakdown'.$qty_index} .= 'Using '.$length.'inches x '.($laminate_width?$laminate_width:$maximum_sheet_width).' width *%d% waste = '.$area.' square inches<br/>';
-      } else {
-        $$specs{'hdnBreakdown'.$qty_index} .= 'Using '.$length.'inches x '.$laminate_width?$laminate_width:$maximum_sheet_width).' feed width = '.$area.' square inches<br/>';
-      }
+      $$specs{'hdnBreakdown'.$qty_index} .= 'Using '.$length.'" x '.($laminate_width?$laminate_width:$maximum_sheet_width).'" laminate width * '.$sheets.' sheets = '.$area.' square inches<br/>';
 
 			my %SetupPrice = $MakeReady->get_price(undef, $Equipment ) if $MakeReady;
 			my $price = $SetupPrice{Price};
