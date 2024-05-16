@@ -69,7 +69,10 @@ join(' ',
 $Fold->min_width(), $Fold->max_width(),
 $Fold->min_height(), $Fold->max_height(),
 $Fold->makeready_time(),
-join( '<br/>', map { sprintf('%s to %s %s => %d/Hr', $_->min_weight(), $_->max_weight(), $_->weight_units(), $_->runspeed() ) } $Fold->Specifications() ),
+join( '<br/>', map { join(' to ',
+  ($_->min() ? $_->min() : ()),
+  ($_->max() ? $_->max() : ()),
+  ). ' '. $Fold->runspeed_units(). ' @ '. $_->runspeed().$_->units() } $Fold->Specifications() ),
 );
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';
