@@ -83,6 +83,9 @@ fieldset.Fold p label {
 fieldset.Fold p input {
 	width: auto;
 }
+.units select {
+  max-width: 100%;
+}
 
 #Prices table .buttons {
 	width: 80px;

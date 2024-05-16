@@ -36,6 +36,39 @@ require openprint::Estimating::Perforating;
 use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
+my %ServicePrices = (
+  FoldingMinimumCharge => {},
+  'Folding(.*)MakeReady' => { units => [ 'per hour' ] },
+  'Folding' => { units=> ['per hour', 'per lb','per m']},
+);
+my %Specifications = (
+  'Folding Capable' => { values=>['Y','N','When PerfectBound', 'For Pocket Folders', 'When Stitching','When Printing'] },
+  'Folding Orientation' => { value=>['Portrait','Landscape'] },
+  'Folding MakeReadyTime' => { units => 'minutes' },
+  'Folding Runspeed' => {},
+  '1out Required Bleed' => {},
+  '2out Required Bleed' => {},
+  '3out Required Bleed' => {},
+  '4out Required Bleed' => {},
+  'Maximum Feed Width' => { units => 'inches' }
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  $openprint::log->debug("Finding for $name");
+  $openprint::log->debug( Data::Dumper::Dumper(\%ServicePrices));
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    $openprint::log->debug("Trying $name =~ $key/");
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  $openprint::log->debug("Not found for ($name)");
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
+
 my @equipment;
 my @stitchers;
 my %Services;
@@ -158,6 +191,7 @@ sub outputs {
 	'PerpendicularSoftFold',
 	'ParallelSoftFold',
 	'2Panel1Pocket',
+	'2Panel1PocketGusset',
 	'2Panel2Pocket',
 	'2Panel2PocketGusset',
 	'3Panel2Pocket',
@@ -207,6 +241,7 @@ sub outputs {
 	'64PageFold'=> '64 Page Fold',
 	'72PageFold'=> '72 Page Fold',
 	'2Panel1Pocket'=> 'Single Pocket',
+	'2Panel1PocketGusset'=> 'Single Pocket w/Gussets',
 	'2Panel2Pocket'=> '2 Pocket',
 	'2Panel2PocketGusset'=> '2 Pocket w/Gussets',
 	'3Panel2Pocket'=> '3 Panel 2 Pocket',
@@ -255,6 +290,7 @@ my %short_fold_names = (
 	'64PageFold', '64pg',
 	'72PageFold', '72pg',
 	'2Panel1Pocket', 'Single Pocket',
+	'2Panel1PocketGusset', 'Single Pocket w/Gussets',
 	'2Panel2Pocket', '2 Pocket',
 	'2Panel2PocketGusset', '2 Pocket w/Gussets',
 	'3Panel2Pocket', '3 Panel 2 Pocket',
@@ -1495,19 +1531,17 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				$$Imposition{impressions} = $run_qty;
 
 				my $runspeed;
+        if ($$Fold{runspeed_units} eq 'calliper') {
+          $runspeed = $Fold->RunSpeed($$Paper{calliper});
+        } elsif ( $$Fold{runspeed_units} eq 'gsm') {
+          $runspeed = $Fold->RunSpeed($$Paper{gsm});
+        } elsif ( $$Fold{runspeed_units} eq 'impressions') {
+          $runspeed = $Fold->RunSpeed($run_qty);
+        } # end if units
 				if ( $$specs{"OverrideRunspeed-$form-$qty_index-$fold_index"} and ( $$specs{"OverrideRunspeed-$form-$qty_index-$fold_index"} eq 'Y' ) ) {
-					$runspeed = $$specs{"FoldRunspeed-$form-$qty_index-$fold_index"};
-        } else {
-          if ($$Fold{runspeed_units} eq 'calliper') {
-            $runspeed = int($Fold->runspeed($$Paper{calliper}));
-          } elsif ( $$Fold{runspeed_units} eq 'gsm') {
-            $runspeed = int($Fold->runspeed($$Paper{gsm}));
-          } elsif ( $$Fold{runspeed_units} eq 'impressions') {
-            $runspeed = int($Fold->runspeed($run_qty));
-          } # end if units
+					$$runspeed{runspeed} = $$specs{"FoldRunspeed-$form-$qty_index-$fold_index"};
         }
-				$fold_specs{"FoldRunspeed-$form-$qty_index-$fold_index"} = $runspeed;
-
+				$fold_specs{"FoldRunspeed-$form-$qty_index-$fold_index"} = $$runspeed{runspeed};
 				$fold_specs{"FoldImpressions-$form-$qty_index-$fold_index"} = $run_qty;
 
 				# Why are we doing this?  Did we not already do it?
@@ -1583,13 +1617,20 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? 
 
 # In hours
 				my $runTime;
-				if ( ! $runspeed ) {
+				if (!($runspeed and $$runspeed{runspeed})) {
 					$Breakdown .= "No runspeed for $$Fold{type}($$Fold{name}) on $$Equipment{name} Setting to 1/Hr.<br/>";
-					$runspeed = 1;
+					$$runspeed{runspeed} = 1;
 				} # end if
-				$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ) if $runspeed; # in hours
-				$Breakdown .= sprintf('<tr><td>Runspeed: %d @ %d/HR = %d:%d:%d</td></tr>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
-				$$Imposition{runspeed} = $runspeed;
+        if ($$runspeed{units} eq 'inches per hour') {
+          $runTime = Math::Round::nearest( 0.0001, $run_qty * $Imposition->object_height()/ $$runspeed{runspeed} );
+          $Breakdown .= sprintf('<tr><td>Runspeed: %d * %.2f" @ %d/inches per hour = %d:%d:%d</td></tr>',
+            $run_qty, $Imposition->object_height(), $$runspeed{runspeed}, misc::seconds_to_interval( int( 3600*$runTime ) ) );
+        } else {
+          $runTime = Math::Round::nearest( 0.0001, $run_qty / $$runspeed{runspeed} );
+          $Breakdown .= sprintf('<tr><td>Runspeed: %d @ %d/HR = %d:%d:%d</td></tr>',
+            $run_qty, $$runspeed{runspeed}, misc::seconds_to_interval( int( 3600*$runTime ) ) );
+        }
+				$$Imposition{runspeed} = $$runspeed{runspeed};
 				$openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name} $runspeed $$Paper{gsm}" ) if DEBUG;
 
 #$Breakdown .= sprintf( '&nbsp;Folds: QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', $qty, $imposition, $$RunSpeed{runspeed}, $runTime );
