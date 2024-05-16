@@ -39,6 +39,18 @@ sub ServicePriceConfiguration {
   return undef;
 }
 
+%MaterialPrices = (
+'.*Laminate.*' => { units => [ 'per square foot', 'per m square inches' ] }
+);
+sub MaterialPriceConfiguration {
+  my $name = shift;
+  return $MaterialPrices{$name} if $MaterialPrices{$name};
+  foreach my $key (keys %MaterialPrices) {
+    return $MaterialPrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
+}
+
 %Specifications = (
   'Laminating Waste'  => { units => 'Percent' },
   'Laminating Style' => { values => [ 'Sheet','Final Pieces' ] },
@@ -178,10 +190,10 @@ sub calc {
 		my $qty = int $$specs{"txtQuantity$qty_index"};
 		next if ! $qty;
 
-		my %bestPrice;
+		my %bestPrice = (Price=>0);
 		my @equipment = ();
 		if ($$specs{"chkOverrideEquipment$qty_index"} and ($$specs{"chkOverrideEquipment$qty_index"} eq 'Y' and $$specs{"ddmEquipment$qty_index"})) {
-			@equipment = openprint::Equipment->find( strid=> $$specs{"ddmEquipment$qty_index"} );
+			@equipment = openprint::Equipment->find(id=> $$specs{"ddmEquipment$qty_index"} );
 		} else {
 			@equipment = @possible_equipment;
 		} # end if
@@ -198,7 +210,7 @@ sub calc {
 				next;
 			} # end if
 			my $maximum_sheet_width = $Equipment->specification('Maximum Sheet Width');
-			my $maximum_sheet_length= $Equipment->specification('Maximum Sheet Width');
+			my $maximum_sheet_length= $Equipment->specification('Maximum Sheet Length');
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s max Width: %s Length: %s<br/>',
           $Equipment->name(), $maximum_sheet_width, $maximum_sheet_length);
       my $sheets = 0;
@@ -233,7 +245,7 @@ sub calc {
           $$specs{'hdnBreakdown'.$qty_index} .= 'Doesn\'t fit.'.$_.'<br/>';
           next;
         } # end if
-        $length = ($imposition->sheet_width() > $imposition->sheet_height ? $imposition->sheet_height() : $imposition->sheet_width());
+        $length = ($imposition->sheet_width() > $imposition->sheet_height ? $imposition->sheet_width() : $imposition->sheet_height());
         $sheets = $$imposition{impressions} ? $$imposition{impressions} : $$imposition{net_sheets};
         $sheets = $qty if ! $sheets;
       }
@@ -317,27 +329,27 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No Service price for $$specs{ServiceType}<br/>";
 			} # end if
 			if ( $$specs{TypeFront} ne 'None' ) {
-				my %FrontMaterialPrice;
+				my $FrontMaterialPrice;
 				if ( my $FrontMaterial = openprint::Material->find_one(name=>$$specs{TypeFront} ) ) {
-					%FrontMaterialPrice = $FrontMaterial->get_price( $area, $Equipment );
-					if ( ! %FrontMaterialPrice ) {
+					$FrontMaterialPrice = $FrontMaterial->get_Price( $area, $Equipment );
+					if ( ! $FrontMaterialPrice ) {
 						if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
 							$$specs{alert} .= "There is no price for $$FrontMaterial{description} on $$Equipment{name}.<br/>";
 						} # end if
 
 						next;
 					} # end if
-					if ( $FrontMaterialPrice{units} eq 'per square foot' ) {
-						$FrontMaterialPrice{Total} = $FrontMaterialPrice{Price} * $area / 144;
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: $%1$.2f %2$s * %4$.2f square feet = $%3$.2f<br/>', @FrontMaterialPrice{'Price','units','Total'}, $area/144 );
-					} elsif ( $FrontMaterialPrice{units} eq 'per m square inches' ) {
-						$FrontMaterialPrice{Total} = $FrontMaterialPrice{Price} * $area / 1000;
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: $%1$.2f %2$s * %4$.2f inches = $%3$.2f<br/>', @FrontMaterialPrice{'Price','units','Total'}, $area/1000 );
+					if ( $$FrontMaterialPrice{units} eq 'per square foot' ) {
+						$$FrontMaterialPrice{Total} = $$FrontMaterialPrice{Price} * $area / 144;
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: $%1$.2f %2$s * %4$.2f square feet = $%3$.2f<br/>', @$FrontMaterialPrice{'Price','units','Total'}, $area/144 );
+					} elsif ( $$FrontMaterialPrice{units} eq 'per m square inches' ) {
+						$$FrontMaterialPrice{Total} = $$FrontMaterialPrice{Price} * $area / 1000;
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: $%1$.2f %2$s * %4$.2f inches = $%3$.2f<br/>', @$FrontMaterialPrice{'Price','units','Total'}, $area/1000 );
 					} else {
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: unknown units: (%s)<br/>', $FrontMaterialPrice{units} );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: unknown units: (%s)<br/>', $FrontMaterialPrice->to_string() );
 					} # end if
-          $price += $FrontMaterialPrice{Total};
-          $MPrice += ( 1000 / $imposition->imposition() ) * $FrontMaterialPrice{Total};
+          $price += $$FrontMaterialPrice{Total};
+          $MPrice += ( 1000 / $imposition->imposition() ) * $$FrontMaterialPrice{Total};
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No Material found for Front: (%s)<br/>', $$specs{TypeFront} );
 				} # end if Material Found
