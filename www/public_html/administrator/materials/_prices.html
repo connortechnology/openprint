@@ -41,7 +41,7 @@ sub get_units {
 		$html .= '<fieldset><legend>Pricing for Price List: '. $Pricelist->link_to() .'</legend>';
 		my @Prices = openprint::MaterialPrice->find( material_id=>$Material->id(), pricelist_id=>$$Pricelist{id} );
 		my @Equipment = sort { $$a{strid} cmp $$b{strid} } map { $_ ? new openprint::Equipment( $_ ) : () } sets::union( map{ $_->equipment_id() } @Prices );
-		foreach my $Equipment ( @Equipment, { } ) {
+		foreach my $Equipment ( @Equipment, new openprint::Equipment() ) {
       next if $$Equipment{deleted};
 			$html .= '<fieldset class="Equipment">
 				<p>
@@ -51,6 +51,7 @@ sub get_units {
 					$$Equipment{id},
 					{ name=>join('-', 'equipment_id', $$Pricelist{id}, $$Equipment{id}), prepend=>['', 'All Equipment'] },
 					);
+      $html .= $Equipment->link_to('Go') if $Equipment->id();
 			$html .= '
 				</p>
 				<table class="List">
