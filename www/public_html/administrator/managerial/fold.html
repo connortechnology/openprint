@@ -15,7 +15,7 @@
         });
     }
   function add_fold_spec(btn) {
-      const form_id = btn.form.fold_id;
+      const fold_id = btn.form.fold_id.value;
       new Ajax.Request('/administrator/equipment/_fold_specification.html?action=add&fold_id='+fold_id, {
           onSuccess: function(response){
               new Insertion.Bottom($('FoldSpecifications'), response.responseText);
@@ -37,6 +37,7 @@
            make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)', 'servicetype any'=>'Folding' ) ], $$variable{Fold}{equipment_id} );
   ) ?>
         </select>
+        <?echo($$variable{Fold}->Equipment()->link_to('Go');)?>
       </li>
 		<li>
 			<label>Type</label>
@@ -168,8 +169,8 @@
 				<tr>
 					<th align="left">Min</th>
 					<th align="left">Max</th>
-					<th align="left">Units</th>
 					<th align="left">Runspeed</th>
+					<th align="left">Units</th>
 					<th align="left">Interpolate</th>
 					<th class="buttons"><? echo ( button( 'AddFoldSpec'.$$variable{Fold}->id(), { on_click_this=>'add_fold_spec', text=>'Add' } ); ) ?></th>
 				</tr>
