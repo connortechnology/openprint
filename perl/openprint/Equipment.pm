@@ -590,6 +590,10 @@ sub Operators {
 sub link_to {
 	return '<a href="/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ > 1 ? $_[1] : $_[0]{strid}).'</a>';
 }
+sub button_to {
+  my $self = shift;
+  return ssi::button('EquipmentButton'.$$self{id}, {href=>'/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ ? shift : $$self{strid})});
+}
 
 1;
 __END__
