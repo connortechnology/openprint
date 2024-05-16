@@ -2068,6 +2068,15 @@ if ( ! sets::isin( 'materials', \@tables ) ) {
 		$dbh->do('ALTER TABLE materials add servicetype_id INTEGER');
 		$dbh->do('ALTER TABLE materials add FOREIGN KEY (servicetype_id) REFERENCES service_types (id)');
 	} 
+  if ($$data{dblprice} and $$data{dblprice}{data_type} ne 'float') {
+    $dbh->do('ALTER TABLE tbl_material_prices ALTER COLUMN dblprice TYPE float');
+  }
+  if ($$data{dblcost} and $$data{dblcost}{data_type} ne 'float') {
+    $dbh->do('ALTER TABLE tbl_material_prices ALTER COLUMN dblcost TYPE float');
+  }
+  if ($$data{dblmarkup} and $$data{dblmarkup}{data_type} ne 'float') {
+    $dbh->do('ALTER TABLE tbl_material_prices ALTER COLUMN dblmarkup TYPE float');
+  }
 	if ( ! exists $$data{activity_code} ) {
 		$dbh->do('ALTER TABLE materials add activity_code text');
 	} 
