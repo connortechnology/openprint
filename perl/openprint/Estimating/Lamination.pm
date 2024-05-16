@@ -211,6 +211,7 @@ sub calc {
 			} # end if
 			my $maximum_sheet_width = $Equipment->specification('Maximum Sheet Width');
 			my $maximum_sheet_length= $Equipment->specification('Maximum Sheet Length');
+			my $laminate_width = $Equipment->specification('Laminate Width');
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s max Width: %s Length: %s<br/>',
           $Equipment->name(), $maximum_sheet_width, $maximum_sheet_length);
       my $sheets = 0;
@@ -245,19 +246,37 @@ sub calc {
           $$specs{'hdnBreakdown'.$qty_index} .= 'Doesn\'t fit.'.$_.'<br/>';
           next;
         } # end if
-        $length = ($imposition->sheet_width() > $imposition->sheet_height ? $imposition->sheet_width() : $imposition->sheet_height());
+        my $max_width = $Equipment->specification('Maximum Sheet Width');
+        if ($imposition->sheet_width() > $max_width) {
+          $length = $imposition->sheet_height();
+        } elsif ($imposition->sheet_Height() > $max_width) {
+          $length = $imposition->sheet_width();
+        } else {
+          # They both fit, use the shorter
+          $length = ($imposition->sheet_width() > $imposition->sheet_height ? $imposition->sheet_height() : $imposition->sheet_width());
+        }
         $sheets = $$imposition{impressions} ? $$imposition{impressions} : $$imposition{net_sheets};
         $sheets = $qty if ! $sheets;
       }
 
 			my $area;
-			if ( $maximum_sheet_width ) {
+			if ( $laminate_width ) {
+				$area = $length * $laminate_width;
+      } elsif ($maximum_sheet_width) {
 				$area = $length * $maximum_sheet_width;
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No Maximum Sheet Width set for %s<br/>', $Equipment->strid() );
 				$area = $length;
 			} # end if
-      $$specs{'hdnBreakdown'.$qty_index} .= 'Using '.$length.'inches x '.$maximum_sheet_width.' feed width = '.$area.' square inches<br/>';
+      my $waste = $Equipment->Specification('Laminating Waste');
+      if ($waste) {
+        if ($$waste{units} eq 'percent') {
+          $area *= 1+($$waste{units}/100);
+        }
+        $$specs{'hdnBreakdown'.$qty_index} .= 'Using '.$length.'inches x '.($laminate_width?$laminate_width:$maximum_sheet_width).' width *%d% waste = '.$area.' square inches<br/>';
+      } else {
+        $$specs{'hdnBreakdown'.$qty_index} .= 'Using '.$length.'inches x '.$laminate_width?$laminate_width:$maximum_sheet_width).' feed width = '.$area.' square inches<br/>';
+      }
 
 			my %SetupPrice = $MakeReady->get_price(undef, $Equipment ) if $MakeReady;
 			my $price = $SetupPrice{Price};
