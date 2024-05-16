@@ -52,6 +52,7 @@ sub MaterialPriceConfiguration {
 }
 
 %Specifications = (
+'Laminating Count' => { units => 'Net Sheets', 'Gross Sheets' },
   'Laminating Waste'  => { units => 'Percent' },
   'Laminating Style' => { values => [ 'Sheet','Final Pieces' ] },
   'Laminating Capable' => { values => [ 'Y'|'N' ] },
@@ -246,18 +247,23 @@ sub calc {
           next;
         } # end if
         $length = ($imposition->sheet_width() > $imposition->sheet_height ? $imposition->sheet_width() : $imposition->sheet_height());
-        $sheets = $$imposition{impressions} ? $$imposition{impressions} : $$imposition{net_sheets};
+        my $count = $Equipment->specification('Laminating Count');
+        if ($count eq 'Net Sheets') {
+          $sheets = $$imposition{net_sheets};
+        } else {
+          $sheets = $$imposition{impressions} ? $$imposition{impressions} : $$imposition{net_sheets};
+        }
         $sheets = $qty if ! $sheets;
       }
 
 			my $area;
 			if ( $maximum_sheet_width ) {
-				$area = $length * $maximum_sheet_width;
+				$area = $length * $maximum_sheet_width*$sheets;
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No Maximum Sheet Width set for %s<br/>', $Equipment->strid() );
-				$area = $length;
+				$area = $length*$sheets;
 			} # end if
-      $$specs{'hdnBreakdown'.$qty_index} .= 'Using '.$length.'inches x '.$maximum_sheet_width.' feed width = '.$area.' square inches<br/>';
+      $$specs{'hdnBreakdown'.$qty_index} .= 'Using '.$length.'" x '.$maximum_sheet_width.'" feed width * '.$sheets.'sheets = '.$area.' square inches<br/>';
 
 			my %SetupPrice = $MakeReady->get_price(undef, $Equipment ) if $MakeReady;
 			my $price = $SetupPrice{Price};
@@ -274,7 +280,7 @@ sub calc {
 					$MPrice += $serviceprice;
         } elsif ( $ServicePrice{units} eq 'per inch' ) {
           my $linear_length = Math::Round::nearest(0.01, $length * $sheets);
-          $$specs{'hdnBreakdown'.$qty_index} .= "Linear length $length * $sheets = $linear_length inches<br/>";
+          #$$specs{'hdnBreakdown'.$qty_index} .= "Linear length $length * $sheets = $linear_length inches<br/>";
           $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $linear_length );
           $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f %2$s * %4$d inches = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $linear_length);
           $MPrice += Math::Round::nearest( 0.01, $ServicePrice{Price} * ( $length * ( 1000 / $$imposition{imposition} ) ));
