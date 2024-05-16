@@ -249,7 +249,7 @@ sub Category {
 
 sub ServiceType {
   my $self = shift;
-  if ( !exists $$self{ServicType} ) {
+  if ( !exists $$self{ServiceType} ) {
     $$self{ServiceType} = new openprint::ServiceType($$self{servicetype_id});
   }
   return $$self{ServiceType};
