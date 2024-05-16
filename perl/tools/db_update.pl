@@ -6373,6 +6373,7 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 		$dbh->do('CREATE SEQUENCE materialprices_id_seq');
 		$dbh->do("ALTER TABLE tbl_material_prices ALTER id set default nextval('materialprices_id_seq')");
 		$dbh->do('DROP SEQUENCE tbl_material_prices_id_seq');
+    $dbh->do("select setval('materialprices_id_seq'::regclass, (select max(id) from tbl_material_prices))");
 	}
 	if ( ! exists $$data{interpolate} ) {
 			$log->debug("adding interpolate to tbl_material_prices");
