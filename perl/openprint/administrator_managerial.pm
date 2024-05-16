@@ -1418,6 +1418,12 @@ sub fold {
 		my @changes = $Fold->changes( \%param );
 		$variable{error} = $Fold->save(\%param);
 		if ( ! $variable{error} ) {
+      foreach my $spec ($Fold->Specifications()) {
+        my %data = map { $_ => $param{$_.'-'.$spec->id() }} ('min','max','units','runspeed','interpolate' );
+        my @spec_changes = $spec->changes(\%data);
+        $spec->save(\%data) if @spec_changes;
+        push @changes, @spec_changes;
+      }
 			my $Equipment = $Fold->Equipment();
 			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>'Save Fold', 
 				note=>$$Fold{name} . ' ' . join('<br/>', @changes ) });
