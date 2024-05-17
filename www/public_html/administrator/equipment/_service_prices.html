@@ -11,7 +11,7 @@ foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
     order=>'min NULLS FIRST, max NULLS LAST');
   my %prices = misc::make_hash_from_array('service_id', @prices);
 
-  my @services = openprint::Service->find(id=>[map { $_->service_id() } @prices], order=>'lower(description)');
+  my @services = openprint::Service->find(id=>[map { $_->service_id() } @prices], order=>'lower(description)') if @prices;
 
   $html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->link_to() . "</legend><div id=\"pricelist-$$Pricelist{id}\">";
   foreach my $service (@services) {
