@@ -18,20 +18,25 @@
 ) ?>	
 <? if ( @{$$variable{Service}} ) ?>
 	<table class="List sortable">
+<thead>
 		<tr> 
-			<th class="ServiceID">ID #</th>
-			<th class="ServiceName">Name</th>
-			<th class="Description">Description</th>
-			<th class="Categories">Categories</th>
-			<th class="Services">Services</th>
-			<th class="CompanyName Supplier">Supplier</th>
+			<th class="ServiceID" data-dt-order="true" aria-label="Service ID">ID #</th>
+			<th class="ServiceName" data-dt-order="true" aria-label="Service Name">Name</th>
+			<th class="Description" aria-label="Description">Description</th>
+			<th class="Categories" aria-label="Categories">Categories</th>
+			<th class="ServiceTypes" aria-label="ServiceTypes">ServiceTypes</th>
+			<th class="CompanyName Supplier" aria-label="Supplier">Supplier</th>
 		</tr>
+</thead>
+<tbody>
 <? echo (
 	my $html;
 	my $rowclass;
 	my %ServiceTypes = map { $$_{id}, $_ } openprint::ServiceType->find();
+	my $uri = '/administrator/services/list.html';
 
 	foreach my $Service ( @{$$variable{Service}} ) {
+    next if $session{$uri.'?equipment_id'} and ! openprint::ServicePrice->find(service_id=>$$Service{id}, equipment_id=>$session{$uri.'?equipment_id'});
 		$html .= sprintf(q`
 <tr%1$s> 
 	<td class="ServiceID">%2$s</td>
@@ -55,6 +60,7 @@
 	} # end foreach
 	return $html;
 ) ?>
+</tbody>
 </table>
 <? else ( @{$$variable{Service}} ) ?>
 There were no results matching your criteria.<br>
