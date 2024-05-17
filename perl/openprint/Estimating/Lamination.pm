@@ -290,10 +290,9 @@ sub calc {
 			my %ServicePrice = $Service->get_price( undef, $Equipment ) if $Service;
 			if ( %ServicePrice ) {
 				if ( $ServicePrice{units} eq 'per m' ) {
-					my $serviceprice = ($ServicePrice{Price} * $qty)/1000;
-					$price += $serviceprice;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %f = $%.2f<br/>', @ServicePrice{'Price','units'}, $qty, $serviceprice );
-					$MPrice += $serviceprice;
+          $ServicePrice{Total} = ($ServicePrice{Price} * $qty)/1000;
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f %2$s * %4$f = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
+					$MPrice += $ServicePrice{Total};
         } elsif ( $ServicePrice{units} eq 'per inch' ) {
           my $linear_length = Math::Round::nearest(0.01, $length * $sheets);
           #$$specs{'hdnBreakdown'.$qty_index} .= "Linear length $length * $sheets = $linear_length inches<br/>";
@@ -321,12 +320,12 @@ sub calc {
             my $hours = Math::Round::nearest( 0.01, $length * ( $qty / $$imposition{imposition} ) / $inches_per_hour );
             $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $hours );
             if ($sides eq 'Single' and $$specs{TypeFront} ne 'None' and $$specs{TypeBack} ne 'None') {
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Front $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Back $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
-            $ServicePrice{Total} *= 2;
-            $ServicePrice{Price} *= 2;
+              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Front $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Back $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+              $ServicePrice{Total} *= 2;
+              $ServicePrice{Price} *= 2;
             } else {
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Both sides $%1$.2f %4$s * %2$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Both sides $%1$.2f %4$s * %2$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
             }
             $MPrice += Math::Round::nearest( 0.01, $ServicePrice{Price} * ( $length * ( 1000 / $$imposition{imposition} ) ) / $inches_per_hour );
           } else {
@@ -337,7 +336,7 @@ sub calc {
               $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Front $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
               $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Back $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
               $ServicePrice{Total} *= 2;
-            $ServicePrice{Price} *= 2;
+              $ServicePrice{Price} *= 2;
             } else {
               $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Both sides: $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
             }
