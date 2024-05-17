@@ -452,6 +452,11 @@ sub display {
 } # end sub display
 
 sub summary {
+	my ( $Project, $service_index, $specs, $qty_index ) = @_;
+  if ($qty_index) {
+    return 'on '.new openprint::Equipment($$specs{'ddmEquipment'.$qty_index})->name();
+  }
+  return $$specs{TypeFront}.' on front, '.$$specs{TypeBack}.' on back';
 } # end sub summary
 
 sub save {
