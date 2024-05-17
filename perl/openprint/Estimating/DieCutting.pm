@@ -33,7 +33,12 @@ use vars qw( %ServicePrices %Specifications);
 );
 
 sub ServicePriceConfiguration {
-  return $ServicePrices{shift};
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
 }
 sub SpecificationConfiguration {
   return $Specifications{shift};
