@@ -1340,21 +1340,25 @@ sub navmenu {
           push @keys, shift @{$$menu{$category}};
           shift @{$$menu{$category}};
         };
-      } else {
-       %urls = %{$$menu{$category}};
-       @keys =  sort { $urls{$a} cmp $urls{$b} } keys %urls;
-     }
+      } elsif ( ref $$menu{$category} eq 'HASH' ) {
+        %urls = %{$$menu{$category}};
+        @keys =  sort { $urls{$a} cmp $urls{$b} } keys %urls;
+      }
       my $submenu_html;
       my $on = 0;
       foreach my $url (@keys) {
-        my $text = $urls{$url};
-        if ( $text ) {
-          my $Page_Setting = openprint::Page_Setting::get( $url );
-          if ( $Page_Setting->can_view() ) {
-            $submenu_html .= sprintf('<li%s><a href="%s">%s</a></li>', ($current_uri eq $url ? ' class="on"':''), $url, $urls{$url} );
-          } # end if
-        }
-        $on = 1 if $current_uri eq $url;
+        if (ref $urls{$url}) {
+          $submenu_html .= navmenu({$url=>$urls{$url}}, $current_uri);
+        } else {
+          my $text = $urls{$url};
+          if ( $text ) {
+            my $Page_Setting = openprint::Page_Setting::get( $url );
+            if ( $Page_Setting->can_view() ) {
+              $submenu_html .= sprintf('<li%s><a href="%s">%s</a></li>', ($current_uri eq $url ? ' class="on"':''), $url, $urls{$url} );
+            } # end if
+          }
+          $on = 1 if $current_uri eq $url;
+        } # end if submenu
       } # end foreach url
 
       if ( $submenu_html ) {
