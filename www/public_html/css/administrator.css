@@ -23,6 +23,9 @@ th.Range,
 .Supplier select {
 	max-width: 100%;
 }
+select.equipment, select.service {
+width: auto;
+}
 .Mode {
 /*
 , .Period {
