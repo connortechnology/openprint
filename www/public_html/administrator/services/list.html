@@ -11,6 +11,8 @@ function load_page() {
 } 
 
 addEventListener('DOMContentLoaded', (event) => {
+  $j('#Services').bootstrapTable({ });
+/*
     $j('table.sortable').each(function(index){
         new DataTable(this, {
 columns: [ {title: 'Service Id', ariaTitle: 'Service Id'},
@@ -20,8 +22,8 @@ orderable: true,
 order: [[1, 'asc']]
 });
         });
+*/
     });
-</script>
 </script>
 <div class="Services">
 <form id="f1" name="f1" method="post" action="list.html">

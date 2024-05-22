@@ -17,15 +17,35 @@
     $$variable{Service} = [ openprint::Service->find( %filters ) ];
 ) ?>	
 <? if ( @{$$variable{Service}} ) ?>
-	<table class="List sortable">
-<thead>
-		<tr> 
-			<th class="ServiceID" data-dt-order="true" aria-label="Service ID">ID #</th>
-			<th class="ServiceName" data-dt-order="true" aria-label="Service Name">Name</th>
-			<th class="Description" aria-label="Description">Description</th>
-			<th class="Categories" aria-label="Categories">Categories</th>
-			<th class="ServiceTypes" aria-label="ServiceTypes">ServiceTypes</th>
-			<th class="CompanyName Supplier" aria-label="Supplier">Supplier</th>
+	<table id="Services" 
+  data-pagination="true"
+  data-search="true"
+  data-show-pagination-switch="true"
+  data-cookie="true"
+  data-cookie-same-site="Strict"
+  data-cookie-id-table="AdminServicesTable"
+  data-cookie-expire="2y"
+  data-show-columns="true"
+  data-show-export="true"
+  data-columns-hidden="[]"
+  data-uncheckAll="true"
+ data-click-to-select="true"
+              data-check-on-init="true"
+              data-mobile-responsive="true"
+              data-min-width="562"
+              data-show-export="true"
+              data-uncheckAll="true"
+
+>
+  <thead>
+		<tr>
+      <th class="checkbox"><input type="checkbox"/></th>
+			<th id="ServiceId" class="ServiceID" data-field="ServiceId" data-sortable="true">ID #</th>
+			<th class="ServiceName" data-field="Name" data-sortable="true">Name</th>
+			<th class="Description" data-field="Description"data-sortable="true">Description</th>
+			<th class="Categories" data-field="Categories" data-sortable="true">Categories</th>
+			<th class="ServiceTypes" data-field="ServieTypes" data-sortable="true">ServiceTypes</th>
+			<th class="CompanyName Supplier" data-sortable="true">Supplier</th>
 		</tr>
 </thead>
 <tbody>
@@ -39,6 +59,7 @@
     next if $session{$uri.'?equipment_id'} and ! openprint::ServicePrice->find(service_id=>$$Service{id}, equipment_id=>$session{$uri.'?equipment_id'});
 		$html .= sprintf(q`
 <tr%1$s> 
+  <td class="checkbox"><input type="checkbox" value="%8$d" name="service_ids[]"</td>
 	<td class="ServiceID">%2$s</td>
 	<td class="ServiceName">%3$s</td>
 	<td class="Description">%4$s</td>
@@ -54,6 +75,7 @@
   $Service->ServiceType()->name(),
 	format_date( $$Service{created_on} ),
   $Service->Supplier()->name(),
+  $Service->id(),
  );
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';
