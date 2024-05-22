@@ -2,6 +2,8 @@
 .Project .Header {
   margin-bottom: 5px;
 	width: 100%;
+  flex-wrap: wrap;
+  display: flex;
 }
 .Project .Header:after {
     content: ".";
@@ -11,22 +13,20 @@
     visibility: hidden;
 }
 .Project .Header fieldset {
-	margin: 0;
+	margin: 2px;
+  /*
     margin-bottom: 0;
+    */
     padding: 6px;
     text-align: left;
 }
-.Project .Header .ProjectInformation {
-    float: left;
-    width: 48%;
-}
-.Project .Header .OrderInformation, .Project .Header .ContactInformation {
-    float: right;
-    width: 48%;
-}
+.Project .Header .ProjectInformation ,
+.Project .Header .OrderInformation,
+.Project .Header .ContactInformation ,
 .Project .Header .Reference {
-    float: left;
+  flex-grow: 1;
     width: 48%;
+    height: 100%;
 }
 .Project .Header .Comments {
     float: left;
