@@ -9,7 +9,7 @@ fieldset p label {
 }
 th.Range,
 .Range  {
-	width: auto;
+	width: 250px;
 	text-align: center;
 }
 .Range input[type="text"], .Range input[type="number"] {
