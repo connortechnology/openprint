@@ -5,6 +5,33 @@ require openprint::service;
 
 use constant DEBUG => 0;
 
+use vars qw( %ServicePrices %Specifications);
+%ServicePrices = (
+  DTapingMinimumCharge => {},
+  DTapingMakeReady => {},
+  DTaping => { units=> ['per inch', 'per m']},
+);
+%Specifications = (
+  'DTapes Per Run' => {},
+  'DTaping Capable' => { value=>['Y','N'] },
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  $openprint::log->debug("Finding for $name");
+  $openprint::log->debug( Data::Dumper::Dumper(\%ServicePrices));
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    $openprint::log->debug("Trying $name =~ $key/");
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  $openprint::log->debug("Not found for ($name)");
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
+
 my %variables = (
 	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],
 	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
@@ -128,7 +155,7 @@ sub calc {
 
 					if ( $last_run ) {
 						my %LastServicePrice;
-						%LastServicePrice = openprint::service::get_price_object('DTaping',$last_run, $Equipment );
+						%LastServicePrice = openprint::service::get_price_object('DTaping', $last_run, $Equipment );
 						if ( ! %LastServicePrice ) {
 							$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
 						} else {

@@ -20,7 +20,7 @@
 	vertical-align: middle;
 	
 }
-.ProjectCreateEdit fieldset li label:after {
+.ProjectCreateEdit fieldset li label:not(.radio):not(.radio-inline):after {
 	content: "";
 }
 .ProjectCreateEdit fieldset ul li.design label,

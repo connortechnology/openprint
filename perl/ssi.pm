@@ -604,7 +604,9 @@ sub button {
 	} else {
 		$html .= $$options{text};
 	}
-	$html .= $$options{type} ? '</button>' : '</a>';
+	$html .= $$options{type} ? '</button>
+' : '</a>
+';
   if ( $$options{onclick} ) {
     $html .= '<script nonce="'.$config{CSP_NONCE}.qq`">
     document.getElementById('Button$name').onclick = function(){
@@ -739,30 +741,32 @@ sub date_select {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{onchange} );
 			$html .= return_years( $start_year, $end_year, $year );
-			$html .= '</select>';
+			$html .= '</select>'."\n";
 #$log->debug($html);
 		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin('month', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"><option value=""> </option>`, $prefix, $$options{onchange} );
 			$html .= getmonths( $month );
-			$html .= '</select>';
+			$html .= '</select>'."\n";
 #$log->debug($html);
 		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin('day', \@fields) ) ) {
 			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""> </option>', $prefix, $$options{onchange} );
 			$html .= getdays( $day, int($year), int($month) );
-			$html .= '</select>';
+			$html .= '</select>'."\n";
 #$log->debug($html);
 		} # endif
 	} # end foreach o
   $html .= "\n";
 	if ( $$options{with_clear} ) {
 		$html .= button( $prefix.'_clear', {
-				onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+				#onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+				on_click_this=>'clear_date', data_prefix=>$prefix,
 				text=>'C', title=>'Clear', class=>'Clear',
 				} );
 	} # end if
 	if ( $$options{with_today} ) {
 		$html .= button( $prefix.'_today', {
-				onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+        on_click_this=>'new_set_today', data_prefix=>$prefix,
+				#onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
 				text=>'T', title=>'Today', class=>'Today',
 				} );
 	} # end if
@@ -1340,21 +1344,25 @@ sub navmenu {
           push @keys, shift @{$$menu{$category}};
           shift @{$$menu{$category}};
         };
-      } else {
-       %urls = %{$$menu{$category}};
-       @keys =  sort { $urls{$a} cmp $urls{$b} } keys %urls;
-     }
+      } elsif ( ref $$menu{$category} eq 'HASH' ) {
+        %urls = %{$$menu{$category}};
+        @keys =  sort { $urls{$a} cmp $urls{$b} } keys %urls;
+      }
       my $submenu_html;
       my $on = 0;
       foreach my $url (@keys) {
-        my $text = $urls{$url};
-        if ( $text ) {
-          my $Page_Setting = openprint::Page_Setting::get( $url );
-          if ( $Page_Setting->can_view() ) {
-            $submenu_html .= sprintf('<li%s><a href="%s">%s</a></li>', ($current_uri eq $url ? ' class="on"':''), $url, $urls{$url} );
-          } # end if
-        }
-        $on = 1 if $current_uri eq $url;
+        if (ref $urls{$url}) {
+          $submenu_html .= navmenu({$url=>$urls{$url}}, $current_uri);
+        } else {
+          my $text = $urls{$url};
+          if ( $text ) {
+            my $Page_Setting = openprint::Page_Setting::get( $url );
+            if ( $Page_Setting->can_view() ) {
+              $submenu_html .= sprintf('<li%s><a href="%s">%s</a></li>', ($current_uri eq $url ? ' class="on"':''), $url, $urls{$url} );
+            } # end if
+          }
+          $on = 1 if $current_uri eq $url;
+        } # end if submenu
       } # end foreach url
 
       if ( $submenu_html ) {

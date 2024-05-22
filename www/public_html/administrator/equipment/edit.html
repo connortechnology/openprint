@@ -1,17 +1,21 @@
+<div class="PageTitle">
+<h1>Equipment</h1>
+<h2>Edit</h2>
+</div>
 <?include('/includes/error_reporting.html')?>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search Information</legend>
 		<ul>
       <li>
         <label>Category</label>
-        <select name="search_category_id" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);};">
+        <select name="search_category_id" on_change_this="search_change" class="chosen">
           <option value="">All</option>
   <? echo ( make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $param{search_category_id} );) ?>
         </select>
       </li>
       <li>
         <label>Equipment ID</label>
-        <select name="ddmEquipment" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}" >
+        <select name="ddmEquipment" on_change_this="search_change" class="chosen">
           <option value="">Select Equipment</option>
   <? echo (
     my @Equipment = openprint::Equipment->find(
@@ -39,8 +43,6 @@
 				button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ),
 				);
 			) ?>
-		</p>
-		<p class="buttons">
 			<input type="file" name="fileSpecifications"/>
 			<? echo ( join("\n",
 			button( 'Import', { onclick=>"f1.btnFunction.value='Import Specifications';f1.submit();", text=>'Import' } ),
@@ -66,7 +68,7 @@
 			</li>
 			<li>
 				<label>Category</label>
-				<select name="category_id" multiple="multiple" size="4">
+				<select name="category_id" multiple="multiple" size="4" class="chosen">
 				<? echo ( make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $$variable{Equipment}->category_id() );) ?>
 				</select>
 			</li>
@@ -98,8 +100,8 @@
 				<? echo ( radio( 'useinestimating', [ '1', 'Yes', '0', 'No', '', 'By Override' ], $$variable{Equipment}->useinestimating(), { default=>'' } ); ) ?>
 			</li>
 			<li>
-				<label>Services</label>
-				<select name="servicetype_id" id="servicetype_id" multiple="multiple" size="4">
+				<label>Service Types</label>
+				<select name="servicetype_id" id="servicetype_id" multiple="multiple" class="chosen">
 					<? echo ( make_drop_down(
 						openprint::ServiceType->dropdown( order=>'lower(name)'),
 						$$variable{Equipment}->servicetype_id(),
@@ -174,7 +176,7 @@
 	</fieldset>
 <? if ( $$variable{Equipment}->id() ) ?>
   <fieldset><legend>Service Prices <span id="toggle_service_prices" on_click="toggle_service_prices">+</span></legend>
-    <div id="show_service_prices"><?include(_service_prices.html)?></div>
+    <div id="show_service_prices"><?echo($session{$r->uri().'?show_service_prices'} ? include('_service_prices.html') : '' )?></div>
   </fieldset>
 	<fieldset><legend>Specifications <span on_click="toggle_specifications">+</span></legend>
 <div id="show_specifications">

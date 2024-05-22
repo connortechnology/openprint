@@ -244,6 +244,7 @@ sub RunSpeed {
 	if ( ! defined $gsm ) {
 		my ( $caller, undef, $line ) = caller;
 		$openprint::log->warn("No gsm in Fold->RunSpeed from $caller line $line");
+    return;
 	} # end if
 	if ( ! exists $$self{runspeed_cache}{$gsm} ) {
 		$$self{runspeed_cache}{$gsm} = $self->Specification( $gsm );

@@ -245,12 +245,17 @@ fieldset p.buttons {
 p.buttons {
   clear: both;
 }
+input[type="radio"] {
+  border-color: black;
+}
 input[type="radio"],
 .checkbox input[type="checkbox"],
 input[type="checkbox"] {
+/*
 	margin: 2px 0;
 	padding: 1px 0;
 	vertical-align: middle;
+*/
 }
 input[type="checkbox"] {
 	margin: 2px;

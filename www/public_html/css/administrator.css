@@ -9,7 +9,7 @@ fieldset p label {
 }
 th.Range,
 .Range  {
-	width: auto;
+	width: 250px;
 	text-align: center;
 }
 .Range input[type="text"], .Range input[type="number"] {
@@ -22,6 +22,9 @@ th.Range,
 }
 .Supplier select {
 	max-width: 100%;
+}
+select.equipment, select.service {
+width: auto;
 }
 .Mode {
 /*

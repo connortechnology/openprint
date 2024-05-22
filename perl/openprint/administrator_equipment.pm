@@ -464,5 +464,15 @@ sub _list {
                 ) );
 }
 
+sub _service_prices {
+  $variable{Equipment} = new openprint::Equipment($param{equipment_id});
+  if ($param{hide}) {
+    $openprint::session{'/administrator/equipment/edit.html?show_service_prices'} = 0;
+    $variable{PageContent} = '';
+  } else  {
+    $openprint::session{'/administrator/equipment/edit.html?show_service_prices'} = 1;
+  }
+}
+
 1;
 __END__

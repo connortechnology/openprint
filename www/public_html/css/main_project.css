@@ -105,6 +105,7 @@
 display: block;
 }
 .Service .templates p label:not(.radio):not(.radio-inline) {
+  width: auto;
 	clear: none;
 	float: none;
 	margin: 0;
