@@ -129,8 +129,12 @@
 	margin-left: -180px;
 	text-align: left;
 }
-.Service fieldset li select, .Service fieldset li input,
-.Service fieldset p select, .Service fieldset p input {
+.Service fieldset li select,
+.Service fieldset li input[type="text"],
+.Service fieldset p select,
+.Service fieldset p input[type="text"],
+.Service fieldset p input[type="number"]
+ {
 	width: auto;
 }
 
