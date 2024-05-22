@@ -992,6 +992,17 @@ function disableDiv(elm) {
 	document.getElementsByTagName("body")[0].appendChild(overlay);
 }
 
+function new_set_today(btn) {
+  const prefix=btn.getAttribute('prefix');
+  set_today(
+      document.getElementById(prefix+'_year'),
+      document.getElementById(prefix+'_month'),
+      document.getElementById(prefix+'day'),
+      document.getElementById(prefix+'hour'),
+      document.getElementById(prefix+'minute')
+      );
+}
+
 function set_today( e_y, e_m, e_d, e_h, e_min ) {
 	var d = new Date();
 	ddm_select_by_value( e_y, 1900+d.getYear() );
@@ -1003,8 +1014,19 @@ function set_today( e_y, e_m, e_d, e_h, e_min ) {
 		ddm_select_by_value( e_min, d.getMinutes() );
 } // end function set_today
 
+function clear_date(btn) {
+  const prefix=btn.getAttribute('prefix');
+  date_clear(
+      document.getElementById(prefix+'_year'),
+      document.getElementById(prefix+'_month'),
+      document.getElementById(prefix+'day'),
+      document.getElementById(prefix+'hour'),
+      document.getElementById(prefix+'minute')
+      );
+}
+
 function date_clear( e_y, e_m, e_d, e_h, e_min ) {
-	var onchange=e_y.onchange;
+	let onchange=e_y.onchange;
 	e_y.onchange='';
 	e_y.selectedIndex = 0;
 	e_y.onchange=onchange;
@@ -1027,6 +1049,7 @@ function date_clear( e_y, e_m, e_d, e_h, e_min ) {
 	if ( e_min )
 	e_min.selectedIndex = 0;
 		//ddm_select_by_value( e_min, '' );
+	if (window[onchange]) window[onchange]();
 } // end function date_clear
 
 function set_date( form, from, to ) {
@@ -1848,6 +1871,15 @@ function update_event_bindings() {
     el.onclick = window[fnName].bind(el, el);
   });
 
+  document.querySelectorAll('textarea[on_keyup_this]').forEach(function(el) {
+    const fnName = el.getAttribute('on_keyup_this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    console.log("Setting up onkeyup_this for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
   document.querySelectorAll('button[on_click_this], input[on_click_this]').forEach(function(el) {
     const fnName = el.getAttribute('on_click_this');
     if ( !window[fnName] ) {
@@ -1892,11 +1924,9 @@ function update_event_bindings() {
       window[fnName](ev);
     };
   });
+console.log('done');
 }
 
-window.addEventListener('DOMContentLoaded', function() {
-  update_event_bindings();
-});
 
 function fix_prototype_bootstrap() {
   /*
