@@ -33,7 +33,7 @@ require openprint::ServiceType;
 use openprint::Imposition;
 require openprint::Estimating::Perforating;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my %ServicePrices = (
@@ -1141,7 +1141,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 							page_width			=>	$$sig_specs{txtFinalWidth},
 							page_height			=>	$$sig_specs{txtFinalHeight},
 							type						=>	$$sig_specs{rdbTemplateType},
-							gsm							=>	$$Paper{gsm},
+							gsm							=>	$Paper->gsm(),
 							calliper				=>	$$Paper{calliper},
 							imposition			=>	$$Imposition{imposition},
 							columns					=>	$$Imposition{columns},
@@ -1160,7 +1160,7 @@ if ( 0 ) {
 									page_width			=>	$$sig_specs{txtFinalWidth},
 									page_height			=>	$$sig_specs{txtFinalHeight},
 									type						=>	$$sig_specs{rdbTemplateType},
-									gsm							=>	$$Paper{gsm},
+									gsm							=>	$Paper->gsm(),
 									calliper				=>	$$Paper{calliper},
 									imposition			=>	$$Imposition{imposition},
 									columns					=>	$$Imposition{columns},
@@ -1174,7 +1174,7 @@ if ( 0 ) {
 									page_width			=>	$$sig_specs{txtFinalWidth},
 									page_height			=>	$$sig_specs{txtFinalHeight},
 									type						=>	$$sig_specs{rdbTemplateType},
-									gsm							=>	$$Paper{gsm},
+									gsm							=>	$Paper->gsm(),
 									imposition			=>	$$Imposition{imposition},
 									columns					=>	$$Imposition{columns},
 									rows						=>	$$Imposition{rows},
@@ -1315,7 +1315,7 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
                 stitching		=>	(($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0),
                 perfectbind		=>	($$services{PerfectBound} ? 1 : 0),
                 spinepaste		=>	($$services{SpinePaste} ? 1 : 0),
-                gsm						=>	$$Paper{gsm},
+                gsm						=>	$Paper->gsm(),
                 calliper				=>	$$Paper{calliper},
                 imposition		=>	$$Imposition{imposition},
                 columns				=>	$$Imposition{columns},
@@ -1333,7 +1333,7 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 									stitching		=>	(($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0),
 									perfectbind		=>	($$services{PerfectBound} ? 1 : 0),
 									spinepaste		=>	($$services{SpinePaste} ? 1 : 0),
-									gsm						=>	$$Paper{gsm},
+									gsm						=>	$Paper->gsm(),
 									imposition		=>	$$Imposition{imposition},
 									columns				=>	$$Imposition{columns},
 									rows					=>	$$Imposition{rows},
@@ -1534,7 +1534,7 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
         if ($$Fold{runspeed_units} eq 'calliper') {
           $runspeed = $Fold->RunSpeed($$Paper{calliper});
         } elsif ( $$Fold{runspeed_units} eq 'gsm') {
-          $runspeed = $Fold->RunSpeed($$Paper{gsm});
+          $runspeed = $Fold->RunSpeed($Paper->gsm());
         } elsif ( $$Fold{runspeed_units} eq 'impressions') {
           $runspeed = $Fold->RunSpeed($run_qty);
         } # end if units
@@ -1556,17 +1556,19 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 
 				my $total_MR = 0;
 				my %setupPrice = openprint::service::get_price_object($$Fold{type}.'MakeReady', $imposition, $Equipment);
-				if ( ! %setupPrice ) {
+				if (!%setupPrice) {
 					$openprint::log->debug('No MakeReady for '.$$Fold{type}.'MakeReady ' . $imposition . ' out on ' . $$Equipment{strid} ) if DEBUG;
 					%setupPrice = openprint::service::get_price_object('FoldingMakeReady', $imposition, $Equipment);
 					%setupPrice = openprint::service::get_price_object('FoldMakeReady', $imposition, $Equipment) if ! %setupPrice;
 				} else {
-					$openprint::log->debug("Got MakeReady for " . $Fold->type().'MakeReady' . ' imp:' . $imposition . " \$$setupPrice{Price} $setupPrice{units}" ) if DEBUG;
+					$openprint::log->debug('Got MakeReady for ' . $Fold->type().'MakeReady' . ' imp:' . $imposition . ' $'.$setupPrice{Price}.' '.($setupPrice{units} ? $setupPrice{units}:'') ) if DEBUG;
 				} # end if
 				$Breakdown .= '<table><tr><td class="Description">MR: ';
 				if (!$setupPrice{units} and ! $makereadies{$$Equipment{id}}{$$Fold{type}.$imposition}) {
           # This is the most common so test for it first.
           $setupPrice{Total} = $setupPrice{Price};
+          $setupPrice{units} ||= '';
+					$total_MR += $setupPrice{Total};
           $Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
 				} elsif ( $setupPrice{units} eq 'per form' ) {
 					$setupPrice{Total} = $setupPrice{Price};
@@ -1631,7 +1633,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? 
             $run_qty, $$runspeed{runspeed}, misc::seconds_to_interval( int( 3600*$runTime ) ) );
         }
 				$$Imposition{runspeed} = $$runspeed{runspeed};
-				$openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name} $runspeed $$Paper{gsm}" ) if DEBUG;
+				$openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name} $$runspeed{runspeed} $$Paper{gsm}" ) if DEBUG;
 
 #$Breakdown .= sprintf( '&nbsp;Folds: QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', $qty, $imposition, $$RunSpeed{runspeed}, $runTime );
 # We are assuming at this point, that all these folds are posible on this equipment, so any errors are soft errors
@@ -1652,15 +1654,15 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? 
 					$servicePrice{Total} = $servicePrice{Price} * $runTime;
 					$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %.2d:%.2d:%.2d =</td><td class="Price">$%.2f</td></tr>', @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{Total} );
 				} elsif ( $servicePrice{units} eq 'per m' or $servicePrice{units} eq 'per 1000' or $servicePrice{units} eq 'per 1000 sheets') {
-					# Need adjustment
-					my $Adjustment = 1;
-					if ( my $Base = $Fold->RunSpeed( 0 ) ) {
-						$Adjustment = $$Base{runspeed}/$runspeed;
+					my $Base = $Fold->RunSpeed( 0 );
+					if ($Base and int($$Base{runspeed})) {
+            # Need adjustment
+            my $Adjustment = $$Base{runspeed}/$$runspeed{runspeed};
 						$servicePrice{Total} = $servicePrice{Price} * ( $run_qty/1000 ) * $Adjustment;
-	#$openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $runspeed . ' calculated: ' . $Adjustment );
-						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d * %d%% runspeed adjustment =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $Adjustment*100, $servicePrice{Total} );
+$openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$runspeed{runspeed} . ' calculated: ' . $Adjustment );
+						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d * %f%% runspeed adjustment =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $Adjustment*100, $servicePrice{Total} );
 					} else {
-						$servicePrice{Total} = $servicePrice{Price} * ( $run_qty/1000 ) * $Adjustment;
+						$servicePrice{Total} = $servicePrice{Price} * $run_qty/1000;
 						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d =</td><td class="Price">$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $servicePrice{Total} );
 					} # end if
 				} elsif ( $servicePrice{units} eq 'per inch per m' ) {
@@ -1846,11 +1848,15 @@ $openprint::log->debug("Calling Scoring");
 			} else {
 				$results{MakeReadyOvers} = $$Fold{makeready_overs} if $results{MakeReadyOvers} < $$Fold{makeready_overs};
 			} # end if
+    } else {
+      $results{MakeReadyOvers} = 0;
 		} # end if
 		if ( $$Fold{run_overs} ) {
 			$results{RunOvers} = $$Fold{run_overs} if $results{RunOvers} < $$Fold{run_overs};
 			my $run_overs = $printed_sheets * $$Fold{run_overs} /100;
 			$results{RunOvers} = $run_overs if $results{RunOvers} < $run_overs;
+    } else {
+      $results{RunOvers} = 0;
 		}
 	} # end foreach
 
@@ -1986,7 +1992,7 @@ $openprint::log->debug("Signatures: @signatures") if DEBUG;
 					"FoldFolds-$form-$qty_index-$index",
 					"FoldAngles-$form-$qty_index-$index",
 					) {
-$$specs{$k} = '';
+            $$specs{$k} = '';
 				};
 				$$specs{"FoldRunspeed-$form-$qty_index-$index"} = '' if (!$$specs{"OverrideRunspeed-$form-$qty_index-$index"}) or $$specs{"OverrideRunspeed-$form-$qty_index-$index"} ne 'Y';
 				} # end for
@@ -2864,7 +2870,7 @@ sub get_Folds {
 
 if ( DEBUG ) {
 foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
-	$openprint::log->debug("$k=>$$folding_specs{$k}");
+	$openprint::log->debug($k.'=>'.(defined $$folding_specs{$k} ? $$folding_specs{$k} : 'undef'));
 }
 }
 	my $form = $$sig_specs{SignatureIndex};
@@ -2875,6 +2881,7 @@ $openprint::log->debug('Has no equipment_id') if DEBUG;
 
 	my $Folder = new openprint::Equipment($$folding_specs{"ddmEquipment-$form-$qty_index"});
 	my $services = $$Source_Imposition{Project}->services();
+  my $Paper = $$Source_Imposition{Paper};
 
 	foreach my $fold_index ( 1 .. 4 ) {
 		my $fold_qty = $$folding_specs{join('-','FoldQty',$form,$qty_index,$fold_index)};
@@ -2897,7 +2904,8 @@ $openprint::log->debug('Has no equipment_id') if DEBUG;
 		$$Imposition{Folder} = $Folder;
 		$Imposition->Press($Folder);
 
-		my $Paper = $$Imposition{Paper};
+		$Paper = $$Imposition{Paper};
+$openprint::log->debug($Paper->to_string());
 
 		my $find = {
 			type 			=>	$fold_type,
