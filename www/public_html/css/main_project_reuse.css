@@ -1,12 +1,17 @@
-div.Project div.History .filters div.leftColumn {
+/*div.Project div.History .filters div.leftColumn {
     width: 27%;
 }
 div.Project div.History .filters div.rightColumn {
     width: 70%;
 }
+
+*/
 div.Project div.Reuse div.quantities ul li {
-    width: 140px;
+    width: 320px;
     float: left;
+}
+div.Project div.Reuse div.quantities ul li input {
+max-width: 98%;
 }
 div.Project div.Reuse ul li {
     text-align: left;
@@ -18,6 +23,8 @@ div.Project div.Reuse ul li textarea {
     width: 98%;
 }
 div.Project div.Reuse ul li select {
-	width: 90%;
+	width: auto;
 }
-
+select#ddmCustomer, select#company_id {
+width: auto;
+}
