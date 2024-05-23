@@ -119,7 +119,7 @@
 				return include('/includes/main/proj/press_sheet_combo.html');
 		} elsif ( $$variable{ProjectType}->name() eq 'PresentationFolders' ) {
 			return join("\n",
-				include('/includes/main/proj/templates/presentation_folders.html'),
+				include('/includes/main/proj/templates/generic.html'),
 				include('/includes/main/proj/dimensions.html'),
 				include('/includes/main/proj/presentation_folder_printing.html'),
 			);
