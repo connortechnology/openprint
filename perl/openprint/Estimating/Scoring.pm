@@ -719,6 +719,11 @@ sub get_price {
 			$qty += $overs;
 			$Results{Overs} = $overs;
 			$Results{Breakdown} .= 'Overs: ' . $overs . '<br/>';
+    } elsif ( $$Overs{units} eq 'Percent' ) {
+			my $overs = $qty * $$Overs{value} / 100;
+			$qty += $overs;
+			$Results{Overs} = $overs;
+			$Results{Breakdown} .= 'Overs: ' . $overs . '<br/>';
 		} else {
 			$openprint::log->error('unknown units on Scoring Overs on '.$$Equipment{strid});
 		} # end if
