@@ -360,7 +360,7 @@ sub calc {
 					} # end if
 					if ( $$FrontMaterialPrice{units} eq 'per square foot' ) {
 						$$FrontMaterialPrice{Total} = $$FrontMaterialPrice{Price} * $area / 144;
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: $%1$.2f %2$s * %4$.2f square feet = $%3$.2f<br/>', @$FrontMaterialPrice{'Price','units','Total'}, $area/144 );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: $%1$.6f %2$s * %4$.2f square feet = $%3$.2f<br/>', @$FrontMaterialPrice{'Price','units','Total'}, $area/144 );
 					} elsif ( $$FrontMaterialPrice{units} eq 'per m square inches' ) {
 						$$FrontMaterialPrice{Total} = $$FrontMaterialPrice{Price} * $area / 1000;
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: $%1$.2f %2$s * %4$.2f inches = $%3$.2f<br/>', @$FrontMaterialPrice{'Price','units','Total'}, $area/1000 );
