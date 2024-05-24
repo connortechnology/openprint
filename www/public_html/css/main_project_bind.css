@@ -21,8 +21,11 @@ table .Imp {
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
+  width: 40px;
 }
 .Impositions table th {
     font-size: x-small;
 }
-
+table.Impositions .Imp {
+  width: 300px;
+}
