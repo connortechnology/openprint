@@ -275,13 +275,16 @@ table.ProofsSummary .quantity, table.ProofsSummary .size {
 	width: 32%;
 	float: left;
 }
+.Service .OneColumns,
 .Service .TwoColumns {
 	width: 40%;
 	float: left;
 }
-table .Qty, table .Imp {
+table .Qty,
+table .Imp {
 	width: 20px;
 }
+
 .Folding table {
 	table-layout: auto;
 	width: auto;
