@@ -4,29 +4,27 @@
       cbFillResults(results);
       const form = getFormObj('f1');
       const re = /ImpQty-(\d+)-(\d+)-(\d+)/;
-      const keys = results.keys();
-      for ( let index = 0, len = keys.length; index < len; index += 1 ) {
-          const key = keys[index];
-          const matches = re.exec( key );
-          if ( matches ) {
-              const f = $('Imp-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
-              if ( f ) {
-                  const value = form.elements[index].value;
-                  if ( matches[3] == 1 || value > 0 ) {
-                      f.show();
-                    } else {
-                        f.hide();
-                      } // end if
-                } else {
-                    alert('debug mesage: No html for imp ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
-                  } // end if f
-            } // end if matches
-        } // end foreach pair
+      for (const [key, value] of Object.entries(results)) {
+        const matches = re.exec( key );
+        if ( matches ) {
+          const f = $('Imp-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
+          if ( f ) {
+            const value = form.elements[index].value;
+            if ( matches[3] == 1 || value > 0 ) {
+              f.show();
+            } else {
+              f.hide();
+            } // end if
+          } else {
+            alert('debug mesage: No html for imp ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
+          } // end if f
+        } // end if matches
+      } // end foreach pair
     } // end fucntion
 
-function show_extra_imposition( signature, qty_index ) {
-    var f = $('Imp-'+signature+'-'+qty_index+'-'+'2');
-    f.show();
+  function show_extra_imposition( signature, qty_index ) {
+      const f = $('Imp-'+signature+'-'+qty_index+'-'+'2');
+      f.show();
 }
 function Imposition_onchange( element, signature, qty_index, index ) {
     var spec = signature + '-' + qty_index + '-' + index;
@@ -52,8 +50,6 @@ function Imposition_onchange( element, signature, qty_index, index ) {
         calc(element.form.name);
 } // end function
 </script>
-
-
 <div class="Service <?ServiceType?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
@@ -61,14 +57,17 @@ function Imposition_onchange( element, signature, qty_index, index ) {
 				foreach my $signature_id ( $$variable{Project}->signatures({sort=>1}) ) {
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $signature_id );
 
-					$html .= qq`<div class="Signature">Information for form $$sig_specs{SignatureIndex} ($$sig_specs{txtServiceDescription}):
+					$html .= qq`<div class="Signature">Information for form $$sig_specs{SignatureIndex}`.
+            ($$sig_specs{txtServiceDescription} ? '('.$$sig_specs{txtServiceDescription}.')' : '').':
 					<ul>
-					<li><label>Score Quantity</label>`;
-					$html .= input( name=>'txtVerticalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtVerticalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', oninput=>'calc(this.form.name);' );
-					$html .= ' Vertical + ';
-					$html .= input( name=>'txtHorizontalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtHorizontalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', oninput=>'calc(this.form.name);' );
-					$html .= ' Horizontal ';
-					$html .= write_override( 'chkOverrideQty-'.$$sig_specs{SignatureIndex}, $$variable{'chkOverrideQty-'.$$sig_specs{SignatureIndex}}, '', "calc('f1');" );
+					<li><label>Score Quantity</label>';
+					$html .= join("\n",
+          input( name=>'txtVerticalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtVerticalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', oninput=>'calc(this.form.name);' ),
+					' Vertical + ',
+					input( name=>'txtHorizontalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtHorizontalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', oninput=>'calc(this.form.name);' ),
+					' Horizontal ',
+					write_override( 'chkOverrideQty-'.$$sig_specs{SignatureIndex}, $$variable{'chkOverrideQty-'.$$sig_specs{SignatureIndex}}, '', "calc('f1');" ),
+          '');
 					$html .= '</li>
 					</ul>
 				</div>';
