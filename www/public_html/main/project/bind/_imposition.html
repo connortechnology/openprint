@@ -11,7 +11,7 @@
 		oninput	=>	$onkeyup,
 		title	=>	'# of pieces cut from press sheet',
 		);
-	$html .= '</td><td class="Imp">'.join('',
+	$html .= '</td><td class="Imp">'.join("\n",
 	input(
 		type	=>	'cardinal',
 		id		=>	'ImpColumns-'.$blah,
