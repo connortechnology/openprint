@@ -40,6 +40,7 @@ my %ServicePrices = (
   FoldingMinimumCharge => {},
   'Folding(.*)MakeReady' => { units => [ 'per hour' ] },
   'Folding' => { units=> ['per hour', 'per lb','per m']},
+  '(.*)Fold' => { units=> ['per hour', 'per lb','per m']},
 );
 my %Specifications = (
   'Folding Capable' => { values=>['Y','N','When PerfectBound', 'For Pocket Folders', 'When Stitching','When Printing'] },
@@ -197,6 +198,12 @@ sub outputs {
 	'3Panel2Pocket',
 	'3Panel2PocketGusset',
 	'MapFold',
+  'Package21Fold',
+  'Package30Fold',
+  'Package51Fold',
+  'Package6Fold',
+  'Package62Fold',
+  'Package64Fold',
 );
 
 
@@ -247,6 +254,12 @@ sub outputs {
 	'3Panel2Pocket'=> '3 Panel 2 Pocket',
 	'3Panel2PocketGusset'=> '3 Panel 2 Pocket w/Gussets',
 	'MapFold'=>'Map Fold',
+  'Package21Fold' => 'Package 21',
+  'Package30Fold' => 'Package 30',
+  'Package51Fold' => 'Package 51',
+  'Package6Fold' => 'Package 6',
+  'Package62Fold' => 'Package 62',
+  'Package64Fold' => 'Package 64',
 );
 my %short_fold_names = (
 	'2PanelFold', '2panel',
@@ -296,6 +309,12 @@ my %short_fold_names = (
 	'3Panel2Pocket', '3 Panel 2 Pocket',
 	'3Panel2PocketGusset', '3 Panel 2 Pocket w/Gussets',
 	'MapFold','Map Fold',
+  'Package21Fold' => 'Package 21',
+  'Package30Fold' => 'Package 30',
+  'Package51Fold' => 'Package 51',
+  'Package6Fold' => 'Package 6',
+  'Package62Fold' => 'Package 62',
+  'Package64Fold' => 'Package 64',
 );
 my %short_signature_types = (
 	'Interior Pages' => 'Int',
