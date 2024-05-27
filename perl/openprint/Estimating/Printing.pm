@@ -2650,7 +2650,7 @@ sub calc {
 	my %inkCoverage = get_inkcoverage( $Project, $specs );
 
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
-	my @side_two_colours = get_colours( $specs, $$specs{side_linked} ? 'SideOne' : 'SideTwo' );
+	my @side_two_colours = get_colours( $specs, $$specs{side_link} ? 'SideOne' : 'SideTwo' );
 	$$specs{SideOneColours} = \@side_one_colours;
 	$$specs{SideTwoColours} = \@side_two_colours;
 
