@@ -242,6 +242,13 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
+	require openprint::Estimating::DieCutting;
+	if ( openprint::Estimating::DieCutting::neccessary($Project) ) {
+		if (!$$services{DieCutting} ) {
+			push @{$$services{DieCutting}}, $Project->add_service( 'DieCutting' );
+		} # end if
+	} # end if
+
 	require openprint::Estimating::Padding;
 	if ( openprint::Estimating::Padding::neccessary( $Project ) ) {
 		if ( ! $$services{Padding} ) {
