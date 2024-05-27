@@ -4,7 +4,11 @@
 		<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
 		<fieldset><legend><?ServiceTypeName?> Services</legend>
 			<ul>
-			<?include('/includes/main/proj/quantities_prices.html')?>
+        <li><label>Quantity to count</label>
+          <?echo( input( type=>'cardinal', onclick=>'calc(\'f1\');', name=>'txtSignatureCount', value=>$$variable{txtSignatureCount}); ) ?>
+        </li>
+			  <?include('/includes/main/proj/quantities_prices.html')?>
+			  <?include('/includes/main/proj/_comments.html')?>
 			</ul>
 		</fieldset>
 		<hr/>
