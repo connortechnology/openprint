@@ -30,6 +30,7 @@ use vars qw( %ServicePrices %Specifications);
   'Runspeed' => {range_units => [ 'calliper'], units=>'per hour'},
   'DieCutting Overs' => {range_units => [ 'impressions' ], units=>['percent']},
   'DieCutting Capable' => { value=>['Y','N'] },
+  'DieCutting W&T'  => { value=>['Y','N'] },
 );
 
 sub ServicePriceConfiguration {
@@ -110,6 +111,14 @@ sub calc_price {
 
 	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'' );
 	my $form = $$sig_specs{SignatureIndex};
+  if ($$Imposition{runstyle} eq 'Work & Turn' or $$Imposition{runstyle} eq 'Work & Tumble') {
+    my $do_wt = $Equipment->specification('DieCutting W&T');
+    if ($do_wt and $do_wt eq 'N') {
+      $Total{Status} = 'uncalculated';
+      $Total{alert} = 'Not allowed to do W&T';
+      return %Total;
+    }
+  }
 
 	my $MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'MakeReadyComplexity-'.$form}.'MakeReady' ) if $$specs{'MakeReadyComplexity-'.$form};
 	$MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'rdbDieCutting-'.$form}.'MakeReady' ) if (!$MakeReadyService) and $$specs{'rdbDieCutting-'.$form};
@@ -575,7 +584,7 @@ sub signature_calc {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;	
 
-	$$variable{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)', useinestimating=>1,Specifications=>{'Die Cutting Capable'=>'Y'} ) ];
+	$$variable{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)', useinestimating=>1,Specifications=>{'DieCutting Capable'=>'Y'} ) ];
 
 	if ( $$variable{rdbTemplateTypePresentationFolderStandard1Pocket} or $$variable{rdbTemplateTypePresentationFolderStandard2Pocket} ) {
 		$$variable{ShowPresentationFolderDieCutting} = 'Y';
@@ -693,6 +702,10 @@ sub has_overrides {
 
 sub neccessary {
 	my ( $Project ) = @_;
+  foreach my $service_type ( $Project->Type()->required_ServiceTypes()) {
+    return 1 if $service_type->type() eq 'DieCutting';
+  }
+
 	return 0;
 } # end sub neccessary
 
