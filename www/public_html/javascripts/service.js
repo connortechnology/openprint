@@ -76,8 +76,6 @@ function submit_handler( formName ) {
 function cbWindowSaveClose( results ) {
 	window.close();
 } 
-var timeout;
-var block_calc = false;
 
 function body_onLoad() {
 	if ( typeof(selectProjectTemplate) == 'function' ) {
@@ -89,6 +87,8 @@ function body_onLoad() {
 	} // end if
 }
 
+var timeout;
+var block_calc = false;
 function calc( formName='f1', force, options ) {
   console.log('calc', formName);
 	if ( block_calc ) return;
@@ -108,7 +108,7 @@ function calc( formName='f1', force, options ) {
     if ( options ) {
       timeout = setTimeout("calc_print('"+formName+"', 0, " + Object.toJSON( options ) + ");", 1000 );	
     } else {
-      timeout = setTimeout( "calc('" + formName + "');", 1000 );
+      timeout = setTimeout("calc('" + formName + "');", 1000);
     }
   } else {
     timeout = null;
@@ -152,6 +152,7 @@ function calc( formName='f1', force, options ) {
     }).done(function(data) {
       console.log(data);
     }).fail(function(jqXHR, textStatus, errorThrown) {
+      gettingNewPrice = false;
       console.log("fail", jqXHR, textStatus);
     });
   } // end if
