@@ -238,11 +238,9 @@ function calc_print( formName, force, options ) {
   }
   if (options) {
     for (const [key, value] of Object.entries(options)) {
-      console.log("Adding ", key, value);
       data[data.length] = {name: key, value: value};
     }
   }
-  console.log('options', options);
 	//pendingCalc = new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
   pendingCalc = $j.ajax({
     type: 'POST',
@@ -250,11 +248,9 @@ function calc_print( formName, force, options ) {
     data: data,
     dataType: 'json',
     success: function(data, textStatus, jqXHR) {
-      console.log(data);
       cbFillPrintResults(data);
     }
   }).done(function(data) {
-    console.log(data);
   }).fail(function(jqXHR, textStatus, errorThrown) {
 	  gettingNewPrice = false;
     console.log("fail", textStatus, errorThrown);
@@ -409,7 +405,6 @@ function selectProjectTemplate( formName ) {
 					add_option( ddm, options[TemplateType][x].text, options[TemplateType][x].value );
 				} // end for
 			} else {
-        console.log(TemplateType);
 				alert("We do not have dimensions for the selected project template "+TemplateType+" at this time.\n\nPlease select custom in the size pull down and input your finished and flat dimensions in the supplied text boxes.");	
 			} // end if
 		} // end if TemplateType
@@ -617,26 +612,25 @@ function cbStockFillResults( results ) {
 
 window.addEventListener('DOMContentLoaded', function() {
 	calc('f1');
-});
 
 // Register side linking and set initial page state.
-Event.observe(window, 'load', function () {
-    const link = $('side_link');
-    const side = $('InksOnBackQuestions');
+  const link = document.getElementById('side_link');
+  const side = document.getElementById('InksOnBackQuestions');
 
-    if (! (side && link) ) return;
+  if (! (side && link) ) {
+    console.log(link,side,'not found');
+    return;
+  }
 
-    // Set the initial status on page load.
-    if (link.checked) link_sides.apply(link);
-
-    Event.observe(link, 'click', link_sides.bind(link));
-
-    return true;
+  // Set the initial status on page load.
+  if (link.checked) link_sides.apply(link);
+  link.onclick = link_sides.bind(link);
+  console.log('done');
 });
 
 // Gray out/disable side two when it's "linked" to side one. The server
 // handles replicating the fields across when they are linked.
-function link_sides (e) {
+function link_sides(e) {
   const linked = this.checked;
   const side   = $('InksOnBackQuestions');
   const colour = linked ? '#999999' : '';
@@ -676,4 +670,5 @@ function link_sides (e) {
         console.log("Unknown element", elem);
     }
   });
+  calc('f1');
 }
