@@ -143,7 +143,7 @@ sub calc {
 		} # end if
 		if ( (!$$specs{'rdbSuppliedDie-'.$form} or  $$specs{'rdbSuppliedDie-'.$form} eq 'N' ) and ( ! $$specs{'rdbStripping-'.$form} ) ) {
 			$$specs{alert} .= 'Please select the complexity of the die.<br/>';
-			return 'uncalculated';
+			return $$specs{Status} = 'uncalculated';
 		} # end if
 	} # end foreach signature
 
@@ -301,6 +301,10 @@ sub signature_calc {
 	if ( $$services{DieCutting} and @{$$services{DieCutting}} ) {
 		$DieCutting_specs = openprint::service::get_specs_ref( $Project, $$services{DieCutting}[0] );
 		@Impositions = load_Impositions( $Imposition, $DieCutting_specs, $form, $qty_index );
+    if (!@Impositions) {
+      $results{alert} = 'Unable to load imposition from die cutting.<br/>';
+      return %results;
+    }
 	} else {
 		@Impositions = ( $Imposition );
 	} # end if
@@ -429,8 +433,7 @@ sub calc_price {
 	} # end if
 
 	$Total{UnitPrice} = $Total{Total} / $$specs{"txtQuantity$qty_index"};
-    return %Total;
-
+  return %Total;
 } # end sub calc_price
 
 sub display {
