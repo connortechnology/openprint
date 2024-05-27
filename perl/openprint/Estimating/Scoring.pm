@@ -28,6 +28,31 @@ require openprint::Equipment;
 
 use constant DEBUG => 0;
 
+use vars qw( %ServicePrices %Specifications);
+%ServicePrices = (
+  ScoringMinimumCharge => {},
+  'ScoringMakeReady' => {},
+  'Scoring' => { units=> ['per hour', 'per m']},
+);
+%Specifications = (
+  'Runspeed' => {range_units => [ 'calliper'], units=>'per hour'},
+  'Scoring Overs' => {range_units => [ 'impressions' ], units=>['percent']},
+  'Scoring Capable' => { value=>['Y','N'] },
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
+
+
 my @variables = (
 		'txtQuantity',
 		'txtQuantity1','txtQuantity2','txtQuantity3',
@@ -573,6 +598,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 
 		 my $totalPrice;
 		 my @impositions = ();
+     my $minimumCharge = openprint::service::get_price('ScoringMinimumCharge', undef, $Equipment) || 0;
 
 # FIXME, needs to be same folder
 		 if ( ( $type eq 'Folder' ) and @Folds ) {
@@ -594,6 +620,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 $totalPrice += $$Price{setup}{Price} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
 				 $Results{Breakdown} .= $$Price{Breakdown};
 			 } # end foreach my $Fold
+
 #$Results{Imposition} = $Fold;
 			 $Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice);
 
@@ -637,6 +664,10 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 } # end foreach imposition I
 				 next if ! $complete;
 				 $Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice);
+         if ($minimumCharge and ($minimumCharge > $totalPrice)) {
+           $Results{Breakdown} .= sprintf('Minimum Charge: $%.2f<br/>', $minimumCharge);
+           $totalPrice = $minimumCharge;
+         }
 
 				 if ( (! exists $Results{Price}) or ($totalPrice < $Results{Price}) ) {
 					 $Results{Price} = $totalPrice;
