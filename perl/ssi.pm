@@ -1323,14 +1323,18 @@ sub navmenu {
   my $current_uri = shift;
 
   my $html;
+  my $on = 0;
 
   my @categories;
   if ( ref $menu eq 'ARRAY' ) {
-    @categories = map { $_ % 2 ? () : $$menu[$_] } 0 .. (scalar @{$menu}-1);
     my %m = @{$menu};
+    while (@{$menu}) {
+      push @categories, shift @{$menu};
+      shift @{$menu};
+    }
     $menu = \%m;
   } else {
-    @categories = sort keys %{$menu};
+    @categories = sort { $a cmp $b } keys %{$menu};
   }
 
   foreach my $category ( @categories ) {
@@ -1340,25 +1344,28 @@ sub navmenu {
 
       if ( ref $$menu{$category} eq 'ARRAY' ) {
         %urls = @{$$menu{$category}};
+        # Maintain ordering
         while(@{$$menu{$category}}) {
           push @keys, shift @{$$menu{$category}};
           shift @{$$menu{$category}};
-        };
+        }
       } elsif ( ref $$menu{$category} eq 'HASH' ) {
         %urls = %{$$menu{$category}};
         @keys =  sort { $urls{$a} cmp $urls{$b} } keys %urls;
       }
       my $submenu_html;
-      my $on = 0;
       foreach my $url (@keys) {
         if (ref $urls{$url}) {
-          $submenu_html .= navmenu({$url=>$urls{$url}}, $current_uri);
+          my ($sub_html, $new_on) = navmenu({$url=>$urls{$url}}, $current_uri);
+          $submenu_html .= $sub_html;
+          $on = 1 if $new_on;
         } else {
           my $text = $urls{$url};
           if ( $text ) {
             my $Page_Setting = openprint::Page_Setting::get( $url );
             if ( $Page_Setting->can_view() ) {
               $submenu_html .= sprintf('<li%s><a href="%s">%s</a></li>', ($current_uri eq $url ? ' class="on"':''), $url, $urls{$url} );
+              $submenu_html .= "\n";
             } # end if
           }
           $on = 1 if $current_uri eq $url;
@@ -1379,6 +1386,9 @@ sub navmenu {
         `, $category, $$menu{$category} );
     }
   } # end foreach category
+  if (wantarray) {
+    return ($html, $on);
+  }
   return $html;
 }
 
@@ -1387,6 +1397,7 @@ sub bootstrap_navmenu {
 	my $current_uri = shift;
 
 	my $html;
+	my $on = 0;
 
   my @categories;
   if ( ref $menu eq 'ARRAY' ) {
@@ -1403,7 +1414,6 @@ sub bootstrap_navmenu {
 		if ( ref $$menu{$category} eq 'HASH' ) {
 			my %urls = %{$$menu{$category}};
 			my $submenu_html = '';
-			my $on = 0;
 			foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
 				my $text = $urls{$url};
 				if ( $text ) {
