@@ -106,8 +106,9 @@ my @no_outputs = (
 sub no_outputs {
 	return @no_outputs;
 }
+
 sub calc_price {
-    my ( $specs, $Equipment, $qty_index, $Imposition, $sig_specs, $Signature_Imposition ) = @_;
+  my ( $specs, $Equipment, $qty_index, $Imposition, $sig_specs, $Signature_Imposition ) = @_;
 
 	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'' );
 	my $form = $$sig_specs{SignatureIndex};
@@ -200,7 +201,7 @@ sub calc_price {
 			$DiePrice{Price} = $$specs{'DiePrice'.$qty_index};
 		} # end if
 		if ( ! $DiePrice{Price} ) {
-			$Total{alert} .= 'Please enter the price of the die.<br/>';
+			$Total{alert} .= 'Please enter the price of the die for quantity '.$qty_index.'.<br/>';
 			$Total{Status} = 'uncalculated';
 		} else {
 			$Total{Total} += $DiePrice{Price};
@@ -209,11 +210,8 @@ sub calc_price {
 
 	$Total{DiePrice} = \%DiePrice;
 
-	# Why 1.28, overs I assume
 	my $impressions = ceil( ( $$specs{"txtQuantity$qty_index"} / $$Signature_Imposition{imposition} ) ) * $Imposition->quantity();
-# * $$Imposition{imposition});
-	
-	if ( my $Overs = $Equipment->Specification('DieCutting Overs') ) {
+	if (my $Overs = $Equipment->Specification('DieCutting Overs')) {
 		my $overs;
 		if ( $$Overs{units} eq 'percent' ) {
 			$overs = int( $impressions * ($$Overs{value}/100) );
@@ -269,8 +267,7 @@ sub calc_price {
 	} # end if
 
 	$Total{UnitPrice} = $Total{Total} / $$specs{"txtQuantity$qty_index"} if $$specs{"txtQuantity$qty_index"};
-    return %Total;
-
+  return %Total;
 } # end sub calc_price
 
 sub calc {
@@ -348,7 +345,6 @@ sub calc {
 	} # end foreach signature
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{"txtQuantity$qty_index"};
 
@@ -499,6 +495,11 @@ sub signature_calc {
 	} else {
 		@equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'DieCutting Capable'=>'Y'} );
 	} # end if
+  if (!@equipment) {
+    $results{alert} .= 'No equipment was found for die cutting.<br/>';
+    $results{Status} = 'uncalculated';
+    return %results;
+  }
 
 	my $services = $Project->services();
 	my @Sets_of_Impositions;
