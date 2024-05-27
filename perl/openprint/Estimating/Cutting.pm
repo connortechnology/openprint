@@ -158,7 +158,12 @@ sub signature_needs_bindery_cutting {
 		return 0;
 	} # end if
 
-	# Pretty much always need final trim
+	if ( $$services{DieCutting} ) {
+		$openprint::log->debug(" ** Project is marked as DieCutting, Cutting not needed ! ** ") if DEBUG;
+		return 0;
+	} # end if
+
+	# Pretty much always need final trim, except DirCutting
 	return 1;
 	if ( $$sig_specs{'txtImposition'.$qty_index} > 1 ) {
 		$openprint::log->debug("Imposition > 1, Cutting needed ! ** ") if DEBUG;
@@ -463,6 +468,12 @@ sub signature_calc {
   } # end if
 
   my $services = $Project->services();
+  if ($$services{DieCutting}) {
+    $results{Breakdown} .= 'Signature is being Die Cut. Assuming further cutting not needed<br/>';
+    return %results;
+  } else {
+    $openprint::log->error("Don't have DieCutting?");
+  }
   my $printing_specs = openprint::service::get_specs_ref($Project, $$services{''}[0]) if $$services{''} and @{$$services{''}};
 
   my $form = $$sig_specs{SignatureIndex};
