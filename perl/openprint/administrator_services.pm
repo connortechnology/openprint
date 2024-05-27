@@ -30,6 +30,8 @@ sub edit {
     } elsif ( $param{btnFunction} eq 'Delete' ) {
       $variable{error} .= $Service->delete() if ! $variable{error};
       $Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
+    } elsif ( $param{btnFunction} eq 'Undelete' ) {
+      $variable{error} .= $Service->undelete() if ! $variable{error};
     } elsif ( $param{btnFunction} eq 'Destroy' ) {
       foreach my $T ( openprint::Timetrack->find(service_id=>$Service->id() ) ) {
         $variable{error} .= sprintf('Service is used in <a href="/timetrack/edit.html?timetrack_id=%1$d">Timetrack %1$d</a><br/>', $T->id() );
