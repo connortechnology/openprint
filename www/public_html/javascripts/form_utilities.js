@@ -761,6 +761,14 @@ function toggleMenu( element, a, b ) {
 		element.className = a;
 	} // end if
 }
+// Assume element is a link, toggle the class of the parent.
+function toggle_menu(element) {
+  if (element.parent.className == 'on') {
+    element.parent.className = '';
+  } else {
+    element.parent.className = 'on';
+  }
+}
 
 function email_check(str) {
 
