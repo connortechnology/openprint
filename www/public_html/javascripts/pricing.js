@@ -115,21 +115,37 @@ function add_price(form, pricelist_id, equipment_id, service_id) {
 	div.load('/administrator/services/_prices_table_body.html?action=add&pricelist_id='+pricelist_id+'&equipment_id='+equipment_id, data);
 } /* end function add_price() */
 
-function del_price( form, pricelist_id, equipment_id, service_id, price_id ) {
+function del_price(btn) {
+  const form = btn.form;
+  const pricelist_id = btn.getAttribute('data_pricelist_id');
+  const equipment_id = btn.getAttribute('data_equipment_id');
+  const service_id = btn.getAttribute('data_service_id');
+  const price_id = btn.getAttribute('data_price_id');
+
   const prices_id = '#prices-'+pricelist_id+'-'+equipment_id+'-'+service_id;
   const div = $j(prices_id);
   div.html('Please wait...loading.');
   const data = Object.fromEntries(new FormData(form));
-	div.load('/administrator/services/_prices_table_body.html?action=delete&price_id='+price_id, data);
+	div.load('/administrator/services/_prices_table_body.html?action=delete&price_id='+price_id, data, function() {
+      update_event_bindings();
+      });
 } /* end function del_price() */
 
-function copy_price( form, pricelist_id, equipment_id, service_id, price_id ) {
+function copy_price(btn) {
+  const form = btn.form;
+  const pricelist_id = btn.getAttribute('data_pricelist_id');
+  const equipment_id = btn.getAttribute('data_equipment_id');
+  const service_id = btn.getAttribute('data_service_id');
+  const price_id = btn.getAttribute('data_price_id');
+
   const prices_id = '#prices-'+pricelist_id+'-'+equipment_id+'-'+service_id;
   const div = $j(prices_id);
   div.html('Please wait...loading.');
   const data = Object.fromEntries(new FormData(form));
-	div.load('/administrator/services/_prices_table_body.html?action=copy&price_id='+price_id, data);
-} /* end function add_price() */
+	div.load('/administrator/services/_prices_table_body.html?action=copy&price_id='+price_id, data, function() {
+      update_event_bindings();
+      });
+} /* end function copy_price() */
 
 function add_new_price ( service_id, pricelist_id, equipment_id ) {
 
