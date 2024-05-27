@@ -45,6 +45,7 @@
 					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } );
 					if ( $$variable{Service}->deleted() ) {
 						$html .= button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';fmChange=2;fmCheck(f1);", text=>'Destroy' } );
+						$html .= button( 'Undelete1', { onclick=>"f2.btnFunction.value='Undelete';fmChange=2;fmCheck(f2);", text=>'Undelete' } );
 					} else {
 						$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
 					}
