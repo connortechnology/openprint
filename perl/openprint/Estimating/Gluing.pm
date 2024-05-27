@@ -29,6 +29,7 @@ my %ServicePrices = (
 );
 my %Specifications = (
   'Gluing Capable' => { values=>['Y','N'] },
+  'Gluing Overs' => {range_units => [ 'impressions' ], units=>['percent']},
   'Gluing MakeReadyTime' => { units => 'minutes' },
   'Gluing Runspeed' => { units => 'inches per hour'},
   'Runspeed' => { units => 'inches per hour'},
@@ -215,7 +216,7 @@ sub get_price {
     Breakdown => '',
     Total => 0,
   );
-  my $qty = $$specs{"txtQuantity$qty_index"};
+
 
   my @Equipment;
   if ( (defined $$specs{"chkOverrideEquipment-$form-$qty_index"}) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) ) {
@@ -233,6 +234,21 @@ sub get_price {
       Equipment => $Equipment,
       Breakdown => '',
     );
+
+    my $qty = $$specs{"txtQuantity$qty_index"};
+    if ( my $Overs = $Equipment->Specification('Gluing Overs') ) {
+      my $overs;
+      if ( $$Overs{units} eq 'percent' ) {
+        $overs = int( $qty * ($$Overs{value}/100) );
+      } elsif ( $$Overs{units} eq 'sheets' ) {
+        $overs = int( $$Overs{value} );
+      } else {
+        $openprint::log->error("Unknown units $$Overs{units} in Gluing Overs");
+      } # end if
+      $price{Overs} = $overs;
+      $qty += $overs;
+    } # end if
+    #$Total{Impressions} = $impressions;
     my $makeReadyPrice = openprint::service::get_price('GluingMakeReady', undef, $Equipment) || 0;
     my $minimumCharge = openprint::service::get_price('GluingMinimumCharge', undef, $Equipment) || 0;
     $price{Breakdown} .= '<b>'.$Equipment->name().'</b><br/>';
@@ -254,7 +270,7 @@ sub get_price {
         $price{Breakdown} .= "No runspeed set for gluing. Can't support per hour pricing.<br/>";
       } elsif ($$runspeed{units} eq 'inches per hour') {
         $servicePrice{Total} = $qty * $height * $servicePrice{Price} / $$runspeed{value};
-        $price{Breakdown} .= sprintf( 'Service: $%1$.2f %2$s * %4$.2finches @ %5$d/hour= $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $height, $$runspeed{value} );
+        $price{Breakdown} .= sprintf( 'Service: $%1$.2f %2$s * %6$d * %4$.2finches @ %5$d/hour= $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $height, $$runspeed{value}, $qty );
       } else {
         $openprint::log->error("Unsupported units in $$runspeed{name} $$runspeed{units}");
         $price{Breakdown} .= "Unsupported units in $$runspeed{name} $$runspeed{units}<br/>";
