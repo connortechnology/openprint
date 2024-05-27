@@ -23,11 +23,11 @@ use constant DEBUG => 1;
 use vars qw( %ServicePrices %Specifications);
 %ServicePrices = (
   DieCuttingMinimumCharge => {},
-  'DieCuttingMakeReady' => {},
-  'DieCutting' => { units=> ['per hour', 'per m']},
+  DieCuttingMakeReady => {},
+  DieCutting => { units=> ['per hour', 'per m']},
 );
 %Specifications = (
-  'Runspeed' => {range_units => [ 'calliper'], units=>'per hour'},
+  Runspeed => {range_units => [ 'calliper'], units=>'per hour'},
   'DieCutting Overs' => {range_units => [ 'impressions' ], units=>['percent']},
   'DieCutting Capable' => { value=>['Y','N'] },
   'DieCutting W&T'  => { value=>['Y','N'] },
@@ -285,7 +285,13 @@ sub calc {
 		my $form = $$sig_specs{SignatureIndex};
 	
 		if ( ! $$specs{"Needed-$form"} ) {
-			if ( sets::isin( $$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+
+			if ( $$sig_specs{rdbTemplateType} and sets::isin( $$sig_specs{rdbTemplateType},
+          ['2Panel1Pocket', '2Panel1PocketGusset',
+            '2Panel2Pocket','Panel2PocketGusset',
+            'TriFoldDoublePocket', 'TriFoldDoublePocketGusset',
+          ]
+        ) ) {
 				$$specs{"Needed-$form"} = 'Y';
 			} elsif ( $Project->signatures() == 1 ) {
 				$$specs{"Needed-$form"} = 'Y';
@@ -310,13 +316,19 @@ sub calc {
 			return $$specs{Status} = 'uncalculated';
 		} # end if
 		if ( ! $$specs{'rdbDieCutting-'.$form} ) {
-			if ( $$sig_specs{rdbTemplateType} eq '2Panel2Pocket' ) {
-				$$specs{'rdbDieCutting-'.$form} = 'Average';
-			} elsif ( $$sig_specs{rdbTemplateType} eq '2Panel1Pocket' ) {
-				$$specs{'rdbDieCutting-'.$form} = 'Simple';
-			} else {
-				$$specs{'rdbDieCutting-'.$form} = 'Complex';
-			} # end if
+      if ($$sig_specs{rdbTemplateType}) {
+        if (sets::isin($$sig_specs{rdbTemplateType}, ['2Panel1Pocket', '2Panel1PocketGusset', '2Panel2Pocket','Panel2PocketGusset' ])) {
+          $$specs{'rdbDieCutting-'.$form} = 'Simple';
+        } elsif (sets::isin($$sig_specs{rdbTemplateType},[ 'TriFoldDoublePocket', 'TriFoldDoublePocketGusset' ])) {
+          $$specs{'rdbDieCutting-'.$form} = 'Complex';
+        } elsif (sets::isin($$sig_specs{rdbTemplateType},[ 'Package6Fold','Package21Fold','Package30Fold','Package51Fold' ])) {
+          $$specs{'rdbDieCutting-'.$form} = 'Average';
+        } elsif (sets::isin($$sig_specs{rdbTemplateType},[ 'Package62Fold','Package64Fold' ])) {
+          $$specs{'rdbDieCutting-'.$form} = 'Complex';
+        } else {
+          $$specs{'rdbDieCutting-'.$form} = 'Average';
+        }
+      } # end if
 		} # end if
 		if ( ( $$specs{'rdbSuppliedDie-'.$form} eq 'N' ) and ( ! $$specs{'rdbDieCutting-'.$form} ) ) {
 			$$specs{alert} .= 'Please select the complexity of the die.<br/>';
