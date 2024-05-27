@@ -2462,6 +2462,9 @@ if ( ! sets::isin( 'service_prices',\@tables )  ) {
   if ($$data{markup} and $$data{markup}{data_type} ne 'float') {
     $dbh->do('ALTER TABLE service_prices ALTER COLUMN markup TYPE float');
   }
+if ( $$data{equipment_id} and !$$data{equipment_id}{is_nullable}) {
+$dbh->do('ALTER TABLE service_prices ALTER COLUMN equipment_id DROP NOT NULL');
+}
 
 	if ( ! exists $$data{period_start} ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD period_start TIMESTAMP WITH TIME ZONE');
