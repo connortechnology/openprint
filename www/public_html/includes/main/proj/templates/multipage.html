@@ -32,7 +32,13 @@
 			} 
 
 		if ( $image_path ) {
-      $html .= sprintf(q`<p onclick="$('rdbTemplateType%1$s').checked=true;selectProjectTemplate('f1');"><img src="%4$s" alt="%2$s"/><br/><input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %3$s/> <label for="rdbTemplateType%1$s">%2$s</label></p>`, $template_type, $Templates{$template_type}, checked( $template_type eq $$variable{rdbTemplateType} ), $image_path );
+      $html .= sprintf(q`
+      <p onclick="$('rdbTemplateType%1$s').checked=true;selectProjectTemplate('f1');">
+        <img src="%4$s" alt="%2$s"/><br/>
+        <input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %3$s/>
+        <label for="rdbTemplateType%1$s">%2$s</label>
+      </p>
+      `, $template_type, $Templates{$template_type}, checked( $template_type eq $$variable{rdbTemplateType} ), $image_path );
 		} else {
       $log->error("No Project Template image for " . $config{SkinPath}.'/images/templates/'.$ProjectType->name().'/'.$template_type.'.gif' );
       $html .= sprintf('<p><input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %2$s /> <label for="rdbTemplateType%1$s">%1$s</label></p>', $template_type, checked( $template_type eq
