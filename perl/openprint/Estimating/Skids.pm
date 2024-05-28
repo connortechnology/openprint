@@ -438,9 +438,9 @@ sub summary {
 		if ( $$services{BulkSkids} ) {
 			# The purpose of this is to put all the breakdown in the skids line and leave the other packaging summaries empty
 			if ( $$services{BulkSkids}[0] == $service_id ) {
-				if ( !$$specs{items_per_package} ) {
-					$summary .= 'around '.$$specs{"txtItemsPerPackage$qty_index"}.
-						(($$specs{item_type} and ($$specs{item_type} eq 'FloatSheets')) ? ' flat sheets' : ' product').
+				if ($$specs{items_per_package}) {
+					$summary .= 'around '.$$specs{items_per_package}.
+						(($$specs{item_type} and ($$specs{item_type} eq 'FlatSheets')) ? ' flat sheets' : ' product').
 						' per '.$package.'<br/>';
 				}
 				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $package . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
