@@ -39,9 +39,9 @@ use constant DEBUG => 1;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 1;
 use constant DEBUG_PRESSES => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_AFTER_FILTERING => 1;
+use constant DEBUG_AFTER_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
@@ -3088,16 +3088,18 @@ if ( 0 ) {
 				$prices{$qty_index} = $threads{$qty_index}->join();
 			} # end if
 		} # end if
-		if ( ! $prices{$qty_index} ) {
+
+		if ( !$prices{$qty_index}) {
 			$$specs{alert} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
 			$$specs{Status} = 'uncalculated';
 			next;
 		} # end if
 		my $best_price = $prices{$qty_index};
+		$$specs{alert} .= $$best_price{alert} if $$best_price{alert};
 
 		my $Imposition = $$best_price{Imposition};
 		if ( ! $Imposition ) {
-			#$log->error("No imposition in best_price for qty $qty_index");
+			$log->error("No imposition in best_price for qty $qty_index");
 			$$specs{alert} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
 			$$specs{Status} = 'uncalculated';
 			next;
@@ -3113,7 +3115,6 @@ if ( 0 ) {
 			$$specs{Status} = 'uncalculated';
 			next;
 		}
-		$$specs{alert} .= $$best_price{alert} if $$best_price{alert};
 		my $Paper = $$Imposition{Paper};
 $Imposition->layout_width(undef);
 
@@ -3188,10 +3189,11 @@ $log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval(
 
 	# This is down here because it is a function of the results...
 	$$specs{NeedCutting} = openprint::Estimating::Cutting::signature_needs( $Project, $$project{CuttingSpecs}, $specs ) if ! $$project{HasCutting};
-$log->debug("Leaving Printing::calc status: $$specs{Status}");
-if ($$specs{Status} eq 'uncalculated' and ! $$specs{alert}) {
-  $$specs{alert} = 'We were unable to calculate.<br/>';
-}
+  $log->debug("Leaving Printing::calc status: $$specs{Status}");
+  if ($$specs{Status} eq 'uncalculated' and !$$specs{alert}) {
+    $$specs{alert} = 'We were unable to calculate.<br/>';
+    $log->debug("Leaving Printing::calc status: $$specs{Status} $$specs{alert}");
+  }
 	return $$specs{Status};
 } # end sub calc
 
@@ -3538,10 +3540,12 @@ $log->debug("Using overriden page quantity $needed_pages");
 			my @keys = keys %max_impositions;
 			my $max_pages;
 			if ( @keys ) {
+				$log->debug("Max pages: @keys") if DEBUG_FILTERING;
 				$max_pages = sets::max( @keys );
 				#$log->debug(" needed pages $needed_pages max: $max_pages spreadsize: $$project{txtSpreadSize} press $$Press{strid} impositions: " . @press_impositions);
 				$max_pages = Math::Round::nearest(1, $max_pages / 3 );
 				$max_pages = $$project{txtSpreadSize} if $max_pages < $$project{txtSpreadSize};
+        $max_pages -= 1 if $max_pages %2;
 				$log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 			} else {
 				$max_pages = $$project{txtSpreadSize};
@@ -3556,7 +3560,7 @@ $log->debug("Using overriden page quantity $needed_pages");
 				next if $needed_pages < $$I{pages};
 				if ( $max_impositions{$$I{pages}} > $$I{imposition}) {
 # Only do this if not sheet size overrides
-					$I->display("Ma imposition! for $$I{pages} is $max_impositions{$$I{pages}} > $$I{imposition} ") if DEBUG_FILTERING;
+					$I->display("Max imposition! for $$I{pages} is $max_impositions{$$I{pages}} > $$I{imposition} ") if DEBUG_FILTERING;
 					next;
 				} 
 				if (($max_pages > $$I{pages}) and ( !$$sig_specs{'chkOverridePageQuantity'.$qty_index}) ) {
@@ -3591,6 +3595,7 @@ $log->debug("Using overriden page quantity $needed_pages");
 			}
 		} # end if
 	}
+
 	my @results;
 
 	if ( $$sig_specs{txtSpreadSize} == 2 ) {
@@ -3604,7 +3609,7 @@ $log->debug("Using overriden page quantity $needed_pages");
 			push @results, $imp;
 		}
 		if ( ! @results ) {
-			$log->debug("no non-2pg options available");
+			$log->debug('no non-2pg options available');
 		} else {
 			@impositions =@results;
 			@results = ();
@@ -3693,7 +3698,8 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 				$imp->display("Previous Imposition") if DEBUG_FILTERING;
 				next;
 			} # end if
-			if ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} <= $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) ) {
+			if ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} and
+        ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} <= $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) ) {
 				if ( $$imp{pages} != $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} ) {
 					$imp->display('Doesnt match group page quantity override want: ' . $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} ) if DEBUG_FILTERING;
 					next;
@@ -3704,11 +3710,9 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 					$imp->display('Doesnt match page quantity override want: ' . $$sig_specs{'PageQuantity'.$qty_index}) if DEBUG_FILTERING;
 					next;
 				} # end if
-			} # end if chkOverriDEPageQuantity
-
+			} # end if chkOverridePageQuantity
 		} # end if needed_pages
 		push @results, $imp;
-		#$grain_direction_imps{join(',',$qty_index,@$imp{'imposition','columns','runstyle'})} = $imp;
 		$imp->display('Good') if DEBUG_FILTERING;
 	} # end foreach imp
 
@@ -3806,6 +3810,7 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 	} # end if $$sig_specs{"OverrideImpositionLayout$qty_index"} eq 'Y'
 			
 	if ( DEBUG_FILTERING ) {
+    $openprint::log->debug("After first round of filtering");
 		foreach my $I ( @results ) {
 			$I->display("After first round of filtering");
 		}
@@ -4395,8 +4400,13 @@ sub get_project_price {
 			$I->display("Before calculation: depth: $recursion_depth # of sigs: " . @Is);
 		} # end while
 	}
-	if ( !@Is and DEBUG ) {
-		$log->error('No impositions from calculate_impositions');
+  if (!@Is) {
+    $log->error('No impositions from calculate_impositions') if DEBUG;
+    if ($$project{ProjectSpecs}{"PageQuantity-$sig_specs{Group}"}) {
+      return {alert=>'No impositions matched the overriden page quantity('.$$project{ProjectSpecs}{"PageQuantity-$sig_specs{Group}"}.') for this group.<br/>'};
+    } elsif ($sig_specs{'chkOverridePageQuantity'.$qty_index}  and ( $sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y')) {
+      return {alert=>'No impositions matched the overriden page quantity ('.$sig_specs{'PageQuantity'.$qty_index}.').<br/>'};
+    }
 	}
 #$log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 	foreach my $base_imp ( @Is ) {
@@ -7719,107 +7729,107 @@ $log->debug("Printing::save");
 	if ( $$services{''} and @{$$services{''}} ) {
 		my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-	my $sig_specs = openprint::service::get_specs_ref( $Project, $s_id );
-	if ( $$sig_specs{Group} ) {
-$log->debug("Group $$sig_specs{Group}");
+    my $sig_specs = openprint::service::get_specs_ref( $Project, $s_id );
+    if ( $$sig_specs{Group} ) {
+      $log->debug("Group $$sig_specs{Group}");
 
-		# Save things like colours, stock, etc.
-		foreach my $key ( @openprint::Estimating::MultiPage::signature_variables ) {
-$log->debug("Saving to multipage $key$$sig_specs{Group} => $$param{$key}");
-			if ( exists $$param{$key} ) {
-				openprint::service::insert_service_spec( $log, $openprint::dbh, $$Project{id}, $$services{''}[0], $key.$$sig_specs{Group}, $$param{$key} );
-			}
-		} # end foreach key
+      # Save things like colours, stock, etc.
+      foreach my $key ( @openprint::Estimating::MultiPage::signature_variables ) {
+        $log->debug("Saving to multipage $key$$sig_specs{Group} => $$param{$key}");
+        if ( exists $$param{$key} ) {
+          openprint::service::insert_service_spec( $log, $openprint::dbh, $$Project{id}, $$services{''}[0], $key.$$sig_specs{Group}, $$param{$key} );
+        }
+      } # end foreach key
 
-		# So, if we just edited NOT the first sig in the group, and it's a bit different, so create a new group?
-		my @sigs = sort { $a <=> $b } $Project->signatures({ Group=>$$sig_specs{Group} });
-		if ( $s_id != $sigs[0] ) {
-$log->debug("Not first");
-			my $first_sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
-			if ( ! compare_signatures_no_results( $Project, $first_sig_specs, $sig_specs ) ) {
-# Split into a new group
-				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};
-				my ( $new_group ) = sql::execute( $log, $dbh, $_, $Project->id() );
-				$new_group += 1;
-$log->debug("New group is $new_group");
-				my $pages = $$sig_specs{txtSpreadSize};
-				foreach my $qty_index ( $Project->quantity_indexes() ) {
-					$pages = $$sig_specs{"PageQuantity$qty_index"} if $$sig_specs{"PageQuantity$qty_index"} > $pages;
-				} # end foreach
-				my $new_pages = $$first_sig_specs{GroupPageQuantity}-$pages;
-				
-$log->debug("Old pages $$first_sig_specs{GroupPageQuantity} - this pages: $pages ");
-				openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $s_id, 'GroupPageQuantity', $pages );
+      # So, if we just edited NOT the first sig in the group, and it's a bit different, so create a new group?
+      my @sigs = sort { $a <=> $b } $Project->signatures({ Group=>$$sig_specs{Group} });
+      if ( $s_id != $sigs[0] ) {
+        $log->debug("Not first");
+        my $first_sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+        if ( ! compare_signatures_no_results( $Project, $first_sig_specs, $sig_specs ) ) {
+          # Split into a new group
+          $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};
+          my ( $new_group ) = sql::execute( $log, $dbh, $_, $Project->id() );
+          $new_group += 1;
+          $log->debug("New group is $new_group");
+          my $pages = $$sig_specs{txtSpreadSize};
+          foreach my $qty_index ( $Project->quantity_indexes() ) {
+            $pages = $$sig_specs{"PageQuantity$qty_index"} if $$sig_specs{"PageQuantity$qty_index"} > $pages;
+          } # end foreach
+          my $new_pages = $$first_sig_specs{GroupPageQuantity}-$pages;
 
-				foreach my $key ( @openprint::Estimating::MultiPage::signature_variables ) {
-					openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $$services{''}[0], $key.$new_group, $$project_specs{$key.$$sig_specs{Group}} );
-				}	
-				openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $$services{''}[0], 'GroupPageQuantity'.$$sig_specs{Group}, $$first_sig_specs{GroupPageQuantity}-$pages );
-				openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $$services{''}[0], 'GroupPageQuantity'.$new_group, $pages );
-				openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $$services{''}[0], 'OverrideGroupPageQuantity'.$new_group, 'Y' );
-			
-				foreach my $sig_id ( @sigs ) {
-					next if $sig_id == $s_id;
-					openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $sig_id, 'GroupPageQuantity', $new_pages );
-				} # end foreach sig_id
-				openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $s_id, 'Group', $new_group );
-			} # end if
-		} # end if not the first sig in the group
+          $log->debug("Old pages $$first_sig_specs{GroupPageQuantity} - this pages: $pages ");
+          openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $s_id, 'GroupPageQuantity', $pages );
 
-		} else {
-			$log->debug("No group");
-		} # end if Group
-	} else {
-		$log->error("No project service in project $$Project{id}");
-	} # end if
+          foreach my $key ( @openprint::Estimating::MultiPage::signature_variables ) {
+            openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $$services{''}[0], $key.$new_group, $$project_specs{$key.$$sig_specs{Group}} );
+          }	
+          openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $$services{''}[0], 'GroupPageQuantity'.$$sig_specs{Group}, $$first_sig_specs{GroupPageQuantity}-$pages );
+          openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $$services{''}[0], 'GroupPageQuantity'.$new_group, $pages );
+          openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $$services{''}[0], 'OverrideGroupPageQuantity'.$new_group, 'Y' );
+
+          foreach my $sig_id ( @sigs ) {
+            next if $sig_id == $s_id;
+            openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $sig_id, 'GroupPageQuantity', $new_pages );
+          } # end foreach sig_id
+          openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $s_id, 'Group', $new_group );
+        } # end if
+      } # end if not the first sig in the group
+
+    } else {
+      $log->debug("No group");
+    } # end if Group
+  } else {
+    $log->error("No project service in project $$Project{id}");
+  } # end if
 } # end sub save
 
 sub get_colour_description_no_coverage {
-	my ( $Project, $specs ) = @_;
+  my ( $Project, $specs ) = @_;
 
-	my @front_coatings = ();
-	my $front_pms = 0;
+  my @front_coatings = ();
+  my $front_pms = 0;
 
-	my @back_coatings = ();
-	my $coatings = '';
-	my $back_pms = 0;
+  my @back_coatings = ();
+  my $coatings = '';
+  my $back_pms = 0;
 
-	my $side = 'SideOne';
-	my $ProjectTypeName = $Project->Type()->name();
+  my $side = 'SideOne';
+  my $ProjectTypeName = $Project->Type()->name();
 
-	foreach my $k ( keys %$specs ) {
-		if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
-			next if ! $$specs{"chkColourCoating$index$side"};
+  foreach my $k ( keys %$specs ) {
+    if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+      next if ! $$specs{"chkColourCoating$index$side"};
 
-			my $type = $$specs{"ColourCoatingType$index$side"};
-			next if ! $type;
-			next if $$specs{"chkColourCoatingColour$index$side"} and ( $$specs{"chkColourCoatingColour$index$side"} eq 'None' );
-			if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
-				
-				push @front_coatings , $$specs{"ColourCoatingType$index$side"};
-			} elsif ( $type =~ /PMS/i ) {
-				$front_pms += 1;
-$log->debug("Adding PMS for $type chkColourCoating$index$side");
-			} else {
-				push @front_coatings, $$specs{"ColourCoatingType$index$side"}; 	#line added to show other types june-18-2008
-			} # end if
-		} # end if
-	} # end foreach
+      my $type = $$specs{"ColourCoatingType$index$side"};
+      next if ! $type;
+      next if $$specs{"chkColourCoatingColour$index$side"} and ( $$specs{"chkColourCoatingColour$index$side"} eq 'None' );
+      if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
 
-	if ( $front_pms ) {
-		unshift @front_coatings, $front_pms.'PMS';
-	} # end if
+        push @front_coatings , $$specs{"ColourCoatingType$index$side"};
+      } elsif ( $type =~ /PMS/i ) {
+        $front_pms += 1;
+        $log->debug("Adding PMS for $type chkColourCoating$index$side");
+      } else {
+        push @front_coatings, $$specs{"ColourCoatingType$index$side"}; 	#line added to show other types june-18-2008
+      } # end if
+    } # end if
+  } # end foreach
 
-	unshift @front_coatings, map { $$specs{'chk'.$_.$side} ? $_ : () } ( 'Cyan','Magenta','Yellow','Black' );
-	if ( $$specs{'chkProcessColour'.$side} ) {
-		unshift @front_coatings, '4C'; 
-	}
+  if ( $front_pms ) {
+    unshift @front_coatings, $front_pms.'PMS';
+  } # end if
 
-	if ( (defined $$specs{sides_the_same}) and ( $$specs{sides_the_same} eq 'Y' ) ) {
-		@back_coatings = @front_coatings;
-		$back_pms = $front_pms;
-		$coatings .= ' back the same as front';
-	} else {
+  unshift @front_coatings, map { $$specs{'chk'.$_.$side} ? $_ : () } ( 'Cyan','Magenta','Yellow','Black' );
+  if ( $$specs{'chkProcessColour'.$side} ) {
+    unshift @front_coatings, '4C'; 
+  }
+
+  if ( (defined $$specs{sides_the_same}) and ( $$specs{sides_the_same} eq 'Y' ) ) {
+    @back_coatings = @front_coatings;
+    $back_pms = $front_pms;
+    $coatings .= ' back the same as front';
+  } else {
 		$side = 'SideTwo';
 
 		foreach my $k ( keys %$specs ) {
