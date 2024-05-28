@@ -3092,6 +3092,9 @@ if ( 0 ) {
 		if ( !$prices{$qty_index}) {
 			$$specs{alert} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
 			$$specs{Status} = 'uncalculated';
+      delete $$specs{'ddmPress'.$qty_index} if (!$$specs{'chkOverridePress'.$qty_index});
+      delete $$specs{'ddmRunStyle'.$qty_index} if (!$$specs{'chkOverrideRunStyle'.$qty_index});
+      
 			next;
 		} # end if
 		my $best_price = $prices{$qty_index};
@@ -3101,6 +3104,8 @@ if ( 0 ) {
 		if ( ! $Imposition ) {
 			$log->error("No imposition in best_price for qty $qty_index");
 			$$specs{alert} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
+      delete $$specs{'ddmPress'.$qty_index} if (!$$specs{'chkOverridePress'.$qty_index});
+      delete $$specs{'ddmRunStyle'.$qty_index} if (!$$specs{'chkOverrideRunStyle'.$qty_index});
 			$$specs{Status} = 'uncalculated';
 			next;
 		} else {
