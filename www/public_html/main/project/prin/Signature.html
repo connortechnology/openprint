@@ -53,7 +53,7 @@
 						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
 						return join("\n",	
 						'<li class="pages_per_spread"><label>Pages per spread</label>',
-						input( type=>'cardinal', name=>'txtSpreadSize', id=>'txtSpreadSize', value=>$$variable{txtSpreadSize}, min=>2 ),
+                 input( type=>'cardinal', name=>'txtSpreadSize', id=>'txtSpreadSize', value=>$$variable{txtSpreadSize}, min=>2, oninput=>'calc(this.form.name);' ),
 						write_override( 'OverrideSpreadSize', $$variable{OverrideSpreadSize}, '', q`calc('f1');` ),
 						'</li>'
 						);
