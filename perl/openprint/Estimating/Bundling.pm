@@ -39,6 +39,7 @@ my @variables = (
 	'txtPackageQuantity1', 'txtPackageQuantity2', 'txtPackageQuantity3',
 	'rdbCardboardBacking',
 	'type_id', 'cross_type_id',
+  'alert',
 );
 sub variables {
   return @variables;
@@ -61,6 +62,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+  $$specs{alert} = '';
 	if ( ! $$services{''} ) {
 		$$specs{alert} .= 'Unable to find project service.<br/>';
 		return $$specs{Status} = 'uncalculated';
