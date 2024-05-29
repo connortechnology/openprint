@@ -50,6 +50,7 @@ $serial = 'materials_id_seq';
     taxexempt1  =>  q`'N'`,
     taxexempt2  =>  q`'N'`,
     manufacturer_id  =>  undef,
+    servicetype_id  => undef,
     );
 
 $cache_field = 'name';
