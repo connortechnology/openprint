@@ -601,6 +601,21 @@ sub get_price {
 			);
 
 	my $qty = $$specs{'txtQuantity'.$qty_index};
+
+  my $Overs = $Equipment->Specification('PerfectBind Overs');
+  if (my $Overs = $Equipment->Specification('PerfectBind Overs')) {
+    my $overs;
+    if ( $$Overs{units} eq 'percent' ) {
+      $overs = int( $qty * ($$Overs{value}/100) );
+    } elsif ( $$Overs{units} eq 'sheets' ) {
+      $overs = int( $$Overs{value} );
+    } else {
+      $openprint::log->error("Unknown units $$Overs{units} in PerfectBinding Overs");
+    } # end if
+    $price{Overs} = $overs;
+    $qty += $overs;
+  } # end if
+
 #$openprint::log->debug($price{Imposition} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition'));
 	if ( $_ = $Equipment->specification('Maximum Imposition') and ( $_ < $$specs{'Imposition'.$qty_index} ) ) {
 		$price{Imposition} = 1;
