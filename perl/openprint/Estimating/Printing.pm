@@ -40,7 +40,7 @@ use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 1;
 use constant DEBUG_PRESSES => 0;
 use constant DEBUG_FILTERING => 1;
-use constant DEBUG_INITIAL_FILTERING => 0;
+use constant DEBUG_INITIAL_FILTERING => 1;
 use constant DEBUG_AFTER_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
@@ -1329,6 +1329,8 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 # FIXME
 			if ( $$specs{PrintingTypes} and ! sets::isin( $printing_type, $$specs{PrintingTypes} ) ) {
 				if ( $$specs{'chkOverridePress'.$qty_index} and ( $$specs{'ddmPress'.$qty_index} eq $$Press{strid} ) ) {
+					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
+        } elsif ( $$project{ProjectSpecs}{"ddmPress-$$specs{Group}"} and ( $$project{ProjectSpecs}{"ddmPress-$$specs{Group}"} eq $$Press{strid} ) ) {
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
 				} elsif ( $$specs{'OverridePrintingType'.$qty_index} and ( $printing_type eq $$specs{'PrintingType'.$qty_index} ) ) {
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
@@ -3488,7 +3490,10 @@ $log->debug("Using overriden page quantity $needed_pages");
 	my $filter_press = '';
 	if ( $$sig_specs{"chkOverridePress$qty_index"} ) {
 		$filter_press = $$sig_specs{"ddmPress$qty_index"};
-		$log->debug("Have Override Press " . $$sig_specs{"ddmPress$qty_index"} . " from $$sig_specs{SignatureIndex}");
+		$log->debug("Have Override Press " . $filter_press . ' from chkOverride');
+  } elsif ($$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"}) {
+		$filter_press = $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"};
+		$log->debug("Have Override Press " . $filter_press . ' from book specs');
 	} elsif ( $$sig_specs{PreviousPress} ) {
 		$filter_press = $$sig_specs{PreviousPress};
 		$log->debug("Have PreviousPress $$sig_specs{PreviousPress} from $$sig_specs{SignatureIndex}");
@@ -3499,10 +3504,6 @@ $log->debug("Using overriden page quantity $needed_pages");
 		  $log->debug("calculate_impositions: No impositions for $strid");
 			next;
 		}
-
-		if ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} ne $strid ) ) {
-			next;
-		} # end if
 		my $Press = $Presses{$strid};
 
 		if ( ! $Press ) {
@@ -3520,6 +3521,7 @@ $log->debug("Using overriden page quantity $needed_pages");
 
 		if ( $$sig_specs{PrintingTypes} 
 			and ( !$$sig_specs{"chkOverridePress$qty_index"} )
+      and ( !$$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} )
 			and ( !$$sig_specs{"OverridePrintingType$qty_index"} )
 			) {
 			my $printing_type = $Press->specification('Printing Type');
