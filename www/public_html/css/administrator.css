@@ -107,3 +107,7 @@ input[type="numeric"] {
 	width: 100px;
 	text-align: left;
 }
+
+li input[type="text"] {
+  width: 100%;
+}
