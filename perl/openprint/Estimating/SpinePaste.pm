@@ -136,7 +136,7 @@ sub signature_calc {
 				$sigs += 1 if ( $ss_id < $service_index );
 			} # end foreach
 			if ( $sigs > 1 ) {
-				$openprint::log->debug("Can only spine paste 1 signature for " . $Equipment->strid() . '<br/>' );
+				$openprint::log->debug('Can only spine paste 1 signature for ' . $Equipment->strid() . '<br/>' );
 				next;
 			} # end if
 			if ( ( ! $$folding_results{Equipment} ) or ( $$folding_results{Equipment}->id() != $Equipment->id() ) ) {
@@ -276,7 +276,7 @@ sub calc {
 			} # end foreach fold_index
 
 			my %Price = calc_price( $qty_index, $qty, $Equipment, $pages, $imposition, $folding_runspeed, $services, $specs );
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Run Speed: %d/hr<br/>', $Price{RunSpeed} );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('QTY %d Folding max run speed %d/hr Spine Paste Run Speed: %d/hr<br/>', $qty, $folding_runspeed, $Price{RunSpeed} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: $%.2f<br/>', $Price{MakeReady}{Price} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReadyTime: %dminutes<br/>', $Price{MakeReadyTime} );
       $$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady Overs: %d<br/>', $Price{MakeReadyOvers} );
@@ -362,6 +362,7 @@ sub calc_price {
         $RunSpeed = $Equipment->Specification('SpinePaste RunSpeed', $qty);
         $Price{'Gluing RunSpeed'} = $RunSpeed->value();
 			} else {
+        $openprint::log->error("No units set on SpinePaste RunSpeed on $$Equipment{name}");
 				$Price{'Gluing RunSpeed'} = $RunSpeed->value();
 			} # end if
       $Price{RunSpeed} = $Price{'Gluing RunSpeed'} if $Price{RunSpeed} > $Price{'Gluing RunSpeed'};
@@ -422,7 +423,7 @@ sub calc_price {
 		} # end if Runspeed
 		if ( ( my $MaxRunSpeed = $Equipment->specification('Trimming Maximum RunSpeed') ) ) {
 			$Price{'Trimming RunSpeed'} = $MaxRunSpeed if $Price{'Gluing RunSpeed'} and $Price{'Gluing RunSpeed'} > $MaxRunSpeed;
-      $openprint::log->debug("Runspeed is " . $Price{'Trimming RunSpeed'});
+      $openprint::log->debug('Runspeed is ' . $Price{'Trimming RunSpeed'});
 		} # end if Maximum Run Speed
 		if ( $Price{'Trimming RunSpeed'} and ( ( ! $Price{RunSpeed} ) or ( $Price{'Trimming RunSpeed'} < $Price{RunSpeed} ) ) ) {
 			$Price{RunSpeed} = $Price{'Trimming RunSpeed'};
