@@ -419,7 +419,7 @@ sub neccessary {
 
 	my $ServiceType = openprint::ServiceType->find_one( type=>'Folding' );
   $openprint::log->error('NO Folding!') if !$ServiceType;
-	}
+
 	my @blocked = $Project->Type()->blocked_services();
 	if ( ( ! $ServiceType ) or sets::isin( $ServiceType->id(), \@blocked ) ) {
 		$openprint::log->debug("Folding blocked: $$ServiceType{id} blocked: @blocked");
