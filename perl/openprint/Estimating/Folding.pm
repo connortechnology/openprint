@@ -418,8 +418,7 @@ sub neccessary {
 	my ( $Project, $Service ) = @_;
 
 	my $ServiceType = openprint::ServiceType->find_one( type=>'Folding' );
-	if ( ! $ServiceType ) {
-$openprint::log->error("NO Folding!");
+  $openprint::log->error('NO Folding!') if !$ServiceType;
 	}
 	my @blocked = $Project->Type()->blocked_services();
 	if ( ( ! $ServiceType ) or sets::isin( $ServiceType->id(), \@blocked ) ) {
@@ -1671,7 +1670,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? 
 					$servicePrice{Total} += 1000000;
 				} elsif ( $servicePrice{units} eq 'per hour' ) {
 					$servicePrice{Total} = $servicePrice{Price} * $runTime;
-					$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %.2d:%.2d:%.2d =</td><td class="Price">$%.2f</td></tr>', @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{Total} );
+					$Breakdown .= sprintf('<tr><td>Run: %s $%.2f%s * %.2d:%.2d:%.2d =</td><td class="Price">$%.2f</td></tr>', @servicePrice{'ServiceName','Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{Total} );
 				} elsif ( $servicePrice{units} eq 'per m' or $servicePrice{units} eq 'per 1000' or $servicePrice{units} eq 'per 1000 sheets') {
 					my $Base = $Fold->RunSpeed( 0 );
 					if ($Base and int($$Base{runspeed})) {
@@ -1679,7 +1678,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? 
             my $Adjustment = $$Base{runspeed}/$$runspeed{runspeed};
 						$servicePrice{Total} = $servicePrice{Price} * ( $run_qty/1000 ) * $Adjustment;
 $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$runspeed{runspeed} . ' calculated: ' . $Adjustment );
-						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d * %f%% runspeed adjustment =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $Adjustment*100, $servicePrice{Total} );
+						$Breakdown .= sprintf('<tr><td>Run: %s $%.2f%s * %d * %f%% runspeed adjustment =</td><td>$%.2f</td></tr>', @servicePrice{'ServiceName','Price','units'}, $run_qty, $Adjustment*100, $servicePrice{Total} );
 					} else {
 						$servicePrice{Total} = $servicePrice{Price} * $run_qty/1000;
 						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d =</td><td class="Price">$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $servicePrice{Total} );
@@ -1780,12 +1779,14 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
 			$comparison_cost += $totalPrice + $stitching_part;
 # + $cutting_results{Price};
 
-			if ( ( defined $bestComparison ) and ( $comparison_cost > $bestComparison ) ) {
-				$openprint::log->debug("Bailing early because comparison $comparison_cost > best $bestComparison") if DEBUG;
-				next;
-			} elsif ( DEBUG ) {
-				$openprint::log->debug("Not bailing early because comparison $comparison_cost < best $bestComparison");
-			}
+      if ( defined $bestComparison ) {
+        if ( $comparison_cost > $bestComparison ) {
+          $openprint::log->debug("Bailing early because comparison $comparison_cost > best $bestComparison") if DEBUG;
+          next;
+        } elsif ( DEBUG ) {
+          $openprint::log->debug("Not bailing early because comparison $comparison_cost < best $bestComparison");
+        }
+      }
 
 			if ( $scoring_signature_needs ) {
 				$$calc_hash{FoldingSpecs} = \%fold_specs;
