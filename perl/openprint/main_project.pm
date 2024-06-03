@@ -273,6 +273,7 @@ sub calc {
 	} else {
 		foreach my $key ( keys %specs ) {
 			next if ref $specs{$key};
+      next if $key eq 'alert';
 
 			if ( (exists $param{$key}) and (exists $specs{$key}) and ( 
 						( (!$specs{$key}) and (!$param{$key}) ) # both not defined or ''
