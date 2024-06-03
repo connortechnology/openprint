@@ -1327,7 +1327,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			} # end if
 		} else {
 # FIXME
-			if ( $$specs{PrintingTypes} and ! sets::isin( $printing_type, $$specs{PrintingTypes} ) ) {
+			if ( $$specs{PrintingTypes} and $printing_type and ! sets::isin( $printing_type, $$specs{PrintingTypes} ) ) {
 				if ( $$specs{'chkOverridePress'.$qty_index} and ( $$specs{'ddmPress'.$qty_index} eq $$Press{strid} ) ) {
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
         } elsif ( $$project{ProjectSpecs}{"ddmPress-$$specs{Group}"} and ( $$project{ProjectSpecs}{"ddmPress-$$specs{Group}"} eq $$Press{strid} ) ) {
@@ -1335,7 +1335,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				} elsif ( $$specs{'OverridePrintingType'.$qty_index} and ( $printing_type eq $$specs{'PrintingType'.$qty_index} ) ) {
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
 				} else {
-	$log->debug("Skipping $$Press{strid} because of printintype") if DEBUG_IMPOSITIONS;
+          $log->debug("Skipping $$Press{strid} because of printintype") if DEBUG_IMPOSITIONS;
 					next;
 				} # end if
 			} # end if
@@ -1374,9 +1374,9 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				push @side_two_colours, @side_two_varnishes;
 			} # end if
 		}
-		if ( 1 ) {
-			$log->debug("$$Press{strid} Side One varnihses @side_one_varnishes");
-			$log->debug("$$Press{strid} Side Two varnihses @side_two_varnishes");
+		if ( 0 ) {
+			$log->debug("$$Press{strid} Side One varnishes @side_one_varnishes");
+			$log->debug("$$Press{strid} Side Two varnishes @side_two_varnishes");
 			$log->debug("$$Press{strid} Side One colours @side_one_colours");
 			$log->debug("$$Press{strid} Side Two colours @side_two_colours");
 		} # end if
@@ -1389,6 +1389,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 			$$project{Runstyles} = $$specs{"ddmRunStyle$qty_index"};
 		} 
+    $log->error("Runstyles: $$project{Runstyles}");
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
 		my $do_perfecting = 1;
 		if ( $$project{print_sides} == 1 ) {
@@ -1400,7 +1401,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				( ($number_of_colours%2) and ( (@side_one_colours > int($number_of_colours/2)+1) or (@side_two_colours > int($number_of_colours/2)+1) ) )
 				or ( @side_one_colours == int($number_of_colours/2)+1 and @side_two_colours == int($number_of_colours/2)+1 )
 				) {
-			$log->debug("** Too many colours to Perfect	***") if DEBUG_IMPOSITIONS;
+			$log->debug("** Too many colours to Perfect on $$Press{strid} $number_of_colours @side_one_colours, @side_two_colours***") if DEBUG_IMPOSITIONS;
 			$do_perfecting = 0;
 		} elsif ( ! sets::isin('Perfecting', [ split(',',$$project{Runstyles} ) ] ) ) {
 			$log->debug("** $$Press{strid} Can't Perfect - Perfecting not in runstyles ***") if DEBUG_IMPOSITIONS;
@@ -2774,14 +2775,17 @@ sub calc {
 	if ( ! ( $$services{NoPrinting} or @side_one_colours or @side_two_colours ) ) {
 		$$specs{alert} .= 'Please choose the colours to be printed.<br/>';
 		return $$specs{Status} = 'uncalculated';
+	} elsif ( DEBUG ) {
+		$log->debug("NOT Returning early");
 	} # end if
 
 	my @Papers = get_Stocks( $Project, $specs );
 	if ( ! @Papers ) {
-		$$specs{alert} .= 'There was a problem loading the specified paper.';
+    $$specs{alert} .= 'There was a problem loading the specified paper.';
+		$log->debug("No paper: $$specs{alert}");
 		return $$specs{Status} = 'uncalculated';
-	} else {
-		$log->debug('got papers' . @Papers ) if DEBUG;
+	} elsif ( DEBUG ) {
+		$log->debug('Not Returning early due to paper');
 	} # end if
 
 	if ( $$services{NoPrinting} ) {
@@ -2836,7 +2840,7 @@ $log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_
 		} # end if
 	} # end foreach
 	if ( ! @possible_presses ) {
-		$$specs{alert} = 'There were no possible presses. Your project may be too large for us.<br/>';
+		$$specs{alert} .= 'There were no possible presses. Your project may be too large for us.<br/>';
 		foreach my $press_id ( keys %presses ) {
 			$$specs{alert} .= new openprint::Equipment($press_id)->strid() . ' : ' . $presses{$press_id} . '</br>';
 		} # end foreach
@@ -3618,7 +3622,7 @@ $log->debug("Using overriden page quantity $needed_pages");
 		if ( ! @results ) {
 			$log->debug('no non-2pg options available');
 		} else {
-			@impositions =@results;
+			@impositions = @results;
 			@results = ();
 		}
 	}			
