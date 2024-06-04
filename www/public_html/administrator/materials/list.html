@@ -9,6 +9,22 @@ function load_page() {
 	if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
 	openprint_load_content_ajax = new Ajax.Updater( 'Results', '_list.html', { parameters: $('f1').serialize() } );
 } 
+
+addEventListener('DOMContentLoaded', (event) => {
+  $j('#Materials').bootstrapTable({ });
+/*
+    $j('table.sortable').each(function(index){
+        new DataTable(this, {
+columns: [ {title: 'Service Id', ariaTitle: 'Service Id'},
+{title: 'Service Name'},
+null, null, null, null ],
+orderable: true,
+order: [[1, 'asc']]
+});
+        });
+*/
+    });
+
 </script>
 <div class="Materials">
 <form id="f1" name="f1" method="post" action="list.html">

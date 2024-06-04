@@ -17,16 +17,37 @@
     $$variable{Material} = [ openprint::Material->find( %filters ) ];
 ) ?>	
 <? if ( @{$$variable{Material}} ) ?>
-	<table class="List sortable">
+	<table class="List sortable table-striped" id="Materials"
+    data-pagination="true"
+    data-search="true"
+    data-show-pagination-switch="true"
+    data-cookie="true"
+    data-cookie-same-site="Strict"
+    data-cookie-id-table="MaterialsTable"
+    data-cookie-expire="2y"
+    data-show-columns="true"
+    data-show-export="true"
+    data-columns-hidden="[]"
+    data-uncheckAll="true"
+    data-click-to-select="true"
+    data-check-on-init="true"
+    data-mobile-responsive="true"
+    data-min-width="562"
+    data-show-export="true"
+    data-uncheckAll="true"
+    >
+    <thead>
 		<tr> 
       <th class="checkbox"><input type="checkbox" onclick="select_all(this.form, 'material_ids', this.checked);"/></th>
-			<th class="MaterialID">ID #</th>
-			<th class="MaterialName">Name</th>
-			<th class="Description">Description</th>
-			<th class="Categories">Categories</th>
-			<th class="CompanyName Manufacturer">Manufacturer</th>
-			<th class="CompanyName Supplier">Supplier</th>
+			<th class="MaterialID" data-field="MaterialID" data-sortable="true">ID #</th>
+			<th class="MaterialName" data-field="MaterialName" data-sortable="true">Name</th>
+			<th class="Description" data-field="Description" data-sortable="true">Description</th>
+			<th class="Categories" data-field="Categories" data-sortable="true">Categories</th>
+			<th class="CompanyName Manufacturer" data-field="Manufacturer" data-sortable="true">Manufacturer</th>
+			<th class="CompanyName Supplier" data-field="Supplier" data-sortable="true">Supplier</th>
 		</tr>
+    </thead>
+    <tbody>
 <? echo (
 	my $html;
 	my $rowclass;
@@ -56,6 +77,7 @@
 	} # end foreach
 	return $html;
 ) ?>
+</body>
 </table>
 <? else ( @{$$variable{Material}} ) ?>
 There were no results matching your criteria.<br>
