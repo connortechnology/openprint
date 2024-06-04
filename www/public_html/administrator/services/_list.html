@@ -29,17 +29,16 @@
   data-show-export="true"
   data-columns-hidden="[]"
   data-uncheckAll="true"
- data-click-to-select="true"
-              data-check-on-init="true"
-              data-mobile-responsive="true"
-              data-min-width="562"
-              data-show-export="true"
-              data-uncheckAll="true"
-
+  data-click-to-select="true"
+  data-check-on-init="true"
+  data-mobile-responsive="true"
+  data-min-width="562"
+  data-show-export="true"
+  data-uncheckAll="true"
 >
   <thead>
 		<tr>
-      <th class="checkbox"><input type="checkbox"/></th>
+      <th class="checkbox"><input type="checkbox" onclick="select_all(this.form, 'service_ids', this.checked);"/></th>
 			<th id="ServiceId" class="ServiceID" data-field="ServiceId" data-sortable="true">ID #</th>
 			<th class="ServiceName" data-field="Name" data-sortable="true">Name</th>
 			<th class="Description" data-field="Description"data-sortable="true">Description</th>
@@ -59,7 +58,7 @@
     next if $session{$uri.'?equipment_id'} and ! openprint::ServicePrice->find(service_id=>$$Service{id}, equipment_id=>$session{$uri.'?equipment_id'});
 		$html .= sprintf(q`
 <tr%1$s> 
-  <td class="checkbox"><input type="checkbox" value="%8$d" name="service_ids[]"</td>
+  <td class="checkbox"><input type="checkbox" value="%8$d" name="service_ids"</td>
 	<td class="ServiceID">%2$s</td>
 	<td class="ServiceName">%3$s</td>
 	<td class="Description">%4$s</td>
@@ -73,7 +72,7 @@
 	$Service->link_to( $$Service{description} ), 
   $Service->link_to( $Service->Category()->name() ), 
   $Service->ServiceType()->name(),
-	format_date( $$Service{created_on} ),
+	#format_date( $$Service{created_on} ),
   $Service->Supplier()->name(),
   $Service->id(),
  );

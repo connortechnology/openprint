@@ -588,7 +588,10 @@ sub Operators {
 } # end sub Operators
 
 sub link_to {
-	return '<a href="/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ > 1 ? $_[1] : $_[0]{strid}).'</a>';
+  my $self = shift;
+  my $text = @_ ? shift : $$self{strid};
+  my $options = @_ ? shift : {};
+	return '<a href="/administrator/equipment/edit.html?ddmEquipment='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>';
 }
 sub button_to {
   my $self = shift;

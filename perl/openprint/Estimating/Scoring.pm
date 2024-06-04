@@ -37,7 +37,7 @@ use vars qw( %ServicePrices %Specifications);
 %Specifications = (
   'Runspeed' => {range_units => [ 'calliper'], units=>'per hour'},
   'Scoring Overs' => {range_units => [ 'impressions' ], units=>['percent']},
-  'Scoring Capable' => { value=>['Y','N'] },
+  'Scoring Capable' => { value=>['Y','N', 'For Pocket Folders', 'When PerfectBound', 'When Stitching' ] },
 );
 
 sub ServicePriceConfiguration {
@@ -127,7 +127,7 @@ sub init {
 	my @capabilities = ('Y','When Printing');
 	push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 	push @capabilities, 'When Folding' if $$calc_hash{FoldingSpecs};
-	push @capabilities, 'When PerfectBinding' if $$calc_hash{PerfectBoundSpecs};
+	push @capabilities, 'When PerfectBound' if $$calc_hash{PerfectBoundSpecs};
 	push @capabilities, 'When Stitching' if $$calc_hash{StitchingSpecs};
 
 	@all_equipment = openprint::Equipment->find( Specifications => {'Scoring Capable'=>\@capabilities}, useinestimating=>1, order=>'strName');
@@ -968,7 +968,7 @@ sub get_specs {
 	my @capabilities = ( 'Y', 'When Printing' );
 	push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 	push @capabilities, 'When Folding' if $$services{Folding};
-	push @capabilities, 'When PerfectBinding' if $$services{PerfectBound};
+	push @capabilities, 'When PerfectBound' if $$services{PerfectBound};
 	push @capabilities, 'When Stitching' if $$services{SaddleStitching} or $$services{LoopStitching};
 
 	@{$$variable{Equipment}} = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'strName');

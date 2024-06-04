@@ -1495,6 +1495,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 					}
 				} # end if
 				$$project{Perfecting_colour_bar_size} = $Press->specification('Perfecting Colour Bar Size');
+        $$project{Perfecting_colour_bar_size} = $$project{colour_bar_size} if !$$project{Perfecting_colour_bar_size};
 			} else {
 				$$project{colour_bar_size} = 0;
 			} # end if
@@ -3353,7 +3354,7 @@ sub breakdown {
 
 	my $breakdown = '';
 	$breakdown .= openprint::Estimating::Imposition::signature_summary( $Imposition, $$price{'Imposition Price'} ) if $$price{'Imposition Price'} and $ImpositionServiceType;
-	$breakdown .= sprintf('%s Colour Bar %s %s, Bleed: %s Orientation: %s<br/>', ( $Press ? $$Press{strid} : '' ), @$Imposition{'colour_bar_size','colour_bar_orientation','bleed_size'},
+	$breakdown .= sprintf('%s Colour Bar %f %s, Bleed: %s Orientation: %s<br/>', ( $Press ? $$Press{strid} : '' ), @$Imposition{'colour_bar_size','colour_bar_orientation','bleed_size'},
 		$Imposition->image_orientation_text() );
 	$breakdown .= '<b>Setups</b><br/>';
 	if ( $$price{GripperSetup} ) {

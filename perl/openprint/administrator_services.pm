@@ -234,6 +234,18 @@ sub _list {
   ssi::save_params( '/administrator/services/list.html', (
       'deleted', 'service_name', 'equipment_id', 'category_id','servicetype_id'
     ) );
+  return if ! $param{btnFunction};
+
+  if ($param{btnFunction} eq 'delete') {
+    my @ids = ref $param{service_id} eq 'ARRAY' ? @{$param{service_id}} : ($param{service_id});
+    foreach my $service ( openprint::Service->find(id=>\@ids) ) {
+      if ($service->deleted()) {
+        $variable{error} .= $service->destroy();
+      } else {
+        $variable{error} .= $service->delete();
+      }
+    }
+  }
 }
 
 1;

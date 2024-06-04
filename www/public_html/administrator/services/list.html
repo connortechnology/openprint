@@ -96,6 +96,7 @@ order: [[1, 'asc']]
 				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
 				button( 'New', { href=>'/administrator/services/edit.html', text=>'New' } ),
 				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+        button( 'delete', { onclick=>q`jQuery('#Results').load('/administrator/services/_list.html?btnFunction=delete', { service_id: get_value( document.getElementById('f1').service_ids ) } );`, text=>'Delete Checked' } ),
 ); ) ?>
 		</p>
 	</fieldset>

@@ -176,7 +176,9 @@ sub get_price {
   my %price = openprint::pricing::get_best_price_object(
 			$openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
 
-	if ( ! %price ) {
+	if (!%price) {
+    $price{ServiceName} = $$self{name};
+    $price{Service} = $self;
 		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
 		return;
 	} # end if

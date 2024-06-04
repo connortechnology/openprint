@@ -432,6 +432,7 @@ sub summary {
 	if ($qty_index) {
 		my $services = $Project->services();
 		my $Material = new openprint::Material( $$specs{'ddmPackageType'.$qty_index} );
+    $package = $Material->name() if $Material->name();
 
     $$specs{'totalWeight'.$qty_index} = 0 if ! defined $$specs{'totalWeight'.$qty_index};
 
