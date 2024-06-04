@@ -99,6 +99,8 @@ while ( !($$options{account} and openprint::Expense_Account->find_one(name=>$$op
     } elsif ( $$options{file} =~ /report(.*)\.csv$/ ) {
       $guessed_account = 'PC Mastercard 6369';
       print "Guessing account to " . $guessed_account. "\n";
+    } elsif ( $$options{file} =~ /download(.*)\.csv$/ ) {
+      $guessed_account = 'Meridian Joint';
     }
   }
   my %accounts = map { $$_{id} => $_ } @accounts;
@@ -134,7 +136,7 @@ if ( $$options{file} =~ /Transactions(.*)\.csv$/ ) {
   $guessed_format = 'TD';
 } elsif ( $$options{file} =~ /cibc(.*)\.csv$/ ) {
   $guessed_format = 'CIBC';
-} elsif ( $$options{file} =~ /download\.csv$/ ) {
+} elsif ( $$options{file} =~ /download(.*)\.csv$/ ) {
   $guessed_format = 'Meridian';
 } elsif ( $$options{file} =~ /report(.*)\.csv$/ ) {
   $guessed_format = 'PC';
@@ -425,7 +427,14 @@ LINE: while ( my $line = <FH> ) {
 
       $log->info('No rules matched') if !$matched;
 
+      #$Expense->Taxes(undef);
+      $Expense->amount(undef) if ! $$Expense{amount_locked};
+      $Expense->business_use_amount(undef);
+      $Expense->total(undef) if ! $$Expense{total_locked};
       my %expense_find = %$Expense;
+      delete $expense_find{business_use_amount};
+      delete $expense_find{total_locked};
+      delete $expense_find{category} if $expense_find{category_id};
 
       if ( $expense_find{recipient} ) {
         $expense_find{'recipient lc'} = lc $expense_find{recipient};
