@@ -4790,16 +4790,20 @@
               m[ty][tx] = true;
             }
           }
-          var field = columns[x].field;
-          row[field] = _this2.escapeApostrophe($el.html().trim());
-          // save td's id, class and data-* attributes
-          row["_".concat(field, "_id")] = $el.attr('id');
-          row["_".concat(field, "_class")] = $el.attr('class');
-          row["_".concat(field, "_rowspan")] = $el.attr('rowspan');
-          row["_".concat(field, "_colspan")] = $el.attr('colspan');
-          row["_".concat(field, "_title")] = $el.attr('title');
-          row["_".concat(field, "_data")] = _this2.getRealDataAttr($el.data());
-          row["_".concat(field, "_style")] = $el.attr('style');
+          if (columns[x]) {
+            var field = columns[x].field;
+            row[field] = _this2.escapeApostrophe($el.html().trim());
+            // save td's id, class and data-* attributes
+            row["_".concat(field, "_id")] = $el.attr('id');
+            row["_".concat(field, "_class")] = $el.attr('class');
+            row["_".concat(field, "_rowspan")] = $el.attr('rowspan');
+            row["_".concat(field, "_colspan")] = $el.attr('colspan');
+            row["_".concat(field, "_title")] = $el.attr('title');
+            row["_".concat(field, "_data")] = _this2.getRealDataAttr($el.data());
+            row["_".concat(field, "_style")] = $el.attr('style');
+          } else {
+            console.log("No column for ",x);
+          }
         });
         data.push(row);
       });
