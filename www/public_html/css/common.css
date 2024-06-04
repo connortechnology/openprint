@@ -89,14 +89,14 @@ table.List {
 table.List tr {
   margin: 2px 0;
 }
-.List th {
+th {
   vertical-align: top;
 	border: none;
 	padding: 2px 0;
   text-align: left;
 	margin: 0;
 }
-.List td {
+td {
 	padding: 2px 0;
 	vertical-align: top;
 	margin: 0;
@@ -431,6 +431,7 @@ table .checkbox {
   display: table-cell;
 	width: 25px;
 	text-align: center;
+  padding: 2px 0;
 }
 table .cost,
 table .Price {
@@ -758,4 +759,11 @@ margin-right: .2rem;
 }
 .form-check-inline label {
   display: inline;
+}
+
+.bootstrap-table .fixed-table-container .table thead th .th-inner {
+  padding: 0;
+}
+select, textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"], .uneditable-input, .control-group .input-prepend span, .control-group .input-append span {
+  border-width: 1px;
 }
