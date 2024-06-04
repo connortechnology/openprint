@@ -1471,8 +1471,8 @@ function popup_window( url, parameters, options ) {
   */
 
 	if ( ! options ) options = {};
-	if ( (! options.width) && ! ( options.left && options.right) ) options.width = 400;
-	if ( (! options.height) && ! ( options.top && options.bottom ) ) options.height = 400;
+	if ( (! options.width) && ! ( options.left && options.right) ) options.width = 600;
+	if ( (! options.height) && ! ( options.top && options.bottom ) ) options.height = 600;
 
 	if ( ! popupWin ) {
 		var defaults = {
