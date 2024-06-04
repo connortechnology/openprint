@@ -527,11 +527,14 @@ tr .mac {
 	font-size: 16px;
 }
 #BugReport fieldset p {
-	padding-left: 75px;
+	padding-left: 85px;
 }
 #BugReport fieldset p label {
-	width: 75px;
-	margin-left: -75px;
+	width: 85px;
+	margin-left: -85px;
+}
+#BugReport textarea {
+  min-height: 275px;
 }
 br.pagebreak {
 	height: 0;
