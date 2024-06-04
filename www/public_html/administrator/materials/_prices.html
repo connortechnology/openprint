@@ -41,7 +41,7 @@ sub get_units {
 		$html .= '<fieldset><legend>Pricing for Price List: '. $Pricelist->link_to() .'</legend>';
 		my @Prices = openprint::MaterialPrice->find( material_id=>$Material->id(), pricelist_id=>$$Pricelist{id} );
 		my @Equipment = sort { $$a{strid} cmp $$b{strid} } map { $_ ? new openprint::Equipment( $_ ) : () } sets::union( map{ $_->equipment_id() } @Prices );
-		foreach my $Equipment ( @Equipment, new openprint::Equipment() ) {
+		foreach my $Equipment ( @Equipment ) {
       next if $$Equipment{deleted};
 			$html .= '<fieldset class="Equipment">
 				<p>
@@ -51,7 +51,7 @@ sub get_units {
 					$$Equipment{id},
 					{ name=>join('-', 'equipment_id', $$Pricelist{id}, $$Equipment{id}), prepend=>['', 'All Equipment'] },
 					);
-      $html .= $Equipment->link_to('Go') if $Equipment->id();
+          $html .= $Equipment->link_to('Go', {class=>'btn'}) if $Equipment->id();
 			$html .= '
 				</p>
 				<table class="List">
@@ -64,24 +64,27 @@ sub get_units {
 						<th class="Markup">Mark up</th>
 						<th class="Price">Price</th>
 						<th class="Discount">Discount?</th>
+            <th class="buttons"></th>
 					</tr>';
 			my @Prices = openprint::MaterialPrice->find(
 					material_id		=>	$Material->id(), 
 					pricelist_id	=>	$$Pricelist{id},
 					equipment_id	=>	( $$Equipment{id} ? $$Equipment{id} : undef ),	
 					order			=>	'lngmin NULLS FIRST,lngmax NULLS FIRST, id' );
-			foreach my $Price ( @Prices, new openprint::MaterialPrice() ) {
-				$html .= sprintf('<tr>
-					<td class="checkbox">%1$s</td>
-					<td class="ActivityCode">%2$s</td>
-					<td class="Range">%3$s - %4$s</td>
-					<td class="Units">%5$s</td>
-					<td class="Cost">%6$s</td>
-					<td class="Markup">%7$s</td>
-					<td class="Price">%8$s</td>
-					<td class="Discount">%9$s</td>
+			foreach my $Price ( @Prices ) {
+      $html .= sprintf('<tr id="Price-%1$d">
+					<td class="checkbox">%2$s</td>
+					<td class="ActivityCode">%3$s</td>
+					<td class="Range">%4$s - %5$s</td>
+					<td class="Units">%6$s</td>
+					<td class="Cost">%7$s</td>
+					<td class="Markup">%8$s</td>
+					<td class="Price">%9$s</td>
+					<td class="Discount">%10$s</td>
+          <td class="buttons">%11$s</td>
 					</tr>
 ',
+$$Price{id},
 checkboxes( join('-', 'chk', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), ( $$Price{id} ? [ $$Price{id} ] : undef ), $$Price{id} ),
 input( type=>'text', name=>join('-', 'activity_code', $$Price{id} ), value=>$$Price{activity_code} ),
 input( type=>'float', name=>join('-', 'min', $$Price{id} ), value=>$$Price{min} ),
@@ -91,6 +94,11 @@ input( type=>'float', name=>join('-', 'cost',$$Price{id} ), value=>$$Price{cost}
 input( type=>'float', name=>join('-', 'markup', $$Price{id} ), value=>$$Price{markup}, onkeyup=>'calc_from_markup(this);', oninput=>'this.onkeyup();' ),
 input( type=>'float', name=>join('-', 'price', $$Price{id} ), value=>$$Price{price}, onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
 radio( 'discountable-'.$$Price{id}, ['Y','Yes','N','No'], $$Price{discountable}, { default=>'Y' } ),
+($Price->id() ?
+    join("\n",
+      button( 'x'.$Price->id(), { on_click_this=>'del_price', data_pricelist_id=>$$Pricelist{id}, data_equipment_id=>$$Equipment{id}, data_service_id=>$$Material{id}, data_price_id=>$$Price{id}, text=>'X', title=>'Delete', type=>'button' } ),
+      button( 'c'.$Price->id(), { on_click_this=>'copy_price', data_pricelist_id=>$$Pricelist{id}, data_equipment_id=>$$Equipment{id}, data_service_id=>$$Material{id}, data_price_id=>$$Price{id}, text=>'C', title=>'Copy', type=>'button' } ),
+      ) : ''),
  );
 			} # end foreach Price
 			$html .= '</table></fieldset><!--Equipment-->';
