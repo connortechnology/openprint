@@ -27,7 +27,7 @@ use vars qw( %ServicePrices %Specifications);
   DieCutting => { units=> ['per hour', 'per m']},
 );
 %Specifications = (
-  Runspeed => {range_units => [ 'calliper'], units=>'per hour'},
+  Runspeed => {range_units => ['calliper','impressions'], units=>'per hour'},
   'DieCutting Overs' => {range_units => [ 'impressions' ], units=>['percent']},
   'DieCutting Capable' => { value=>['Y','N'] },
   'DieCutting W&T'  => { value=>['Y','N'] },
@@ -233,13 +233,23 @@ sub calc_price {
 	if ( $ServicePrice{units} eq 'per m' ) {
 		$ServicePrice{Total} = $impressions * $ServicePrice{Price} / 1000;
 	} elsif ( $ServicePrice{units} eq 'per hour' ) {
-		my $Runspeed = $Equipment->Specification('Runspeed', $Imposition->Paper()->calliper());
+		my $Runspeed = $Equipment->Specification('Runspeed');
+    if (!$$Runspeed{range_units} or $$Runspeed{range_units} eq 'calliper') {
+      $Runspeed = $Equipment->Specification('Runspeed', $Imposition->Paper()->calliper());
+    } elsif ($$Runspeed{range_units} eq 'impressions') {
+      $Runspeed = $Equipment->Specification('Runspeed', $impressions);
+    } else {
+      $Total{alert} .= 'Invalid range units '.$$Runspeed{range_units}. ' for Runspeed on '.$$Equipment{name}.'<br/>';
+    }
 		$Total{Runspeed} = $Runspeed;
 		if ( $Runspeed and $$Runspeed{value} ) {
 			my $hours = $impressions / $$Runspeed{value};
-			$ServicePrice{Total} = Math::Round::nearest( 0.01, $hours * $ServicePrice{Price} );
-		} else {
+			$ServicePrice{Total} = Math::Round::nearest(0.01, $hours * $ServicePrice{Price});
+		} elsif (!$$Runspeed{range_units} or $$Runspeed{range_units} eq 'calliper') {
 			$Total{alert} .= 'No runspeed for calliper ' . $Imposition->Paper()->calliper() . ' on '  . $Equipment->name() . '<br/>';
+			$openprint::log->error($$specs{alert});
+    } elsif ($$Runspeed{range_units} eq 'impressions') {
+			$Total{alert} .= 'No runspeed for ' . $impressions . 'impressions on '  . $Equipment->name() . '<br/>';
 			$openprint::log->error($$specs{alert});
 		} # end if
 	} # end if
