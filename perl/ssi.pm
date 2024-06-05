@@ -939,6 +939,7 @@ sub radio {
 	if ( exists($$options{default}) and ! defined($selected) ) {
 #$log->debug("Selecting default $$options{default} for radio $name");
 		$selected = $$options{default};
+    delete $$options{default};
 	} # end if
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
