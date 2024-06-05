@@ -16,9 +16,10 @@ $serial = 'tbl_equipment_specifications_id_seq';
 	equipment_id	=>	'lngequipmentindex',
 	min				=>	'dblmin',
 	max				=>	'dblmax',
-	units			=>	'strunits',
+  range_units => 'range_units',
 	name			=>	'strname',
 	value			=>	'strvalue',
+	units			=>	'strunits',
 	interpolate		=>	'interpolate',
 );
 %transforms = (
