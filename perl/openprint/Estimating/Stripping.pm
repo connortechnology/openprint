@@ -109,6 +109,7 @@ sub calc {
 	my $Service = $Project->Service( $service_index );
 
 	my @signatures_needing = ();
+  $$specs{alert} = '';
 
 	foreach my $signature_service_index ( $Project->signatures( { sort=>1 }) ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
