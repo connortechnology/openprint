@@ -212,18 +212,22 @@ sub Taxes {
     $$self{Taxes} = [];
   } # end if
 
-  if ( (!@{$$self{Taxes}}) and $self->Recipient()->country() and $self->Recipient()->state() and ($$self{invoiced_on} or $$self{paid_on}) ) {
+  if ( (!@{$$self{Taxes}}) and ($$self{invoiced_on} or $$self{paid_on}) ) {
+    my $country = $self->Recipient()->country() ? $self->Recipient()->country()  : $self->Company()->country();
+    return @{$$self{Taxes}} if ! $country;
+    my $state = $self->Recipient()->state() ? $self->Recipient()->state()  : $self->Company()->state();
+
     foreach my $Tax ( openprint::Tax->find(
         'period_start null_or_<='   =>  ( $$self{invoiced_on} ? $$self{invoiced_on} : $$self{paid_on} ),
         'period_end null_or_>='     =>  ( $$self{invoiced_on} ? $$self{invoiced_on} : $$self{paid_on} ),
-        country   =>  $self->Recipient()->country(),
-        state     =>  $self->Recipient()->state()),
-    ) {
-      my $T = new openprint::Expense_Tax();
-      $T->set({
-          Expense     =>  $self,
-          expense_id	=>	$$self{id},
-          tax_id      =>  $$Tax{id},
+        country   =>  $country,
+        ( $state ? (state => $state) : ()),
+      ) ) {
+        my $T = new openprint::Expense_Tax();
+        $T->set({
+            Expense     =>  $self,
+            expense_id	=>	$$self{id},
+            tax_id      =>  $$Tax{id},
           rate        =>  $$Tax{rate},
         });
       $openprint::log->debug("New aTax: " . $T->to_string()) if $debug;
