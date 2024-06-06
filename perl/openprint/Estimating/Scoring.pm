@@ -772,31 +772,51 @@ sub get_price {
 	} # end if
 	$servicePrice{Total} = 0;
 
-	my $runspeed = $Equipment->specification('PerfScoreRunSpeed');
-	if ( ! $runspeed ) {
-		if ( $$I{Fold} and $$I{Fold}{equipment_id} == $$Equipment{id} ) {
-			$runspeed = $$I{Fold}->runspeed($I->Paper()->gsm());
-		} # end if
-	} # end if
+  my $runspeed;
+
+  if ($$I{Fold} and $$I{Fold}{equipment_id} == $$Equipment{id}) {
+    if ($$I{Fold}{runspeed_units} eq 'gsm') {
+      $runspeed = $$I{Fold}->RunSpeed($I->Paper()->gsm());
+    } else {
+      $runspeed = $$I{Fold}->RunSpeed($qty);
+    }
+  } else {
+    $runspeed = $Equipment->Specification('PerfScoreRunSpeed');
+    $runspeed = $Equipment->Specification('RunSpeed', undef, 1) if !$runspeed;
+    if ($runspeed) {
+
+    $openprint::log->debug("runspeed".$runspeed->to_string());
+      if ($$runspeed{range_units} eq 'impressions') {
+        $runspeed = $Equipment->Specification($$runspeed{name}, $qty);
+      } else {
+        $runspeed = $Equipment->Specification($$runspeed{name}, $I->Paper()->gsm());
+      }
+    }
+  }
+
 	$Results{Runspeed} = $runspeed;
 
-	if ( $servicePrice{units} eq 'per m' ) {
+	if ($servicePrice{units} eq 'per m') {
 		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $qty / 1000 );
 		$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>',
 				@servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice{Total} );
-	} elsif ( $servicePrice{units} eq 'per hour' ) {
-		if ( $runspeed ) {
-			if ( int($runspeed) ) {
-				my $hours = $qty / $runspeed;
+	} elsif ($servicePrice{units} eq 'per hour') {
+		if ($runspeed) {
+      if ($$runspeed{value} and int($$runspeed{value})) {
+				my $hours = $qty / $$runspeed{value};
 				$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $hours );
 				$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d @ %d%s = $%.2f<br/>',
-						@servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
+						@servicePrice{'Price','units'}, $qty, $$runspeed{value}, 'Per Hour', $servicePrice{Total} );
 			} else {
-				$openprint::log->error("Bogus runspeed ($runspeed) on $$Equipment{strid}");
+        $Results{Breakdown} .= "Bad runspeed ($$runspeed{value}) on $$Equipment{strid}<br/>";
+				$openprint::log->error("Bogus runspeed ($$runspeed{value}) on $$Equipment{strid}");
 			} # end if
-		} # end if
-	} elsif ( $servicePrice{Price} ) {
-		$Results{Breakdown} .= "Unknown units set on service price ($score_qty) ($servicePrice{units}) <br/>";
+    } else {
+      $Results{Breakdown} .= "per hour price set but no runspeed set on $$Equipment{strid}<br/>";
+      $openprint::log->error("Bogus runspeed set on $$Equipment{strid}");
+    } # end if
+  } elsif ( $servicePrice{Price} ) {
+    $Results{Breakdown} .= "Unknown units set on service price ($score_qty) ($servicePrice{units}) <br/>";
 	} # end if
 
 #$openprint::log->debug("Horizontal: $horizontal_rule");
