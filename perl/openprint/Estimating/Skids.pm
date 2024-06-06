@@ -42,7 +42,7 @@ my %variables = (
 	'OverrideItemsPerPackage1'=>['save'], 'OverrideItemsPerPackage2'=>['save'], 'OverrideItemsPerPackage3'=>['save'],
 	'txtPackageWeight1' => ['save','output'], 'txtPackageWeight2' => ['save','output'], 'txtPackageWeight3' => ['save','output'],
 	'totalWeight1' => ['save','output'],'totalWeight2' => ['save','output'],'totalWeight3' => ['save','output'],
-	'alert'=>['output'], 
+	'alert'=>['save','output'], 
 	'hdnBreakdown1'=>['output'], 'hdnBreakdown2'=>['output'], 'hdnBreakdown3'=>['output'],
 
 );
@@ -107,6 +107,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	$$specs{Status} = 'calculated';
+  $$specs{alert} = '';
 
 	$log->debug("********************** START OF CALC SKIDS type:($$specs{ServiceType})**********************") if DEBUG;
 	my $Project = new openprint::Project($project_index);
