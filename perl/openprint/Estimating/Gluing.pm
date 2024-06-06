@@ -235,6 +235,7 @@ sub get_price {
       Breakdown => '',
     );
 
+    $price{Breakdown} .= '<b>'.$Equipment->name().'</b><br/>';
     my $qty = $$specs{"txtQuantity$qty_index"};
     if ( my $Overs = $Equipment->Specification('Gluing Overs') ) {
       my $overs;
@@ -243,15 +244,16 @@ sub get_price {
       } elsif ( $$Overs{units} eq 'sheets' ) {
         $overs = int( $$Overs{value} );
       } else {
+        $price{Breakdown} .= "Unknown units $$Overs{units} in Gluing Overs<br/>";
         $openprint::log->error("Unknown units $$Overs{units} in Gluing Overs");
       } # end if
       $price{Overs} = $overs;
       $qty += $overs;
+      $price{Breakdown} .= 'Overs '.$$Overs{value}.$$Overs{units}. ' = '.$overs.'<br/>';
     } # end if
-    #$Total{Impressions} = $impressions;
+
     my $makeReadyPrice = openprint::service::get_price('GluingMakeReady', undef, $Equipment) || 0;
     my $minimumCharge = openprint::service::get_price('GluingMinimumCharge', undef, $Equipment) || 0;
-    $price{Breakdown} .= '<b>'.$Equipment->name().'</b><br/>';
     $price{Breakdown} .= 'MakeReady: $' . sprintf( '%.2f', $makeReadyPrice ? $makeReadyPrice : 0) . '<br/>';
     $price{Breakdown} .= 'MinimumCharge: $' . sprintf( '%.2f', $minimumCharge ? $minimumCharge : 0 ) . '<br/>';
 
