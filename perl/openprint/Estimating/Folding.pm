@@ -679,7 +679,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					$makereadies{$$SigImpo{folding_results}{Equipment}{id}}{$fold_type.$imposition} = 1;
 				} # end foreach
 			} elsif ( DEBUG ) {
-				$openprint::log->error("No folds from sigimpo so can't detect makereadies");
+				$openprint::log->error('No folds from sigimpo so cant detect makereadies');
 				$SigImpo->display();
 			} # end if
 		} else {
