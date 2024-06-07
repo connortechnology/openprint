@@ -171,7 +171,9 @@ sub handler {
 
 		openprint::pricing::init_cache();
 		foreach my $o ( split(',', $config{Cached_Objects} ) ) {
-			('openprint::'.$o)->init_cache();
+      eval {
+        ('openprint::'.$o)->init_cache();
+      };
 		} # end foreach
 
 		# Just does timeout
