@@ -17,7 +17,7 @@
     $$variable{Service} = [ openprint::Service->find( %filters ) ];
 ) ?>	
 <? if ( @{$$variable{Service}} ) ?>
-	<table id="Services" 
+	<table id="Services" class="List sortable table-striped"
   data-pagination="true"
   data-search="true"
   data-show-pagination-switch="true"
