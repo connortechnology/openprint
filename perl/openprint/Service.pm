@@ -138,7 +138,8 @@ sub destroy {
 	sql::execute(undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id});
 	$self->SUPER::destroy();
 	sql::end_transaction($dbh, $ac);
-	return $dbh->errstr();
+	return $dbh->errstr() if $dbh->errstr();
+  return '';
 } # end sub delete
 
 sub prices {
