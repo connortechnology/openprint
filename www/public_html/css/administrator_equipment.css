@@ -9,9 +9,10 @@ li input[type="text"] {
 #specifications td.min span,
 #specifications td.max span,
 #specifications td.units span,
+#specifications td.range_units span,
 #specifications td.value span {
     width: 100%;
-    float: left;
+    display: block;
 }
 #specifications .name {
     text-align: left;

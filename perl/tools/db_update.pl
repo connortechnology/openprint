@@ -1790,6 +1790,10 @@ if ( ! sets::isin( 'tbl_equipment_specifications', \@tables ) ) {
 			$log->debug("Adding interpolate to tbl_equipment_specifications");
 			$dbh->do('ALTER TABLE tbl_equipment_specifications ADD interpolate         BOOLEAN NOT NULL DEFAULT false');
 		}
+		if ( ! exists $$data{range_units} ) {
+			$log->debug("Adding range_units to tbl_equipment_specifications");
+			$dbh->do('ALTER TABLE tbl_equipment_specifications ADD range_units         text');
+		}
 	} # end if
 } # end if
 

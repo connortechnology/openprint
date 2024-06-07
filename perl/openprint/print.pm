@@ -112,7 +112,7 @@ sub view_services {
 
 				if ( !$param{ServiceType} ) {
 					#multipage_signatures( \%param, $log, $dbh, $variable, $project_index, $service_index );
-					my $s = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_index, $Project->Type()->type() );
+					my $s = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 					if ( $$s{Status} ne 'calculated' ) {
 						$log->error("Error calculting Project service");
 						# Don't want to redirect because it would be annoying.  Just go to view.

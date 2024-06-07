@@ -27,7 +27,7 @@ use vars qw( %ServicePrices %Specifications);
   DieCutting => { units=> ['per hour', 'per m']},
 );
 %Specifications = (
-  Runspeed => {range_units => [ 'calliper'], units=>'per hour'},
+  RunSpeed => {range_units => ['calliper','impressions'], units=>'per hour'},
   'DieCutting Overs' => {range_units => [ 'impressions' ], units=>['percent']},
   'DieCutting Capable' => { value=>['Y','N'] },
   'DieCutting W&T'  => { value=>['Y','N'] },
@@ -110,7 +110,7 @@ sub no_outputs {
 sub calc_price {
   my ( $specs, $Equipment, $qty_index, $Imposition, $sig_specs, $Signature_Imposition ) = @_;
 
-	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'' );
+	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'', Total=>0, MPrice=>0 );
 	my $form = $$sig_specs{SignatureIndex};
   if ($$Imposition{runstyle} eq 'Work & Turn' or $$Imposition{runstyle} eq 'Work & Tumble') {
     my $do_wt = $Equipment->specification('DieCutting W&T');
@@ -230,19 +230,34 @@ sub calc_price {
 	if ( ! %ServicePrice ) {
 		%ServicePrice = openprint::service::get_price_object( 'DieCutting', $impressions, $Equipment );
 	} # end if
+  $ServicePrice{Total} = 0;
 	if ( $ServicePrice{units} eq 'per m' ) {
 		$ServicePrice{Total} = $impressions * $ServicePrice{Price} / 1000;
 	} elsif ( $ServicePrice{units} eq 'per hour' ) {
-		my $Runspeed = $Equipment->Specification('Runspeed', $Imposition->Paper()->calliper());
-		$Total{Runspeed} = $Runspeed;
-		if ( $Runspeed and $$Runspeed{value} ) {
-			my $hours = $impressions / $$Runspeed{value};
-			$ServicePrice{Total} = Math::Round::nearest( 0.01, $hours * $ServicePrice{Price} );
-		} else {
-			$Total{alert} .= 'No runspeed for calliper ' . $Imposition->Paper()->calliper() . ' on '  . $Equipment->name() . '<br/>';
-			$openprint::log->error($$specs{alert});
-		} # end if
-	} # end if
+		my $Runspeed = $Equipment->Specification('RunSpeed');
+    if (!$Runspeed) {
+      $Total{alert} .= 'No RunSpeed on '.$$Equipment{name}.'<br/>';
+    } else {
+      if (!$$Runspeed{range_units} or ($$Runspeed{range_units} eq 'calliper')) {
+        $Runspeed = $Equipment->Specification('RunSpeed', $Imposition->Paper()->calliper());
+      } elsif ($$Runspeed{range_units} eq 'impressions') {
+        $Runspeed = $Equipment->Specification('RunSpeed', $impressions);
+      } else {
+        $Total{alert} .= 'Invalid range units '.$$Runspeed{range_units}. ' for Runspeed on '.$$Equipment{name}.'<br/>';
+      }
+      $Total{Runspeed} = $Runspeed;
+      if ( $Runspeed and $$Runspeed{value} ) {
+        my $hours = $impressions / $$Runspeed{value};
+        $ServicePrice{Total} = Math::Round::nearest(0.01, $hours * $ServicePrice{Price});
+      } elsif (!$$Runspeed{range_units} or ($$Runspeed{range_units} eq 'calliper')) {
+        $Total{alert} .= 'No runspeed('.$$Runspeed{name}.') for calliper ' . $Imposition->Paper()->calliper() . ' on '  . $Equipment->name() . '<br/>';
+        $openprint::log->error($Total{alert});
+      } elsif ($$Runspeed{range_units} eq 'impressions') {
+        $Total{alert} .= 'No runspeed for ' . $impressions . 'impressions on '  . $Equipment->name() . '<br/>';
+        $openprint::log->error($Total{alert});
+      } # end if
+    } # end if
+  } # end if
 
 	$Total{ServicePrice} = \%ServicePrice;
 	$Total{Total} += $ServicePrice{Total};

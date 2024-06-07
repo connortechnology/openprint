@@ -23,6 +23,9 @@
             }
         });
     }
+  function delete_fold_spec( id ) {
+      new Ajax.Request('/administrator/equipment/_fold_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('FoldSpecification-'+id); tr.parentNode.removeChild(tr);} } );
+    } // end function delete_fold_spec
 </script>
 <form id="Fold" action="fold.html" method="post">
   <input type="hidden" name="fold_id" value="<? echo ( $$variable{Fold}->id() ) ?>"/>
