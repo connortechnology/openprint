@@ -37,13 +37,13 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 1;
 use constant DEBUG_PLATES => 0;
-use constant DEBUG_VERSIONS => 1;
+use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
-use constant DEBUG_FILTERING => 1;
-use constant DEBUG_INITIAL_FILTERING => 1;
+use constant DEBUG_FILTERING => 0;
+use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_AFTER_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
-use constant DEBUG_INKS => 0;
+use constant DEBUG_INKS => 1;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
 use constant USE_PRICE_CACHE => 1;
@@ -670,14 +670,15 @@ $log->debug("Setting washed colours $$Colour{name}.'-'.$$sig_specs{'ddmPress'.$q
 		} # end if
 $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if DEBUG_INKS;
 
-		if ( ! $special_colours{$colour} ) {
+		if (!$special_colours{$colour}) {
 			my $Ink = openprint::Ink->find_one(name=>$colour);
-			$log->debug("Adding special colour for $colour") if DEBUG_INKS;
+			$log->debug("Adding special colour for ($colour) $Ink") if DEBUG_INKS;
 			if ( !$Ink and ($$real_colour{type} eq 'PMS') ) {
 				$Ink = openprint::Ink->find_one(name=>'PMSInk');
 					$log->debug("Adding PMS special colour for $colour have: $Ink") if DEBUG_INKS;
 			}
 			if ( !$Ink ) {
+        $log->debug("Creating special ink for $colour");
 				# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
 				$Ink = new openprint::Ink();
 				$$Ink{pmsid} = $colour;
@@ -1374,7 +1375,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				push @side_two_colours, @side_two_varnishes;
 			} # end if
 		}
-		if ( 0 ) {
+		if ( 1 ) {
 			$log->debug("$$Press{strid} Side One varnishes @side_one_varnishes");
 			$log->debug("$$Press{strid} Side Two varnishes @side_two_varnishes");
 			$log->debug("$$Press{strid} Side One colours @side_one_colours");
@@ -6368,7 +6369,7 @@ if ( 1 ) {
 	foreach my $Colour ( @colours_no_coatings ) {
 		
 		my $real_colour = $$Colour{name};
-$log->debug("Colour: $real_colour impressions $colour_impressions $$Imposition{runstyle} Coverage($$Colour{coverage}") if DEBUG_INKS;
+$log->debug("Colour: $real_colour impressions $colour_impressions $$Imposition{runstyle} Coverage $$Colour{coverage}%") if DEBUG_INKS;
 		my $colour;
 
 		$price{'Ink breakdown'} .= $real_colour;
@@ -6408,6 +6409,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			} # end if
 		} elsif ( $real_colour =~ /^(\w+) Spot Colour$/ ) {
 			$colour = $1;
+      $log->DEBUG("Have $colour spot colour");
 		} elsif ( $real_colour =~ /PMS/i ) {
 			$colour = $real_colour;
 			#$colour =~ s/\D//g; # Just the PMS #
@@ -6430,6 +6432,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 
 		foreach my $C ( @{$special_colours{$colour}} ) {
 			if ( ( ! ( $$C{grades} and scalar @{$$C{grades}} ) ) or sets::isin($grade, $C->grades()) ) {
+        $log->debug("Found ink $$C{name}");
 				$Ink = $C;
 				last;
 			} # end if
@@ -6459,6 +6462,8 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			$ink_price{ServicePrice} = \%InkService;
 			$ink_price{Total} += $InkService{Total};
 			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f = $%5$.2f', @InkService{'Price','units','Total'}, $colour_impressions, $ink_price{Total} );
+    } else {
+      $log->debug("No ink service found for $$Ink{name}");
 		} # end if
 
 # Washed_colours contains each colour used in the other signatures
@@ -6512,7 +6517,6 @@ $log->debug("Was mixed") if DEBUG_INKS;
 # * $colour_impressions ) {
 					$area *= $qty / $$Imposition{imposition};
 				}
-
 $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impressions) * Coverage($coverage) ") if DEBUG_INKS;
 
 			# Not exactly sure about this, but keeping it to make topknotch keep the same prices.	Will have to do more testing and thinking
@@ -6577,6 +6581,8 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
           $price{'Ink breakdown'} .= "<div class=\"warning\"> Unknown units for material $colour: $material_price{units} $$Press{strid}</div>";
 				} # end if
 			} # end if material_price
+    } else {
+      $log->debug("No material id for $colour ".$Ink->to_string());
 		} # end if material_id
 
 		if ( ! %ink_price ) {
