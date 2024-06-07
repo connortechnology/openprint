@@ -31,8 +31,8 @@ my %Specifications = (
   'Gluing Capable' => { values=>['Y','N'] },
   'Gluing Overs' => {range_units => [ 'impressions' ], units=>['percent']},
   'Gluing MakeReadyTime' => { units => 'minutes' },
-  'Gluing Runspeed' => { units => 'inches per hour'},
-  'Runspeed' => { units => 'inches per hour'},
+  'Gluing RunSpeed' => { units => 'inches per hour'},
+  'RunSpeed' => { units => 'inches per hour'},
 );
 
 sub ServicePriceConfiguration {
@@ -263,8 +263,8 @@ sub get_price {
       $servicePrice{Total} = $qty * $servicePrice{Price} / 1000;
       $price{Breakdown} .= sprintf( 'Service: $%.2f %s = $%.2f<br/>', @servicePrice{'Price','units','Total'} );
     } elsif ( $servicePrice{units} eq 'per hour') {
-      my $runspeed = $Equipment->Specification('Gluing Runspeed');
-      $runspeed = $Equipment->Specification('Runspeed') if ! $runspeed;
+      my $runspeed = $Equipment->Specification('Gluing RunSpeed');
+      $runspeed = $Equipment->Specification('RunSpeed') if ! $runspeed;
 
       my $height = $$sig_specs{txtWidth} > $$sig_specs{txtHeight} ? $$sig_specs{txtHeight} : $$sig_specs{txtWidth};
       if (!$runspeed) {
