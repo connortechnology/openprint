@@ -51,15 +51,15 @@
 );
 		) ?>
 	</p>
-<? if ( $openprint::User->email() =~ /^iconnor/ ) ?>
+<? if ( 0 and $openprint::User->email() =~ /^iconnor/ ) ?>
 	<p class="buttons">
-		<input type="file" name="file"/>
+  <input type="file" name="file"/>
 		<? echo ( join("\n",
 		button( 'Import', { onclick=>"f2.btnFunction.value='Import';f2.submit();", text=>'Import' } ),
 		button( 'Export', { onclick=>"f2.btnFunction.value='Export';f2.submit();", text=>'Export' } ),
 		); ) ?>
 	</p>
-<? endif ( $openprint::User->email() =~ /^iconnor/ ) ?>
+<? endif ( 0 and $openprint::User->email() =~ /^iconnor/ ) ?>
 <br class="spacer"/>
 <fieldset><legend>Editing Material <? echo ( $$variable{Material}->id() ) ?></legend>
 	<div class="leftColumn">
