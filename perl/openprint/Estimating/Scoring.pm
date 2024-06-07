@@ -35,7 +35,7 @@ use vars qw( %ServicePrices %Specifications);
   'Scoring' => { units=> ['per hour', 'per m']},
 );
 %Specifications = (
-  'Runspeed' => {range_units => [ 'calliper'], units=>'per hour'},
+  'RunSpeed' => {range_units => [ 'calliper'], units=>'per hour'},
   'Scoring Overs' => {range_units => [ 'impressions' ], units=>['percent']},
   'Scoring Capable' => { value=>['Y','N', 'For Pocket Folders', 'When PerfectBound', 'When Stitching' ] },
 );
