@@ -169,23 +169,29 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
         my %AcetateFrontPrice = $AcetateFront->get_price($qty, undef);
 				if ($AcetateFrontPrice{units} eq 'each') {
 					$AcetateFrontPrice{Total} = Math::Round::nearest( 0.01, $AcetateFrontPrice{Price} * $qty);
+          $mprice += $AcetateFrontPrice{Price} * 1000;
         } elsif ($AcetateFrontPrice{units} eq 'per m') {
 					$AcetateFrontPrice{Total} = Math::Round::nearest( 0.01, $AcetateFrontPrice{Price} * $qty/1000);
+          $mprice += $AcetateFrontPrice{Price};
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'Unknown units for '.$AcetateFront->description().'<br/>';
 				} # end if
         $$specs{'hdnBreakdown'.$qty_index} .= $AcetateFront->description().': ' . sprintf('$%.2f%s = $%.2f<br/>', @AcetateFrontPrice{qw(Price units Total)});
+        $price += $AcetateFrontPrice{Total};
       }
       if ($AcetateBack and $$specs{acetate_back} and ($$specs{acetate_back} eq 'Y')) {
         my %AcetateBackPrice = $AcetateBack->get_price($qty, undef);
 				if ($AcetateBackPrice{units} eq 'each') {
 					$AcetateBackPrice{Total} = Math::Round::nearest( 0.01, $AcetateBackPrice{Price} * $qty);
+          $mprice += $AcetateBackPrice{Price} * 1000;
         } elsif ($AcetateBackPrice{units} eq 'per m') {
 					$AcetateBackPrice{Total} = Math::Round::nearest( 0.01, $AcetateBackPrice{Price} * $qty/1000);
+          $mprice += $AcetateBackPrice{Price};
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'Unknown units for '.$AcetateBack->description().'<br/>';
 				} # end if
         $$specs{'hdnBreakdown'.$qty_index} .= $AcetateBack->description().': ' . sprintf('$%.2f%s = $%.2f<br/>', @AcetateBackPrice{qw(Price units Total)});
+        $price += $AcetateBackPrice{Total};
       }
 	
 			if ( $minimumCharge > 0 and $price < $minimumCharge ) {

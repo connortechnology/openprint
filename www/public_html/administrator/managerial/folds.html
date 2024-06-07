@@ -75,8 +75,8 @@ function load_page() {
           <option value="">All</option>
   <? echo ( 
     make_drop_down( [ 
-                  map { $_, $openprint::Estimating::Folding::fold_types{$_} } 
-                  sort keys %openprint::Estimating::Folding::fold_types ],
+    map { $openprint::Estimating::Folding::fold_types{$_} ? ( $_=>$openprint::Estimating::Folding::fold_types{$_}) : () } 
+                  @openprint::Estimating::Folding::folds ],
                   [split(',',$session{$r->uri().'?type'})]);
   ) ?>
         </select>

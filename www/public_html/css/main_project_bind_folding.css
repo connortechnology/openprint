@@ -7,6 +7,12 @@ table .Qty,
 table .Imp {
 	width: 30px;
 }
+table .Type {
+  vertical-align: top;
+}
+table .Type select {
+  max-width: 100%;
+}
 .Folding table .Folds, 
 .Folding table .Angles {
 	width: 30px;

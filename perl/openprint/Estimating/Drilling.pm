@@ -23,6 +23,7 @@ require openprint::Equipment;
 require openprint::service;
 
 my @variables = (
+  'alert',
 		'Markup1', 'Markup2', 'Markup3',
 		'txtPrice1', 'txtPrice2', 'txtPrice3',
 		'MPrice1', 'MPrice2', 'MPrice3',
@@ -57,6 +58,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 	
 	$$specs{Status} = 'calculated';
+  $$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();

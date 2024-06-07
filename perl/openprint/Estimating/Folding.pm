@@ -679,7 +679,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					$makereadies{$$SigImpo{folding_results}{Equipment}{id}}{$fold_type.$imposition} = 1;
 				} # end foreach
 			} elsif ( DEBUG ) {
-				$openprint::log->error("No folds from sigimpo so can't detect makereadies");
+				$openprint::log->error('No folds from sigimpo so cant detect makereadies');
 				$SigImpo->display();
 			} # end if
 		} else {
@@ -1539,12 +1539,15 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 
 				$openprint::log->debug("Pricing qindex $qty_index runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out	of fold $$Fold{type} on " . $Equipment->name()) if DEBUG;
 				if ( $$Fold{makeready_overs} ) {
-					$run_qty += $$Fold{makeready_overs_units} eq 'Percent' ? $run_qty * ( $$Fold{makeready_overs} /100 ) : $$Fold{makeready_overs};
-					$openprint::log->debug("Make Over runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out	of fold $$Fold{type} on " . $$Equipment{name}) if DEBUG;
+					my $overs = $$Fold{makeready_overs_units} eq 'Percent' ? $run_qty * ( $$Fold{makeready_overs} /100 ) : $$Fold{makeready_overs};
+          $Breakdown .= "Run Overs $$Fold{makeready_overs}$$Fold{makeready_overs_units} = $overs, total = ".($run_qty+$overs)."<br/>";
+          $run_qty += $overs;
 				} # end if
+        #$Breakdown .= $Fold->to_string();
 				if ( $$Fold{run_overs} ) {
-					$run_qty += $$Fold{run_overs_units} eq 'Percent' ? $run_qty * ($$Fold{run_overs}/100): $$Fold{run_overs};
-					$openprint::log->debug("Run Overs runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out	of fold $$Fold{type} on " . $$Equipment{name}) if DEBUG;
+					my $overs = $$Fold{run_overs_units} eq 'Percent' ? $run_qty * ($$Fold{run_overs}/100) : $$Fold{run_overs};
+          $Breakdown .= "Run Overs $$Fold{run_overs}$$Fold{run_overs_units} = $overs, total = ".($run_qty+$overs)."<br/>";
+          $run_qty += $overs;
 				} # end if
 				$$Imposition{impressions} = $run_qty;
 
