@@ -149,12 +149,15 @@ function del_price(btn) {
   let url = '/administrator/services/_prices_table_body.html';
   if (!(id = btn.getAttribute('data_service_id'))) {
     id = btn.getAttribute('data_material_id');
-    data.service_id = id;
-  } else {
-    url = '/administrator/materials/_prices_table_body.html';
     data.material_id = id;
+    url = '/administrator/materials/_prices_table_body.html';
+  } else {
+    data.service_id = id;
   }
-
+  if (!id) {
+    alert("Failed to identify the price. Will not proceed");
+    return;
+  }
   const prices_id = '#prices-'+pricelist_id+'-'+equipment_id+'-'+id;
   const div = $j(prices_id);
   div.html('Please wait...loading.');
