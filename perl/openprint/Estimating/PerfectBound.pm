@@ -604,13 +604,13 @@ sub get_price {
 
   my $Overs = $Equipment->Specification('PerfectBind Overs');
   if (my $Overs = $Equipment->Specification('PerfectBind Overs')) {
-    my $overs;
+    my $overs = 0;
     if ( $$Overs{units} eq 'percent' ) {
       $overs = int( $qty * ($$Overs{value}/100) );
     } elsif ( $$Overs{units} eq 'sheets' ) {
       $overs = int( $$Overs{value} );
     } else {
-      $openprint::log->error("Unknown units $$Overs{units} in PerfectBinding Overs");
+      $openprint::log->error("Unknown units $$Overs{units} in PerfectBinding Overs on $$Equipment{name}");
     } # end if
     $price{Overs} = $overs;
     $qty += $overs;
