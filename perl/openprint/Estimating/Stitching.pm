@@ -26,7 +26,7 @@ require openprint::Project;
 
 my %Services;
 
-my %specifications = (
+my %Specifications = (
 	'Maximum Calliper'	=> {},
 	'Units Per Hour( \d out)'	=>	{},
 	'Maximum Pieces'	=>	{},
@@ -36,6 +36,26 @@ my %specifications = (
 	'Minimum Finished Height'	=>	{},
   '(\w+) Overs' => { units => [ 'sheets', 'percent' ] },
 );
+
+# Stripping tends to be a manual process.  There are tools to help...
+my %ServicePrices = (
+  StitchingMinimumCharge => {},
+  'Stitching(.*)MakeReady' => { units => [ 'per hour' ] },
+  'Stitching' => { units=> ['per hour', 'per lb','per m']},
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
+
 my @possible_pages = ( 4, 6, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 );
 # This is an array of all the variables that need to be saved to the database for this service.
 my %variables = (
