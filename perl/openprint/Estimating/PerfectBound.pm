@@ -238,7 +238,6 @@ sub signature_calc {
 			$imposition = $$specs{'Imposition'.$qty_index};
 		} # end if
 	} # end if
-	$results{Breakdown} .= 'Imposition: ' . $imposition . 'out<br/>';
 
 	my %error;
 	my @equipment = ();
@@ -272,9 +271,7 @@ sub signature_calc {
 
 	while ( ! $bestPrice and $imposition ) {
 		$$specs{'Imposition'.$qty_index} = $imposition;
-		$results{Breakdown} .= "Calculating for $imposition out<br/>";
 
-#$$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 		foreach my $Equipment ( @equipment ) {
 			$results{Breakdown} .= 'On ' . $$Equipment{name}.'<br/>';
 			if ( ( $_ = $Equipment->specification('PerfectBind Maximum Quantity') ) and ( $_ < $$specs{"txtQuantity$qty_index"} ) ) {
@@ -320,11 +317,11 @@ sub signature_calc {
 			if ( $Equipment->specification('Type') eq 'Press' ) {
 #next if $$specs{'txtPockets'.$qty_index} > 1;
 				if ( $$Press{id} != $$Equipment{id} ) {
-					$results{Breakdown} .= "Press not the same: " . $$Press{name} . ' != ' . $$Equipment{name} . '<br/>';
+					$results{Breakdown} .= 'Press not the same: ' . $$Press{name} . ' != ' . $$Equipment{name} . '<br/>';
 					next;
 				} # end if
 				if ( $$folding_specs{"ddmEquipment-$form-$qty_index"} and ( $$folding_specs{"ddmEquipment-$form-$qty_index"} != $$Equipment{id} ) ) {
-					$results{Breakdown} .= "Folder not the same: " . new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} )->name(). ' != ' . $$Equipment{name} . '<br/>';
+					$results{Breakdown} .= 'Folder not the same: ' . new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} )->name(). ' != ' . $$Equipment{name} . '<br/>';
 					next;
 				} # end if
 			} # end if
@@ -520,10 +517,10 @@ sub calc {
 		$$specs{'hdnBreakdown'.$qty_index} .= $results{Breakdown};
 		$$specs{alert} .= $results{alert} if $results{alert};
 		my %price = %{$results{Price}} if $results{Price};
+
 		if ( $results{Status} eq 'calculated' ) {
 			$$specs{"ddmEquipment$qty_index"} = $results{Equipment}{id};
 			$$specs{'Imposition'.$qty_index} = $results{Imposition};
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: @'.$price{Runspeed}.'/Hr = '. Math::Round::nearest( 0.1, $price{RunTime} ) . ',<br/>' if $price{Runspeed};
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '.scalar @{$price{Passes}}.'<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= "Imposition: $price{Imposition}out<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Run Discount' . $price{'RunCost Discount'}.'%<br/>' if $price{'RunCost Discount'};
@@ -533,12 +530,14 @@ sub calc {
       my $pass = 1;
       foreach my $pass_price (@{$price{Passes}}) {
         $$specs{'hdnBreakdown'.$qty_index} .= 'Pass '.$pass.'<br/>' if @{$price{Passes}}>1;
+        #$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity ' . $$specs{'txtQuantity'.$qty_index}.'+'.$$pass_price{overs}.' overs = '.($$specs{'txtQuantity'.$qty_index}+$$pass_price{overs}).'<br/>' if $$pass_price{overs};
+        #$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: @'.$price{RunSpeed}.'/Hr = '. Math::Round::nearest( 0.1, $price{RunTime} ) . ',<br/>' if $price{RunSpeed};
         my $MakeReadyPrice = $$pass_price{MakeReadyPrice};
 			  $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Make Ready: $%.2f%s = $%.2f', @$MakeReadyPrice{qw(Price units Total)}).'<br/>' if $MakeReadyPrice;
-			  $$specs{'hdnBreakdown'.$qty_index} .= 'Pocket Make Ready: $' . Math::Round::nearest(0.01, $$pass_price{PocketMakeReady}).'<br/>' if $$pass_price{PocketMakeReady};
+			  $$specs{'hdnBreakdown'.$qty_index} .= 'Pocket Make Ready: $' . sprintf('%.2f', Math::Round::nearest(0.01, $$pass_price{PocketMakeReady})).'<br/>' if $$pass_price{PocketMakeReady};
 
         if ( my $servicePrice = $$pass_price{ServicePrice} ) {
-          $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s $%.2f%s @%d per hour %.2fhours =$%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','RunSpeed','RunTime','Total'});
+          $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s $%.2f%s @%d per hour %d = %.2fhours =$%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','RunSpeed','quantity','RunTime','Total'});
         } # end if
         $pass ++;
 			}
@@ -598,6 +597,7 @@ sub get_price {
 			MPrice  => 0,
 			Waste    => 0,  
 			Imposition => $$specs{'Imposition'.$qty_index},
+      Quantity => $$specs{'txtQuantity'.$qty_index},
 			);
 
 	my $qty = $$specs{'txtQuantity'.$qty_index};
@@ -612,8 +612,12 @@ sub get_price {
     } else {
       $openprint::log->error("Unknown units $$Overs{units} in PerfectBinding Overs on $$Equipment{name}");
     } # end if
-    $price{Overs} = $overs;
+    $price{Overs} = $Overs;
+    $price{overs} = $overs;
     $qty += $overs;
+    $price{Quantity} += $overs;
+  } else {
+    $openprint::log->error("No overs");
   } # end if
 
 #$openprint::log->debug($price{Imposition} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition'));
@@ -698,6 +702,7 @@ sub get_price {
 		%servicePrice = openprint::service::get_price_object( $$specs{ServiceType}, $neededPockets, $Equipment );
 	} # end if
 	if ( %servicePrice and $servicePrice{Price} ) {
+    $servicePrice{quantity} = $qty;
 		my $unitsPerHour = $servicePrice{RunSpeed} = $Equipment->specification( 'Units Per Hour', $neededPockets );
 		my $runtime = $servicePrice{RunTime} = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 			$price{RunTime} += $runtime * 360;
