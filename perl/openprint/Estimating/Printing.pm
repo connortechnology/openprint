@@ -1387,7 +1387,12 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			$log->warn("No runstyles set on $$Press{strid}, defaulting to sheet work");
       $$project{Runstyles} = 'Sheet Work';
 		}
-		if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
+    %{$$project{RunstylesHash}} = map { $_ => $_ } split(',',$$project{Runstyles});
+		if (DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"}) {
+      if (!$$project{RunstylesHash}{$$specs{"ddmRunStyle$qty_index"}}) {
+        $log->warn("Press $$Press{strid} does not do ".$$specs{"ddmRunStyle$qty_index"});
+        next;
+      }
 			$$project{Runstyles} = $$specs{"ddmRunStyle$qty_index"};
 		} 
     $log->error("Runstyles: $$project{Runstyles}");
