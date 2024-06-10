@@ -964,7 +964,6 @@ sub get_price {
     $price{overs} = $overs;
     $price{Overs} = $Overs;
     $price{quantity} = $qty;
-  $openprint::log->error("Overs: $overs");
   } # end if
 
 	my $service_name = $$ServiceType{name}.$price{Imposition}.'out';
