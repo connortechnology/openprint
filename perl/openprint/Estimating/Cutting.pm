@@ -127,6 +127,20 @@ sub signature_needs {
       $openprint::log->debug(" ** Imposition > 1, Cutting needed ! ** ") if DEBUG;
       return 1;
     } # end if
+
+    # If folding imposition doesn't match printed imposition
+    if ( $$services{Folding} and @{$$services{Folding}} ) {
+      my $folding_specs = openprint::service::get_specs_ref($Project, $$services{Folding}[0]);
+      #if ( $$Imposition{Folds} ) {
+      #@folding_impositions = @{$$Imposition{Folds}};
+      #} else {
+        my @folding_impositions = openprint::Estimating::Folding::get_Folds( $folding_specs, $sig_specs, $qty_index );
+        #}
+      if (@folding_impositions>1 or $folding_impositions[0]->quantity() > 1) {
+        return 1;
+      }
+    } # end if
+
     if ( signature_has_cut_stock($sig_specs, $qty_index) ) {
       $openprint::log->debug(" Supplied Width $$sig_specs{'hdnSuppliedStockWidth'.$qty_index} != $$sig_specs{txtWidth} or $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} != $$sig_specs{txtHeight} Cutting needed ! ** ") if DEBUG;
       return 1;
@@ -472,7 +486,7 @@ sub signature_calc {
     $results{Breakdown} .= 'Signature is being Die Cut. Assuming further cutting not needed<br/>';
     return %results;
   } else {
-    $openprint::log->error("Don't have DieCutting?");
+    $openprint::log->debug('Dont have DieCutting?');
   }
   my $printing_specs = openprint::service::get_specs_ref($Project, $$services{''}[0]) if $$services{''} and @{$$services{''}};
 
@@ -1283,8 +1297,8 @@ sub calc {
     } # end if
 
     $$specs{'hdnBreakdown'.$qty_index} = '';
-    my $price;
-    my $mprice;
+    my $price = 0;
+    my $mprice = 0;
 
     my %Cut_Stocks;
     my $stock_id = 1;
@@ -1295,7 +1309,7 @@ sub calc {
       my $form = $$sig_specs{SignatureIndex};
       $$specs{'hdnBreakdown'.$qty_index} .= join(' ', 'Signature: ', $form, ($$sig_specs{txtSignatureType}?$$sig_specs{txtSignatureType}:''), '<br/>');
       if ( ! ( $$sig_specs{'txtImposition'.$qty_index} and signature_needs($Project, $specs, $sig_specs, $qty_index) ) ) {
-        $$specs{'hdnBreakdown'.$qty_index} .= 'no imposition or not needed.';
+        $$specs{'hdnBreakdown'.$qty_index} .= $$sig_specs{'txtImposition'.$qty_index} ? 'Not needed.' : 'No imposition.';
         $$specs{"txtRegularCutPrice-$form-$qty_index"} = '';
         $$specs{"ddmEquipment-$form-$qty_index"}  = '';
         $$specs{"txtVerticalCuts-$form-$qty_index"} = '';
