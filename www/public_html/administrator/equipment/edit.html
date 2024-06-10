@@ -4,6 +4,7 @@
 </div>
 <?include('/includes/error_reporting.html')?>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search Information</legend>
 		<ul>
       <li>
@@ -50,7 +51,6 @@
 			); ) ?>
 		</p>
 	</fieldset>
-	<input type="hidden" name="btnFunction"/>
 </form>
 <form id="f2" name="f2" method="post" enctype="multipart/form-data" action="edit.html">
 	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
