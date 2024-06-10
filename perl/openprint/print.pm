@@ -138,7 +138,7 @@ sub view_services {
 					openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_index, 'Paper' );
         } else {
           my $calc = ('openprint::Estimating::'.$project_type)->can('calc');
-					openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_index, $project_type ) if $calc;
+					openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $services{''}[0], $project_type ) if $calc;
           $calc = ('openprint::Estimating::'.$project_type)->can('calculate_signatures');
           $calc->($Project) if $calc;
 				} # end if
