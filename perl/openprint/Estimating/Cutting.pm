@@ -660,6 +660,18 @@ sub signature_calc {
         my $liftDepth = $Equipment->specification('Maximum Lift Depth', $calliper);
         my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
         $sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
+        if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
+          my $overs = 0;
+          if ( $$Spec{units} eq 'Sheets' ) {
+            $overs = int($$Spec{value});
+          } elsif ( $$Spec{units} eq 'percent' ) {
+            $overs = int($sheets * $$Spec{value});
+          } else {
+            $openprint::log->error("Invalid units on Cutting Overs $$Spec{units}");
+          } # end if
+          $results{Breakdown} .= $sheets.'sheets + '.$overs.' overs = '.($sheets+$overs).'<br/>';
+          $sheets += $overs;
+        } # end if
         my $piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
         $results{Breakdown} .= '# of pre-folding cuts: ' . $folding_cuts . ' => ' .($folding_cuts * $sheets) . '<br/>';
         my %price;
@@ -795,11 +807,16 @@ EQUIPMENT: foreach my $Equipment ( @my_equipment ) {
     $sheets *= $$sig_specs{'PageQuantity'.$qty_index} if ($$sig_specs{txtSignatureType} and ($$sig_specs{txtSignatureType} eq 'Pad Pages')) and $$sig_specs{'PageQuantity'.$qty_index};
 
     if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
+      my $overs = 0;
       if ( $$Spec{units} eq 'Sheets' ) {
-        $sheets += $$Spec{value};
+        $overs = int($$Spec{value});
+      } elsif ( $$Spec{units} eq 'percent' ) {
+        $overs = int($sheets * $$Spec{value});
 			} else {
 				$openprint::log->error("Invalid units on Cutting Overs $$Spec{units}");
       } # end if
+      $sheets += $overs;
+      $results{overs} = $overs;
     } # end if
 
     my ( $sheet_width, $sheet_height ) = ( $Paper->width(), $Paper->height() );
@@ -1258,12 +1275,6 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
   $results{Price}		= $bestPrice;
   $results{MPrice}	= ($bestM/$$specs{'txtQuantity'.$qty_index})*1000;
   $results{Equipment}	= $bestEquipment;
-  $results{Overs} = 0;
-  if ( $bestEquipment and ( my $Spec = $bestEquipment->Specification('Cutting Overs') ) ) {
-    if ( ( $$Spec{units} eq 'Sheets' ) and $$Spec{value}) {
-      $results{Overs} = $$Spec{value};
-    } # end if
-  } # end if
   return %results;
 } # end sub signature_calc
 
@@ -1309,7 +1320,7 @@ sub calc {
       my $form = $$sig_specs{SignatureIndex};
       $$specs{'hdnBreakdown'.$qty_index} .= join(' ', 'Signature: ', $form, ($$sig_specs{txtSignatureType}?$$sig_specs{txtSignatureType}:''), '<br/>');
       if ( ! ( $$sig_specs{'txtImposition'.$qty_index} and signature_needs($Project, $specs, $sig_specs, $qty_index) ) ) {
-        $$specs{'hdnBreakdown'.$qty_index} .= $$sig_specs{'txtImposition'.$qty_index} ? 'Not needed.' : 'No imposition.';
+        $$specs{'hdnBreakdown'.$qty_index} .= ($$sig_specs{'txtImposition'.$qty_index} ? 'Not needed.' : 'No imposition.').'<br/>';
         $$specs{"txtRegularCutPrice-$form-$qty_index"} = '';
         $$specs{"ddmEquipment-$form-$qty_index"}  = '';
         $$specs{"txtVerticalCuts-$form-$qty_index"} = '';
