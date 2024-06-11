@@ -209,7 +209,7 @@ $openprint::log->debug("Setting: $param{amount} " );
 			} elsif ( $param{mode} eq 'other' ) {
 				my $Changed = $Paper->clone();
 
-				foreach my $field ( 'score_required', 'gsm' ) {
+				foreach my $field ( 'digital', 'score_required', 'gsm' ) {
 						$Changed->$field( $param{$field} );
 				} # end foreach field
 				my @changes = $Paper->changes( $Changed );
