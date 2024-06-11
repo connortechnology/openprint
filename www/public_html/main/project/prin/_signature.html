@@ -7,6 +7,7 @@
 <? endif ( $$variable{'txtSignatureType'.$$variable{Signature}} eq 'Cover Pages' ) ?>
 
 <legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ? $$variable{'txtServiceDescription'.$$variable{Signature}} : ( $$variable{Signature} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
+<div class="PagesAndSizes">
 	<div class="leftColumn">
 		<ul>
 <?if($$variable{Project}->Type()->type() eq 'MultiPage' or $$variable{Project}->Type()->type() eq 'ScratchPads' ) ?>
@@ -88,7 +89,7 @@
 		<?include(_press_proof_approval.html)?>
 		</ul>
 	</div>
-	<br class="spacer"/>
+</div><!--PagesAndSies-->
 	<? echo (
 		my $html .= slurp_content( '/includes/main/proj/colours_coatings.html' );
 		$html .= slurp_content( '/includes/main/proj/bleeds_colourbars.html' );
