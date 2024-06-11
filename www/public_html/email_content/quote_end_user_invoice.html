@@ -3,8 +3,10 @@
 	<style><?include('/css/quote.css')?></style>
 	<div class="Header">
 		<?include('/includes/quote_header.html')?>
+    <div class="PreparedByFor">
 		<?include('/includes/quote_prepared_by.html')?>
 		<?include('/includes/quote_prepared_for.html')?>
+    </div>
     <? if ( $$variable{Quote}->comments() ) ?>
     <div class="comments"><fieldset><legend>Comments</legend>
         <? echo ( $$variable{Quote}->comments() ) ?>
