@@ -136,7 +136,7 @@ sub signature_needs {
       #} else {
         my @folding_impositions = openprint::Estimating::Folding::get_Folds( $folding_specs, $sig_specs, $qty_index );
         #}
-      if (@folding_impositions>1 or $folding_impositions[0]->quantity() > 1) {
+      if (@folding_impositions>1 or (@folding_impositions==1 and $folding_impositions[0]->quantity() > 1)) {
         return 1;
       }
     } # end if
