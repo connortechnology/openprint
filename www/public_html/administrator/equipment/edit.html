@@ -175,10 +175,12 @@
 		</div>
 	</fieldset>
 <? if ( $$variable{Equipment}->id() ) ?>
+<div id="ServicePrices">
   <fieldset><legend>Service Prices <span id="toggle_service_prices" on_click="toggle_service_prices">+</span></legend>
     <div id="show_service_prices"><?echo($session{$r->uri().'?show_service_prices'} ? include('_service_prices.html') : '' )?></div>
   </fieldset>
 	<fieldset><legend>Specifications <span on_click="toggle_specifications">+</span></legend>
+</div><!--ServicePrices-->
 <div id="show_specifications">
 		Changes made below take effect immediately.<br/>
 		<table id="specifications" class="List sortable">
