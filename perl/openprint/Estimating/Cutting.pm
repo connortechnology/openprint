@@ -151,7 +151,7 @@ sub signature_needs {
   } # end foreach qty_index
 
   if ( $$services{NoBindery} ) {
-    $openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ") if DEBUG;
+    $openprint::log->debug(' ** Project is marked as No bindery, Cutting not needed ! ** ') if DEBUG;
     return 0;
   } # end if
 
@@ -177,7 +177,7 @@ sub signature_needs_bindery_cutting {
 		return 0;
 	} # end if
 
-	# Pretty much always need final trim, except DirCutting
+	# Pretty much always need final trim, except DieCutting
 	return 1;
 	if ( $$sig_specs{'txtImposition'.$qty_index} > 1 ) {
 		$openprint::log->debug("Imposition > 1, Cutting needed ! ** ") if DEBUG;
@@ -1429,7 +1429,8 @@ sub display {
   my $Project = new openprint::Project( $project_index );
   my $services = $Project->services();
 
-  @{$$variable{StockCutEquipmentArray}} = map { $_->id(), $_->name() } openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
+  @{$$variable{StockCutEquipmentArray}} = map { $_->id(), $_->name() } openprint::Equipment->find(
+    Specifications => {'Cutting Capable'=>'Y'}, useinestimating=>1, order=>'lower(strName)');
 
   my @capabilities = ('Y','When Printing','When Folding');
   if ( $$services{SaddleStitching} or $$services{LoopStitching} ) {
@@ -1442,9 +1443,10 @@ sub display {
     push @capabilities, 'Large Format';
   } # end if
 
-  $$variable{EquipmentArray} = [ map { $_->id(), $_->name() } openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'lower(strName)') ];
-  $$variable{PreFoldingEquipmentArray} = [ map { $_->id(), $_->name() } openprint::Equipment->find( Specifications => {'Cutting Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'lower(strName)') ];
-
+  $$variable{EquipmentArray} = [ map { $_->id(), $_->name() } openprint::Equipment->find(
+      Specifications => {'Cutting Capable'=>\@capabilities}, useinestimating=>1, order=>'lower(strName)') ];
+  $$variable{PreFoldingEquipmentArray} = [ map { $_->id(), $_->name() } openprint::Equipment->find(
+      Specifications => {'Cutting Capable'=>['Y','When Printing']}, useinestimating=>1, order=>'lower(strName)') ];
 
   @{$$variable{CuttingGroups}} = ();
 
