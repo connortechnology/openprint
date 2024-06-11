@@ -588,16 +588,13 @@ sub signature_calc {
 	my $Breakdown;
 	my $bestImpositions;
 
-	if (DEBUG) {
-		$SignatureImposition->display('Signature Imposition:');
-	} # end if
+	$SignatureImposition->display('Signature Imposition:') if DEBUG;
 
 	my $perforating = 0;
 	$perforating = openprint::Estimating::Perforating::signature_has_perforation($$calc_hash{PerforatingSpecs}, $sig_specs) if $$calc_hash{PerforatingSpecs};
 	my $scoring_signature_needs = openprint::Estimating::Scoring::signature_needs( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $Paper ) if $$calc_hash{ScoringSpecs};
 
 	my @my_equipment;
-
 	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) ) {
 		#$openprint::log->debug("Overriding Folding Equipment for sig $form to " . $$specs{"ddmEquipment-$form-$qty_index"});
 		if ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
@@ -615,8 +612,8 @@ sub signature_calc {
 			} else {
 				@my_equipment = @equipment;
 			} # end if
-		} elsif ( DEBUG ) {
-			$openprint::log->debug('No sheeter');
+		} else {
+			$openprint::log->debug('No sheeter') if DEBUG;
 			@my_equipment = @equipment;
 		} # end if
 
