@@ -157,6 +157,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
       $$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $equipment->name().':<br/>';
 
       my %price = (
+        equipment => $equipment,
         quantity => $base_qty,
         total => 0,
         mprice => 0,
@@ -277,6 +278,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 		} # end foreach equipment
 
     $$specs{'hdnBreakdown'.$qty_index} .= $bestPrice{breakdown};
+    $$specs{'ddmEquipment'.$qty_index} .= $bestPrice{equipment}->id();
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ($bestPrice{total}/$bestPrice{quantity}) * (1+$Project->markup()/100) );
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $bestPrice{mprice} *(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
