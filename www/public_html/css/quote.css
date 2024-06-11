@@ -18,24 +18,16 @@ div.Quote div.Header fieldset ul {
 }
 div.Quote div.Header fieldset ul li {
 	list-style: none;
-    text-align: left;
+  text-align: left;
 	width: auto;
 	padding: 0px;
 	margin: 0px;
 }
 div.Quote div.Header fieldset ul li label {
-    margin-right: 10px;
+  margin-right: 10px;
 	margin-left: 0px;
-    width: auto;
-    text-align: left;
-}
-div.Quote div.Header div#PreparedFor fieldset li label,
-div.Quote Div.Header div#PreparedBy fieldset li label {
-	display: none;
-}
-div.Quote div.Information div.Header div#PreparedFor fieldset li label,
-div.Quote div.Information Div.Header div#PreparedBy fieldset li label {
-	display: inline;
+  width: auto;
+  text-align: left;
 }
 div.Quote div.Information div.Header fieldset li {
 	text-align: right;
@@ -44,26 +36,24 @@ div.Quote div.Information div.Header fieldset li label {
 	text-align: left;
 }
 
-div.Quote div.Header div#Information {
+#Information {
 	width: 100%;
-	float: left;
 }
-div.Quote div.Header div#PreparedFor {
+.PreparedByFor {
+  margin: 4px 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+  
+#PreparedBy,
+#PreparedFor {
 	width: 50%;
-	float: right;
+  flex: 1;
 }
-div.Quote div.Header div#PreparedBy {
-	clear: both;
-	width: 50%;
-	float: left;
-}
-.Header:after {
-	content: ".";
-	display: block;
-	height: 0;
-	font-size: 0;
-	clear: both;
-	visibility: hidden;
+#PreparedBy fieldset,
+#PreparedFor fieldset {
+  height: 87%;
 }
 div#Information {
 	width: 100%;
