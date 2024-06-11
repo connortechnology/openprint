@@ -1023,41 +1023,45 @@ function set_today( e_y, e_m, e_d, e_h, e_min ) {
 } // end function set_today
 
 function clear_date(btn) {
-  const prefix=btn.getAttribute('prefix');
-  date_clear(
-      document.getElementById(prefix+'_year'),
+  const prefix = btn.getAttribute('data_prefix');
+  const year = document.getElementById(prefix+'_year');
+  if (!year) {
+    console.log('No element found for '+prefix+'_year');
+    return;
+  }
+  date_clear(year,
       document.getElementById(prefix+'_month'),
-      document.getElementById(prefix+'day'),
-      document.getElementById(prefix+'hour'),
-      document.getElementById(prefix+'minute')
+      document.getElementById(prefix+'_day'),
+      document.getElementById(prefix+'_hour'),
+      document.getElementById(prefix+'_minute')
       );
 }
 
 function date_clear( e_y, e_m, e_d, e_h, e_min ) {
-	let onchange=e_y.onchange;
-	e_y.onchange='';
+	let onchange = e_y.onchange;
+	e_y.onchange = '';
 	e_y.selectedIndex = 0;
-	e_y.onchange=onchange;
+	e_y.onchange = onchange;
 
-	onchange=e_m.onchange;
-	e_m.onchange='';
+	onchange = e_m.onchange;
+	e_m.onchange = '';
 	e_m.selectedIndex = 0;
-	e_m.onchange=onchange;
+	e_m.onchange = onchange;
 
-	onchange=e_d.onchange;
-	e_d.onchange='';
+	onchange = e_d.onchange;
+	e_d.onchange = '';
 	e_d.selectedIndex = 0;
-	e_d.onchange=onchange;
+	e_d.onchange = onchange;
 	//ddm_select_by_value( e_y, '' );
 	//ddm_select_by_value( e_m, '' );
 	//ddm_select_by_value( e_d, '' );
 	if ( e_h )
-	e_h.selectedIndex = 0;
+    e_h.selectedIndex = 0;
 		//ddm_select_by_value( e_h, '' );
 	if ( e_min )
-	e_min.selectedIndex = 0;
+    e_min.selectedIndex = 0;
 		//ddm_select_by_value( e_min, '' );
-	if (window[onchange]) window[onchange]();
+	if (onchange && window[onchange]) window[onchange]();
 } // end function date_clear
 
 function set_date( form, from, to ) {
