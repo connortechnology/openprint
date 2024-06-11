@@ -386,7 +386,7 @@ sub signature_calc_stock_cutting {
       my $price = 0;
       if ( $CuttingMakeReady ) {
         my %setup = $CuttingMakeReady->get_price( undef, $Equipment );
-        if ( $setup{units} eq 'per cut' ) {
+        if ($setup{units} and ($setup{units} eq 'per cut')) {
           my $cuts = $width_cuts + $height_cuts;
           %setup = $CuttingMakeReady->get_price( $cuts, $Equipment );
           $setup{Total} = $setup{Price} * $cuts;
@@ -591,7 +591,6 @@ sub signature_calc {
 
 # Take care of cutting before folding
   if ( @folding_impositions and $Folder and ( $$Folder{id} != $$Press{id} ) ) {
-
     $openprint::log->debug('Folding impositions: '.@folding_impositions) if DEBUG;
 
     my $folding_cuts = 0;
@@ -601,7 +600,7 @@ sub signature_calc {
 				($$specs{"OverrideFoldingCuts-$form-$qty_index"} eq 'Y')
 			 ) {
       $folding_cuts = $$specs{"FoldingCuts-$form-$qty_index"};
-    } else {
+    } elsif (@folding_impositions) {
       if ( ( @folding_impositions == 1 ) 
           and ( $folding_impositions[0]{imposition} == 1 )
           and ( ! $stitching_imposition )
@@ -612,6 +611,7 @@ sub signature_calc {
 				 ) {
         $trim_before_folding = 1;
       } else {
+        my $folder_type = $Folder->specification('Type') || '';
         if ( (@folding_impositions > 1) or ($folding_impositions[0]{quantity} > 1) ) {
 					$openprint::log->debug('Folds: '.@folding_impositions) if DEBUG;
 					# If we are stitching, final trim is done on stitcher, otherwise we might final trim before folding	
@@ -627,7 +627,7 @@ sub signature_calc {
 				} elsif (
 						($folding_impositions[0]{imposition} > $stitching_imposition)
 						and
-						($Folder->specification('Type') eq 'Stitcher')
+						($folder_type eq 'Stitcher')
 						) {
 					$folding_impositions[0]->display('Cutting impo before folding because the folder is a stitcher:');
 					$folding_cuts += $folding_impositions[0]{columns}-1;
@@ -681,7 +681,7 @@ sub signature_calc {
 					if ( !%setup ) {
 						$log->error('No Cutting Makeready for '.$$Equipment{strid});
 					} else {
-						if ( $setup{units} eq 'per cut' ) {
+						if ($setup{units} and ($setup{units} eq 'per cut')) {
 							%setup = $CuttingMakeReady->get_price($folding_cuts, $Equipment);
 							$setup{Total} = $setup{Price} * $folding_cuts;
 							$results{Breakdown} .= sprintf('Make Ready: $%1$.2f%2$s * %4$d cuts = $%3$.2f<br/>',
@@ -1233,7 +1233,7 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
         if ( !%setup ) {
           $log->error("No Cutting Makeready for $$Equipment{strid}");
         } else {
-          if (!$setup{units} or ($setup{units} eq 'per cut')) {
+          if ($setup{units} and ($setup{units} eq 'per cut')) {
             %setup = $CuttingMakeReady->get_price( $cuts, $Equipment );
             $setup{Total} = $setup{Price} * $cuts;
             $results{Breakdown} .= sprintf('Make Ready: $%1$.2f%2$s * %4$d cuts = $%3$.2f<br/>',
