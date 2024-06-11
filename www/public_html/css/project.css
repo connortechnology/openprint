@@ -309,17 +309,16 @@ table .Imp {
 #markup_edit input {
 	width: auto;
 }
-/*
 .Dimensions {
-	width: 50%;
-float: left;
+
 }
-*/
 .Dimensions .leftColumn {
 	width: 40%;
+min-width: 0;
 }
 .Dimensions .rightColumn {
 	width: 60%;
+min-width: 0;
 }
 .Project select {
     max-width: 100%;
