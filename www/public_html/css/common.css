@@ -49,9 +49,9 @@ select {
 	border-style: solid;
 	border-color: rgb(169, 169, 169);
     border-radius: 0px;
+  height: 32px;
 */
   line-height: 32px;
-  height: 32px;
 }
 option {
 	margin: 0;

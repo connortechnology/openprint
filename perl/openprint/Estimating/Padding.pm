@@ -246,17 +246,12 @@ sub calc {
         if ( $$Overs{units} eq 'sheets' ) {
           $overs = int($$Overs{value});
         } elsif ( $$Overs{units} eq 'percent' ) {
-          $overs = int($qty * $$Overs{value});
+          $overs = int($qty * $$Overs{value}/100);
         } else {
           $openprint::log->error("Invalid units on Padding Overs $$Overs{units} on $$equipment{name}");
         } # end if
         $qty += $overs;
-        $$specs{'hdnBreakdown'.$qty_index} .= $base_qty.'sheets + ';
-        if ($$Overs{units} eq 'percent' ) {
-          $$specs{'hdnBreakdown'.$qty_index} .= (100*$$Overs{value}).'% = '.$overs.' overs = '.($qty).'<br/>';
-        } else {
-          $$specs{'hdnBreakdown'.$qty_index} .= $$Overs{value}.$$Overs{units}.' = '.$overs.' overs = '.($qty).'<br/>';
-        }
+        $$specs{'hdnBreakdown'.$qty_index} .= $base_qty.'sheets + '.$$Overs{value}.$$Overs{units}.' = '.$overs.' overs = '.$qty.'<br/>';
       } # end if
 
       my $price = 0;
