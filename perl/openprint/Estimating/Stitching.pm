@@ -34,6 +34,7 @@ my %specifications = (
 	'Maximum Finished Height'	=>	{},
 	'Minimum Finished Width'	=>	{},
 	'Minimum Finished Height'	=>	{},
+  '(\w+) Overs' => { units => [ 'sheets', 'percent' ] },
 );
 my @possible_pages = ( 4, 6, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 );
 # This is an array of all the variables that need to be saved to the database for this service.
@@ -775,12 +776,20 @@ sub breakdown {
 	} # end if
 	$breakdown .= 'Number of passes: '. scalar(@{$price{Passes}}).'<br/>' if $price{Passes};
 	my $pass_count = 1;
+  if ($price{overs}) {
+    my $Overs = $price{Overs};
+    if ($$Overs{units} eq 'percent' ) {
+      $breakdown .= $price{base_quantity}.' + '.$$Overs{value}.'% = '.$price{overs}.' overs = '.$price{quantity}.'<br/>';
+    } else {
+      $breakdown .= $price{base_quantity}.' + '.$$Overs{value}.$$Overs{units}.' = '.$price{overs}.' overs = '.$price{quantity}.'<br/>';
+    }
+  }
 	foreach my $pass ( @{$price{Passes}} ) {
 		$breakdown .= 'Pass ' . $pass_count . ', ' . $$pass{Pockets} . ' pockets:<br/>';
 		$breakdown .= sprintf(
 				'&nbsp;Estimated MR Time %.2f + Run Time: %s@/%dHr = %s hours = %s total hours<br/>',
 				Math::Round::nearest(0.1, $$pass{PocketMakeReadyTime}),
-				$$results{quantity}, $$pass{Runspeed},
+				$price{quantity}, $$pass{Runspeed},
 				Math::Round::nearest(0.01, $$pass{RunTime}),
 				Math::Round::nearest(0.01, $$pass{PocketMakeReadyTime} + $$pass{RunTime}),
 				);
@@ -941,6 +950,21 @@ sub get_price {
 			);
 
 	my $qty = $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantity'.$qty_index} : $Project->quantity($qty_index);
+  $price{base_quantity} = $qty;
+  if ( my $Overs = $Equipment->Specification('Stitching Overs') ) {
+    my $overs = 0;
+    if ( $$Overs{units} eq 'sheets' ) {
+      $overs = int($$Overs{value});
+    } elsif ( $$Overs{units} eq 'percent' ) {
+      $overs = int($qty * $$Overs{value}/100);
+    } else {
+      $openprint::log->error("Invalid units on Padding Overs $$Overs{units} on $$Equipment{name}");
+    } # end if
+    $qty += $overs;
+    $price{overs} = $overs;
+    $price{Overs} = $Overs;
+    $price{quantity} = $qty;
+  } # end if
 
 	my $service_name = $$ServiceType{name}.$price{Imposition}.'out';
 

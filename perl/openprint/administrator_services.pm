@@ -238,7 +238,7 @@ sub _list {
 
   if ($param{btnFunction} eq 'delete') {
     my @ids = ref $param{service_id} eq 'ARRAY' ? @{$param{service_id}} : ($param{service_id});
-    foreach my $service ( openprint::Service->find(id=>\@ids) ) {
+    foreach my $service ( openprint::Service->find(id=>\@ids, deleted=>[0,1]) ) {
       if ($service->deleted()) {
         $variable{error} .= $service->destroy();
       } else {

@@ -73,10 +73,18 @@ sub delete {
 } # end sub delete
 
 sub prices {
-  my $self = shift;
-
-  return openprint::MaterialPrice->find(material_id=>$$self{id});
+  return Prices(@_);
 } # end sub prices
+
+sub Prices {
+  my $self = shift;
+  $$self{Prices} = shift if @_;
+  if (!$$self{Prices}) {
+    $$self{Prices} = [ openprint::MaterialPrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST', material_id=>$$self{id}) ];
+  }
+  return @{$$self{Prices}} if wantarray;
+  return $$self{Prices};
+}
 
 sub New_Specification {
   my ( $self, $name, $options ) = @_;
@@ -149,7 +157,7 @@ sub get_price {
   my ( $self, $quantity, $Equipment ) = @_;
 
   my $Pricelist = $openprint::Pricelist ? $openprint::Pricelist : openprint::Pricelist::get_current();
-  my %price = openprint::pricing::get_best_price_object( $session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{id} );
+  my %price = openprint::pricing::get_best_price_object( $session{company_id}, $$self{id}, $$Pricelist{id}, $self, $quantity, $$Equipment{id} );
   return if ! %price;
 
   $price{currency_id} = $Pricelist->currency_id();
@@ -164,7 +172,7 @@ sub get_Price {
   my ( $self, $quantity, $Equipment ) = @_;
 
   my $Pricelist = $openprint::Pricelist ? $openprint::Pricelist : openprint::Pricelist::get_current();
-  my %price = openprint::pricing::get_best_price_object( $session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{id} );
+  my %price = openprint::pricing::get_best_price_object( $session{company_id}, $$self{id}, $$Pricelist{id}, $self, $quantity, $$Equipment{id} );
   return if ! %price;
   my $price = \%price;
   bless $price, 'openprint::MaterialPrice';

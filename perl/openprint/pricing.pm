@@ -49,6 +49,7 @@ sub init_cache {
 	foreach my $Material ( @Materials ) {
 		$Material->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} : () } @Pricelists ] );
 	} # end foreach Material
+  $openprint::log->debug("Done picing::init_cahce");
 }
 
 sub get_pricelist_id {
@@ -179,7 +180,7 @@ sub split_by_equipment {
 
 #Memoize::memoize('get_best_prices');
 sub get_best_prices {
-	my ( $cust_id, $prod_index, $list_id, $Object, $equipment, $qty, $period ) = @_;
+	my ( $cust_id, $prod_index, $list_id, $Object, $equipment_id, $qty, $period ) = @_;
 
 	if ( ! $list_id ) {
 		my ( $caller, undef, $line ) = caller;
@@ -192,22 +193,35 @@ sub get_best_prices {
 
 	my @pricing = ();
 	my $price_type = ref $Object;
-	if ( $price_type and $price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}} ) {
-$log->debug("Using new style price caching" );
-		@pricing = @{$price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}};
+	if ($price_type) {
+    $log->debug('Using new style price caching' ) if DEBUG;
+    if ($price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}) {
+      @pricing = @{$price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}};
+    } else {
+      @pricing = $Object->Prices();
+    }
+    if ($equipment_id) {
+      $openprint::log->debug("Filtering by equipment id $equipment_id");
+      @pricing = map { ((!$$_{equipment_id}) or ($$_{equipment_id} == $equipment_id)) ? $_ : () } @pricing;
+    } else {
+      $openprint::log->debug("Not Filtering by equipment id $equipment_id") if DEBUG;
+    }
+    foreach my $p ( @pricing ) {
+      $$p{Price} = $$p{price};
+    }
 	} else {
 $log->warn("Request for old style price for $Object");
 #if ( $Object eq 'openprint::service_priceset' ) {
 #my $Service = new openprint::Service( $prod_index );
 #$log->warn("Loading price for $Object $prod_index $equipment $qty " . $Service->to_string() );
 #}
-		my $priceGroup = $Object->new( $log, $dbh, $list_id, $prod_index, $equipment, $qty, $period );
+		my $priceGroup = $Object->new( $log, $dbh, $list_id, $prod_index, $equipment_id, $qty, $period );
 		$priceGroup->load();	
 		push @pricing, @{$priceGroup->{prices}};
 	}
 if ( DEBUG ) {
 foreach my $p ( @pricing ) {
-$log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
+$log->debug("Price $$p{id} service_id:$$p{service_id} price $$p{price}/$$p{Price} interpolate:$$p{interpolate}; $$p{equipment_id}=?$equipment_id");
 }
 }
 
@@ -237,7 +251,6 @@ $log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
 			my $credit_card_fee = 1+$$Company{credit_card_fee}/100;
 
 			for ( my $index = 0; $index < @pricing; $index += 1 ) {
-
 # the if here is to preserve empty pricing.	if price is empty, we display call, instead of 0.00.
 				if ( $pricing[$index]->{Price} ne '' ) {
 					if ( $pricing[$index]->{Discountable} ne 'N' ) {
@@ -251,7 +264,7 @@ $log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
 	} # end if
 
 	my @prices;
-	if ( $equipment ) {
+	if ( $equipment_id ) {
 		@prices = build_lowest_price_list( @pricing );
 	} else {
 		my %lists = split_by_equipment( @pricing );

@@ -33,6 +33,7 @@ my %Specifications = (
   'Padding Capable' => { values=>['Y','N'] },
   'Padding MakeReadyTime' => { units => 'minutes' },
   'Padding Runspeed' => {},
+  'Padding Overs' => { units => ['sheets','percent']},
   'Maximum Calliper'  => {units=>'Inches'},
   'Maximum Sheet Length' => {units=>'Inches'},
   'Maximum Sheet Width' => {units=>'Inches'},
@@ -203,14 +204,13 @@ sub calc {
 		$$specs{'txtPrice'.$qty_index} = '';
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtQuantity$qty_index"};
-		my $qty = $$specs{"txtQuantity$qty_index"};
-		if ( ( $ProjectType->name() eq 'ScratchPads' ) and ( ! $$printing_specs{PageQuantity} ) ) {
-			#$qty /= int( $$specs{PageQuantity} );
-		} elsif ( ( $ProjectType->name() eq 'NCR' ) and ( ! $$printing_specs{PageQuantity} ) ) {
-			$qty *= int( $$specs{PageQuantity} );
-		} # end if
+    my $base_qty = $$specs{"txtQuantity$qty_index"};
+    if ( ( $ProjectType->name() eq 'ScratchPads' ) and ( ! $$printing_specs{PageQuantity} ) ) {
+      #$qty /= int( $$specs{PageQuantity} );
+    } elsif ( ( $ProjectType->name() eq 'NCR' ) and ( ! $$printing_specs{PageQuantity} ) ) {
+      $base_qty *= int( $$specs{PageQuantity} );
+    } # end if
 		$$specs{'hdnBreakdown'.$qty_index} .= "Minimum Charge: $minimumCharge<br/>";
-		$$specs{'hdnBreakdown'.$qty_index} .= "QTY $qty_index: $qty<br/>";
 
     my $best_price;
     my @equipment;
@@ -225,20 +225,34 @@ sub calc {
       my $max_width = $equipment->specification('Maximum Sheet Width') || 40;
       my $maximum_thickness =$equipment->specification('Maximum Calliper') || 4;
       if (0) {
-      my $max_imp = $equipment->specification('Maximum Padding Imposition');
+        my $max_imp = $equipment->specification('Maximum Padding Imposition');
 
-      my $padding_imposition = $max_imp == 1 ? 1
+        my $padding_imposition = $max_imp == 1 ? 1
         : $$printing_specs{txtFinalWidth} ? POSIX::floor($max_width / $$printing_specs{txtFinalWidth})
         : 0;
 
-      if ( $padding_imposition < 1) {
-        $$specs{'hdnBreakdown'.$qty_index} .= "Imposition $padding_imposition > Maximum $max_imp<br/>";
-        next;
-      } elsif ($calliper * $$specs{PageQuantity} > $maximum_thickness) {
-        $$specs{'hdnBreakdown'.$qty_index} .= "Too thick $calliper > $maximum_thickness<br/>";
-        next;
+        if ( $padding_imposition < 1) {
+          $$specs{'hdnBreakdown'.$qty_index} .= "Imposition $padding_imposition > Maximum $max_imp<br/>";
+          next;
+        } elsif ($calliper * $$specs{PageQuantity} > $maximum_thickness) {
+          $$specs{'hdnBreakdown'.$qty_index} .= "Too thick $calliper > $maximum_thickness<br/>";
+          next;
+        }
       }
-    }
+
+      my $qty = $base_qty;
+      if ( my $Overs = $equipment->Specification('Padding Overs') ) {
+        my $overs = 0;
+        if ( $$Overs{units} eq 'sheets' ) {
+          $overs = int($$Overs{value});
+        } elsif ( $$Overs{units} eq 'percent' ) {
+          $overs = int($qty * $$Overs{value}/100);
+        } else {
+          $openprint::log->error("Invalid units on Padding Overs $$Overs{units} on $$equipment{name}");
+        } # end if
+        $qty += $overs;
+        $$specs{'hdnBreakdown'.$qty_index} .= $base_qty.'sheets + '.$$Overs{value}.$$Overs{units}.' = '.$overs.' overs = '.$qty.'<br/>';
+      } # end if
 
       my $price = 0;
 
@@ -326,7 +340,7 @@ sub calc {
     } # end foreach Equipment
 
 		$best_price = $minimumCharge if $best_price < $minimumCharge;
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $best_price/$qty ) * (1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $best_price/$base_qty ) * (1+$Project->markup()/100) );
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $best_price*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} else {

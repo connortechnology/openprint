@@ -688,7 +688,8 @@ table .Host {
 text-align: left;
 }
 
-select#ddmCustomer, select#company_id {
+select#ddmCustomer, select#company_id,
+select#supplier_id {
   width: calc(100% - 46px);
 }
 a.Today, a.Clear {

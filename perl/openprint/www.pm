@@ -148,16 +148,16 @@ sub handler {
 			$PageSetting = new openprint::Page_Setting() if ! $PageSetting;
 			$variable{PageSetting} = $PageSetting;
 
-# if not logged in, determine if they are allowed to see this page or not.
-			if ( ! $PageSetting->can_view() ) {
+      # determine if they are allowed to see this page or not.
+			if (!$PageSetting->can_view()) {
         openprint::login::save_destination();
-				$log->debug("No good, need login");
-				if ( $page =~ /^.*\/_/ ) {
+				$log->debug('No good, need login');
+				if ($page =~ /^.*\/_/) {
 					$r->content_type(q{text/javascript; charset=utf-8});
 					$r->print( q`window.location='/error/error_login.html';` );
 					return Apache2::Const::OK;
 				} else {
-					if ( $page =~ /employee/ ) {
+					if ($page =~ /employee/) {
 						$page = '/employee/account/login.html';
 					} else {
 						$page = '/error/error_login.html';
@@ -169,8 +169,11 @@ sub handler {
 			} # end if
 		} # end if
 
-		foreach my $o ( split(',',$config{Cached_Objects} ) ) {
-			('openprint::'.$o)->init_cache();
+		openprint::pricing::init_cache();
+		foreach my $o ( split(',', $config{Cached_Objects} ) ) {
+      eval {
+        ('openprint::'.$o)->init_cache();
+      };
 		} # end foreach
 
 		# Just does timeout

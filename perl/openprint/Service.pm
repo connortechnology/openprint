@@ -138,7 +138,8 @@ sub destroy {
 	sql::execute(undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id});
 	$self->SUPER::destroy();
 	sql::end_transaction($dbh, $ac);
-	return $dbh->errstr();
+	return $dbh->errstr() if $dbh->errstr();
+  return '';
 } # end sub delete
 
 sub prices {
@@ -157,6 +158,16 @@ sub get_Price {
   return undef;
 } # end sub get_Price
 
+sub Prices {
+  my $self = shift;
+  $$self{Prices} = shift if @_;
+  if (!$$self{Prices}) {
+    $$self{Prices} = [ openprint::ServicePrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST', service_id=>$$self{id}) ];
+  }
+  return @{$$self{Prices}} if wantarray;
+  return $$self{Prices};
+}
+
 sub get_price {
   my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
   if (! $$self{id}) {
@@ -165,7 +176,7 @@ sub get_price {
     return ;
   }
 
-	if ( ! $period ) {
+	if (!$period) {
 		$period = 'NOW()';
 		if ( $debug ) {
 			$log->debug("No period specified defaulting to $period");
@@ -174,7 +185,7 @@ sub get_price {
 
 	$Pricelist = $openprint::Pricelist if ! $Pricelist;
   my %price = openprint::pricing::get_best_price_object(
-			$openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
+			$openprint::session{company_id}, $$self{id}, $$Pricelist{id}, $self, $quantity, $$Equipment{id}, $period );
 
 	if (!%price) {
     $price{ServiceName} = $$self{name};

@@ -90,12 +90,13 @@ sub new {
 	my $sub_cache = $cache{$config{db_name}}{$parent};
 #$log->debug("New parent:$parent id:$id data:$data ref:$ref");
 
-	if ( ! $ref ) {
-		if ( $id and (!$dont_cache) and $$sub_cache{$id} ) {
+	if (!$ref) {
+		if ($id and (!$dont_cache) and $$sub_cache{$id}) {
 			if ( $data ) {
 				my $self = $$sub_cache{$id};
 				# The reason to use load is if we have overriden it in the object, like in Paper
         # 2022-04-21 had commented it out for some reason. Probably performance, but we need it if we are using find()
+        #$openprint::log->debug("New:loading for $id $$data{id} ($data)");
         $self->load($data);
         #$log->debug("Loading object $parent $id from cache and populating with data new objcet is $self old cache is " . $$sub_cache{$id}) if DEBUG_CACHE;
 				return $self;
@@ -112,13 +113,14 @@ sub new {
 #$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
 				#$self->load( $data );
 			#} # end if
-			$log->debug("not cached from $caller:$line no ref, $parent id: $id, dont_cache: ".(defined($dont_cache)?$dont_cache:'undef').' sub '.$sub_cache.' '.$$sub_cache{$id}) if $id;
+			$log->debug("not cached from $caller:$line no ref, $parent id: $id, dont_cache: ".(defined($dont_cache)?$dont_cache:'undef').' sub '.$sub_cache.' '.$$sub_cache{$id} . ' data '.$data) if $id;
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
 		bless $self, $parent;
 
 if ( 1 ) {
+  # Refresh contents from data or db
 	if ( ( $$self{id} = $id ) or $data ) {
 		#if ( $debug or DEBUG_ALL ) {
 			#my ( $caller, undef, $line ) = caller;
@@ -171,7 +173,7 @@ sub load {
 	$debug = DEBUG_ALL if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 	if ( ! $data ) {
-#$log->debug("Object::load Loading from db $type");
+$log->debug("Object::load Loading from db $type");
 		my $table = ${$type.'::table'};
 		if ( ! $table ) {
 			$log->error( 'NO table for type ' . $type );

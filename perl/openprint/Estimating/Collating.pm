@@ -22,6 +22,32 @@ require openprint::service;
 require openprint::Project;
 require openprint::Estimating::Folding;
 
+my %Specifications = (
+  'Collating Capable' => {values=>['Y', 'N']},
+  'Run Speed' => { },
+  '(\w+) ?Overs' => { units => [ 'sheets', 'percent' ] },
+);
+
+# Stripping tends to be a manual process.  There are tools to help...
+my %ServicePrices = (
+  CollatingMinimumCharge => {},
+  'CollatingMakeReady' => { units => [ 'per hour' ] },
+  'CollatingPocketMakeReady' => { units => [ 'per hour' ] },
+  'Collating' => { units=> ['per hour', 'per lb','per m']},
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
+
 my @variables = (
 	'alert',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
@@ -159,7 +185,7 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 		$$specs{"txtQuantity$qty_index"} = int( $$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 
-		my $qty = $$specs{"txtQuantity$qty_index"} * $$specs{'txtSignatureCount'.$qty_index};
+		my $base_qty = $$specs{"txtQuantity$qty_index"} * $$specs{'txtSignatureCount'.$qty_index};
 
 		my @equipment = ();
 		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
@@ -175,6 +201,7 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 				MakeReady	=> 0,
 				Equipment	=> $Equipment,
 				Total		=> 0,
+        quantity => $base_qty,
 			);
 			if ( $Equipment->specification('Collating Capable') eq 'When Printing' ) {
 				# All signatures must be printed on the same machine
@@ -194,6 +221,24 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 				} # end if
 			} # end if
 
+      my $qty = $base_qty;
+      if ( my $Overs = $Equipment->Specification('Collating Overs') ) {
+        my $overs = 0;
+        if ( $$Overs{units} eq 'sheets' ) {
+          $overs = int($$Overs{value});
+        } elsif ( $$Overs{units} eq 'percent' ) {
+          $overs = int($qty * $$Overs{value}/100);
+        } else {
+          $openprint::log->error("Invalid units on $$Overs{name} $$Overs{units} on $$Equipment{name}");
+        } # end if
+        $qty += $overs;
+        $price{overs} = $overs;
+        $price{Overs} = $Overs;
+        $price{quantity} = $qty;
+        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Base quantity %d + %d%s = %d overs = %d<br/>',
+          $base_qty, $$Overs{value}, $$Overs{units}, $overs, $qty);
+      } # end if
+
 			my %MakeReadyPrice = $CollatingMakeReady->get_price( undef, $Equipment ) if $CollatingMakeReady;
 			$price{MakeReady} = $MakeReadyPrice{Price};
       $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Make Ready: $%.2f<br/>', $price{MakeReady});
@@ -205,10 +250,13 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
       }
 
 			my %servicePrice = $Collating->get_price( $$specs{'txtSignatureCount'.$qty_index}, $Equipment ) if $Collating;
-			if ( $servicePrice{units} and sets::isin( $servicePrice{units}, 'per m', 'per 1000' )  ) {
+			if (!$servicePrice{units}) {
+				$$specs{alert} .= 'No units in service price.<br/>';
+        $price{Service} = $servicePrice{Total} = 1000000;
+      } elsif (sets::isin( $servicePrice{units}, 'per m', 'per 1000')) {
 				$price{Service} = $qty*$servicePrice{Price}/1000; # Service Price for Collating is per 1000
         $price{MPrice} = $price{Service};
-      } elsif ( $servicePrice{units} and $servicePrice{units} eq 'per hour'  ) {
+      } elsif ($servicePrice{units} eq 'per hour') {
         my $runspeed = $Equipment->Specification('Run Speed');
         if ($runspeed) {
           if (lc $$runspeed{units} eq 'per hour') {
