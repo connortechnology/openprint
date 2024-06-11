@@ -207,19 +207,24 @@ $openprint::log->debug("Setting: $param{amount} " );
 				$variable{error} .= $Paper->save();
 				$variable{ExternalRedirect} = '/administrator/stock/list.html';
 			} elsif ( $param{mode} eq 'other' ) {
-				my $Changed = $Paper->clone();
+				my %changes;
 
-				foreach my $field ( 'score_required', 'gsm' ) {
-						$Changed->$field( $param{$field} );
+				foreach my $field ( 'digital', 'score_required', 'gsm' ) {
+            next if $param{$field} eq '';
+						$changes{$field} = $param{$field};
 				} # end foreach field
-				my @changes = $Paper->changes( $Changed );
+				my @changes = $Paper->changes( \%changes );
 
-				if ( @changes ) {
-					$Changed->save();
-					(new openprint::Log())->save({ Object=>$Paper, action=>'Edit', note=>join(',',@changes) } );
+				if (@changes) {
+					if ($_ = $Paper->save(\%changes)) {
+            $variable{error} .= $_;
+            $log->error($_);
+          } else {
+            (new openprint::Log())->save({ Object=>$Paper, action=>'Edit', note=>join(',', @changes) } );
+          }
 				}
 			} else {
-				$log->error("Unknown mode in apply changes");
+				$log->error('Unknown mode in apply changes');
 			} # end if
 			sql::end_transaction( $dbh, $ac );
 		} # end foreach Paper

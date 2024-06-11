@@ -157,22 +157,19 @@ sub signature_calc {
 	foreach my $I ( @$Impositions ) {
 		$I->display('In PerfectBi:') if DEBUG;
 		my $sig_specs = $$I{specs};
-				next if $$sig_specs{txtSignatureType} eq 'Cover Pages';
+    next if $$sig_specs{txtSignatureType} eq 'Cover Pages';
 		my $form = $$sig_specs{SignatureIndex};
 #$printed_impositions{$$I{imposition}} = !undef;
 		if ( ! $$I{Folds} ) {
-			$openprint::log->error("No folds in imposition, generating");
-      if ( DEBUG ) {
-			$I->display("No Folds");
-      }
+			$openprint::log->error('No folds in imposition, generating');
+			$I->display('No Folds') if DEBUG;
 			$$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index, $Project ) ] if $folding_specs;
 		} # end if
 
 		if ( ! ( $$I{Folds} and @{$$I{Folds}} ) ) {
-			$openprint::log->error("No folds in imposition, guess 1") if DEBUG;
-			$I->display("No Folds") if DEBUG;
+			$openprint::log->error('No folds in imposition, guess 1') if DEBUG;
 			$$specs{'txtSignatureQty'.$I->pages().'Page-'.$qty_index} += 1;
-			$$specs{"txtPockets$qty_index"} += 1;
+			$pockets += 1;
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 		} else {
 			foreach my $FI ( @{$$I{Folds}} ) {

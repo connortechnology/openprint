@@ -4,8 +4,10 @@
 	<div class="Header">
 		<h1>Quote <?echo($$variable{Quote}->id())?></h1>
 		<?include('/includes/quote_header.html')?>
+    <div class="PreparedByFor">
 		<?include('/includes/quote_prepared_by.html')?>
 		<?include('/includes/quote_prepared_for.html')?>
+    </div>
 	</div>
 <? if ( $$variable{Quote}->Quoted_Projects() ) ?>
 	<table class="List">
