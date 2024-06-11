@@ -669,7 +669,7 @@ sub signature_calc {
           } else {
             $openprint::log->error("Invalid units on Cutting Overs $$Spec{units}");
           } # end if
-          $results{Breakdown} .= $sheets.'sheets + '.$$spec{value}.$$Spec{units}.' = '.$overs.' total = '.($sheets+$overs).'<br/>';
+          $results{Breakdown} .= $sheets.'sheets + '.$$Spec{value}.$$Spec{units}.' = '.$overs.' total = '.($sheets+$overs).'<br/>';
           $sheets += $overs;
         } # end if
         my $piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
@@ -815,6 +815,7 @@ EQUIPMENT: foreach my $Equipment ( @my_equipment ) {
 			} else {
 				$openprint::log->error("Invalid units on Cutting Overs $$Spec{units}");
       } # end if
+          $results{Breakdown} .= $sheets.'sheets + '.$$Spec{value}.$$Spec{units}.' = '.$overs.' total = '.($sheets+$overs).'<br/>';
       $sheets += $overs;
       $results{overs} = $overs;
     } # end if
