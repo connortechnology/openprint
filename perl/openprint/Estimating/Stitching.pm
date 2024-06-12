@@ -41,7 +41,7 @@ my %Specifications = (
 my %ServicePrices = (
   StitchingMinimumCharge => {},
   'Stitching(.*)MakeReady' => { units => [ 'per hour' ] },
-  'Stitching' => { units=> ['per hour', 'per lb','per m']},
+  'Stitching' => { units=> ['per hour', 'per lb','per m', 'per job']},
 );
 
 sub ServicePriceConfiguration {
@@ -574,6 +574,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 		} # endif
 	} # while ! bestPrice and imposition
 
+  $results{alert} = $bestPrice{alert};
 	if ( $$bestPrice{Imposition} ) {
 #$results{alert} .= sprintf('%dout on %s %dpockets', $$bestPrice{Imposition},($bestEquipment ? $bestEquipment->strid() . ' ' . $bestEquipment->name() : '' ),$$specs{'txtPockets'.$qty_index} );
 		$results{Imposition} = $$bestPrice{Imposition};
@@ -1226,6 +1227,7 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 			$$servicePrice{quantity} = $qty;
 			$$servicePrice{Total} = $$servicePrice{Price} * $qty;
 		} else {
+      $price{alert} .= "Unknown Units: $$servicePrice{units} for $$ServiceType{name} on $$Equipment{strid}<br/>";
 			$openprint::log->debug("Unknown Units: $$servicePrice{units} for $$ServiceType{name} range($neededPockets) equipment($$Equipment{strid})");
 		} # end if
 		$price{Service} += $$servicePrice{Total}
