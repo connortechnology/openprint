@@ -2050,7 +2050,7 @@ $openprint::log->debug("Not needed for form $form") if DEBUG;
 				my $results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, \@Signature_Impositions, $calc_hash );
 			#$openprint::log->debug( Data::Dumper::Dumper($results) );
 				#my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, [ sets::exclude( [ $Imposition ], \@Signature_Impositions ) ], $calc_hash );
-				$$specs{'hdnBreakdown'.$qty_index} .= $$results{Breakdown};
+				$$specs{'hdnBreakdown'.$qty_index} .= $$results{Breakdown} if $$results{Breakdown};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>MR Waste: %d, Run Waste: %d<br/>', @$results{'MakeReadyOvers','RunOvers'} );
 				$$specs{"Price-$form-$qty_index"} = $$results{Price};
 				$price += $$results{Price} if $$results{Price};
