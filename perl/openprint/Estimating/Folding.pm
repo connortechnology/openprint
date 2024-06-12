@@ -33,7 +33,7 @@ require openprint::ServiceType;
 use openprint::Imposition;
 require openprint::Estimating::Perforating;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my %ServicePrices = (
@@ -826,7 +826,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	} # end if have pages
 
 	if ( $override_folds ) {
-		$openprint::log->error("Checking for Overriden folds") if DEBUG;
+		$openprint::log->error('Checking for Overriden folds') if DEBUG;
 
 		if ( $$sig_specs{txtSignatureType} ) {
 			my $override_pages = 0;
@@ -879,11 +879,12 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 					} elsif ( $$specs{rdbTemplateType} and $fold_types{$$specs{rdbTemplateType}} and ( $$specs{"FoldType-$form-$qty_index-$index"} ne $$specs{rdbTemplateType} ) ) {
 #$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$specs{rdbTemplateType}`) if DEBUG;
 						next;
-					} elsif ( $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity} ) {
-#$openprint::log->debug(qq`Wrong qty: $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity}`) if DEBUG;
-						next;
 					} elsif ( $$specs{"FoldImposition-$form-$qty_index-$index"} != $$FI{imposition} ) {
 #$openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_index-$index"} != $$FI{imposition}`) if DEBUG;
+						next;
+					} elsif ( $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity} ) {
+            $$specs{alert} .= 'Found a fold that matched but maybe the quantity of folds is wrong. Should it be '.$$FI{quantity}.'?<br/>';
+#$openprint::log->debug(qq`Wrong qty: $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity}`) if DEBUG;
 						next;
 					} # end if
 #$FI->display("Found") if DEBUG;
