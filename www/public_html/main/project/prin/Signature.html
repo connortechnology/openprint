@@ -26,9 +26,9 @@
 			<?include(/includes/main/proj/templates/signature_template_select.html)?>
 			<?include(/includes/main/proj/templates/signatures.html)?>
 		<? endif ( $$variable{txtSignatureType} eq 'Cover Pages' or $$variable{txtSignatureType} eq 'Gate Folded Pages' ) ?>
-<div class="PagesAndSizes">
 		<fieldset><legend><? echo ( $$variable{Project}->Type()->description() ) ?> <?txtSignatureType?></legend>
 			<? if ( $$variable{txtSignatureType} ) ?>
+<div class="PagesAndSizes">
       <div class="<? echo ( my $type = $$variable{txtSignatureType}; $type =~ s/\s//g; return $type; ) ?>">
 				<ul>
 					<li class="Description">
