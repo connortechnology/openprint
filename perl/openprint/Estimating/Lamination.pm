@@ -174,6 +174,8 @@ sub calc {
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 
+	$$specs{Status} = 'calculated';
+
 	# So we can do multiple items at once, as many as will fit in the width of the laminator.
   # We need a certain amount of space between the items.  I suspect that this should be an 
   # input, not a fixed value, but for now we will make it fixed.
@@ -191,7 +193,7 @@ sub calc {
 		my $qty = int $$specs{"txtQuantity$qty_index"};
 		next if ! $qty;
 
-		my %bestPrice = (Price=>0);
+		my %bestPrice;
 		my @equipment = ();
 		if ($$specs{"chkOverrideEquipment$qty_index"} and ($$specs{"chkOverrideEquipment$qty_index"} eq 'Y' and $$specs{"ddmEquipment$qty_index"})) {
 			@equipment = openprint::Equipment->find(id=> $$specs{"ddmEquipment$qty_index"} );
@@ -409,10 +411,14 @@ sub calc {
 			} # end if
 		} # end foreach equipment
 
-		if ( %bestPrice and ($bestPrice{Price} < $MinimumCharge{Price})) {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>Using minimum charge: $%.2f<br/>', $MinimumCharge{Price} );
-			$bestPrice{Price} = $MinimumCharge{Price};
-		} # end if
+		if (%bestPrice) {
+      if ($bestPrice{Price} < $MinimumCharge{Price}) {
+        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>Using minimum charge: $%.2f<br/>', $MinimumCharge{Price} );
+        $bestPrice{Price} = $MinimumCharge{Price};
+      } # endif
+    } else {
+      $$specs{Status} = 'uncalculated';
+    } # end if
 
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment}->id() if $bestPrice{Equipment};
 		if ((!$$specs{"OverridePrice$qty_index"}) or ( $$specs{"OverridePrice$qty_index"} ne 'Y')) {
@@ -436,7 +442,7 @@ sub calc {
     $bestPrice{MPrice} *= (1+$Project->markup()/100) if $Project->markup();
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $bestPrice{MPrice} );
 	} # end foreach qty_index
-	return $$specs{Status} = 'calculated';
+	return $$specs{Status};
 } # end sub calc
 
 sub display {
