@@ -10,6 +10,14 @@
 	float: none;
 	width: auto;
 }
+.PagesAndSizes {
+  display: flex;
+  align-items: stretch;
+
+}
+.PagesAndSizes > div {
+  flex: 1;
+}
 
 .SignatureGroup .leftColumn ,
 .SignatureGroup .rightColumn {
@@ -61,6 +69,7 @@ content: "";
 .SpecialColour {
 	margin: 5px 0px;
 	padding-left: 165px;
+  clear: both;
 }
 .SpotColours:after,
 .ProcessColours:after {

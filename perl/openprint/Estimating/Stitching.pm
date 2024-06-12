@@ -26,7 +26,7 @@ require openprint::Project;
 
 my %Services;
 
-my %specifications = (
+my %Specifications = (
 	'Maximum Calliper'	=> {},
 	'Units Per Hour( \d out)'	=>	{},
 	'Maximum Pieces'	=>	{},
@@ -36,6 +36,26 @@ my %specifications = (
 	'Minimum Finished Height'	=>	{},
   '(\w+) Overs' => { units => [ 'sheets', 'percent' ] },
 );
+
+# Stripping tends to be a manual process.  There are tools to help...
+my %ServicePrices = (
+  StitchingMinimumCharge => {},
+  'Stitching(.*)MakeReady' => { units => [ 'per hour' ] },
+  'Stitching' => { units=> ['per hour', 'per lb','per m', 'per job']},
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
+
 my @possible_pages = ( 4, 6, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 );
 # This is an array of all the variables that need to be saved to the database for this service.
 my %variables = (
@@ -554,6 +574,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 		} # endif
 	} # while ! bestPrice and imposition
 
+  $results{alert} = $$bestPrice{alert};
 	if ( $$bestPrice{Imposition} ) {
 #$results{alert} .= sprintf('%dout on %s %dpockets', $$bestPrice{Imposition},($bestEquipment ? $bestEquipment->strid() . ' ' . $bestEquipment->name() : '' ),$$specs{'txtPockets'.$qty_index} );
 		$results{Imposition} = $$bestPrice{Imposition};
@@ -1196,19 +1217,22 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 	foreach my $pass ( @{$price{Passes}} ) {
 		my $servicePrice = $$pass{ServicePrice};
 
-		if ( $$servicePrice{units} eq 'per m' or $$servicePrice{units} eq 'per 1000' ) {
-			$$servicePrice{quantity} = $qty/1000;
-			$$servicePrice{Total} = $$servicePrice{Price} * $qty/1000;
-		} elsif ( $$servicePrice{units} eq 'per hour' ) {
-			$$servicePrice{quantity} = $$pass{RunTime};
-			$$servicePrice{Total} = $$servicePrice{Price} * $$pass{RunTime};
-		} elsif ( $$servicePrice{units} eq 'each' ) {
-			$$servicePrice{quantity} = $qty;
-			$$servicePrice{Total} = $$servicePrice{Price} * $qty;
-		} else {
-			$openprint::log->debug("Unknown Units: $$servicePrice{units} for $$ServiceType{name} range($neededPockets) equipment($$Equipment{strid})");
-		} # end if
-		$price{Service} += $$servicePrice{Total}
+    if ($servicePrice) {
+      if ( $$servicePrice{units} eq 'per m' or $$servicePrice{units} eq 'per 1000' ) {
+        $$servicePrice{quantity} = $qty/1000;
+        $$servicePrice{Total} = $$servicePrice{Price} * $qty/1000;
+      } elsif ( $$servicePrice{units} eq 'per hour' ) {
+        $$servicePrice{quantity} = $$pass{RunTime};
+        $$servicePrice{Total} = $$servicePrice{Price} * $$pass{RunTime};
+      } elsif ( $$servicePrice{units} eq 'each' ) {
+        $$servicePrice{quantity} = $qty;
+        $$servicePrice{Total} = $$servicePrice{Price} * $qty;
+      } else {
+        $price{alert} .= "Unknown Units: $$servicePrice{units} for $$ServiceType{name} on $$Equipment{strid}<br/>";
+        $openprint::log->debug("Unknown Units: $$servicePrice{units} for $$ServiceType{name} range($neededPockets) equipment($$Equipment{strid})");
+      } # end if
+      $price{Service} += $$servicePrice{Total}
+    }
 	} # end foreach pass
 # FIXME
 	my @sigs;
@@ -1247,15 +1271,18 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 		}
 		$pass{RunTime} = $runtime;
 		$price{RunTime} += $runtime;
-		if ( $$servicePrice{units} eq 'per m' ) {
-			$$servicePrice{Total} = $$servicePrice{Price} * $qty/1000;
-		} elsif ( $$servicePrice{units} eq 'per hour' ) {
-			$$servicePrice{Total} = $$servicePrice{Price} * $runtime;
-		} else {
-			$openprint::log->error("Unknown Unit Type: $$servicePrice{units} for $$ServiceType{name} range(1) equipment($$Equipment{strid})");
-		} # end if
-		$pass{ServicePrice} = $servicePrice;
-		$price{Service} += $$servicePrice{Total};
+    if ($servicePrice) {
+      if ( $$servicePrice{units} eq 'per m' ) {
+        $$servicePrice{Total} = $$servicePrice{Price} * $qty/1000;
+      } elsif ( $$servicePrice{units} eq 'per hour' ) {
+        $$servicePrice{Total} = $$servicePrice{Price} * $runtime;
+      } else {
+        $price{alert} .= "Unknown Unit Type: $$servicePrice{units} for $$ServiceType{name} range(1) equipment($$Equipment{strid})<br/>";
+        $openprint::log->error("Unknown Unit Type: $$servicePrice{units} for $$ServiceType{name} range(1) equipment($$Equipment{strid})");
+      } # end if
+      $pass{ServicePrice} = $servicePrice;
+      $price{Service} += $$servicePrice{Total};
+    }
 
 		if ( $$specs{CoverFit} eq 'Flush' ) {
 			if ( my $BoardInsertService = openprint::Service->find_one(name=>$$ServiceType{name}.' Board Insertion') ) {
@@ -1333,7 +1360,7 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 		$price{'SpineLength Discount'} = '';
 	} # end if
 
-	$price{Price} = Math::Round::nearest(0.01,$price{MakeReadyTotal} + $price{Service} + $price{Insert});
+	$price{Price} = Math::Round::nearest(0.01, $price{MakeReadyTotal} + $price{Service} + $price{Insert});
 	$openprint::log->debug($price{Imposition} . 'out on ' .$$Equipment{name}.($price{'Imposition Discount'}?' Discount: ' . $price{'Imposition Discount'}:'') ) if DEBUG;
 	return \%price;
 } # end sub get_price

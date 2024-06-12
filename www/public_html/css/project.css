@@ -23,20 +23,12 @@
 .Project .Header .ProjectInformation ,
 .Project .Header .OrderInformation,
 .Project .Header .ContactInformation ,
+.Project .Header .Comments ,
+.Project .Header .Description ,
 .Project .Header .Reference {
   flex-grow: 1;
     width: 48%;
     height: 100%;
-}
-.Project .Header .Comments {
-    float: left;
-    width: 48%;
-	clear: both;
-}
-.Project .Header .Description {
-	clear: both;
-    float: right;
-    width: 48%;
 }
 .Project .Header .Comments li ,
 .Project .Header .Reference li ,

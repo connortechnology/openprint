@@ -225,7 +225,7 @@ sub Prices {
 sub save {
 	my ( $self, $hash ) = @_;
 
-	$self->set($hash ? $hash : {} );
+	$self->set($hash ? $hash : {});
 	
 	if ( $$self{group} and ! $$self{group_id} ) {
 		my $Group = openprint::StockGroup->find_one('name lc'=>lc openprint::StockGroup->transform( 'name', $$self{group} ) );
@@ -320,7 +320,7 @@ sub save {
 	$$self{height} = undef if $$self{type} eq 'Roll';
 	
 	my $error;
-	$error .= 'An owner must be selected.<br/>' if ! $$self{owner_id};
+	#$error .= 'An owner must be selected.<br/>' if ! $$self{owner_id};
 	# Why?
 	#$error .= 'A manufacturer must be selected.<br/>' if ! $$self{manufacturer_id};
 

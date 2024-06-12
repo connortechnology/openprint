@@ -1174,7 +1174,9 @@ sub hash_link {
 	my ( $path ) = @_;
 
 	my $src;
-	if ( -e $config{SkinPath}.$path ) {
+  if ( -e $path ) {
+    $src = $path;
+	} elsif ( -e $config{SkinPath}.$path ) {
 		$src = $config{SkinPath}.$path;
 	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
 		$src = $ENV{DOCUMENT_ROOT}.$path;
@@ -1303,16 +1305,16 @@ sub do_css_links {
     $css = join('_', @parts ) . '.css';
     #$log->debug("$css");
     if ( -e $config{SkinPath}.'/css/'.$css ) {
-      #$log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
-      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
+      #$log->debug("exist at " . $config{SkinPath}.'/css/'.$css);
+      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link($config{SkinPath}.'/css/'.$css).'"/>';
     } elsif ( Debug ) {
-      $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
+      $log->debug('Does not exist at ' . $config{SkinPath}.'/css/'.$css);
     } # end if
     if ( -e $ENV{DOCUMENT_ROOT}.'/css/'.$css ) {
       #$log->debug("xist at " . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
-      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/base_css/'.$css).'"/>';
+      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link($ENV{DOCUMENT_ROOT}.'/css/'.$css).'"/>';
     } elsif ( Debug ) {
-      $log->debug("Does not exist at " . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
+      $log->debug('Does not exist at ' . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
     }
     pop @parts;
   } # end while

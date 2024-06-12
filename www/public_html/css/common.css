@@ -261,11 +261,11 @@ input[type="checkbox"] {
 	margin: 2px;
 }
 .dialog table li {
-	padding-left: 80px;
+	padding-left: 140px;
 }
 .dialog table li label:not(.radio):not(.radio-inline) {
-	margin-left: -80px;
-	width: 75px;
+	margin-left: -140px;
+	width: 135px;
 }
 .dialog table input[type="text"]:not(.filter),
 .dialog table input[type="email"],
@@ -768,6 +768,7 @@ margin-right: .2rem;
 .bootstrap-table .fixed-table-container .table thead th .th-inner {
   padding: 0;
 }
-select, textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"], .uneditable-input, .control-group .input-prepend span, .control-group .input-append span {
+select,
+textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"], .uneditable-input, .control-group .input-prepend span, .control-group .input-append span {
   border-width: 1px;
 }
