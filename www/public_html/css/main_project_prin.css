@@ -10,6 +10,14 @@
 	float: none;
 	width: auto;
 }
+.PagesAndSizes {
+  display: flex;
+  align-items: stretch;
+
+}
+.PagesAndSizes > div {
+  flex: 1;
+}
 
 .SignatureGroup .leftColumn ,
 .SignatureGroup .rightColumn {
