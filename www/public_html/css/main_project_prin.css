@@ -61,6 +61,7 @@ content: "";
 .SpecialColour {
 	margin: 5px 0px;
 	padding-left: 165px;
+  clear: both;
 }
 .SpotColours:after,
 .ProcessColours:after {
