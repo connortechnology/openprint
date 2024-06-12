@@ -576,22 +576,29 @@ sub signature_calc {
 				if ( ! $Material ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'No material for aqueous found.<br/>';
 				} else {
+          my $area;
+          if ($$type{coverage}==100) {
+            $area = $imp->sheet_width()*$imp->sheet_height() * $run_qty;
+          } else {
+            $area = $imp->layout_area() * $run_qty;
+          }
+
 					%MaterialPrice = $Material->get_price( $run_qty, $Equipment );
 					if ( $MaterialPrice{units} eq 'per square inch' ) {
-						my $area = $imp->object_area() * $run_qty * ($$type{coverage}/100);
+						$area *= $$type{coverage}/100;
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $run_qty * $area;
 					} elsif ( $MaterialPrice{units} eq 'per square foot' ) {
-						my $area = $imp->object_area() * $run_qty * ($$type{coverage}/100) /144;
+						$area *= ($$type{coverage}/100) /144;
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $area;
 					} elsif ( $MaterialPrice{units} eq 'per 1000 square feet' ) {
-						my $area = $imp->object_area() * $run_qty * ($$type{coverage}/100) /144;
+						$area *= ($$type{coverage}/100) /144;
 # area is # of square feet
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $area/1000;
 					} elsif ( $MaterialPrice{units} eq 'per m' ) {
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $run_qty / 1000;
 					} elsif ( $MaterialPrice{units} eq 'per kg' ) {
 						my $coverage = $$type{coverage}/100;
-						my $area = $Imposition->object_area() * $run_qty * $coverage;
+						$area *= $coverage;
 			
 						$Inks{$type_name} = openprint::Ink->find_one(name=>$type_name) if ! exists $Inks{$type_name};
 						my $Ink = $Inks{$type_name};
@@ -606,8 +613,10 @@ sub signature_calc {
 								my $qty = Math::Round::nearest( 0.01, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
 								%MaterialPrice = $Material->get_price($qty, $Equipment);
 								$MaterialPrice{Total} += Math::Round::nearest(0.01, $MaterialPrice{Price} * $qty);
-								$MaterialPrice{Breakdown} = sprintf('Coverage %d%% = %d square inches, mileage: %dsquare inches/kg = %.2fkg * $%s%s=$%.2f',
-										$coverage*100, $area, $$Coverage{value}, $qty, @MaterialPrice{'Price','units','Total'});
+								$MaterialPrice{Breakdown} = sprintf('Coverage %d%% * %sx%s = %d square inches, mileage: %dsquare inches/kg = %.2fkg * $%s%s=$%.2f',
+										$coverage*100, 
+                    ($$type{coverage}==100?($imp->sheet_width(), $imp->sheet_height()) : ($imp->layout_width(), $imp->layout_height())),
+                    $area, $$Coverage{value}, $qty, @MaterialPrice{'Price','units','Total'});
 							} # end if coverage
 						} # end if ink
 
@@ -715,7 +724,8 @@ sub breakdown {
 		$breakdown .= sprintf(
 				'%s MakeReady: $%.2f<br/>Blanket Cut: $%.2f<br/>Service: ($%.2f%s*%d)=$%.2f<br/>Material: %s<br/>Total: $%.2f<br/>',
 			$type,
-			$$SetupPrice{Price}, $$BlanketCutPrice{Price},
+			$$SetupPrice{Price},
+      ($$BlanketCutPrice{Price} ? $$BlanketCutPrice{Price} : 0),
 			@$ServicePrice{'Price','units','Quantity','Total'},
 			$$MaterialPrice{Breakdown}, $colour_total );
 	} # end foreach aq type
