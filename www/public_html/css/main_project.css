@@ -91,26 +91,26 @@
     visibility: hidden;
 }
 
-.Service .templates p {
+.Service fieldset .templates li {
 	float: left;
 	width: 175px;
 	height: 180px;
 	text-align: center;
 	margin: 0 5px 10px 5px;
 	padding: 0;
-display: block;
+  display: block;
 }
-.Service .templates p label:not(.radio):not(.radio-inline) {
+.Service fieldset .templates li label:not(.radio):not(.radio-inline) {
   width: auto;
 	clear: none;
 	float: none;
 	margin: 0;
 	vertical-align: middle;
 }
-.Service .templates p label:after {
+.Service .templates li label:after {
 content: "";
 }
-.Service .templates p img {
+.Service .templates li img {
     clear: both;
     width: 130px;
     height: 130px;
