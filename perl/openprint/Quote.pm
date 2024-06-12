@@ -372,7 +372,7 @@ sub send {
 		$Email->attachments(undef);
   } else {
     if ( $self->Company()->reseller() eq 'Y' or sets::isin( $session{user_type}, ['A', 'E']) ) {
-      if ( $openprint::User->email_quotes_to_myself() ) {
+      if ( $openprint::User->email_quotes_to_myself() and ($$self{by_email} eq $openprint::User->email())) {
         $quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_body.html', \%quote );
         $Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
@@ -436,6 +436,7 @@ sub send {
           $Email->add_html_attachment( "Quote$$self{id}.html", $html );
         }
 
+$log->debug("Sending to ".$For_User->email());
         $results .= $Email->send(
             FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
             BCC		=>	'iconnor@connortechnology.com',
