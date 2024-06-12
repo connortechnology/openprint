@@ -218,3 +218,22 @@ svg.Imposition rect.sheet {
   padding: 0 1em;
   background-color: #FFFFFF;
 }
+#Versions {
+  width: 50%;
+  flex: 1;
+}
+#Versions .Id {
+  width: 30px;
+}
+#Versions table {
+  width: 100%;
+}
+#Versions .Description {
+  text-align: left;
+}
+#Versions .Quantity {
+  width: 100px;
+}
+#Versions input {
+  max-width: 100%;
+}
