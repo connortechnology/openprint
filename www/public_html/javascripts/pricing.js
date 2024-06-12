@@ -113,14 +113,14 @@ function add_price(btn) {
 
   const pricelist_id = btn.getAttribute('data_pricelist_id');
   const equipment_id = $j('#ddmEquipment-'+pricelist_id).val();
-  const content = '_prices_per_equipment';
+  const content = '_prices_per_equipment.html';
 
   let id;
   let url = '/administrator/services/'+content;
-  if (!(id = btn.getAttribute('data_service_id'))) {
-    id = btn.getAttribute('data_material_id');
+  if (id = btn.getAttribute('data_service_id')) {
     data.service_id = id;
   } else {
+    id = btn.getAttribute('data_material_id');
     url = '/administrator/materials/'+content;
     data.material_id = id;
   }
@@ -202,12 +202,12 @@ function add_new_price(btn) {
   };
   let id;
   let url = '/administrator/services/';
-  if (!(id = btn.getAttribute('data_service_id'))) {
+  if (id = btn.getAttribute('data_service_id')) {
+    data.service_id = id;
+  } else {
     id = btn.getAttribute('data_material_id');
     url = '/administrator/materials/';
     data.material_id = id;
-  } else {
-    data.service_id = id;
   }
 
   let prices = $j('#prices-'+pricelist_id+'-'+equipment_id+'-'+id);
