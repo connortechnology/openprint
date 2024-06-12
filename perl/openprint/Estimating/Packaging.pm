@@ -90,9 +90,9 @@ sub calc {
         return $$specs{Status} = 'uncalculated';
 	} # end if
 	if ( ! $$specs{rdbCardboardBacking} ) {
-        $$specs{alert} = 'Please select whether you need cardboard backing.';
-        return $$specs{Status} = 'uncalculated';
-    } # end if
+    $$specs{alert} = 'Please select whether you need cardboard backing.';
+    return $$specs{Status} = 'uncalculated';
+  } # end if
 
 	$$specs{bands_per_package} =~ s/[^\d\.]//g;
 	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
@@ -106,7 +106,8 @@ sub calc {
 			$log->error("No ServiceMinimum ");
 		} # end if
 	}
-	my $Cardboard = openprint::Material->find_one( name=>'CardboardBacking');
+	my $Cardboard = openprint::Material->find_one(name=>'CardboardBackingFor'.$ServiceType->name());
+  $Cardboard = openprint::Material->find_one(name=>'CardboardBacking') if ! $Cardboard;
 	my @Materials = openprint::Material->find( category=>$ServiceType->name() );
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -128,10 +129,10 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 				} # end if
 			} else {
 				# No versions?
-				$openprint::log->debug("No versions");
+				$openprint::log->debug('No versions');
 			} # end if
 		} else {
-			$openprint::log->debug("No signatnures");
+			$openprint::log->debug('No signatnures');
 		} # end if
 		my $package_qty = $$specs{txtItemsPerPackage} ? ceil( $qty/$$specs{txtItemsPerPackage} ) : 0;
 
@@ -158,7 +159,6 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 		$price = $unitPrice + $makeReady;
 
 		if ( $$specs{rdbCardboardBacking} eq 'Y' ) {
-
 			if ( $Cardboard ) {
 				my %CardboardPrice = $Cardboard->get_price( $package_qty, undef );
 				if ( $CardboardPrice{units} eq 'per square inch' ) {
@@ -167,6 +167,10 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 					$CardboardPrice{Total} = $CardboardPrice{Price} * ($$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight}/144);
 				} elsif ( $CardboardPrice{units} eq 'per pad' ) {
 					$CardboardPrice{Total} = $CardboardPrice{Price};
+				} elsif ( $CardboardPrice{units} eq 'each' ) {
+					$CardboardPrice{Total} = $CardboardPrice{Price};
+        } else {
+          $$specs{'hdnBreakdown'.$qty_index} .= '<span class="error">Unknown units on cardboard price ('.$CardboardPrice{units}.')<br/>';
 				} # end if
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%.2f %s * %s x %s = $%.2f per package = %.2f total<br/>',@CardboardPrice{'Price','units'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'}, $CardboardPrice{Total}, $CardboardPrice{Total}*$package_qty );
 				$price += $CardboardPrice{Total} * $package_qty;

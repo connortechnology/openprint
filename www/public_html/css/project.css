@@ -272,32 +272,7 @@ table.ProofsSummary .quantity, table.ProofsSummary .size {
 	width: 40%;
 	float: left;
 }
-table .Qty,
-table .Imp {
-	width: 20px;
-}
 
-.Folding table {
-	table-layout: auto;
-	width: auto;
-}
-.Folding table .Folds, 
-.Folding table .Angles {
-	width: 30px;
-}
-.Folding table .Speed {
-	width: 50px;
-}
-.Folding table input[type="text"],
-.Folding table input[type="number"] {
-	width: 100%;
-	box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;
-}
-.Folding table th {
-	font-size: x-small;
-}
 #markup_edit input {
 	width: auto;
 }

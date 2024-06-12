@@ -7827,13 +7827,20 @@ sub get_colour_description_no_coverage {
       next if ! $type;
       next if $$specs{"chkColourCoatingColour$index$side"} and ( $$specs{"chkColourCoatingColour$index$side"} eq 'None' );
       if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
-
-        push @front_coatings , $$specs{"ColourCoatingType$index$side"};
+        if ( $$specs{"ColourCoatingCoverage$index$side"} != 100) {
+          push @front_coatings, 'Spot '. $$specs{"ColourCoatingType$index$side"}. ' @ '.$$specs{"ColourCoatingCoverage$index$side"} .'%';
+        } else {
+          push @front_coatings , $$specs{"ColourCoatingType$index$side"};
+        }
       } elsif ( $type =~ /PMS/i ) {
         $front_pms += 1;
         $log->debug("Adding PMS for $type chkColourCoating$index$side");
       } else {
-        push @front_coatings, $$specs{"ColourCoatingType$index$side"}; 	#line added to show other types june-18-2008
+        if ( $$specs{"ColourCoatingCoverage$index$side"} != 100) {
+          push @front_coatings, 'Spot '. $$specs{"ColourCoatingType$index$side"}. ' @ '.$$specs{"ColourCoatingCoverage$index$side"} .'%';
+        } else {
+          push @front_coatings, $$specs{"ColourCoatingType$index$side"}; 	#line added to show other types june-18-2008
+        }
       } # end if
     } # end if
   } # end foreach
@@ -7906,8 +7913,11 @@ sub get_colour_description {
 			next if ! $type;
 			next if $$specs{"chkColourCoatingColour$index$side"} and ( $$specs{"chkColourCoatingColour$index$side"} eq 'None' );
 			if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
-				
-				push @front_coatings , $$specs{"ColourCoatingType$index$side"};
+        if ( $$specs{"ColourCoatingCoverage$index$side"} != 100) {
+          push @front_coatings, 'Spot '. $$specs{"ColourCoatingType$index$side"}. ' @ '.$$specs{"ColourCoatingCoverage$index$side"} .'%';
+        } else {
+          push @front_coatings , $$specs{"ColourCoatingType$index$side"};
+        }
 			} elsif ( $type =~ /PMS/i ) {
 				$front_pms += 1;
 $log->debug("Adding PMS for $type chkColourCoating$index$side");
@@ -7947,9 +7957,11 @@ $log->debug("Adding PMS for $type chkColourCoating$index$side");
 				next if $$specs{"chkColourCoatingColour$index$side"} and ( $$specs{"chkColourCoatingColour$index$side"} eq 'None' );
 
 				if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
-#Changes made on june-19-2008
-#						$back_coatings .= '+'.$$specs{"ColourCoatingColour$index$side"};
-					push @back_coatings, $$specs{"ColourCoatingType$index$side"};
+          if ( $$specs{"ColourCoatingCoverage$index$side"} != 100) {
+            push @back_coatings, 'Spot '. $$specs{"ColourCoatingType$index$side"}. ' @ '.$$specs{"ColourCoatingCoverage$index$side"} .'%';
+          } else {
+            push @back_coatings, $$specs{"ColourCoatingType$index$side"};
+          }
 				} elsif ( $type =~ /PMS/i ) {
 					$back_pms += 1;
 				} else {

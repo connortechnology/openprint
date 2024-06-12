@@ -53,6 +53,10 @@
 	max-width: 65px;
 	min-width: 45px;
 }
+.Dimensions .leftColumn,
+.Dimensions .rightColumn {
+	width: 100%;
+}
 .InteriorPages .Dimensions {
 	width: auto;
 	float: none;
@@ -212,11 +216,4 @@ svg.Imposition rect.sheet {
   display: inline;
   padding: 0 1em;
   background-color: #FFFFFF;
-}
-.SizesAndPages {
-display: flex;
-align-items: stretch;
-}
-.SizesAndPages > div fieldset {
-height: 100%;
 }
