@@ -129,12 +129,16 @@ sub fits {
 	} # end if
 
 	if ( $calliper ) {
-		if ( $self->specification("Minimum$service Calliper") and ( 1*$calliper < 1*$self->specification("Minimum$service Calliper") ) ) {
-			return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: " . $self->specification("Minimum$service Calliper") .' Inches.';
+    my $min_calliper = $self->specification("Minimum$service Calliper");
+
+		if ($min_calliper and ($calliper < $min_calliper)) {
+			return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: $min_calliper Inches.";
 		} # end if
-		if ( $self->specification("Maximum$service Calliper") and ( 1*$calliper > 1*$self->specification("Maximum$service Calliper") ) ) {
-			return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specification("Maximum$service Calliper") .' Inches.';
+    my $max_calliper = $self->specification("Maximum$service Calliper");
+		if ($max_calliper and ($calliper > $max_calliper)) {
+			return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: $max_calliper Inches.";
 		} # end if
+    #$openprint::log->debug("Calliper is ok $min_calliper < $calliper < $max_calliper");
 	} # end if
 	return '';
 
