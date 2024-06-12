@@ -574,7 +574,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 		} # endif
 	} # while ! bestPrice and imposition
 
-  $results{alert} = $bestPrice{alert};
+  $results{alert} = $$bestPrice{alert};
 	if ( $$bestPrice{Imposition} ) {
 #$results{alert} .= sprintf('%dout on %s %dpockets', $$bestPrice{Imposition},($bestEquipment ? $bestEquipment->strid() . ' ' . $bestEquipment->name() : '' ),$$specs{'txtPockets'.$qty_index} );
 		$results{Imposition} = $$bestPrice{Imposition};
