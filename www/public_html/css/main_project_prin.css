@@ -10,13 +10,27 @@
 	float: none;
 	width: auto;
 }
+.Inks {
+padding-top: 23px;
+}
+.Inks,
 .PagesAndSizes {
   display: flex;
   align-items: stretch;
+position: relative;
 
 }
 .PagesAndSizes > div {
   flex: 1;
+}
+.PagesAndSizes > div fieldset {
+  height: 100%;
+}
+.link-outer {
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
 }
 
 .SignatureGroup .leftColumn ,
@@ -24,7 +38,7 @@
 width: 50%;
 	float: left;
 }
-#Inks label:after {
+.Inks label:after {
 content: "";
 }
 .BleedsColourBars ,
@@ -35,6 +49,7 @@ content: "";
 	float: left;
 	width: 50%;
 	min-width: 425px;
+flex: 1;
 }
 .SpotColour {
 	width: 25%;
