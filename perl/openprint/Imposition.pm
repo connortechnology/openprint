@@ -394,18 +394,17 @@ sub load {
 		}
 	} else {
 		# It's a brochure or something, so can't be cut.
-
-		
 		if ( $$self{image_orientation} == Vertical ) {
-#$$self{page_rows} = POSIX::ceil($$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
-			$$self{page_columns} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
-#$$self{page_columns} = POSIX::ceil($$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
-			$$self{page_rows} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
-		} else {
-#$$self{page_rows} = POSIX::ceil($$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
-			$$self{page_rows} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
-#$$self{page_columns} = POSIX::ceil($$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
-			$$self{page_columns} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+      # 2024-06-12 switch to ceil because of job 717036
+      $$self{page_columns} = POSIX::ceil($$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
+      #$$self{page_columns} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
+      #$$self{page_rows} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+      $$self{page_rows} = POSIX::ceil($$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+    } else {
+      $$self{page_rows} = POSIX::ceil($$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
+      #$$self{page_rows} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
+      $$self{page_columns} = POSIX::ceil($$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+      #$$self{page_columns} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
 		}
 $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}");
 

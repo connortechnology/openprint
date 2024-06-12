@@ -116,7 +116,7 @@ Override</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{'chkOverr
 						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
 							$html .= sprintf('
               <label class="radio-inline" for="chkOverrideFold-%1$d-%2$d">
-              <input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}else{show_extra_fold(%1$d,%2$d);};" />
+              <input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if (this.checked) { show_extra_fold(%1$d,%2$d); }; calc(this.form.name);" />
                 Override Folds</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"chkOverrideFold-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
 							$html .= sprintf('
               <label class="radio-inline" for="chkOverrideLimits-%1$d-%2$d">
