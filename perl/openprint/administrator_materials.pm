@@ -228,6 +228,7 @@ sub edit {
 					$variable{error} .= $Spec->save();
 				} # end foreach
 				$Material = $NewMaterial;
+				$variable{ExternalRedirect} = '/administrator/materials/edit.html?material_id='.$Material->id();
 			} # end if
 		} # end if
 	} # end if btnFunction
