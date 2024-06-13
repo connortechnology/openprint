@@ -767,6 +767,16 @@ sub quantity {
 	$_[0]{quantity} = $_[1] if @_ > 1;
 	return $_[0]{quantity};
 } # end subquantity
+
+sub colours {
+  my $self = shift;
+  my $specs = $self->specs();
+  $$self{coloursSideOne} = [openprint::Estimating::Printing::get_colours( $specs, 'SideOne' )] if !$$self{coloursSideOne};
+  $$self{coloursSideTwo} = [openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' )] if !$$self{coloursSideTwo};
+  my $side = shift;
+  return @{$$self{'colours'.$side}};
+}
+
 sub sides {
 	$_[0]{sides} = $_[1] if @_ > 1;
 	if ( ! $_[0]{sides} ) {
