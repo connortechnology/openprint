@@ -585,7 +585,6 @@ sub signature_calc {
 	my $bestSetupPrice = 0;
 	my $bestEquipment;
 	my $bestFolds;
-	my $Breakdown;
 	my $bestImpositions;
 
 	$SignatureImposition->display('Signature Imposition:') if DEBUG;
@@ -936,16 +935,19 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 	my $FoldingFoldMakeReadyService = $Services{FoldingFoldMakeReady};
 	my $FoldingAngleMakeReadyService = $Services{FoldingAngleMakeReady};
 
+	my $bestBreakdown;
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
-		$Breakdown .= '<br/><b>Equipment '.$$Equipment{name}.':</b><br/>';
+		my $Breakdown = '<br/><b>Equipment '.$$Equipment{name}.':</b><br/>';
 		if ( (!$$Equipment{useinestimating}) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' ) ) {
 			$Breakdown .= 'Can only be used by override';
+      $results{Breakdown} .= $Breakdown;
 			next;
 		}
 		#$openprint::log->debug('2 Equipment '.$Equipment->name()) if DEBUG;
 		if ( $$services{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) ) {
 			$Breakdown .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
+      $results{Breakdown} .= $Breakdown;
 			$openprint::log->debug('No Offline Equipment '.$$Equipment{name}) if DEBUG;
 			next;
 		} # end if
@@ -954,6 +956,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 # Means it's a PerfectBinder, so can only do covers
 			if ( $$sig_specs{Group} != 1 ) {
 				$Breakdown .= 'Perfect Binder can only fold 4pg cover:<br/>';
+        $results{Breakdown} .= $Breakdown;
 				next;
 			} # end if
 		} elsif ( $capable eq 'For Pocket Folders' ) {
@@ -961,10 +964,12 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 		} elsif ( $capable eq 'When Binding' ) {
 			if ( ! ( $$calc_hash{HasStitching} or $$calc_hash{HasPerfectBound} ) ) {
 				$Breakdown .= 'Not binding:<br/>';
+        $results{Breakdown} .= $Breakdown;
 				next;
 			} # end if
 			if ( $Equipment->specification('Fold Covers Only') and ( (!$$sig_specs{Group}) or ( $$sig_specs{Group} != 1 ) )) {
 				$Breakdown .= 'Stitcher can only fold 4pg cover:<br/>';
+        $results{Breakdown} .= $Breakdown;
 				next;
 			} # end if
 
@@ -973,10 +978,12 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 # Means it's a Stitcher, or a Duplo, so can only do covers
 			if ( ! $$calc_hash{HasStitching} ) {
 				$Breakdown .= 'Not stitching:<br/>';
+        $results{Breakdown} .= $Breakdown;
 				next;
 			} # end if
 			if ( $Equipment->specification('Fold Covers Only') and ( (!$$sig_specs{Group}) or ( $$sig_specs{Group} != 1 ) )) {
 				$Breakdown .= 'Stitcher can only fold 4pg cover:<br/>';
+        $results{Breakdown} .= $Breakdown;
 				next;
 			} # end if
 		} elsif ( $capable =~ /^When Printing( on .*)?$/ ) {
@@ -986,12 +993,14 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 				$press =~ s/^ on //;
 				if ( $press ne $$Press{strid} ) {
 					$Breakdown .= "Not printing on $$Press{strid}:<br/>";
+          $results{Breakdown} .= $Breakdown;
 					next;
 				}
 			} else {
 
 				if ( $$Press{id} != $$Equipment{id} ) {
 					$Breakdown .= "Not printing on $$Equipment{name}:<br/>";
+          $results{Breakdown} .= $Breakdown;
 					next;
 				} # end if
 
@@ -1000,6 +1009,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 						$$specs{alert} .= "Perforating while folding inline may cause tearing.<br/>";
 					} else {
 						$Breakdown .= 'not perforating on this piece of equipment.<br/>';
+            $results{Breakdown} .= $Breakdown;
 						next;
 					} # end if
 				} # end if
@@ -1008,11 +1018,13 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 		if ( $ppt and ( my $pt = $Equipment->specification('PrintingTypes') ) ) {
 			if ( ! sets::isin( $ppt, [ split(',',$pt ) ] ) ) {
 				$Breakdown .= 'Wrong printing type.<br/>';
+        $results{Breakdown} .= $Breakdown;
 				next;
 			} # end if
 		} # end if
 		if ( $_ = $Equipment->fits(undef,undef,$$Paper{calliper}) ) {
 			$Breakdown .= $_;
+      $results{Breakdown} .= $Breakdown;
 			next;
 		}
 
@@ -1076,6 +1088,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 				if ( defined $required_bleed ) {
 					if ( $required_bleed > $$Imposition{bleed_size} ) {
 						$Breakdown .= 'Requires ' . $required_bleed . ' bleed for ' . $$Imposition{imposition} . q`out Can't fold it this way.<br/><br/>`;
+            $results{Breakdown} .= $Breakdown;
 						$complete = 0;
 						last;
 					} else {
@@ -1122,6 +1135,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 						$openprint::log->debug(sprintf('Found: %dx%d,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition() ) ) if DEBUG;
 					} else {
 						$Breakdown .= sprintf('Didnt find fold pages: %dx%d=%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), @$Imposition{'page_width','page_height','image_orientation_text','imposition'}, $Paper->gsm() );
+            $results{Breakdown} .= $Breakdown;
 						$openprint::log->debug(sprintf('Didnt find: %dx%d %.3fx%.3f %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), @$Imposition{'page_width','page_height','image_orientation_text','imposition'} ) ) if 1 or DEBUG;
 $Imposition->display();
 						%folds = ();
@@ -1142,11 +1156,13 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 							if ( $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
 								if ( @my_equipment == 1 ) {
 									$Breakdown .= $Imposition->to_string() . "Doesn't fit: $rc<br/>";
+                  $results{Breakdown} .= $Breakdown;
 								} # end if
 								%folds = ();
 								last;
 							} else {
 								$Breakdown .= $Imposition->to_string() . "Doesn't fit: $rc<br/>";
+                $results{Breakdown} .= $Breakdown;
 								$$specs{alert} .= "Fold for form $form may exceed equipment specifications.<br/>";
 							}
 						} # end if
@@ -1282,6 +1298,7 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									gsm				=>	$$Paper{gsm}<br/>
 									calliper		=>	$$Paper{calliper}<br/>
 									imposition		=>	$$Imposition{imposition}<br/>";
+                $results{Breakdown} .= $Breakdown;
 							} # end if Fold passwes extra shceks
 
 							if ( $Fold ) {
@@ -1310,11 +1327,13 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 							if ( !$$specs{"chkOverrideLimits-$form-$qty_index"} or $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
 								if ( @my_equipment == 1 ) {
 									$Breakdown .= $Imposition->to_string()."Doesn't fit $rc.<br/>";
+                  $results{Breakdown} .= $Breakdown;
 								}
 								$complete =0;
 								last;
 							} else {
 								$Breakdown .= $Imposition->to_string()."Doesn't fit $rc.<br/>";
+                $results{Breakdown} .= $Breakdown;
 								$$specs{alert} .= "Fold for form $form may exceed equipment specifications.<br/>";
 							}
 						} # end if fits
@@ -1449,6 +1468,7 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 								$Imposition->display('Didnt find:' ) if DEBUG;
 								$Breakdown .= sprintf('Didnt find: %dx%d=%dpages %s,%dout %s<br/>', @$Imposition{'page_columns','page_rows','pages'},
 										$openprint::Imposition::Orientations{$$Imposition{spine_direction}}, $$Imposition{imposition}, $fits );
+                $results{Breakdown} .= $Breakdown;
 								$complete = 0;
 							} elsif ( DEBUG ) {
 								$Imposition->display('Didnt find fold:' );
@@ -1759,13 +1779,14 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
 						#$totalPrice += 1000000;
 					} elsif ( $$stitching_results{Equipment}{id} != $$Equipment{id} and ( $capable eq 'When Stitching' ) ) {
 						$Breakdown .= 'Not stitching on ' . $$Equipment{strid}.' stitching on '.$$stitching_results{Equipment}{strid} .'.<br/>';
-						$Breakdown .= $$stitching_results{Breakdown} . '<br/>' . $$stitching_results{alert};
+            #$Breakdown .= $$stitching_results{Breakdown} . '<br/>';
+						$Breakdown .= $$stitching_results{alert};
 						$stitching_part = 1000000;
 						$totalPrice += 1000000;
 					} else {
 						my $Price = $$stitching_results{Price};
 						$stitching_part = $$Price{Price};
-						$Breakdown .= '<tr><td>'.$$stitching_results{Breakdown}.'</td></tr>' if DEBUG;
+            #$Breakdown .= '<tr><td>'.$$stitching_results{Breakdown}.'</td></tr>' if DEBUG;
 						$Breakdown .= sprintf('<tr><td>Stitching cost on %s %dout %dpockets</td><td class="Price">$%.2f</td></tr>',
 								$$stitching_results{Equipment}{name}, @$stitching_results{'Imposition','pockets'}, $stitching_part );
 					} # end if
@@ -1791,14 +1812,15 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
 
 			if ( $scoring_signature_needs ) {
 				$$calc_hash{FoldingSpecs} = \%fold_specs;
-$openprint::log->debug("Calling Scoring");
 				my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $qty_index, $SignatureImposition, $calc_hash, \@Used_Impositions );
 				if ( $scoring_results{Status} eq 'uncalculated' ) {
 					$Breakdown .= "<tr><td>Scoring uncalculated $scoring_results{alert}</td><td class=\"Price\">\$1000000</a>";
 					$comparison_cost += 1000000;
 				} else {
 #$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
-					$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}<br/>$scoring_results{Breakdown}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
+					$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}<br/>";
+          #$Breakdown .= $scoring_results{Breakdown};
+          $Breakdown .= "</td><td class=\"Price\">\$$scoring_results{Price}</td></tr>";
 					$comparison_cost += $scoring_results{Price};
 				}
 			} # end if
@@ -1821,6 +1843,7 @@ $openprint::log->debug("Calling Scoring");
 				$bestRunTime = int($totalTime);
 				$bestFolds = \%folds;
 				$bestImpositions = \@Used_Impositions;
+        $bestBreakdown = $Breakdown;
 
 				# folding could be free, in which case, we can probably just give up now.
 				# No cannot give up.  ANother free imposition may allow 2up stitching for example.
@@ -1844,7 +1867,7 @@ $openprint::log->debug("Calling Scoring");
 		Equipment					=>	$bestEquipment,
 		Status						=>	$bestEquipment ? 'calculated' : 'uncalculated',
 		Folds							=>	$bestFolds,
-		Breakdown					=>	$Breakdown,
+		Breakdown					=>	$bestBreakdown,
 		FoldedImpositions	=>	$bestImpositions,
 		MakeReadyTime			=>	0,
 		MakeReadyOvers		=>	0,
@@ -1856,7 +1879,7 @@ $openprint::log->debug("Calling Scoring");
 		my $Fold = $$FI{Fold};
 		if ( ! $$Fold{equipment_id} ) {
 			$$Fold{equipment_id} = $$bestEquipment{id};
-			$openprint::log->warn("Fold didn't have equipment");
+			$openprint::log->warn('Fold didnt have equipment');
 		}
 		$FI->Equipment( $Fold->Equipment() );
 		my $printed_sheets = (($$specs{'txtQuantity'.$qty_index}/$$FI{imposition})/$$SignatureImposition{imposition});
@@ -1904,12 +1927,11 @@ Specifications=>{'Folding Capable'=>\@folding_capable}
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-	if ( ! $project_index or ! $service_index ) {
-		$log->debug("calc_folding called with ProjectIndex or ServiceIndex!");
+	if (!$project_index or !$service_index) {
+		$log->debug('calc_folding called without ProjectIndex or ServiceIndex!');
 		return;
 	} # end if
 
-	$log->debug(" Start FOLDING!!!!!!!!!!!!!!!!!!");
 	# sig_calc overwrites $$specs{Status}, so we keep our own copy
 	my $status = 'calculated';
 	$$specs{alert} = '';
