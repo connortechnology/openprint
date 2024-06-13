@@ -1001,13 +1001,13 @@ function disableDiv(elm) {
 }
 
 function new_set_today(btn) {
-  const prefix=btn.getAttribute('prefix');
+  const prefix = btn.getAttribute('data_prefix');
   set_today(
       document.getElementById(prefix+'_year'),
       document.getElementById(prefix+'_month'),
-      document.getElementById(prefix+'day'),
-      document.getElementById(prefix+'hour'),
-      document.getElementById(prefix+'minute')
+      document.getElementById(prefix+'_day'),
+      document.getElementById(prefix+'_hour'),
+      document.getElementById(prefix+'_minute')
       );
 }
 
