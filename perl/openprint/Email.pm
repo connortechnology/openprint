@@ -53,7 +53,6 @@ sub send {
 			} else {
 				push @bcc, $bcc;
 			} # end if
-
 		} # end foreach bcc
 	} # end if
 
@@ -62,7 +61,7 @@ sub send {
 			BOUNDARY =>	$$self{boundary} ? $$self{boundary} : '====' . time() . '====',
 			( $params{CC} ? ( CC		=>	$params{CC} ) : () ),
 			( @bcc ? ( BCC		=>	join(',', @bcc ) ) : () ),
-			Smtp    => $params{SMTP} ? $params{SMTP} : $openprint::config{smtp_server},
+			Smtp    => ($params{SMTP} ? $params{SMTP} : $openprint::config{smtp_server}),
 			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
 			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
 			FROM    => ( ref $$self{from} eq 'openprint::User' ? sprintf('"%s" <%s>', $$self{from}->get('name','email') ) : $$self{from} ),
@@ -79,7 +78,6 @@ sub send {
 		my $message = $mail{BODY};
 
 		$mail{'MIME-Version'} = '1.0';
-
 		$mail{BODY} = "\nThis is a message with multiple parts in MIME format.\n";
 
 # start with the current body
@@ -137,7 +135,7 @@ sub send {
 			@recipients = ( $params{TO} );
 		} # end if
 	} # end if
-#$openprint::log->debug("Email: Recipients @recipients");
+$openprint::log->debug("Email: Recipients @recipients");
 	foreach my $recipient ( @recipients ) {
 		next if ! $recipient;
 
