@@ -52,7 +52,7 @@ sub MaterialPriceConfiguration {
 }
 
 %Specifications = (
-'Laminating Count' => { units => 'Net Sheets', 'Gross Sheets' },
+'Laminating Count' => { units => ['Net Sheets', 'Gross Sheets'] },
   'Laminating Waste'  => { units => 'Percent' },
   'Laminating Style' => { values => [ 'Sheet','Final Pieces' ] },
   'Laminating Capable' => { values => [ 'Y'|'N' ] },
@@ -73,6 +73,7 @@ sub SpecificationConfiguration {
 }
 
 my @variables = (
+  'alert',
 	'txtFinalWidth','txtFinalHeight','chkOverrideDimensions',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'Markup1', 'Markup2', 'Markup3',
@@ -146,26 +147,32 @@ sub calc {
     },
     'useinestimating'=>1,'order'=>'lower(strName)');
 
-  if ( ! @all_equipment ) {
+  if (!@all_equipment) {
     $$specs{alert} = 'We have no laminating equipment.';
     return $$specs{Status} = 'uncalculated';
   } # end if
 
   my $error = '';
-  foreach my $Equipment ( @all_equipment ) {
+  foreach my $Equipment (@all_equipment) {
     my $style = $Equipment->specification('Laminating Style');
 
     if ((!$style) or ($style ne 'Sheet')) {
       if ( 
-        (my $reason1 = $Equipment->fits( $$specs{txtFinalWidth} ) ) and
-        (my $reason2 = $Equipment->fits( $$specs{txtFinalHeight} ) ) 
+        (my $reason1 = $Equipment->fits( $$specs{txtFinalWidth}, undef, $$sig_specs{txtSpecificStockCalliper} ) ) and
+        (my $reason2 = $Equipment->fits( $$specs{txtFinalHeight}, undef, $$sig_specs{txtSpecificStockCalliper} ) ) 
       ) {
         $error .= 'For ' . $Equipment->name() . ': '. $reason1  . '<br/>' . $reason2;
       } else {
-        push @possible_equipment, $Equipment
+        push @possible_equipment, $Equipment;
       } # end if
     } else {
-      push @possible_equipment, $Equipment
+      if ( 
+        (my $reason1 = $Equipment->fits( undef, undef, $$sig_specs{txtSpecificStockCalliper} ) )
+      ) {
+        $error .= 'For ' . $Equipment->name() . ': '. $reason1  . '<br/>';
+      } else {
+        push @possible_equipment, $Equipment;
+      } # end if
     }
   } # end foreach
 
@@ -212,8 +219,8 @@ sub calc {
 				} # end if
 				next;
 			} # end if
-			my $maximum_sheet_width = $Equipment->specification('Maximum Sheet Width');
-			my $maximum_sheet_length= $Equipment->specification('Maximum Sheet Length');
+			my $maximum_sheet_width = $Equipment->specification('Maximum Sheet Width') || '';
+			my $maximum_sheet_length= $Equipment->specification('Maximum Sheet Length') || '';
 			my $laminate_width = $Equipment->specification('Laminate Width');
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s max Width: %s Length: %s<br/>',
           $Equipment->name(), $maximum_sheet_width, $maximum_sheet_length);
@@ -404,7 +411,7 @@ sub calc {
 
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/><br/>', $price );
 
-			if ( ( ! $bestPrice{Price} ) or $bestPrice{Price} > $price ) {
+			if ((!$bestPrice{Price}) or ($bestPrice{Price} > $price)) {
 				$bestPrice{Price} = $price;
 				$bestPrice{MPrice} = $MPrice;
 				$bestPrice{Equipment} = $Equipment;
@@ -418,6 +425,7 @@ sub calc {
       } # endif
     } else {
       $$specs{Status} = 'uncalculated';
+      $bestPrice{Price} = 0;
     } # end if
 
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment}->id() if $bestPrice{Equipment};
@@ -458,6 +466,7 @@ sub display {
 sub summary {
 	my ( $Project, $service_index, $specs, $qty_index ) = @_;
   if ($qty_index) {
+    return '' if !$$specs{'ddmEquipment'.$qty_index};
     return 'on '.new openprint::Equipment($$specs{'ddmEquipment'.$qty_index})->name();
   }
   return $$specs{TypeFront}.' on front, '.$$specs{TypeBack}.' on back';
