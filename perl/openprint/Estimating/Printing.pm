@@ -2803,7 +2803,7 @@ sub calc {
 		return $$specs{Status} = 'calculated';
 	} # end if
 
-		# For caching
+	# For caching
 	%Services = map { $$_{name}, $_ } openprint::Service->find();
 	$openprint::Service::cached = 1;
 	$GripperMakeReadyService = $Services{GripperMakeReady};
@@ -3020,6 +3020,9 @@ $log->debug('after sorting presses: ' . ( sprintf('%.4f', tv_interval( [$master_
 			return $$specs{Status} = 'uncalculated';
 		} # end if
 
+    # Used for setups, etc.  
+    my @previous_signatures = map { $_ < $service_index ? $_ : () } sort { $a <=> $b } sort $Project->signatures();
+
 		# These are passed along for consideration in get_project_price.	Hence they should only occur after the current service, right?
 		my @signatures = map { $_ > $service_index ? $_ : () } sort { $a <=> $b } sort $Project->signatures({ Group=>$$specs{Group}});
 
@@ -3053,62 +3056,27 @@ $log->debug('after sorting presses: ' . ( sprintf('%.4f', tv_interval( [$master_
 
 		my @versions = get_versions( $specs, $qty_index ) if $$specs{versions};
 #$log->debug("versions: @versions");
-# Only thread qtys 2 and 3
-		if ( $threading ) {
-#and ($qty_index > 1) ) {
-			#$openprint::dbh->disconnect();
-			#$log->debug('stacksize:'.(threads->get_stack_size()));
-			#threads->set_stack_size(64*4096);
-			$threads{$qty_index} = threads->create( { stack_size => 4096*4096 }, sub { 
-					$openprint::dbh = sql::open_sql( $log, 
-						database	=> $openprint::r->dir_config('db_name'),
-						driver	=> $openprint::r->dir_config('db_driver'), 
-						host		=> $openprint::r->dir_config('db_host'),
-						login		=> $openprint::r->dir_config('db_user'),
-						password	=> $openprint::r->dir_config('db_password'),
-						);
-					my $return = get_project_price( $Project, $service_index, $project, \%sig_specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, @$project{'washed_colours','mixed_colours',"AqueousMakeReadies$qty_index"}, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
-					#$openprint::dbh->disconnect();
-					return $return;
-					} );
-if ( 0 ) {
-					$openprint::dbh = sql::open_sql( $log, 
-						database	=> $openprint::r->dir_config('db_name'),
-						driver	=> $openprint::r->dir_config('db_driver'), 
-						host		=> $openprint::r->dir_config('db_host'),
-						login		=> $openprint::r->dir_config('db_user'),
-						password	=> $openprint::r->dir_config('db_password'),
-						);
-}
-		} else {
-			$prices{$qty_index} = get_project_price( $Project, $service_index, $project, \%sig_specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, @$project{'washed_colours','mixed_colours',"AqueousMakeReadies$qty_index"}, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
-		} # end if
-
+		$prices{$qty_index} = get_project_price( $Project, $service_index, $project, \%sig_specs, $qty, $qty_index,
+      \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts,
+      @$project{'washed_colours','mixed_colours',"AqueousMakeReadies$qty_index"},
+      \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
 	} # end foreach quantity
 
 	foreach my $qty_index ( @quantity_indexes ) {
 		my $qty = $Project->quantity($qty_index);
-		next if ! defined $qty;
-		next if ! int $qty;
+		next if (! defined $qty) or ! int $qty;
 
 		$qty *= $$specs{PageQuantity} if $$specs{PageQuantity};
 		$qty *= $$specs{txtNameQuantity} if $$specs{txtNameQuantity};
-		if ( $threading ) {
-#and ($qty_index > 1) ) {
-# The thread may not be defined if for example no more spreads needed to be calculated
-			if ( defined $threads{$qty_index} ) {
-				$prices{$qty_index} = $threads{$qty_index}->join();
-			} # end if
-		} # end if
 
 		if ( !$prices{$qty_index}) {
 			$$specs{alert} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
 			$$specs{Status} = 'uncalculated';
       delete $$specs{'ddmPress'.$qty_index} if (!$$specs{'chkOverridePress'.$qty_index});
       delete $$specs{'ddmRunStyle'.$qty_index} if (!$$specs{'chkOverrideRunStyle'.$qty_index});
-      
 			next;
 		} # end if
+
 		my $best_price = $prices{$qty_index};
 		$$specs{alert} .= $$best_price{alert} if $$best_price{alert};
 
@@ -4395,7 +4363,7 @@ sub get_project_price {
 	if ( $openprint::r ) {
 		$openprint::r->print("\n");
 		if ( $openprint::r->connection()->aborted() ) {
-			$log->warn("ABORTED");
+			$log->warn('ABORTED');
 			return {};
 		} # end if
 	} # end if
@@ -4411,12 +4379,6 @@ sub get_project_price {
 
 	#my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
 	my @Is = calculate_impositions( $Project, $source_sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
-	if ( DEBUG or DEBUG_AFTER_FILTERING ) {
-		$log->debug('@ of impositions: ' . @Is );
-		foreach my $I ( @Is ) {
-			$I->display("Before calculation: depth: $recursion_depth # of sigs: " . @Is);
-		} # end while
-	}
   if (!@Is) {
     $log->error('No impositions from calculate_impositions') if DEBUG;
     if ($$project{ProjectSpecs}{"PageQuantity-$sig_specs{Group}"}) {
@@ -4425,10 +4387,15 @@ sub get_project_price {
       return {alert=>'No impositions matched the overriden page quantity ('.$sig_specs{'PageQuantity'.$qty_index}.').<br/>'};
     }
 	}
+	if ( DEBUG or DEBUG_AFTER_FILTERING ) {
+		$log->debug('@ of impositions: ' . @Is );
+		foreach my $I ( @Is ) {
+			$I->display("Before calculation: depth: $recursion_depth # of sigs: " . @Is);
+		} # end while
+	}
 #$log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 	foreach my $base_imp ( @Is ) {
 # Imp still gets modified in calc_price, Folding adds Folder member
-#$base_imp->display("Starting");
 # But if we alraedy know how to fold this impo... then.....
 		$$base_imp{Project} = $Project;
 		my $imp = $base_imp->copy();
@@ -4464,6 +4431,7 @@ sub get_project_price {
 		my %PaperCounts = %$PaperCounts;
 		my %aq_makereadies = %{ dclone $aq_makereadies} if $aq_makereadies;
 
+    # other_impositions are ones that come after us... so this is weird.
 		my @total_impositions = @$other_impositions;
 
 		# This is suspect is it?	other_impos doesn't get modified. sig_specs{mpositions} gets populated before recurse
@@ -4474,7 +4442,7 @@ sub get_project_price {
 
     $openprint::log->debug("1 @{$other_impositions} imp $imp $base_imp");
 		my $price = calc_price( $Project, $service_index, $imp, $project, $services, \%sig_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies, \@total_impositions );
-		if ( ! $$price{complete} ) {
+		if (!$$price{complete}) {
 			if ( DEBUG ) {
 				$imp->display( 'Couldnt calculate initial price: ' . $$price{alert} );
 			} # end if
@@ -4612,11 +4580,11 @@ sub get_project_price {
 					$versions -= $$newimp{versions};
 					push @{$$price{prices}}, $sig_price;
 					if ( ! $$newimp{versions} ) {
-						$log->error("Should not get no versions. ".$sig_specs{"UnspecifiedVersions$qty_index"}." $$imp{versions}");
+						$log->error('Should not get no versions. '.$sig_specs{"UnspecifiedVersions$qty_index"}.' '.$$imp{versions});
 #last;
 					} # end if
 				} else {
-					$log->error("recurses didn't work out");
+					$log->error('recurses didnt work out');
 					$$price{complete} = 0;
 				} # end if
 			} # end while versions
@@ -5513,7 +5481,7 @@ sub calc_price {
 		@colours = ( @{$$project{side_one_colours}}, @{$$project{side_one_coatings}} );
 		if ( ( $$specs{sides_the_same} eq 'Y' ) and ( $$Imposition{runstyle} eq 'Sheet Work' ) ) {
 		} else {
-			push @colours, @{$$project{side_two_colours}},@{$$project{side_two_coatings}};
+			push @colours, @{$$project{side_two_colours}}, @{$$project{side_two_coatings}};
 		} # end if
 
 	} elsif ( $$Imposition{runstyle} =~ /^Work/ ) {
@@ -6137,39 +6105,39 @@ if ( 1 ) {
 
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$project{side_one_colours}} and @{$$project{side_two_colours}} ) {
-			my $press_setup_front = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition );
+			my $press_setup_front = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 			$press_setup += $press_setup_front->{Total};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 			if ( ( !$$press_setup_front{units} ) or ( $$press_setup_front{units} ne 'total' and $$press_setup_front{units} ne 'per job' ) ) {
-				my $back_press_setup = press_setup_cost( 0, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition );
+				my $back_press_setup = press_setup_cost( 0, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 				$press_setup += $$back_press_setup{Total};
 				$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$back_press_setup{'Unit Count','Price','units','Total'} );
 				$price{'Plate Total'} += $$back_press_setup{'Plate Total'};
 				$price{'Plate Setup Count'} += $$back_press_setup{'Plate Count'};
 			} # end if
 		} elsif ( @{$$project{side_one_colours}} ) {
-			my $press_setup_front = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition );
+			my $press_setup_front = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 			$press_setup += $$press_setup_front{Total};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 		} elsif ( @{$$project{side_two_colours}} ) {
-			my $press_setup_back = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition );
+			my $press_setup_back = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 			$press_setup += $$press_setup_back{Total};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_back{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_back{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_back{'Plate Price','Plate Count','Plate Units'};
 		} # end if
 	} elsif ( $$Imposition{runstyle} eq 'Web' or $$Imposition{runstyle} eq 'Perfecting' ) {
-		my $press_setup_cost = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{combined_colours}, $$Paper{calliper}, $qty_index, $Imposition );
+		my $press_setup_cost = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{combined_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 		$press_setup += $$press_setup_cost{Total};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
 		@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_cost{'Plate Price','Plate Count','Plate Units'};
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
 	} else {
-		my $press_setup_cost = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{filtered_colours}, $$Paper{calliper}, $qty_index, $Imposition );
+		my $press_setup_cost = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{filtered_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 		$press_setup += $$press_setup_cost{Total};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
@@ -7182,12 +7150,14 @@ $log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{units})");
 
 # This is called once perside, or just once for W&T
 sub press_setup_cost {
-	my ( $plate_change_qty, $plate_runs, $colours, $calliper, $qty_index, $Imposition ) = @_;
+	my ( $plate_change_qty, $plate_runs, $colours, $calliper, $qty_index, $Imposition, $other_impositions ) = @_;
 
 	my $Press = $$Imposition{Press};
+  my $specs = $$Imposition{specs};
 
 	# These are pre-filtered in setup_project now
 	my $setup_count = @$colours;
+  my $unit_count = $setup_count;
 
 	my %Price;
 
@@ -7195,15 +7165,63 @@ sub press_setup_cost {
 	if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{runstyle}, undef, $Press ) ) ) {
 		%Price = openprint::service::get_price_object('PressUnitMakeReady', undef, $Press);
 	} # end if
-	if ( $Price{units} eq 'stock calliper - per plate' ) {
+      $Imposition->display("Sigature index $$specs{SignatureIndex}");
+  if ($Price{units} eq 'per press per unit') {
+    my @previous_impositions = map { $$_{specs}{SignatureIndex} < $$specs{SignatureIndex} ? $_ : () } @{$other_impositions};
+    #foreach (@{$other_impositions}) {
+    #$_->display('Sig Index:'.$$_{specs}{SignatureIndex});
+    #if (($_ != $Imposition) and ($$_{specs}{SignatureIndex} == $$specs{SignatureIndex})) {
+    #$parent_imposition = $_;
+    #last;
+    #} elsif ($$_{specs}{SignatureIndex} < $$specs{SignatureIndex}) {
+    #push @previous_impositions, $_;
+    #}
+    #}
+    #if ($parent_imposition) {
+    #$unit_count = 0;
+    #$Price{Total} = 0;
+    #} else {
+    if (@previous_impositions) {
+      $log->error("Previous impositions: " . @previous_impositions);
+
+      foreach my $prev_i (@previous_impositions) {
+        my $sig_specs = $$prev_i{specs};
+        if ($$prev_i{Press}->id() == $$Press{id} and $$prev_i{runstyle} eq $$Imposition{runstyle}) {
+          $unit_count = 0;
+          #my @prev_colours = ($prev_i->colours('SideOne'), $prev_i->colours('SideTwo'));
+          #$log->error("Prev colours: @prev_colours");
+
+          #my %prev_colours = map { $$_{name} => $_ } @prev_colours;
+          ##$log->error("Prev: ".join(',', keys %prev_colours));
+          #foreach my $c (@$colours) {
+          #$log->error("Colour $$c{name} $prev_colours{$$c{name}}");
+          #if ($prev_colours{$$c{name}} or $prev_colours{$$c{name}.' Spot Colour'}) {
+          #$unit_count -= 1;
+          #}
+          #}
+          %Price = openprint::service::get_price_object( $Price{ServiceName}, $unit_count, $Press );
+          #$log->warn("Charging $Price{Price} setup for $$specs{SignatureIndex}");
+          $Price{Total} = $unit_count * $Price{Price};
+          last;
+        } else {
+          $log->error("Previous imp with index $$sig_specs{SignatureIndex} <=> $$specs{SignatureIndex} has press ".$$prev_i{Press}->strid().' ours is '.$$Press{strid});
+        } # end if
+      } #end 
+    } # end if parent
+    if (!exists $Price{Total}) {
+      %Price = openprint::service::get_price_object( $Price{ServiceName}, $unit_count, $Press );
+      #$log->warn("Charging $Price{Price} setup for $$specs{SignatureIndex}");
+      $Price{Total} = $unit_count * $Price{Price};
+    }
+
+  } elsif ( $Price{units} eq 'stock calliper - per plate' ) {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press );
-		$Price{Total} = $Price{Price} * $setup_count;
+		$Price{Total} = $Price{Price} * $unit_count;
 	} elsif ( $Price{units} eq 'per job' ) {
-		my $specs = $$Imposition{specs};
 		
 		my $Project = $$Imposition{Project};
 		if ( $Project ) {
-			my @signatures = sort $Project->signatures();
+			my @signatures = sort { $a <=> $b } $Project->signatures();
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[0] );
 			if ( $$sig_specs{SignatureIndex} == $$specs{SignatureIndex} ) {
 				# Do the charge.	
@@ -7211,7 +7229,7 @@ sub press_setup_cost {
 				$Price{Total} = $Price{Price};
 			} # end if
 		} else {
-			$log->error("No Project in iimposition");
+			$log->error('No Project in imposition');
 		} # end if
 	} elsif ( $Price{units} eq 'per form' ) {
 		my $specs = $$Imposition{specs};
@@ -7219,27 +7237,30 @@ sub press_setup_cost {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{"PreviousForms$qty_index"}, $Press);
 		$Price{Total} = $Price{Price};
 	} elsif ( $Price{units} eq 'total' ) {
-		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{runstyle}, $setup_count, $Press ) ) ) {
-			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
+		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{runstyle}, $unit_count, $Press ) ) ) {
+			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $unit_count, $Press );
 		} # end if
 		
 		$Price{Total} = $Price{Price};
 	} elsif ( $Price{units} eq 'per side' ) {
-		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{runstyle}, $setup_count, $Press ) ) ) {
-			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
+		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{runstyle}, $unit_count, $Press ) ) ) {
+			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $unit_count, $Press );
 		} # end if
 		
 	} else { # Per Unit
-		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{runstyle}, $setup_count, $Press ) ) ) {
-			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
+		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{runstyle}, $unit_count, $Press ) ) ) {
+			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $unit_count, $Press );
 		} # end if
-		$Price{Total} = $Price{Price} * $setup_count;
+		$Price{Total} = $Price{Price} * $unit_count;
 	} # end if
 	if ( $Price{units} =~ /per run/i ) {
 		$Price{Total} *= $plate_runs if $plate_runs;
 		#$Price{Total} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{Total};
+	$Price{'Unit Count'} = $unit_count;
+
+
 	my $plates = $setup_count;
 	$plates *= $plate_runs if $plate_runs;
 	$plates += $plate_change_qty if $plate_change_qty;
@@ -7278,7 +7299,6 @@ sub press_setup_cost {
 		$Price{'Plate Total'} = 0;
 	} # end if has a platesetupprice
 
-	$Price{'Unit Count'} = $setup_count;
 	return \%Price;
 } # end sub press_setup_cost
 
