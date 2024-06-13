@@ -87,6 +87,8 @@
 .Service .templates {
     padding-right: 0;
 }
+.Service .templates {
+}
 .Service .templates:after {
     content: ".";
     display: block;
@@ -95,6 +97,7 @@
     visibility: hidden;
 }
 
+.Service .templates li,
 .Service fieldset .templates li {
 	float: left;
 	width: 175px;
