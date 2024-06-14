@@ -43,7 +43,7 @@ my %variables = (
 	ProjectIndex=>[], ServiceIndex=>[], ServiceType=>[],
 	remaining_pages=>['output'],next_group_id=>['output'],groups=>['output','save'],
 	spine	=>	 ['save'],
-
+	alert	=>	 ['save'],
 	);
 
 @signature_variables = (
@@ -108,38 +108,38 @@ sub no_outputs {
     return @v;
 }
 sub outputs {
-	my ( $project_index, $service_index, $specs ) = @_;
-    my @v;
-    foreach my $k ( keys %variables ) {
-        push @v, $k, if sets::isin( 'output', $variables{$k} );
-    } # end foreach;
-	my @outputs = openprint::Estimating::Printing::outputs( $project_index, $service_index, $specs );
-	foreach my $Group ( groups( $project_index, $specs ) ) {
-		push @v, map { $_.$Group } @outputs;
-		if ( ! $$specs{"chkOverrideDimensions$Group"} ) {
-		push @v, map { $_.$Group } ( 'txtFinalWidth','txtFinalHeight' );
-		}
-	} # end foreach Group
-    return @v;
+  my ( $project_index, $service_index, $specs ) = @_;
+  my @v;
+  foreach my $k ( keys %variables ) {
+    push @v, $k, if sets::isin( 'output', $variables{$k} );
+  } # end foreach;
+  my @outputs = openprint::Estimating::Printing::outputs( $project_index, $service_index, $specs );
+  foreach my $Group ( groups( $project_index, $specs ) ) {
+    push @v, map { $_.$Group } @outputs;
+    if ( ! $$specs{"chkOverrideDimensions$Group"} ) {
+      push @v, map { $_.$Group } ( 'txtFinalWidth','txtFinalHeight' );
+    }
+  } # end foreach Group
+  return @v;
 }
 
 sub groups {
-	my ( $project_index, $specs ) = @_;
-	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
-	if ( $$specs{rdbCover} eq 'Different' ) {
-        if ( ! sets::isin( 1, \@Groups ) ) {
-            push @Groups, 1;
-        } # end if
-    } else {
-        @Groups = sets::exclude( [1], \@Groups );
+  my ( $project_index, $specs ) = @_;
+  my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
+  if ( $$specs{rdbCover} eq 'Different' ) {
+    if ( ! sets::isin( 1, \@Groups ) ) {
+      push @Groups, 1;
     } # end if
-    if ( ! sets::isin( 2, \@Groups ) ) {
-        push @Groups, 2;
-    } # end if
-    if ( $$specs{txtGateFoldedSpreadQuantity} and ! sets::isin( 3, \@Groups ) ) {
-        push @Groups, 3;
-    } # end if
-	return @Groups;
+  } else {
+    @Groups = sets::exclude( [1], \@Groups );
+  } # end if
+  if ( ! sets::isin( 2, \@Groups ) ) {
+    push @Groups, 2;
+  } # end if
+  if ( $$specs{txtGateFoldedSpreadQuantity} and ! sets::isin( 3, \@Groups ) ) {
+    push @Groups, 3;
+  } # end if
+  return @Groups;
 } # end sub groups
 
 sub calc {
