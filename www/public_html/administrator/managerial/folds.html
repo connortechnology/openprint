@@ -6,19 +6,14 @@
 var load_page_ajax = null;
 function load_page() {
 	if ( load_page_ajax ) load_page_ajax.abort();
-    load_page_ajax = $j('#Folds').load( '_folds.html',
-        $j('#f1').serialize(),
-        /*
-        {	
-            equipment_id: $j('#equipment_id').val(),
-            type: $j('#type').val() 
-            imposition: 
-          },
- */
-        function() {
-            load_page_ajax = null;
-          }
-      );
+    load_page_ajax = $j.ajax({
+            url: '_folds.html',
+            data: $j('#f1').serialize(),
+            success: function(data) {
+                load_page_ajax = null;
+                $j('#Folds').html(data)
+              }
+      });
   } 
   function popup_fold(fold_id) {
       window.location.href='fold.html?fold_id='+fold_id;
