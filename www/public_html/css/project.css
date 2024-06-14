@@ -112,7 +112,7 @@
 .Service fieldset {
 }
 .Service fieldset li,
-.Service fieldset p {
+.Service fieldset p:not(.buttons) {
 	padding-left: 180px;
 }
 .Service fieldset li label:not(.radio):not(.radio-inline),
@@ -251,8 +251,6 @@ table.ProofsSummary .quantity, table.ProofsSummary .size {
 	float: left;
 	width:49%;
 }
-#Inks:after,
-.Inks:after,
 .ProjectSpecifications:after {
     content: ".";
     display: block;
