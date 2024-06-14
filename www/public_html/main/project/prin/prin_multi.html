@@ -68,7 +68,7 @@
 			<div class="BookSpecifications">
 			<fieldset><legend>Book Specifications</legend>
 				<ul>
-          <li><label>Dimensions</label>
+          <li class="project_size"><label>Dimensions</label>
             <select id="ddmProjectSize" name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(this.form);">
 <? if ( $$variable{ddmProjectSize} ) ?>
                 <option value="<?ddmProjectSize?>"><?ddmProjectSize?></option>
@@ -77,16 +77,16 @@
 <? endif ( $$variable{ddmProjectSize} ) ?>
             </select>
           </li>
-          <li><label>Finished</label>
+          <li class="finished"><label>Finished</label>
             <? echo ( join( "\n",
                 input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Final Width in inches' ),
                 ' x ',
                 input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Final Height in inches' ),
 				); ) ?>
 				</li>
-				<li><label>Spine</label>
+				<li class="spine"><label>Spine</label>
 					<?echo( radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { default=>'height', onclick=>'calc(this.form.name);' } ); ) ?> </li>
-				<li><label>Spread</label>
+				<li class="multipage_spread"><label>Spread</label>
                 <? echo ( join( "\n",
 				
                 input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Width in inches' ),
@@ -189,7 +189,7 @@
 				my $h = slurp_content( '/main/project/prin/_signature.html' );
 				foreach my $Group ( @Groups ) {
 					$$variable{Group} = $$variable{Signature} = $Group;
-					$html .= variable_substitution( \$h, $variable );
+					$html .= variable_substitution(\$h, $variable);
 				} # end foreach
 				return $html;
 			) ?>
