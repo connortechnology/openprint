@@ -94,7 +94,9 @@ sub calc {
 	} # end if
 	my $stitching_specs = openprint::service::get_specs_ref( $Project, $stitching_service_index ) if $stitching_service_index;
 
-	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'Drilling Capable'=>\@capabilities}, 'useinestimating'=>1, order=>'strName');
+	my @possible_equipment = openprint::Equipment->find(
+      Specifications => {'Drilling Capable'=>\@capabilities},
+      useinestimating=>1, order=>'strName');
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
@@ -118,8 +120,11 @@ sub calc {
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
-      my $spec = $Equipment->Specification('Maximum Lift Depth');
-			$$specs{'hdnBreakdown'.$qty_index} .= '<br/>Equipment: '.$Equipment->name().' Lift: '.$spec->value().$spec->units().'<br/>' if $spec;
+      my $liftDepth = $Equipment->Specification('Maximum Lift Depth', $$specs{txtHoleSize});
+      $liftDepth = $Equipment->Specification('Lift Depth', $$specs{txtHoleSize}, 1) if !$liftDepth;
+			$$specs{'hdnBreakdown'.$qty_index} .= '<br/>Equipment: '.$Equipment->name();
+      $$specs{'hdnBreakdown'.$qty_index} .= ' Lift: '.($liftDepth ? $liftDepth->value().$liftDepth->units():' no lift depth set');
+      $$specs{'hdnBreakdown'.$qty_index} .= '<br/>';
 			my $equipment_type = $Equipment->specification('Type');
 			if ( $equipment_type eq 'Stitcher' ) {
 				if ( ! $stitching_service_index ) {
@@ -150,24 +155,25 @@ sub calc {
 				my $min_spine_length = $Equipment->specification('Drilling Minimum Spine Length', $$specs{txtHoleQty} );
 				$$specs{'hdnBreakdown'.$qty_index} .= " Spine Length: $spine_length, min: $min_spine_length, max: $max_spine_length<br/>";
 				if ( $max_spine_length and ( $max_spine_length < $spine_length ) ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= " Spine too long.\n";
+					$$specs{'hdnBreakdown'.$qty_index} .= ' Spine too long.<br/>';
 					next;
 				} # end if
 				if ( $min_spine_length and ( $min_spine_length > $spine_length ) ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= " Spine too short.\n";
+					$$specs{'hdnBreakdown'.$qty_index} .= ' Spine too short.<br/>';
 					next;
 				} # end if
 			} # end if
 			if ( $Equipment->specification('Hole Sizes') and ! sets::isin( $$specs{txtHoleSize}, [split ',', $Equipment->specification('Hole Sizes', $$specs{txtHoleQty} ) ] ) ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= " Doesn't support $$specs{txtHoleSize}\" holes.\n";
+				$$specs{'hdnBreakdown'.$qty_index} .= ' Doesn\'t support '.$$specs{txtHoleSize}.' holes.<br/>';
 				next;
 			} # end if
-			if ( $Equipment->specification('Maximum Lift Depth') and $Equipment->specification('Maximum Lift Depth') < $$specs{txtFinishedCalliper} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= " Too thick.\n";
+			if ( $liftDepth and $$liftDepth{value} < $$specs{txtFinishedCalliper} ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= ' Too thick.<br/>';
 				next;
 			} # end if
-			if ( ! $Equipment->specification('Number of Drills') ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= " has no drills!\n";
+			my $heads = $Equipment->specification('Number of Drills') || $Equipment->specification('Drill Heads');
+			if ( ! $heads) {
+				$$specs{'hdnBreakdown'.$qty_index} .= ' has no drills! Please set the Drill Heads specification<br/>';
 				next;
 			} # end if
 
@@ -182,8 +188,8 @@ sub calc {
 				if ( ( $$services{Scoring} or $$services{Perforating} ) and $Equipment->specification('PerfScoreDrillingItemsPerLift') ) {
 					$items_per_lift = $Equipment->specification('PerfScoreDrillingItemsPerLift');
 					$$specs{'hdnBreakdown'.$qty_index} .= 'Settings items per lift to 10 because the items are scored or perfed<br/>';
-				} elsif ( $Equipment->specification('Maximum Lift Depth') ) {
-					$items_per_lift = int($Equipment->specification('Maximum Lift Depth')/$$specs{txtFinishedCalliper});
+				} elsif ($liftDepth) {
+					$items_per_lift = int($$liftDepth{value}/$$specs{txtFinishedCalliper});
 				} else {
 					$items_per_lift = 1;
 				} # end if
@@ -193,6 +199,9 @@ sub calc {
 
 			my $makeReady = openprint::service::get_price( 'DrillingMakeReady', $$specs{txtHoleQty}, $Equipment );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReadyPrice: $%.2f<br/>', $makeReady);
+			my $headMakeReady = openprint::service::get_price( 'DrillingHeadMakeReady', $$specs{txtHoleQty}, $Equipment ) * $$specs{txtHoleQty};
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('HeadMakeReadyPrice: $%.2f<br/>', $headMakeReady);
+
 			my %servicePrice = openprint::service::get_price_object( 'Drilling', $qty, $Equipment);
 			if ( ! %servicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No Service Price found for this quantity.<br/>";
@@ -241,7 +250,7 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units ( $servicePrice{units} ) for service price!<br/>";
 			} # end if
 
-			$price = $makeReady + $servicePrice{Total};
+			$price = $makeReady + $headMakeReady + $servicePrice{Total};
 			if ( $minPrice > 0 and $price < $minPrice ) {
 				$price = $minPrice;
 			} # end if
