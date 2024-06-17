@@ -25,6 +25,28 @@
 		return 1;
 	} // end function
 
+  function signature_type_change(ddm) {
+    if (ddm.value != 'unknown') {
+      const re = /txtSignatureType(\d+)/;
+      const matches = ddm.name.match(re);
+      if (matches) {
+        console.log(matches);
+        const description = ddm.form.elements['txtServiceDescription'+matches[1]];
+
+        if ( description && (
+          description.value == 'Cover Pages' ||
+          description.value == 'Interior Pages' ||
+          description.value == 'Gate Folded Pages' ||
+          description.value == 'PerfReplyCard' ||
+          description.value == 'Cover'
+        )) {
+          description.value = ddm.value;
+        }
+      }
+    } // if ! unkown
+    calc(ddm.form.name);
+  }
+
 	function add_group() {
 		var form = $('f1');
 	   new Ajax.Request( '/main/project/prin/_signature.html', {

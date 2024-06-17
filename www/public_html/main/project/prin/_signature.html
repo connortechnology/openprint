@@ -57,7 +57,7 @@
 <? else ( $$variable{Signature} == 1 or $$variable{Signature} == 2 ) ?>
 		<li>
 			<label>Signature Type</label>
-			<select name="txtSignatureType<?Signature?>" onchange="calc(this.form.name);">
+      <select name="txtSignatureType<?Signature?>" on_change_this="signature_type_change">
 <? echo (
 	my @options = (
 		'unknown', 'Please select',
