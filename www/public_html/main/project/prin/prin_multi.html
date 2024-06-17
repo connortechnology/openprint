@@ -43,6 +43,11 @@
           description.value = ddm.value;
         }
       }
+      if (ddm.value == 'Gate Folded Pages') {
+        $j('#templates'+matches[1]).load('/includes/main/proj/templates/_gatefolds.html?Signature='+matches[1]);
+      } else {
+        $j('#templates'+matches[1]).html('');
+      }
     } // if ! unkown
     calc(ddm.form.name);
   }
