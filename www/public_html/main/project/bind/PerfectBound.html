@@ -30,17 +30,17 @@
 					my $html;
 					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			
-						$html .= '<span class="'.$$variable{Columns}.'Columns">';
-						foreach my $page ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
-							$html .= input( 
-								name	=>	"txtSignatureQty${page}Page-${qty_index}", 
-								value	=>	$$variable{"txtSignatureQty${page}Page-${qty_index}"},
-								type	=>	'cardinal',
-								onkeyup	=>	'calc(this.form.name);', 
-								readonly=>	!sets::isin( $session{user_type}, ['A','E'] ),
-								);
-							$html .= $page . ' Page Signature(s)<br/>';
-						} # end foreach page
+						$html .= join("\n", '<span class="'.$$variable{Columns}.'Columns">',
+                ( map {
+                  input( 
+                      name	=>	'txtSignatureQty'.$_.'Page-'.$qty_index, 
+                      value	=>	$$variable{'txtSignatureQty'.$_.'Page-'.$qty_index},
+                      type	=>	'cardinal',
+                      onkeyup	=>	'calc(this.form.name);', 
+                      readonly=>	!sets::isin( $session{user_type}, ['A','E'] ),
+                      ).' '.$_.' Page Signature(s)<br/>'
+                  } ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) ), 
+                );
 						$html .= input(
 							name	=>	"txtSignatureQtyGateFolded-$qty_index", 
 							value	=>	$$variable{"txtSignatureQtyGateFolded-$qty_index"},

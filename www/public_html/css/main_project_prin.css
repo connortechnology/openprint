@@ -11,20 +11,27 @@
 	width: auto;
 }
 .Inks {
-padding-top: 23px;
+  padding-top: 23px;
+  margin-bottom: 5px;
 }
 .Inks,
 .PagesAndSizes {
   display: flex;
   align-items: stretch;
-position: relative;
-
+  position: relative;
 }
+.BleedsColourBarsStockOverrides > div,
 .PagesAndSizes > div {
   flex: 1;
 }
+.BleedsColourBarsStockOverrides > div fieldset,
+.Inks > div fieldset,
 .PagesAndSizes > div fieldset {
   height: 100%;
+}
+.InksFront,
+.InksBack {
+flex: 1;
 }
 .link-outer {
   position: absolute;
@@ -33,23 +40,23 @@ position: relative;
   right: 20%;
 }
 
+.BleedsColourBarsStockOverrides {
+display: flex;
+align-items: stretch;
+}
+
 .SignatureGroup .leftColumn ,
 .SignatureGroup .rightColumn {
 width: 50%;
 	float: left;
 }
-.Inks label:after {
-content: "";
-}
 .BleedsColourBars ,
 .Service .Overrides ,
-.Stock ,
-.InksFront,
-.InksBack {
+.Stock 
+ {
 	float: left;
 	width: 50%;
 	min-width: 425px;
-flex: 1;
 }
 .SpotColour {
 	width: 25%;

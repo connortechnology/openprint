@@ -26,6 +26,31 @@ require openprint::Imposition;
 
 use constant DEBUG => 0;
 
+use vars qw( %ServicePrices %Specifications);
+%ServicePrices = (
+  PerforatingMinimumCharge => {},
+  PerforatingMakeReady => {},
+  Perforating => { units=> ['per hour', 'per m']},
+);
+%Specifications = (
+  'RunSpeed' => {range_units => [ 'calliper'], units=>'per hour'},
+  'Perforating Overs' => {range_units => [ 'impressions' ], units=>['percent']},
+  'Perforating Capable' => { value=>['Y','N', 'When Printing', 'When Folding', 'When Stitching' ] },
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
+
+
 my @all_equipment;
 my @stitchers;
 my %Materials;

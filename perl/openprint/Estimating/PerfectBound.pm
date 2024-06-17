@@ -534,7 +534,11 @@ sub calc {
 			  $$specs{'hdnBreakdown'.$qty_index} .= 'Pocket Make Ready: $' . sprintf('%.2f', Math::Round::nearest(0.01, $$pass_price{PocketMakeReady})).'<br/>' if $$pass_price{PocketMakeReady};
 
         if ( my $servicePrice = $$pass_price{ServicePrice} ) {
-          $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s $%.2f%s @%d per hour %d = %.2fhours =$%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','RunSpeed','quantity','RunTime','Total'});
+          if ($$servicePrice{units} eq 'per 1000' or $$servicePrice{units} eq 'per m') {
+            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s $%.2f%s * %d = $%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','quantity','Total'});
+          } else {
+            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s $%.2f%s @%d per hour %d = %.2fhours = $%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','RunSpeed','quantity','RunTime','Total'});
+          }
         } # end if
         $pass ++;
 			}
@@ -658,7 +662,7 @@ sub get_price {
 
 		my $loopbreak_pockets = $neededPockets;
 		while ($neededPockets > $maxPockets) {
-			if ( $servicePrice{units} eq 'per m' ) {
+			if ( $servicePrice{units} eq 'per m' or $servicePrice{units} eq 'per 1000') {
 				$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
 				$price{Service} += $servicePrice{Total};
 			} elsif ( $servicePrice{units} eq 'each' ) {
@@ -702,8 +706,8 @@ sub get_price {
     $servicePrice{quantity} = $qty;
 		my $unitsPerHour = $servicePrice{RunSpeed} = $Equipment->specification( 'Units Per Hour', $neededPockets );
 		my $runtime = $servicePrice{RunTime} = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
-			$price{RunTime} += $runtime * 360;
-		if ( $servicePrice{units} eq 'per m' ) {
+    $price{RunTime} += $runtime * 360;
+		if ( $servicePrice{units} eq 'per m' or $servicePrice{units} eq 'per 1000') {
 			$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
 			$price{Service} += $servicePrice{Total};
 		} elsif ( $servicePrice{units} eq 'each' ) {
