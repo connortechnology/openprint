@@ -187,7 +187,7 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
       my $price = get_price($Project, $Service, $specs, $sig_specs, $qty_index);
       $total += $$price{Total};
       $$specs{"hdnBreakdown$qty_index"} .= $$price{Breakdown};
-      $$specs{"ddmEquipment$qty_index"} .= $$price{Equipment}->id();
+      $$specs{"ddmEquipment$qty_index"} .= $$price{Equipment}->id() if $$price{Equipment};
     } # end foreach signature
 
     if ( (!$$specs{"OverridePrice$qty_index"}) or ($$specs{"OverridePrice$qty_index"} ne 'Y')) {
