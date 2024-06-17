@@ -441,3 +441,10 @@ update projecttemplate set type='PerfectBound' where type='PerfectBinding';
 update projecttemplate set type='Cerlox' where type='PlasticComb';
 delete from projecttemplate where type='KnotchBound';
 
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='PerfectBound') where id=135;
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='Perfect Binder_Sulby_10x14'), 'PerfectBound Capable', 'Y','');
+UPDATE services set name='PerfectBound' WHERE name='PerfectBinding';
+UPDATE services set name='PerfectBoundMakeReady' WHERE name='PerfectBindingMakeReady';
+UPDATE Service_Prices SET range_units = 'pockets' WHERE
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Drilling') where id=35;
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='Multi Head Drill'), 'Drilling Capable', 'Y','');
