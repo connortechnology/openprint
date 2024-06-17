@@ -431,6 +431,10 @@ sub neccessary {
 		$openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
 		return 0;
 	} # end if
+	if ( $$services{PerfectBound} ) {
+		$openprint::log->debug(" ** Project is marked as PerfectBound, Folding needed ! ** ");
+		return 1;
+	} # end if
 	if ( 0 and $$services{''} ) {
 		# Turn this off... Unbound defaults to a spreadsize of 4, so unbound should still mean folding
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -443,7 +447,7 @@ sub neccessary {
 			return 1;
 		} # end if
 	} # end foreach
-	$openprint::log->debug("FOLDING NOT NEEDED!");
+	$openprint::log->debug('FOLDING NOT NEEDED!');
 	return 0;
 } # end sub neccessary
 
