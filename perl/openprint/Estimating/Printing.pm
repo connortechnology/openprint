@@ -421,6 +421,7 @@ my @qty_override_keys = (
 				'OverridePrice',
 				'OverrideSetup',
 				'OverrideRun',
+				'RunspeedOverride',
 				'chkOverridePlateType',
 );
 my @override_keys = (
