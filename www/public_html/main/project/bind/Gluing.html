@@ -20,6 +20,17 @@
 					/>
 					<label class="radio" for="chkOverrideArea-<?SignatureIndex?>">Override</label>
 				</li>
+<?echo(
+my @complexityoptions = map { openprint::Service->find_one(name=>'Gluing'.$_) ? $_ : () } ( 'Simple','Average', 'Complex' );
+  if (@complexityoptions) {
+    return join("\n", '<li class="complexity"><label>Complexity</label>',
+      radio('complexity', [map { $_=>$_ } @complexityoptions], $$variable{complexity}, {onclick=>'calc(\'f1\');'}),
+    '</li>',
+);
+}
+return;
+)?>
+
 				</ul>
 			</fieldset>
 		<? endwhile ( $$variable{SignatureServiceIndex} = shift @{$$variable{SignatureGroups}}; ) ?>
