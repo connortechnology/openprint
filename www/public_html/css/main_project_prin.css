@@ -29,6 +29,12 @@
 .PagesAndSizes > div fieldset {
   height: 100%;
 }
+.project_size,
+.dimension_boxes {
+  float: left;
+  min-width: 360px;
+  margin-top: 5px;
+}
 .InksFront,
 .InksBack {
 flex: 1;
