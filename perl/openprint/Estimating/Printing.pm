@@ -1051,6 +1051,11 @@ sub get_Stocks {
 				return @Papers;
 			} # end if
 		} # end if
+    if ($$specs{txtSpecificStockWeight} and ($$specs{txtSpecificStockWeight} =~ /(\d+)\s?pt/i)) {
+      if ($$specs{txtSpecificStockCalliper} != $1/1000) {
+        $$specs{alert} .= "Is your calliper correct? $$specs{txtSpecificStockCalliper} != $$specs{txtSpecificStockWeight}<br/>";
+      }
+    }
 		my $Paper = openprint::Paper::load_from_signature( $Project, $specs );
 #$log->debug( $Paper->id_string() );
 		push @Papers, $Paper;
