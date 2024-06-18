@@ -433,16 +433,19 @@ $log->warn('Object::changes called on an object with no fields');
       } elsif ( $debug ) {
         $log->debug( "$field not changed from ".join(',',@{$$self{$field}}).' to '.join(',', @new_value).' intersection:'.join(',',sets::intersection(@{$$self{$field}}, @new_value)));
 			}
-		} elsif ( $$self{$field} ne $$params{$field} ) {
-			if ( $field eq 'password' ) {
-				push @results, "$field changed";
-			} else {
-				push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$$params{$field}.'\'';
-			}
 		} else {
-			if ( $debug ) {
-				$log->debug("$field eq $$self{$field} to $$params{$field}");
-			}
+      my $newvalue = $self->transform($field=>$$params{$field});
+      if ( $$self{$field} ne $newvalue ) {
+        if ( $field eq 'password' ) {
+          push @results, "$field changed";
+        } else {
+          push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$newvalue.'\'';
+        }
+      } else {
+        if ( $debug ) {
+          $log->debug("$field eq $$self{$field} to $newvalue");
+        }
+      } # end if
 		} # end if
 	} # end foreach field
 	return @results;
