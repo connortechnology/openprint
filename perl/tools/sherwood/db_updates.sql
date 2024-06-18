@@ -1,6 +1,7 @@
 UPDATE users set type='A' where email='iconnor@connortechnology.com';
 update service_types set name='Aqueous',url='spec/Aqueous.html' where name='AQCoating';
 UPDATE service_types set url='prep/proofs.html' WHERE url='prep/prep_proo.html';
+UPDATE service_types set type='Prepress' WHERE name='TypeSetting';
 UPDATE service_types set url='bind/stitching.html' WHERE name='CornerStitching';
 UPDATE service_types set url='shipping/Shipping.html' WHERE url='shipping/shipping.html';
 UPDATE service_types set url='prin/Signature.html' WHERE url='service/printing.html';

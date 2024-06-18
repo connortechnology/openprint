@@ -337,7 +337,7 @@ sub signature_needs {
 			return 0;
 		}
 		if ( $fold_types{$$specs{rdbTemplateType}} ) {
-			$openprint::log->warn("FOLDING NEEDED got templatetype!") if DEBUG_NEEDS;
+			$openprint::log->warn('FOLDING NEEDED got templatetype!') if DEBUG_NEEDS;
 			return 1;
 		} else {
 			$openprint::log->warn("FOLDING NEEDED $$specs{rdbTemplateType} $fold_types{$$specs{rdbTemplateType}}!") if DEBUG_NEEDS;
@@ -876,7 +876,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 					$openprint::log->debug(qq`Overriden $$specs{"FoldQty-$form-$qty_index-$index"} $$specs{"FoldImposition-$form-$qty_index-$index"}out $$specs{"FoldType-$form-$qty_index-$index"}`) if DEBUG;
 
 					if ($pages and ( $$FI{pages} != $pages ) ) {
-#$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$FI{pages}`) if DEBUG;
+$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$FI{pages}`) if DEBUG;
 						next;
 
 					} elsif ( $$specs{rdbTemplateType} and $fold_types{$$specs{rdbTemplateType}} and ( $$specs{"FoldType-$form-$qty_index-$index"} ne $$specs{rdbTemplateType} ) ) {
