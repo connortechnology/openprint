@@ -2401,7 +2401,7 @@ $log->debug("Using spine ehgiht");
 						} # end foreach signature in the group
 					} # end foreach group
 					if ( ! $finished_calliper ) {
-						$$specs{alert} .= 'No caliper found for interior pages.  Spread Width will be incorrect';
+						$$specs{alert} .= 'No calliper found for interior pages.  Spread Width will be incorrect';
 					}
 $openprint::log->debug("Doing Perfect bound ifinished calliper is $finished_calliper");
 
@@ -2423,7 +2423,7 @@ $openprint::log->debug("Doing Perfect bound ifinished calliper is $finished_call
 						$$specs{txtSpreadSize} = $openprint::config{$$printing_specs{rdbTemplateType}.'SpreadSize'};
 					} elsif ( $$printing_specs{rdbTemplateType} eq 'Unbound' ) {
 						$$specs{txtSpreadSize} = 2;
-					} elsif ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) {
+					} elsif ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' or $$printing_specs{rdbTemplateType} eq 'PerfectBinding') {
 						if ( $openprint::config{PerfectBindSpreadSize} ) {
 							$$specs{txtSpreadSize} = $openprint::config{PerfectBindSpreadSize};
 						} else {
@@ -6876,7 +6876,8 @@ $log->debug("Considering $$Press{strid}") if DEBUG_PRESSES;
 			$log->error("Press $$Press{strid} has no Number of Colours");
 		}
 
-		if ( ( @$side_one_colours > $number_of_colours or @$side_two_colours > $number_of_colours ) and ( $_ = $Press->specification('Multipass', $Paper->gsm()) and ( $_ ne 'Y' ) ) ) {
+    my $multipass = $Press->specification('Multipass', $Paper->gsm());
+		if ( ( @$side_one_colours > $number_of_colours or @$side_two_colours > $number_of_colours ) and ( !$multipass or ( $multipass ne 'Y' ) ) ) {
 			$results{$press_id} = 'Too many colours and no multipass.';
 			next;
 		} elsif ( $_ = $Press->specification('Web Press') and ( $_ eq 'Y' ) ) {
