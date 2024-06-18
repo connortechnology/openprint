@@ -126,20 +126,20 @@ sub outputs {
 sub groups {
 	my ( $project_index, $specs ) = @_;
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
-	if ( $$specs{rdbCover} eq 'Different' ) {
-        if ( ! sets::isin( 1, \@Groups ) ) {
-            push @Groups, 1;
-        } # end if
-    } else {
-        @Groups = sets::exclude( [1], \@Groups );
+  if ( $$specs{rdbCover} eq 'Different' ) {
+    if ( ! sets::isin( 1, \@Groups ) ) {
+      unshift @Groups, 1;
     } # end if
-    if ( ! sets::isin( 2, \@Groups ) ) {
-        push @Groups, 2;
-    } # end if
-    if ( $$specs{txtGateFoldedSpreadQuantity} and ! sets::isin( 3, \@Groups ) ) {
-        push @Groups, 3;
-    } # end if
-	return @Groups;
+  } else {
+    @Groups = sets::exclude( [1], \@Groups );
+  } # end if
+  if ( ! sets::isin( 2, \@Groups ) ) {
+    push @Groups, 2;
+  } # end if
+  if ( $$specs{txtGateFoldedSpreadQuantity} and ! sets::isin( 3, \@Groups ) ) {
+    push @Groups, 3;
+  } # end if
+  return @Groups;
 } # end sub groups
 
 sub calc {
