@@ -876,7 +876,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 					$openprint::log->debug(qq`Overriden $$specs{"FoldQty-$form-$qty_index-$index"} $$specs{"FoldImposition-$form-$qty_index-$index"}out $$specs{"FoldType-$form-$qty_index-$index"}`) if DEBUG;
 
 					if ($pages and ( $$FI{pages} != $pages ) ) {
-$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$FI{pages}`) if DEBUG;
+$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$FI{pages}pages`) if DEBUG;
 						next;
 
 					} elsif ( $$specs{rdbTemplateType} and $fold_types{$$specs{rdbTemplateType}} and ( $$specs{"FoldType-$form-$qty_index-$index"} ne $$specs{rdbTemplateType} ) ) {
@@ -886,7 +886,7 @@ $openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"
 #$openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_index-$index"} != $$FI{imposition}`) if DEBUG;
 						next;
 					} elsif ( $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity} ) {
-            $$specs{alert} .= 'Found a fold that matched but maybe the quantity of folds is wrong. Should it be '.$$FI{quantity}.'?<br/>' if !$$specs{alert};
+            #$$specs{alert} .= 'Found a fold that matched for form '.$form.' but maybe the quantity of folds is wrong. Should it be '.$$FI{quantity}.'?<br/>' if !$$specs{alert};
 #$openprint::log->debug(qq`Wrong qty: $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity}`) if DEBUG;
 						next;
 					} # end if
@@ -1461,23 +1461,23 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
               } # end if orientation
             } # end if max_feed_width
 
-							if ( $Fold ) {
-								$Fold = $Fold->clone();
-								$$Imposition{Fold} = $Fold;
+            if ( $Fold ) {
+              $Fold = $Fold->clone();
+              $$Imposition{Fold} = $Fold;
 
-								push @{$folds{$$Fold{type}.'-'.$$Imposition{imposition}.'out'}}, $Fold;
-								$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', @$Imposition{'page_columns','page_rows','image_orientation','imposition'})) if DEBUG;
-								next;
-							} elsif ( @my_equipment == 1 ) {
-								$Imposition->display('Didnt find:' ) if DEBUG;
-								$Breakdown .= sprintf('Didnt find: %dx%d=%dpages %s,%dout %s<br/>', @$Imposition{'page_columns','page_rows','pages'},
-										$openprint::Imposition::Orientations{$$Imposition{spine_direction}}, $$Imposition{imposition}, $fits );
-                $results{Breakdown} .= $Breakdown;
-								$complete = 0;
-							} elsif ( DEBUG ) {
-								$Imposition->display('Didnt find fold:' );
-								$complete = 0;
-							} # end if
+              push @{$folds{$$Fold{type}.'-'.$$Imposition{imposition}.'out'}}, $Fold;
+              $openprint::log->debug(sprintf('Found: %dx%d %s,%dout', @$Imposition{'page_columns','page_rows','image_orientation','imposition'})) if DEBUG;
+              next;
+            } elsif ( @my_equipment == 1 ) {
+              $Imposition->display('Didnt find:' ) if DEBUG;
+              $Breakdown .= sprintf('Didnt find: %dx%d=%dpages %s,%dout %s<br/>', @$Imposition{'page_columns','page_rows','pages'},
+                  $openprint::Imposition::Orientations{$$Imposition{spine_direction}}, $$Imposition{imposition}, $fits );
+              $results{Breakdown} .= $Breakdown;
+              $complete = 0;
+            } elsif ( DEBUG ) {
+              $Imposition->display('Didnt find fold:' );
+              $complete = 0;
+            } # end if
 
 						$complete = 0;
 						# If we get here, then we couldn't find the fold
