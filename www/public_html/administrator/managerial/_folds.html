@@ -19,6 +19,7 @@
 			<th class="Equipment">Equipment</th>
 			<th class="Fold">Name</th>
 			<th class="Type">Type</th>
+			<th class="Orientation">Orientation</th>
 			<th class="Pages">Pages</th>
 			<th class="Folds">Folds</th>
 			<th class="Angles">Angles</th>
@@ -39,17 +40,19 @@
 	<td class="Equipment" onclick="popup_fold(%2$d);">%3$s</td>
 	<td class="Fold" onclick="popup_fold(%2$d);">%4$s</td>
 	<td class="Type" onclick="popup_fold(%2$d);">%5$s</td>
-	<td class="Pages" onclick="popup_fold(%2$d);">%6$s</td>
-	<td class="Folds">%7$s</td>
-	<td class="Angles">%8$s</td>
-	<td class="MinMaxImposition">%9$s / %10$s</td>
-	<td class="MinMaxWidth">%11$s / %12$s</td>
-	<td class="MinMaxHeight">%13$s / %14$s</td>
-	<td class="MRTime">%15$d</td>
-	<td class="Speed">%16$s</td>
+  <td class="Orientation" onclick="popup_fold(%2$d);">%6$s</td>
+	<td class="Pages" onclick="popup_fold(%2$d);">%7$s</td>
+	<td class="Folds">%8$s</td>
+	<td class="Angles">%9$s</td>
+	<td class="MinMaxImposition">%10$s / %11$s</td>
+	<td class="MinMaxWidth">%12$s / %13$s</td>
+	<td class="MinMaxHeight">%14$s / %15$s</td>
+	<td class="MRTime">%16$d</td>
+	<td class="Speed">%17$s</td>
 </tr>
 `, $rowclass, $$Fold{id}, $Fold->Equipment()->name(), $$Fold{name}, 
 $Fold->type(), 
+$Fold->orientation(),
 ($Fold->page_columns() ? $Fold->page_columns().'x'.$Fold->page_rows().'='.$Fold->pages() : $Fold->pages()),
 $Fold->folds(), $Fold->angles(),
 join(' ',
