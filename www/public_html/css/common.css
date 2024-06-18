@@ -211,7 +211,7 @@ fieldset li {
 	padding: 0 0 0 185px;
 	text-align: left;
 }
-fieldset label:not(.radio):not(.radio-inline) {
+fieldset ul li label:not(.radio):not(.radio-inline) {
 	width: 180px;
 	margin-left: -185px;
 	float: left;
