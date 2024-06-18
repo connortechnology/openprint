@@ -205,20 +205,13 @@ sub calc {
 				if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
 					$$specs{'txtServiceDescription'.$group_id} = 'Perforated Reply Card';
 				} # end if
-      } elsif ( $$specs{'txtSignatureType'.$group_id} eq 'Gate Folded Pages' ) {
-        if ($$specs{'rdbTemplateType'.$group_id} eq 'SingleGateFold') {
-          $override_pages{$group_id} = 6;
-        } elsif ($$specs{'rdbTemplateType'.$group_id} eq 'DoubleGateFold') {
-          $override_pages{$group_id} = 8;
-        }
 			} else {
 				if ( ! $group_id ) {
 					$log->warn("NO GROUP ID $group_id");
 				}
 				my @g_signatures = $Project->signatures({Group=>$group_id});
 				if ( ! @g_signatures ) {
-
-# calc shouldn't really alter the project.
+          # calc shouldn't really alter the project.
 					$Project->add_signature( undef, undef, {
 							Group=>$group_id,
 							( $group_id == 1 ? ( txtSignatureType=>'Cover Pages', txtServiceDescription=>'Cover' ) : () ),
@@ -226,12 +219,24 @@ sub calc {
 							( $group_id == 3 ? ( txtSignatureType=>'Gate Folded Pages', txtServiceDescription=>'Gate Folded Pages' ) : () ),
 							} );
 				} # end if
-			} # end if
-			$remaining_pages -= $override_pages{$group_id};
+			} # end if type
+			$remaining_pages -= $override_pages{$group_id} if $override_pages{$group_id};
 			if ( $$specs{"PageQuantity-$group_id"} and ( $$specs{"PageQuantity-$group_id"} > $$specs{'GroupPageQuantity'.$group_id} ) ) {
 				$$specs{alert} .= "You have specified to print more pages per signature than are required for group $group_id.<br/>";
 			} # end if
     } else {
+      if ( $$specs{'txtSignatureType'.$group_id} eq 'Gate Folded Pages' ) {
+        if ($$specs{'rdbTemplateType'.$group_id} eq 'SingleGateFold') {
+          $override_pages{$group_id} = 6;
+          $$specs{'txtSpreadSize'.$group_id} = 6;
+        } elsif ($$specs{'rdbTemplateType'.$group_id} eq 'DoubleGateFold') {
+          $override_pages{$group_id} = 8;
+          $$specs{'txtSpreadSize'.$group_id} = 8;
+        } else {
+          $override_pages{$group_id} = 4;
+          $$specs{'txtSpreadSize'.$group_id} = 4;
+        }
+      }
 			$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
 		} # end if override
 	} # end foreach group
@@ -317,6 +322,12 @@ sub calc {
 		my @side_two_colours = openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideTwo', \%variables );
 
 		my @Stocks = openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
+
+    if (!$$specs{'chkOverrideDimensions'.$group_id}) {
+      # Delete them so that set_size will auto-calculate
+      delete $sig_specs{txtWidth};
+      delete $sig_specs{txtHeight};
+    }
 		openprint::Estimating::Printing::set_size( $Project, \%sig_specs, $specs );
 
 		if ( ! ( @side_one_colours or @side_two_colours ) ) {
@@ -339,7 +350,10 @@ sub calc {
 			}
 		}
 		$$specs{alert} .= $sig_specs{alert} .' for group ' . $group_id . ' ' . $$specs{'txtServiceDescription'.$group_id}. '<br/>' if $sig_specs{alert};
-		@$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
+    @$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
+    #foreach (@signature_variables) {
+    #$openprint::log->error("Group $group_id $_ => $sig_specs{$_}");
+    #}
 		if ( ! ( $variables{'GroupPageQuantity'.$group_id} and @{$variables{'GroupPageQuantity'.$group_id}} ) ) {
 			$openprint::log->debug("Setting output on GroupPageQuantity$group_id") if DEBUG;
 			$variables{'GroupPageQuantity'.$group_id} = [sets::union('output', @{$variables{'GroupPageQuantity'.$group_id}})];
