@@ -204,6 +204,12 @@ sub calc {
 				if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
 					$$specs{'txtServiceDescription'.$group_id} = 'Perforated Reply Card';
 				} # end if
+      } elsif ( $$specs{'txtSignatureType'.$group_id} eq 'Gate Folded Pages' ) {
+        if ($$specs{'rdbTemplateType'.$group_id} eq 'SingleGateFold') {
+          $override_pages{$group_id} = 6;
+        } elsif ($$specs{'rdbTemplateType'.$group_id} eq 'DoubleGateFold') {
+          $override_pages{$group_id} = 8;
+        }
 			} else {
 				if ( ! $group_id ) {
 					$log->warn("NO GROUP ID $group_id");
