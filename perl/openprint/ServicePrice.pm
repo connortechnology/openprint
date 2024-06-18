@@ -54,6 +54,8 @@ $serial = 'service_prices_id_seq';
 	cost	=>	[ 's/[^\d\.\-]//g' ],
 	markup	=>	[ 's/[^\d\.\-]//g' ],
 	price	=>	[ 's/[^\d\.\-]//g' ],
+	units					=>	[ 's/^\s+//', 's/\s+$//' ],
+	range_units					=>	[ 's/^\s+//', 's/\s+$//' ],
 );
 
 sub next {
