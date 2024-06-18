@@ -886,7 +886,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 #$openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_index-$index"} != $$FI{imposition}`) if DEBUG;
 						next;
 					} elsif ( $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity} ) {
-            $$specs{alert} .= 'Found a fold that matched but maybe the quantity of folds is wrong. Should it be '.$$FI{quantity}.'?<br/>';
+            $$specs{alert} .= 'Found a fold that matched but maybe the quantity of folds is wrong. Should it be '.$$FI{quantity}.'?<br/>' if !$$specs{alert};
 #$openprint::log->debug(qq`Wrong qty: $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity}`) if DEBUG;
 						next;
 					} # end if
