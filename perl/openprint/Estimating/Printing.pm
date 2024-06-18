@@ -368,6 +368,7 @@ my %variables = (
 	hdnNetSheetCount1 => ['save','output'], hdnNetSheetCount2 => ['save','output'], hdnNetSheetCount3 => ['save','output'],
 	StockQuantity1 => ['save','output'], StockQuantity2 => ['save','output'], StockQuantity3 => ['save','output'],
 	Runspeed1 => ['save','output'], Runspeed2 => ['save','output'], Runspeed3 => ['save','output'],
+	RunspeedOverride1 => ['save'], RunspeedOverride2 => ['save'], RunspeedOverride3 => ['save'],
 	RunTime1 => ['save','output'], RunTime2 => ['save','output'], RunTime3 => ['save','output'],
 	txtWidth => ['save'], txtHeight => ['save'], txtFinalWidth => ['save'], txtFinalHeight => ['save'],
 	chkOverrideDimensions	=> ['save'],
@@ -420,6 +421,7 @@ my @qty_override_keys = (
 				'OverridePrice',
 				'OverrideSetup',
 				'OverrideRun',
+				'RunspeedOverride',
 				'chkOverridePlateType',
 );
 my @override_keys = (
@@ -3101,7 +3103,7 @@ $log->debug('after sorting presses: ' . ( sprintf('%.4f', tv_interval( [$master_
 			next;
 		}
 		my $Paper = $$Imposition{Paper};
-$Imposition->layout_width(undef);
+    $Imposition->layout_width(undef);
 
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown($best_price, $specs);
 		shift @{$$best_price{Impositions}};
@@ -5715,6 +5717,9 @@ sub calc_price {
 
 	my $RunSpeed = $price{RunSpeed} = $Press->Specification('Run Speed '.$$Imposition{runstyle});
 	$RunSpeed = $price{RunSpeed} = $Press->Specification('Run Speed') if ! $price{RunSpeed};
+  if ($$specs{'RunspeedOverride'.$qty_index} and ($$specs{'RunspeedOverride'.$qty_index} eq 'Y')) {
+    $$RunSpeed{value} = $$specs{'Runspeed'.$qty_index}
+  }
 
 	my $std_speed = $price{StandardRunSpeed} = $Press->Specification('Standard Run Speed ' . $$Imposition{runstyle} );
 	$price{StandardRunSpeed} = $std_speed = $Press->Specification('Standard Run Speed') if ! $std_speed;
@@ -5722,7 +5727,9 @@ sub calc_price {
 
   if ( $RunSpeed ) {
     my $run_speed;
-    if ( $$RunSpeed{units} =~ /^Per (.+) Per Hour$/ ) {
+    if ($$specs{'RunspeedOverride'.$qty_index} and ($$specs{'RunspeedOverride'.$qty_index} eq 'Y')) {
+      $run_speed = $$specs{'Runspeed'.$qty_index};
+    } elsif ( $$RunSpeed{units} =~ /^Per (.+) Per Hour$/ ) {
       my $unit = $1;
       if ( $unit =~ /([\d\.]+)x([\d\.]+)/ ) {
         my $area = $1*$2;
@@ -5812,17 +5819,20 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 
 					my $FI = $$folding_results{FoldedImpositions}[0];
 					if ( ! $FI ) {
-						$log->error("WTF FI is empty! maybe caching issue? Fold equipment is FI: " . $FI);
+						$log->error('WTF FI is empty! maybe caching issue? Fold equipment is FI: ' . $FI);
 						
 					} elsif ( ! $$FI{Equipment} ) {
 						$log->error("WTF Equipment in Fold is empty! maybe caching issue? Fold equipment is " . $$FI{Equipment} . ' FI: ' . $FI->to_string() );
 					} elsif ( $$FI{Equipment}{id} != $$Press{id} ) {
-						$log->error("WTF Equipment in Fold is not the press, but the folding results equipment is. maybe caching issue? Fold equipment is " . $$FI{Equipment}->strid() . ' FI: ' . $FI->to_string() );
+						$log->error('WTF Equipment in Fold is not the press, but the folding results equipment is. maybe caching issue? Fold equipment is ' . $$FI{Equipment}->strid() . ' FI: ' . $FI->to_string() );
 					} else {
-					$FI->display( "Runspeed: $$FI{runspeed}") if DEBUG;
-          $$folding_results{RunSpeed} = $$FI{runspeed}; # For spine paste
-#$log->debug("Runspeed: $folding_results{RunSpeed}");
-					$$specs{Runspeed} = $price{Runspeed} = $$FI{runspeed} if $$FI{runspeed};
+            $FI->display( "Runspeed: $$FI{runspeed}") if DEBUG;
+            $$folding_results{RunSpeed} = $$FI{runspeed}; # For spine paste
+            #$log->debug("Runspeed: $folding_results{RunSpeed}");
+            if ($$specs{'RunspeedOverride'.$qty_index} and ($$specs{'RunspeedOverride'.$qty_index} eq 'Y')) {
+            } else {
+              $$specs{Runspeed} = $price{Runspeed} = $$FI{runspeed} if $$FI{runspeed};
+            }
 					} # end if
 				} # end if
 				$$Imposition{Folder} = $$folding_results{Equipment};
@@ -7023,7 +7033,7 @@ sub get_run_prices {
 		} # end if side_two_colours
 	} # end if web perfecting or other
 
-# now work out the press run speed
+  # now work out the press run speed
 
 	# There should be either a Standard Run Speed
 

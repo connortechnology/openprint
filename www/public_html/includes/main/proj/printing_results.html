@@ -216,6 +216,23 @@
 		return $html;
 	) ?>
 </li>
+<li><label>Speed</label>
+  <?echo(my $html = '';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= sprintf( q`<span class="%sColumns">%s%s</span>`,
+
+				$$variable{Columns},
+        input(name=>'Runspeed'.$qty_index, id=>'Runspeed'.$qty_index, value=>$$variable{'Runspeed'.$qty_index}, type=>'cardinal', oninput=>"calc('f1');"),
+        ( sets::isin( $session{user_type}, ['A','E'] ) ?
+				write_override( 'RunspeedOverride'.$qty_index, $$variable{'RunspeedOverride'.$qty_index},'',"calc('f1');" )
+        :
+				sprintf('<input type="hidden" name="RunspeedOverride%1$d" value="%2$s" />', $qty_index, $$variable{'RunspeedOverrideStockType'.$qty_index} ).' Overriden'
+        )
+			);
+		} # end foreach qty_index
+		return $html;
+	) ?>
+</li>
 <? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) ?>
 <li>
 	<label>Printing type</label>

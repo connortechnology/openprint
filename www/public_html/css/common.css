@@ -113,6 +113,18 @@ fieldset {
 	margin: 2px;
 	padding-bottom: 10px;
 }
+fieldset .toggle {
+position: absolute;
+display: block;
+float: none;
+top: 0;
+padding: 0;
+background-color: #FFFFFF;
+letter-spacing: -0.1em;
+text-align: center;
+color: #00;
+font-weight: bold;
+}
 fieldset:after {
 	content: ".";
 	display: block;
@@ -771,4 +783,7 @@ margin-right: .2rem;
 select,
 textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"], .uneditable-input, .control-group .input-prepend span, .control-group .input-append span {
   border-width: 1px;
+}
+.pagination ul {
+  display: flex;
 }

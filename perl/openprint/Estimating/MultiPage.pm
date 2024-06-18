@@ -74,6 +74,7 @@ my %variables = (
 		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package','full_packages',
 		'sides_the_same','rdbPressProof','PressApproval',
 		'pages_supplied','supplied_format','rdbTemplateType','txtSpreadSize',
+    'txtServiceDescription'
 		);
 
 sub variables {
@@ -124,11 +125,11 @@ sub outputs {
 }
 
 sub groups {
-  my ( $project_index, $specs ) = @_;
-  my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
+	my ( $project_index, $specs ) = @_;
+	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
   if ( $$specs{rdbCover} eq 'Different' ) {
     if ( ! sets::isin( 1, \@Groups ) ) {
-      push @Groups, 1;
+      unshift @Groups, 1;
     } # end if
   } else {
     @Groups = sets::exclude( [1], \@Groups );
