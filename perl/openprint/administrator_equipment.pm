@@ -144,6 +144,7 @@ sub edit {
           } # end if
         } # end foreach price
         (new openprint::Log())->save({Object=>$service, action=>'Edit Service', note=>join('<br/>', @service_changes) }) if @service_changes;
+        (new openprint::Log())->save({Object=>$Equipment, action=>'Save', note=>join('<br/>', @service_changes) }) if @service_changes;
       } # end foreach service
       $variable{information} .= 'No changes made!<br/>' if !@changes;
       if (!$variable{errors}) {
