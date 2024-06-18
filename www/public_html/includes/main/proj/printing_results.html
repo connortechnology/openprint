@@ -224,10 +224,10 @@
 				$$variable{Columns},
         input(name=>'Runspeed'.$qty_index, id=>'Runspeed'.$qty_index, value=>$$variable{'Runspeed'.$qty_index}, type=>'cardinal', oninput=>"calc('f1');"),
         ( sets::isin( $session{user_type}, ['A','E'] ) ?
-				write_override( 'RunspeedOverride'.$qty_index, $$variable{'RunspeedOverride'.$qty_index},'',"calc('f1');" ),
+				write_override( 'RunspeedOverride'.$qty_index, $$variable{'RunspeedOverride'.$qty_index},'',"calc('f1');" )
         :
-				sprintf('<input type="hidden" name="RunspeedOverride%1$d" value="%2$s" />', $qty_index, $$variable{'RunspeedOverrideStockType'.$qty_index} ).' Overriden',
-
+				sprintf('<input type="hidden" name="RunspeedOverride%1$d" value="%2$s" />', $qty_index, $$variable{'RunspeedOverrideStockType'.$qty_index} ).' Overriden'
+        )
 			);
 		} # end foreach qty_index
 		return $html;
