@@ -1152,7 +1152,7 @@ $Imposition->display();
           # Figure out the fold.	Because this isn't the press, we have to figure out how it cuts...
           $openprint::log->debug("Max feed: $max_feed_width") if $max_feed_width;
 
-					if ( (!$$sig_specs{txtSignatureType}) and $$sig_specs{rdbTemplateType} and $fold_types{$$sig_specs{rdbTemplateType}} ) {
+					if ($$sig_specs{rdbTemplateType} and $fold_types{$$sig_specs{rdbTemplateType}}) {
 $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height() );
 						$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' (' . ($rc ? $rc : '' ).')' ) if DEBUG;
