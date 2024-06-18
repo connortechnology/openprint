@@ -533,12 +533,11 @@ sub signature_calc {
 			if ( $scor_equipment and ( $scor_equipment eq $$Equipment{strid} ) and ( $scor_imposition == $$I{imposition} ) ) {
 				$Results{Breakdown} .= 'Same equipment as scoring, no service price needed.<br/>';
 			} else {
-				%servicePrice = openprint::service::get_price_object( 'Perforating', $qty/$$I{imposition}, $Equipment );
+				%servicePrice = openprint::service::get_price_object( 'Perforating', $qty, $Equipment );
 				#%servicePrice = openprint::service::get_price_object( 'Perforating', $rule_qty, $Equipment );
 # I don't know if we should be multiplying by this or not.. how many perfs can a given piece of equipment do in an impression?
 #$servicePrice *= $$specs{"txtQty-$signature_index"};
 			} # end if
-
 
 			my $runspeed = 0;
 
@@ -565,6 +564,10 @@ sub signature_calc {
 				} else {
 					$Results{Breakdown} .= 'no runspeed';
 				} # end if
+      } else {
+        $openprint::log->error('Invalid units '.$servicePrice{units}.' on Perforating on '.$$Equipment{strid});
+        $Results{Breakdown} .= 'Invalid units '.$servicePrice{units}.' on Perforating on '.$$Equipment{strid}.'<br/>';
+        $$specs{alert} .= 'Invalid units '.$servicePrice{units}.' on Perforating on '.$$Equipment{strid}.'<br/>';
 			} # end if
 # Div by imposition
 			#$servicePrice /= $$imposition{imposition} if $$imposition{imposition};
