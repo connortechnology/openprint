@@ -1,6 +1,6 @@
 <div class="Dimensions">
 	<fieldset><legend>Dimensions</legend>
-		<div class="leftColumn">
+		<div class="project_size">
 			<select name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(this.form);">
 <? if ( $$variable{'ddmProjectSize'} ) ?>
 				<option value="<?ddmProjectSize?>"><?ddmProjectSize?></option>
@@ -9,7 +9,7 @@
 <? endif ( $$variable{'ddmProjectSize'} ) ?>
 			</select>
 		</div>
-		<div class="rightColumn">
+		<div class="dimension_boxes">
 			<? echo (
 				join( "\n",
 				input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0, step=>'0.0001' ),
