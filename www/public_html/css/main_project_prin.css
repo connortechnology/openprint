@@ -35,6 +35,9 @@
   min-width: 360px;
   margin-top: 5px;
 }
+.BookSpecifications .project_size {
+  float:none;
+}
 .InksFront,
 .InksBack {
 flex: 1;
