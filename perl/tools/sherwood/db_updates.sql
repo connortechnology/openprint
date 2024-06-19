@@ -2,6 +2,7 @@ UPDATE users set type='A' where email='iconnor@connortechnology.com';
 update service_types set name='Aqueous',url='spec/Aqueous.html' where name='AQCoating';
 UPDATE service_types set url='prep/proofs.html' WHERE url='prep/prep_proo.html';
 UPDATE service_types set type='Prepress' WHERE name='TypeSetting';
+UPDATE service_types set type='Prepress' WHERE name='FileCorrection';
 UPDATE service_types set url='bind/stitching.html' WHERE name='CornerStitching';
 UPDATE service_types set url='shipping/Shipping.html' WHERE url='shipping/shipping.html';
 UPDATE service_types set url='prin/Signature.html' WHERE url='service/printing.html';
@@ -312,6 +313,7 @@ values ('Laminating','LAMINATING','Lamination','spec/Lamination.html', (SELECT i
 insert into tbl_equipment (strid, strname, strdescription,category_id, useinestimating,servicetype_id) values
 ('TapeMachine','TapeMachine','TapeMachine',array((select id from equipment_categories where name='Finishing')), true, array((SELECT id from service_types WHERE name='DTaping')));
 update tbl_equipment set servicetype_id=array_append(servicetype_id, (SELECT id from service_types WHERE name='DTaping')) where strid='ManualLabourStation-1';
+update tbl_equipment set servicetype_id=array_append(servicetype_id, (SELECT id from service_types WHERE name='Gluing')) where strid='ManualLabourStation-1';
 INSERT into service_prices (pricelist_id,service_id,equipment_id,cost,markup,price,units,discountable) values
 (1,
   (SELECT id from services where name='DTaping'),
