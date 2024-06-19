@@ -1077,18 +1077,20 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 			$Services{$service_name} = openprint::Service->find_one(name=>$service_name);
 		}
 		my $Service = $Services{$service_name};
+    $openprint::log->debug("Service? $Service $$Service{name}");
 		my $servicePrice = $Service ? $Service->get_Price($qty, $Equipment) : 0;
 		if ( !$servicePrice ) {
 			$Service = $BaseService;
+      $openprint::log->debug("No price, going with $$BaseService{name}");
 			$servicePrice = $Service->get_Price($neededPockets, $Equipment) if $Service;
 		} # end if
 		if ( $servicePrice ) {
 			$pass{ServicePrice} = $servicePrice;
+    $openprint::log->debug("ServicePrice? $$servicePrice{ServiceName} $$servicePrice{units}");
 		} else {
 			$openprint::log->error("No service price for $$Service{name}");
 		}
 		push @{$price{Passes}}, \%pass;
-
 	} # end if lastpass needed_Pockets
 
 	if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
@@ -1121,7 +1123,7 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 			$$servicePrice{quantity} = $qty;
 			$$servicePrice{Total} = $$servicePrice{Price} * $qty;
 		} else {
-			$openprint::log->debug("Unknown Units: $$servicePrice{units} for $$ServiceType{name} range($neededPockets) equipment($$Equipment{strid})");
+			$openprint::log->debug("Unknown Units: $$servicePrice{units} for $$servicePrice{ServiceName} range($neededPockets) equipment($$Equipment{strid})");
 		} # end if
 		$price{Service} += $$servicePrice{Total}
 	} # end foreach pass
@@ -1167,7 +1169,7 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 		} elsif ( $$servicePrice{units} eq 'per hour' ) {
 			$$servicePrice{Total} = $$servicePrice{Price} * $runtime;
 		} else {
-			$openprint::log->error("Unknown Unit Type: $$servicePrice{units} for $$ServiceType{name} range(1) equipment($$Equipment{strid})");
+			$openprint::log->error("Unknown Unit Type: $$servicePrice{units} for cover $$ServiceType{name} range(1) equipment($$Equipment{strid})");
 		} # end if
 		$pass{ServicePrice} = $servicePrice;
 		$price{Service} += $$servicePrice{Total};
