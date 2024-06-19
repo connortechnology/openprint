@@ -397,15 +397,29 @@ sub load {
 		if ( $$self{image_orientation} == Vertical ) {
       #2024-06-19 switch to rounding to nearest quarter because of 717102
       # 2024-06-12 switch to ceil because of job 717036
-      $$self{page_columns} = 4*(int($$specs{txtWidth} / (4*$$specs{txtFinalWidth}))) if $$specs{txtFinalWidth};
+      if ($$specs{txtFinalWidth}) {
+        $$self{page_columns} = int($$specs{txtWidth} / $$specs{txtFinalWidth});
+        my $remainder = ($$specs{txtWidth} / $$specs{txtFinalWidth}) - $$self{page_columns};
+        $$self{page_columns} ++ if ($remainder > 0.25);
+      }
       #$$self{page_columns} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
       #$$self{page_rows} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
-      $$self{page_rows} = 4*(int($$specs{txtHeight} / (4*$$specs{txtFinalHeight}))) if $$specs{txtFinalHeight};
+      if ($$specs{txtFinalHeight}) {
+        $$self{page_rows} = int($$specs{txtHeight} / $$specs{txtFinalHeight});
+        my $remainder = ($$specs{txtHeight} / $$specs{txtFinalHeight}) - $$self{page_rows};
+        $$self{page_rows} ++ if $remainder > 0.25;
+      }
     } else {
-      $$self{page_rows} = 4*(int($$specs{txtWidth} / (4*$$specs{txtFinalWidth}))) if $$specs{txtFinalWidth};
-      #$$self{page_rows} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
-      $$self{page_columns} = 4*(int($$specs{txtHeight} / (4*$$specs{txtFinalHeight}))) if $$specs{txtFinalHeight};
-      #$$self{page_columns} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+      if ($$specs{txtFinalWidth}) {
+        $$self{page_rows} = int($$specs{txtWidth} / $$specs{txtFinalWidth});
+        my $remainder = ($$specs{txtWidth} / $$specs{txtFinalWidth}) - $$self{page_rows};
+        $$self{page_rows} ++ if $remainder > 0.25;
+      }
+      if ($$specs{txtFinalHeight}) {
+        $$self{page_columns} = int($$specs{txtHeight} / $$specs{txtFinalHeight});
+        my $remainder = ($$specs{txtHeight} / $$specs{txtFinalHeight}) - $$self{page_columns};
+        $$self{page_columns} ++ if $remainder > 0.25;
+      }
 		}
 $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}");
 
