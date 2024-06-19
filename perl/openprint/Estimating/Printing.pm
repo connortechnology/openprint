@@ -4201,7 +4201,7 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 # Can also look at cases where same roll width, different cut off... but less impo... seems to me we want to maximuize plate usage
 		foreach my $I ( @results ) {
 			my $Paper = $$I{Paper};
-			my $key = join('-',@$Paper{'width','height','minimum_order'}, @$I{'pages','image_orientation','runstyle'} );
+			my $key = join('-',@$Paper{'width','height','minimum_order'}, @$I{'pages','image_orientation','runstyle'}, $I->Press()->id() );
 
 			if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
 				$imps{$key} = [ $I ];
