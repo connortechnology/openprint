@@ -110,13 +110,15 @@ foreach my $session ( @$session_ids ) {
 $log->debug("Deleted $deleted_session_count sessions");
 
 if ( 0 and openprint::Order->find_one() ) {
-# Clean out unfinished Orders
-	my @Orders = openprint::Order->find(status=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
-	$log->debug('Cleaning out '.@Orders.' incomplete orders');
-	foreach my $Order ( @Orders ) {
-		$Order->delete();
-	} # end foreach
+  # Clean out unfinished Orders
+  my @Orders = openprint::Order->find(status=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
+  $log->debug('Cleaning out '.@Orders.' incomplete orders');
+  foreach my $Order ( @Orders ) {
+    $Order->delete();
+  } # end foreach
+  openprint::Object::init_cache();
 } # end if
+
 
 if ( openprint::Order->find_one() ) {
 # Clean out unfinished Orders
@@ -132,6 +134,7 @@ if ( openprint::Order->find_one() ) {
 			$Order->close();
 		}
 	} # end foreach
+  openprint::Object::init_cache();
 } # end if
 
 if ( openprint::Quote->find_one() ) {
@@ -143,6 +146,7 @@ if ( openprint::Quote->find_one() ) {
 	foreach my $Quote ( @Quotes ) {
 		$Quote->delete();
 	} # end foreach
+  openprint::Object::init_cache();
 }
 
 if ( 0 ) {
@@ -183,7 +187,7 @@ if ( ( exists $config{RFID} ) and $config{RFID} ) {
 # Paper maintenance
 foreach my $Paper ( openprint::Paper->find( 'project_type_id exists' => 1 ) ) {
 	if ( (! $$Paper{basis_mweight} ) and $Paper->basis_mweight() ) {
-				$log->debug("Updating basis_weight");
+    $log->debug("Updating basis_weight");
 		$Paper->save();
 	}
 	
@@ -200,7 +204,7 @@ foreach my $Paper ( openprint::Paper->find( 'project_type_id exists' => 1 ) ) {
 				$Paper->basis_mweight( 2*$1 );
 				$Paper->save();
 			}
-	$check = $Paper->check();
+      $check = $Paper->check();
 		}
 		$log->error($Paper->to_string() . ' ' . $check . " id:$$Paper{id}");
 		#sleep 1;
@@ -210,42 +214,45 @@ foreach my $Paper ( openprint::Paper->find( 'project_type_id exists' => 1 ) ) {
 	$old_wpsi = '' if ! defined $old_wpsi;
 	next if ! $Paper->wpsi(undef);
 	if ( $old_wpsi ne $Paper->wpsi() ) {
-$openprint::log->debug("Updating wpsi (old: $old_wpsi, new: $$Paper{wpsi}) for " . $Paper->to_string() );
+    $openprint::log->debug("Updating wpsi (old: $old_wpsi, new: $$Paper{wpsi}) for " . $Paper->to_string() );
 		$Paper->save();
 		last if $dbh->errstr();
 	} # end if
+  openprint::Object::init_cache();
 } # end foreach my Paper
 
 if ( 1 ) {
-my $log_count = 0;
-# Delete all logs more than 2 years
-foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d 00:00:00',
-				Date::Calc::Add_Delta_Days( Date::Calc::Today(), -2*365 ) ) )
-		) {
-	$Log->delete();
-	$log_count += 1;
-} # end foreach Log
-$log->debug("Deleted $log_count log entries");
+  my $log_count = 0;
+  # Delete all logs more than 2 years
+  foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d 00:00:00',
+        Date::Calc::Add_Delta_Days( Date::Calc::Today(), -2*365 ) ) )
+  ) {
+    $Log->delete();
+    $log_count += 1;
+  } # end foreach Log
+  openprint::Object::init_cache();
+  $log->debug("Deleted $log_count log entries");
 
-$log_count = 0;
-# Delete all WAP connections logs more than 7days
-foreach my $Log (
-		openprint::Log->find(
-			'date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -7)),
-			action	=>	'Update',
-			'note like'	=> 'Connection to %', )
-		) {
-	$Log->delete();
-	$log_count += 1;
-} # end foreach Log
-$log->debug("Deleted $log_count log entries for connection updates");
+  $log_count = 0;
+  # Delete all WAP connections logs more than 7days
+  foreach my $Log (
+    openprint::Log->find(
+      'date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -7)),
+      action	=>	'Update',
+      'note like'	=> 'Connection to %', )
+  ) {
+    $Log->delete();
+    $log_count += 1;
+  } # end foreach Log
+  $log->debug("Deleted $log_count log entries for connection updates");
+  openprint::Object::init_cache();
 }
 
 #if ( $config{AssetPath} ) {
 	foreach my $Asset ( openprint::Asset->find('md5 is null'=>1) ) {
 		my $data = misc::load_file( $log, $Asset->on_disk_path() );
 		if ( $data ) {
-			$_ = $Asset->save({'md5'=>Digest::MD5::md5_base64( $data ) });
+			$_ = $Asset->save({md5=>Digest::MD5::md5_base64( $data ) });
 			die $_ if $_;
 		} # end if
 	} # end foreach Asset
@@ -284,7 +291,7 @@ foreach my $Skid ( openprint::Skid->find(
 } # end foreach Skid
 $log->debug("Deleted $deleted_skids skids");
 
-if ( 1 ) {
+if ( 0 ) {
 	# Resolve any unresolved IP's
 	my @Hosts = openprint::Host->find(
 			'hostname is null'=>1, 
