@@ -621,8 +621,11 @@ sub signature_calc {
 					}
 					
 					$folding_cuts += @folding_impositions - 1;
-					foreach my $folding_imposition ( @folding_impositions ) {
-						$folding_cuts += $$folding_imposition{quantity}-1 if $$folding_imposition{quantity};
+          foreach my $folding_imposition ( @folding_impositions ) {
+            $folding_cuts += $$folding_imposition{quantity}-1 if $$folding_imposition{quantity};
+            if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ($$sig_specs{BleedTop} or $$sig_specs{BleedBottom} or $$sig_specs{BleedLef} or $$sig_specs{BleedBottom} ) ) {
+              $folding_cuts += $$folding_imposition{quantity}-1 if $$folding_imposition{quantity};
+            }
 					} # end foreach
 				} elsif (
 						($folding_impositions[0]{imposition} > $stitching_imposition)
@@ -741,7 +744,7 @@ sub signature_calc {
 					$openprint::log->debug("No PileHandling");
 				} # end PileHandling
 
-				$results{Breakdown} .= sprintf( 'Pre-folding cutting total: $%.2f<br/>', $price{'Total'});
+				$results{Breakdown} .= sprintf( 'Pre-folding cutting total: $%.2f<br/>', $price{Total});
 
         if ( ( ! defined $results{FoldingPrice} ) or ( $price{Total} < $results{FoldingPrice} ) ) {
           $results{FoldingPrice} = $price{Total};
@@ -1030,7 +1033,6 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
 
     my $totalPrice = 0;
     my $mprice = 0;
-    my $price;
 
 		my %ServicePrice = $CuttingService->get_price(undef, $Equipment);
 		if ( $cuts ) {
@@ -1046,6 +1048,7 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
 			$results{Breakdown} .= '# of cuts: ' . $cuts . ' => ' .($cuts * $sheets) . '<br/>';
 
 			if ( %ServicePrice ) {
+        my $price;
 				if ( $vertical_cuts > $horizontal_cuts ) {
 					if ( $ServicePrice{units} eq 'per inch' ) {
 						$price = $piles * $vertical_cuts *$ServicePrice{Price} * $$I{image_height};
@@ -1139,6 +1142,7 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
 				$sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
 				$piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 
+        my $price = 0;
 				if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {
 					if ( $ServicePrice{units} eq 'per inch' ) {
 						$price = ( $piles * $dutch_vertical_cuts * $ServicePrice{Price} * $I->image_width() );
@@ -1209,14 +1213,19 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
 				} # end PileHandling
 
 			} # end if dutch
-
 		} # end if ( $cuts ) {
 
     if ( ( ! $$specs{"txtAdditionalCuts$form"} ) and $$sig_specs{txtPressSheetComboItems} ) {
       $$specs{"txtAdditionalCuts$form"} = $$sig_specs{txtPressSheetComboItems};
     } # end if
 
-    if ( $$specs{"txtAdditionalCuts$form"} and %ServicePrice ) {
+    if ( $$specs{"txtAdditionalCuts$form"}) {
+      my $type = $Equipment->specification('Type');
+      if ($type and ($type eq 'Folder')) {
+        # Folders can only do splitting, not proper cutting
+        $openprint::log->debug("Skipping $$Equipment{strid} because of additional folds");
+        next;
+      }
       $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
       my $piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
       my $price = ( $piles * $$specs{"txtAdditionalCuts$form"} * $ServicePrice{Price} );
