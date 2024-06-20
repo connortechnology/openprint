@@ -8,16 +8,14 @@
 <fieldset><legend>Type Setting Services</legend>
 <ul>
 		<?include('/includes/main/proj/prepress_hours.html') ?>
+</ul>
+    <?include('/includes/main/proj/_comments.html') ?>
+<ul class="pricing">
 		<?include('/includes/main/proj/prices_prepress.html') ?>
+</ul>
 		<?include('/includes/main/proj/add_to_project.html') ?>
 		<?include('/includes/main/proj/hdn_fields_prepress.html') ?>
-</ul>
 </fieldset>
 	</form>
 </div>
 <script src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
-<script>
-	const quantities = new Array();
-	<?QUANTITIES?>
-</script>
-
