@@ -25,9 +25,11 @@ UPDATE service_types set url='bind/Padding.html' WHERE name='Padding';
 UPDATE service_types set url='bind/PerfectBound.html',type='PerfectBound' WHERE name='PerfectBinding';
 UPDATE service_types set url='bind/RoundCornering.html' WHERE name='RoundCornering';
 UPDATE service_types set url='bind/KissCutting.html' WHERE name='KissCutting';
+UPDATE service_types set url='spec/FoilStamping.html',type='FoilStamping' WHERE name='FoilStamping';
 UPDATE service_types set url='bind/Collating.html' WHERE url='bind/bind_collating.html';
 UPDATE service_types set url='pack/pack_by_quantity.html',type='Packaging' WHERE url='pack/pack_shri.html';
 UPDATE service_types set url='pack/pack_by_quantity.html',type='Packaging' WHERE url='pack/Bundling.html';
+UPDATE service_types set url='spec/UVCoating.html' WHERE name='UVCoating';
 UPDATE service_types set description='SCORING' WHERE name='Scoring';
 UPDATE service_types set create_visible=true WHERE name='Shipping';
 insert into service_types (name,description,url,category_id,create_visible,view_visible,summary_visible,allow_delete, type)
@@ -451,3 +453,34 @@ UPDATE services set name='PerfectBoundMakeReady' WHERE name='PerfectBindingMakeR
 UPDATE Service_Prices SET range_units = 'pockets' WHERE
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Drilling') where id=35;
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='Multi Head Drill'), 'Drilling Capable', 'Y','');
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='RoundCornering') where id=26;
+
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Scoring') where id=136;
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Perforating') where id=136;
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='DigiFold Pro'), 'Scoring Capable', 'Y','');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='DigiFold Pro'), 'Perforating Capable', 'Y','');
+
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Scoring') where id=153;
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Perforating') where id=153;
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='Digital Folder'), 'Scoring Capable', 'Y','');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='Digital Folder'), 'Perforating Capable', 'Y','');
+
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Scoring') where id=20;
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Perforating') where id=20;
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values (20, 'Scoring Capable', 'Y','');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values (20, 'Perforating Capable', 'Y','');
+
+/* Brause */
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Embossing') where id=173;
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='FoilStamping') where id=173;
+/* Cylinder-21x30 */
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Embossing') where id=20;
+/* Cylinder-21x30 */
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Embossing') where id=172;
+/* Platen */
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Scoring') where id=37;
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Embossing') where id=37;
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='FoilStamping') where id=37;
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Perforating') where id=37;
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values (37, 'Scoring Capable', 'Y','');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values (37, 'Perforating Capable', 'Y','');

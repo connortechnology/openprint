@@ -23,7 +23,7 @@
 			input( type=>'float', name=>'txtDieWidth-'.$$variable{SignatureIndex}, value=>$$variable{txtDieWidth}, oninput=>'calc(this.form.name);', placeholder=>'width' ),
 			' x ',
 			input( type=>'float', name=>'txtDieHeight-'.$$variable{SignatureIndex}, value=>$$variable{txtDieHeight}, oninput=>'calc(this.form.name);', placeholder=>'height' ),
-			write_override( 'chkOverrideDimensions', $$variable{"chkOverrideDimensions"}, '', q`calc('f1');` ),
+			write_override( 'chkOverrideDimensions-'.$$variable{SignatureIndex}, $$variable{'chkOverrideDimensions-'.$$variable{SignatureIndex}}, '', q`calc('f1');` ),
 		); ) ?>
 	</li>
 	<li><label>Die Type</label>

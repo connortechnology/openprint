@@ -105,7 +105,7 @@ $openprint::log->debug("Equipment is : " . $$Results{Equipment}->to_string() );
 			} else {
 				$openprint::log->error("NO Equipment in results!");
 			} # end if Equipment
-			if ( @{$$Results{Impositions}} == 1 ) {
+			if ( $$Results{Impositions} and (@{$$Results{Impositions}} == 1)) {
 				$$specs{"txtImposition-$form-$qty_index"} = $Imposition->imposition();
 				$$specs{"txtLayoutWidth-$form-$qty_index"} = $Imposition->layout_width();
 				$$specs{"txtLayoutHeight-$form-$qty_index"} = $Imposition->layout_height();
