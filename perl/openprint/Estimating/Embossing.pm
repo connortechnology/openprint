@@ -50,6 +50,7 @@ sub variables {
 		push @v, map { "$_-$form" } ( 'txtWidth', 'txtHeight', 
 			 'Embossing' ,'Needed', 'MakeReadyComplexity',
 			 'rdbSuppliedDie','Foil',
+       'txtDieWidth','txtDieHeight',
        'chkOverrideDimensions',
 			 );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
