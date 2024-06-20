@@ -52,7 +52,7 @@ function Imposition_onchange( element, signature, qty_index, index ) {
 </script>
 <div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
-		<fieldset><legend>Embossing</legend>
+		<fieldset><legend><?ServiceTypeName?></legend>
 			<div class="Signatures">
 			<? echo ( 
 				my $html;
@@ -69,7 +69,7 @@ function Imposition_onchange( element, signature, qty_index, index ) {
 					$html .= '<legend>Form '. $form . ' '.$$sig_specs{txtServiceDescription}.'</legend><p>'. openprint::service::summary( $$variable{ProjectIndex}, $sig_id ) . '</p>';
 					$html .= '<ul>
 						<li>
-							<label>Embossing Needed</label>';
+							<label>'.$$variable{ServiceTypeName}.' Needed</label>';
 
 					$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onclick=>qq`if(get_rdb_value(f1.elements['Needed-$form']) == 'Y' ) { \$('Embossing-$form').show();}else{\$('Embossing-$form').hide();};calc(this.form.name);` } );
 					$html .= qq`</li>
@@ -77,7 +77,7 @@ function Imposition_onchange( element, signature, qty_index, index ) {
 				<div id="Embossing-$form" `. ( $$variable{'Needed-'.$form} ne 'Y' ? 'style="display:none;"' : '' ). '><ul>';
 				$html .= include('/main/project/spec/_embossing.html');
 				$html .= '<li><label>Foil</label>'. ssi::select( 
-                    [ map { $_->name(), $_->description() } openprint::Material->find( category=>'Embossing Foils', order=>'lower(name)') ],
+                    [ map { $_->name(), $_->description() } openprint::Material->find( category=>'Foil', order=>'lower(name)') ],
 					$$variable{'Foil-'.$$variable{SignatureIndex}}, { name=>'Foil-'.$$variable{SignatureIndex}, onchange=>'calc(this.form.name);', prepend=>['','None'] } );
 				$html .= '</li>';
 				$html .= include('/includes/main/proj/signature_equipment.html');

@@ -1,4 +1,4 @@
-<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
+<script src="<?hash_link('/javascripts/service.js')?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
@@ -6,10 +6,12 @@
 			<li><label>Rounded Corners</label>
 				<? echo ( input( type=>'cardinal', id=>'RoundedCorners', name=>'RoundedCorners', value=>$$variable{RoundedCorners}, oninput=>'calc(this.form.name);' ); ) ?>
 			</li>
+      </ul>
+    <?include('/includes/main/proj/_comments.html') ?>
+      <ul class="pricing">
 			<?include('/includes/main/proj/quantities_equipment_prices.html')?>
 			</ul>
 		</fieldset>
-		<hr/>
 		<?include('/includes/main/proj/add_to_project.html')?>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
