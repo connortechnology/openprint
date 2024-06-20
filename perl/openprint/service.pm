@@ -330,6 +330,17 @@ sub auto_calculate {
 		} else {
 			$openprint::log->error("Stitching is needed, but template is something else ($$project_specs{rdbTemplateType})");
 		}
+  } else {
+			if ( $$services{SaddleStitching} ) {
+				foreach ( @{$$services{SaddleStitching}} ) {
+					openprint::print_project::delete_service( $Project, $_ );
+				}
+			}
+			if ( $$services{LoopStitching} ) {
+				foreach ( @{$$services{LoopStitching}} ) {
+					openprint::print_project::delete_service( $Project, $_ );
+				}
+			}
 	} # end if
 
 	foreach my $service_type ( 'ThreeKnifeTrim', 'Tipping', 'Blowing' ) {
