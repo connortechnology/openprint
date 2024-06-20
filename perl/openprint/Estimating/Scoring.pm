@@ -124,6 +124,8 @@ sub has_overrides {
 
 sub init {
 	my ( $Project, $calc_hash ) = @_;
+  my $ServiceType = $Project->ServiceType();
+
 	my @capabilities = ('Y','When Printing');
 	push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 	push @capabilities, 'When Folding' if $$calc_hash{FoldingSpecs};
