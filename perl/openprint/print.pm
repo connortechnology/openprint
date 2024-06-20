@@ -87,62 +87,30 @@ sub view_services {
 					return;
 				} # end if
 
-				my $recalc = 0;	
-
 				openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
 				my $new_status = $param{Status} ? $param{Status} : 'calculated';
 				$Service->save({ status=>$new_status }) if (!$Service->status()) or ( ( $Service->status() ne $new_status ) and ( $Service->status() ne 'Completed' ) );
 
-				my $Currency = openprint::Currency::get_current();
-				if ( $Project->currency_id() != $Currency->id() ) {
-					$Project->add_to_log( @session{'company_id','user_id'}, 'Currency changed from '.$Project->Currency()->name() . ' to '. $Currency->name() );
-					$Project->currency_id( $Currency->id() );
-					# Change of currency calls for complete recalc
-					if ( $param{ServiceType} eq 'Printing' or ! $param{ServiceType} ) {
-					} else {
-						openprint::Estimating::MultiPage::calculate_signatures( $Project );
-						# Shouldn't we do this before that?
-#2017-01-6 yeah I think so, but we are dealing with a currency change... so... who cares/.
-						openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{''}[0], $Project->Type()->type() );
-					} # end if
+				if ( $Project->currency_id() != $openprint::Currency->id() ) {
+					$Project->add_to_log( @session{'company_id','user_id'}, 'Currency changed from '.$Project->Currency()->name() . ' to '. $openprint::Currency->name() );
+					$Project->currency_id( $openprint::Currency->id() );
 				} # end if
 
 				$Project->lock();
         my $project_type = $Project->Type()->type();
 
-				if ( !$param{ServiceType} ) {
-					#multipage_signatures( \%param, $log, $dbh, $variable, $project_index, $service_index );
-					my $s = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{''}[0], $Project->Type()->type() );
-					if ( $$s{Status} ne 'calculated' ) {
-						$log->error("Error calculting Project service");
-						# Don't want to redirect because it would be annoying.  Just go to view.
-					} else {
-						openprint::Estimating::MultiPage::calculate_signatures( $Project );
-					} # end if
-					$recalc = 1;
-				} elsif ( $param{ServiceType} eq 'Printing' ) {
-					openprint::Estimating::MultiPage::calculate_signatures( $Project );
-					openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{''}[0], $Project->Type()->type() );
-# Might need to test for status of project service
-					$recalc = 1;
-				} elsif (sets::isin( $param{ServiceType}, ['Scoring','Perforating','SpinePaste','Stitching','Sewing','DieCutting'] ) ) {
-					openprint::Estimating::MultiPage::calculate_signatures( $Project );
-					$recalc = 1;
-				} elsif (sets::isin( $param{ServiceType}, ['Folding' ] ) ) {
-					openprint::Estimating::MultiPage::calculate_signatures( $Project );
-					if ( $$services{Cutting} and @{$$services{Cutting}} ) {	
-						openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{Cutting}[0], 'Cutting' );
-					} # end if
-					$recalc = 1;
-				} elsif ( $param{ServiceType} eq 'Paper' ) {
-					openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_index, 'Paper' );
-        } else {
-          my $calc = ('openprint::Estimating::'.$project_type)->can('calc');
-					openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{''}[0], $project_type ) if $calc;
-          $calc = ('openprint::Estimating::'.$project_type)->can('calculate_signatures');
-          $calc->($Project) if $calc;
-				} # end if
-				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
+        my $calc = ('openprint::Estimating::'.$project_type)->can('calc');
+        if ($calc) {
+          my $s = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{''}[0], $project_type);
+          if ( $$s{Status} ne 'calculated' ) {
+            $log->error("Error calculating Project service");
+            # Don't want to redirect because it would be annoying.  Just go to view.
+          } else {
+            $calc = ('openprint::Estimating::'.$project_type)->can('calculate_signatures');
+            $calc->($Project) if $calc;
+          }
+        }
+				openprint::service::auto_calculate($Project, $service_index);
 				$Project->update_status();
 				$Project->unlock();
 		
