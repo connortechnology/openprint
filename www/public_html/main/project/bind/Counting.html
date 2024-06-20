@@ -1,4 +1,4 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
@@ -7,8 +7,10 @@
         <li><label>Quantity to count</label>
           <?echo( input( type=>'cardinal', onclick=>'calc(\'f1\');', name=>'txtSignatureCount', value=>$$variable{txtSignatureCount}); ) ?>
         </li>
-			  <?include('/includes/main/proj/quantities_prices.html')?>
+      </ul>
 			  <?include('/includes/main/proj/_comments.html')?>
+      <ul class="pricing">
+			  <?include('/includes/main/proj/quantities_prices.html')?>
 			</ul>
 		</fieldset>
 		<hr/>
