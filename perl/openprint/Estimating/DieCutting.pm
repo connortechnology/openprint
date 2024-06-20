@@ -76,6 +76,7 @@ sub variables {
 		push @v, map { "$_-$form" } ( 'txtWidth', 'txtHeight', 
 			 'rdbDieCutting' ,'Needed', 'MakeReadyComplexity',
 			 'rdbSuppliedDie','txtDieCutPunches',
+       'txtDieWidth','txtDieHeight',
         'chkOverrideDimensions',
 			 'txtSteelRuleLength', 'txtDieCutBends', 'txtHoleClearingHoles' );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -233,7 +234,7 @@ sub calc_price {
 		%ServicePrice = openprint::service::get_price_object( 'DieCutting', $impressions, $Equipment );
 	} # end if
   $ServicePrice{Total} = 0;
-	if ( $ServicePrice{units} eq 'per m' ) {
+	if ( $ServicePrice{units} eq 'per m' or $ServicePrice{units} eq 'per 1000 impressions') {
 		$ServicePrice{Total} = $impressions * $ServicePrice{Price} / 1000;
 	} elsif ( $ServicePrice{units} eq 'per hour' ) {
 		my $Runspeed = $Equipment->Specification('RunSpeed');
@@ -259,6 +260,8 @@ sub calc_price {
         $openprint::log->error($Total{alert});
       } # end if
     } # end if
+  } else {
+    $Total{alert} .= 'Unknown units '.$ServicePrice{units}.' on service '.$ServicePrice{ServiceName}.'<br/>';
   } # end if
 
 	$Total{ServicePrice} = \%ServicePrice;
