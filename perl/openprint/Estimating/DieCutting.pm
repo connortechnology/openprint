@@ -61,6 +61,7 @@ my @variables = (
 	'MPrice1','MPrice2','MPrice3',
 	'DiePrice1','DiePrice2','DiePrice3', 
 	'OverrideDiePrice1', 'OverrideDiePrice2', 'OverrideDiePrice3',
+  'hdnBreakdown1','hdnBreakdown2','hdnBreakdown3',
 	'alert',
 );
 
@@ -75,6 +76,7 @@ sub variables {
 		push @v, map { "$_-$form" } ( 'txtWidth', 'txtHeight', 
 			 'rdbDieCutting' ,'Needed', 'MakeReadyComplexity',
 			 'rdbSuppliedDie','txtDieCutPunches',
+        'chkOverrideDimensions',
 			 'txtSteelRuleLength', 'txtDieCutBends', 'txtHoleClearingHoles' );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v,map { "$_-$form-$qty_index" } (
@@ -121,8 +123,8 @@ sub calc_price {
     }
   }
 
-	my $MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'MakeReadyComplexity-'.$form}.'MakeReady' ) if $$specs{'MakeReadyComplexity-'.$form};
-	$MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'rdbDieCutting-'.$form}.'MakeReady' ) if (!$MakeReadyService) and $$specs{'rdbDieCutting-'.$form};
+	my $MakeReadyService = openprint::Service->find_one( name => 'DieCutting'.$$specs{'MakeReadyComplexity-'.$form}.'MakeReady' ) if $$specs{'MakeReadyComplexity-'.$form};
+	$MakeReadyService = openprint::Service->find_one( name => 'DieCutting'.$$specs{'rdbDieCutting-'.$form}.'MakeReady' ) if (!$MakeReadyService) and $$specs{'rdbDieCutting-'.$form};
 	$MakeReadyService = openprint::Service->find_one( name => 'DieCuttingMakeReady' ) if ! $MakeReadyService;
 
 	if ( $MakeReadyService ) {
