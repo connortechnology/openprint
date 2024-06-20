@@ -7,6 +7,7 @@ use POSIX           qw(ceil);
 use constant DEBUG => 1;
 
 my %variables = (
+    alert=>['save', 'output'],
 	'RoundedCorners' => ['save'],
 	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],
 	'Markup1'	=> ['save'], 'Markup2'	=> ['save'], 'Markup3'	=> ['save'],
@@ -35,8 +36,10 @@ sub calc {
     my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
 
 	my $Project = new openprint::Project( $pid );
+  my $ServiceType = $Project->ServiceType($sid);
 
 	$$specs{RoundedCorners} =~ s/\D//g;
+  $$specs{alert} = '';
 	if ( ! $$specs{RoundedCorners} ) {
 		$$specs{alert} = 'Please enter the number of corners to round.<br/>';
 		return $$specs{Status} = 'uncalculated';
@@ -44,9 +47,12 @@ sub calc {
 
 	my $calliper = $Project->calliper();
 
-	my @Equipment = openprint::Equipment->find('Specifications'=>{'RoundCornering Capable'=>'Y'},'useinestimating'=>1);
-	if ( ! @Equipment ) {
-		$$specs{alert} = 'We have no round cornering equipment.';
+	my @Equipment = openprint::Equipment->find(
+      'servicetype_id any'=>$ServiceType->id(),
+#'Specifications'=>{'RoundCornering Capable'=>'Y'}
+      useinestimating=>1);
+  if ( ! @Equipment ) {
+    $$specs{alert} = 'We have no round cornering equipment.';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 
