@@ -376,6 +376,8 @@ sub edit {
 			} # end foreach
 		} # end if
 	} # end if
+	ssi::setup_date_select($r->uri, 'timetrack_start', -365);
+	ssi::setup_date_select($r->uri, 'timetrack_end', '');
 } # end sub edit
 
 sub view {
