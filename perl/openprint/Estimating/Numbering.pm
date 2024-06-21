@@ -84,6 +84,26 @@ sub no_outputs {
   return @v;
 } # end sub no_outputs
 
+sub has_overrides {
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+  my @v;
+  foreach my $ss_id ( $Project->signatures() ) {
+    foreach my $qty_index ( $Project->quantity_indexes() ) {
+      foreach my $var ('chkOverrideEquipment', 'chkOverrideImposition') {
+        my $v = join('-',$var, $ss_id, $qty_index);
+        push @v,$v if $$specs{$v} and $$specs{$v} eq 'Y';
+      }
+    } # end foreach
+  } # end foreach my ss_id
+  if ( $qty_index ) {
+    push @v, map { $$specs{$_.$qty_index} ? $_.$qty_index : () } ( 'OverridePrice' );
+  } # end if
+
+  return @v;
+} # end sub has_overrides
+
 sub calc {
   my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
 
