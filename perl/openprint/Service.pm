@@ -178,9 +178,9 @@ sub get_price {
 
 	if (!$period) {
 		$period = 'NOW()';
-		if ( $debug ) {
-			$log->debug("No period specified defaulting to $period");
-		} # end if
+		#if ( $debug ) {
+			#$log->debug("No period specified defaulting to $period");
+		#} # end if
 	} # end if
 
 	$Pricelist = $openprint::Pricelist if ! $Pricelist;
@@ -188,8 +188,9 @@ sub get_price {
 			$openprint::session{company_id}, $$self{id}, $$Pricelist{id}, $self, $quantity, $$Equipment{id}, $period );
 
 	if (!%price) {
-    $price{ServiceName} = $$self{name};
-    $price{Service} = $self;
+# Populating these breaks tests for if a price was returned
+    #$price{ServiceName} = $$self{name};
+    #$price{Service} = $self;
 		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
 		return;
 	} # end if
