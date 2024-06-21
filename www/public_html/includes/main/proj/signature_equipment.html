@@ -12,6 +12,15 @@
 						name=>"ddmEquipment-$$variable{SignatureIndex}-$qty_index",
 						onchange=>'calc(this.form.name)',
 					} );
+      } else {
+        $html .= ssi::select(
+            openprint::Equipment->dropdown('servicetype_id any'=>$$variable{ServiceType}->id(), useinestimating=>1),
+            $$variable{join('-','ddmEquipment', $$variable{SignatureIndex}, $qty_index)},
+            {
+            prepend=>['','select'],
+            name=>"ddmEquipment-$$variable{SignatureIndex}-$qty_index",
+            onchange=>'calc(this.form.name)',
+          } );
 			} # end if
 			$html .= write_override(
 					"chkOverrideEquipment-$$variable{SignatureIndex}-$qty_index",
