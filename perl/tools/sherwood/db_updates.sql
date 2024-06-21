@@ -477,7 +477,10 @@ update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types whe
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Embossing') where id=20;
 /* Cylinder-21x30 */
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Embossing') where id=172;
+/* Igen NUmber */
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Numbering') where id=164;
 /* Platen */
+update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Numbering') where id=37;
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Scoring') where id=37;
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Embossing') where id=37;
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='FoilStamping') where id=37;
