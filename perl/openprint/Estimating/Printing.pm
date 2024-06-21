@@ -5725,6 +5725,9 @@ sub calc_price {
   if ($$specs{'RunspeedOverride'.$qty_index} and ($$specs{'RunspeedOverride'.$qty_index} eq 'Y')) {
     $$RunSpeed{value} = $$specs{'Runspeed'.$qty_index}
   }
+  if ($$RunSpeed{range_units} eq 'calliper') {
+    $RunSpeed = $price{RunSpeed} = $Press->Specification($$RunSpeed{name}, $$Paper{calliper});
+  }
 
 	my $std_speed = $price{StandardRunSpeed} = $Press->Specification('Standard Run Speed ' . $$Imposition{runstyle} );
 	$price{StandardRunSpeed} = $std_speed = $Press->Specification('Standard Run Speed') if ! $std_speed;
@@ -5734,6 +5737,9 @@ sub calc_price {
     my $run_speed;
     if ($$specs{'RunspeedOverride'.$qty_index} and ($$specs{'RunspeedOverride'.$qty_index} eq 'Y')) {
       $run_speed = $$specs{'Runspeed'.$qty_index};
+    } elsif ($$RunSpeed{units} eq 'per hour') {
+
+      $run_speed = $$RunSpeed{value};
     } elsif ( $$RunSpeed{units} =~ /^Per (.+) Per Hour$/ ) {
       my $unit = $1;
       if ( $unit =~ /([\d\.]+)x([\d\.]+)/ ) {
@@ -7077,7 +7083,6 @@ sub get_run_prices {
 	} else {
 		$log->debug("No standard speed on $$Press{strid} have runspeed $run_speed") if DEBUG;
 	} # end if
-
 
 	if ( $$Imposition{runstyle} eq 'Perfecting' and ! $$Paper{perfecting} ) {
 		my $Outside_Wheel_Size = $Press->specification('Outside Slow Down Wheel Size');
