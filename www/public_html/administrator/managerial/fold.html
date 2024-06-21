@@ -131,7 +131,7 @@
 		</li>
 		<li class="make_ready_overs">
 			<label>Make Ready Overs</label>
-			<? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-makeready_overs', name=>'makeready_overs', value=>$$variable{Fold}->makeready_overs() ); ) ?>
+      <? echo ( input( type=>'number', id=>'fold-'.$$variable{Fold}->id().'-makeready_overs', name=>'makeready_overs', value=>$$variable{Fold}->makeready_overs(), min=>0, step=>'any' ); ) ?>
 			<select id="fold-<? echo ( $$variable{Fold}->id() ) ?>-makeready_overs_units" name="makeready_overs_units" >
 				<option value="Sheets" <? echo ( $$variable{Fold}->makeready_overs_units() eq 'Sheets' ? 'selected="selected"' : '' ) ?>>Sheets</option>
 				<option value="Percent" <? echo ( $$variable{Fold}->makeready_overs_units() eq 'Percent' ? 'selected="selected"' : '' ) ?>>Percent</option>
