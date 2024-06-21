@@ -8,7 +8,7 @@
 				order		   => 'id DESC',
 			) ];
 		} else {
-			$param{project_id} = openprint::Project->transform('id'=>$param{project_id});
+			$param{project_id} = openprint::Project->transform(id=>$param{project_id});
 			$$variable{Projects} = [ openprint::Project->find( 
 				company_id		=> $session{company_id},
 				id						=> $param{project_id},
@@ -29,6 +29,7 @@
 			) ),
 			( $session{$uri.'?servicetype_id'} ? ( 'servicetype_id	any'=> $session{$uri.'?servicetype_id'} ) : () ),
 			order				=> 'id DESC',
+      limit=>1000,
 		);
 		$sql{status} = [ split(',', $session{$uri.'?ddmStatus'} ) ] if $session{$uri.'?ddmStatus'};
 		$sql{type_id} = $session{$uri.'?type_id'} if $session{$uri.'?type_id'};
