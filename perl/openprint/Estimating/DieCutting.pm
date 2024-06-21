@@ -74,7 +74,7 @@ sub variables {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $form = $$sig_specs{SignatureIndex};
 		push @v, map { "$_-$form" } ( 'txtWidth', 'txtHeight', 
-			 'rdbDieCutting' ,'Needed', 'MakeReadyComplexity',
+			 'Complexity' ,'Needed',
 			 'rdbSuppliedDie','txtDieCutPunches',
        'txtDieWidth','txtDieHeight',
         'chkOverrideDimensions',
@@ -123,16 +123,18 @@ sub calc_price {
       return %Total;
     }
   }
+  my $complexity = $$specs{'Complexity-'.$form} || '';
 
-	my $MakeReadyService = openprint::Service->find_one( name => 'DieCutting'.$$specs{'MakeReadyComplexity-'.$form}.'MakeReady' ) if $$specs{'MakeReadyComplexity-'.$form};
-	$MakeReadyService = openprint::Service->find_one( name => 'DieCutting'.$$specs{'rdbDieCutting-'.$form}.'MakeReady' ) if (!$MakeReadyService) and $$specs{'rdbDieCutting-'.$form};
-	$MakeReadyService = openprint::Service->find_one( name => 'DieCuttingMakeReady' ) if ! $MakeReadyService;
+	my $MakeReadyService = openprint::Service->find_one(name => 'DieCutting'.$complexity.'MakeReady');
+	$MakeReadyService = openprint::Service->find_one(name => 'DieCuttingMakeReady') if (!$MakeReadyService) and $complexity;
 
 	if ( $MakeReadyService ) {
 		my $MakeReady = $MakeReadyService->get_Price( undef, $Equipment );
-		if ( $$MakeReady{units} eq 'per hour' ) {
-			my $MRHours = $Equipment->Specification( $$specs{ServiceType}.$$specs{'MakeReadyComplexity-'.$form}.'MakeReadyTime' ) if $$specs{'MakeReadyComplexity-'.$form};
-			$MRHours = $Equipment->Specification( $$specs{ServiceType}.'MakeReadyTime' ) if !$MRHours;
+    if (!$$MakeReady{units}) {
+			$$MakeReady{Total} = $$MakeReady{Price};
+		} elsif ( $$MakeReady{units} eq 'per hour' ) {
+			my $MRHours = $Equipment->Specification($$specs{ServiceType}.$complexity.'MakeReadyTime');
+			$MRHours = $Equipment->Specification( $$specs{ServiceType}.'MakeReadyTime' ) if (!$MRHours) and $complexity;
 			$Total{MakeReadyTime} = $MRHours;
 			if ( $MRHours and $$MRHours{value} ) {
 				$$MakeReady{Total} = Math::Round::nearest( 0.01, $$MakeReady{Price} * $$MRHours{value} );
@@ -142,6 +144,7 @@ sub calc_price {
 				$$MakeReady{Total} = $$MakeReady{Price};
 			} # end if
 		} else {
+      $Total{alert} .= "Unknown units $$MakeReady{units} on $$MakeReadyService{name}<br/>";
 			$$MakeReady{Total} = $$MakeReady{Price};
 		}
 		$Total{MPrice} = 0;
@@ -161,8 +164,8 @@ sub calc_price {
 				%DiePrice = $Material->get_price( undef, $Equipment );
 			} # end if
 		} # end if
-		if ( ( ! %DiePrice ) and $$specs{'rdbDieCutting-'.$form} ) {
-			if ( my $Material = openprint::Material->find_one( name=>$$specs{'rdbDieCutting-'.$form}.'Die') ) {
+		if ( ( ! %DiePrice ) and $$specs{'Complexity-'.$form} ) {
+			if ( my $Material = openprint::Material->find_one( name=>$$specs{'Complexity-'.$form}.'Die') ) {
 				%DiePrice = $Material->get_price( undef, $Equipment );
 			} # end if
 		} # end if
@@ -191,7 +194,7 @@ sub calc_price {
 #
 			if ( $$specs{txtDieCutPunches} and ( $$specs{txtDieCutPunches} > 0 ) ) {
 ##punches are optional
-				if ( my $Material = openprint::Material->find_one( name=>'DieCutPunch'.$$specs{'rdbDieCutting-'.$form}) ) {
+				if ( my $Material = openprint::Material->find_one( name=>'DieCutPunch'.$complexity) ) {
 					my %PunchPrice = $Material->get_price( $$specs{'txtDieCutPunches-'.$form}*$$Imposition{imposition}, $Equipment );
 					$PunchPrice{Total} = $PunchPrice{Price} * $$specs{'txtDieCutPunches-'.$form} * $$Imposition{imposition};
 					$DiePrice{Price} += $PunchPrice{Total};
@@ -228,40 +231,51 @@ sub calc_price {
 	} # end if
 	$Total{Impressions} = $impressions;
 
-# this is the price for actual die cutting, priced by impressions.
-	my %ServicePrice = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting-'.$form}, $impressions, $Equipment ) if $$specs{'rdbDieCutting-'.$form};
-	if ( ! %ServicePrice ) {
+  my $service_name = 'DieCutting'.$complexity;
+
+	my %ServicePrice = openprint::service::get_price_object($service_name, $impressions, $Equipment);
+	if (!%ServicePrice and $complexity) {
+    $service_name = 'DieCutting';
 		%ServicePrice = openprint::service::get_price_object( 'DieCutting', $impressions, $Equipment );
 	} # end if
-  $ServicePrice{Total} = 0;
-	if ( $ServicePrice{units} eq 'per m' or $ServicePrice{units} eq 'per 1000 impressions') {
-		$ServicePrice{Total} = $impressions * $ServicePrice{Price} / 1000;
-	} elsif ( $ServicePrice{units} eq 'per hour' ) {
-		my $Runspeed = $Equipment->Specification('RunSpeed');
-    if (!$Runspeed) {
-      $Total{alert} .= 'No RunSpeed on '.$$Equipment{name}.'<br/>';
-    } else {
-      if (!$$Runspeed{range_units} or ($$Runspeed{range_units} eq 'calliper')) {
-        $Runspeed = $Equipment->Specification('RunSpeed', $Imposition->Paper()->calliper());
-      } elsif ($$Runspeed{range_units} eq 'impressions') {
-        $Runspeed = $Equipment->Specification('RunSpeed', $impressions);
-      } else {
-        $Total{alert} .= 'Invalid range units '.$$Runspeed{range_units}. ' for Runspeed on '.$$Equipment{name}.'<br/>';
-      }
-      $Total{Runspeed} = $Runspeed;
-      if ( $Runspeed and $$Runspeed{value} ) {
-        my $hours = $impressions / $$Runspeed{value};
-        $ServicePrice{Total} = Math::Round::nearest(0.01, $hours * $ServicePrice{Price});
-      } elsif (!$$Runspeed{range_units} or ($$Runspeed{range_units} eq 'calliper')) {
-        $Total{alert} .= 'No runspeed('.$$Runspeed{name}.') for calliper ' . $Imposition->Paper()->calliper() . ' on '  . $Equipment->name() . '<br/>';
-        $openprint::log->error($Total{alert});
-      } elsif ($$Runspeed{range_units} eq 'impressions') {
-        $Total{alert} .= 'No runspeed for ' . $impressions . 'impressions on '  . $Equipment->name() . '<br/>';
-        $openprint::log->error($Total{alert});
-      } # end if
-    } # end if
+
+  if (!%ServicePrice) {
+    $Total{alert} .= "No service price found for $service_name on $$Equipment{strid}<br/>";
+    $ServicePrice{Total} = 0;
   } else {
-    $Total{alert} .= 'Unknown units '.$ServicePrice{units}.' on service '.$ServicePrice{ServiceName}.'<br/>';
+    $ServicePrice{Total} = 0;
+    if (!$ServicePrice{units}) {
+      $Total{alert} .= "No units set on $ServicePrice{ServiceName}, defaulting to per 1000<br/>";
+      $ServicePrice{Total} = $impressions * $ServicePrice{Price} / 1000;
+    } elsif ( $ServicePrice{units} eq 'per m' or $ServicePrice{units} eq 'per 1000 impressions') {
+      $ServicePrice{Total} = $impressions * $ServicePrice{Price} / 1000;
+    } elsif ( $ServicePrice{units} eq 'per hour' ) {
+      my $Runspeed = $Equipment->Specification('RunSpeed');
+      if (!$Runspeed) {
+        $Total{alert} .= 'No RunSpeed on '.$$Equipment{name}.'<br/>';
+      } else {
+        if (!$$Runspeed{range_units} or ($$Runspeed{range_units} eq 'calliper')) {
+          $Runspeed = $Equipment->Specification('RunSpeed', $Imposition->Paper()->calliper());
+        } elsif ($$Runspeed{range_units} eq 'impressions') {
+          $Runspeed = $Equipment->Specification('RunSpeed', $impressions);
+        } else {
+          $Total{alert} .= 'Invalid range units '.$$Runspeed{range_units}. ' for Runspeed on '.$$Equipment{name}.'<br/>';
+        }
+        $Total{Runspeed} = $Runspeed;
+        if ( $Runspeed and $$Runspeed{value} ) {
+          my $hours = $impressions / $$Runspeed{value};
+          $ServicePrice{Total} = Math::Round::nearest(0.01, $hours * $ServicePrice{Price});
+        } elsif (!$$Runspeed{range_units} or ($$Runspeed{range_units} eq 'calliper')) {
+          $Total{alert} .= 'No runspeed('.$$Runspeed{name}.') for calliper ' . $Imposition->Paper()->calliper() . ' on '  . $Equipment->name() . '<br/>';
+          $openprint::log->error($Total{alert});
+        } elsif ($$Runspeed{range_units} eq 'impressions') {
+          $Total{alert} .= 'No runspeed for ' . $impressions . 'impressions on '  . $Equipment->name() . '<br/>';
+          $openprint::log->error($Total{alert});
+        } # end if
+      } # end if
+    } else {
+      $Total{alert} .= 'Unknown units '.$ServicePrice{units}.' on service '.$ServicePrice{ServiceName}.'<br/>';
+    } # end if
   } # end if
 
 	$Total{ServicePrice} = \%ServicePrice;
@@ -350,30 +364,33 @@ sub calc {
         }
       } # end if
 		} # end if
-		if ( ( $$specs{'rdbSuppliedDie-'.$form} eq 'N' ) and ( ! $$specs{'rdbDieCutting-'.$form} ) ) {
-			$$specs{alert} .= 'Please select the complexity of the die.<br/>';
-			return 'uncalculated';
-		} # end if
-		if ( (!defined $$specs{'chkOverrideDimensions-'.$form}) or ( $$specs{'chkOverrideDimensions-'.$form} ne 'Y' ) ) {
-			@$specs{"txtDieWidth-$form","txtDieHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
-		} # end if
-		if ( ! ( $$specs{'txtDieWidth-'.$form} or $$specs{'txtDieHeight-'.$form} ) ) {
-			$$specs{alert} .= 'Please enter the die dimensions.<br/>';
-			return 'uncalculated';
-		} # end if
-# now we have to make a custom die
-		if ( $$specs{'rdbDieCutting-'.$form} eq 'Simple' ) {
-			$$specs{'txtSteelRuleLength-'.$form} = 6;
-		} elsif ( $$specs{'rdbDieCutting-'.$form} eq 'Average' ) {
-			$$specs{'txtSteelRuleLength-'.$form} = 9;
-		} elsif ( $$specs{'rdbDieCutting-'.$form} eq 'Complex' ) {
-			$$specs{'txtSteelRuleLength-'.$form} = 12;
-		} # end if
+		if ($$specs{'rdbSuppliedDie-'.$form} eq 'N') {
+      if (!$$specs{'rdbDieCutting-'.$form}) {
+        $$specs{alert} .= 'Please select the complexity of the die.<br/>';
+        return 'uncalculated';
+      } # end if
 
-		if ( ! $$specs{'txtSteelRuleLength-'.$form} ) {
-			$log->debug(" ** Required Data Missing for Custom Die, Rule Length: $$specs{'txtSteelRuleLength-'.$form} Bends: $$specs{'txtDieCutBends-'.$form} ** ");
-			return 'uncalculated';
-		} # end if
+      if ( (!defined $$specs{'chkOverrideDimensions-'.$form}) or ( $$specs{'chkOverrideDimensions-'.$form} ne 'Y' ) ) {
+        @$specs{"txtDieWidth-$form","txtDieHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
+      } # end if
+      if ( ! ( $$specs{'txtDieWidth-'.$form} or $$specs{'txtDieHeight-'.$form} ) ) {
+        $$specs{alert} .= 'Please enter the die dimensions.<br/>';
+        return 'uncalculated';
+      } # end if
+# now we have to make a custom die
+      if ( $$specs{'rdbDieCutting-'.$form} eq 'Simple' ) {
+        $$specs{'txtSteelRuleLength-'.$form} = 6;
+      } elsif ( $$specs{'rdbDieCutting-'.$form} eq 'Average' ) {
+        $$specs{'txtSteelRuleLength-'.$form} = 9;
+      } elsif ( $$specs{'rdbDieCutting-'.$form} eq 'Complex' ) {
+        $$specs{'txtSteelRuleLength-'.$form} = 12;
+      } # end if
+
+      if ( ! $$specs{'txtSteelRuleLength-'.$form} ) {
+        $log->debug(" ** Required Data Missing for Custom Die, Rule Length: $$specs{'txtSteelRuleLength-'.$form} Bends: $$specs{'txtDieCutBends-'.$form} ** ");
+        return 'uncalculated';
+      } # end if
+    } # end if supplied die
 	} # end foreach signature
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -423,11 +440,13 @@ sub calc {
 					} else {
 						$$specs{'hdnBreakdown'.$qty_index} .= '<tr><td>DiePrice: </td><td class="Price">$0.00</td></tr>';
 					} # end if
-					if ( $$Price{ServicePrice}{units} eq 'per hour' ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d impressions/%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{Runspeed}{value} );
-					} else {
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions} );
-					} # en dif
+          if ($$Price{ServicePrice}{Service}) {
+            if ( $$Price{ServicePrice}{units} eq 'per hour' ) {
+            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d impressions/%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{Runspeed}{value} );
+            } else {
+              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions} );
+            } # en dif
+          } # end if have service price
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Hole Clearing: $%1$.2f%2$s * %5$d holes * %6$dout * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{HoleClearingPrice}}{'Price','units','Total'}, $$Price{Impressions}, $$specs{"txtHoleClearingHoles-$form"}, $I->imposition() ) if exists $$Price{HoleClearingPrice};
 
 					$totalUnitPrice += $Price->{UnitPrice};
