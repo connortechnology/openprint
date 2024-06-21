@@ -17,7 +17,7 @@
 	) ?>	
 </li>
 	<li class="complexity"><label>Die Type</label>
-		<? echo ( radio( 'Complexity-'.$$variable{SignatureIndex}, [ map { $_, $_ } ( 'Simple','Average','Complex' ) ], $$variable{'rdbDieCutting-'.$$variable{SignatureIndex}}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		<? echo ( radio( 'Complexity-'.$$variable{SignatureIndex}, [ map { $_, $_ } ( 'Simple','Average','Complex' ) ], $$variable{'Complexity-'.$$variable{SignatureIndex}}, { onclick=>'calc(this.form.name);' } ); ) ?>
   </li>
 </ul>
 <ul id="CustomDie<?SignatureIndex?>" style="<? echo ( 'display: none;' if $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} eq 'Y' ) ?>" >
