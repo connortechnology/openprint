@@ -22,6 +22,7 @@ require openprint::Estimating::Shipping;
 require openprint::Estimating::Stitching;
 require openprint::Estimating::Padding;
 require openprint::Estimating::MultiPage;
+require openprint::Estimating::SinglePage;
 
 # Adds completed/edited services, and then displays the status of the project
 sub view_services {
@@ -109,6 +110,8 @@ sub view_services {
             $calc = ('openprint::Estimating::'.$project_type)->can('calculate_signatures');
             $calc->($Project) if $calc;
           }
+        } else {
+$log->error("No calc for $project_type");
         }
 				openprint::service::auto_calculate($Project, $service_index);
 				$Project->update_status();
