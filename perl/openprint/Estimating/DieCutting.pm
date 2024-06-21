@@ -165,7 +165,7 @@ sub calc_price {
 			} # end if
 		} # end if
 		if ( ( ! %DiePrice ) and $$specs{'Complexity-'.$form} ) {
-			if ( my $Material = openprint::Material->find_one( name=>$$specs{'Complexity-'.$form}.'Die') ) {
+			if ( my $Material = openprint::Material->find_one( name=>$complexity.'Die') ) {
 				%DiePrice = $Material->get_price( undef, $Equipment );
 			} # end if
 		} # end if
@@ -349,27 +349,31 @@ sub calc {
 			$$specs{alert} .= 'Please select whether the die is to be supplied by the customer or not for signature ' . $form . '.<br/>';
 			return $$specs{Status} = 'uncalculated';
 		} # end if
-		if ( ! $$specs{'rdbDieCutting-'.$form} ) {
-      if ($$sig_specs{rdbTemplateType}) {
-        if (sets::isin($$sig_specs{rdbTemplateType}, ['2Panel1Pocket', '2Panel1PocketGusset', '2Panel2Pocket','Panel2PocketGusset' ])) {
-          $$specs{'rdbDieCutting-'.$form} = 'Simple';
-        } elsif (sets::isin($$sig_specs{rdbTemplateType},[ 'TriFoldDoublePocket', 'TriFoldDoublePocketGusset' ])) {
-          $$specs{'rdbDieCutting-'.$form} = 'Complex';
-        } elsif (sets::isin($$sig_specs{rdbTemplateType},[ 'Package6Fold','Package21Fold','Package30Fold','Package51Fold' ])) {
-          $$specs{'rdbDieCutting-'.$form} = 'Average';
-        } elsif (sets::isin($$sig_specs{rdbTemplateType},[ 'Package62Fold','Package64Fold' ])) {
-          $$specs{'rdbDieCutting-'.$form} = 'Complex';
-        } else {
-          $$specs{'rdbDieCutting-'.$form} = 'Average';
-        }
+
+    my @complexityoptions = map { openprint::Service->find_one(name=>'DieCutting'.$_) ? $_ : () } ( 'Simple','Average', 'Complex' );
+    if (@complexityoptions) {
+      if ( ! $$specs{'Complexity-'.$form} ) {
+        if ($$sig_specs{rdbTemplateType}) {
+          if (sets::isin($$sig_specs{rdbTemplateType}, ['2Panel1Pocket', '2Panel1PocketGusset', '2Panel2Pocket','Panel2PocketGusset' ])) {
+            $$specs{'Complexity-'.$form} = 'Simple';
+          } elsif (sets::isin($$sig_specs{rdbTemplateType},[ 'TriFoldDoublePocket', 'TriFoldDoublePocketGusset' ])) {
+            $$specs{'Complexity-'.$form} = 'Complex';
+          } elsif (sets::isin($$sig_specs{rdbTemplateType},[ 'Package6Fold','Package21Fold','Package30Fold','Package51Fold' ])) {
+            $$specs{'Complexity-'.$form} = 'Average';
+          } elsif (sets::isin($$sig_specs{rdbTemplateType},[ 'Package62Fold','Package64Fold' ])) {
+            $$specs{'Complexity-'.$form} = 'Complex';
+          } else {
+            $$specs{'Complexity-'.$form} = 'Average';
+          }
+        } # end if
       } # end if
-		} # end if
-		if ($$specs{'rdbSuppliedDie-'.$form} eq 'N') {
-      if (!$$specs{'rdbDieCutting-'.$form}) {
+      if (!$$specs{'Complexity-'.$form}) {
         $$specs{alert} .= 'Please select the complexity of the die.<br/>';
         return 'uncalculated';
       } # end if
+    } # end if
 
+		if ($$specs{'rdbSuppliedDie-'.$form} eq 'N') {
       if ( (!defined $$specs{'chkOverrideDimensions-'.$form}) or ( $$specs{'chkOverrideDimensions-'.$form} ne 'Y' ) ) {
         @$specs{"txtDieWidth-$form","txtDieHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
       } # end if
@@ -378,11 +382,11 @@ sub calc {
         return 'uncalculated';
       } # end if
 # now we have to make a custom die
-      if ( $$specs{'rdbDieCutting-'.$form} eq 'Simple' ) {
+      if ( $$specs{'Complexity-'.$form} eq 'Simple' ) {
         $$specs{'txtSteelRuleLength-'.$form} = 6;
-      } elsif ( $$specs{'rdbDieCutting-'.$form} eq 'Average' ) {
+      } elsif ( $$specs{'Complexity-'.$form} eq 'Average' ) {
         $$specs{'txtSteelRuleLength-'.$form} = 9;
-      } elsif ( $$specs{'rdbDieCutting-'.$form} eq 'Complex' ) {
+      } elsif ( $$specs{'Complexity-'.$form} eq 'Complex' ) {
         $$specs{'txtSteelRuleLength-'.$form} = 12;
       } # end if
 
