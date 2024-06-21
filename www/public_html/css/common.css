@@ -211,6 +211,7 @@ fieldset li {
 	padding: 0 0 0 185px;
 	text-align: left;
 }
+fieldset p label:not(.radio):not(.radio-inline) ,
 fieldset ul li label:not(.radio):not(.radio-inline) {
 	width: 180px;
 	margin-left: -185px;
@@ -397,7 +398,7 @@ img {
 }
 
 table .Date {
-	width: 135px;
+	width: 145px;
 	text-align: right;
 	padding-right: 5px;
 }
@@ -642,7 +643,7 @@ th.When {
 table .status {
 	text-align: left;
 	padding-left: 7px;
-	width: 80px;
+	width: 100px;
 }
 table .order_id {
 	text-align: left;

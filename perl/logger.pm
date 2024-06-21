@@ -89,8 +89,9 @@ sub crit {
 	$self->print( "[crit] $message\n" );
 }
 sub error {
+	my ( $caller, undef, $line ) = caller;
 	if ( $_[0]{level} <= ERROR ) {
-		$_[0]->print( "[error] $_[1]\n" );
+		$_[0]->print( "[error] $caller:$line $_[1]\n" );
 	} # end if
 }
 sub warn {

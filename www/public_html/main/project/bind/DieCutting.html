@@ -2,19 +2,14 @@
 <script>
   results_callback = function cbDieCuttingResults( results ) {
       if (!results) {
-        console.log("No results!");
-        return;
-      }
+          console.log("No results!");
+          return;
+        }
 
       const form = getFormObj('f1');
 
       const re = /ImpQty-(\d+)-(\d+)-(\d+)/;
-      //const keys = Object.keys(results);
-  for (const [key, value] of Object.entries(results)) {
-      //for ( let index = 0, len = keys.length; index < len; index += 1 ) {
-          //const key = keys[index];
-          //const value = results.get(keys[index]);
-
+      for (const [key, value] of Object.entries(results)) {
           const matches = re.exec( key );
           if ( matches ) {
               var f = $('Imp-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
@@ -30,35 +25,34 @@
             } // end if matches
         } // end foreach pair
       cbFillResults(results);
-
     } // end function
-function show_extra_imposition( signature, qty_index ) {
-    var f = $('Imp-'+signature+'-'+qty_index+'-'+'2');
-    f.show();
-}
+  function show_extra_imposition( signature, qty_index ) {
+      const f = $j('#Imp-'+signature+'-'+qty_index+'-'+'2');
+      f.show();
+    }
 function Imposition_onchange( element, signature, qty_index, index ) {
-    var spec = signature + '-' + qty_index + '-' + index;
-    var next_index = 1+parseInt(index);
+    const spec = signature + '-' + qty_index + '-' + index;
+    const next_index = 1+parseInt(index);
     var do_calc = 1;
 
     if ( element.type == 'select-one' ) {
         if ( ! element.value ) {
             $('ImpQty-'+spec).value = '';
-        } else {
-            if ( ! $('ImpQty-'+spec).value ) {
-                $('ImpQty-'+spec).value = 1;
+          } else {
+              if ( ! $('ImpQty-'+spec).value ) {
+                  $('ImpQty-'+spec).value = 1;
+                } // end if
             } // end if
+      } else { // must be the qty field
         } // end if
-    } else { // must be the qty field
-    } // end if
 
     if ( ! $('ImpQty-'+spec).value ) {
-    } else {
-        $('Imp-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
-    } // end if
+      } else {
+          $('Imp-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
+        } // end if
     if ( do_calc ) 
-        calc(element.form.name);
-} // end function
+      calc(element.form.name);
+  } // end function
 </script>
 <div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
