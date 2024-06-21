@@ -487,3 +487,5 @@ update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types whe
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Perforating') where id=37;
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values (37, 'Scoring Capable', 'Y','');
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values (37, 'Perforating Capable', 'Y','');
+update service_prices set units='per m' where units='per 1000 sheets' and service_id=(SELECT id from services where name='Perforating');
+
