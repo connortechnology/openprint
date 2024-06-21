@@ -22,7 +22,33 @@ use POSIX           qw(ceil);
 
 use constant DEBUG => 1;
 
+use vars qw( %ServicePrices %Specifications);
+%ServicePrices = (
+  NumberingMinimumCharge => {},
+  NumberingMakeReady => {},
+  Numbering => { units=> ['per hour', 'per m']},
+);
+%Specifications = (
+  RunSpeed => {range_units => ['calliper','impressions'], units=>'per hour'},
+  'Numbering Capable' => { value=>['Y','N','When Printing'] },
+  'Numbering Heads' => {},
+  'Numbering Colours' => {},
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
+
 my %variables = (
+    'alert' => ['save','output'],
 	'SetsOfNumbers' => ['save'],
 	'colour'		=> ['save'],
 	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
@@ -30,6 +56,7 @@ my %variables = (
 	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
 	'MPrice1'	=> ['save','output'], 'MPrice2'	=> ['save','output'], 'MPrice3'	=> ['save','output'], 
 	'txtQuantity1' => ['save'], 'txtQuantity2' => ['save'], 'txtQuantity3' => ['save'],
+	'hdnBreakdown1' => ['save'], 'hdnBreakdown2' => ['save'], 'hdnBreakdown3' => ['save'],
 );
 
 sub variables {
@@ -61,6 +88,7 @@ sub calc {
   my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
 
 	my $Project = new openprint::Project( $pid );
+  my $ServiceType = $Project->ServiceType($sid);
 
 	$$specs{Status} = 'calculated';
 	$$specs{SetsOfNumbers} =~ s/\D//g;
@@ -87,7 +115,7 @@ sub calc {
 			next if ! $$sig_specs{"txtImposition$qty_index"};
 
 			my $Imposition = new openprint::Imposition()->load( $sig_specs, $qty_index, $Project );
-			my $Results = signature_calc( $Project, $specs, $sig_specs, $qty_index, $Imposition );
+			my $Results = signature_calc( $Project, $ServiceType, $specs, $sig_specs, $qty_index, $Imposition );
 			if ( ! $Results ) {
 				$$specs{alert} .= 'No result from signature_calc.';
 				$$specs{Status} = 'uncalculated';
@@ -141,7 +169,7 @@ $openprint::log->debug("Equipment is : " . $$Results{Equipment}->to_string() );
 } # end sub calc
 
 sub signature_calc {
-	my ( $Project, $specs, $sig_specs, $qty_index, $Imposition ) = @_;
+	my ( $Project, $ServiceType, $specs, $sig_specs, $qty_index, $Imposition ) = @_;
 
 	my %Results;
 	my $services = $Project->services();
@@ -151,7 +179,7 @@ sub signature_calc {
 	my $form = $$sig_specs{SignatureIndex};
   if ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) {
     if ( $$specs{"txtImposition-$form-$qty_index"} > $Imposition->imposition() or $$specs{"txtImposition-$form-$qty_index"} <= 0 ) {
-      $Results{alert} = 'The specified imposition is not possible.';
+      $Results{alert} = 'The specified imposition is not possible.<br/>';
       $Results{Status} = 'uncalculated';
       return \%Results;
     } # end if
@@ -163,7 +191,11 @@ sub signature_calc {
 	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 		@Equipment = ( new openprint::Equipment($$specs{"ddmEquipment-$form-$qty_index"}) );
 	} else {
-		@Equipment = openprint::Equipment->find( 'Specifications'=>{'Numbering Capable'=>['Y','When Printing']}, 'useinestimating'=>1 );
+		@Equipment = openprint::Equipment->find(
+        useinestimating=>1,
+        'servicetype_id any'=>$ServiceType->id(),
+# 'Specifications'=>{'Numbering Capable'=>['Y','When Printing']},
+        );
 	} # end if
 	if ( ! @Equipment ) {
 		$Results{alert} .= 'We have no numbering equipment.';
@@ -376,10 +408,6 @@ sub summary {
 
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
-
-	my @possible_equipment = openprint::Equipment->find( Specifications => {'Numbering Capable'=>['Y','When Printing']}, useinestimating=>1, order=>'lower(strName)');
-	#my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
-	@{$$variable{Equipment}} = @possible_equipment;
 } # end sub display
 
 sub save {
