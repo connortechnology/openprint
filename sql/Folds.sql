@@ -25,7 +25,7 @@ CREATE TABLE Folds (
 	spinepaste		boolean,
 	spine_direction	TEXT,
 	makeready_time	integer,
-	makeready_overs	integer,
+	makeready_overs	float,
 	makeready_overs_units	TEXT,
 	run_overs	integer,
 	run_overs_units	TEXT,
