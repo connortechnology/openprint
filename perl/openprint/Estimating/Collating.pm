@@ -185,7 +185,8 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 		$$specs{"txtQuantity$qty_index"} = int( $$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 
-		my $base_qty = $$specs{"txtQuantity$qty_index"} * $$specs{'txtSignatureCount'.$qty_index};
+		my $base_qty = $$specs{"txtQuantity$qty_index"};
+    # * $$specs{'txtSignatureCount'.$qty_index};
 
 		my @equipment = ();
 		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
