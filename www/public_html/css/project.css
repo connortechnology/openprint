@@ -21,8 +21,9 @@ height: 100%;
 .Project .Header .Comments ,
 .Project .Header .Description ,
 .Project .Header .Reference {
-flex: 1;
+    flex: 1;
     width: 48%;
+    min-width: 275px;
 }
 .Project .Header .Comments li ,
 .Project .Header .Reference li ,
@@ -258,11 +259,13 @@ table.ProofsSummary .quantity, table.ProofsSummary .size {
 .Service .ThreeColumns {
 	width: 32%;
 	float: left;
+  min-width: 300px;
 }
 .Service .OneColumns,
 .Service .TwoColumns {
 	width: 40%;
 	float: left;
+  min-width: 300px;
 }
 
 #markup_edit input {
