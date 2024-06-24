@@ -16,6 +16,9 @@
 				onclick=>qq`if(this.value=='Y'){\$('CustomDie$$variable{SignatureIndex}').hide();}else{\$('CustomDie$$variable{SignatureIndex}').show();} calc(this.form.name);` } );
 	) ?>	
 </li>
+	<li class="complexity"><label>Die Type</label>
+		<? echo ( radio( 'Complexity-'.$$variable{SignatureIndex}, [ map { $_, $_ } ( 'Simple','Average','Complex' ) ], $$variable{'Complexity-'.$$variable{SignatureIndex}}, { onclick=>'calc(this.form.name);' } ); ) ?>
+  </li>
 </ul>
 <ul id="CustomDie<?SignatureIndex?>" style="<? echo ( 'display: none;' if $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} eq 'Y' ) ?>" >
 	<li><label>Die size? (Inches)</label>
@@ -26,8 +29,6 @@
 			write_override( 'chkOverrideDimensions-'.$$variable{SignatureIndex}, $$variable{'chkOverrideDimensions-'.$$variable{SignatureIndex}}, '', q`calc('f1');` ),
 		); ) ?>
 	</li>
-	<li><label>Die Type</label>
-		<? echo ( radio( 'rdbDieCutting-'.$$variable{SignatureIndex}, [ map { $_, $_ } ( 'Simple','Average','Complex' ) ], $$variable{'rdbDieCutting-'.$$variable{SignatureIndex}}, { onclick=>'calc(this.form.name);' } ); ) ?> <br/>
 		<? echo ( input( type=>'float', name=>'txtSteelRuleLength-'.$$variable{SignatureIndex}, value=>$$variable{'txtSteelRuleLength-'.$$variable{SignatureIndex}}, oninput=>'calc(this.form.name);' ); ) ?>
 		Linear Inches
 	</li>
@@ -47,7 +48,4 @@
 <ul>
 <li><label># of holes to clear</label>
 <? echo ( input( type=>'cardinal', name=>'txtHoleClearingHoles-'.$$variable{SignatureIndex}, value=>$$variable{'txtHoleClearingHoles-'.$$variable{SignatureIndex}}, oninput=>'calc(this.form.name);' ); ) ?>
-</li>
-<li><label>MakeReady Complexity</label>
-	<? echo ( radio( 'MakeReadyComplexity-'.$$variable{SignatureIndex}, [ map { $_, $_ } ( 'Simple','Average','Complex' ) ], $$variable{'MakeReadyComplexity-'.$$variable{SignatureIndex}}, { onclick=>'calc(this.form.name);' } ); ) ?>
 </li>
