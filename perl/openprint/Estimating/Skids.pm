@@ -479,7 +479,7 @@ sub summary {
 							Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
 					);
 				} # end if
-			} else {
+			} elsif ($$specs{"txtPackageQuantity$qty_index"}) {
 				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $Material->name() . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
 				my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
 				if ( $g > 1000 ) {
