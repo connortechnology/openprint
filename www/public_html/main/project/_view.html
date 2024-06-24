@@ -82,6 +82,7 @@
 				} # end foreach
 				$html .= '<td class="status">'.$statuses{$$services{''}[0]};
 				if ( (!$editable) and ($openprint::User->email() =~ /iconnor/ ) ) {
+					$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $$services{''}[0]);
 					$html .= sprintf(q`<br/><a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $$services{''}[0] );
 				}
 				$html .= '</td>';
@@ -90,9 +91,10 @@
 					$html .= '<td class="unprintable actions">';
 					if ( $Project_Type->url() ) {
 						$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $$services{''}[0], $Project_Type->url() );
-if ( $openprint::User->email() =~ /iconnor/ ) {
-	$html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $$services{''}[0] );
-}
+            if ( $openprint::User->email() =~ /iconnor/ ) {
+              $html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $$services{''}[0]);
+              $html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $$services{''}[0] );
+            }
 					} # end if
 					$html .= '</td>';
 				} # end if
