@@ -201,7 +201,7 @@ sub get_best_prices {
       @pricing = $Object->Prices();
     }
     if ($equipment_id) {
-      $openprint::log->debug("Filtering by equipment id $equipment_id");
+      #$openprint::log->debug("Filtering by equipment id $equipment_id");
       @pricing = map { ((!$$_{equipment_id}) or ($$_{equipment_id} == $equipment_id)) ? $_ : () } @pricing;
     } else {
       $openprint::log->debug("Not Filtering by equipment id $equipment_id") if DEBUG;
