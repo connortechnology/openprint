@@ -30,7 +30,7 @@ my %Specifications = (
 my %ServicePrices = (
   '(\w+)PunchingMinimumCharge' => {},
   '(\w)PunchingMakeReady' => { units => [ 'per hour' ] },
-  '\w+' => { units=> ['per hour', 'per lb','per m']},
+  '\w+' => { units=> ['per m', 'each']},
 );
 
 sub ServicePriceConfiguration {
@@ -196,7 +196,10 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 				%PunchingPrice = $PunchingService->get_price($qty, $equipment);
 				if ( $PunchingPrice{units} eq 'per m' ) {
 					$PunchingPrice{Total} = Math::Round::nearest( 0.01, $PunchingPrice{Price} * $qty / 1000 );
+        } elsif ( $PunchingPrice{units} eq 'each' ) {
+					$PunchingPrice{Total} = Math::Round::nearest( 0.01, $PunchingPrice{Price} * $qty );
 				} else {
+          $price{alert} .= 'Invalid units '.$PunchingPrice{units}.' on '.$PunchingPrice{ServiceName}.'<br/>';
 					$PunchingPrice{Total} = Math::Round::nearest( 0.01, $PunchingPrice{Price} * $qty );
 				} # end if
 				$price{breakdown} .= 'Punching: '.sprintf( '$%.4f%s = $%.2f<br/>', @PunchingPrice{'Price','units','Total'} );
