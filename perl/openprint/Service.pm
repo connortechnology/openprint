@@ -178,9 +178,9 @@ sub get_price {
 
 	if (!$period) {
 		$period = 'NOW()';
-		if ( $debug ) {
-			$log->debug("No period specified defaulting to $period");
-		} # end if
+    #if ( $debug ) {
+    #$log->debug("No period specified defaulting to $period");
+    #} # end if
 	} # end if
 
 	$Pricelist = $openprint::Pricelist if ! $Pricelist;
