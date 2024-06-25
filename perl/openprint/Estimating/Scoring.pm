@@ -124,7 +124,6 @@ sub has_overrides {
 
 sub init {
 	my ( $Project, $calc_hash ) = @_;
-  my $ServiceType = $Project->ServiceType();
 
 	my @capabilities = ('Y','When Printing');
 	push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
@@ -153,7 +152,7 @@ sub signature_needs {
 		} # end if
 	} # end if
 
-# If it's not needing folding, then it doesn't need to be scored!!
+  # If it's not needing folding, then it doesn't need to be scored
 	if ( ! openprint::Estimating::Folding::signature_needs( $Project, $sig_specs ) ) {
     $openprint::log->debug("NeedFolding is not true form $form $$sig_specs{txtWidth}x$$sig_specs{txtHeight} : $$sig_specs{txtFinalWidth}x$$sig_specs{txtFinalHeight}");
 		return 0;
@@ -168,7 +167,7 @@ sub signature_needs {
 			$openprint::log->error("Loading paper in Scoring::signature_needs");
 			$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
 		}
-	#$openprint::log->debug( "Score Required!: " . $Paper->score_required() );
+	$openprint::log->debug( "Score Required for form $form!: " . $Paper->score_required() );
 		if ( $Paper->score_required() ) {
 			return 1;
 		} # end if
@@ -248,7 +247,7 @@ sub calc {
 		} # end if
 		my $qty = $$specs{"txtQuantity$qty_index"};
 
-		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty:";
+		$$specs{'hdnBreakdown'.$qty_index} = '';
 
 		my $qtyTotal = 0;
 		my $price = 0;
@@ -361,12 +360,6 @@ sub signature_calc {
 			alert			=>	'',
 			);
 	my $form = $$sig_specs{SignatureIndex};
-
-	if ( 0 ) {
-		if ( (!defined $$specs{"chkOverrideQty-$form"}) or ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
-			get_scores( $Project, $specs, $sig_specs, $SignatureImposition->Paper() );
-		} # end if
-	} # end if
 
 	my $score_qty = ($$specs{"txtVerticalQty-$form"}?$$specs{"txtVerticalQty-$form"}:0) + ($$specs{"txtHorizontalQty-$form"}?$$specs{"txtHorizontalQty-$form"}:0);
 	$Results{Breakdown} .= "# of Scores: $score_qty<br/>";
@@ -881,13 +874,13 @@ sub get_scores {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
 	my $form = $$sig_specs{SignatureIndex};
-	if ( ! signature_needs( $Project, $specs, $sig_specs, $Paper ) ) {
-# Default to 1 score, because we assume that if we have scoring, then we must want at least 1
+	if (!signature_needs($Project, $specs, $sig_specs, $Paper)) {
 		$$specs{"txtVerticalQty-$form"} = 0;
 		$$specs{"txtHorizontalQty-$form"} = 0;
-		$openprint::log->debug("SIgnature $form doesn't need scoring in get_scores") if DEBUG;
+		$openprint::log->error("Signature $form doesn't need scoring in get_scores") if DEBUG;
 		return;
 	} # end if
+
 	if ( $$sig_specs{txtSignatureType} eq 'Cover Pages' ) {
 		if ( $Project->get_book_type() eq 'PerfectBound' ) {
 			$$specs{"txtVerticalQty-$form"} = 4;
@@ -905,10 +898,17 @@ sub get_scores {
 			$$specs{"txtHorizontalQty-$form"} = 0;
 		} # end if
 	} elsif ( $$sig_specs{txtSignatureType} eq 'Gate Folded Pages' ) {
+    if ( $$sig_specs{rdbTemplateType} eq 'SingleGateFold') {
+      $$specs{"txtVerticalQty-$form"} = 1;
+    } elsif ( $$sig_specs{rdbTemplateType} eq 'DoubleGateFold') {
+      $$specs{"txtVerticalQty-$form"} = 2;
+    } else {
+      $openprint::log->error("No templatefolded");
+    }
 	} else { # normal printing
 		my $width_folds = Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1 if $$sig_specs{txtFinalWidth};
 		my $height_folds = Math::Round::nearest( 1, $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight})-1 if $$sig_specs{txtFinalHeight};
-		$openprint::log->debug("Width folds: $width_folds height folds: $height_folds template $$sig_specs{rdbTemplateType} $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
+		$openprint::log->error("Width folds: $width_folds height folds: $height_folds template $$sig_specs{rdbTemplateType} $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
 		if ( !$$sig_specs{rdbTemplateType} or
       ($$sig_specs{rdbTemplateType} eq 'Portrait') or
       ($$sig_specs{rdbTemplateType} eq 'Landscape')
@@ -971,9 +971,7 @@ sub get_scores {
 			} # end if
 
 		} # end if
-
 	} # end if
-
 } # end sub get_scores
 
 sub get_specs {
