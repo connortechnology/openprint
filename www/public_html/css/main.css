@@ -65,6 +65,7 @@ ul.redbox {
 	width: 90%;
 }
 #AlertDiv {
+  overflow: auto;
 	font-weight: bold;
 	color: red;
 }
