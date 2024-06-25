@@ -43,7 +43,7 @@ my %variables = (
 	ProjectIndex=>[], ServiceIndex=>[], ServiceType=>[],
 	remaining_pages=>['output'],next_group_id=>['output'],groups=>['output','save'],
 	spine	=>	 ['save'],
-	alert	=>	 ['save'],
+	alert	=>	 ['save','output'],
 	);
 
 @signature_variables = (
@@ -153,7 +153,7 @@ sub calc {
 	} # end if
 
 	if ( ! ( $$specs{txtFinalWidth} or $$specs{txtFinalHeight} ) ) {
-		$$specs{alert} = 'Please select the dimensions.<br/>';
+		$$specs{alert} .= 'Please select the dimensions.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 	if ( ! $$specs{spine} ) {
@@ -225,6 +225,7 @@ sub calc {
 				$$specs{alert} .= "You have specified to print more pages per signature than are required for group $group_id.<br/>";
 			} # end if
     } else {
+      # Not overriden
       if ( $$specs{'txtSignatureType'.$group_id} eq 'Gate Folded Pages' ) {
         if ($$specs{'rdbTemplateType'.$group_id} eq 'SingleGateFold') {
           $override_pages{$group_id} = 6;
@@ -236,6 +237,7 @@ sub calc {
           $override_pages{$group_id} = 4;
           $$specs{'txtSpreadSize'.$group_id} = 4;
         }
+        $remaining_pages -= $override_pages{$group_id};
       }
 			$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
 		} # end if override
@@ -244,13 +246,13 @@ sub calc {
 	# if there is a cover, then force it to be non-zero
 	if ( (! $override_pages{1}) and ($$specs{OverrideGroupPageQuantity1} ne 'Y') and ($$specs{rdbCover} eq 'Different') ) {
     my $pages = 4;
-      if ($$specs{'rdbTemplateType1'} eq 'SingleGateFold') {
-        $pages = $$specs{'GroupPageQuantity1'} = 6;
-        $$specs{txtSpreadSize1} = 6;
-      } elsif ($$specs{'rdbTemplateType1'} eq 'DoubleGateFold') {
-        $pages = $$specs{'GroupPageQuantity1'} = 8;
-        $$specs{txtSpreadSize1} = 8;
-      }
+    if ($$specs{rdbTemplateType1} eq 'SingleGateFold') {
+      $pages = $$specs{GroupPageQuantity1} = 6;
+      $$specs{txtSpreadSize1} = 6;
+    } elsif ($$specs{rdbTemplateType1} eq 'DoubleGateFold') {
+      $pages = $$specs{GroupPageQuantity1} = 8;
+      $$specs{txtSpreadSize1} = 8;
+    }
 		my $new_remaining = int(($remaining_pages-$pages) / $$specs{txtSpreadSize1} ) * $$specs{txtSpreadSize1} if $$specs{txtSpreadSize1};
 		if ( 0 ) {
 # I think the idea here is to give the cover either 4 or 6 pages... depending on the total # of pages.
@@ -266,7 +268,7 @@ sub calc {
 	$remaining_pages = 0 if $remaining_pages < 0;
 
 	if ( ! $$specs{txtTotalPageQuantity} ) {
-		$$specs{alert} = 'Please enter the # of pages<br/>';
+		$$specs{alert} .= 'Please enter the # of pages<br/>';
 		$$specs{Status} = 'uncalculated';
 	} elsif ( $$specs{txtTotalPageQuantity} > 2000 ) {
 		$$specs{alert} .= 'The maximum # of pages is 2000.<br/>';
@@ -277,11 +279,6 @@ sub calc {
 #$openprint::log->debug("Overrides: @overrides . " . @overrides . ' Groups: ' . @Groups );
 	if ( $remaining_pages and ( @overrides >= @Groups ) ) {
 		$$specs{alert} .= 'There are ' . $remaining_pages . ' unspecified pages.<br/>';
-		$$specs{Status} = 'uncalculated';
-	} # end if
-
-	if ( ! $$specs{rdbCover} ) {
-		$$specs{alert} = 'Please select the cover type.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
