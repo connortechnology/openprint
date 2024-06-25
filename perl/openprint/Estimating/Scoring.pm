@@ -146,13 +146,8 @@ sub init {
 sub signature_needs {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
-	my $form = $$sig_specs{SignatureIndex} * 1;
+	my $form = $$sig_specs{SignatureIndex};
 	if ( $specs ) {
-
-# This is because for non-books, the specs hash doesn't have the SignatureIndex filledin.
-# WHAT?S!  ARE YOU SMOKING?
-#$openprint::log->debug("Scoring::need $form : " .$$specs{"chkOverrideQty-$form"}) if DEBUG;
-#if ( ( (defined $$specs{"chkOverrideQty-$form"} ) and ( $$specs{"chkOverrideQty-$form"} eq 'Y' ) ) and
 		if ( ( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
 			return 1;
 		} # end if
@@ -160,12 +155,13 @@ sub signature_needs {
 
 # If it's not needing folding, then it doesn't need to be scored!!
 	if ( ! openprint::Estimating::Folding::signature_needs( $Project, $sig_specs ) ) {
-#$openprint::log->debug("NeedFolding is not true $$specs{txtWidth}x$$specs{txtHeight} : $$specs{txtFinalWidth}x$$specs{txtFinalHeight}");
+    $openprint::log->debug("NeedFolding is not true form $form $$sig_specs{txtWidth}x$$sig_specs{txtHeight} : $$sig_specs{txtFinalWidth}x$$sig_specs{txtFinalHeight}");
 		return 0;
 	} # end if
 	if ( 
 			( $$sig_specs{txtSignatureType} eq '' ) 
 			or ( $$sig_specs{txtSignatureType} eq 'Cover Pages' ) 
+			or ( $$sig_specs{txtSignatureType} eq 'Gate Folded Pages' ) 
 			or ( $$sig_specs{txtSignatureType} and ( ! $Project->signatures({type=>'Cover Pages'}) ) and ( $form == 1 ) ) 
 			) {
 		if ( ! $Paper ) {
