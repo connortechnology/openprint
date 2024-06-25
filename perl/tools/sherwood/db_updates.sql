@@ -459,11 +459,13 @@ update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types whe
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Perforating') where id=136;
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='DigiFold Pro'), 'Scoring Capable', 'Y','');
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='DigiFold Pro'), 'Perforating Capable', 'Y','');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='DigiFold Pro'), 'Type', 'Folder','');
 
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Scoring') where id=153;
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Perforating') where id=153;
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='Digital Folder'), 'Scoring Capable', 'Y','');
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='Digital Folder'), 'Perforating Capable', 'Y','');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='Digital Folder'), 'Type', 'Folder','');
 
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Scoring') where id=20;
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Perforating') where id=20;
@@ -475,8 +477,10 @@ update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types whe
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='FoilStamping') where id=173;
 /* Cylinder-21x30 */
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Embossing') where id=20;
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values (20, 'Type', 'Cylinder','');
 /* Cylinder-21x30 */
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Embossing') where id=172;
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values (172, 'Type', 'Cylinder','');
 /* Igen NUmber */
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Numbering') where id=164;
 /* Platen */
@@ -488,4 +492,5 @@ update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types whe
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values (37, 'Scoring Capable', 'Y','');
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values (37, 'Perforating Capable', 'Y','');
 update service_prices set units='per m' where units='per 1000 sheets' and service_id=(SELECT id from services where name='Perforating');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values (37, 'Type', 'Platen','');
 
