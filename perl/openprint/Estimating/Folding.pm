@@ -837,13 +837,22 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 				next if ! ( $$specs{"FoldQty-$form-$qty_index-$index"}
 						and $$specs{"FoldType-$form-$qty_index-$index"}
 						and $$specs{"FoldImposition-$form-$qty_index-$index"} );
-				my ( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/;
+        my $pages = 0;
+        if ($$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/) {
+          $pages = $1;
+        } elsif ($$specs{"FoldType-$form-$qty_index-$index"} eq 'SingleGateFold') {
+          $pages = 6;
+        } elsif ($$specs{"FoldType-$form-$qty_index-$index"} eq 'DoubleGateFold') {
+          $pages = 8;
+        }
+
 				$override_pages += $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $$specs{"FoldImposition-$form-$qty_index-$index"};
-			}
+      }
+
 			if ( $override_pages > $$SignatureImposition{imposition} * $SignatureImposition->pages() ) {
 				$$specs{alert} .= "You seem to be specifying more pages for folding than were printed for form $form quantity $qty_index<br/>";
 			} elsif ( $override_pages < $$SignatureImposition{imposition} * $SignatureImposition->pages() ) {
-				$$specs{alert} .= "You seem to be specifying fewer pages for folding than were printed for form $form quantity $qty_index<br/>";
+				$$specs{alert} .= "You seem to be specifying fewer pages ($override_pages) for folding than were printed (".($$SignatureImposition{imposition} * $SignatureImposition->pages())." for form $form quantity $qty_index<br/>";
 			} # end if
 		} # end if SignatureType need to test for too many pages
 
