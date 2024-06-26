@@ -922,11 +922,12 @@ $openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"
 # If we got here, then we matched the override
 			push @New_All_Impositions, $Set_Of_Impositions;
 		} # end foreach Set
-		if ( ! @New_All_Impositions ) {
-			#$openprint::log->error("Didn't find any matching folds for the override");
-			$$specs{alert} .= "Didn't find any matching folds for the override<br/>";
+
+		if (!@New_All_Impositions) {
+			$openprint::log->error("Didn't find any matching folds for the override");
+			$$specs{alert} .= 'Didn\'t find any matching folds for the override<br/>';
 			$results{Status} = 'uncalculated';
-			return;
+			return \%results;
 # Look for some generic matches and create a new imp
 			my $Set;
 			my $Override_pages;
@@ -1399,7 +1400,7 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
                 $openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") if DEBUG;
               } else {
                 $openprint::log->debug("Fold does not have page_rows and page_columns filled in" . $Fold->to_string() ) if DEBUG;
-                $openprint::log->debug("old: $width_folds x $height_folds source: $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} x $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight} ") if DEBUG;
+                $openprint::log->debug("old: $width_folds x $height_folds source: $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} x $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight} ") if DEBUG;
                 if ( 1 ) {
                   $width_folds = Math::Round::nearest( 1, $$Imposition{layout_width} / $$Imposition{object_width} )-1 if $$Imposition{object_width};
                   if ( $width_folds < 0 ) {
@@ -2083,61 +2084,56 @@ $openprint::log->debug("Not needed for form $form") if DEBUG;
 			my $Imposition = $Impositions{$signature_service_index};
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string();
 
-			# What the hellis the point of this line?  Brochures don't have pages..
-			#if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
+      my $results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, \@Signature_Impositions, $calc_hash );
+    #$openprint::log->debug( Data::Dumper::Dumper($results) );
+      #my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, [ sets::exclude( [ $Imposition ], \@Signature_Impositions ) ], $calc_hash );
+      $$specs{'hdnBreakdown'.$qty_index} .= $$results{Breakdown} if $$results{Breakdown};
+      $$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>MR Waste: %d, Run Waste: %d<br/>', @$results{'MakeReadyOvers','RunOvers'} );
+      $$specs{"Price-$form-$qty_index"} = $$results{Price};
+      $price += $$results{Price} if $$results{Price};
+      $mprice += $$results{MPrice};
+      if ( $$results{Equipment} ) {
+        if ( (!$$specs{"chkOverrideEquipment-$form-$qty_index"}) or ($$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y') ) {
+          $$specs{"ddmEquipment-$form-$qty_index"} = $$results{Equipment}->id();
+        } else {
+          @no_outputs = sets::exclude( [ "ddmEquipment-$form-$qty_index" ], \@no_outputs );
+        } # end if
 
-				my $results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, \@Signature_Impositions, $calc_hash );
-			#$openprint::log->debug( Data::Dumper::Dumper($results) );
-				#my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, [ sets::exclude( [ $Imposition ], \@Signature_Impositions ) ], $calc_hash );
-				$$specs{'hdnBreakdown'.$qty_index} .= $$results{Breakdown} if $$results{Breakdown};
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>MR Waste: %d, Run Waste: %d<br/>', @$results{'MakeReadyOvers','RunOvers'} );
-				$$specs{"Price-$form-$qty_index"} = $$results{Price};
-				$price += $$results{Price} if $$results{Price};
-				$mprice += $$results{MPrice};
-				if ( $$results{Equipment} ) {
-					if ( (!$$specs{"chkOverrideEquipment-$form-$qty_index"}) or ($$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y') ) {
-						$$specs{"ddmEquipment-$form-$qty_index"} = $$results{Equipment}->id();
-					} else {
-						@no_outputs = sets::exclude( [ "ddmEquipment-$form-$qty_index" ], \@no_outputs );
-					} # end if
-
-					my $index = 1;
-					$$Imposition{Folds} = $$results{FoldedImpositions};
+        my $index = 1;
+        $$Imposition{Folds} = $$results{FoldedImpositions};
 $log->debug("# of FOlded Impositions in results" . @{$$results{FoldedImpositions}} );
-					foreach my $FI ( @{$$results{FoldedImpositions}} ) {
-						my $Fold = $$FI{Fold};
-						my $fold_type = $Fold->type();
+        foreach my $FI ( @{$$results{FoldedImpositions}} ) {
+          my $Fold = $$FI{Fold};
+          my $fold_type = $Fold->type();
 
-						if ( 0 and DEBUG ) {
-							$openprint::log->debug("Foldtype: $fold_type " . $$FI{imposition} . "out $$Fold{name} $$Fold{folds} $$Fold{angles}" );
-							$Imposition->display(" Runspeed: $$FI{runspeed}");
-						}
-						$$specs{"FoldType-$form-$qty_index-$index"} = $fold_type;
-						$$specs{"FoldQty-$form-$qty_index-$index"} = $$FI{quantity};
-						$$specs{"FoldPageQty-$form-$qty_index-$index"} = $$FI{page_quantity};
-						$$specs{"FoldPageColumns-$form-$qty_index-$index"} = $$FI{page_columns};
-						$$specs{"FoldPageRows-$form-$qty_index-$index"} = $$FI{page_rows};
-						$$specs{"FoldImposition-$form-$qty_index-$index"} = $$FI{imposition};
-						$$specs{"FoldColumns-$form-$qty_index-$index"} = $$FI{columns};
-						$$specs{"FoldRows-$form-$qty_index-$index"} = $$FI{rows};
-						$$specs{"FoldFolds-$form-$qty_index-$index"} = $Fold->folds();
-						$$specs{"FoldAngles-$form-$qty_index-$index"} = $Fold->angles();
-						$$specs{"FoldRunspeed-$form-$qty_index-$index"} = $$FI{runspeed};
-						$index += 1;
-					} # end foreach fold
-
-				} else {
-					if ( ! $$specs{"chkOverrideEquipment-$form-$qty_index"} ) {
-						$$specs{"ddmEquipment-$form-$qty_index"} = '';
-					} elsif ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
-						$status = 'uncalculated';
-						$$specs{alert} .= "Unable to fold form $form qty $qty_index<br/>";
-					} # end if
-				} # end if
-				if ( $$results{Status} eq 'uncalculated' ) {
-					$status = 'uncalculated';
-				} # end if
-			#} # end if has pages
+          if ( 0 and DEBUG ) {
+            $openprint::log->debug("Foldtype: $fold_type " . $$FI{imposition} . "out $$Fold{name} $$Fold{folds} $$Fold{angles}" );
+            $Imposition->display(" Runspeed: $$FI{runspeed}");
+          }
+          $$specs{"FoldType-$form-$qty_index-$index"} = $fold_type;
+          $$specs{"FoldQty-$form-$qty_index-$index"} = $$FI{quantity};
+          $$specs{"FoldPageQty-$form-$qty_index-$index"} = $$FI{page_quantity};
+          $$specs{"FoldPageColumns-$form-$qty_index-$index"} = $$FI{page_columns};
+          $$specs{"FoldPageRows-$form-$qty_index-$index"} = $$FI{page_rows};
+          $$specs{"FoldImposition-$form-$qty_index-$index"} = $$FI{imposition};
+          $$specs{"FoldColumns-$form-$qty_index-$index"} = $$FI{columns};
+          $$specs{"FoldRows-$form-$qty_index-$index"} = $$FI{rows};
+          $$specs{"FoldFolds-$form-$qty_index-$index"} = $Fold->folds();
+          $$specs{"FoldAngles-$form-$qty_index-$index"} = $Fold->angles();
+          $$specs{"FoldRunspeed-$form-$qty_index-$index"} = $$FI{runspeed};
+          $index += 1;
+        } # end foreach fold
+      } else {
+        if ( ! $$specs{"chkOverrideEquipment-$form-$qty_index"} ) {
+          $$specs{"ddmEquipment-$form-$qty_index"} = '';
+        } elsif ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
+          $status = 'uncalculated';
+          $$specs{alert} .= "Unable to fold form $form qty $qty_index<br/>";
+        } # end if
+      } # end if
+      if ( $$results{Status} eq 'uncalculated' ) {
+        $status = 'uncalculated';
+      } # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
 		} # end foreach signature
 		if ( $status eq 'uncalculated' and ! $$specs{alert} ) {
