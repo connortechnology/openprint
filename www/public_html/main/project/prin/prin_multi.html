@@ -56,7 +56,11 @@
 		var form = $('f1');
 	   new Ajax.Request( '/main/project/prin/_signature.html', {
 			parameters: { project_id : form.ProjectIndex.value, action: 'add_group' },
-			onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}
+			onSuccess: function(response){
+        new Insertion.Bottom($('SignatureGroups'), response.responseText);
+        update_event_bindings();
+        calc('f1');
+        }
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
 			});
@@ -66,7 +70,11 @@
 		var form = $('f1');
 		new Ajax.Request( '/main/project/prin/_signature.html', {
 			parameters: { project_id : form.ProjectIndex.value, action: 'copy_group', group_id: group_id },
-			onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}
+			onSuccess: function(response){
+        new Insertion.Bottom($('SignatureGroups'), response.responseText);
+        update_event_bindings();
+        calc('f1');
+        }
 			});
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
@@ -222,7 +230,7 @@
 			) ?>
 			</div>
 		</fieldset>
-		<? echo ( button( 'AddSignature', { onclick=>'add_group();', text=>'Add Another Group of Signatures' } ); ) ?>
+		<? echo ( button( 'AddSignature', { on_click=>'add_group', text=>'Add Another Group of Signatures' } ); ) ?>
 		<?include('/includes/main/proj/add_to_project.html')?>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
     <input type="hidden" name="ServiceType" value="<?echo($$variable{ProjectType}->type())?>"/>
