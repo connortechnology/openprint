@@ -161,7 +161,8 @@ sub signature_needs {
 			( $$sig_specs{txtSignatureType} eq '' ) 
 			or ( $$sig_specs{txtSignatureType} eq 'Cover Pages' ) 
 			or ( $$sig_specs{txtSignatureType} eq 'Gate Folded Pages' ) 
-			or ( $$sig_specs{txtSignatureType} and ( ! $Project->signatures({type=>'Cover Pages'}) ) and ( $form == 1 ) ) 
+      or ($$sig_specs{txtSignatureType} and $$sig_specs{GroupPageQuantity} and ($$sig_specs{GroupPageQuantity} == 6))
+			or ( $$sig_specs{txtSignatureType} and ( ! $Project->signatures({type=>'Cover Pages'}) ) and ( $form == 1 ) )
 			) {
 		if ( ! $Paper ) {
 			$openprint::log->error("Loading paper in Scoring::signature_needs");
@@ -348,7 +349,6 @@ sub calc {
 		} # end if
 	} # end foreach
 
-	$log->debug("END SCORING!!!!!!!!!!!!!!!!!!");
 	return $$specs{Status} = $status;
 } # end sub calc
 
@@ -572,10 +572,26 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 $Results{Breakdown} .= 'Stitcher can only score cover.<br/>';
 				 next;
 			 }
+       if ($$sig_specs{GroupPageQuantity} and ($$sig_specs{GroupPageQuantity} != 4)) {
+         $Results{Breakdown} .= 'Stitcher can only score 4pg.<br/>';
+         next;
+       }
 		 } elsif ( $type eq 'PerfectBinder' ) {
 			 if ( ! $$calc_hash{PerfectBoundSpecs} ) {
 				 next ;
 			 } 
+       if ( $$calc_hash{PerfectBoundSpecs}{"ddmEquipment$qty_index"} and $$calc_hash{PerfectBoundSpecs}{"ddmEquipment$qty_index"} != $Equipment->id() ) {
+         $Results{Breakdown} .= 'Not binding on this.<br/>';
+         next;
+       } # end if
+       if ( $$sig_specs{txtSignatureType} ne 'Cover Pages' ) {
+         $Results{Breakdown} .= 'PerfectBinder can only score cover.<br/>';
+         next;
+       }
+       if ($$sig_specs{GroupPageQuantity} and ($$sig_specs{GroupPageQuantity} != 4)) {
+         $Results{Breakdown} .= 'PerfectBinder can only score 4pg.<br/>';
+         next;
+       }
 		 } elsif ( $type eq 'Press' ) {
 			 if ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Work & Turn' or $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Work & Tumble' ) {
 				 $Results{Breakdown} .= 'Cant do an inline score when W&T.<br/>';
@@ -904,7 +920,7 @@ sub get_scores {
     } elsif ( $$sig_specs{rdbTemplateType} eq 'DoubleGateFold') {
       $$specs{"txtVerticalQty-$form"} = 2;
     } else {
-      $openprint::log->error("No templatefolded");
+      $openprint::log->error("No template folded in $$sig_specs{txtSignatureType} Gate Folded Pages form $form $$sig_specs{rdbTemplateType}");
     }
 	} else { # normal printing
 		my $width_folds = Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1 if $$sig_specs{txtFinalWidth};
