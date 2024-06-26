@@ -18,7 +18,7 @@ package openprint::Estimating::Imposition;
 use strict;
 #use Data::Dumper;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::service;
 
@@ -87,13 +87,11 @@ sub signature_calc {
 				$ImpositionMakeReady{Total} = $ImpositionMakeReady{Price};
 			} elsif ( $ImpositionMakeReady{units} eq 'per side' ) {
 				$ImpositionMakeReady{Total} = $ImpositionMakeReady{Price} * $Imposition->sides();
-		
 			} else {
-$openprint::log->error("Unknown units on ImpositionMakeready");
-
+$openprint::log->error('Unknown units on ImpositionMakeready');
 			} # end if
 		} elsif(DEBUG) {
-			$openprint::log->error("No price found for " . $SigMRService->name() . " on $$Press{strid}" );
+			$openprint::log->error('No price found for ' . $SigMRService->name() . ' on '.$$Press{strid});
 		} # end if
 		if ( DEBUG ) {
 			$openprint::log->debug("MR Price is $ImpositionMakeReady{Price}");
@@ -124,7 +122,7 @@ $openprint::log->error("Unknown units on ImpositionMakeready");
 		} # end if
 $openprint::log->debug("MakeReady is $ImpositionCharge{Price} $ImpositionCharge{units} $ImpositionCharge{Total}") if DEBUG;
 	} elsif ( DEBUG ) {
-$openprint::log->debug("NO MR service");
+$openprint::log->debug('NO MR service');
 	} # end if SErviceService
 	$price{Price} = \%ImpositionCharge;
 
