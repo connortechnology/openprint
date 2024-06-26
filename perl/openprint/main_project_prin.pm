@@ -23,11 +23,6 @@ sub _signature {
 $log->debug("Removing group $param{group_id}");
 		$Project->lock();
 		my @src_sigs = $Project->signatures( { Group => $param{group_id} } );
-		if ( ! @src_sigs ) {
-			$variable{PageContent} .= qq`alert('No signatures found for group $param{group_id}');`;
-      $Project->unlock();
-			return;
-		} # end if
 		foreach my $sig_id ( @src_sigs ) {
 			my $Service = $Project->Service( $sig_id );
 			$Service->delete();

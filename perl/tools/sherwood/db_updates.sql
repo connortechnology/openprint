@@ -494,3 +494,21 @@ INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, st
 update service_prices set units='per m' where units='per 1000 sheets' and service_id=(SELECT id from services where name='Perforating');
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values (37, 'Type', 'Platen','');
 
+UPDATE service_prices set units='per form' where units='per signature';
+UPDATE Services set name='SignatureImpositionMakeReady' where name='ImpositionMakeReady';
+UPDATE service_prices set units='total' WHERE service_id=(SELECT id from services where name='PressMakeReady') and units='';
+UPDATE service_prices set service_id=(SELECT id from services where name='PressUnitMakeReady') WHERE service_id=(SELECT id from services where name='PressMakeReady');
+DELETE FROM Services where name='PressMakeReady';
+UPDATE Services set name='PerfectingImpression1/1' where name='1-1ColourImpressionPerfecting';
+UPDATE Services set name='PerfectingImpression2/1' where name='2-1ColourImpressionPerfecting';
+UPDATE Services set name='PerfectingImpression2/2' where name='2-2ColourImpressionPerfecting';
+UPDATE Services set name='PerfectingImpression3/1' where name='3-1ColourImpressionPerfecting';
+UPDATE Services set name='PerfectingImpression3/2' where name='3-2ColourImpressionPerfecting';
+UPDATE Services set name='PerfectingImpression3/3' where name='3-3ColourImpressionPerfecting';
+UPDATE Services set name='PerfectingImpression4/1' where name='4-1ColourImpressionPerfecting';
+UPDATE Services set name='PerfectingImpression4/2' where name='4-2ColourImpressionPerfecting';
+UPDATE Services set name='PerfectingImpression4/3' where name='4-3ColourImpressionPerfecting';
+UPDATE Services set name='PerfectingImpression4/4' where name='4-4ColourImpressionPerfecting';
+
+
+
