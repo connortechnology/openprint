@@ -68,23 +68,9 @@ use constant DEBUG_IMPOSITIONS => 1;
 	'Work & TurnSetup'	=> { units => [ ] },
 	'Work & TumbleSetup'	=>	{ units=> [] },
 	'Sheet WorkSetup'		=>	{ units=> [] },
-	PressRunChargeMinimum	=>	{ units=> [] },
-	'1ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
-	'2ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
-	'3ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
-	'4ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
-	'5ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
-	'6ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
-	'7ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
-	'8ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
-	'9ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
-	'10ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
-	PressUnitMakeReady		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
-	PressUnitMakeReadyWeb		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
-	PressUnitMakeReadyPerfecting		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
-	'PressUnitMakeReadyWork & Turn'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
-	'PressUnitMakeReadyWork & Tumble'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
-	'PressUnitMakeReadySheet Work'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	PressRunMinimumCharge	=>	{ units=> [] },
+	'\d*ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'PressUnitMakeReady(.*)'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
 	PlateMakeReady					=>	{ units => [ 'per hour', 'per plate' ] },
 	# Re-enable when someone uses
 	#PlateMakeReadyWeb					=>	{ units => [ 'per hour', 'per plate' ] },
@@ -5638,8 +5624,12 @@ sub calc_price {
 		} else {
 			$price{'Run Overs'} = { impressions=>$net_sheets, value=>0, units=>'', total=>0};
 		}
-	} # end if
-	my $run_overs = $price{'Run Overs'}{total};
+    my $run_overs_minimum = $Press->Specification('Press Run Overs Minimum');
+    if ($run_overs_minimum and ($$PressRunOvers{total} < $$run_overs_minimum{value})) {
+      $price{'Run Overs'}{total} = $$run_overs_minimum{value};
+    }
+  } # end if
+  my $run_overs = $price{'Run Overs'}{total};
 
 	my $fm_overs = 0;
 	if ( $$specs{ScreenType} and ( $$specs{ScreenType} eq 'FM' ) ) {
@@ -6676,7 +6666,7 @@ $log->warn("Something wrong in AQ");
 	$price{'Press Setup'} = $press_setup;
 	$price{'Impression MPrice'} = List::Util::sum( map { $$_{MPrice} } @{$run_prices} );
 
-	$price{'Minimum Run Charge'} = openprint::service::get_price('PressRunChargeMinimum', undef, $Press);
+	$price{'Minimum Run Charge'} = openprint::service::get_price('PressRunMinimumCharge', undef, $Press);
 
 	if ( $run_cost < $price{'Minimum Run Charge'} ) {
 		$run_cost = $price{'Minimum Run Charge'};
@@ -7186,7 +7176,7 @@ sub press_setup_cost {
 	if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{runstyle}, undef, $Press ) ) ) {
 		%Price = openprint::service::get_price_object('PressUnitMakeReady', undef, $Press);
 	} # end if
-      $Imposition->display("Sigature index $$specs{SignatureIndex}");
+  #$Imposition->display("Sigature index $$specs{SignatureIndex}");
   if ($Price{units} eq 'per press per unit') {
     my @previous_impositions = map { $$_{specs}{SignatureIndex} < $$specs{SignatureIndex} ? $_ : () } @{$other_impositions};
     #foreach (@{$other_impositions}) {

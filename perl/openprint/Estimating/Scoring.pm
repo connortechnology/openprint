@@ -532,7 +532,8 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 		 my $type = $Equipment->specification('Type');
 		 if ( ! $type ) {
 			 $Results{Breakdown} .= "No type for $$Equipment{name}. Please set it in equipment specifications.<br/>";
-			 next;
+       $type = 'Folder';
+			 #next;
 		 }
 		 my $capable = $Equipment->specification('Scoring Capable');
 
