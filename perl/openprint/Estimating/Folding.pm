@@ -204,6 +204,7 @@ sub outputs {
   'Package6Fold',
   'Package62Fold',
   'Package64Fold',
+  'CustomFold',
 );
 
 
@@ -260,8 +261,10 @@ sub outputs {
   'Package6Fold' => 'Package 6',
   'Package62Fold' => 'Package 62',
   'Package64Fold' => 'Package 64',
+  'CustomFold' => 'Custom Fold',
 );
 my %short_fold_names = (
+  'CustomFold', 'Custom Fold',
 	'2PanelFold', '2panel',
 	'3PanelFold', '3panel',
 	'3PanelZFold', '3panelZ',
@@ -2924,11 +2927,11 @@ sub get_Folds {
 	} # end if
 	return () if !$$Source_Imposition{imposition};
 
-if ( DEBUG ) {
-foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
-	$openprint::log->debug($k.'=>'.(defined $$folding_specs{$k} ? $$folding_specs{$k} : 'undef'));
-}
-}
+  #if ( DEBUG ) {
+  #foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
+  #$openprint::log->debug($k.'=>'.(defined $$folding_specs{$k} ? $$folding_specs{$k} : 'undef'));
+  #}
+  #}
 	my $form = $$sig_specs{SignatureIndex};
 	if ( ! $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
 $openprint::log->debug('Has no equipment_id') if DEBUG;
