@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require openprint::Equipment;
 require openprint::service;
@@ -202,7 +202,7 @@ sub signature_calc {
 	my $folding_specs = $$calc_hash{FoldingSpecs};
 	my $ServiceType = $Project->ServiceType($service_index);
 	if ( !$$ServiceType{id} ) {
-		$results{alert} .= 'Unable to determine stitching type!<br/>';
+		$results{alert} .= 'Unable to determine stitching type! Has service been removed from project?<br/>';
 		$results{Status} = 'uncalculated';
 		return \%results;
 	} else {
@@ -322,10 +322,10 @@ sub signature_calc {
 				my $Fold = $$FI{Fold};
 $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets was: $pockets") if DEBUG;
 				if ( $$FI{imposition} < $imposition ) {
-					$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
+					$openprint::log->debug("Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out");
 					$imposition = $$FI{imposition};
 				} elsif ( $$FI{imposition} % 2 ) {
-					$results{Breakdown} .= "Setting stitching imposition to 1 out because Folding imposition is $$FI{imposition} is odd<br/>";
+					$openprint::log->debug("Setting stitching imposition to 1 out because Folding imposition is $$FI{imposition} is odd");
 					$imposition = 1;
 				}
 				if ( !$$I{Folder} ) {
@@ -334,9 +334,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				}
 				$openprint::log->debug('Stitching Adding '.$Fold->pages().'pg x qty:'.$FI->quantity()) if DEBUG;
 
-
 				if ( !$override_pockets ) {
-
 					if ( $pages_done == $$I{pages} ) {
 						next;
 					}
@@ -483,12 +481,13 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 			my $type = $Equipment->specification('Type') // '';
 			$openprint::log->debug("Printed impos: @printed_impositions, stitched: $imposition out $pockets pockets type: $type $$Equipment{strid}") if DEBUG;
 			if ( $type eq 'Press' ) {
-				if ( @printed_impositions > 1 ) {
-					$results{Breakdown} .= $$Equipment{strid}.': Printed and stitched imposition must match.<br/>';
-					next;
-				} # end if
 				if ( $$Press{id} != $$Equipment{id} ) {
 					$results{Breakdown} .= 'Press not the same: ' . $$Press{strid} . ' != ' . $$Equipment{strid} . '<br/>' if DEBUG;
+					next;
+				} # end if
+
+				if ( @printed_impositions > 1 ) {
+					$results{Breakdown} .= $$Equipment{strid}.': Printed and stitched imposition must match.<br/>';
 					next;
 				} # end if
 
@@ -551,6 +550,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 					next;
 				} # end if
 			} # end if
+
 			my $price = get_price($Project, $ServiceType, $Equipment, $specs, $pockets, $plusCover, $qty_index);
 			$$price{ComparisonPrice} = $$price{Price};
 			if ( $folding_specs and ( defined $$folding_specs{"Price-$form-$qty_index"} ) ) {
@@ -684,7 +684,7 @@ sub calc {
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
 
 		next if ! $$specs{'txtQuantity'.$qty_index};
-		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{txtCalliper} .' '.
+		$$specs{'hdnBreakdown'.$qty_index} = 'Finished Calliper: ' . $$specs{txtCalliper} .' '.
     "Face Trim: $$specs{Width} Spine Length: $$specs{Height}<br/>";
 
 		if ( (!defined $$specs{'OverridePockets'.$qty_index}) or ($$specs{'OverridePockets'.$qty_index} ne 'Y') ) {
@@ -751,7 +751,7 @@ sub calc {
 			$$specs{"ddmEquipment$qty_index"} = $$results{Equipment}->id();
 			$$specs{'Imposition'.$qty_index} = $$results{Imposition};
 		} else {
-			$$specs{alert} = $$results{Breakdown};
+			$$specs{alert} .= 'Unable to calculate: '.$$results{Breakdown};
 			foreach my $press_id ( keys %error ) {
 				my $Equipment = new openprint::Equipment($press_id);
 				$$specs{'hdnBreakdown'.$qty_index} .= 'For '.$$Equipment{name}.': '.$error{$press_id}.'<br/>';
@@ -849,7 +849,7 @@ sub breakdown {
 	$breakdown .= '&nbsp;Run Discount'. $price{'RunCost Discount'}.'%<br/>' if $price{'RunCost Discount'};
 	$breakdown .= '&nbsp;Imposition Discount: '. $price{'Imposition Discount'} .'%<br/>' if $price{'Imposition Discount'};
 	$breakdown .= '&nbsp;Spine Length Discount: ' . $price{'SpineLength Discount'} . '%<br/>' if $price{'SpineLength Discount'};
-	$breakdown .= '&nbsp;Estimated Total Run Time: '. Math::Round::nearest(0.1, $price{MRTime} + $price{RunTime}).'hours,<br/>';
+	$breakdown .= '&nbsp;Estimated Total Run Time: '. Math::Round::nearest(0.1, $price{MRTime} + $price{RunTime}).'hours,<br/>' if $price{RunTime};
 	$breakdown .= '&nbsp;Total: $'. sprintf('%.2f', Math::Round::nearest(0.01, $price{Price})).'<br/><br/>';
 	$breakdown .= '&nbsp;Comparison: $'. sprintf('%.2f', Math::Round::nearest(0.01, $price{ComparisonPrice})).'<br/><br/>';
 	return $breakdown;
@@ -979,7 +979,7 @@ sub get_price {
     } elsif ( $$Overs{units} eq 'percent' ) {
       $overs = int($qty * $$Overs{value}/100);
     } else {
-      $openprint::log->error("Invalid units on Padding Overs $$Overs{units} on $$Equipment{name}");
+      $openprint::log->error("Invalid units on $$Overs{name} $$Overs{units} on $$Equipment{name}");
     } # end if
     $qty += $overs;
     $price{overs} = $overs;
@@ -1040,7 +1040,6 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 		} elsif ( DEBUG ) {
 			$openprint::log->debug("No Makeready Service for $maxPockets pockets");
 		}
-
 
 		$service_name = $$ServiceType{name}.$maxPockets.'Pockets';
 		$Services{$service_name} = openprint::Service->find_one(name=>$service_name) if ! $Services{$service_name};
@@ -1194,7 +1193,6 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 			$openprint::log->error("No service price for $$Service{name}");
 		}
 		push @{$price{Passes}}, \%pass;
-
 	} # end if lastpass needed_Pockets
 
 	if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
