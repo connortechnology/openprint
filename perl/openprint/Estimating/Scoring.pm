@@ -272,6 +272,16 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string() . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->Paper()->to_string() . '<br/>';
 
+      if (!$$specs{"chkOverrideImposition-$form-$qty_index"}) {
+        foreach my $imp_index (1..4) {
+          @$specs{
+          "ImpQty-$form-$qty_index-$imp_index",
+          "ImpOut-$form-$qty_index-$imp_index",
+          "ImpColumns-$form-$qty_index-$imp_index",
+          "ImpRows-$form-$qty_index-$imp_index"} =();
+        } # end foreach 
+      } # end if
+
 			if ( (!defined $$specs{"chkOverrideQty-$form"}) or ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
 				get_scores( $Project, $specs, $sig_specs, $Imposition->Paper() );
 			} # end if
@@ -282,7 +292,7 @@ sub calc {
 #$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->imposition();
 #$$specs{"txtLayoutWidth-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->layout_width();
 #$$specs{"txtLayoutHeight-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->layout_height();
-				if ( ! $$specs{"chkOverrideImposition-$form-$qty_index"} ) {
+        #if ( ! $$specs{"chkOverrideImposition-$form-$qty_index"} ) {
 					my $imp_index = 1;
 					foreach my $I ( @{$Price{Impositions}} ) {
 						$I->Equipment( $Price{Equipment} );
@@ -294,7 +304,14 @@ sub calc {
 									@$I{'quantity','imposition','columns','rows'};
 						$imp_index += 1;
 					} # end foreach 
-				} # end if
+          foreach my $imp_index ($imp_index .. 4) {
+          @$specs{
+          "ImpQty-$form-$qty_index-$imp_index",
+          "ImpOut-$form-$qty_index-$imp_index",
+          "ImpColumns-$form-$qty_index-$imp_index",
+          "ImpRows-$form-$qty_index-$imp_index"} =();
+          }
+          #} # end if
 			} else {
 				$$specs{"ddmEquipment-$form-$qty_index"} = '' if (!$$specs{"chkOverrideEquipment-$form-$qty_index"}) or ($$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y');
 #$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
@@ -426,30 +443,7 @@ sub signature_calc {
 	my @Sets_of_Impositions;
 	my @All_Impositions;
 
-	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
-		$openprint::log->debug('Overriding impositions');
-
-		my @override_impos;
-		foreach my $index ( 1 .. 4 ) {
-			my $imp_qty =$$specs{join('-','ImpQty',$form,$qty_index,$index)};
-			next if ! $imp_qty;
-			my $I = $SignatureImposition->copy();
-			$I->quantity( $imp_qty );
-			$I->imposition( $$specs{"ImpOut-$form-$qty_index-$index"} );
-			$I->columns( $$specs{"ImpColumns-$form-$qty_index-$index"} );
-			$I->rows( $$specs{"ImpRows-$form-$qty_index-$index"} );
-
-			push @override_impos, $I;
-			$I->display('Override');
-		} # end foreach
-		@All_Impositions = ( \@override_impos );
-		my $overriden_count = misc::sum( map { $_->quantity() * $_->imposition() } @override_impos );
-		if ( $overriden_count != $SignatureImposition->quantity() * $SignatureImposition->imposition() ) {
-			$Results{alert} .= "Overriden imposition count ($overriden_count) does not match printed imposition count (".$SignatureImposition->quantity() * $SignatureImposition->imposition().") for form $form quantity $qty_index (".$$specs{"txtQuantity$qty_index"}.").<br/>";
-		} else {
-			$openprint::log->debug(" override count: $overriden_count $$SignatureImposition{quantity} * $$SignatureImposition{imposition}");
-		} # end if
-	} elsif ( ! $$SignatureImposition{cut_impositions} ) {
+  if ( ! $$SignatureImposition{cut_impositions} ) {
 
 # IF it's a W&T, we have to cut in half first, so just do it.
 		if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
@@ -526,6 +520,51 @@ sub signature_calc {
 	} else {
 		@All_Impositions = @{$$SignatureImposition{cut_impositions}};
 	} # end if overrideImpositions
+
+	if ((defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
+		$openprint::log->debug('Overriding impositions');
+    # Look in sets of impositions for a cut that matches
+    my $matched = 0;
+    foreach my $set (@All_Impositions) {
+      my @matched;
+      foreach my $index ( 1 .. 4 ) {
+        my $imp_qty = $$specs{join('-','ImpQty',$form,$qty_index,$index)};
+        next if ! $imp_qty;
+        foreach my $imp (@{$set}) {
+          if ($$imp{quantity} == $imp_qty and $$imp{imposition} == $$specs{"ImpOut-$form-$qty_index-$index"}) {
+            push @matched, $imp;
+          }
+        }
+      }
+      if (@matched == @{$set}) {
+        @All_Impositions = ( \@matched );
+        $matched = 1;
+        last;
+      }
+    }
+    if (!$matched) {
+      my @override_impos;
+      foreach my $index ( 1 .. 4 ) {
+        my $imp_qty = $$specs{join('-','ImpQty',$form,$qty_index,$index)};
+        next if ! $imp_qty;
+        my $I = $SignatureImposition->copy();
+        $I->quantity( $imp_qty );
+        $I->imposition( $$specs{"ImpOut-$form-$qty_index-$index"} );
+        $I->columns( $$specs{"ImpColumns-$form-$qty_index-$index"} ) if $$specs{"ImpColumns-$form-$qty_index-$index"} < $I->columns();
+        $I->rows( $$specs{"ImpRows-$form-$qty_index-$index"} ) if $$specs{"ImpRows-$form-$qty_index-$index"} < $I->rows();
+
+        push @override_impos, $I;
+        $I->display('Override');
+      } # end foreach
+      @All_Impositions = ( \@override_impos );
+      my $overriden_count = misc::sum( map { $_->quantity() * $_->imposition() } @override_impos );
+      if ( $overriden_count != $SignatureImposition->quantity() * $SignatureImposition->imposition() ) {
+        $Results{alert} .= "Overriden imposition count ($overriden_count) does not match printed imposition count (".$SignatureImposition->quantity() * $SignatureImposition->imposition().") for form $form quantity $qty_index (".$$specs{"txtQuantity$qty_index"}.").<br/>";
+      } else {
+        $openprint::log->debug(" override count: $overriden_count $$SignatureImposition{quantity} * $$SignatureImposition{imposition}");
+      } # end if
+    }
+  } # end if overriden
 
 EQUIPMENT: foreach my $Equipment ( @equipment ) {
 		 $Results{Breakdown} .= "<br/>Equipment: $$Equipment{name}, ";
@@ -650,6 +689,10 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 foreach my $I ( @impositions ) {
 					 $I->Press( $Equipment );
 					 $Results{Breakdown} .= '<br/>Imp: '.$I->to_string().'<br/>';
+           if (!$$I{imposition}) {
+             $Results{Breakdown} .= 'No imposition in Imposition!<br/>';
+             next;
+           }
 
 					 if ( $_ = is_desirable($Equipment, $I, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}) ) {
 						 $Results{Breakdown} .= "Not good. $_<br/>";
