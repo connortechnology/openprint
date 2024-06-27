@@ -181,10 +181,6 @@ height: 100%;
 	display: none;
 }
 
-table .Override {
-	width: 25px;
-}
-
 .Service #GateFoldFit {
 	float: left;
 	width: 49%;
@@ -266,6 +262,9 @@ table.ProofsSummary .quantity, table.ProofsSummary .size {
 	width: 40%;
 	float: left;
   min-width: 300px;
+}
+.Service .OneColumns {
+  width: auto;
 }
 
 #markup_edit input {
