@@ -15,16 +15,19 @@
   margin-bottom: 5px;
 }
 .Inks,
+.dims_and_other,
 .PagesAndSizes {
   display: flex;
   align-items: stretch;
   position: relative;
 }
 .BleedsColourBarsStockOverrides > div,
+.dims_and_other > div,
 .PagesAndSizes > div {
   flex: 1;
 }
 .BleedsColourBarsStockOverrides > div fieldset,
+.dims_and_other > div fieldset,
 .Inks > div fieldset,
 .PagesAndSizes > div fieldset {
   height: 100%;
