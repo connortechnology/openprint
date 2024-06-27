@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA	02110-1301, USA
 use strict;
-#use warnings;
+use warnings;
 
 package openprint::Estimating::Scoring;
 
@@ -52,9 +52,7 @@ sub SpecificationConfiguration {
   return $Specifications{shift};
 }
 
-
 my @variables = (
-		'txtQuantity',
 		'txtQuantity1','txtQuantity2','txtQuantity3',
 		'txtPrice1','txtPrice2','txtPrice3',
 		'MPrice1','MPrice2','MPrice3',
@@ -66,6 +64,7 @@ my @variables = (
 my @all_equipment;
 my $Rule;
 my $Wheel;
+my $Die;
 my $ScoringService;
 my $ScoringWithoutFoldingService;
 my $ScoringMakeReadyService;
@@ -94,7 +93,6 @@ sub variables {
 				push @v, map { join('-', $_, $form, $qty_index, $imp_index ) } ( 'ImpOut','ImpColumns','ImpRows','ImpQty' );
 			} # end foreach imp_index
 		} # end foreach
-
 	} # end foreach
 	return @v;
 } # end sub variables
@@ -134,6 +132,7 @@ sub init {
 	@all_equipment = openprint::Equipment->find( Specifications => {'Scoring Capable'=>\@capabilities}, useinestimating=>1, order=>'strName');
 	$Rule = openprint::Material->find_one( name=>'ScoringRule');
 	$Wheel = openprint::Material->find_one( name=>'ScoringWheel');
+	$Die = openprint::Material->find_one( name=>'Score');
 
 	$ScoringService = openprint::Service->find_one(name=>'Scoring');
 	$ScoringWithoutFoldingService = openprint::Service->find_one(name=>'ScoringWithoutFolding');
@@ -260,7 +259,8 @@ sub calc {
 			if ( $$sig_specs{Versions} ) {
 				$qty *= $$sig_specs{Versions};
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{txtServiceDescription}, " if $$sig_specs{txtServiceDescription};
+			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature $form: ".
+      ($$sig_specs{txtServiceDescription} ? $$sig_specs{txtServiceDescription}:'').'</legend>';
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No imposition for signature $$sig_specs{SignatureIndex}";
 				next;
@@ -278,7 +278,7 @@ sub calc {
           "ImpQty-$form-$qty_index-$imp_index",
           "ImpOut-$form-$qty_index-$imp_index",
           "ImpColumns-$form-$qty_index-$imp_index",
-          "ImpRows-$form-$qty_index-$imp_index"} =();
+          "ImpRows-$form-$qty_index-$imp_index"} =('','','','');
         } # end foreach 
       } # end if
 
@@ -292,9 +292,9 @@ sub calc {
 #$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->imposition();
 #$$specs{"txtLayoutWidth-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->layout_width();
 #$$specs{"txtLayoutHeight-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->layout_height();
-        #if ( ! $$specs{"chkOverrideImposition-$form-$qty_index"} ) {
 					my $imp_index = 1;
 					foreach my $I ( @{$Price{Impositions}} ) {
+            $I->display("CHosen");
 						$I->Equipment( $Price{Equipment} );
 						@$specs{
 							"ImpQty-$form-$qty_index-$imp_index",
@@ -303,15 +303,17 @@ sub calc {
 								"ImpRows-$form-$qty_index-$imp_index"} =
 									@$I{'quantity','imposition','columns','rows'};
 						$imp_index += 1;
-					} # end foreach 
-          foreach my $imp_index ($imp_index .. 4) {
-          @$specs{
-          "ImpQty-$form-$qty_index-$imp_index",
-          "ImpOut-$form-$qty_index-$imp_index",
-          "ImpColumns-$form-$qty_index-$imp_index",
-          "ImpRows-$form-$qty_index-$imp_index"} =();
-          }
-          #} # end if
+          } # end foreach 
+          if ( ! $$specs{"chkOverrideImposition-$form-$qty_index"} ) {
+            foreach my $imp_index ($imp_index .. 4) {
+              $openprint::log->debug("Clearing $form-$qty_index-$imp_index");
+              @$specs{
+              "ImpQty-$form-$qty_index-$imp_index",
+              "ImpOut-$form-$qty_index-$imp_index",
+              "ImpColumns-$form-$qty_index-$imp_index",
+              "ImpRows-$form-$qty_index-$imp_index"} =('','','','');
+            }
+          } # end if
 			} else {
 				$$specs{"ddmEquipment-$form-$qty_index"} = '' if (!$$specs{"chkOverrideEquipment-$form-$qty_index"}) or ($$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y');
 #$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
@@ -319,13 +321,13 @@ sub calc {
 #$$specs{"txtLayoutHeight-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
 				if ( $Price{Status} eq 'uncalculated' ) {
 					if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
-						$$specs{alert} .= "QTY $qty_index: The selected equipment can not handle your project.	This may be because the stock is too heavy, or too large.";
+						$$specs{alert} .= "QTY $qty_index: The selected equipment ".$$specs{"ddmEquipment-$form-$qty_index"}." can not handle your project.	This may be because the stock is too heavy, or too large.";
 					} else {
 						$$specs{alert} .= "QTY $qty_index: No suitable equipment could be found for your project.	This may be because the stock is too heavy, or too large.";
 					} # end if
 				} # end if
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= $Price{Breakdown};
+			$$specs{'hdnBreakdown'.$qty_index} .= $Price{Breakdown}.'</fieldset>';
 			$$specs{alert} .= $Price{alert} if $Price{alert};
 
 			if ( (!defined$$specs{"txtVerticalQty-$form"}) and (!defined$$specs{"txtHorizontalQty-$form"}) ) {
@@ -337,7 +339,7 @@ sub calc {
 			} # end if
 			$price += $Price{Price} if $Price{Price};
 			$status = 'uncalculated' if $Price{Status} eq 'uncalculated';
-		} # end foreach qty_index
+		} # end foreach signature
 
 		my $unitPrice = 0;
 
@@ -364,7 +366,7 @@ sub calc {
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
-	} # end foreach
+  } # end foreach qty_index
 
 	return $$specs{Status} = $status;
 } # end sub calc
@@ -664,11 +666,16 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 $$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $Fold->quantity() ) if ! $$Fold{impressions};
 #$$Fold{impressions} /= $Fold->imposition();
 				 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $$Fold{impressions}, $Fold );
-				 $totalPrice += $$Price{setup}{Price} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
+         $totalPrice += $$Price{setup}{Price} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
+         if ($$Price{Die}) {
+           $openprint::log->error("Die price $$Price{Die} " . $$Price{Die}{Price});
+           $totalPrice += $$Price{Die}{Total} if $$Price{Die};
+         } else {
+           $openprint::log->error("No Die price $$Price{Die} $form" );
+         }
 				 $Results{Breakdown} .= $$Price{Breakdown};
 			 } # end foreach my $Fold
 
-#$Results{Imposition} = $Fold;
 			 $Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice);
 
 			 if ( $totalPrice < $Results{Price} or ! exists $Results{Price} ) {
@@ -711,6 +718,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 					 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $qty/$$I{imposition}, $I );
 
 					 $totalPrice += $$Price{setup}{Price} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
+           $totalPrice += $$Price{Die}{Total} if $$Price{Die};
 					 $Results{Breakdown} .= $$Price{Breakdown};
 				 } # end foreach imposition I
 				 next if ! $complete;
@@ -802,7 +810,7 @@ sub get_price {
 			$Results{Overs} = $overs;
 			$Results{Breakdown} .= 'Overs: ' . $overs . '<br/>';
     } elsif ( $$Overs{units} eq 'Percent' ) {
-			my $overs = $qty * $$Overs{value} / 100;
+			my $overs = int($qty * $$Overs{value} / 100);
 			$qty += $overs;
 			$Results{Overs} = $overs;
 			$Results{Breakdown} .= 'Overs: ' . $overs . '<br/>';
@@ -896,6 +904,17 @@ sub get_price {
 		$horizontal_price{Total} = 0;
 	} # end if
 
+  if ( $Die ) {
+    my %die_price = $Die->get_price(undef, $Equipment);
+    if (%die_price) {
+      if ($die_price{units} eq 'per square inch') {
+        $die_price{Total} = $die_price{Price} * $$I{sheet_width} * $$I{sheet_height};
+        $Results{Breakdown} .= sprintf('Die: $%1$.2f%2$s * %4$sx%5$s=$%3$.2f<br/>', @die_price{'Price','units','Total'}, $$I{sheet_width}, $$I{sheet_height} );
+        $Results{Die} = \%die_price;
+      }
+    }
+  }
+
 	if ( $vertical_rule ) {
 		if ( $Wheel ) {
 			%vertical_price = $Wheel->get_price( $vertical_rule, $Equipment );
@@ -926,7 +945,6 @@ sub get_price {
 	$Results{Vertical} = \%vertical_price;
 	$Results{Horizontal} = \%horizontal_price;
 	return \%Results;
-
 } # end sub get_price
 
 # figures ou the number of scores needed. May return 0 if signature doesn't need it.
