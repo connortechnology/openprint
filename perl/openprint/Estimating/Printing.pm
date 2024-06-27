@@ -6209,8 +6209,6 @@ if ( 1 ) {
 	#} elsif ( $$Imposition{sides} == 2 and $$Imposition{runstyle} eq 'Sheet Work' ) {
 		#$impressions *= 2;
 	}
-
-
 	my $additional_setup_count = $plate_setup{'Plate Count'} - $plate_setup{'Setup Plate Count'};
 	my $additional_setup_overs = 0;
 	my $additional_setup_rate = 0;
@@ -6237,7 +6235,7 @@ if ( 1 ) {
 		$setup_overs += $fm_overs + $additional_setup_overs;
 	} # end if
 
-	my $total_overs = 0;
+	$total_overs = 0;
 
 	if ( $_ = $Press->Specification('Overs') and $$_{value} eq 'All' ) {
 		$total_overs += ceil( $run_overs + $setup_overs );
@@ -6255,7 +6253,7 @@ if ( 1 ) {
 
 	$gross_sheets = $net_sheets + $total_overs;
 	$impressions = $gross_sheets;
-	my $colour_impressions = $gross_sheets;
+	$colour_impressions = $gross_sheets;
 	if ( $is_wt ) {
 # Same sheets, go through twice, colours merged.
 		$colour_impressions *= 2;
