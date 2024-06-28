@@ -294,7 +294,6 @@ sub calc {
 #$$specs{"txtLayoutHeight-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->layout_height();
 					my $imp_index = 1;
 					foreach my $I ( @{$Price{Impositions}} ) {
-            $I->display("CHosen");
 						$I->Equipment( $Price{Equipment} );
 						@$specs{
 							"ImpQty-$form-$qty_index-$imp_index",
@@ -306,7 +305,6 @@ sub calc {
           } # end foreach 
           if ( ! $$specs{"chkOverrideImposition-$form-$qty_index"} ) {
             foreach my $imp_index ($imp_index .. 4) {
-              $openprint::log->debug("Clearing $form-$qty_index-$imp_index");
               @$specs{
               "ImpQty-$form-$qty_index-$imp_index",
               "ImpOut-$form-$qty_index-$imp_index",
@@ -661,9 +659,8 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 			 } # end if
 
 			 foreach my $Fold ( @Folds ) {
-
-# $qty / imposition gives us the # of sheets, so * qty gives us the # of impressions
-				 $$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $Fold->quantity() ) if ! $$Fold{impressions};
+         # $qty / imposition gives us the # of sheets, so * qty gives us the # of impressions
+         $$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $Fold->quantity() );
 #$$Fold{impressions} /= $Fold->imposition();
 				 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $$Fold{impressions}, $Fold );
          $totalPrice += $$Price{setup}{Price} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
@@ -695,7 +692,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 
 				 foreach my $I ( @impositions ) {
 					 $I->Press( $Equipment );
-					 $Results{Breakdown} .= '<br/>Imp: '.$I->to_string().'<br/>';
+					 $Results{Breakdown} .= '<br/>Fold: '.$I->to_string(undef).'<br/>';
            if (!$$I{imposition}) {
              $Results{Breakdown} .= 'No imposition in Imposition!<br/>';
              next;
@@ -715,7 +712,9 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 
 					 $Results{Breakdown} .= '<br/>';
 
-					 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $qty/$$I{imposition}, $I );
+           $$I{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $I->quantity() );
+           #$openprint::log->error("Impressions from $$I{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $$I{quantity} );");
+					 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $$I{impressions}, $I );
 
 					 $totalPrice += $$Price{setup}{Price} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
            $totalPrice += $$Price{Die}{Total} if $$Price{Die};
@@ -843,8 +842,6 @@ sub get_price {
     $runspeed = $Equipment->Specification('PerfScoreRunSpeed');
     $runspeed = $Equipment->Specification('RunSpeed', undef, 1) if !$runspeed;
     if ($runspeed) {
-
-    $openprint::log->debug("runspeed".$runspeed->to_string());
       if ($$runspeed{range_units} eq 'impressions') {
         $runspeed = $Equipment->Specification($$runspeed{name}, $qty);
       } else {
