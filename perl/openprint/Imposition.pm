@@ -750,6 +750,7 @@ sub equals {
 
 sub to_string {
 	my $self = $_[0];
+  $$self{to_string} = $_[1] if @_ > 1;
 	if ( ! $_[0]{to_string} ) {
 		if ( $_[0]{Paper} ) {
 			my $Paper = $_[0]{Paper};
@@ -759,10 +760,10 @@ sub to_string {
 					$_[0]->image_orientation_text() );
 		} else {
 			if ( $_[0]{quantity} > 1 ) {
-			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'), 
+			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]{Press}->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'), 
 					@Orientations{@$self{'image_orientation_text','spine_direction'}} );
 			} else {
-			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'),
+			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]{Press}->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'),
 					@Orientations{@$self{'image_orientation_text','spine_direction'}} );
 			}
 		} # end if
@@ -850,7 +851,7 @@ sub Equipment {
 sub Press { 
 	$_[0]{Press} = $_[1] if @_ > 1;
 	if ( ! $_[0]{Press} ) {
-		$openprint::log->error("No Press in Imposition:Press");
+		$openprint::log->error('No Press in Imposition:Press');
 		$_[0]{Press} = new openprint::Equipment();
 	} # end if
 	return $_[0]{Press};
