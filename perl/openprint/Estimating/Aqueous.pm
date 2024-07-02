@@ -25,15 +25,27 @@ use vars qw( %ServicePrices );
 	'AqueousBlanketCutW&T'	=> { },
 	AqueousBlanketCut	=> { },
 	BlanketCut	=> { },
-	'Aqueous Satin Overall'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
-	'Aqueous Satin W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
-	'Aqueous Gloss Overall'	=> {units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
-	'Aqueous Gloss W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
-	'Aqueous Matte W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
-	'Aqueous Matte Overall'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
-	'Aqueous Soft Touch W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
-	'Aqueous Soft Touch Overall'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous (.*)'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
 );
+my %Specifications = (
+  'Aqueous Capable' => { values=>['Y','N','When Printing'] },
+  'AqueousRunSpeed' => {},
+'Aqueous Double Sided When Perfecting' => {},
+'Aqueous Minimum Weight' => {units=>['gsm']},
+'HasCoater'=> {['Y','N']},
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
 
 require openprint::service;
 require openprint::Material;
@@ -124,8 +136,14 @@ sub neccessary {
 sub get_colours {
     my ( $specs, $side ) = @_;
     my @colours;
-    if ( ( defined $$specs{sides_the_same} ) and ( $$specs{sides_the_same} eq 'Y' ) and ( $side eq 'SideTwo' ) ) {
-        $side = 'SideOne';
+    if ( 
+        (
+         ( defined $$specs{sides_the_same} ) and ( $$specs{sides_the_same} eq 'Y' )
+         or
+         ( defined $$specs{side_link} ) and ( $$specs{side_link} eq '1' )
+        )
+        and ( $side eq 'SideTwo' ) ) {
+      $side = 'SideOne';
     } # end if
 
     foreach my $k ( keys %$specs ) {
@@ -147,7 +165,7 @@ sub signature_needs {
 
 	if ( $$sig_specs{SideOneColours} ) {
 		foreach ( @{$$sig_specs{SideOneColours}} ) {
-			return 1 if $$_{name} =~ /Aqueous/;
+			return 1 if $$_{name} =~ /Aqueous/i;
 		} # end foreach colour
 	} else {
 		$$sig_specs{SideOneAQ} = [ get_colours( $sig_specs, 'SideOne' ) ] if ! $$sig_specs{SideOneAQ};
@@ -156,7 +174,7 @@ sub signature_needs {
 
 	if ( $$sig_specs{SideTwoColours} ) {
 		foreach ( @{$$sig_specs{SideTwoColours}} ) {
-			return 1 if $$_{name} =~ /Aqueous/;
+			return 1 if $$_{name} =~ /Aqueous/i;
 		} # end foreach colour
 	} else {
 		$$sig_specs{SideTwoAQ} = [ get_colours( $sig_specs, 'SideTwo' ) ] if ! $$sig_specs{SideTwoAQ};
@@ -225,7 +243,7 @@ sub calc {
 				next;
 			} # end if
 			my $form = $$sig_specs{SignatureIndex};
-			$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Signature: $$sig_specs{txtServiceDescription},<br/>" if $$sig_specs{txtServiceDescription};
+			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature $form: ".($$sig_specs{txtServiceDescription}? $$sig_specs{txtServiceDescription}:'').'</legend>';
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index, $Project );
 			if ( ! $$Imposition{imposition} ) {
@@ -289,6 +307,7 @@ sub calc {
 					$$specs{"txtLayoutHeight-$form-$qty_index"} = 0;
 				} # end if
 			} # end if uncalculated
+$$specs{"hdnBreakdown$qty_index"} .= '</fieldset>';
 		} # end foreach signature
 
 		$GrandTotal *= ( 1+$Project->markup()/100 ) if $Project->markup();
@@ -303,7 +322,6 @@ sub calc {
 	} # end foreach qty
 
 	return $status;
-
 } # end sub calc
 
 sub signature_calc {
@@ -326,7 +344,8 @@ sub signature_calc {
 	my %front_aq;
 	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideOne')] if ! $$sig_specs{SideOneColours};
 	foreach ( @{$$sig_specs{SideOneColours}} ) {
-		if ( -1 != index($$_{name}, 'Aqueous') ) {
+$openprint::log->debug('Front:'.$$_{name});
+		if (-1 != index($$_{name}, 'Aqueous')) {
 			push @front_aq, $_;
 			$front_aq{$$_{name}} = $_;
 		} # end if
@@ -336,6 +355,7 @@ sub signature_calc {
 	my %back_aq;
 	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideTwo')] if ! $$sig_specs{SideTwoColours};
 	foreach ( @{$$sig_specs{SideTwoColours}} ) {
+$openprint::log->debug("Back:".$$_{name});
 		if ( -1 != index($$_{name}, 'Aqueous') ) {
 			push @back_aq, $_;
 			$back_aq{$$_{name}} = $_;
@@ -458,6 +478,7 @@ sub signature_calc {
 			if ( !index($$Imposition{runstyle}, 'Work') ) {
 # need to merge any overalls into spots
 				foreach my $type ( @different_types ) {
+$openprint::log->error("$type to W&T front: $front_aq{$type} back: $back_aq{$type}");
 					if ( ! ( $front_aq{$type} and $back_aq{$type} ) ) {
 						$type =~ s/Overall/W&T/;
 						push @types, { name => $type, coverage=> $front_aq{$type} ? $front_aq{$type}{coverage}/2 : $back_aq{$type}{coverage}/2 };
@@ -517,7 +538,7 @@ sub signature_calc {
           if ($BlanketCutService) {
             %BlanketCutPrice = $BlanketCutService->get_price(undef, $Equipment) if $BlanketCutService;
           } else {
-            $openprint::log->warn("No blankcut service found");
+            $openprint::log->warn('No blankcut service found');
           }
 				} elsif ( -1 != index($type_name, 'W&T') ) {
 					%BlanketCutPrice = $BlanketCutServiceWT->get_price(undef, $Equipment) if $BlanketCutServiceWT;
