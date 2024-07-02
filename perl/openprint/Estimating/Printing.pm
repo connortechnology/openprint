@@ -819,7 +819,13 @@ sub get_colours {
 	#my ( $caller, undef, $line ) = caller;
 #$log->debug("Called get_colours from $caller : $line");
 	my @colours;
-	if ( ( defined $$specs{sides_the_same} ) and ( $$specs{sides_the_same} eq 'Y' ) and ( $side eq 'SideTwo' ) ) {
+	if ((
+        ( defined $$specs{sides_the_same} ) and ( $$specs{sides_the_same} eq 'Y' )
+        or
+        ( defined $$specs{side_link} ) and ( $$specs{side_link} eq '1' )
+        and ( $side eq 'SideTwo' )
+      )
+     ) {
 		$side = 'SideOne';
 	} # end if
 
@@ -848,7 +854,10 @@ sub get_colours {
 	foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
 	#foreach my $k ( keys %$specs ) {
 		#if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
-			next if ! $$specs{"chkColourCoating$index$side"};
+      if (! $$specs{"chkColourCoating$index$side"} ) {
+        $log->debug("No chkColourCoating for $index $side");
+        next ;
+      }
 			my $c = {
 				type => $$specs{"ColourCoatingType$index$side"},
 			};
