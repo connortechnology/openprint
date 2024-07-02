@@ -54,8 +54,8 @@ sub SpecificationConfiguration {
 
 
 my @variables = (
-'ddmEquipment1', 'ddmEquipment2','ddmEquipment3',
-'chkOverrideEquipment1', 'chkOverrideEquipment2','chkOverrideEquipment3',
+    'ddmEquipment1', 'ddmEquipment2','ddmEquipment3',
+    'chkOverrideEquipment1', 'chkOverrideEquipment2','chkOverrideEquipment3',
 		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 		'Markup1', 'Markup2', 'Markup3',
     'txtPrice1', 'txtPrice2', 'txtPrice3',
@@ -161,7 +161,7 @@ sub calc {
 		} # end if
 	} # end if
 
-	my @Materials = openprint::Material->find('category'=>'Padding Glue');
+	my @Materials = openprint::Material->find(category=>'Padding Glue');
 	if ( $$specs{override_glue_id} eq 'Y' ) {
 	} else {
 		my $Paper;
@@ -201,7 +201,7 @@ sub calc {
   $calliper *= $$specs{PageQuantity} * $calliper;
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{'txtPrice'.$qty_index} = '';
+		$$specs{'txtPrice'.$qty_index} = '' if (!$$specs{'OverridePrice'.$qty_index}) or ($$specs{'OverridePrice'.$qty_index} ne 'Y');
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtQuantity$qty_index"};
     my $base_qty = $$specs{"txtQuantity$qty_index"};
@@ -340,11 +340,21 @@ sub calc {
     } # end foreach Equipment
 
 		$best_price = $minimumCharge if $best_price < $minimumCharge;
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $best_price/$base_qty ) * (1+$Project->markup()/100) );
-		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $best_price*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
+    if ($Project->markup()) {
+      $best_price *= (1+$Project->markup()/100);
+    }
+    if ($$specs{"Markup$qty_index"}) {
+      $best_price *= (1+$$specs{"Markup$qty_index"}/100);
+    }
+
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $best_price/$base_qty );
+
+		if ( (!$$specs{"OverridePrice$qty_index"}) or ($$specs{"OverridePrice$qty_index"} ne 'Y')) {
+$openprint::log->error("Not overriding");
+			$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $best_price);
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
+$openprint::log->error("overriding to ".$$specs{"txtPrice$qty_index"});
+			$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"});
 		} # end if
 	} # end foreach
 	return $$specs{Status} = $status;

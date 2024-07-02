@@ -32,6 +32,7 @@ require openprint::service;
 require openprint::ServiceType;
 use openprint::Imposition;
 require openprint::Estimating::Perforating;
+require openprint::Estimating::Collating;
 
 use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
@@ -1247,7 +1248,7 @@ if ( 0 ) {
 						} # end if ! Fold
 						if ( $Fold ) {
 # Need to check feed width
-$openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
+$openprint::log->debug('Has a fold, doing extra checks') if DEBUG;
 							my $failure_reason;
 							if ( $max_feed_width ) {
 								# If multiple out, we trim inline otherwise trim first.
@@ -1771,14 +1772,21 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
 				$totalTime += $runTime * 3600;
 				$$Imposition{price} = $totalPrice;
 			} # end foreach folded Imposition
+			$comparison_cost += $totalPrice;
 
 			#my %cutting_results = ( alert => '', Breakdown=>'', Price=>0 );
 			#if ( $$calc_hash{HasCutting} ) {
 				#%cutting_results = openprint::Estimating::Cutting::signature_calc_folding_cutting( $Project, $sig_specs, $$calc_hash{cutting_specs}, $qty_index, $Paper, $SignatureImposition, \%fold_specs, $calc_hash );
 			#} # end if
-			$Breakdown .= '<tr><td>Folding total:</td><td class="Price">$' . sprintf($openprint::config{ProjectMoneyFormat}, $totalPrice) . '</td></tr>'  ;
-			my $stitching_part = 0;
+			$Breakdown .= '<tr><td>Folding total:</td><td class="Price">$' . sprintf($openprint::config{ProjectMoneyFormat}, $totalPrice) . '</td></tr>';
 			$$SignatureImposition{Folds} = \@Used_Impositions;
+      if ($$calc_hash{HasCollating}) {
+				my %collating_results = openprint::Estimating::Collating::internal_calc( $Project, $$calc_hash{CollatingSpecs}, $qty_index, $Signature_Impositions, $calc_hash );
+        $Breakdown .= '<tr><td>'.$collating_results{Breakdown}.'</td><td></td></tr>';
+        $Breakdown .= '<tr><td>Collating total:</td><td class="Price">$' . sprintf($openprint::config{ProjectMoneyFormat}, $collating_results{Total}) . '</td></tr>';
+			  $comparison_cost += $collating_results{Total};
+      }
+			my $stitching_part = 0;
 			if ( $$calc_hash{HasStitching} ) {
 				if ( ! exists $$specs{StitchingCost} ) {
 # Add in stitching estimate, based on if the folder is this piece of equipment
@@ -1827,9 +1835,10 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
 					$Breakdown .= sprintf('<tr><td>Stitching cost on %s</td><td class="Price">$%.2f</td></tr>', $$specs{StitchingEquipment}{name}, $stitching_part );
 				} # end if
 			} # end if has stitching
-			$comparison_cost += $totalPrice + $stitching_part;
+			$comparison_cost += $stitching_part;
 # + $cutting_results{Price};
 
+      if (0) {
       if ( defined $bestComparison ) {
         if ( $comparison_cost > $bestComparison ) {
           $openprint::log->debug("Bailing early because comparison $comparison_cost > best $bestComparison") if DEBUG;
@@ -1837,6 +1846,7 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
         } elsif ( DEBUG ) {
           $openprint::log->debug("Not bailing early because comparison $comparison_cost < best $bestComparison");
         }
+      }
       }
 
 			if ( $scoring_signature_needs ) {
@@ -1864,7 +1874,7 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
 			$Breakdown .= '</table><br/>';
 
 			if ( ( ! defined $bestComparison ) or ( $comparison_cost < $bestComparison ) ) {
-#$openprint::log->debug("Got better prrice $totalPrice < $bestPrice comparison $comparison_cost < $bestComparison" . $Equipment->name() ) if DEBUG;
+$openprint::log->debug("Got better prrice $totalPrice < $bestPrice comparison $comparison_cost < $bestComparison" . $Equipment->name() ) if DEBUG;
 				$bestM = $mprice;
 				$bestComparison = $comparison_cost;
 				$bestPrice = $totalPrice;
@@ -1990,7 +2000,7 @@ sub calc {
 		$$calc_hash{FoldingStitchingSpecs}{"chkOverrideEquipment2"} = 'Y';
 		$$calc_hash{FoldingStitchingSpecs}{"chkOverrideEquipment3"} = 'Y';
 	} # end if
-	foreach my $service ( 'UVCoating', 'Aqueous', 'Cutting', 'Scoring', 'Folding' ) {
+	foreach my $service ( 'UVCoating', 'Aqueous', 'Cutting', 'Scoring', 'Folding', 'Collating' ) {
 		if ( $$services{$service} and @{$$services{$service}} ) {
 			$$calc_hash{"Has$service"} = $$services{$service}[0];
 			$$calc_hash{"${service}Specs"} = openprint::service::get_specs_ref( $Project, $$services{$service}[0] );
@@ -2627,7 +2637,8 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 
 		# So becomes pages/2, imposition * 2, page quantity * 2, meaning if it is now 4pg 2out, it is in fact 8pages.
 		$i1->spread_rows( $$i1{spread_rows} / 2 );
-		$i1->rows( $$i1{rows} * 2 );
+    #$i1->rows( $$i1{rows} * 2 );
+    $$i1{quantity} *= 2;
 		$$i1{page_quantity} = $$i1{page_quantity} * 2;
 		$i1->image_height( $$I{image_height}/$$I{spread_rows} );
 		$openprint::log->debug(sprintf('SPECIAL Cutting Vertical pages down from quantity q%d x %d pages %dout to q%d x %d pages %dout pq(%d)',
@@ -2639,7 +2650,8 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 
     # So becomes pages/2, imposition * 2, page quantity * 2, meaning if it is now 4pg 2out, it is in fact 8pages.
     $i1->spread_columns( $$i1{spread_columns} / 2 );
-    $i1->columns( $$i1{columns} * 2 );
+    #$i1->columns( $$i1{columns} * 2 );
+    $$i1{quantity} *= 2;
     $$i1{page_quantity} = $$i1{page_quantity} * 2;
     $i1->image_height( $$I{image_height}/$$I{spread_columns} );
     $openprint::log->debug(sprintf('SPECIAL Cutting Horizontal pages down from quantity %d x %d pages %dout to q%d x %d pages %dout pq(%d)',
