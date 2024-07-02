@@ -712,7 +712,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 
 					 $Results{Breakdown} .= '<br/>';
 
-           $$I{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $I->quantity() );
+           $$I{impressions} = ( $qty / $$SignatureImposition{imposition} ) * ( $I->quantity() );
            #$openprint::log->error("Impressions from $$I{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $$I{quantity} );");
 					 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $$I{impressions}, $I );
 
