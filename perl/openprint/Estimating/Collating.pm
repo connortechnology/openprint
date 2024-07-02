@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Collating;
 use strict;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::service;
 require openprint::Project;
@@ -105,18 +105,58 @@ sub neccessary {
 	return 0;
 } # end sub neccessary
 
+sub get_signature_count {
+  my ($Project, $specs, $Impositions, $calc_hash) = @_;
+  my $folding_specs = $$calc_hash{FoldingSpecs};
+
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		if ( (!$$specs{'OverrideSignatureCount'.$qty_index} ) or ( $$specs{'OverrideSignatureCount'.$qty_index} ne 'Y' ) ) {
+      $$specs{'txtSignatureCount'.$qty_index} = 0;
+      foreach my $I ( @$Impositions ) {
+        my $sig_specs = $$I{specs};
+        my $form = $$sig_specs{SignatureIndex};
+        if ( ! $$I{Folds} ) {
+          $openprint::log->error('Stitching: No folds in imposition, generating');
+          if ( DEBUG ) {
+            $I->display('No Folds');
+          }
+          if ( $folding_specs ) {
+            $$I{Folds} = [ openprint::Estimating::Folding::get_Folds($folding_specs, $I, $qty_index) ];
+            if ( DEBUG ) {
+              foreach my $F ( @{$$I{Folds}} ) {
+                $F->display('pq:'.$$F{page_quantity});
+              } # end foreach F
+            } # end if
+          } # end if
+        } # end if
+        if ($$I{Folds}) {
+					foreach my $Fold_Imp ( @{$$I{Folds}} ) {
+            $I->display() if DEBUG;
+            $$specs{'txtSignatureCount'.$qty_index} += ($$I{pages} / $$Fold_Imp{pages});
+            # * $Fold_Imp->quantity() / ($$I{imposition}/$$Fold_Imp{imposition});
+            $openprint::log->debug("Fold $qty_index: " . $$Fold_Imp{type} . ' ' . $Fold_Imp->pages() . 'pg ' . $Fold_Imp->quantity() . ' ' . $$Fold_Imp{imposition}. ' signature count:'.$$specs{'txtSignatureCount'.$qty_index} ) if DEBUG;
+
+          } # end foreach Fold product
+				} else {
+					$$specs{'txtSignatureCount'.$qty_index} += $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize};
+				} # end if
+      } # end foreach Impositions
+    } # end if override
+  } # end foreach qty_index
+} # end sub get_signature_count
+
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-	my $status = 'calculated';
+	$$specs{Status} = 'calculated';
   $$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-$log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
+  my $calc_hash = {};
 
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	my $printing_specs = $$calc_hash{PrintingSpecs} = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	if ( ! $$printing_specs{txtTotalPageQuantity} ) {
 		$$specs{alert} = 'Number of pages is unknown!';
 		return $$specs{Status} = 'uncalculated';
@@ -124,30 +164,62 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 
   my $folding_specs;
   if ( $$services{Folding} and @{$$services{Folding}} ) {
-    $folding_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
+    $folding_specs = $$calc_hash{FoldingSpecs} = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
+  } # end if
+
+  my @signatures = $Project->signatures();
+  if ( ! @signatures ) {
+    $$specs{alert} .= 'Unable to find any signatures to collate.<br/>';
+    return $$specs{Status} = 'uncalculated';
   } # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		if ( (!$$specs{'OverrideSignatureCount'.$qty_index} ) or ( $$specs{'OverrideSignatureCount'.$qty_index} ne 'Y' ) ) {
+    $$specs{"txtQuantity$qty_index"} = int( $$specs{"txtQuantity$qty_index"} );
+    $$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
+    my @Impositions;
 
-			$$specs{'txtSignatureCount'.$qty_index} = 0;
-			foreach my $sig_id ( $Project->signatures({sort=>1}) ) {
-				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-				next if ! $$sig_specs{"txtImposition$qty_index"};
-				my @folding_impositions = openprint::Estimating::Folding::load_Impositions( $folding_specs, $sig_specs, $qty_index ) if $folding_specs;
-$openprint::log->debug("Got " . @folding_impositions . " folds for form $$sig_specs{SignatureIndex}") if DEBUG;
-				if ( @folding_impositions ) {
-					foreach my $Fold_Imp ( @folding_impositions ) {
-$openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp->pages() . 'pg ' . $Fold_Imp->quantity() . ' ' . $Fold_Imp->imposition() );
-						$$specs{'txtSignatureCount'.$qty_index} += $Fold_Imp->quantity();
-					} # end foreach Fold product
-				} else {
-					$$specs{'txtSignatureCount'.$qty_index} += $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize};
-				} # end if
-		
-			} # end foreach signature
-		} # end if
+    foreach my $signature_service_index ( @signatures ) {
+      my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+      next if ! $$sig_specs{"txtImposition$qty_index"};
+      my $form = $$sig_specs{SignatureIndex};
+      if ( $folding_specs and
+        ( ! $$folding_specs{"ddmEquipment-$form-$qty_index"} ) and
+        ( $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} )
+      ) {
+        $openprint::log->debug('Overrode folding to nothing.') if DEBUG;
+      } # end if
+      my $Imposition = new openprint::Imposition();
+      $Imposition->load( $sig_specs, $qty_index, $Project );
+      push @Impositions, $Imposition;
+      if ( $folding_specs ) {
+        $$Imposition{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $Imposition, $qty_index ) ];
+        if ( DEBUG ) {
+          foreach my $F ( @{$$Imposition{Folds}} ) {
+            $F->display("Stitching::calc Fold: pq($$F{page_quantity})");
+          } # end foreach F
+        } # end if
+      }
+    } # end foreach signature_service_index
+
+		my %bestPrice = internal_calc($Project, $specs, $qty_index, \@Impositions, $calc_hash);
+
+    $$specs{'hdnBreakdown'.$qty_index} = $bestPrice{Breakdown};
+		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment}->id();
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $bestPrice{Service} * (1+$Project->markup()/100) );
+    $$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $bestPrice{MPrice} );
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $bestPrice{Total} * (1+$Project->markup()/100) );
+    $$specs{Status} = 'uncalculated' if $bestPrice{Status} eq 'uncalculated';
 	} # end foreach qty_index
+
+	return $$specs{Status};
+} # end sub calc
+
+sub internal_calc {
+  my ($Project, $specs, $qty_index, $impositions, $calc_hash) = @_;
+  my $printing_specs = $$calc_hash{PrintingSpecs};
+  my %bestPrice;
+
+  get_signature_count($Project, $specs, $impositions, $calc_hash);
 
 	my $minimumCharge = openprint::service::get_price( 'CollatingMinimumCharge', undef, undef );
 
@@ -170,130 +242,122 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 	if (!@possible_equipment) {
 # alert the user that no equipment is good.
 		$$specs{alert} = "Our collating equipment cannot run this project, for the following reasons:<br/>$error<br/> Please only print flat sheets and contact another bindery.";
-		return $$specs{Status} = 'uncalculated';
+    $bestPrice{Status} = 'uncalculated';
+		return %bestPrice;
 	} # end if
 
 	my $CollatingMakeReady = openprint::Service->find_one(name=>'CollatingMakeReady');
 	my $CollatingPocketMakeReady = openprint::Service->find_one(name=>'CollatingPocketMakeReady');
 	my $Collating = openprint::Service->find_one(name=>'Collating');
 
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		my %bestPrice;
+  my $base_qty = $$specs{"txtQuantity$qty_index"};
 
-		$$specs{'hdnBreakdown'.$qty_index} = '';
-		$$specs{'hdnBreakdown'.$qty_index} = 'MinimumCharge: $' . sprintf( '%.2f', $minimumCharge ) . '<br/>' if $minimumCharge;
-		$$specs{"txtQuantity$qty_index"} = int( $$specs{"txtQuantity$qty_index"} );
-		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
+  my @equipment = ();
+  if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
+    @equipment = ( new openprint::Equipment( $$specs{"ddmEquipment$qty_index"} ) );
+  } else {
+    @equipment = @possible_equipment;
+  } # end if
 
-		my $base_qty = $$specs{"txtQuantity$qty_index"};
-    # * $$specs{'txtSignatureCount'.$qty_index};
+  foreach my $Equipment ( @equipment ) {
+    my %price = (
+      Breakdown => '',
+      Service		=> 0,
+      MakeReady	=> 0,
+      Equipment	=> $Equipment,
+      Total		=> 0,
+      quantity => $base_qty,
+    );
+    $price{Breakdown} .= 'Pockets: '.$$specs{'txtSignatureCount'.$qty_index}.'<br/>';
+    $price{Breakdown} .= 'Equipment ' . $Equipment->name().':<br/>';
+    if ( $Equipment->specification('Collating Capable') eq 'When Printing' ) {
+      # All signatures must be printed on the same machine
+      my $cant = 0;
+      foreach my $sig_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+        next if ! $$sig_specs{"txtImposition$qty_index"};
 
-		my @equipment = ();
-		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-			@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment$qty_index"} ) );
-		} else {
-			@equipment = @possible_equipment;
-		} # end if
-
-		foreach my $Equipment ( @equipment ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $Equipment->name().':<br/>';
-			my %price = (
-				Service		=> 0,
-				MakeReady	=> 0,
-				Equipment	=> $Equipment,
-				Total		=> 0,
-        quantity => $base_qty,
-			);
-			if ( $Equipment->specification('Collating Capable') eq 'When Printing' ) {
-				# All signatures must be printed on the same machine
-				my $cant = 0;
-				foreach my $sig_id ( $Project->signatures() ) {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-					next if ! $$sig_specs{"txtImposition$qty_index"};
-
-					if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
-						# cant
-						$cant = 1;
-					} # end if
-				} # end foreach
-				if ( $cant ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $price{Equipment}->name() . ': Not all signatures printed on this press.<br/>';
-					next;
-				} # end if
-			} # end if
-
-      my $qty = $base_qty;
-      if ( my $Overs = $Equipment->Specification('Collating Overs') ) {
-        my $overs = 0;
-        if ( $$Overs{units} eq 'sheets' ) {
-          $overs = int($$Overs{value});
-        } elsif ( $$Overs{units} eq 'percent' ) {
-          $overs = int($qty * $$Overs{value}/100);
-        } else {
-          $openprint::log->error("Invalid units on $$Overs{name} $$Overs{units} on $$Equipment{name}");
+        if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
+          # cant
+          $cant = 1;
         } # end if
-        $qty += $overs;
-        $price{overs} = $overs;
-        $price{Overs} = $Overs;
-        $price{quantity} = $qty;
-        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Base quantity %d + %d%s = %d overs = %d<br/>',
-          $base_qty, $$Overs{value}, $$Overs{units}, $overs, $qty);
+      } # end foreach
+      if ( $cant ) {
+        $price{Breakdown} .= ': Not all signatures printed on this press.<br/>';
+        next;
       } # end if
+    } # end if
 
-			my %MakeReadyPrice = $CollatingMakeReady->get_price( undef, $Equipment ) if $CollatingMakeReady;
-			$price{MakeReady} = $MakeReadyPrice{Price};
-      $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Make Ready: $%.2f<br/>', $price{MakeReady});
+    my $qty = $base_qty;
+    if ( my $Overs = $Equipment->Specification('Collating Overs') ) {
+      my $overs = 0;
+      if ( $$Overs{units} eq 'sheets' ) {
+        $overs = int($$Overs{value});
+      } elsif ( $$Overs{units} eq 'percent' ) {
+        $overs = int($qty * $$Overs{value}/100);
+      } else {
+        $openprint::log->error("Invalid units on $$Overs{name} $$Overs{units} on $$Equipment{name}");
+      } # end if
+      $qty += $overs;
+      $price{overs} = $overs;
+      $price{Overs} = $Overs;
+      $price{quantity} = $qty;
+      $price{Breakdown} .= sprintf('Base quantity %d + %d%s = %d overs = %d<br/>',
+        $base_qty, $$Overs{value}, $$Overs{units}, $overs, $qty);
+    } # end if
 
-      if ( $CollatingPocketMakeReady) {
-        my %PocketMakeReadyPrice = $CollatingPocketMakeReady->get_price( undef, $Equipment );
-        $price{PocketMakeReady} = $PocketMakeReadyPrice{Total} = $PocketMakeReadyPrice{Price} * $$specs{'txtSignatureCount'.$qty_index};
-        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Pocket Make Ready: %d pockets @ $%.2f%s = $%.2f<br/>',$$specs{'txtSignatureCount'.$qty_index}, @PocketMakeReadyPrice{qw(Price units Total)});
-      }
+    my %MakeReadyPrice = $CollatingMakeReady->get_price( undef, $Equipment ) if $CollatingMakeReady;
+    $price{MakeReady} = $MakeReadyPrice{Price};
+    $price{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $price{MakeReady});
 
-			my %servicePrice = $Collating->get_price( $$specs{'txtSignatureCount'.$qty_index}, $Equipment ) if $Collating;
-			if (!$servicePrice{units}) {
-				$$specs{alert} .= 'No units in service price.<br/>';
-        $price{Service} = $servicePrice{Total} = 1000000;
-      } elsif (sets::isin( $servicePrice{units}, 'per m', 'per 1000')) {
-				$price{Service} = $qty*$servicePrice{Price}/1000; # Service Price for Collating is per 1000
-        $price{MPrice} = $price{Service};
-      } elsif ($servicePrice{units} eq 'per hour') {
-        my $runspeed = $Equipment->Specification('Run Speed');
-        if ($runspeed) {
-          if (lc $$runspeed{units} eq 'per hour') {
-            $servicePrice{speed} = $$runspeed{value};
-            $servicePrice{hours} = $qty / $$runspeed{value};
-            $price{Service} = $servicePrice{Total} = $servicePrice{Price} * $qty / $$runspeed{value};
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s * %.2fhours @%d = $%.2f<br/>', @servicePrice{qw(Price units hours speed Total)});
-            $price{MPrice} = $price{Service} *1000/$$runspeed{value};;
-          }
-        } else {
-          $price{Service} = $servicePrice{Price};
-          $$specs{'hdnBreakdown'.$qty_index} .= 'Service: Pricing is per hour but no run speed found.<br/>';
-          $$specs{alert} .= 'Pricing is per hour but no run speed set.<br/>';
+    if ( $CollatingPocketMakeReady) {
+      my %PocketMakeReadyPrice = $CollatingPocketMakeReady->get_price( undef, $Equipment );
+      $price{PocketMakeReady} = $PocketMakeReadyPrice{Total} = $PocketMakeReadyPrice{Price} * $$specs{'txtSignatureCount'.$qty_index};
+      $price{Breakdown} .= sprintf('Pocket Make Ready: %d pockets @ $%.2f%s = $%.2f<br/>',$$specs{'txtSignatureCount'.$qty_index}, @PocketMakeReadyPrice{qw(Price units Total)});
+    }
+
+    my %servicePrice = $Collating->get_price( $$specs{'txtSignatureCount'.$qty_index}, $Equipment ) if $Collating;
+    if (!$servicePrice{units}) {
+      $$specs{alert} .= 'No units in service price.<br/>';
+      $price{Service} = $servicePrice{Total} = 1000000;
+    } elsif (sets::isin( $servicePrice{units}, 'per m', 'per 1000')) {
+      $price{Service} = $qty*$servicePrice{Price}/1000; # Service Price for Collating is per 1000
+      $price{MPrice} = $price{Service};
+    } elsif ($servicePrice{units} eq 'per hour') {
+      my $runspeed = $Equipment->Specification('Run Speed');
+      if ($runspeed) {
+        if (lc $$runspeed{units} eq 'per hour') {
+          $servicePrice{speed} = $$runspeed{value};
+          $servicePrice{hours} = $qty / $$runspeed{value};
+          $price{Service} = $servicePrice{Total} = $servicePrice{Price} * $qty / $$runspeed{value};
+          $price{Breakdown} .= sprintf('Service: $%.2f%s * %.2fhours @%d = $%.2f<br/>', @servicePrice{qw(Price units hours speed Total)});
+          $price{MPrice} = $price{Service} *1000/$$runspeed{value};;
         }
-			} else {
-				$$specs{alert} .= 'Unknown units in service price.<br/>';
-			} # end if
-			$price{Total} = $price{MakeReady} + $price{PocketMakeReady} + $price{Service};
-      $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $price{Total});
+      } else {
+        $price{Service} = $servicePrice{Price};
+        $price{Breakdown} .= 'Service: Pricing is per hour but no run speed found.<br/>';
+        $$specs{alert} .= 'Pricing is per hour but no run speed set.<br/>';
+      }
+    } else {
+      $$specs{alert} .= 'Unknown units in service price.<br/>';
+    } # end if
+    $price{Total} = $price{MakeReady} + $price{PocketMakeReady} + $price{Service};
+    $price{Breakdown} .= sprintf('Total: $%.2f<br/>', $price{Total});
 
-			if ( ! $bestPrice{Total} or $price{Total} < $bestPrice{Total} ) {
-				%bestPrice = %price;
-			} # end if
-		} # end foreach equipment
+    if ( ! $bestPrice{Total} or $price{Total} < $bestPrice{Total} ) {
+      %bestPrice = %price;
+    } # end if
+  } # end foreach equipment
 
-		if ( ! $bestPrice{Equipment} ) {
-			$status = 'uncalculated';
-		} # end if
-		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment}->id();
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $bestPrice{Service} * (1+$Project->markup()/100) );
-    $$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $bestPrice{MPrice} );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $bestPrice{Total} * (1+$Project->markup()/100) );
-	} # end foreach qty_index
+  if ($minimumCharge and $bestPrice{Total} < $minimumCharge) {
+     $bestPrice{Total} = $minimumCharge;
+     $bestPrice{Breakdown} = 'MinimumCharge: $' . sprintf( '%.2f', $minimumCharge ) . '<br/>'
+   }
 
-	$log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
-	return $$specs{Status} = $status;
+  if ( ! $bestPrice{Equipment} ) {
+    $bestPrice{Status} = 'uncalculated';
+  } # end if
+  return %bestPrice;
 } # end sub calc
 
 sub display {
