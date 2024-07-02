@@ -1824,6 +1824,15 @@ function update_event_bindings() {
     console.log('setting onchange on '+el.name+' to '+fnName);
   });
 
+  document.querySelectorAll("select[on_change]").forEach(function attachOnChangeThis(el) {
+    const fnName = el.getAttribute("on_change");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName + " on "+el.name);
+      return;
+    }
+    el.onchange = window[fnName].bind(el, el);
+    console.log('setting onchange on '+el.name+' to '+fnName);
+  });
   document.querySelectorAll('select[data-on-change-this]').forEach(function(el) {
     const fnName = el.getAttribute('data-on-change-this');
     if ( !window[fnName] ) {
