@@ -189,6 +189,10 @@ sub neccessary {
 #$log->debug(" ** Project hash DueCutting bindery, Scoring not needed ! ** ");
 		return 0;
 	} # end if
+  my $book_type = $Project->get_book_type();
+  if (sets::isin($book_type, ['Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound'])) {
+		return 0;
+  }
 
   # Only need scoring if it's being folded.
 	if ( $$services{Folding} and @{$$services{Folding}} ) {
