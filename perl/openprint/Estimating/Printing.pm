@@ -7887,6 +7887,9 @@ sub get_colour_description_no_coverage {
     @back_coatings = @front_coatings;
     $back_pms = $front_pms;
     $coatings .= ' back the same as front';
+  } elsif ((defined $$specs{side_link}) and $$specs{side_link}) {
+    @back_coatings = @front_coatings;
+    $back_pms = $front_pms;
   } else {
 		$side = 'SideTwo';
 
@@ -7916,7 +7919,7 @@ sub get_colour_description_no_coverage {
 			unshift @back_coatings, '4C';
 		} # end if Process
 	} # end if
-	return join('+', @front_coatings).'/'.join('+',@back_coatings).' ' . $coatings;
+	return join('+', @front_coatings).'/'.(@back_coatings?join('+',@back_coatings):'0').' ' . $coatings;
 } # end sub get_colour_description_no_coverage
 
 sub get_colour_description {
@@ -7975,6 +7978,9 @@ $log->debug("Adding PMS for $type chkColourCoating$index$side");
 		@back_coatings = @front_coatings;
 		$back_pms = $front_pms;
 		$coatings .= ' back the same as front';
+  } elsif ((defined $$specs{side_link}) and $$specs{side_link}) {
+    @back_coatings = @front_coatings;
+    $back_pms = $front_pms;
 	} else {
 		$side = 'SideTwo';
 
@@ -8012,7 +8018,7 @@ $log->debug("Adding PMS for $type chkColourCoating$index$side");
 				);
 		} # end if Process
 	} # end if
-	return join('+', @front_coatings).'/'.join('+',@back_coatings).' ' . $coatings;
+	return join('+', @front_coatings).'/'.(@back_coatings?join('+',@back_coatings):'0').' ' . $coatings;
 } # end sub get_colour_description
 
 sub filter_coatings_from_colours {
