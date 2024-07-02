@@ -42,7 +42,7 @@
     } elsif (@{$$config{$field}}==1) {
       return input( type=>'hidden', name=>join('-', $field, $$price{id} ), value=>$price->$field() ).$config{$field}[0];
     }
-    return ssi::select( [ map { $_, $_ } @{$$config{$field}} ], $$price{$field}, { name=>join('-', $field, $$price{id}) } )
+    return ssi::select( [ map { $_, $_ } @{$$config{$field}} ], $$price{$field}, { prepend=>['','unset'], name=>join('-', $field, $$price{id}) } )
   }
 
 	$html .= sprintf('
