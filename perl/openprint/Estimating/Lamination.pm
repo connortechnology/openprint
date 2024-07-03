@@ -511,7 +511,7 @@ sub summary {
 
     $summary .= (@sigs > 1) ? 'Form '.$form.' ': '';
     if ($qty_index) {
-      my $equipment = openprint::Equipment->find(id=>$$specs{'ddmEquipment-'.$form.'-'.$qty_index});
+      my $equipment = openprint::Equipment->find_one(id=>$$specs{'ddmEquipment-'.$form.'-'.$qty_index});
       $summary .= 'on '.$equipment->name().'<br/>' if $equipment;
     } else {
       $summary .= $$specs{"TypeFront-$form"}.' on front, '.$$specs{"TypeBack-$form"}.' on back<br/>';
