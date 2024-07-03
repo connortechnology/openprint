@@ -145,10 +145,12 @@ sub signature_needs {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
 	my $form = $$sig_specs{SignatureIndex};
-	if ( $specs ) {
-		if ( ( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
-			return 1;
-		} # end if
+  if ( $specs ) {
+    if ( (defined $$specs{"chkOverrideQty-$form"}) and ( $$specs{"chkOverrideQty-$form"} eq 'Y' ) ) {
+      if ( ( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
+        return 1;
+      } # end if
+    } # end if
 	} # end if
 
   # If it's not needing folding, then it doesn't need to be scored
@@ -156,6 +158,10 @@ sub signature_needs {
     $openprint::log->debug("NeedFolding is not true form $form $$sig_specs{txtWidth}x$$sig_specs{txtHeight} : $$sig_specs{txtFinalWidth}x$$sig_specs{txtFinalHeight}");
 		return 0;
 	} # end if
+  my $book_type = $Project->get_book_type();
+  if (sets::isin($book_type, ['Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound'])) {
+		return 0;
+  }
 	if ( 
 			( $$sig_specs{txtSignatureType} eq '' ) 
 			or ( $$sig_specs{txtSignatureType} eq 'Cover Pages' ) 
@@ -846,7 +852,7 @@ sub get_price {
     $runspeed = $Equipment->Specification('PerfScoreRunSpeed');
     $runspeed = $Equipment->Specification('RunSpeed', undef, 1) if !$runspeed;
     if ($runspeed) {
-      if ($$runspeed{range_units} eq 'impressions') {
+      if ($$runspeed{range_units} and ($$runspeed{range_units} eq 'impressions')) {
         $runspeed = $Equipment->Specification($$runspeed{name}, $qty);
       } else {
         $runspeed = $Equipment->Specification($$runspeed{name}, $I->Paper()->gsm());
