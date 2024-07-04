@@ -68,7 +68,7 @@ use constant DEBUG_IMPOSITIONS => 1;
 	'Work & TurnSetup'	=> { units => [ ] },
 	'Work & TumbleSetup'	=>	{ units=> [] },
 	'Sheet WorkSetup'		=>	{ units=> [] },
-	PressRunMinimumCharge	=>	{ units=> [] },
+	PressRunChargeMinimum	=>	{ units=> [] },
 	'\d*ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
 	'PressUnitMakeReady(.*)'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
 	PlateMakeReady					=>	{ units => [ 'per hour', 'per plate' ] },
@@ -6673,7 +6673,7 @@ $log->warn("Something wrong in AQ");
 	$price{'Press Setup'} = $press_setup;
 	$price{'Impression MPrice'} = List::Util::sum( map { $$_{MPrice} } @{$run_prices} );
 
-	$price{'Minimum Run Charge'} = openprint::service::get_price('PressRunMinimumCharge', undef, $Press);
+	$price{'Minimum Run Charge'} = openprint::service::get_price('PressRunChargeMinimum', undef, $Press);
 
 	if ( $run_cost < $price{'Minimum Run Charge'} ) {
 		$run_cost = $price{'Minimum Run Charge'};

@@ -24,7 +24,7 @@
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
 		<? if ( $$variable{txtSignatureType} eq 'Cover Pages' or $$variable{txtSignatureType} eq 'Gate Folded Pages' ) ?>
 			<?include(/includes/main/proj/templates/signature_template_select.html)?>
-			<?include(/includes/main/proj/templates/signatures.html)?>
+			<?include(/includes/main/proj/templates/_signatures.html)?>
 		<? endif ( $$variable{txtSignatureType} eq 'Cover Pages' or $$variable{txtSignatureType} eq 'Gate Folded Pages' ) ?>
 		<fieldset><legend><? echo ( $$variable{Project}->Type()->description() ) ?> <?txtSignatureType?></legend>
 			<? if ( $$variable{txtSignatureType} ) ?>
