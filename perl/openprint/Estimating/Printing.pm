@@ -6788,8 +6788,6 @@ $log->debug("Considering $$Press{strid}") if DEBUG_PRESSES;
 		my $paper_ok = 0;
 		my $Paper;
 
-		my $AQ_Min_Weight = $Press->Specification('Aqueous Minimum Weight') if $aqueous;
-
 		foreach $Paper ( @$Papers ) {
 			my $max_calliper = $Press->specification('Maximum Calliper', $$Paper{grade} );
 			if ( $max_calliper and ( $$Paper{calliper} > $max_calliper ) ) {
@@ -6813,11 +6811,6 @@ $log->debug("Considering $$Press{strid}") if DEBUG_PRESSES;
 			} # end if
 			if ( ( $$Paper{type} eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {
 				$results{$press_id} = "Failed Minimum Basis Weight Check **" . $Paper->basis_mweight() . ' < ' . $Press->specification('Minimum Basis Weight');
-				next;
-			} # end if
-			if ( $AQ_Min_Weight and ( $$AQ_Min_Weight{units} eq 'gsm' ) and ( $Paper->gsm() < $$AQ_Min_Weight{value} ) ) {
-				$results{$press_id} = " ** Press $press_id Failed Aqueous Minimum Weight Check (".$$AQ_Min_Weight{value}." > $$Paper{gsm})gsm<br/>";
-#$log->debug(" ** Press $press_id Failed Aqueous Minimum Weight Check (".$$AQ_Min_Weight{value}." > $$Paper{gsm})gsm<br/>");
 				next;
 			} # end if
 			$paper_ok = 1;
@@ -6908,10 +6901,6 @@ $log->debug("Considering $$Press{strid}") if DEBUG_PRESSES;
 				$results{$press_id} = 'Failed varnish check.';
 				next;
 			} # end if
-		} # end if
-		if ( $aqueous and ! sets::isin( $Press->specification('Aqueous Capable'), [ 'Y', 'When Printing', '1 Side' ] ) ) {
-			$results{$press_id} = 'Failed Aqueous check.';
-			next;
 		} # end if
 		if ( my $stocknames = $Press->specification('StockBrands') ) {
 			my ( @allowed, @disallowed );
