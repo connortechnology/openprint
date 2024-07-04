@@ -25,15 +25,15 @@ use vars qw( %ServicePrices );
 	'AqueousBlanketCutW&T'	=> { },
 	AqueousBlanketCut	=> { },
 	BlanketCut	=> { },
-	'Aqueous (.*)'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous(.*)'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour', 'per side' ] },
 );
 my %Specifications = (
   'Aqueous Capable' => { values=>['Y','N','When Printing'] },
   'AqueousRunSpeed' => {},
-'Aqueous Double Sided When Perfecting' => {},
-'Aqueous Minimum Weight' => {units=>['gsm']},
-'HasCoater'=> {['Y','N']},
-);
+  'Aqueous Double Sided When Perfecting' => {},
+  'Aqueous Minimum Weight' => {units=>['gsm']},
+  'HasCoater'=> {untis=>['Y','N']},
+  );
 
 sub ServicePriceConfiguration {
   my $name = shift;
@@ -134,28 +134,28 @@ sub neccessary {
 } # end sub neccessary
 
 sub get_colours {
-    my ( $specs, $side ) = @_;
-    my @colours;
-    if ( 
-        (
-         ( defined $$specs{sides_the_same} ) and ( $$specs{sides_the_same} eq 'Y' )
-         or
-         ( defined $$specs{side_link} ) and ( $$specs{side_link} eq '1' )
-        )
-        and ( $side eq 'SideTwo' ) ) {
-      $side = 'SideOne';
-    } # end if
+  my ( $specs, $side ) = @_;
+  my @colours;
+  if ( 
+      (
+       ( defined $$specs{sides_the_same} ) and ( $$specs{sides_the_same} eq 'Y' )
+       or
+       ( defined $$specs{side_link} ) and ( $$specs{side_link} eq '1' )
+      )
+      and ( $side eq 'SideTwo' ) ) {
+    $side = 'SideOne';
+  } # end if
 
-    foreach my $k ( keys %$specs ) {
+  foreach my $k ( keys %$specs ) {
 #$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
-        if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
-            next if ! $$specs{"chkColourCoating$index$side"};
-			if ( $$specs{"ColourCoatingType$index$side"} =~ /Aqueous/i ) {
-				push @colours, $$specs{"ColourCoatingType$index$side"};
-            } # end if
-        } # end if
-    } # end foreach
-    return @colours;
+    if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+      next if ! $$specs{"chkColourCoating$index$side"};
+      if ( $$specs{"ColourCoatingType$index$side"} =~ /Aqueous/i ) {
+        push @colours, $$specs{"ColourCoatingType$index$side"};
+      } # end if
+    } # end if
+  } # end foreach
+  return @colours;
 } # end sub get_colours
 
 sub signature_needs {
@@ -307,7 +307,7 @@ sub calc {
 					$$specs{"txtLayoutHeight-$form-$qty_index"} = 0;
 				} # end if
 			} # end if uncalculated
-$$specs{"hdnBreakdown$qty_index"} .= '</fieldset>';
+      $$specs{"hdnBreakdown$qty_index"} .= '</fieldset>';
 		} # end foreach signature
 
 		$GrandTotal *= ( 1+$Project->markup()/100 ) if $Project->markup();
@@ -339,12 +339,12 @@ sub signature_calc {
 	my $form = $$sig_specs{SignatureIndex};
 	my %bestPrice;
 	$bestPrice{Status} = 'uncalculated';
+  $bestPrice{breakdown} = '';
 
 	my @front_aq;
 	my %front_aq;
 	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideOne')] if ! $$sig_specs{SideOneColours};
 	foreach ( @{$$sig_specs{SideOneColours}} ) {
-$openprint::log->debug('Front:'.$$_{name});
 		if (-1 != index($$_{name}, 'Aqueous')) {
 			push @front_aq, $_;
 			$front_aq{$$_{name}} = $_;
@@ -355,7 +355,6 @@ $openprint::log->debug('Front:'.$$_{name});
 	my %back_aq;
 	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideTwo')] if ! $$sig_specs{SideTwoColours};
 	foreach ( @{$$sig_specs{SideTwoColours}} ) {
-$openprint::log->debug("Back:".$$_{name});
 		if ( -1 != index($$_{name}, 'Aqueous') ) {
 			push @back_aq, $_;
 			$back_aq{$$_{name}} = $_;
@@ -561,7 +560,12 @@ $openprint::log->error("$type to W&T front: $front_aq{$type} back: $back_aq{$typ
 
 				my %ServicePrice = $Service->get_price($run_qty, $Equipment);
 				if ( ! %ServicePrice ) {
-					$$specs{'hdnBreakdown'.$qty_index} = 'No Service price for '.$type_name.'<br/>';
+          if ($Service = openprint::Service->find_one(name=>'Aqueous')) {
+            %ServicePrice = $Service->get_price($run_qty, $Equipment);
+          }
+        }
+				if ( ! %ServicePrice ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price for '.$type_name.'<br/>';
 					$ServicePrice{Total} = 1000000;
 				} # end if
 				if ( $ServicePrice{units} eq 'per 1000 impressions' ) {
@@ -575,8 +579,11 @@ $openprint::log->error("$type to W&T front: $front_aq{$type} back: $back_aq{$typ
 					$ServicePrice{Quantity} = $run_qty;
 					my $run_speed = $Equipment->specification('AqueousRunSpeed');
 					$ServicePrice{Total} = $ServicePrice{Price} * $run_qty / $run_speed if $run_speed;
+        } elsif ( $ServicePrice{units} eq 'per side' ) {
+          $ServicePrice{Quantity} = $run_qty;
+          $ServicePrice{Total} = $ServicePrice{Price} * $run_qty;
 				} else {
-					$$specs{'hdnBreakdown'.$qty_index} = "Unkown units ( $ServicePrice{units} ) for $$type{name}<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} = "Unkonwn units ( $ServicePrice{units} ) for $$type{name}<br/>";
 				} # end if
 				push @{$Price{ServicePrices}}, \%ServicePrice;
 				$Price{Service} += $ServicePrice{Total};
@@ -778,7 +785,21 @@ sub save {
 } # end sub
 
 sub summary {
-	return '';
+	my ( $Project, $service_index, $specs, $qty_index ) = @_;
+  my $summary = '';
+  if ($qty_index) {
+    foreach my $sig_id ( $Project->signatures( { sort=>1 } ) ) {
+      my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+      my $form = $$sig_specs{SignatureIndex};
+      if ($$specs{"ddmEquipment-$form-$qty_index"}) {
+        $summary .= $$specs{"txtImposition-$form-$qty_index"}.' out';
+        $summary .= ' on '.(new openprint::Equipment($$specs{"ddmEquipment-$form-$qty_index"})->name()).'<br/>';
+      }
+    } # end foreah;
+  } else {
+  }
+
+  return $summary;
 } # end sub summary
 
 sub has_overrides {
