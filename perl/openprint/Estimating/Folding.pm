@@ -388,7 +388,7 @@ sub signature_needs {
 				$openprint::log->warn("Folding not needed: PageQuantity: $page_quantity") if DEBUG_NEEDS;
 				return 0;
 			} # end if
-			if ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
+			if ( 0 and $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
 				# Need singltons... anything < 8pg sigs...might as well just cut them out
 				if ( $page_quantity < 8 ) {
 					return 0
@@ -404,7 +404,7 @@ sub signature_needs {
 			} # end foreah qty_index
 		} # end if
 
-		$openprint::log->debug("Folding::signature_needs: book sig return 1") if DEBUG_NEEDS;
+		$openprint::log->debug('Folding::signature_needs: book sig return 1') if DEBUG_NEEDS;
 		return 1;
 	} # end if
 

@@ -68,7 +68,7 @@ use constant DEBUG_IMPOSITIONS => 1;
 	'Work & TurnSetup'	=> { units => [ ] },
 	'Work & TumbleSetup'	=>	{ units=> [] },
 	'Sheet WorkSetup'		=>	{ units=> [] },
-	PressRunMinimumCharge	=>	{ units=> [] },
+	PressRunChargeMinimum	=>	{ units=> [] },
 	'\d*ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
 	'PressUnitMakeReady(.*)'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
 	PlateMakeReady					=>	{ units => [ 'per hour', 'per plate' ] },
@@ -819,7 +819,13 @@ sub get_colours {
 	#my ( $caller, undef, $line ) = caller;
 #$log->debug("Called get_colours from $caller : $line");
 	my @colours;
-	if ( ( defined $$specs{sides_the_same} ) and ( $$specs{sides_the_same} eq 'Y' ) and ( $side eq 'SideTwo' ) ) {
+	if ((
+        ( defined $$specs{sides_the_same} ) and ( $$specs{sides_the_same} eq 'Y' )
+        or
+        ( defined $$specs{side_link} ) and ( $$specs{side_link} eq '1' )
+        and ( $side eq 'SideTwo' )
+      )
+     ) {
 		$side = 'SideOne';
 	} # end if
 
@@ -848,7 +854,10 @@ sub get_colours {
 	foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
 	#foreach my $k ( keys %$specs ) {
 		#if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
-			next if ! $$specs{"chkColourCoating$index$side"};
+      if (! $$specs{"chkColourCoating$index$side"} ) {
+        $log->debug("No chkColourCoating for $index $side");
+        next ;
+      }
 			my $c = {
 				type => $$specs{"ColourCoatingType$index$side"},
 			};
@@ -6664,7 +6673,7 @@ $log->warn("Something wrong in AQ");
 	$price{'Press Setup'} = $press_setup;
 	$price{'Impression MPrice'} = List::Util::sum( map { $$_{MPrice} } @{$run_prices} );
 
-	$price{'Minimum Run Charge'} = openprint::service::get_price('PressRunMinimumCharge', undef, $Press);
+	$price{'Minimum Run Charge'} = openprint::service::get_price('PressRunChargeMinimum', undef, $Press);
 
 	if ( $run_cost < $price{'Minimum Run Charge'} ) {
 		$run_cost = $price{'Minimum Run Charge'};
@@ -6779,8 +6788,6 @@ $log->debug("Considering $$Press{strid}") if DEBUG_PRESSES;
 		my $paper_ok = 0;
 		my $Paper;
 
-		my $AQ_Min_Weight = $Press->Specification('Aqueous Minimum Weight') if $aqueous;
-
 		foreach $Paper ( @$Papers ) {
 			my $max_calliper = $Press->specification('Maximum Calliper', $$Paper{grade} );
 			if ( $max_calliper and ( $$Paper{calliper} > $max_calliper ) ) {
@@ -6804,11 +6811,6 @@ $log->debug("Considering $$Press{strid}") if DEBUG_PRESSES;
 			} # end if
 			if ( ( $$Paper{type} eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {
 				$results{$press_id} = "Failed Minimum Basis Weight Check **" . $Paper->basis_mweight() . ' < ' . $Press->specification('Minimum Basis Weight');
-				next;
-			} # end if
-			if ( $AQ_Min_Weight and ( $$AQ_Min_Weight{units} eq 'gsm' ) and ( $Paper->gsm() < $$AQ_Min_Weight{value} ) ) {
-				$results{$press_id} = " ** Press $press_id Failed Aqueous Minimum Weight Check (".$$AQ_Min_Weight{value}." > $$Paper{gsm})gsm<br/>";
-#$log->debug(" ** Press $press_id Failed Aqueous Minimum Weight Check (".$$AQ_Min_Weight{value}." > $$Paper{gsm})gsm<br/>");
 				next;
 			} # end if
 			$paper_ok = 1;
@@ -6899,10 +6901,6 @@ $log->debug("Considering $$Press{strid}") if DEBUG_PRESSES;
 				$results{$press_id} = 'Failed varnish check.';
 				next;
 			} # end if
-		} # end if
-		if ( $aqueous and ! sets::isin( $Press->specification('Aqueous Capable'), [ 'Y', 'When Printing', '1 Side' ] ) ) {
-			$results{$press_id} = 'Failed Aqueous check.';
-			next;
 		} # end if
 		if ( my $stocknames = $Press->specification('StockBrands') ) {
 			my ( @allowed, @disallowed );

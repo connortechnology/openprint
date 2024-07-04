@@ -1,5 +1,5 @@
 UPDATE users set type='A' where email='iconnor@connortechnology.com';
-update service_types set name='Aqueous',url='spec/Aqueous.html' where name='AQCoating';
+update service_types set name='Aqueous',type='Aqueous',url='spec/Aqueous.html' where name='AQCoating';
 UPDATE service_types set url='prep/proofs.html' WHERE url='prep/prep_proo.html';
 UPDATE service_types set type='Prepress' WHERE name='TypeSetting';
 UPDATE service_types set type='Prepress' WHERE name='FileCorrection';
@@ -97,6 +97,7 @@ INSERT INTO Configuration (Name,Value,Type,category,description) values ('Add_De
 INSERT INTO Configuration (Name,Value,Type,category,description) values ('Add_Default_Press_Proof','N','yesno','Estimating', 'Whether or not to add a Press proof to all projects.');
 INSERT INTO Configuration (Name,Value,Type,category,description) values ('DateFormat','%a %b %e, %Y','text','Miscellaneous', 'Format string for all displayed dates.');
 INSERT INTO Configuration (Name,Value,Type,category,description) values ('DateTimeFormat','%Y-%m-%d %H:%M','text','Miscellaneous', 'Format string used when displaying timstamps with both a date and a time part.');
+INSERT INTO Configuration (Name,Value,Type,category,description) values ('SpecialColourQuantity','5','number','Miscellaneous', 'Number of special colours to offer per side');
 INSERT INTO Configuration (Name,Value,Type,category,description) values ('UnitPriceRounding','0.001','number','Miscellaneous', 'Value to round unit prices to on projects.');
 INSERT INTO Configuration (Name,Value,Type,category,description) values ('ProjectMoneyFormat','%.0f.00','text','Miscellaneous', 'Format string used when displaying monetary amounts on projects.');
 INSERT INTO Configuration (Name,Value,Type,category,description) values ('UnitPriceFormat','%.2f','text','Miscellaneous', 'Format string used when displaying unit prices on projects.');
@@ -253,6 +254,8 @@ update projecttemplate set type='2Panel2Pocket', name='DoublePocket' where type=
 update projecttemplate set type='Landscape', name='Landscape' where type='PadsLandscape';
 update projecttemplate set type='Portrait', name='Portrait' where type='PadsPortrait';
 update projecttemplate set type='Square', name='Square' where type='PadsSquare';
+update projecttemplate set Type='Landscape', Name='Landscape' where type='PostersLandscape';
+update projecttemplate set Type='Portrait', Name='Portrait' where type='PostersPortrait';
 
 insert into material_categories (name) values ('Bundling');
 
@@ -261,18 +264,32 @@ insert into tbl_material_prices (lnglistindex,lngmaterialindex,lngequipmentindex
 insert into materials (name,description,category_id) values ('Paper Strips','Paper Strips',(SELECT id from material_categories where name='Bundling'));
 insert into materials (name,description,category_id) values ('Cross Banding','Cross Banding',(SELECT id from material_categories where name='Bundling'));
 
-insert into services (name,description, category_id) values ('Varnish Gloss Overall', 'Varnish Gloss Overall', (SELECT id from service_categories where name='Coating'));
-insert into services (name,description, category_id) values ('Varnish Gloss Spot', 'Varnish Gloss Spot', (SELECT id from service_categories where name='Coating'));
-insert into services (name,description, category_id) values ('Varnish Matte Overall', 'Varnish Matte Overall', (SELECT id from service_categories where name='Coating'));
-insert into services (name,description, category_id) values ('Varnish Matte Spot', 'Varnish Matte Spot', (SELECT id from service_categories where name='Coating'));
-insert into services (name,description, category_id) values ('Aqueous Matte', 'Aqueous Matte', (SELECT id from service_categories where name='Coating'));
-insert into services (name,description, category_id) values ('Aqueous Gloss', 'Aqueous Gloss', (SELECT id from service_categories where name='Coating'));
-insert into services (name,description, category_id) values ('Aqueous Slik', 'Aqueous Slik', (SELECT id from service_categories where name='Coating'));
-insert into services (name,description, category_id) values ('Aqueous Spot', 'Aqueous Spot', (SELECT id from service_categories where name='Coating'));
+insert into services (name,description, category_id) values ('Varnish Gloss Overall', 'Varnish Gloss Overall', (SELECT id from service_categories where name='Coatings'));
+insert into services (name,description, category_id) values ('Varnish Gloss Spot', 'Varnish Gloss Spot', (SELECT id from service_categories where name='Coatings'));
+insert into services (name,description, category_id) values ('Varnish Matte Overall', 'Varnish Matte Overall', (SELECT id from service_categories where name='Coatings'));
+insert into services (name,description, category_id) values ('Varnish Matte Spot', 'Varnish Matte Spot', (SELECT id from service_categories where name='Coatings'));
+/*
+insert into services (name,description, category_id) values ('Aqueous Matte', 'Aqueous Matte', (SELECT id from service_categories where name='Coatings'));
+insert into services (name,description, category_id) values ('Aqueous Gloss', 'Aqueous Gloss', (SELECT id from service_categories where name='Coatings'));
+insert into services (name,description, category_id) values ('Aqueous Silk', 'Aqueous Silk', (SELECT id from service_categories where name='Coatings'));
+insert into services (name,description, category_id) values ('Aqueous Soft Touch', 'Aqueous Soft Touch', (SELECT id from service_categories where name='Coatings'));
+*/
 
-update services set name='Aqueous' where name='AQCoating';
+update services set name='Aqueous', description='Aqueous' where name='AQCoating';
 update services set name='AqueousMakeReady' where name='AQCoatingMakeready';
-update services set name='AqueousMinimumCharge' where name='AQCoatingMininumCharge';
+update service_prices set service_id=(SELECT id from services where name='AqueousMakeReady') Where service_id=(SELECT id from services where name='AQCoatingMakeReady');
+
+update services set name='AqueousMinimumCharge' where name='AQCoatingMinimumCharge';
+
+insert into material_categories (name) values ('Coatings');
+insert into materials (name,description, category_id) values ('Aqueous Matte', 'Aqueous Matte', (SELECT id from material_categories where name='Coatings'));
+insert into materials (name,description, category_id) values ('Aqueous Gloss', 'Aqueous Gloss', (SELECT id from material_categories where name='Coatings'));
+insert into materials (name,description, category_id) values ('Aqueous Silk', 'Aqueous Silk', (SELECT id from material_categories where name='Coatings'));
+insert into materials (name,description, category_id) values ('Aqueous Soft Touch', 'Aqueous Soft Touch', (SELECT id from material_categories where name='Coatings'));
+INSERT INTO material_specifications (material_id,name,value,units) values ((SELECT id from materials where name='Aqueous Matte'),'Coverage', '372700','square inches per kg');
+INSERT INTO material_specifications (material_id,name,value,units) values ((SELECT id from materials where name='Aqueous Gloss'),'Coverage', '372700','square inches per kg');
+INSERT INTO material_specifications (material_id,name,value,units) values ((SELECT id from materials where name='Aqueous Silk'),'Coverage', '372700','square inches per kg');
+INSERT INTO material_specifications (material_id,name,value,units) values ((SELECT id from materials where name='Aqueous Soft Touch'),'Coverage', '279525','square inches per kg');
 
 update service_prices set units='per cut' where service_id = (SELECT id from Services where name='CuttingMakeReady');
 
@@ -512,3 +529,23 @@ UPDATE Services set name='PerfectingImpression4/4' where name='4-4ColourImpressi
 
 
 
+insert into services (name, description,category_id,servicetype_id) values 
+('Folding','Folding',
+  (SELECT id from SErvice_categories where name='Bindery'),
+  (SELECT id from service_types WHERE name='Folding')
+);
+insert into services (name, description,category_id,servicetype_id) values 
+('FoldingMakeReady','Folding Make Ready',
+  (SELECT id from SErvice_categories where name='Bindery'),
+  (SELECT id from service_types WHERE name='Folding')
+);
+INSERT into service_prices (pricelist_id,service_id,equipment_id,cost,markup,price,units,discountable) values
+(1,
+  (SELECT id from services where name='FoldingMakeReady'),
+  (select id from tbl_equipment where strname='DigiFold Pro'),
+  10,100,20,'','Y');
+
+UPDATE Services set name='3PanelZFold' where name='3PanelAccordianFold';
+UPDATE Services set name='4PanelZFold' where name='4PanelAccordianFold';
+UPDATE Services set name='3PanelZFoldMakeReady' where name='3PanelAccordianFoldMakeReady';
+UPDATE Services set name='4PanelZFoldMakeReady' where name='4PanelAccordianFoldMakeReady';

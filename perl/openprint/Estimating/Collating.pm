@@ -59,21 +59,20 @@ my @variables = (
 );
 
 sub variables {
-    return @variables;
+  return @variables;
 } # end sub variables
 
 sub has_overrides {
-    my ( $Project, $service_id, $specs ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+  my ( $Project, $service_id, $specs ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-    my @v;
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		push @v, "chkOverrideEquipment$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
-		push @v, "OverrideSignatureCount$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
-	} # end foreach
+  my @v;
+  foreach my $qty_index ( $Project->quantity_indexes() ) {
+    push @v, "chkOverrideEquipment$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
+    push @v, "OverrideSignatureCount$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
+  } # end foreach
 
-    return @v;
-
+  return @v;
 } # end sub has_overrides
 
 sub neccessary {
@@ -106,43 +105,60 @@ sub neccessary {
 } # end sub neccessary
 
 sub get_signature_count {
-  my ($Project, $specs, $Impositions, $calc_hash) = @_;
+  my ($Project, $specs, $qty_index, $Impositions, $calc_hash) = @_;
   my $folding_specs = $$calc_hash{FoldingSpecs};
+  my $services = $Project->services();
 
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		if ( (!$$specs{'OverrideSignatureCount'.$qty_index} ) or ( $$specs{'OverrideSignatureCount'.$qty_index} ne 'Y' ) ) {
-      $$specs{'txtSignatureCount'.$qty_index} = 0;
-      foreach my $I ( @$Impositions ) {
-        my $sig_specs = $$I{specs};
-        my $form = $$sig_specs{SignatureIndex};
-        if ( ! $$I{Folds} ) {
-          $openprint::log->error('Stitching: No folds in imposition, generating');
+  if ( (!$$specs{'OverrideSignatureCount'.$qty_index} ) or ( $$specs{'OverrideSignatureCount'.$qty_index} ne 'Y' ) ) {
+    $$specs{'txtSignatureCount'.$qty_index} = 0;
+    foreach my $I ( @$Impositions ) {
+      my $sig_specs = $$I{specs};
+      my $form = $$sig_specs{SignatureIndex};
+      if ( ! $$I{Folds} ) {
+        $openprint::log->error('Stitching: No folds in imposition, generating');
+        if ( DEBUG ) {
+          $I->display('No Folds');
+        }
+        if ( $folding_specs ) {
+          $$I{Folds} = [ openprint::Estimating::Folding::get_Folds($folding_specs, $I, $qty_index) ];
           if ( DEBUG ) {
-            $I->display('No Folds');
-          }
-          if ( $folding_specs ) {
-            $$I{Folds} = [ openprint::Estimating::Folding::get_Folds($folding_specs, $I, $qty_index) ];
-            if ( DEBUG ) {
-              foreach my $F ( @{$$I{Folds}} ) {
-                $F->display('pq:'.$$F{page_quantity});
-              } # end foreach F
-            } # end if
+            foreach my $F ( @{$$I{Folds}} ) {
+              $F->display('pq:'.$$F{page_quantity});
+            } # end foreach F
           } # end if
         } # end if
-        if ($$I{Folds}) {
-					foreach my $Fold_Imp ( @{$$I{Folds}} ) {
+      } # end if
+      if ($$I{Folds}) {
+        if (!@{$$I{Folds}}) {
+          $$specs{'txtSignatureCount'.$qty_index} += 1;
+        } else {
+          foreach my $Fold_Imp ( @{$$I{Folds}} ) {
             $I->display() if DEBUG;
             $$specs{'txtSignatureCount'.$qty_index} += ($$I{pages} / $$Fold_Imp{pages});
             # * $Fold_Imp->quantity() / ($$I{imposition}/$$Fold_Imp{imposition});
             $openprint::log->debug("Fold $qty_index: " . $$Fold_Imp{type} . ' ' . $Fold_Imp->pages() . 'pg ' . $Fold_Imp->quantity() . ' ' . $$Fold_Imp{imposition}. ' signature count:'.$$specs{'txtSignatureCount'.$qty_index} ) if DEBUG;
 
           } # end foreach Fold product
-				} else {
-					$$specs{'txtSignatureCount'.$qty_index} += $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize};
-				} # end if
-      } # end foreach Impositions
-    } # end if override
-  } # end foreach qty_index
+        }
+      } else {
+        $$specs{'txtSignatureCount'.$qty_index} += $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize};
+      } # end if
+    } # end foreach Impositions
+    foreach my $coilname ('PlasticCoil','MetalCoil','PlasticComb','Cerlox','DoubleLoopWire') {
+      if ($$services{$coilname} and @{$$services{$coilname}}) {
+        my $coil_specs = openprint::service::get_specs_ref($Project, $$services{$coilname}[0]);
+        $openprint::log->error("Have $coilname $$coil_specs{acetate_front} $$coil_specs{acetate_back}");
+        if ($$coil_specs{acetate_front}) {
+          $$specs{'txtSignatureCount'.$qty_index} += 1;
+        }
+        if ($$coil_specs{acetate_back}) {
+          $$specs{'txtSignatureCount'.$qty_index} += 1;
+        }
+      } else {
+        $openprint::log->error("Do not Have $coilname $$services{$coilname} ");
+      }
+    }
+  } # end if override
 } # end sub get_signature_count
 
 sub calc {
@@ -219,7 +235,7 @@ sub internal_calc {
   my $printing_specs = $$calc_hash{PrintingSpecs};
   my %bestPrice;
 
-  get_signature_count($Project, $specs, $impositions, $calc_hash);
+  get_signature_count($Project, $specs, $qty_index, $impositions, $calc_hash);
 
 	my $minimumCharge = openprint::service::get_price( 'CollatingMinimumCharge', undef, undef );
 
