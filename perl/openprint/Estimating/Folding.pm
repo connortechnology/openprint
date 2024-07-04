@@ -1630,15 +1630,17 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 					%setupPrice = openprint::service::get_price_object('FoldingMakeReady', $imposition, $Equipment);
 					%setupPrice = openprint::service::get_price_object('FoldMakeReady', $imposition, $Equipment) if ! %setupPrice;
 				} else {
-					$openprint::log->debug('Got MakeReady for ' . $Fold->type().'MakeReady' . ' imp:' . $imposition . ' $'.$setupPrice{Price}.' '.($setupPrice{units} ? $setupPrice{units}:'') ) if DEBUG;
-				} # end if
-				$Breakdown .= '<table><tr><td class="Description">MR: ';
-				if (!$setupPrice{units} and ! $makereadies{$$Equipment{id}}{$$Fold{type}.$imposition}) {
-          # This is the most common so test for it first.
-          $setupPrice{Total} = $setupPrice{Price};
-          $setupPrice{units} ||= '';
-					$total_MR += $setupPrice{Total};
-          $Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
+          $openprint::log->debug('Got MakeReady for ' . $Fold->type().'MakeReady' . ' imp:' . $imposition . ' $'.$setupPrice{Price}.' '.($setupPrice{units} ? $setupPrice{units}:'') ) if DEBUG;
+        } # end if
+        $Breakdown .= '<table><tr><td class="Description">MR: ';
+        if (!$setupPrice{units}){
+          if (! $makereadies{$$Equipment{id}}{$$Fold{type}.$imposition}) {
+            # This is the most common so test for it first.
+            $setupPrice{Total} = $setupPrice{Price};
+            $setupPrice{units} ||= '';
+            $total_MR += $setupPrice{Total};
+            $Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
+          }
 				} elsif ( $setupPrice{units} eq 'per form' ) {
 					$setupPrice{Total} = $setupPrice{Price};
 					$total_MR += $setupPrice{Total};
