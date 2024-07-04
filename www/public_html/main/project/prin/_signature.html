@@ -1,17 +1,15 @@
 <? if ( $$variable{Signature} ) ?>
 <fieldset id="SignatureGroup<?Signature?>" <? echo ( ( $$variable{Signature} == 1 and ( $$variable{rdbCover} ne 'Different' and $$variable{Backing} ne 'Printed' ) ) 
 ? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
-
-
 <legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ? $$variable{'txtServiceDescription'.$$variable{Signature}} : ( $$variable{Signature} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
-  <div id="templates<?Signature?>">
+  <div id="templates<?Signature?>" >
 <? echo (
   if ($$variable{'txtSignatureType'.$$variable{Signature}} eq 'Cover Pages') {
 	  return include('/includes/main/proj/templates/_signatures.html');
   } elsif ($$variable{'txtSignatureType'.$$variable{Signature}} eq 'Gate Folded Pages') {
 	  return include('/includes/main/proj/templates/_gatefolds.html');
   }
-       ) ?>
+) ?>
   </div>
 <div class="PagesAndSizes">
 	<div>
