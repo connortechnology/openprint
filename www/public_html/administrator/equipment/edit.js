@@ -79,9 +79,9 @@ function delete_fold_spec( id ) {
 } // end function delete_fold_spec
 
 function toggle_service_prices() {
-console.log('toggle');
   const div = $j('#show_service_prices');
   if (!div.html()) {
+    div.html('Loading...');
     div.load('/administrator/equipment/_service_prices.html?equipment_id='+$j('#ddmEquipment').val(),null, function(){
       update_event_bindings();
       });
