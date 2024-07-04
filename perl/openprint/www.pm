@@ -3,7 +3,7 @@ package openprint::www;
 use utf8;
 use open ( ':encoding(UTF-8)', ':std' );
 
-use constant Debug => 0;
+use constant Debug => 1;
 
 #use Benchmark;
 #use diagnostics;
@@ -169,7 +169,6 @@ sub handler {
 			} # end if
 		} # end if
 
-		openprint::pricing::init_cache();
 		foreach my $o ( split(',', $config{Cached_Objects} ) ) {
       eval {
         ('openprint::'.$o)->init_cache();
@@ -456,6 +455,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 		} # end if
 	} elsif ( $first eq 'main' ) { # main
 		if ( $second eq 'project' ) {
+      openprint::pricing::init_cache();
 			require openprint::print;
 			require openprint::print_project;
 			if ( ( defined $third ) or sets::isin($filename, ['Paper.html','Bundling.html','HStands.html']) ) {
