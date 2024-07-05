@@ -3,11 +3,20 @@
 <h2>List</h2>
 </div>
 <script>
-var openprint_load_content_ajax = null;
+var load_page_ajax = null;
 
 function load_page() {
-	if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
-	openprint_load_content_ajax = new Ajax.Updater( 'Results', '_list.html', { parameters: $('f1').serialize() } );
+  if ( load_page_ajax ) load_page_ajax.abort();
+  $j('#Results').html('Loading');
+  load_page_ajax = $j.ajax({
+    url: '_list.html',
+    data: $j('#f1').serialize(),
+    success: function(data) {
+      load_page_ajax = null;
+      $j('#Results').html(data);
+      $j('#Materials').bootstrapTable({ });
+    }
+  });
 } 
 
 addEventListener('DOMContentLoaded', (event) => {
