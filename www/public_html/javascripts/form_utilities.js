@@ -537,9 +537,11 @@ function select_all( form, name, checked, checker ) {
       if (element[i] != checker) {
         const on_click_this = element[i].getAttribute('on_click_this');
         if (on_click_this) {
-          if (window[on_click_this]) window[on_click_this](element[i]);
-        } else {
-          console.error("No function for "+on_click_this);
+          if (window[on_click_this]) {
+            window[on_click_this](element[i]);
+          } else {
+            console.error("No function for "+on_click_this);
+          }
         }
       }
 		} // end for

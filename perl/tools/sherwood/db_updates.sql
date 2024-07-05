@@ -278,6 +278,8 @@ insert into services (name,description, category_id) values ('Aqueous Soft Touch
 update services set name='Aqueous', description='Aqueous' where name='AQCoating';
 update services set name='AqueousMakeReady' where name='AQCoatingMakeready';
 update service_prices set service_id=(SELECT id from services where name='AqueousMakeReady') Where service_id=(SELECT id from services where name='AQCoatingMakeReady');
+update service_prices set units='per side' Where service_id=(SELECT id from services where name='Aqueous') and units IS NULL;
+update service_prices set units='per side' Where service_id=(SELECT id from services where name='Aqueous') and units ='';
 
 update services set name='AqueousMinimumCharge' where name='AQCoatingMinimumCharge';
 
@@ -549,3 +551,20 @@ UPDATE Services set name='3PanelZFold' where name='3PanelAccordianFold';
 UPDATE Services set name='4PanelZFold' where name='4PanelAccordianFold';
 UPDATE Services set name='3PanelZFoldMakeReady' where name='3PanelAccordianFoldMakeReady';
 UPDATE Services set name='4PanelZFoldMakeReady' where name='4PanelAccordianFoldMakeReady';
+
+INSERT INTO material_categories (name) values ('Printing');
+
+INSERT INTO Materials (name, description,category_id) values ('CyanInk','Cyan Ink', (SELECT id from Material_categories where name='Printing'));
+INSERT INTO Materials (name, description,category_id) values ('MagentaInk','Magenta Ink', (SELECT id from Material_categories where name='Printing'));
+INSERT INTO Materials (name, description,category_id) values ('YellowInk','Yellow Ink', (SELECT id from Material_categories where name='Printing'));
+INSERT INTO Materials (name, description,category_id) values ('BlackInk','Black Ink', (SELECT id from Material_categories where name='Printing'));
+insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='CyanInk'), 'Coverage', 920000, 1,1, 'square inches per kg');
+insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='CyanInk'), 'Coverage', 862500, 2,2, 'square inches per kg');
+insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='CyanInk'), 'Coverage', 920000, 3,3, 'square inches per kg');
+insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='CyanInk'), 'Coverage', 715555, 4,5, 'square inches per kg');
+
+insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='CyanInk'), 'Coverage', 920000, 1,1, 'square inches per kg');
+insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='CyanInk'), 'Coverage', 862500, 2,2, 'square inches per kg');
+insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='CyanInk'), 'Coverage', 920000, 3,3, 'square inches per kg');
+insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='CyanInk'), 'Coverage', 715555, 4,5, 'square inches per kg');
+insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='BlackInk'), 'Coverage', 920000, 1,1, 'square inches per kg');
