@@ -44,7 +44,7 @@
 
 		if ( $ServiceCategory->name() eq 'Printing' ) {
       $html .= '<tr class="category '.$ServiceCategory->name().'">
-      <td class="name">'.$ServiceCategory->name().'</td>'.join('', map { '<td></td>' } ($Project->quantities(), $Project->status(), 'actions')).'</tr>';
+        <td class="description">'.$ServiceCategory->name().'</td>'.join("\n", (map { '<td class="price"></td>' } $Project->quantities()), '<td class="status"></td><td class="actions unprintable"></td>').'</tr>';
 			my $function_name = 'openprint::Estimating::'.$Project_Type->type();
 			my $summary = '';
 			if ( my $function = $function_name->can('summary') ) {
@@ -270,7 +270,7 @@
       next if !@service_ids;
 
       $html .= '<tr class="category '.$ServiceCategory->name().'">
-      <td class="name">'.$ServiceCategory->name().'</td>'.join('', map { '<td></td>' } ($Project->quantities(), $Project->status(), 'actions')).'</tr>';
+        <td class="description">'.$ServiceCategory->name().'</td>'.join("\n", (map { '<td class="price"></td>' } $Project->quantities()), '<td class="status"></td><td class="actions unprintable"></td>').'</tr>';
 
       foreach my $service_id (@service_ids) {
         my $Service = $Project->Service( $service_id );
@@ -504,7 +504,7 @@ $html .= '</td>';
 ) ?>
 <? if ( $session{user_type} eq 'A' or ! $$variable{Project}->Ordered_Product() ) ?>
 			<tr class="Prices UnitPrices"> 
-				<td>Unit Prices</td>
+				<td class="description">Unit Prices</td>
 				<? echo ( my $html = '';
 					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 						$html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $$variable{Project}->unit_price($qty_index)), 4).'</td>';
@@ -517,7 +517,7 @@ $html .= '</td>';
 				<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
 			</tr>
 			<tr class="Prices MPrices">
-				<td>Additional M Prices</td>
+				<td class="description">Additional M Prices</td>
 				<? echo ( my $html = '';
 					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 						$html .= '<td class="price">'.openprint::Currency::format($$variable{Project}->Currency()->convert_from( $$variable{Project}->m_price($qty_index)), 4).'</td>';
