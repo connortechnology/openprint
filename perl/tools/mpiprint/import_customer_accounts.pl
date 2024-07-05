@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 use strict;
+use warnings;
 use lib '/var/www/testing/perl';
 
 my $limit = 10;
@@ -24,7 +25,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help',
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s', 'db_port=s', 'debug=s', 'file=s',
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s', 'db_port=s', 'debug=s', 'file=s', 'y',
  );
 
 if ($opts->{help}) {
@@ -66,25 +67,32 @@ require openprint::User;
 my $csv = Text::CSV_XS->new();
 open ( FH, "$$opts{file}" ) or die "Can't open $$opts{file} : $!";
 my @Companies = openprint::Company->find();
-my %Companies = map { $_->name(), $_ } @Companies;
+my %Companies = map { $_->name()=> $_ } @Companies;
 my %Companies2 = map { $_->business_name(), $_ } @Companies;
 while ( <FH> ) {
 	my $status = $csv->parse($_);
   #Customer,Contact First Name,Contact Last Name,Add. Line 1,City,State,Zip,Country
 	my ($name, $firstname, $lastname, $address, $city, $state, $zip, $country ) = misc::trim($csv->fields());
 	next if ! $name;
+  next if $name eq 'Customer';
+  my $business_name = $name;
+  $name = openprint::Company->transform(name=>$name);
 
 	my $Company = $Companies{$name};
 
-	if ( ! $Company ) {
-    $Company = new openprint::Company();
-    $Company->save({name=>$name,
-        address1=>$address,
-        city=>$city,
-        state=>$state,
-        postalcode=>$zip,
-        country=>$country
-      });
+  if ( ! $Company ) {
+    print "Company? $name $Companies{$name}\n";
+    if (confirm("Create ($name) $address ?", 'Y')){
+      $Company = new openprint::Company();
+      $Company->save({name=>$name,
+          business_name => $name,
+          address1=>$address,
+          city=>$city,
+          state=>$state,
+          postalcode=>$zip,
+          country=>$country
+        });
+    }
 	} # end if
 
   #my $User = new openprint::User( );
@@ -107,6 +115,24 @@ Command-line options:
 
 EOH
 } # end sub usage
+
+sub confirm {
+  my $prompt = shift;
+  my $default = @_ ? lc shift : 'y';
+  print $prompt ? $prompt : "Confirm? (Y|n)";
+  if ( $$opts{y} ) {
+    print "Y\n";
+    return 1;
+  }
+  if ( $$opts{n} ) {
+    print "N\n";
+    return 0;
+  }
+  $_=<STDIN>; chomp;
+  return 1 if $_ and ( lc($_) eq 'y');
+  return 1 if (!$_) and ($default eq 'y');
+  return 0;
+}
 
 1;
 __END__
