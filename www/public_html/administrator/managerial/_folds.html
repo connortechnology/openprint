@@ -5,7 +5,7 @@
 		( $session{$uri.'?equipment_id'} ? ( equipment_id => [split(',',$session{$uri.'?equipment_id'})] ) : () ),
 		( $session{$uri.'?type'} ? ( type => [split(',',$session{$uri.'?type'})] ) : () ),
     ( $session{$uri.'?imposition'} ? (
-    'min_imposition <='=>$session{$uri.'?imposition'},
+    'min_imposition <=' =>$session{$uri.'?imposition'},
     'max_imposition <=' => $session{$uri.'?imposition'} ) : () ),
     map { $session{$uri.'?'.$_} ne '' ? ($_ => $session{$uri.'?'.$_}) : () } ( 'stitching','perfectbind','spinepaste' ),
 		);
@@ -13,22 +13,41 @@
     $$variable{Folds} = [ openprint::Fold->find( %filters ) ];
 ) ?>	
 <? if ( @{$$variable{Folds}} ) ?>
-	<table class="List">
+<table class="List sortable table-striped" id="FoldsTable"
+    data-pagination="true"
+    data-search="true"
+    data-show-pagination-switch="true"
+    data-cookie="true"
+    data-cookie-same-site="Strict"
+    data-cookie-id-table="FoldsTable"
+    data-cookie-expire="2y"
+    data-show-columns="true"
+    data-show-export="true"
+    data-columns-hidden="[]"
+    data-uncheckAll="true"
+    data-click-to-select="true"
+    data-check-on-init="true"
+    data-mobile-responsive="true"
+    data-min-width="562"
+  >
+  <thead>
 		<tr> 
       <th class="checkbox"><input type="checkbox" onclick="select_all(this.form, 'fold_id', this.checked);"/></th>
-			<th class="Equipment">Equipment</th>
-			<th class="Fold">Name</th>
-			<th class="Type">Type</th>
-			<th class="Orientation">Orientation</th>
-			<th class="Pages">Pages</th>
-			<th class="Folds">Folds</th>
-			<th class="Angles">Angles</th>
-			<th class="MinMaxImposition">Min/Max Imposition</th>
-			<th class="MinMaxWidth">Min/Max Width</th>
-			<th class="MinMaxHeight">Min/Max Height</th>
-			<th class="MRMinutes">MR Minutes</th>
-			<th class="Speed">Speed</th>
+			<th class="Equipment" data-field="Equipment" data-sortable="true">Equipment</th>
+			<th class="Fold" data-field="FoldName" data-sortable="true">Name</th>
+			<th class="Type" data-field="FoldType" data-sortable="true">Type</th>
+			<th class="Orientation" data-field="Orientation" data-sortable="true">Orientation</th>
+			<th class="Pages" data-field="Pages" data-sortable="true">Pages</th>
+			<th class="Folds" data-field="Folds" data-sortable="true">Folds</th>
+			<th class="Angles" data-field="Angles" data-sortable="true">Angles</th>
+			<th class="MinMaxImposition" data-field="MinMaxImposition" data-sortable="true">Min/Max Imposition</th>
+			<th class="MinMaxWidth" data-sortable="true">Min/Max Width</th>
+			<th class="MinMaxHeight" data-sortable="true">Min/Max Height</th>
+			<th class="MRMinutes" data-sortable="true">MR Minutes</th>
+			<th class="Speed" data-sortable="true">Speed</th>
 		</tr>
+                     </thead>
+                     <tbody>
 <? echo (
 	my $html;
 	my $rowclass;
@@ -82,10 +101,13 @@ join( '<br/>', map { join(' to ',
 	} # end foreach
 	return $html;
 ) ?>
+<!--
 <tr class="totals">
   <td class="checkbox"></td>
-  <td colspan="11"><?echo(scalar @{$$variable{Folds}})?> folds</td>
+  <td colspan="12"><?echo(scalar @{$$variable{Folds}})?> folds</td>
 </tr>
+-->
+  </tbody>
 </table>
 <? else ( @{$$variable{Folds}} ) ?>
 There were no results matching your criteria.<br>

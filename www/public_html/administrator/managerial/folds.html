@@ -3,53 +3,58 @@
 <h2>Folds</h2>
 </div>
 <script>
+addEventListener('DOMContentLoaded', (event) => {
+  $j('#FoldsTable').bootstrapTable({ });
+});
+
 var load_page_ajax = null;
 function load_page() {
-	if ( load_page_ajax ) load_page_ajax.abort();
-    load_page_ajax = $j.ajax({
-            url: '_folds.html',
-            data: $j('#f1').serialize(),
-            success: function(data) {
-                load_page_ajax = null;
-                $j('#Folds').html(data)
-              }
-      });
-  } 
-  function popup_fold(fold_id) {
-      window.location.href='fold.html?fold_id='+fold_id;
-      return;
-      popup_window('/administrator/equipment/_fold.html?fold_id='+fold_id, null, { width: '1000px' });
+  if ( load_page_ajax ) load_page_ajax.abort();
+  load_page_ajax = $j.ajax({
+    url: '_folds.html',
+    data: $j('#f1').serialize(),
+    success: function(data) {
+      load_page_ajax = null;
+      $j('#Folds').html(data)
+      $j('#FoldsTable').bootstrapTable({ });
     }
-  function add_fold() {
-      const equipment_id = $j('#equipment_id').val();
-      if (!equipment_id) {
-          alert('Please select the equipment to add the fold to.');
-          return;
-        }
-      window.location.href='fold.html?action=add&equipment_id='+equipment_id;
-      return;
-      new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id='+equipment_id, {
-          onSuccess: function(response){
-              new Insertion.Top($('Folds'), response.responseText);
-              SortableTable.load();
-            }
-        });
+  });
+} 
+function popup_fold(fold_id) {
+  window.location.href='fold.html?fold_id='+fold_id;
+  return;
+  popup_window('/administrator/equipment/_fold.html?fold_id='+fold_id, null, { width: '1000px' });
+}
+function add_fold() {
+  const equipment_id = $j('#equipment_id').val();
+  if (!equipment_id) {
+    alert('Please select the equipment to add the fold to.');
+    return;
+  }
+  window.location.href='fold.html?action=add&equipment_id='+equipment_id;
+  return;
+  new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id='+equipment_id, {
+    onSuccess: function(response){
+      new Insertion.Top($('Folds'), response.responseText);
+      SortableTable.load();
     }
-  function add_fold_spec(btn) {
-      const form_id = btn.form.fold_id;
-      new Ajax.Request('/administrator/equipment/_fold_specification.html?action=add&fold_id='+fold_id, {
-          onSuccess: function(response){
-              new Insertion.Bottom($('FoldSpecifications'+fold_id), response.responseText);
-              SortableTable.load();
-            }
-        });
+  });
+}
+function add_fold_spec(btn) {
+  const form_id = btn.form.fold_id;
+  new Ajax.Request('/administrator/equipment/_fold_specification.html?action=add&fold_id='+fold_id, {
+    onSuccess: function(response){
+      new Insertion.Bottom($('FoldSpecifications'+fold_id), response.responseText);
+      SortableTable.load();
     }
-  function delete_folds() {
-      console.log('delete folds');
-      jQuery('#Folds').load('/administrator/managerial/_folds.html?action=delete', {
-          fold_id: get_value( document.getElementById('f1').fold_id )
-        } );
-    }
+  });
+}
+function delete_folds() {
+  console.log('delete folds');
+  jQuery('#Folds').load('/administrator/managerial/_folds.html?action=delete', {
+    fold_id: get_value( document.getElementById('f1').fold_id )
+  } );
+}
 </script>
 <form id="f1" name="f1" method="post" action="folds.html">
   <input type="hidden" name="btnFunction"/>
