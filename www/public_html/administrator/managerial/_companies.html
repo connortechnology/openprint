@@ -78,10 +78,10 @@
 <p class="button">
 '. join("\n",
 $can_destroy ? (
-      button( 'destroy', { 'data-on-click'=>'destroy_clicked', text=>'Destroy Checked' } ),
-      button( 'undelete', { 'data-on-click'=>'undelete_clicked', text=>'Undelete Checked' } ),
+      button( 'destroy', { on_click=>'destroy_clicked', text=>'Destroy Checked' } ),
+      button( 'undelete', { on_click=>'undelete_clicked', text=>'Undelete Checked' } ),
       ) : (
-      button( 'delete', { 'data-on-click'=>'delete_clicked', text=>'Delete Checked' } ),
+      button( 'delete', { on_click=>'delete_clicked', text=>'Delete Checked' } ),
       )
 ).' </p>';
 	return $html;
