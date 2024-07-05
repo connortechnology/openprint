@@ -172,6 +172,7 @@ height: 100%;
 }
 .Project table .description {
 	text-align: left;
+  padding-left: 2px;
 }
 .Project table .status {
 	text-align: right;
