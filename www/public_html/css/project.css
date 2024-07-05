@@ -30,6 +30,14 @@ height: 100%;
 .Project .Header .Description li {
     text-align: left;
 }
+.Reference p {
+
+}
+.Reference br {
+  line-height: 0;
+  height: 0;
+  display: none;
+}
 
 .Project .Header fieldset ul {
 	margin: 0;
