@@ -199,7 +199,7 @@ sub edit {
         }
       } # end foreach Fold
 
-      misc::export_csv( $r, $log, \%variable, 'fold_definitionss'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
+      misc::export_csv( $r, $log, \%variable, 'fold_definitions'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
       (new openprint::Log())->save({ action=>'Export Fold Definitions' });
     } elsif ( $param{btnFunction} eq 'Import Folds' ) {
       my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
