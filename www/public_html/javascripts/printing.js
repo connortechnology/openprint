@@ -613,18 +613,18 @@ function cbStockFillResults( results ) {
 window.addEventListener('DOMContentLoaded', function() {
 	calc('f1');
 
-// Register side linking and set initial page state.
-  const link = document.getElementById('side_link');
-  const side = document.getElementById('InksOnBackQuestions');
-
-  if (! (side && link) ) {
-    console.log(link,side,'not found');
-    return;
-  }
-
-  // Set the initial status on page load.
-  if (link.checked) link_sides.apply(link);
-  link.onclick = link_sides.bind(link);
+  $j('.side_link').each(function(index, link) {
+    const signature_index = link.getAttribute('data_signature_index');
+    const side = document.getElementById('InksOnBackQuestions'+signature_index);
+      console.log(link,side, 'not found');
+    if (! (side && link) ) {
+      console.log(link,side, 'not found');
+      return;
+    }
+    // Set the initial status on page load.
+    if (link.checked) link_sides.apply(link);
+    link.onclick = link_sides.bind(link);
+  });
   console.log('done');
 });
 
@@ -632,7 +632,8 @@ window.addEventListener('DOMContentLoaded', function() {
 // handles replicating the fields across when they are linked.
 function link_sides(e) {
   const linked = this.checked;
-  const side   = $('InksOnBackQuestions');
+  const signature_index = this.getAttribute('data_signature_index');
+  const side   = document.getElementById('InksOnBackQuestions'+signature_index);
   const colour = linked ? '#999999' : '';
 
   // When disabled we grey out the side.
@@ -641,7 +642,7 @@ function link_sides(e) {
   side.style.borderColor     = colour;
 
   // Display a message to the user if we're disabled.
-  const side2_linked = $('side2_linked');
+  const side2_linked = document.getElementById('side2_linked'+signature_index);
   if (side2_linked) side2_linked.style.display = linked ? 'block' : 'none';
 
   side.descendants().each(function (elem) {
