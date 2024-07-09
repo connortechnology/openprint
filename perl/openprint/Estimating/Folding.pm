@@ -1079,7 +1079,7 @@ $openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"
 
 			my %folds;
 			if ( DEBUG ) {
-				$openprint::log->debug("Impositions in this set: " . @$Set_Of_Impositions );
+				$openprint::log->debug('Impositions in this set: ' . @$Set_Of_Impositions );
 				for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
 					my $Imposition = $$Set_Of_Impositions[$imp_index];
 					$Imposition->display();
@@ -1180,7 +1180,7 @@ $openprint::log->debug("Type: $fold_type for $form-$qty_index-$fi_index ".$$spec
 
 					if ($fold_type and $fold_types{$fold_type}) {
 						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height() );
-						$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' (' . ($rc ? $rc : '' ).')' ) if DEBUG;
+						$openprint::log->debug('Trying to fit ' . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' (' . ($rc ? $rc : '' ).')' ) if DEBUG;
 						if ( $rc ) {
 							if ( $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
 								if ( @my_equipment == 1 ) {
@@ -1208,12 +1208,16 @@ $openprint::log->debug("Type: $fold_type for $form-$qty_index-$fi_index ".$$spec
 							columns					=>	$$Imposition{columns},
 							rows						=>	$$Imposition{rows},
 							printing_type		=>	$ppt,
+                stitching		=>	(($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0),
+                perfectbind		=>	($$services{PerfectBound} ? 1 : 0),
+                spinepaste		=>	($$services{SpinePaste} ? 1 : 0),
 							spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
 							grain_direction	=>	$Imposition->grain_direction(),
 							});
 
 						if ( ! $Fold ) {
 							if ( (!$$specs{"chkOverrideLimits-$form-$qty_index"} ) or ($$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y') ) {
+$openprint::log->error("No fold and not overriden");
 # Don't do this, because we may be printing a 2x2 8pg fold, but this will allow us to fold a parallel 8pg
 if ( 0 ) {
 							$Fold = $Equipment->Fold({
