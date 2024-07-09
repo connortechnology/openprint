@@ -24,6 +24,7 @@ height: 100%;
     flex: 1;
     width: 48%;
     min-width: 275px;
+margin-bottom: 5px;
 }
 .Project .Header .Comments li ,
 .Project .Header .Reference li ,
@@ -39,6 +40,8 @@ height: 100%;
   display: none;
 }
 
+.Project .Header fieldset  {
+}
 .Project .Header fieldset ul {
 	margin: 0;
 	padding: 0;
@@ -170,9 +173,15 @@ height: 100%;
 }
 .Project .View table .price .price {
 }
-.Project table .description {
+.Project table td.description {
 	text-align: left;
-  padding-left: 2px;
+  padding-left: 14px;
+}
+table th.description {
+  padding-left: 4px;
+}
+table .category td.description {
+  padding-left: 6px;
 }
 .Project table .status {
 	text-align: right;
