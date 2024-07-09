@@ -41,10 +41,10 @@
 	$$variable{category_totals} = {};
 
 	foreach my $ServiceCategory ( @{$$variable{Categories}} ) {
-
 		if ( $ServiceCategory->name() eq 'Printing' ) {
-      $html .= '<tr class="category '.$ServiceCategory->name().'">
+    $html .= '<tr class="category '.$ServiceCategory->name().'">
         <td class="description">'.$ServiceCategory->name().'</td>'.join("\n", (map { '<td class="price"></td>' } $Project->quantities()), '<td class="status"></td><td class="actions unprintable"></td>').'</tr>';
+
 			my $function_name = 'openprint::Estimating::'.$Project_Type->type();
 			my $summary = '';
 			if ( my $function = $function_name->can('summary') ) {
@@ -268,9 +268,10 @@
         push @service_ids, @{$$services{$ServiceType->name()}};
       }
       next if !@service_ids;
+    $html .= '
+<tr class="category '.$ServiceCategory->name().'">
+  <td class="description">'.$ServiceCategory->name().'</td>'.join("\n", (map { '<td class="price"></td>' } $Project->quantities()), '<td class="status"></td><td class="actions unprintable"></td>').'</tr>';
 
-      $html .= '<tr class="category '.$ServiceCategory->name().'">
-        <td class="description">'.$ServiceCategory->name().'</td>'.join("\n", (map { '<td class="price"></td>' } $Project->quantities()), '<td class="status"></td><td class="actions unprintable"></td>').'</tr>';
 
       foreach my $service_id (@service_ids) {
         my $Service = $Project->Service( $service_id );
@@ -352,7 +353,7 @@ $html .= '</td>';
         $html .= "</tr>\n";
         if ( @summaries ) {
           for ( my $line = 0; $line < @summaries; $line += 1 ) {
-            $html .= "<tr$rowclass><td>";
+            $html .= "<tr$rowclass><td class=\"description\">";
             if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() ) {
               $html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d">%4$s</a>`, $ServiceType->url(), $Project->id(), $service_id, $summaries[$line] );
             } else {
@@ -392,6 +393,7 @@ $html .= '</td>';
       } # end foreach service_id
 		} # end if Printing or else
 	} # end foreach ServiceType_Category
+
 	foreach my $service_id ( keys %statuses ) {
 		my $Service = $Project->Service( $service_id );
 		my $ServiceType = $Service->ServiceType();
@@ -469,7 +471,7 @@ $html .= '</td>';
 		$html .= "</tr>\n";
 		if ( @summaries ) {
 			for ( my $line = 0; $line < @summaries; $line += 1 ) {
-				$html .= "<tr$rowclass><td>";
+				$html .= "<tr$rowclass><td class=\"description\">";
 				if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() ) {
 					$html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d">%4$s</a>`, $ServiceType->url(), $Project->id(), $service_id, $summaries[$line] );
 				} else {
