@@ -220,6 +220,7 @@ sub calc {
 				$$specs{alert} .= "Press $$Press{name} cannot do " . $$specs{"ddmRunStyle-$group_id"}.'<br/>';
 			}
 		}
+    $sig_specs{alert} =~ s/<br\/>$//;
 		$$specs{alert} .= $sig_specs{alert} .' for group ' . $group_id . ' ' . $$specs{'txtServiceDescription'.$group_id}. '<br/>' if $sig_specs{alert};
 
 		if ( ! exists $override_pages{$group_id} ) {
