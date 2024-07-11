@@ -201,7 +201,7 @@ sub continue_project {
 	}
 	$log->debug('STARTING continue_project');
 
-	my ( $service_index, $redirect ) = choose_service($log, $dbh, $$Project{id});
+	my ( $service_index, $redirect ) = choose_service($log, $dbh, $$Project{id}, $incoming_service_index);
 
 	if ( ! $service_index ) {
 			$log->debug('No service_index for '.$Project->to_string());
