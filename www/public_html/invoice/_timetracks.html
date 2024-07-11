@@ -41,7 +41,7 @@ Date::Format::time2str( $Timetrack->time_associated() ? $config{DateTimeFormat} 
 ) : ( '','' ),
 $Timetrack->elapsed_formatted(),
 #misc::seconds_to_pretty_interval( $Timetrack->elapsed() ),
-openprint::Currency::format( $$Price{price} ) . $Timetrack->Currency()->short(), $Price->units(),
+openprint::Currency::format( $$Price{price} ) . $Timetrack->Currency()->short(), $$Price{units},
 openprint::Currency::format( $$Price{total} ),
 button( 'del'.$Timetrack->id(), { 'data-on-click-this'=>'del_timetrack', 'data-id'=>$$Timetrack{id}, text=>'-' } ),
 $desc );
