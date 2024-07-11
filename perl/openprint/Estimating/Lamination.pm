@@ -331,6 +331,8 @@ sub calc {
 
         my %ServicePrice = $Service->get_price( undef, $Equipment ) if $Service;
         if ( %ServicePrice ) {
+          $ServicePrice{units} //= '';
+
           if ( $ServicePrice{units} eq 'per m' ) {
             $ServicePrice{Total} = ($ServicePrice{Price} * $qty)/1000;
             $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f %2$s * %4$f = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
@@ -410,7 +412,7 @@ sub calc {
               $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: unknown units: (%s)<br/>', $FrontMaterialPrice->to_string() );
             } # end if
             $price += $$FrontMaterialPrice{Total};
-            $MPrice += ( 1000 / $imposition->imposition() ) * $$FrontMaterialPrice{Total}/$sheets;
+            $MPrice += ( 1000 / $$imposition{imposition} ) * $$FrontMaterialPrice{Total}/$sheets;
           } else {
             $$specs{'hdnBreakdown'.$qty_index} .= sprintf('No Material found for Front: (%s)<br/>', $$specs{"TypeFront-$form"} );
           } # end if Material Found
@@ -436,7 +438,7 @@ sub calc {
               $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: unknown units: (%s)<br/>', $BackMaterialPrice{units} );
             } # end if
             $price += $BackMaterialPrice{Total};
-            $MPrice += ( 1000 / $imposition->imposition() ) * $BackMaterialPrice{Total}/$sheets;
+            $MPrice += ( 1000 / $$imposition{imposition} ) * $BackMaterialPrice{Total}/$sheets;
           } else {
             $$specs{'hdnBreakdown'.$qty_index} .= sprintf('No Material found for Back: (%s)<br/>', $$specs{"TypeBack-$form"} );
           } # end if Material Found
@@ -468,16 +470,17 @@ sub calc {
     } # end foreach signature
 
 		if ((!$$specs{"OverridePrice$qty_index"}) or ( $$specs{"OverridePrice$qty_index"} ne 'Y')) {
+      $totalPrice{Price} //= 0;
       $totalPrice{UnitPrice} = $totalPrice{Price}/$qty;
 			if ( $$specs{"Markup$qty_index"} ) {
 				$totalPrice{Price} *= 1+$$specs{"Markup$qty_index"}/100;
 				$totalPrice{UnitPrice} *= 1+$$specs{"Markup$qty_index"}/100;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Using %s% markup = $%.2f<br/>', $$specs{"Markup$qty_index"}, $totalPrice{Price} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Using %s%% markup = $%.2f<br/>', $$specs{"Markup$qty_index"}, $totalPrice{Price} );
 			}
 			if ( $Project->markup() ) {
 				$totalPrice{Price} *= 1+$Project->markup()/100;
 				$totalPrice{UnitPrice} *= 1+$Project->markup()/100;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Using %s% project markup = $%.2f<br/>', $Project->markup(), $totalPrice{Price} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Using %s%% project markup = $%.2f<br/>', $Project->markup(), $totalPrice{Price} );
 			} 
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $totalPrice{Price} );
       $$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $totalPrice{UnitPrice} );
