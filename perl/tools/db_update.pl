@@ -4272,6 +4272,7 @@ if ( $version < $new_version ) {
 if ( ! sets::isin( 'paper_prices', \@tables ) ) {
   if (sets::isin('tbl_paper_prices', \@tables)) {
     $dbh->do('ALTER TABLE tbl_paper_prices RENAME to paper_prices') or die $dbh->errstr();
+    push @tables, 'paper_prices';
   } else {
     load_sql( 'Paper_Prices' );
   }
