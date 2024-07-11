@@ -45,13 +45,11 @@ sub calc {
 
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
-
 } # end sub display
+
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
-
 	return '';
-
 } # end sub summary
 
 1;
