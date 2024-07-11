@@ -159,18 +159,18 @@ sub signature_needs {
 		return 0;
 	} # end if
   my $book_type = $Project->get_book_type();
-  if (sets::isin($book_type, ['Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound'])) {
+  if ($book_type and sets::isin($book_type, ['Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound'])) {
 		return 0;
   }
-	if ( 
-			( $$sig_specs{txtSignatureType} eq '' ) 
+	if ( !$$sig_specs{txtSignatureType}
+			or ( $$sig_specs{txtSignatureType} eq '' ) 
 			or ( $$sig_specs{txtSignatureType} eq 'Cover Pages' ) 
 			or ( $$sig_specs{txtSignatureType} eq 'Gate Folded Pages' ) 
       or ($$sig_specs{txtSignatureType} and $$sig_specs{GroupPageQuantity} and ($$sig_specs{GroupPageQuantity} == 6))
 			or ( $$sig_specs{txtSignatureType} and ( ! $Project->signatures({type=>'Cover Pages'}) ) and ( $form == 1 ) )
 			) {
 		if ( ! $Paper ) {
-			$openprint::log->error("Loading paper in Scoring::signature_needs");
+			$openprint::log->error('Loading paper in Scoring::signature_needs');
 			$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
 		}
 	$openprint::log->debug( "Score Required for form $form!: " . $Paper->score_required() );
