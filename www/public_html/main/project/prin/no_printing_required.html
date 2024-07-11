@@ -1,31 +1,31 @@
 <div class="PageTitle">
-<h1>Printing</h1>
+<h1>No Printing Required</h1>
 </div>
-<script type="text/javascript" src="<?hash_link(/javascripts/printing.js)?>"></script>
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
-<script type="text/javascript" src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link(/javascripts/printing.js)?>"></script>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
+<script>
 	var quantities=new Array();
 	<?QUANTITIES?>
 	var projectType = "<?ProjectTypeID?>";
 </script>
 <?include(/main/project/prin/_templates.html) ?>
 <? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-<script type="text/javascript" src="<?hash_link(/javascripts/proj/calc_presentation_folder.js)?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link(/javascripts/proj/calc_presentation_folder.js)?>"></script>
+<script>
 	function calc() {
 		calc_presentation_folder('f1');
 	}
 </script>
-<script type="text/javascript" src="<?hash_link(/javascripts/templates/presentation_folders.js)?>"></script>
+<script src="<?hash_link(/javascripts/templates/presentation_folders.js)?>"></script>
 <? else ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-<script type="text/javascript">
+<script>
 	function calc( formName, force ) {
 		calc_print( formName, force );
 	}
 </script>
 <? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-<script type="text/javascript" src="<?hash_link(/javascripts/templates/brochures.js)?>"></script>
+<script src="<?hash_link(/javascripts/templates/brochures.js)?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<?include(/includes/main/proj/hdn_fields_printing.html) ?>
@@ -158,7 +158,7 @@
 </fieldset>
 <!-- End of Input - Start of Results -->
 		<fieldset><legend>Results</legend>
-			<?include(/includes/main/proj/printing_results.html) ?>
+			<?include(/includes/main/proj/printing_results_no_printing.html) ?>
 		</fieldset>
 		<!-- End of Results -->
 		<hr/>
@@ -166,6 +166,6 @@
 		<?include(/includes/main/proj/add_to_project.html) ?>
 	</form>
 </div><!-- Service -->
-<script type="text/javascript">
+<script>
 addLoadEvent( function () {selectProjectTemplate( 'f1' )});
 </script>
