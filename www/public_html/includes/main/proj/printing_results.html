@@ -536,7 +536,6 @@ join("\n", map {
 	if ( sets::isin( $$variable{ProjectType}->name(), [ 'BusinessCards' ] ) ) {
 		$html .= '<li class="versions"><label>'. writeTip('Versions'). '</label>';
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-
 			$html .= sprintf( '<span class="%sColumns">%s%s</span>',
 				$$variable{Columns},
 				input( type=>'cardinal', name=>"Versions$qty_index", value=>$$variable{"Versions$qty_index"} ),
@@ -550,13 +549,13 @@ join("\n", map {
 			);
 	if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
 		$html .= '<li>';
-        foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-            $html .= '<span class="'.$$variable{Columns}.'Columns">';
-            $html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown('$qty_index');", text=>'Breakdown' } );
-			$html .= button( 'Impositions', { onclick=>qq`get_impositions('f1', '$qty_index' );` } );
-            $html .= '</span>';
-            $html .= qq`<div id="hdnBreakdown$qty_index" style="display:none;"></div>`;
-        } # end foreach
+    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+      $html .= '<span class="'.$$variable{Columns}.'Columns">';
+      $html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown('$qty_index');", text=>'Breakdown' } );
+      $html .= button( 'Impositions', { onclick=>qq`get_impositions('f1', '$qty_index' );` } );
+      $html .= '</span>';
+      $html .= qq`<div id="hdnBreakdown$qty_index" style="display:none;"></div>`;
+    } # end foreach
 		$html .= '</li>';
 	} # end if
 	return $html;
