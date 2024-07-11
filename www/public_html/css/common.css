@@ -397,6 +397,11 @@ img {
 	border: none;
 }
 
+table .DateInput {
+	width: 305px;
+	text-align: right;
+	padding-right: 5px;
+}
 table .Date {
 	width: 145px;
 	text-align: right;
@@ -701,6 +706,9 @@ table .Host {
 text-align: left;
 }
 
+td select {
+  max-width: 100%;
+}
 select#ddmCustomer, select#company_id,
 select#supplier_id {
   width: calc(100% - 46px);
