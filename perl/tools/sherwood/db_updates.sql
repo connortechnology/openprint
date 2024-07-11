@@ -208,6 +208,12 @@ INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue) va
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue) values (164, 'Runstyles', 'Sheet Work');
 
 update tbl_Equipment_specifications set strname='Run Speed' where strname='Press Standard Run Speed';
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue) values (114, 'Overs', 'All');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue) values (107, 'Overs', 'All');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue) values (120, 'Overs', 'All');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue) values (122, 'Overs', 'All');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue) values (146, 'Overs', 'All');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue) values (112, 'Overs', 'All');
 
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue) values (13, 'Type', 'Folder');
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue) values (169, 'Type', 'Folder');
@@ -467,6 +473,17 @@ delete from projecttemplate where type='KnotchBound';
 
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='PerfectBound') where id=135;
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='Perfect Binder_Sulby_10x14'), 'PerfectBound Capable', 'Y','');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='Perfect Binder_Sulby_10x14'), 'Folding Capable', 'When PerfectBound','');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='Perfect Binder_Sulby_10x14'), 'Fold Covers Only', 'Y','');
+
+update tbl_equipment set servicetype_id=array_append(servicetype_id, (SELECT id from service_types WHERE name='Folding')) where strid='Perfect Binder_Sulby_10x14';
+
+INSERT INTO service_prices (pricelist_id, service_id,equipment_Id,cost,price,units) values (1, 
+  (SELECT id from services where name='Folding'),
+  (SELECT id from tbl_equipment where strname='Perfect Binder_Sulby_10x14'),
+  0, 0, 'per hour');
+
+
 UPDATE services set name='PerfectBound' WHERE name='PerfectBinding';
 UPDATE services set name='PerfectBoundMakeReady' WHERE name='PerfectBindingMakeReady';
 UPDATE Service_Prices SET range_units = 'pockets' WHERE
@@ -479,6 +496,8 @@ update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types whe
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='DigiFold Pro'), 'Scoring Capable', 'Y','');
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='DigiFold Pro'), 'Perforating Capable', 'Y','');
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='DigiFold Pro'), 'Type', 'Folder','');
+UPDATE Folds set max_imposition=1 where equipment_id=(SELECT id from tbl_equipment where strname='DigiFold Pro');
+UPDATE Folds set max_imposition=2 where equipment_id=(SELECT id from tbl_equipment where strname='Horizon - 28x40 Folder');
 
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Scoring') where id=153;
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='Perforating') where id=153;
@@ -568,3 +587,10 @@ insert into material_specifications (material_id, name, value,min,max, units) va
 insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='CyanInk'), 'Coverage', 920000, 3,3, 'square inches per kg');
 insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='CyanInk'), 'Coverage', 715555, 4,5, 'square inches per kg');
 insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='BlackInk'), 'Coverage', 920000, 1,1, 'square inches per kg');
+
+delete from projecttemplate where type='KnotchBound';
+UPDATE tbl_equipment set deleted=true where strid='DigiFold Pro01-136';
+update paper_prices set strunits='per 100lbs' where strunits='100 lbs';
+
+update papers set score_required=true where calliper > 0.008;
+update service_prices set units='per m' where units ilike '%Per%' AND service_id=(SELECT id from services where name='Scoring');
