@@ -17,7 +17,7 @@
 package openprint::Estimating::Aqueous;
 use strict;
 use warnings;
-use vars qw( %ServicePrices );
+use vars qw( %ServicePrices %MaterialPrices );
 
 %ServicePrices = (
 	AqueousMinimumCharge	=> { },
@@ -45,6 +45,17 @@ sub ServicePriceConfiguration {
 }
 sub SpecificationConfiguration {
   return $Specifications{shift};
+}
+%MaterialPrices = (
+'.*Aqueous.*' => { units => [ 'per square foot', 'per square inch', 'per 1000 square feet', 'per m', 'per kg' ] }
+);
+sub MaterialPriceConfiguration {
+  my $name = shift;
+  return $MaterialPrices{$name} if $MaterialPrices{$name};
+  foreach my $key (keys %MaterialPrices) {
+    return $MaterialPrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
 }
 
 require openprint::service;
@@ -274,7 +285,7 @@ sub calc {
 			foreach my $price_type ( 'MakeReady', 'BlanketCut', 'Service', 'Material', 'Impression' ) {
 				if ( (!defined $$specs{"Override${price_type}Price-$form-$qty_index"}) 
 						or ($$specs{"Override${price_type}Price-$form-$qty_index"} ne 'Y') ) {
-					$$specs{"${price_type}Price-$form-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{$price_type});
+					$$specs{"${price_type}Price-$form-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{$price_type} ? $results{$price_type} : 0);
 				} # end if
 			} # end foreach price type
 
@@ -748,7 +759,7 @@ sub breakdown {
 		my $MaterialPrice = $$Price{MaterialPrices}[$i];
 
 		my $colour_total = $$SetupPrice{Total} + $$BlanketCutPrice{Total} + $$ServicePrice{Total} + $$MaterialPrice{Total};
-		$$MaterialPrice{Breakdown} = sprintf('$%.2f%s = $%.2f', @$MaterialPrice{'Price','units','Total'}) if !$$MaterialPrice{Breakdown};
+		$$MaterialPrice{Breakdown} = sprintf('$%.4f%s = $%.2f', @$MaterialPrice{'Price','units','Total'}) if !$$MaterialPrice{Breakdown};
 		$breakdown .= sprintf(
 				'%s MakeReady: $%.2f<br/>Blanket Cut: $%.2f<br/>Service: ($%.2f%s*%d)=$%.2f<br/>Material: %s<br/>Total: $%.2f<br/>',
 			$type,
