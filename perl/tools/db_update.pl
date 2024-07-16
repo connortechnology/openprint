@@ -745,6 +745,9 @@ $dbh->do('ALTER TABLE orders RENAME COLUMN stremail to email') or die $dbh->errs
   if (exists $$data{stremail} and !exists $$data{email}) {
     $dbh->do('ALTER TABLE orders RENAME COLUMN stremail to email') or die $dbh->errstr();
   }
+  if (exists $$data{id} and ! $$data{column_default}) {
+    $dbh->do("ALTER TABLE orders ALTER id set default nextval('order_id_seq'::regclass)");
+  }
 }
 
 if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
