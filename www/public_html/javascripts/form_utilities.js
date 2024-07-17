@@ -1670,7 +1670,7 @@ function to_hostname(e) {
 }
 function floatize(e) {
 	if ( e.value.match(/[^\d\+\-\.%\*eE]/) ) {
-		e.value = parseFloat(e.value.replace(/[^\d\+\-\.%\*eE]/g,''));
+		e.value = parseFloat(e.value.replace(/[^\d\+\-\.%\*eE]/g, ''));
 	} 
 	if ( e.value == 'NaN' )
 		e.value = '';
