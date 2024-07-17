@@ -38,7 +38,7 @@ input[type="tel"] {
 }
 input.phone,
 input[type="tel"] {
-	width: 120px;
+	width: 140px;
 }
 
 select {
