@@ -1,4 +1,4 @@
-<? if ( $$variable{Project}->quantity_indexes() > 1 or ! $$variable{Project}->ordered_quantity_index() ) ?>
+<? if ( $$variable{Project}->quantity_indexes() > 1) ?>
 <li>
 	<label>Quantity</label>
 	<table class="List">
@@ -13,7 +13,7 @@
 		<? echo ( 
 			my $html = '';
 			my @quantity_indexes = $$variable{Project}->quantity_indexes();
-			my $selected = @quantity_indexes[0] if @quantity_indexes == 1 or ! $$variable{Project}->ordered_quantity_index();
+			my $selected = $$variable{Project}->ordered_quantity_index();
 
 			foreach my $qty_index ( @quantity_indexes ) {
 				$html .= '<tr>';
@@ -31,6 +31,6 @@
 		) ?>
 	</table>
 </li>
-<? else ( $$variable{Project}->quantity_indexes() > 1 or ! $$variable{Project}->ordered_quantity_index() ) ?>
+<? else ( $$variable{Project}->quantity_indexes() > 1) ?>
 <? echo ( input( type=>'hidden', name=>'rdbQuantity'.$$variable{Project}->id(), value=>$$variable{Project}->ordered_quantity_index() ); ) ?>
-<? endif ( $$variable{Project}->quantity_indexes() > 1 or ! $$variable{Project}->ordered_quantity_index() ) ?>
+<? endif ( $$variable{Project}->quantity_indexes() > 1) ?>
