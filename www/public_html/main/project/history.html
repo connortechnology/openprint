@@ -131,4 +131,4 @@
 <? else ( $session{user_id} ) ?>
 Only logged in customers have a project history.
 <? endif ( $session{user_id} ) ?>
-<script src="history.js"></script>
+<script src="<?hash_link(/main/project/history.js)?>"></script>

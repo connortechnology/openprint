@@ -171,10 +171,6 @@ new Ajax.InPlaceRichEditor( 'reference', '/main/project/_update.html?project_id=
 	tinymceToElementSize: true
 	}, tinymce_options );
 </script>
-<? else ( $$variable{Project}->can_edit() ) ?>
-<script>
-console.log("Can't edit");
-</script>
 <? endif ( $$variable{Project}->can_edit() ) ?>
 	<? else ( $$variable{Project}->can_view() ) ?>
 		<div class="error">You may not view this project.</div>

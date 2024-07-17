@@ -1304,18 +1304,18 @@ sub do_css_links {
   while ( @parts ) {
     $css = join('_', @parts ) . '.css';
     #$log->debug("$css");
-    if ( -e $config{SkinPath}.'/css/'.$css ) {
-      #$log->debug("exist at " . $config{SkinPath}.'/css/'.$css);
-      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link($config{SkinPath}.'/css/'.$css).'"/>';
-    } elsif ( Debug ) {
-      $log->debug('Does not exist at ' . $config{SkinPath}.'/css/'.$css);
-    } # end if
     if ( -e $ENV{DOCUMENT_ROOT}.'/css/'.$css ) {
       #$log->debug("xist at " . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
       push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link($ENV{DOCUMENT_ROOT}.'/css/'.$css).'"/>';
     } elsif ( Debug ) {
       $log->debug('Does not exist at ' . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
     }
+    if ( -e $config{SkinPath}.'/css/'.$css ) {
+      #$log->debug("exist at " . $config{SkinPath}.'/css/'.$css);
+      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link($config{SkinPath}.'/css/'.$css).'"/>';
+    } elsif ( Debug ) {
+      $log->debug('Does not exist at ' . $config{SkinPath}.'/css/'.$css);
+    } # end if
     pop @parts;
   } # end while
   return join("\n", reverse @html);

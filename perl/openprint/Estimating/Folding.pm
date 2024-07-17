@@ -1176,6 +1176,8 @@ $Imposition->display();
           $openprint::log->debug("Max feed: $max_feed_width") if $max_feed_width;
 
           my $fold_type = ($$specs{"chkOverrideFold-$form-$qty_index"} ? $$specs{"FoldType-$form-$qty_index-$fi_index"} : $$sig_specs{rdbTemplateType});
+          $fold_type //= '';
+          $$specs{"chkOverrideFold-$form-$qty_index"} //= '';
 $openprint::log->debug("Type: $fold_type for $form-$qty_index-$fi_index ".$$specs{"chkOverrideFold-$form-$qty_index"}) if DEBUG;
 
 					if ($fold_type and $fold_types{$fold_type}) {
@@ -1815,8 +1817,10 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
 					my $stitching_results = openprint::Estimating::Stitching::signature_calc(
 							$Project, $$calc_hash{HasStitching}, $stitching_specs, $qty_index, $Signature_Impositions, $calc_hash );
 					if ( ! $$stitching_results{Equipment} ) {
+            $$stitching_results{alert} //= '';
+            $$stitching_results{Breakdown} //= '';
 						$Breakdown .= "unable to determine stitching equipment: $$stitching_results{alert} $$stitching_results{Breakdown}<br/>";
-						$openprint::log->warn('unable to determine stitching equipment; ; '.$Breakdown) if DEBUG;
+						$openprint::log->warn('unable to determine stitching equipment: '.$Breakdown) if DEBUG;
 
 						$stitching_part = 1000000;
 						#$totalPrice += 1000000;

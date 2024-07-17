@@ -1427,7 +1427,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				$log->debug("** Too many colours to	Perfect	***") if DEBUG_IMPOSITIONS;
 				$do_perfecting = 0;
 			} 
-		} elsif ( @side_one_aq or @side_two_aq  ) {
+		} elsif (@side_one_aq or @side_two_aq) {
 			if ( @side_one_aq and @side_two_aq and ! $Press->specification('Aqueous Double Sided When Perfecting') ) {
         $log->debug("** Too many aq colours to Perfect ***") if DEBUG_IMPOSITIONS;
         $do_perfecting = 0;
