@@ -1344,6 +1344,7 @@ sub navmenu {
     if ( ref $$menu{$category} ) {
       my @keys;
       my %urls;
+      my $category_on = 0;
 
       if ( ref $$menu{$category} eq 'ARRAY' ) {
         %urls = @{$$menu{$category}};
@@ -1361,7 +1362,7 @@ sub navmenu {
         if (ref $urls{$url}) {
           my ($sub_html, $new_on) = navmenu({$url=>$urls{$url}}, $current_uri);
           $submenu_html .= $sub_html;
-          $on = 1 if $new_on;
+          $category_on = 1 if $new_on;
         } else {
           my $text = $urls{$url};
           if ( $text ) {
@@ -1371,7 +1372,8 @@ sub navmenu {
               $submenu_html .= "\n";
             } # end if
           }
-          $on = 1 if $current_uri eq $url;
+          $category_on = 1 if $current_uri eq $url;
+#$log->error("Setting on to $on because $current_uri eq $url");
         } # end if submenu
       } # end foreach url
 
@@ -1379,10 +1381,11 @@ sub navmenu {
         $html .= join( $submenu_html,
           sprintf(q`
             <li id="%1$sMenu" class="%2$s"><a href="#" onclick="toggleMenu($('%1$sMenu'), 'off', 'on');return false;">%1$s</a>
-            <ul>`, $category, ( $on ? 'on' : 'off' ) ),'</ul>
+            <ul>`, $category, ( $category_on ? 'on' : 'off' ) ),'</ul>
           </li>
           ' );
       }
+      $on = $category_on;
     } else {
       $html .= sprintf( q`
         <li id="%1$sMenu" class="menu-item %2$s"><a href="%2$s">%1$s</a></li>
