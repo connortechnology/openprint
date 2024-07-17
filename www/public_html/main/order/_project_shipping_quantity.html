@@ -4,13 +4,14 @@
 	$$variable{ProjectIndex} = $$variable{Project}->id() if ! $$variable{ProjectIndex};
 	my $specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
 	$$variable{QuantityIndex} = $$variable{Project}->ordered_quantity_index();
+$log->error("Quanitty index: " . $$variable{QuantityIndex});
 	my $spec = 'txtQuantity'.$$variable{QuantityIndex};
 	$$variable{"$spec-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} = $$specs{$spec};
 ) ?>	
 <li class="amount<? echo ( sets::isin( $$variable{Order}->status(), ['Incomplete','Re-Opened'] ) ? ' required' : '' ) ?>">
 	<label>Amount</label>
 <? if ( sets::isin( $$variable{Order}->status(), ['Incomplete','Re-Opened'] ) ) ?>
-	<? echo ( input( type=>'cardinal', name=>"txtQuantity$$variable{QuantityIndex}-$$variable{ProjectIndex}-$$variable{ServiceIndex}", value=>$$variable{"txtQuantity$$variable{QuantityIndex}-$$variable{ProjectIndex}-$$variable{ServiceIndex}"}, onkeyup=>'shipping_quantity_update(this);' ); ) ?>
+	<? echo ( input( type=>'cardinal', name=>"txtQuantity$$variable{QuantityIndex}-$$variable{ProjectIndex}-$$variable{ServiceIndex}", value=>$$variable{"txtQuantity$$variable{QuantityIndex}-$$variable{ProjectIndex}-$$variable{ServiceIndex}"}, on_input_this=>'shipping_quantity_update' ); ) ?>
 <? else ( sets::isin( $$variable{Order}->status(), ['Incomplete','Re-Opened'] ) ) ?>
 <? echo ( $$variable{'txtQuantity'.$$variable{QuantityIndex}."-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>
 <? endif ( sets::isin( $$variable{Order}->status(), ['Incomplete','Re-Opened'] ) ) ?>
