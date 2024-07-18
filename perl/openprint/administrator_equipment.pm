@@ -192,7 +192,7 @@ sub edit {
         my $speeds = scalar @Speeds;
 
         foreach my $Speed ( @Speeds ) {
-          push @data, $Speed->min_weight(), $Speed->max_weight(), $Speed->weight_units(), $Speed->runspeed(), $Speed->interpolate();
+          push @data, $Speed->min(), $Speed->max(), $Speed->units(), $Speed->runspeed(), $Speed->interpolate();
         } # end foreach	Speed
         foreach ( 1 .. ($max_speeds - $speeds ) ) {
           push @data, '','','','','';
@@ -201,6 +201,13 @@ sub edit {
 
       misc::export_csv( $r, $log, \%variable, 'fold_definitions'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
       (new openprint::Log())->save({ action=>'Export Fold Definitions' });
+    } elsif ( $param{btnFunction} eq 'Export Service Prices' ) {
+      my @header = ( 'Service ID', 'Equipment ID','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
+      my @data = map {
+        $_->Service()->name(), $_->Equipment()->strid(), $_->min(), $_->max(), $_->units(), $_->cost(), $_->markup(), $_->price(), $_->discountable()
+      } openprint::ServicePrice->find( equipment_id=>$Equipment->id(), order=>join(',',@openprint::ServicePrice::fields{'min','max'}));
+      misc::export_csv( $r, $log, \%variable, $Equipment->strid() . 'ServicePrices.csv', \@header, \@data );
+
     } elsif ( $param{btnFunction} eq 'Import Folds' ) {
       my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
       # if ! $Equipment->id();
@@ -290,6 +297,71 @@ sub edit {
       } # end while IO
       sql::end_transaction( $dbh, $ac );
       $variable{error} = $error;
+	} elsif ( $param{btnFunction} eq 'Import Service Prices' ) {
+		$variable{error} .= 'You must select equipment before importing.<br/>' if ! $Equipment->id();
+		$variable{error} .= 'You must select a file to import.<br/>' if ! $param{fileServicePrices};
+    return if $variable{error};
+
+		my $error = '';
+		my $ac = sql::start_transaction( $dbh );
+
+		# An import replaces the current pricelist, so delete verything in the current one.
+		sql::execute( $log, $dbh, 'DELETE FROM Service_Prices WHERE equipment_id=?', $Equipment->id() );
+
+		# get the upload.
+		my $upload = $r->upload( 'fileServicePrices' );
+		my $io = $upload->io();
+		$_ = <$io>;
+		my $csv = Text::CSV_XS->new();
+		my %services = map { $_->name(), $_->id() } openprint::Service->find();
+		my %equipment= map { $_->strid(), $_->id() } openprint::Equipment->find();
+
+		while ( <$io> ) {
+			my $status = $csv->parse($_);
+			my ( $name, $equip_ids, $min,$max,$units, $cost, $markup, $price, $discountable ) = $csv->fields();
+			$name = openprint::Service->transform( name => $name );
+			next if $name eq '';
+
+			my $service = $services{$name};
+			if (!$service and $service->id()) {
+				$error .= "No Service found for $name<br>";
+				next;
+			} # end if
+
+			foreach my $equip_id ( split(',', $equip_ids ) ) {
+				$equip_id = openprint::Equipment->transform( strid => $equip_id );
+				if ( ! $equipment{$equip_id} ) {
+					$error .= "No Equipment found for $equip_id<br>";
+					next;
+				} # end if
+        if ($equip_id ne $Equipment->strid()) {
+					$error .= "Doesnt match selected equipment: $equip_id<br>";
+					next;
+				} # end if
+
+        foreach my $Pricelist (openprint::Pricelist->find()) {
+          my $Price = new openprint::ServicePrice();
+          $_ = $Price->save({
+              pricelist_id	=>	$Pricelist->id(),
+              service_id		=>	$services{$name},
+              equipment_id	=>	$equip_id ? $equipment{$equip_id}->id() : undef,
+              min				=>	$min,
+              max				=>	$max,
+              units			=>	$units,
+              cost			=>	$cost,
+              price			=>	$price,
+              discountable	=>	$discountable,
+            });
+          if ( $_ ) {
+            $error .= $_ . " for $services{$name}\n";
+          } else {
+            $variable{information} .= "Added Price for service $name on $equip_id $min - $max $units $cost $markup $price<br/>";
+          }
+        }
+			} # end foreach equipment_id
+		} # end while IO
+		sql::end_transaction( $openprint::dbh, $ac );
+		$variable{error} .= $error;
     } # end if
   } # end if btnFunction
 
