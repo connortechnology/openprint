@@ -397,6 +397,7 @@ $html .= '</td>';
 	foreach my $service_id ( keys %statuses ) {
 		my $Service = $Project->Service( $service_id );
 		my $ServiceType = $Service->ServiceType();
+    next if ! $ServiceType->view_visible();
 		my $specs = $Service->specs();
 
 		my @summaries;

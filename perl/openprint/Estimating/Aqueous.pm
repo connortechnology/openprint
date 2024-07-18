@@ -18,6 +18,7 @@ package openprint::Estimating::Aqueous;
 use strict;
 use warnings;
 use vars qw( %ServicePrices %MaterialPrices );
+use Data::Dumper;
 
 %ServicePrices = (
 	AqueousMinimumCharge	=> { },
@@ -92,8 +93,9 @@ sub variables {
 	foreach my $s_s_id ( $Project->signatures() ) {
 		my $specs = openprint::service::get_specs_ref($Project, $s_s_id);
 		my $form = $$specs{SignatureIndex};
+    push @v, 'ColourCoatingTypeOne'.$form, 'ColourCoatingTypeTwo'.$form;
+
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-	
 			push @v, (
 				 "ddmEquipment-$form-$qty_index", "chkOverrideEquipment-$form-$qty_index",
 				 "txtImposition-$form-$qty_index", "chkOverrideImposition-$form-$qty_index",
@@ -190,12 +192,12 @@ sub signature_needs {
 	} else {
 		$$sig_specs{SideTwoAQ} = [ get_colours( $sig_specs, 'SideTwo' ) ] if ! $$sig_specs{SideTwoAQ};
 		return 1 if @{$$sig_specs{SideTwoAQ}};
-	} # en dif
+	} # endif
 	return 0;
 } # end sub signature_needs
 
 sub init {
-	my ( $Project, $calc_hash ) = @_;
+	my ( $Project, $service_id, $calc_hash ) = @_;
 
 	%Materials = ();
 	%Services = ();
@@ -205,6 +207,13 @@ sub init {
 	$Services{'AqueousBlanketCutW&T'} = openprint::Service->find_one(name=>'AqueousBlanketCutW&T');
 	$Services{BlanketCut} = openprint::Service->find_one(name=>'BlanketCut');
 	%Inks = ();
+  my $ServiceType = $Project->ServiceType($service_id);
+	@all_equipment = openprint::Equipment->find(
+			Specifications => {'Aqueous Capable'=>['Y','When Printing','1 Side']},
+      'servicetype_id any' => $ServiceType->id(),
+			useinestimating=>1,
+			order=>'lower(strName)'
+			) if ! @all_equipment;
 }
 
 sub calc {
@@ -214,13 +223,7 @@ sub calc {
 	$$specs{alert} = '';
 
 	my $Project = new openprint::Project($project_index);
-	init($Project, {});
-
-	@all_equipment = openprint::Equipment->find(
-			Specifications => {'Aqueous Capable'=>['Y','When Printing','1 Side']},
-			useinestimating=>1,
-			order=>'lower(strName)'
-			) if ! @all_equipment;
+	init($Project, $service_index, {});
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
@@ -263,7 +266,9 @@ sub calc {
 				$status = 'uncalculated';
 				next;
 			}
-			my %results = signature_calc( $Project, $specs, $sig_specs, $qty_index, $Imposition, \%MakeReadies ) if signature_needs($Project, $sig_specs);
+			my %results = signature_calc( $Project, $specs, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
+# if signature_needs($Project, $sig_specs);
+$openprint::log->error(Data::Dumper::Dumper(\%results));
 			if ( $results{Equipment} ) {
 				$MakeReadies{$results{Equipment}{id}} = {} if ! $MakeReadies{$results{Equipment}{id}};
 				foreach my $type ( $results{types} ? @{$results{types}} : () ) {
@@ -271,6 +276,7 @@ sub calc {
 					push @{$MakeReadies{$results{Equipment}{id}}{$type}}, $Imposition->layout_area();
 				}
 			}
+      $$specs{"hdnBreakdown$qty_index"} .= $results{breakdown};
 			@outputs = sets::union( @outputs, 
 					"ddmEquipment-$form-$qty_index",
 					"txtImposition-$form-$qty_index",
@@ -289,9 +295,9 @@ sub calc {
 				} # end if
 			} # end foreach price type
 
-			if ( (!defined $$specs{"OverrideSignatnurePrice-$form-$qty_index"}) 
+			if ( (!defined $$specs{"OverrideSignaturePrice-$form-$qty_index"}) 
 					or ($$specs{"OverrideSignaturePrice-$form-$qty_index"} ne 'Y') ) {
-				$$specs{"SignaturePrice-$form-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{Total});
+				$$specs{"SignaturePrice-$form-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{Total} // 0);
 			} # end if
 
 			if ( ( ! defined $$specs{"chkOverrideEquipment-$form-$qty_index"} ) or ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' ) ) {
@@ -305,7 +311,6 @@ sub calc {
 					$$specs{alert} .= 'No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.';
 				} # end if
 			} else {
-				$$specs{"hdnBreakdown$qty_index"} .= $results{breakdown};
 				if ( $results{Equipment} ) {
 					$$specs{"ddmEquipment-$form-$qty_index"} = $results{Equipment}{id};
 					$GrandTotal += $$specs{"SignaturePrice-$form-$qty_index"};
@@ -361,6 +366,10 @@ sub signature_calc {
 			$front_aq{$$_{name}} = $_;
 		} # end if
 	} # end foreach colour
+  if (!@front_aq and $$specs{'ColourCoatingTypeOne'.$form}) {
+    push @front_aq, {name=>$$specs{'ColourCoatingTypeOne'.$form}};
+    $front_aq{$$specs{'ColourCoatingTypeOne'.$form}} = {name=>$$specs{'ColourCoatingTypeOne'.$form}};
+  }
 
 	my @back_aq;
 	my %back_aq;
@@ -371,6 +380,10 @@ sub signature_calc {
 			$back_aq{$$_{name}} = $_;
 		} # end if
 	} # end foreach colour
+  if (!@back_aq and $$specs{'ColourCoatingTypeTwo'.$form}) {
+    push @back_aq, {name=>$$specs{'ColourCoatingTypeTwo'.$form}};
+    $back_aq{$$specs{'ColourCoatingTypeTwo'.$form}} = {name=>$$specs{'ColourCoatingTypeTwo'.$form}};
+  }
 
 	if ( ! ( @front_aq or @back_aq ) ) {
 		my ( $caller, undef, $line ) = caller;
@@ -397,10 +410,6 @@ sub signature_calc {
 		$impressions /= 2;
 	}
 
-	@all_equipment = openprint::Equipment->find(
-			Specifications => {'Aqueous Capable'=>['Y','When Printing','1 Side']},
-			useinestimating=>1,
-			order=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	
 	if ( (defined $$specs{"chkOverrideEquipment-$form-$qty_index"}) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) ) {
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} ) );
@@ -594,7 +603,7 @@ $openprint::log->error("$type to W&T front: $front_aq{$type} back: $back_aq{$typ
           $ServicePrice{Quantity} = $run_qty;
           $ServicePrice{Total} = $ServicePrice{Price} * $run_qty;
 				} else {
-					$$specs{'hdnBreakdown'.$qty_index} = "Unkonwn units ( $ServicePrice{units} ) for $$type{name}<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} = "Unknown units ( $ServicePrice{units} ) for $$type{name}<br/>";
 				} # end if
 				push @{$Price{ServicePrices}}, \%ServicePrice;
 				$Price{Service} += $ServicePrice{Total};
@@ -781,12 +790,8 @@ sub breakdown {
 
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
-#$openprint::log->debug('Aqueous');
-	@{$$variable{Equipment}} = openprint::Equipment->find(
-			Specifications => {'Aqueous Capable'=>['Y','When Printing','1 Side']},
-			useinestimating=>1,
-			order=>'lower(strName)'
-			);
+  #my $Project = new openprint::Project($project_index);
+  #my $ServiceType = $Project->ServiceType($service_index);
 } # end sub display
 
 # Copies the AQ settings back into the printing service, because that is where we have chosen to store them.

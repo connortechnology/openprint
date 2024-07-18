@@ -43,7 +43,6 @@ my %variables = (
 	ProjectIndex=>[], ServiceIndex=>[], ServiceType=>[],
 	remaining_pages=>['output'],next_group_id=>['output'],groups=>['output','save'],
 	spine	=>	 ['save'],
-	alert	=>	 ['save','output'],
 	);
 
 @signature_variables = (

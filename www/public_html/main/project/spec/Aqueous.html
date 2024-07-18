@@ -8,40 +8,54 @@
 				$$variable{Reference} = openprint::service::summary( $$variable{Project}->id(), $$variable{SignatureServiceIndex} );
 				$$variable{SignatureIndex} = $$variable{sig_specs}{SignatureIndex};
 				$$variable{FrontCoatings} = join(',', openprint::Estimating::Aqueous::get_colours( $$variable{sig_specs}, 'SideOne' ) );
-				$$variable{FrontCoatings} = 'None' if $$variable{FrontCoatings} eq '';
+				#$$variable{FrontCoatings} = 'None' if $$variable{FrontCoatings} eq '';
 				$$variable{BackCoatings} = join(',', openprint::Estimating::Aqueous::get_colours( $$variable{sig_specs}, 'SideTwo' ) );
-				$$variable{BackCoatings} = 'None' if ! $$variable{BackCoatings};
+				#$$variable{BackCoatings} = 'None' if ! $$variable{BackCoatings};
 			) ?>
 			<? if ( $$variable{FrontCoatings} ne 'None' or $$variable{BackCoatings} ne 'None' ) ?>
 			<fieldset><legend>Signature <? echo ( $$variable{sig_specs}{SignatureIndex} ) ?></legend>
-				Information for <?Reference?><br/><br/>
+				Information for <?Reference?><br/>
 				<div class="Front leftColumn">
 					<p>
 						<label>Coatings on Front</label>
-						<?FrontCoatings?>
+<? echo ( 
+  $$variable{Side} = 'One';
+  @{$$variable{Services}} = openprint::Service->find(category=>'Coating', 'name ilike'=>'%Aqueous%', order=>'lower(name)') if !$$variable{Services};
+  my @options = map { $_->name(), $_->description() } @{$$variable{Services}};
+
+  my $key = join('','ColourCoatingType',@$variable{'index','Side','SignatureIndex'});
+  $$variable{$key} = $$variable{FrontCoatings} if $$variable{FrontCoatings};
+  return ssi::select( \@options, $$variable{$key}, {
+      id    =>  $key,
+      name  =>  $key,
+    onchange=>'calc(\'f1\');',
+    prepend=>[ '', 'None' ],
+    } );
+) ?>
+
 					</p>
 				</div>
 				<div class="Back rightColumn">
 					<p>
 						<label>Coatings on Back</label>
-						<?BackCoatings?>
+<? echo ( 
+  $$variable{Side} = 'Two';
+  my @options = map { $_->name(), $_->description() } @{$$variable{Services}};
+
+  my $key = join('','ColourCoatingType',@$variable{'index','Side','SignatureIndex'});
+  $$variable{$key} = $$variable{BackCoatings} if $$variable{BackCoatings};
+  return ssi::select( \@options, $$variable{$key}, {
+      id    =>  $key,
+      name  =>  $key,
+      onchange=>'calc(\'f1\');',
+      prepend=>[ '', 'None' ],
+      } );
+) ?>
 					</p>
 				</div>
 				<br class="spacer"/>
 				<div id="Results-<?SignatureIndex?>" >
 					<ul>
-					<li><label>Printed</label><? echo ( 
-						my $html;
-						foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-							$html .= '<span class="'.$$variable{Columns}.'Columns">';
-							my $Imposition = new openprint::Imposition(); 
-							$Imposition->load( $$variable{sig_specs}, $qty_index, $$variable{Project} );
-							$html .= $Imposition->to_string();
-							$html .= '</span>';
-						} # end foreach
-						return $html;
-					) ?>
-					</li>
 <? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 					<li class="MakeReadyPrice"><label>Make Ready (<?CurrencySymbol?>)</label>
 					<? echo ( my $html;
@@ -115,16 +129,16 @@
 					</ul>
 				</div>
 				<br class="spacer"/>
-			</fieldset>
+			</fieldset><!--Signature-->
 			<? endif ( $$variable{FrontCoatings} ne 'None' or $$variable{BackCoatings} ne 'None' ) ?>
 		<? endwhile ( $$variable{SignatureServiceIndex} = shift @{$$variable{Signatures}} ) ?>
-		</fieldset>
 		<?include('/includes/main/proj/_comments.html') ?>
-		<!--<fieldset><legend>Results</legend>-->
+		</fieldset>
+		<fieldset><legend>Results</legend>
 			<ul>
 			<?include(/includes/main/proj/quantities_prices.html)?>
 			</ul>
-		<!--</fieldset>-->
+		</fieldset>
 		<hr/>
 		<?include('/includes/main/proj/add_to_project.html')?>
 
