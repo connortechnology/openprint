@@ -1133,7 +1133,7 @@ sub companies {
 
 sub _companies {
 	ssi::save_params( '/administrator/managerial/companies.html', (
-				'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted',
+				'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted','supplier',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),
