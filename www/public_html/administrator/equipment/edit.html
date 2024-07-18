@@ -236,7 +236,7 @@
 	<input type="hidden" name="btnFunction"/>
 		<p>
 			<label>Type</label>
-			<select style="width: auto;" id="type" name="type" onchange="new Ajax.Updater( 'Folds', '_fold.html', { evalScripts:true, onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{Equipment}->id() ) ?>, type: $('type').getValue() } } );">
+      <select style="width: auto;" id="type" name="type" on_change="load_folds">
 				<option value="">select</option>
 				<option value="all">All</option>
 <? echo (
