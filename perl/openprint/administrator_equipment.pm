@@ -208,10 +208,8 @@ sub edit {
       my $error = '';
       if ( ! $param{fileFolds} ) {
         $variable{error} .= 'No file given to upload.<br>';
-        $log->error("No file given");
         return;
       } # end if
-      $log->error("file given");
 
       my $ac = sql::start_transaction( $dbh );
 
