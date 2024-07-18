@@ -813,8 +813,23 @@ sub summary {
       }
     } # end foreah;
   } else {
-  }
+		foreach my $s_s_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			my $form = $$sig_specs{SignatureIndex};
+      if (
+          ($$specs{'ColourCoatingTypeOne'.$form} and ($$specs{'ColourCoatingTypeOne'.$form} ne 'None'))
+          or
+          ($$specs{'ColourCoatingTypeTwo'.$form} and ($$specs{'ColourCoatingTypeTwo'.$form} ne 'None'))
+         ) {
+        $summary .= 'Form '.$form.': '.join(' ',
+            ($$specs{'ColourCoatingTypeOne'.$form} and ($$specs{'ColourCoatingTypeOne'.$form} ne 'None') ? $$specs{'ColourCoatingTypeOne'.$form}. ' on front' : ()),
+            ($$specs{'ColourCoatingTypeTwo'.$form} and ($$specs{'ColourCoatingTypeTwo'.$form} ne 'None') ? $$specs{'ColourCoatingTypeTwo'.$form}. ' on back' : ()),
+            ).
+          '<br/>';
 
+      }
+    } # end foreach sig
+  } # end if qtu
   return $summary;
 } # end sub summary
 
