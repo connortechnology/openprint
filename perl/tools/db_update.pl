@@ -750,6 +750,12 @@ $dbh->do('ALTER TABLE orders RENAME COLUMN stremail to email') or die $dbh->errs
   }
 }
 
+
+if ( sets::isin( 'docketnumber_seq', \@sequences ) ) {
+  $log->debug("Adding docketnumber_seq");
+  $dbh->do('CREATE SEQUENCE docketnumber_seq');
+} # end if
+
 if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
