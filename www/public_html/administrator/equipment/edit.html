@@ -44,11 +44,6 @@
 				button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ),
 				);
 			) ?>
-			<input type="file" name="fileSpecifications"/>
-			<? echo ( join("\n",
-			button( 'Import', { onclick=>"f1.btnFunction.value='Import Specifications';f1.submit();", text=>'Import' } ),
-			button( 'Export', { onclick=>"f1.btnFunction.value='Export Specifications';f1.submit();", text=>'Export' } ),
-			); ) ?>
 		</p>
 	</fieldset>
 </form>
@@ -177,10 +172,24 @@
 <? if ( $$variable{Equipment}->id() ) ?>
 <div id="ServicePrices">
   <fieldset><legend>Service Prices <span id="toggle_service_prices" on_click="toggle_service_prices">+</span></legend>
+  <p class="buttons">
+			<input type="file" name="fileServicePrices"/>
+			<? echo ( join("\n",
+			button( 'ImportServicePrices', { onclick=>"f2.btnFunction.value='Import Service Prices';f2.submit();", text=>'Import' } ),
+			button( 'ExportServicePrices', { onclick=>"f2.btnFunction.value='Export Service Prices';f2.submit();", text=>'Export' } ),
+			); ) ?>
+  </p>
     <div id="show_service_prices"><?echo($session{$r->uri().'?show_service_prices'} ? include('_service_prices.html') : '' )?></div>
   </fieldset>
 </div><!--ServicePrices-->
 <fieldset><legend>Specifications <span on_click="toggle_specifications">+</span></legend>
+  <p class="buttons">
+			<input type="file" name="fileSpecifications"/>
+			<? echo ( join("\n",
+			button( 'Import', { onclick=>"f2.btnFunction.value='Import Specifications';f2.submit();", text=>'Import' } ),
+			button( 'Export', { onclick=>"f2.btnFunction.value='Export Specifications';f2.submit();", text=>'Export' } ),
+			); ) ?>
+  </p>
 <div id="show_specifications">
 		Changes made below take effect immediately.<br/>
 		<table id="specifications" class="List sortable">
@@ -236,7 +245,7 @@
 	<input type="hidden" name="btnFunction"/>
 		<p>
 			<label>Type</label>
-			<select style="width: auto;" id="type" name="type" onchange="new Ajax.Updater( 'Folds', '_fold.html', { evalScripts:true, onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{Equipment}->id() ) ?>, type: $('type').getValue() } } );">
+      <select style="width: auto;" id="type" name="type" on_change="load_folds">
 				<option value="">select</option>
 				<option value="all">All</option>
 <? echo (
