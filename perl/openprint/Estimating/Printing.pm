@@ -696,6 +696,7 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 	foreach my $service ( 'Folding','Scoring','Perforating','DieCutting','Cutting','Numbering','Proofs' ) {
 		if ( $$services{$service} and @{$$services{$service}} ) {
 			$$specs{'Has'.$service} = $project{'Has'.$service} = $$services{$service}[0];
+      $project{$service.'Service'} = $Project->Service($$services{$service}[0]);
 			%{$project{$service.'Specs'}} = %{openprint::service::get_specs_ref( $Project, $$services{$service}[0] )};
 		} # end if	
 	} # end foreach
@@ -5924,7 +5925,7 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 
 	my $numbering_results;
 	if ( $$project{HasNumbering} ) {
-		$numbering_results = openprint::Estimating::Numbering::signature_calc( $Project, $$project{NumberingSpecs}, $specs, $qty_index, $Imposition );
+		$numbering_results = openprint::Estimating::Numbering::signature_calc( $Project, $$project{NumberingService}, $$project{NumberingSpecs}, $specs, $qty_index, $Imposition );
 #foreach my $k ( keys %scoring_results ) {
 #$log->debug("Scoring: $k => $scoring_results{$k}");
 #}
