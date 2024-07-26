@@ -759,7 +759,7 @@ $openprint::log->error("$type to W&T front: $front_aq{$type} back: $back_aq{$typ
 
 sub breakdown {
 	my $Price = shift;
-	my $breakdown = $$Price{Imposition}{imposition} . 'out on ' . ($$Price{Equipment} ? $$Price{Equipment}->name() : 'unknown').'<br/>';
+	my $breakdown = $$Price{Imposition}{imposition} . 'out on ' . ($$Price{Equipment} ? $$Price{Equipment}->name() : 'unknown').'<br/>' if $$Price{Imposition};
 	for ( my $i = 0; $i < ( $$Price{types} ? scalar @{$$Price{types}} : 0); $i ++ ) {
 		my $type = $$Price{types}[$i];
 		my $SetupPrice = $$Price{SetupPrices}[$i];
