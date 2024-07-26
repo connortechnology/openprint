@@ -215,10 +215,8 @@ sub edit {
       my $error = '';
       if ( ! $param{fileFolds} ) {
         $variable{error} .= 'No file given to upload.<br>';
-        $log->error("No file given");
         return;
       } # end if
-      $log->error("file given");
 
       my $ac = sql::start_transaction( $dbh );
 
@@ -315,8 +313,8 @@ sub edit {
 		my $io = $upload->io();
 		$_ = <$io>;
 		my $csv = Text::CSV_XS->new();
-		my %services = map { $_->name(), $_->id() } openprint::Service->find();
-		my %equipment= map { $_->strid(), $_->id() } openprint::Equipment->find();
+		my %services = map { $_->name(), $_ } openprint::Service->find();
+		my %equipment= map { $_->strid(), $_ } openprint::Equipment->find();
 
 		while ( <$io> ) {
 			my $status = $csv->parse($_);
@@ -325,9 +323,9 @@ sub edit {
 			next if $name eq '';
 
 			my $service = $services{$name};
-			if (!$service and $service->id()) {
-				$error .= "No Service found for $name<br>";
-				next;
+			if (!$service) {
+        $service = $services{$name} = new openprint::Service();
+        $service->save({name=>$name, description=>$name});
 			} # end if
 
 			foreach my $equip_id ( split(',', $equip_ids ) ) {
@@ -345,7 +343,7 @@ sub edit {
           my $Price = new openprint::ServicePrice();
           $_ = $Price->save({
               pricelist_id	=>	$Pricelist->id(),
-              service_id		=>	$services{$name},
+              service_id		=>	$service->id(),
               equipment_id	=>	$equip_id ? $equipment{$equip_id}->id() : undef,
               min				=>	$min,
               max				=>	$max,

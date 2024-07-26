@@ -19,31 +19,33 @@
 		my @label_options = ('PMS');
 		
 		my @Services;
-		if ( $$variable{Coatings} ) {
-			@Services = @{$$variable{Coatings}};
-		} else {
-			@Services = @{$$variable{Coatings}} = openprint::Service->find( category=>'Coating', order=>'lower(name)' );
-		} # end if
-		foreach my $S ( @Services ) {
-			if ( $S->name() =~ /Aqueous/i ) {
-				push @label_options, 'AQ';
-			} elsif ( $S->name() =~ /Varnish/i ) {
-				push @label_options, 'Varnish';
-			} elsif ( $S->name() =~ /UV/i ) {
-				push @label_options, 'UV';
-			} elsif ( $S->name() =~ /White/i ) {
-				push @label_options, 'White';
-			} # end if
-		} # end foreach
-		foreach my $index ( 1 .. $$variable{index}-1 ) {
-			for ( my $j = 0; $j < @Services; $j += 1 ) {
-				if ( $$variable{"ColourCoatingType$index$$variable{Side}$$variable{Signature}"} eq $Services[$j]->name() ) {
-					splice @Services, $j, 1;
-					last;
-				} # end if
-			} # end for
-		} # end foreach
-		push @options, map { $_->name(), $_->description() } @Services;
+    if(!$$variable{Project}->has_service('AqueousOffline')){
+      if ( $$variable{Coatings} ) {
+        @Services = @{$$variable{Coatings}};
+      } else {
+        @Services = @{$$variable{Coatings}} = openprint::Service->find( category=>'Coating', order=>'lower(name)' );
+      } # end if
+      foreach my $S ( @Services ) {
+        if ( $S->name() =~ /Aqueous/i ) {
+          push @label_options, 'AQ';
+        } elsif ( $S->name() =~ /Varnish/i ) {
+          push @label_options, 'Varnish';
+        } elsif ( $S->name() =~ /UV/i ) {
+          push @label_options, 'UV';
+        } elsif ( $S->name() =~ /White/i ) {
+          push @label_options, 'White';
+        } # end if
+      } # end foreach
+      foreach my $index ( 1 .. $$variable{index}-1 ) {
+        for ( my $j = 0; $j < @Services; $j += 1 ) {
+          if ( $$variable{"ColourCoatingType$index$$variable{Side}$$variable{Signature}"} eq $Services[$j]->name() ) {
+            splice @Services, $j, 1;
+            last;
+          } # end if
+        } # end for
+      } # end foreach
+      push @options, map { $_->name(), $_->description() } @Services;
+    }
 		ssi::select( \@options, $$variable{"ColourCoatingType$$variable{SideIndexSignature}"}, {
 				id		=>	join('','ColourCoatingType',@$variable{'index','Side','Signature'} ),
 				name	=>	join('','ColourCoatingType',@$variable{'index','Side','Signature'} ),

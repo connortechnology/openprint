@@ -92,3 +92,10 @@ function toggle_service_prices() {
 function toggle_specifications() {
   $j('#show_specifications').toggle();
 }
+
+function load_folds() {
+  const folds = $j('#Folds');
+  const type = document.getElementById('type');
+  folds.html('Loading...');
+  folds.load('_fold.html', {equipment_id: type.form.ddmEquipment.value, type: type.value} );
+}

@@ -59,7 +59,6 @@
 ) ?>
 		  </span>
 		</div>
-    <?if(!$$variable{Project}->has_service('OfflineAqueous'))?>
 		<div id="SpecialColoursSideOne<?Signature?>" class="SpecialColours" <? if ( $$variable{PrintingType} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{PrintingType} eq 'Digital' ) ?>>
 			<? echo ( 
 				my $html;
@@ -79,7 +78,6 @@
 				return $html;
 			) ?>
 		</div>
-    <?endif(!$$variable{Project}->has_service('OfflineAqueous'))?>
     </div>
 	</fieldset>
 </div>
@@ -140,7 +138,6 @@
 ) ?>
 		  </span>
 		</div>
-    <?if(!$$variable{Project}->has_service('OfflineAqueous'))?>
 		<div id="SpecialColoursSideTwo<?Signature?>">
 			<? echo ( 
 				my $html;
@@ -160,7 +157,6 @@
 				return $html;
 			) ?>
 		</div>
-    <?endif(!$$variable{Project}->has_service('OfflineAqueous'))?>
 		</div>
 	</fieldset>
 </div>

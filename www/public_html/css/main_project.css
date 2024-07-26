@@ -4,6 +4,9 @@
 	top: -22px; left: 50px; position: relative; width: 120px;padding-left: 5px;
 	background-color: #DEDCB7;
 }
+.Service {
+min-width: 1000px;
+}
 .Service input[type="text"],
 .Service input[type="number"] {
 	width: 75px;

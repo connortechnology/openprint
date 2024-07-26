@@ -738,50 +738,60 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 		$project{HasUVCoating} = $$services{UVCoating}[0];
 		%{$project{UVCoatingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{UVCoating}[0] )};
 	} # end if	
-	if ( $project{NeedAqueous} ) {
-		if ( ! $$services{Aqueous} ) {
-			push @{$$services{Aqueous}}, $Project->add_service('Aqueous');
-		} # end if	
-		$project{HasAqueous} = $$services{Aqueous}[0];
-		my $aq_specs = openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] );
-		%{$project{AqueousSpecs}} = %{$aq_specs};
 
-		my @sorted_sigs = $Project->signatures( { sort=>1 } );
+  if ( $project{NeedAqueous} ) {
+    if ( ! $$services{Aqueous} ) {
+      $$services{Aqueous} = [];
+      $_ = $Project->add_service('Aqueous');
+      push @{$$services{Aqueous}}, $_ if $_;
+    } # end if	
+    if (!@{$$services{Aqueous}} and !$$services{AqueousInline} and openprint::ServiceType->find_one(name=>'AqueousInline')) {
+      $_ = $Project->add_service('AqueousInline');
+      push @{$$services{Aqueous}}, $_ if $_;
+    }
 
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			my $aq_mrs = $project{"AqueousMakeReadies$qty_index"} = {};
+    if (@{$$services{Aqueous}}) {
+      $project{HasAqueous} = $$services{Aqueous}[0];
+      my $aq_specs = openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] );
+      %{$project{AqueousSpecs}} = %{$aq_specs};
 
-			foreach my $sig_id ( @sorted_sigs ) {
-				last if $sig_id == $service_index;
-				my $s_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-				my @aq_colours = sets::union(
-						openprint::Estimating::Aqueous::get_colours( $s_specs, 'SideOne' ),
-						openprint::Estimating::Aqueous::get_colours( $s_specs, $$s_specs{side_link} ? 'SideOne' : 'SideTwo' ),
-						);
+      my @sorted_sigs = $Project->signatures( { sort=>1 } );
 
-				my $form = $$s_specs{SignatureIndex};
-				my $equipment_id = $$aq_specs{"ddmEquipment-$form-$qty_index"};
+      foreach my $qty_index ( $Project->quantity_indexes() ) {
+        my $aq_mrs = $project{"AqueousMakeReadies$qty_index"} = {};
 
-				$$aq_mrs{$equipment_id} = {} if ! $$aq_mrs{$equipment_id};
-				foreach my $colour ( @aq_colours ) {
-					if ( $colour =~ /Aqueous/ ) {
-						$$aq_mrs{$equipment_id}{$colour} = [] if ! $$aq_mrs{$equipment_id}{$colour};
-						push @{$$aq_mrs{$equipment_id}{$colour}}, $$aq_specs{"txtLayoutWidth-$form-$qty_index"} * $$aq_specs{"txtLayoutHeight-$form-$qty_index"};
-					} # end if
-				} # end foreach colour
-			} # end foreach sig
+        foreach my $sig_id ( @sorted_sigs ) {
+          last if $sig_id == $service_index;
+          my $s_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+          my @aq_colours = sets::union(
+              openprint::Estimating::Aqueous::get_colours( $s_specs, 'SideOne' ),
+              openprint::Estimating::Aqueous::get_colours( $s_specs, $$s_specs{side_link} ? 'SideOne' : 'SideTwo' ),
+              );
 
-			$log->debug("AQUEOUS MR $qty_index " . join(',', keys %{$aq_mrs} ));
-			foreach my $equipment_id ( keys %{$aq_mrs} ) {
-				foreach my $type ( keys %{$$aq_mrs{$equipment_id}} ) {
-					$log->debug("AQUEOUS MR qty_index:$qty_index equipment:$equipment_id type: $type" . join(',',@{$$aq_mrs{$equipment_id}{$type}}) );
-				}
-			}
-		}
-	} elsif ( $$services{Aqueous} and @{$$services{Aqueous}} ) {
-		$project{HasAqueous} = $$services{Aqueous}[0];
-		%{$project{AqueousSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] )};
-	} # end if	
+          my $form = $$s_specs{SignatureIndex};
+          my $equipment_id = $$aq_specs{"ddmEquipment-$form-$qty_index"};
+
+          $$aq_mrs{$equipment_id} = {} if ! $$aq_mrs{$equipment_id};
+          foreach my $colour ( @aq_colours ) {
+            if ( $colour =~ /Aqueous/ ) {
+              $$aq_mrs{$equipment_id}{$colour} = [] if ! $$aq_mrs{$equipment_id}{$colour};
+              push @{$$aq_mrs{$equipment_id}{$colour}}, $$aq_specs{"txtLayoutWidth-$form-$qty_index"} * $$aq_specs{"txtLayoutHeight-$form-$qty_index"};
+            } # end if
+          } # end foreach colour
+        } # end foreach sig
+
+        $log->debug("AQUEOUS MR $qty_index " . join(',', keys %{$aq_mrs} ));
+        foreach my $equipment_id ( keys %{$aq_mrs} ) {
+          foreach my $type ( keys %{$$aq_mrs{$equipment_id}} ) {
+            $log->debug("AQUEOUS MR qty_index:$qty_index equipment:$equipment_id type: $type" . join(',',@{$$aq_mrs{$equipment_id}{$type}}) );
+          }
+        }
+      }
+    } elsif ( $$services{Aqueous} and @{$$services{Aqueous}} ) {
+      $project{HasAqueous} = $$services{Aqueous}[0];
+      %{$project{AqueousSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] )};
+    } # end if	
+  }
 
 	if ( $$services{SaddleStitching} ) {
 		%{$project{StitchingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{SaddleStitching}[0] )};
@@ -7744,7 +7754,7 @@ sub get_stock_description {
       } # end if
     } # end if
   } # end if show stock calliper
-  $string .= ' ' . $$specs{txtStockGSM}.'gsm' if $openprint::config{Show_Stock_GSM} ne 'N';
+  $string .= ' ' . int($$specs{txtStockGSM}).'gsm' if $openprint::config{Show_Stock_GSM} ne 'N';
   return $string;
 }
 
