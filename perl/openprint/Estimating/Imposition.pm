@@ -105,7 +105,7 @@ sub signature_calc {
 			if ( $ImpositionMakeReady{units} eq 'per form' ) {
 #$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
 				%ImpositionMakeReady = $SigMRService->get_price( $previous_forms, $Press );
-				$ImpositionMakeReady{Total} = $ImpositionMakeReady{Price} * $previous_forms;
+				$ImpositionMakeReady{Total} = $ImpositionMakeReady{Price}; # * $previous_forms;
 			} elsif ( $ImpositionMakeReady{units} eq 'per side' ) {
 				$ImpositionMakeReady{Total} = $ImpositionMakeReady{Price} * $Imposition->sides();
 			} else {
