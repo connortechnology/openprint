@@ -48,6 +48,7 @@
 	</fieldset>
 </form>
 <form id="f2" name="f2" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
 	<fieldset><legend>Equipment Information</legend>
 		<div class="leftColumn">
@@ -235,7 +236,6 @@
 </div>
 	</fieldset>
 <? endif ( $$variable{Equipment}->id() ) ?>
-	<input type="hidden" name="btnFunction"/>
 </form>
 <? if ( $$variable{Equipment}->specification('Folding Capable') ) ?>
 	<fieldset><legend>Fold Specifications</legend>
