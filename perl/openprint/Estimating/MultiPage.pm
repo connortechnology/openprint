@@ -54,6 +54,7 @@ my %variables = (
 		'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
 		'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
 		'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
+    'side_link',
 		'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace', 'OverrideAddGrip',
 		'ddmRunStyle-', 'ddmPress-', 'PrintingType-', 'StockType-',
 		'txtPlateChangeQuantity-', 'PlateChangeType-',
@@ -676,7 +677,7 @@ $openprint::log->debug("Starting Multipage::save");
 					txtSignatureType		=> 'Cover Pages',
 					txtServiceDescription	=> 'Cover',
 					Group					=>  1,
-					PrintingType			=> $$param{PrintingType},
+					PrintingType			=> $$specs{PrintingType},
 					txtSpreadSize			=>  4,
 					} );
 		} # end if
@@ -694,7 +695,7 @@ $openprint::log->debug("Starting Multipage::save");
 				txtSignatureType		=> 'Interior Pages',
 				txtServiceDescription	=> 'Interior Pages',
 				Group					=>  2,
-				PrintingType			=> $$param{PrintingType},
+				PrintingType			=> $$specs{PrintingType},
 				txtSpreadSize			=>  4,
 				} );
 	}
