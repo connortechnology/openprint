@@ -7619,7 +7619,7 @@ sub summary {
 		$html .= '</span>';
 	
 		$html .= ' ' . $$specs{"Versions$qty_index"}.' versions' if $$specs{Versions};
-		$html .= sprintf(qq{ on %s\n}, $$specs{'ddmPress'.$qty_index} ) if ( ! $$services{NoPrinting} ) and $openprint::User->email() =~ /^iconnor/;
+		$html .= ' on '. $$specs{'ddmPress'.$qty_index} if $$specs{'ddmPress'.$qty_index}; # and $openprint::User->email() =~ /^iconnor/;
 
 		my $plate_changes = 0;
 		if ( $$specs{Group} and $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"} ) {
