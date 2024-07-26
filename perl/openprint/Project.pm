@@ -1636,6 +1636,12 @@ sub recalculate {
 		if ( $status eq 'calculated' ) {
 			# Recalc signatures
 			my $module = 'openprint::Estimating::'.$$Type{type};
+			if ( my $function = $module->can('save') ) {
+				$status = $function->($$self{id}, $$services{''}[0], {});
+				$openprint::log->debug("$$Type{type}::save: status: $status");
+      } else {
+        $openprint::log->error("No calculate signatures function for $$Type{type}");
+			} # end if
 			if ( my $function = $module->can('calculate_signatures') ) {
 				$status = $function->($self);
 				$openprint::log->debug("$$Type{type}::Calculate_Sigs: status: $status");
