@@ -1884,7 +1884,7 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
 			$Breakdown .= '</table><br/>';
 
 			if ( ( ! defined $bestComparison ) or ( $comparison_cost < $bestComparison ) ) {
-$openprint::log->debug("Got better prrice $totalPrice < $bestPrice comparison $comparison_cost < $bestComparison" . $Equipment->name() ) if DEBUG;
+$openprint::log->debug("Got better prrice $totalPrice < $bestPrice comparison $comparison_cost < ".(defined($bestComparison) ? $bestComparison : undef).' '.$Equipment->name() ) if DEBUG;
 				$bestM = $mprice;
 				$bestComparison = $comparison_cost;
 				$bestPrice = $totalPrice;
