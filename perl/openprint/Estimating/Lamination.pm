@@ -512,12 +512,14 @@ sub summary {
     my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
     my $form  = $$sig_specs{SignatureIndex};
 
-    $summary .= (@sigs > 1) ? 'Form '.$form.' ': '';
-    if ($qty_index) {
-      my $equipment = openprint::Equipment->find_one(id=>$$specs{'ddmEquipment-'.$form.'-'.$qty_index});
-      $summary .= 'on '.$equipment->name().'<br/>' if $equipment;
-    } else {
-      $summary .= $$specs{"TypeFront-$form"}.' on front, '.$$specs{"TypeBack-$form"}.' on back<br/>';
+    if ($$specs{"TypeFront-$form"} ne 'None' or $$specs{"TypeBack-$form"} ne 'None') {
+      $summary .= (@sigs > 1) ? 'Form '.$form.' ': '';
+      if ($qty_index) {
+        my $equipment = openprint::Equipment->find_one(id=>$$specs{'ddmEquipment-'.$form.'-'.$qty_index});
+        $summary .= 'on '.$equipment->name().'<br/>' if $equipment;
+      } else {
+        $summary .= $$specs{"TypeFront-$form"}.' on front, '.$$specs{"TypeBack-$form"}.' on back<br/>';
+      }
     }
   }
   return $summary;
