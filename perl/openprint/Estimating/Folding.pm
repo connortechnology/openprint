@@ -2169,7 +2169,7 @@ $log->debug("# of FOlded Impositions in results" . @{$$results{FoldedImpositions
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
 		} # end foreach signature
 		if ( $status eq 'uncalculated' and ! $$specs{alert} ) {
-			$$specs{alert} = 'Unable to fold.';
+			$$specs{alert} .= 'Unable to fold for qty '.$qty_index.'.<br/>';
 		} # end if
 
 		if ( $$specs{'Markup'.$qty_index} ) {
