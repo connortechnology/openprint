@@ -306,12 +306,12 @@ sub calc {
 					foreach my $I ( @{$Price{Impositions}} ) {
 						$I->Equipment( $Price{Equipment} );
 						@$specs{
-							"ImpQty-$form-$qty_index-$imp_index",
-								"ImpOut-$form-$qty_index-$imp_index",
-								"ImpColumns-$form-$qty_index-$imp_index",
-								"ImpRows-$form-$qty_index-$imp_index"} =
-									@$I{'quantity','imposition','columns','rows'};
-						$imp_index += 1;
+              "ImpQty-$form-$qty_index-$imp_index",
+                "ImpOut-$form-$qty_index-$imp_index",
+                "ImpColumns-$form-$qty_index-$imp_index",
+                "ImpRows-$form-$qty_index-$imp_index"} =
+                  @$I{'quantity','imposition','columns','rows'};
+            $imp_index += 1;
           } # end foreach 
           if ( ! $$specs{"chkOverrideImposition-$form-$qty_index"} ) {
             foreach my $imp_index ($imp_index .. 4) {
@@ -338,7 +338,11 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= $Price{Breakdown}.'</fieldset>';
 			$$specs{alert} .= $Price{alert} if $Price{alert};
 
-			if ( (!defined$$specs{"txtVerticalQty-$form"}) and (!defined$$specs{"txtHorizontalQty-$form"}) ) {
+			if (
+          (!defined($$specs{"txtVerticalQty-$form"}) or $$specs{"txtVerticalQty-$form"} eq '')
+          and
+          (!defined($$specs{"txtHorizontalQty-$form"}) or $$specs{"txtHorizontalQty-$form"} eq '')
+         ) {
 				$$specs{alert} .= 'Please specify # of scores for form ' . $form;
 				$status = 'uncalculated';
 			} else {
@@ -349,10 +353,14 @@ sub calc {
 			$status = 'uncalculated' if $Price{Status} eq 'uncalculated';
 		} # end foreach signature
 
+
 		my $unitPrice = 0;
 
 		if ( $qtyTotal ) {
 			$unitPrice = $price / $qty if $qty;
+    } else {
+      $$specs{alert} .= 'Please specify # of scores or remove scoring from project.<br/>' if ! $$specs{alert};
+      $status = 'uncalculated';
 		} # end if
 
 		if ( $Project->markup() ) {
@@ -954,7 +962,7 @@ sub get_price {
 	return \%Results;
 } # end sub get_price
 
-# figures ou the number of scores needed. May return 0 if signature doesn't need it.
+# figures out the number of scores needed. May return 0 if signature doesn't need it.
 sub get_scores {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
