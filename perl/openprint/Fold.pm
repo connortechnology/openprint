@@ -281,5 +281,12 @@ sub imposition {
 	} # end if
 	return $_[0]{imposition};
 } # end sub imposition
+
+sub link_to {
+  my $self = shift;
+  my $text = @_ ? shift : $$self{strid};
+  my $options = @_ ? shift : {};
+	return '<a href="/administrator/managerial/fold.html?fold_id='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>';
+}
 1;
 __END__
