@@ -57,9 +57,9 @@
 <tr%1$s> 
   <td class="checkbox"><input type="checkbox" name="fold_id" value="%2$d"/></td>
   <td class="Equipment">%3$s</td>
-	<td class="Fold" onclick="popup_fold(%2$d);">%4$s</td>
-	<td class="Type" onclick="popup_fold(%2$d);">%5$s</td>
-  <td class="Orientation" onclick="popup_fold(%2$d);">%6$s</td>
+	<td class="Fold">%4$s</td>
+	<td class="Type">%5$s</td>
+  <td class="Orientation">%6$s</td>
 	<td class="Pages" onclick="popup_fold(%2$d);">%7$s</td>
 	<td class="Folds">%8$s</td>
 	<td class="Angles">%9$s</td>
@@ -71,7 +71,7 @@
 </tr>
 `, $rowclass, $$Fold{id}, $Fold->link_to($Fold->Equipment()->name()), $Fold->link_to($$Fold{name}),
 $Fold->link_to($Fold->type()),
-$Fold->orientation(),
+$Fold->link_to($Fold->orientation()),
 ($Fold->page_columns() ? $Fold->page_columns().'x'.$Fold->page_rows().'='.$Fold->pages() : $Fold->pages()),
 $Fold->folds(), $Fold->angles(),
 join(' ',
