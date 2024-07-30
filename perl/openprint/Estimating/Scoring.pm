@@ -173,7 +173,7 @@ sub signature_needs {
 			$openprint::log->error('Loading paper in Scoring::signature_needs');
 			$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
 		}
-	$openprint::log->debug( "Score Required for form $form!: " . $Paper->score_required() );
+    $openprint::log->debug( "Score Required for form $form!: $$Paper{id} " . $Paper->score_required() );
 		if ( $Paper->score_required() ) {
 			return 1;
 		} # end if
@@ -262,7 +262,7 @@ sub calc {
 		my $qtyTotal = 0;
 		my $price = 0;
 
-		foreach my $signature_service_index ( $Project->signatures() ) {
+		foreach my $signature_service_index ( $Project->signatures( { sort=> 1 }) ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $form = $$sig_specs{SignatureIndex};
 			$qty = $$specs{"txtQuantity$qty_index"};
@@ -795,7 +795,6 @@ sub get_price {
 		} # end if
 	} # end if
 	my $score_qty = $horizontal_rule + $vertical_rule;
-	my %setupPrice;
 	my $UseScoringMakeReadyService;
 	my $UseScoringService;
 	my %servicePrice;
@@ -808,13 +807,17 @@ sub get_price {
 		$UseScoringMakeReadyService = $ScoringMakeReadyService;
 	} 
 
-	%setupPrice = $UseScoringMakeReadyService->get_price(undef, $Equipment);
-	if ( $setupPrice{range_units} eq 'scores' ) {
-		$score_qty = $vertical + $horizontal;
-		%setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
-	} else {
-		%setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
-	}
+  my %setupPrice = $UseScoringMakeReadyService->get_price(undef, $Equipment);
+  if (%setupPrice) {
+    if ( $setupPrice{range_units} eq 'scores' ) {
+      $score_qty = $vertical + $horizontal;
+      %setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
+    } else {
+      %setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
+    }
+  } else {
+    $setupPrice{Total} = 0;
+  }
 
 	$Results{Breakdown} .= sprintf('MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice{Price}) if %setupPrice;
 	$Results{Breakdown} .= "Imposition: $$I{columns}x$$I{rows}=$$I{imposition}: ";
@@ -910,6 +913,7 @@ sub get_price {
 				$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>',
 						@horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
 			} else {
+        $horizontal_price{Total} = $horizontal_price{Price};
 				$openprint::log->error("Unknown units set on horizontal material price ($horizontal_price{units}) on $$Equipment{strid}");
 
 				$Results{Breakdown} .= "Unknown units set on horizontal material price ($horizontal_price{units})<br/>";
@@ -944,6 +948,7 @@ sub get_price {
 					$vertical_price{Total} = $vertical_price{Price} * $vertical_length/12;
 					$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
 				} else {
+          $vertical_price{Total} = $vertical_price{Price};
 					$openprint::log->error("Unknown units set on vertical material price ($vertical_price{units}) on $$Equipment{name}");
 					$Results{Breakdown} .= "Unknown units set on vertical material price ($vertical_price{units})<br/>";
 				} # end if
