@@ -73,23 +73,22 @@ function get_values(obj) {
 }
 
 function set_value( obj, value ) {
-	if ( ! obj ) {
-		console.log("No object passed to set_value");
+	if (!obj) {
+		console.log('No object passed to set_value');
 		return;
 	} // end if
-	if ( obj.type == 'select-one' ) {
-		ddm_select_by_value( obj, value );
-	} else if ( obj.type == 'radio' || obj.type == 'checkbox' ) {
+	if (obj.type == 'select-one') {
+		ddm_select_by_value(obj, value);
+	} else if (obj.type == 'radio' || obj.type == 'checkbox') {
 		set_rdb_value( obj, value );
 	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'tel' ) {
 		obj.value = value;
 	} else if ( obj.length ) {
-		for ( var x = 0, len=obj.length; x < len; x += 1 ) {
-			if ( obj[x].value == value ) {
-				obj[x].checked = 'checked';
-			} // end if
+		for ( let x = 0, len=obj.length; x < len; x += 1 ) {
+      obj[x].checked = ( obj[x].value == value );
 		}
-	} else {
+	} else if (obj.type == 'fieldset') {
+	} else if (obj.type == 'textarea') {
 		obj.innerHTML = value;
 	} // end if
 }
@@ -127,13 +126,17 @@ function get_select_value ( ddm ) {
 } // end function get_select_value
 
 function set_rdb_value( rdb, value ) {
-	for ( var x = 0; x < rdb.length; x ++ ) {
-		if ( rdb[x].value == value ) {
-			rdb[x].checked = true;
-		} else {
-			rdb[x].checked = false;
-		} // end if
-	} // end for
+  if (rdb.length) {
+    for ( let x = 0; x < rdb.length; x ++ ) {
+      if ( rdb[x].value == value ) {
+        rdb[x].checked = true;
+      } else {
+        rdb[x].checked = false;
+      } // end if
+    } // end for
+  } else {
+    rdb.checked = ( rdb.value == value );
+  }
 }
 
 function get_rdb_value( rdb ) {
