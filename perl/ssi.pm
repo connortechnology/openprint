@@ -608,12 +608,12 @@ sub button {
 ' : '</a>
 ';
   if ( $$options{onclick} ) {
-    $html .= '<script nonce="'.$config{CSP_NONCE}.qq`">
+    $html .= '<script'.($config{CSP_NONCE}?' nonce="'.$config{CSP_NONCE}.'"':'').">
     document.getElementById('Button$name').onclick = function(){
     $$options{onclick};
     };
     </script>
-    `;
+    ";
     delete $$options{onclick};
   } # end if
 
