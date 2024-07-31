@@ -3,7 +3,11 @@
 <?echo(
   return '' if $$variable{Project}->Type()->name() eq 'Envelopes';
   my @options = map { $_, $_ } sql::execute(undef, undef, q`SELECT DISTINCT type from Papers WHERE type IS NOT NULL AND type !='' ORDER BY type DESC`);
-  return '' if (@options <= 2);
+  if (@options <= 2) {
+    return join("\n",
+        map {sprintf('<input type="hidden" name="StockType%1$d" value="%2$s" />', $_, $$variable{'StockType'.$_} );} $$variable{Project}->quantity_indexes()
+        );
+  }
 	my $html = '<li class="stockformat"><label>Stock Format</label>';
   foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
     $html .= sprintf('<div class="%sColumns">', $$variable{Columns} );
