@@ -35,6 +35,8 @@ use vars qw( %ServicePrices %Specifications);
   'Scoring' => { units=> ['per hour', 'per m']},
 );
 %Specifications = (
+  'PerfScoreRunSpeed' => {range_units => [ 'calliper'], units=>'per hour'},
+  'Perf Score Run Speed' => {range_units => [ 'calliper'], units=>'per hour'},
   'RunSpeed' => {range_units => [ 'calliper'], units=>'per hour'},
   'Scoring Overs' => {range_units => [ 'impressions' ], units=>['percent']},
   'Scoring Capable' => { value=>['Y','N', 'For Pocket Folders', 'When PerfectBound', 'When Stitching' ] },
@@ -861,6 +863,7 @@ sub get_price {
     }
   } else {
     $runspeed = $Equipment->Specification('PerfScoreRunSpeed');
+    $runspeed = $Equipment->Specification('Perf Score Run Speed') if !$runspeed;
     $runspeed = $Equipment->Specification('RunSpeed', undef, 1) if !$runspeed;
     if ($runspeed) {
       if ($$runspeed{range_units} and ($$runspeed{range_units} eq 'impressions')) {
