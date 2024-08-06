@@ -537,7 +537,7 @@ sub _list {
 
 sub _service_prices {
   $variable{Equipment} = new openprint::Equipment($param{equipment_id});
-  if ($param{hide}) {
+  if ($param{hide} eq '1') {
     $openprint::session{'/administrator/equipment/edit.html?show_service_prices'} = 0;
     $variable{PageContent} = '';
   } else  {
