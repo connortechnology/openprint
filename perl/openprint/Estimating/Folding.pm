@@ -39,9 +39,9 @@ use constant DEBUG_NEEDS => 0;
 
 my %ServicePrices = (
   FoldingMinimumCharge => {},
-  'Folding(.*)MakeReady' => { units => [ 'per hour' ] },
+  '(.*)MakeReady' => { units => [ '', 'once', 'per form', 'per hour', 'per imposition' ] },
   'Folding' => { units=> ['per hour', 'per lb','per m']},
-  '(.*)Fold' => { units=> ['per hour', 'per lb','per m']},
+  '(.*)Fold$' => { units=> ['per hour', 'per lb','per m']},
 );
 my %Specifications = (
   'Folding Capable' => { values=>['Y','N','When PerfectBound', 'For Pocket Folders', 'When Stitching','When Printing'] },
@@ -57,14 +57,14 @@ my %Specifications = (
 
 sub ServicePriceConfiguration {
   my $name = shift;
-  $openprint::log->debug("Finding for $name");
-  $openprint::log->debug( Data::Dumper::Dumper(\%ServicePrices));
+  #$openprint::log->debug("Finding for $name");
+  #$openprint::log->debug( Data::Dumper::Dumper(\%ServicePrices));
   return $ServicePrices{$name} if $ServicePrices{$name};
   foreach my $key (keys %ServicePrices) {
-    $openprint::log->debug("Trying $name =~ $key/");
+    #$openprint::log->debug("Trying $name =~ $key/");
     return $ServicePrices{$key} if ($name =~ /$key/i);
   }
-  $openprint::log->debug("Not found for ($name)");
+  #$openprint::log->debug("Not found for ($name)");
   return undef;
 }
 sub SpecificationConfiguration {
