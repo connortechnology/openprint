@@ -1826,7 +1826,7 @@ function update_event_bindings() {
       return;
     }
     el.onchange = window[fnName].bind(el, el);
-    console.log('setting onchange on '+el.name+' to '+fnName);
+    //console.log('setting onchange on '+el.name+' to '+fnName);
   });
 
   document.querySelectorAll("select[on_change]").forEach(function attachOnChangeThis(el) {
@@ -1836,7 +1836,7 @@ function update_event_bindings() {
       return;
     }
     el.onchange = window[fnName].bind(el, el);
-    console.log('setting onchange on '+el.name+' to '+fnName);
+    //console.log('setting onchange on '+el.name+' to '+fnName);
   });
   document.querySelectorAll('select[data-on-change-this]').forEach(function(el) {
     const fnName = el.getAttribute('data-on-change-this');
@@ -1844,7 +1844,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onchangefor " + el.name + " to " + fnName);
+    //console.log("Setting up onchangefor " + el.name + " to " + fnName);
     el.onchange = window[fnName].bind(el, el);
   });
   document.querySelectorAll('select[on_change_this]').forEach(function(el) {
@@ -1853,7 +1853,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onchangefor " + el.name + " to " + fnName);
+    //console.log("Setting up onchangefor " + el.name + " to " + fnName);
     el.onchange = window[fnName].bind(el, el);
   });
 
@@ -1872,7 +1872,7 @@ function update_event_bindings() {
       console.error("Nothing found to bind to " + fnName);
       return;
     } else {
-      console.log("Setting oninput for "+el.name+" to "+fnName);
+      //console.log("Setting oninput for "+el.name+" to "+fnName);
     }
     el.oninput = window[fnName].bind(el, el);
   });
@@ -1883,7 +1883,7 @@ function update_event_bindings() {
       console.error("Nothing found to bind to " + fnName);
       return;
     }
-    console.log("Setting up oninput for " + el.name + " to " + fnName);
+    //console.log("Setting up oninput for " + el.name + " to " + fnName);
     el.oninput = window[fnName].bind(el, el);
   });
 
@@ -1893,7 +1893,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    //console.log("Setting up onclick for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
 
@@ -1903,7 +1903,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onkeyup_this for " + el.name + " to " + fnName);
+    //console.log("Setting up onkeyup_this for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
   document.querySelectorAll('button[on_click_this], input[on_click_this]').forEach(function(el) {
@@ -1912,7 +1912,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    //console.log("Setting up onclick for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
 
@@ -1922,7 +1922,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    //console.log("Setting up onclick for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
 
@@ -1933,7 +1933,7 @@ function update_event_bindings() {
       return;
     }
 
-    console.log('Setting for on_click to ' + fnName + ' for element ' + el.getAttribute('id'));
+    //console.log('Setting for on_click to ' + fnName + ' for element ' + el.getAttribute('id'));
     el.onclick = function(ev) {
       window[fnName](ev);
     };
@@ -1945,7 +1945,7 @@ function update_event_bindings() {
       return;
     }
 
-    console.log('Setting for data-on-click to ' + fnName + ' for element ' + el.getAttribute('id'));
+    //console.log('Setting for data-on-click to ' + fnName + ' for element ' + el.getAttribute('id'));
     el.onclick = function(ev) {
       window[fnName](ev);
     };
