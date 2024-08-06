@@ -79,15 +79,17 @@ function delete_fold_spec( id ) {
 } // end function delete_fold_spec
 
 function toggle_service_prices() {
+  const toggle = $j('#toggle_service_prices');
   const div = $j('#show_service_prices');
-  if (!div.html()) {
+  if (div.html()) {
+    toggle.html('+');
+  } else {
     div.html('Loading...');
-    div.load('/administrator/equipment/_service_prices.html?equipment_id='+$j('#ddmEquipment').val(),null, function(){
+    toggle.html('-');
+  }
+  div.load('/administrator/equipment/_service_prices.html?equipment_id='+$j('#ddmEquipment').val()+'&hide='+(toggle.html() == '-' ?'0':'1'),null, function(){
       update_event_bindings();
       });
-  } else {
-    div.toggle();
-  }
 }
 function toggle_specifications() {
   $j('#show_specifications').toggle();
