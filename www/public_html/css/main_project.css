@@ -26,6 +26,12 @@ color: black;
 .imposition input[type="text"] {
 	width: 40px;
 }
+.Project .View table tr .price1 input[type="number"],
+.Project .View table tr .price1 input[type="text"],
+.price2 input[type="number"],
+.price2 input[type="text"],
+.price3 input[type="number"],
+.price3 input[type="text"],
 .quantity input[type="number"],
 .quantity input[type="text"],
 .unitprice input[type="number"],
