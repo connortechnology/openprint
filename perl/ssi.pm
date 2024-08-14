@@ -1473,8 +1473,14 @@ sub bootstrap_navmenu {
               ),'</ul></li>' );
       }
 		} else {
-			$html .= sprintf( q`<li id="%1$sMenu" class="nav-item %3$s"><a href="%3$s">%2$s</a></li>`, $category_id, $category, $$menu{$category} );
-		}
+      my $url = $$menu{$category};
+      my $Page_Setting = openprint::Page_Setting::get( $url );
+      if ($Page_Setting->can_view()) {
+        $html .= sprintf( q`<li id="%1$sMenu" class="nav-item %3$s"><a href="%3$s">%2$s</a></li>`, $category_id, $category, $url);
+      } else {
+        $log->debug("Not permitted to view $url");
+      }
+    }
 	} # end foreach category
   #$log->error($html);
 	return $html;
