@@ -175,7 +175,7 @@ sub signature_needs {
 			$openprint::log->error('Loading paper in Scoring::signature_needs');
 			$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
 		}
-    $openprint::log->debug( "Score Required for form $form!: $$Paper{id} " . $Paper->score_required() );
+    $openprint::log->debug( "Score Required for form $form!: ".($$Paper{id} ? $$Paper{id} : 'Custom').' '.$Paper->score_required() );
 		if ( $Paper->score_required() ) {
 			return 1;
 		} # end if

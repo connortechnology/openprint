@@ -36,7 +36,7 @@ my @variables = (
 	'type_id',
 );
 sub variables {
-    return @variables;
+  return @variables;
 }
 
 my @no_outputs = (

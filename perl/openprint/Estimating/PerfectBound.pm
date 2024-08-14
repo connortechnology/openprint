@@ -669,6 +669,9 @@ sub get_price {
 				$servicePrice{Total} = $servicePrice{Price} * $qty;
 				$price{Service} += $servicePrice{Total};
 			} elsif ( $servicePrice{units} =~ /per hour/i ) {
+        if (!$runtime) {
+          $$specs{alert} .= 'Per hour pricing but no runtime calculated! Check Units Per Hour settings on '.$Equipment->name().'</br>';
+        }
 				$servicePrice{Total} = $servicePrice{Price} * $runtime;
 				$price{Service} += $servicePrice{Total}
 			} else {
@@ -714,6 +717,9 @@ sub get_price {
 			$servicePrice{Total} = $servicePrice{Price} * $qty;
 			$price{Service} += $servicePrice{Total};
 		} elsif ( $servicePrice{units} =~ 'per hour' ) {
+      if (!$runtime) {
+        $$specs{alert} .= 'Per hour pricing but no runtime calculated! Check Units Per Hour settings on '.$Equipment->name().'</br>';
+      }
 			$servicePrice{Total} = $servicePrice{Price} * $runtime;
 			$price{Service} += $servicePrice{Total}
 		} else {

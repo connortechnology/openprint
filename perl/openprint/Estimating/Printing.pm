@@ -6264,7 +6264,8 @@ if ( 1 ) {
 		$total_overs += ceil( ( $setup_overs > $run_overs ) ? $setup_overs : $run_overs );
 	} # end if
 	$total_overs += $additional_overs;
-	$total_overs += ( $bindery_overs - $total_overs ) if $bindery_overs > $total_overs;
+	$total_overs += $bindery_overs;
+  #$total_overs += ( $bindery_overs - $total_overs ) if $bindery_overs > $total_overs;
 
 	$min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), $plate_setup{'Plate Count'} );
 #$log->debug("Overs min " . $Paper->material() . " $min_overs");

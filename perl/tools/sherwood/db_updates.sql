@@ -594,3 +594,8 @@ update paper_prices set strunits='per 100lbs' where strunits='100 lbs';
 
 update papers set score_required=true where calliper > 0.008;
 update service_prices set units='per m' where units ilike '%Per%' AND service_id=(SELECT id from services where name='Scoring');
+
+delete from tbl_equipment_specifications where strname='Non-Parallel Perforating / Scoring';
+delete from tbl_equipment_specifications where strname='Parallel Perforating / Scoring';
+delete from service_prices where service_id=(SELECT id from services where name='ScorePerforationMinimumCharge');
+delete from services where name='ScorePerforationMinimumCharge';

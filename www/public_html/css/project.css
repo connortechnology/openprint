@@ -1,6 +1,8 @@
 
 .Project .Header {
+  /*
   margin-bottom: 5px;
+  */
 	width: 100%;
   flex-wrap: wrap;
   display: flex;
