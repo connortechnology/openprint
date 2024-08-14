@@ -6,6 +6,7 @@ use Carp qw( cluck );
 require openprint::Equipment;
 require openprint::pricing;
 require openprint::Project_Service;
+require openprint::ServiceType;
 
 use constant Debug => 0;
 
@@ -354,22 +355,23 @@ sub auto_calculate {
 		} # end if
 	} # end foreach
 
-	foreach my $service_type ( 'Collating', 'Aqueous', 'UVCoating', 'Grommeting', 'Sewing' ) {
-		my $module = 'openprint::Estimating::'.$service_type;
+	foreach my $service_type ( openprint::ServiceType->find(name=>['Collating', 'Aqueous', 'UVCoating', 'Grommeting', 'Sewing'])) {
+    my $type = $service_type->type();
+		my $module = 'openprint::Estimating::'.$type;
 		eval 'require '.$module.';';
-		$openprint::log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
+		$openprint::log->error("Error requiring $module: $@") if $@;
 		if ( my $function = $module->can('neccessary') ) {
 			if ( $function->($Project) ) {
-				$openprint::log->debug("$service_type is neccessary");
-				if ( ! $$services{$service_type} ) {
-					$_ = $Project->add_service( $service_type );
-					push @{$$services{$service_type}}, $_ if $_;
+				$openprint::log->debug("$module is neccessary");
+				if ( ! $$services{$type} ) {
+					$_ = $Project->add_service( $type );
+					push @{$$services{$type}}, $_ if $_;
 				} # end if
-			} elsif ( $$services{$service_type} ) {
-				foreach my $si ( @{$$services{$service_type}} ) {
+			} elsif ( $$services{$type} ) {
+				foreach my $si ( @{$$services{$type}} ) {
 					openprint::print_project::delete_service( $Project, $si );
 				} # end foreach
-				delete $$services{$service_type};
+				delete $$services{$type};
 			} # end if
 		} # end if
 	} # end foreach
