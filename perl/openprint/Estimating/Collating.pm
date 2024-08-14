@@ -24,7 +24,7 @@ require openprint::Estimating::Folding;
 
 my %Specifications = (
   'Collating Capable' => {values=>['Y', 'N']},
-  'Run Speed' => { },
+  'Run Speed' => { units=>['per hour' ] },
   '(\w+) ?Overs' => { units => [ 'sheets', 'percent' ] },
 );
 
@@ -304,6 +304,8 @@ sub internal_calc {
       } # end if
     } # end if
 
+    my $pockets = $$specs{'txtSignatureCount'.$qty_index};
+
     my $qty = $base_qty;
     if ( my $Overs = $Equipment->Specification('Collating Overs') ) {
       my $overs = 0;
@@ -328,11 +330,11 @@ sub internal_calc {
 
     if ( $CollatingPocketMakeReady) {
       my %PocketMakeReadyPrice = $CollatingPocketMakeReady->get_price( undef, $Equipment );
-      $price{PocketMakeReady} = $PocketMakeReadyPrice{Total} = $PocketMakeReadyPrice{Price} * $$specs{'txtSignatureCount'.$qty_index};
-      $price{Breakdown} .= sprintf('Pocket Make Ready: %d pockets @ $%.2f%s = $%.2f<br/>',$$specs{'txtSignatureCount'.$qty_index}, @PocketMakeReadyPrice{qw(Price units Total)});
+      $price{PocketMakeReady} = $PocketMakeReadyPrice{Total} = $PocketMakeReadyPrice{Price} * $pockets;
+      $price{Breakdown} .= sprintf('Pocket Make Ready: %d pockets @ $%.2f%s = $%.2f<br/>', $pockets, @PocketMakeReadyPrice{qw(Price units Total)});
     }
 
-    my %servicePrice = $Collating->get_price( $$specs{'txtSignatureCount'.$qty_index}, $Equipment ) if $Collating;
+    my %servicePrice = $Collating->get_price( $pockets, $Equipment ) if $Collating;
     if (!$servicePrice{units}) {
       $$specs{alert} .= 'No units in service price.<br/>';
       $price{Service} = $servicePrice{Total} = 1000000;
@@ -340,14 +342,14 @@ sub internal_calc {
       $price{Service} = $qty*$servicePrice{Price}/1000; # Service Price for Collating is per 1000
       $price{MPrice} = $price{Service};
     } elsif ($servicePrice{units} eq 'per hour') {
-      my $runspeed = $Equipment->Specification('Run Speed');
+      my $runspeed = $Equipment->Specification('Run Speed', $pockets);
       if ($runspeed) {
         if (lc $$runspeed{units} eq 'per hour') {
           $servicePrice{speed} = $$runspeed{value};
           $servicePrice{hours} = $qty / $$runspeed{value};
           $price{Service} = $servicePrice{Total} = $servicePrice{Price} * $qty / $$runspeed{value};
           $price{Breakdown} .= sprintf('Service: $%.2f%s * %.2fhours @%d = $%.2f<br/>', @servicePrice{qw(Price units hours speed Total)});
-          $price{MPrice} = $price{Service} *1000/$$runspeed{value};;
+          $price{MPrice} = $price{Service} *1000/$$runspeed{value};
         }
       } else {
         $price{Service} = $servicePrice{Price};
