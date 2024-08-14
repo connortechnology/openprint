@@ -34,7 +34,7 @@ my @variables = (
 	'type_id',
 );
 sub variables {
-    return @variables;
+  return @variables;
 }
 
 my @no_outputs = (
@@ -214,6 +214,7 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # endif
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $unitPrice/$qty ) * (1+$Project->markup()/100) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( 1000*$unitPrice/$qty ) * (1+$Project->markup()/100) );
 	} # end foreach
 
 	return $$specs{Status} = $status;
