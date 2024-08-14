@@ -198,7 +198,7 @@ sub neccessary {
 		return 0;
 	} # end if
   my $book_type = $Project->get_book_type();
-  if (sets::isin($book_type, ['Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound'])) {
+  if ($book_type and sets::isin($book_type, ['Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound'])) {
 		return 0;
   }
 
