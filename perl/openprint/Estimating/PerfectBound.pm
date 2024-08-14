@@ -346,6 +346,7 @@ sub signature_calc {
 	} # while ! bestPrice and imposition
 
 	if ( $bestPrice ) {
+    $results{pockets} = $pockets;
 		$results{Imposition} = $$bestPrice{Imposition};
 		$results{Equipment} = $bestEquipment;
 		$results{Status} = 'calculated';
