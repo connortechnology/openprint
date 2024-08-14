@@ -118,10 +118,20 @@ sub view {
 	my $project_id = $param{ProjectIndex};
 	$project_id = $param{project_id} if $param{project_id} and ! $param{ProjectIndex};
 
+
   $session{ShowAllSignatures} = $param{ShowAllSignatures} if exists $param{ShowAllSignatures};
 	$variable{ProjectIndex} = $project_id;
 	my $Project = $variable{Project} = new openprint::Project($project_id);
 	my $save = 0;
+
+  if ( exists($param{quote_level}) and ( $param{quote_level} != $Project->style_id() ) ) {
+    $Project->style_id( $param{quote_level} );
+    $save = 1;
+  } elsif ( ( ! $Project->style_id() ) and $openprint::User->quote_level() ) {
+    # Set default
+    $Project->style_id( $openprint::User->quote_level() );
+    $save = 1;
+  } # end if
   # A new project will have no quantities, so no quantity_indexes, so this is an error check
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $$Project{'price'.$qty_index} != $Project->price($qty_index,undef) ) {
