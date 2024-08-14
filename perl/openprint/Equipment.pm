@@ -354,7 +354,7 @@ $openprint::log->debug("Got fold" . $Fold->to_string()) if DEBUG_FOLDING;
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'strname, dblmin NULLS FIRST', @_ );
+	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'sorting NULLS FIRST,strname, dblmin NULLS FIRST', @_ );
 } # end sub Specifications
 
 sub specification {
