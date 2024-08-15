@@ -1803,6 +1803,10 @@ if ( ! sets::isin( 'tbl_equipment_specifications', \@tables ) ) {
 			$log->debug("Adding range_units to tbl_equipment_specifications");
 			$dbh->do('ALTER TABLE tbl_equipment_specifications ADD range_units         text');
 		}
+		if ( ! exists $$data{sorting} ) {
+			$log->debug("Adding sorting to tbl_equipment_specifications");
+			$dbh->do('ALTER TABLE tbl_equipment_specifications ADD sorting INTEGER');
+		}
 	} # end if
 } # end if
 

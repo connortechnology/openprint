@@ -82,7 +82,6 @@ table .PeriodStart, table .PeriodEnd, table .Period {
 }
 table .Range {
   text-align: center;
-  width: 215px;
 }
 table .Range_Units {
   text-align: center;

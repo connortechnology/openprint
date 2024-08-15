@@ -600,7 +600,8 @@ sub setup_project {
 	my %mixed_colours;
 	my %washed_colours;
 
-	foreach my $index ( $Project->signatures( { sort=>1 }) ) {
+  $project{sorted_signatures} = [ $Project->signatures( { sort=>1 } ) ];
+	foreach my $index ( @{$project{sorted_signatures}} ) {
 		last if $index == $service_index;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 		next if $$sig_specs{pages_supplied} and ($$sig_specs{pages_supplied} eq 'Y');
@@ -756,7 +757,7 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
       my $aq_specs = openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] );
       %{$project{AqueousSpecs}} = %{$aq_specs};
 
-      my @sorted_sigs = $Project->signatures( { sort=>1 } );
+      my @sorted_sigs = @{$project{sorted_signatures}};
 
       foreach my $qty_index ( $Project->quantity_indexes() ) {
         my $aq_mrs = $project{"AqueousMakeReadies$qty_index"} = {};
@@ -6136,39 +6137,39 @@ if ( 1 ) {
 
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$project{side_one_colours}} and @{$$project{side_two_colours}} ) {
-			my $press_setup_front = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
+			my $press_setup_front = press_setup_cost( $project, $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 			$press_setup += $press_setup_front->{Total};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 			if ( ( !$$press_setup_front{units} ) or ( $$press_setup_front{units} ne 'total' and $$press_setup_front{units} ne 'per job' ) ) {
-				my $back_press_setup = press_setup_cost( 0, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
+				my $back_press_setup = press_setup_cost( $project, 0, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 				$press_setup += $$back_press_setup{Total};
 				$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$back_press_setup{'Unit Count','Price','units','Total'} );
 				$price{'Plate Total'} += $$back_press_setup{'Plate Total'};
 				$price{'Plate Setup Count'} += $$back_press_setup{'Plate Count'};
 			} # end if
 		} elsif ( @{$$project{side_one_colours}} ) {
-			my $press_setup_front = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
+			my $press_setup_front = press_setup_cost( $project, $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 			$press_setup += $$press_setup_front{Total};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 		} elsif ( @{$$project{side_two_colours}} ) {
-			my $press_setup_back = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
+			my $press_setup_back = press_setup_cost( $project, $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 			$press_setup += $$press_setup_back{Total};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_back{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_back{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_back{'Plate Price','Plate Count','Plate Units'};
 		} # end if
 	} elsif ( $$Imposition{runstyle} eq 'Web' or $$Imposition{runstyle} eq 'Perfecting' ) {
-		my $press_setup_cost = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{combined_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
+		my $press_setup_cost = press_setup_cost( $project, $plate_changes, $plate_setup{'Plate Runs'}, $$project{combined_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 		$press_setup += $$press_setup_cost{Total};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
 		@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_cost{'Plate Price','Plate Count','Plate Units'};
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
 	} else {
-		my $press_setup_cost = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{filtered_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
+		my $press_setup_cost = press_setup_cost( $project, $plate_changes, $plate_setup{'Plate Runs'}, $$project{filtered_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 		$press_setup += $$press_setup_cost{Total};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
@@ -6263,7 +6264,8 @@ if ( 1 ) {
 		$total_overs += ceil( ( $setup_overs > $run_overs ) ? $setup_overs : $run_overs );
 	} # end if
 	$total_overs += $additional_overs;
-	$total_overs += ( $bindery_overs - $total_overs ) if $bindery_overs > $total_overs;
+	$total_overs += $bindery_overs;
+  #$total_overs += ( $bindery_overs - $total_overs ) if $bindery_overs > $total_overs;
 
 	$min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), $plate_setup{'Plate Count'} );
 #$log->debug("Overs min " . $Paper->material() . " $min_overs");
@@ -7168,7 +7170,7 @@ $log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{units})");
 
 # This is called once perside, or just once for W&T
 sub press_setup_cost {
-	my ( $plate_change_qty, $plate_runs, $colours, $calliper, $qty_index, $Imposition, $other_impositions ) = @_;
+	my ( $project, $plate_change_qty, $plate_runs, $colours, $calliper, $qty_index, $Imposition, $other_impositions ) = @_;
 
 	my $Press = $$Imposition{Press};
   my $specs = $$Imposition{specs};
@@ -7239,7 +7241,7 @@ sub press_setup_cost {
 		
 		my $Project = $$Imposition{Project};
 		if ( $Project ) {
-			my @signatures = sort { $a <=> $b } $Project->signatures();
+			my @signatures = @{$$project{sorted_signatures}};
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[0] );
 			if ( $$sig_specs{SignatureIndex} == $$specs{SignatureIndex} ) {
 				# Do the charge.	

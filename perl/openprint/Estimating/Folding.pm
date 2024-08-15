@@ -39,9 +39,9 @@ use constant DEBUG_NEEDS => 0;
 
 my %ServicePrices = (
   FoldingMinimumCharge => {},
-  'Folding(.*)MakeReady' => { units => [ 'per hour' ] },
+  '(.*)MakeReady' => { units => [ '', 'once', 'per form', 'per hour', 'per imposition' ] },
   'Folding' => { units=> ['per hour', 'per lb','per m']},
-  '(.*)Fold' => { units=> ['per hour', 'per lb','per m']},
+  '(.*)Fold$' => { units=> ['per hour', 'per lb','per m']},
 );
 my %Specifications = (
   'Folding Capable' => { values=>['Y','N','When PerfectBound', 'For Pocket Folders', 'When Stitching','When Printing'] },
@@ -57,14 +57,14 @@ my %Specifications = (
 
 sub ServicePriceConfiguration {
   my $name = shift;
-  $openprint::log->debug("Finding for $name");
-  $openprint::log->debug( Data::Dumper::Dumper(\%ServicePrices));
+  #$openprint::log->debug("Finding for $name");
+  #$openprint::log->debug( Data::Dumper::Dumper(\%ServicePrices));
   return $ServicePrices{$name} if $ServicePrices{$name};
   foreach my $key (keys %ServicePrices) {
-    $openprint::log->debug("Trying $name =~ $key/");
+    #$openprint::log->debug("Trying $name =~ $key/");
     return $ServicePrices{$key} if ($name =~ /$key/i);
   }
-  $openprint::log->debug("Not found for ($name)");
+  #$openprint::log->debug("Not found for ($name)");
   return undef;
 }
 sub SpecificationConfiguration {
@@ -1782,10 +1782,15 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
 			} # end foreach folded Imposition
 			$comparison_cost += $totalPrice;
 
-			#my %cutting_results = ( alert => '', Breakdown=>'', Price=>0 );
-			#if ( $$calc_hash{HasCutting} ) {
-				#%cutting_results = openprint::Estimating::Cutting::signature_calc_folding_cutting( $Project, $sig_specs, $$calc_hash{cutting_specs}, $qty_index, $Paper, $SignatureImposition, \%fold_specs, $calc_hash );
-			#} # end if
+			my %cutting_results = ( alert=>'', Breakdown=>'', Price=>0 );
+			if ($$calc_hash{HasCutting}) {
+        #%cutting_results = openprint::Estimating::Cutting::signature_calc_folding_cutting( $Project, $sig_specs, $$calc_hash{cutting_specs}, $qty_index, $Paper, $SignatureImposition, \%fold_specs, $calc_hash );
+        #%cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, $sig_specs, $$calc_hash{cutting_specs}, $qty_index, $Paper, $SignatureImposition, \%fold_specs, $calc_hash );
+        #$Breakdown .= '<tr><td>Cutting:'.$cutting_results{Status}.' '.$cutting_results{Breakdown}.'</td><td class="Price">$' . sprintf($openprint::config{ProjectMoneyFormat}, $cutting_results{FoldingPrice}) . '</td></tr>';
+        #$Breakdown .= '<tr><td>Cutting:'.$cutting_results{Status}.' '.$cutting_results{Breakdown}.'</td><td class="Price">$' . sprintf($openprint::config{ProjectMoneyFormat}, $cutting_results{FoldingPrice}) . '</td></tr>';
+        #$$specs{alert} .= $cutting_results{alert} if $cutting_results{alert};
+        #$totalPrice += $cutting_results{FoldingPrice};
+			} # end if
 			$Breakdown .= '<tr><td>Folding total:</td><td class="Price">$' . sprintf($openprint::config{ProjectMoneyFormat}, $totalPrice) . '</td></tr>';
 			$$SignatureImposition{Folds} = \@Used_Impositions;
       if ($$calc_hash{HasCollating}) {
@@ -1794,6 +1799,38 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
         $Breakdown .= '<tr><td>Collating total:</td><td class="Price">$' . sprintf($openprint::config{ProjectMoneyFormat}, $collating_results{Total}) . '</td></tr>';
 			  $comparison_cost += $collating_results{Total};
       }
+      if ($$calc_hash{HasPerfectBound}) {
+        my $perfectbound_part = 0;
+        my $perfectbound_specs = $$calc_hash{PerfectBoundSpecs};
+        my $perfectbound_results = openprint::Estimating::PerfectBound::signature_calc(
+          $Project, $$calc_hash{HasPerfectBound}, $perfectbound_specs, $qty_index, $Signature_Impositions, $calc_hash );
+        if ( ! $$perfectbound_results{Equipment} ) {
+          $$perfectbound_results{alert} //= '';
+          $$perfectbound_results{Breakdown} //= '';
+          $Breakdown .= "unable to determine perfectbound equipment: $$perfectbound_results{alert} $$perfectbound_results{Breakdown}<br/>";
+          $openprint::log->warn('unable to determine perfectbound equipment: '.$Breakdown) if DEBUG;
+
+          $perfectbound_part = 1000000;
+          #$totalPrice += 1000000;
+        } elsif ( $$perfectbound_results{Equipment}{id} != $$Equipment{id} and ( $capable eq 'When PerfectBound' ) ) {
+          $Breakdown .= 'Not perfectbinding on ' . $$Equipment{strid}.' perfectbinding on '.$$perfectbound_results{Equipment}{strid} .'.<br/>';
+          #$Breakdown .= $$stitching_results{Breakdown} . '<br/>';
+          $Breakdown .= $$perfectbound_results{alert};
+          $perfectbound_part = 1000000;
+          $totalPrice += 1000000;
+        } else {
+          my $Price = $$perfectbound_results{Price};
+          $perfectbound_part = $$Price{Price};
+          #$Breakdown .= '<tr><td>'.$$stitching_results{Breakdown}.'</td></tr>' if DEBUG;
+          $Breakdown .= sprintf('<tr><td>Stitching cost on %s %dout %dpockets</td><td class="Price">$%.2f</td></tr>',
+            $$perfectbound_results{Equipment}{name}, @$perfectbound_results{'Imposition','pockets'}, $perfectbound_part );
+        } # end if
+        #$Breakdown .= $$results{Breakdown}.'<br/>';
+        #} elsif ( $$specs{StitchingEquipment}{id} != $$Equipment{id} and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
+        #$Breakdown .= '<tr><td>Not stitching on ' . $$Equipment{strid}.' stitching on '.$$specs{StitchingEquipment}{strid} .'.</td></tr>';
+        $comparison_cost += $perfectbound_part;
+      } # end if has perfectbound
+
 			my $stitching_part = 0;
 			if ( $$calc_hash{HasStitching} ) {
 				if ( ! exists $$specs{StitchingCost} ) {
@@ -1993,6 +2030,7 @@ sub calc {
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
 	my $calc_hash = {};
+  $$calc_hash{ProjectSpecs} = $printing_specs;
 	if ( $$services{SaddleStitching} ) {
 		%{$$calc_hash{StitchingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{SaddleStitching}[0] )};
 		$$calc_hash{HasStitching} = $$services{SaddleStitching}[0];
@@ -2016,6 +2054,9 @@ sub calc {
 			$$calc_hash{"${service}Specs"} = openprint::service::get_specs_ref( $Project, $$services{$service}[0] );
 		}
 	} # end foreach
+  if ($$calc_hash{HasCutting}) {
+    openprint::Estimating::Cutting::init( $Project, $calc_hash );
+  }
 	if ( $$services{Scoring} ) {
 		openprint::Estimating::Scoring::init( $Project, $calc_hash );
 	}

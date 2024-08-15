@@ -1,23 +1,26 @@
 <ul>
 <? include(/includes/main/proj/_quantities.html)?>
-<? if ( $$variable{Project}->Type()->name() ne 'Envelopes' ) ?>
-<li class="stockformat">
-	<label>Stock Format</label>
-	<? echo ( my $html = '';
-		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= sprintf('<div class="%sColumns">', $$variable{Columns} );
-			$html .= radio( 'StockType'.$qty_index, ['Sheet','Sheet', 'Roll','Roll'], $$variable{'StockType'.$qty_index}, { onclick=>'calc(this.form.name);' } );
-			if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-				$html .= write_override( 'OverrideStockType'.$qty_index, $$variable{'OverrideStockType'.$qty_index}, '', "calc('f1');" );
-			} else {
-				$html .= sprintf('<input type="hidden" name="OverrideStockType%1$d" value="%2$s" />', $qty_index, $$variable{'OverrideStockType'.$qty_index} );
-			} # end if
-			$html .= '</div>';
-		} # end foreach qty_index
-		return $html;
-	) ?>
-</li>
-<? endif ( $$variable{Project}->Type()->name() ne 'Envelopes' ) ?>
+<?echo(
+  return '' if $$variable{Project}->Type()->name() eq 'Envelopes';
+  my @options = map { $_, $_ } sql::execute(undef, undef, q`SELECT DISTINCT type from Papers WHERE type IS NOT NULL AND type !='' ORDER BY type DESC`);
+  if (@options <= 2) {
+    return join("\n",
+        map {sprintf('<input type="hidden" name="StockType%1$d" value="%2$s" />', $_, $$variable{'StockType'.$_} );} $$variable{Project}->quantity_indexes()
+        );
+  }
+	my $html = '<li class="stockformat"><label>Stock Format</label>';
+  foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+    $html .= sprintf('<div class="%sColumns">', $$variable{Columns} );
+    $html .= radio( 'StockType'.$qty_index, \@options, $$variable{'StockType'.$qty_index}, { onclick=>'calc(this.form.name);' } );
+    if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+      $html .= write_override( 'OverrideStockType'.$qty_index, $$variable{'OverrideStockType'.$qty_index}, '', "calc('f1');" );
+    } else {
+      $html .= sprintf('<input type="hidden" name="OverrideStockType%1$d" value="%2$s" />', $qty_index, $$variable{'OverrideStockType'.$qty_index} );
+    } # end if
+    $html .= '</div>';
+  } # end foreach qty_index
+  return $html.'</li>';
+) ?>
 <li class="stocksize">
 	<label><? echo ( writeTip('Stock size'); ) ?></label>
 <? echo (

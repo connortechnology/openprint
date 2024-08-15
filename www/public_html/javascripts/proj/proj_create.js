@@ -1,5 +1,5 @@
 function submit_handler(form) {
-	var form_status = validate_data(form);
+	let form_status = validate_data(form);
 	if (form_status) {
 		form_status = checkSelections(form);
 	} // end if
@@ -98,7 +98,7 @@ function project_type_alert( form, rdb ) {
 }
 
 function checkSelections (form){
-	var projectService = get_rdb_value(form,'rdbShipping');
+	const projectService = get_rdb_value(form,'rdbShipping');
 	if ( projectService == 'CourierLTLFreight' ) {
 		if ( ! confirm ("Please click OK to calculate your project without a shipping price and an administrator will contact you to arrange the most cost effective way to ship your project(s).\n\nOr click Cancel to select a different shipping method.")) {
 		// if the click Cancel on the pop-up, then return false to cancel the submit
@@ -109,23 +109,22 @@ function checkSelections (form){
 } // end checkSelections()
 
 function setReason(reprintVal,divElem) {
-   if(reprintVal == 'Y') {
-      // Project is a reprint.
-      // Display reason drop down option.
-      divElem.style.display = "block";
-   } else {
-      // Project is not a reprint.
-      // Make sure reason drop down is hidden.
-      divElem.style.display = "none";
-   }
+  if (reprintVal == 'Y') {
+    // Project is a reprint.
+    // Display reason drop down option.
+    divElem.style.display = "block";
+  } else {
+    // Project is not a reprint.
+    // Make sure reason drop down is hidden.
+    divElem.style.display = "none";
+  }
 }
 
 function ddmDesign_onChange(form){
 } // end function
 
-
 function set_service( chk, service, checked ) {
-	for ( var index = 0; index < chk.length; index += 1 ) {
+	for ( let index = 0; index < chk.length; index += 1 ) {
 		if ( chk[index].value == service ) {
 			chk[index].checked = checked;
 		} // end if
@@ -133,7 +132,7 @@ function set_service( chk, service, checked ) {
 } // end function check_service
 
 function check_service( chk, service ) {
-	for ( var index = 0; index < chk.length; index += 1 ) {
+	for ( let index = 0; index < chk.length; index += 1 ) {
 		if ( chk[index].value == service ) {
 			return chk[index].checked;
 		} // end if
@@ -181,9 +180,9 @@ function service_onclick( element ) {
 
 function checkSelections (form){
 
-	var projectType = get_rdb_value( form.rdbProjectType );
+	const projectType = get_rdb_value( form.rdbProjectType );
 	if ( projectType != 'ColourCopies' && projectType != 'InkjetOutputs' && projectType !='NoPrintingRequired') {
-		var design = get_value(form.ddmDesign);
+		const design = get_value(form.ddmDesign);
 		if ( design == 'FinalFilm' ) {
 			if ( ! form.chkServicesFilmStripping.checked ) {
 				form.chkServicesFilmStripping.checked = true;
@@ -219,19 +218,3 @@ function checkSelections (form){
 	} // end if
 	return true;
 } // end checkFilmProofsPads()
-
-function calc( formName, force ) {
-	if ( gettingNewPrice && ! force ) {
-		if ( timeout ) clearTimeout( timeout );
-		timeout = setTimeout( "calc('" + formName + "');", 1000 );
-		return;
-	} // end if
-	timeout = null;
-	var form = getFormObj( formName );
-    gettingNewPrice = true;
-	var h = $H(Form.serialize(form,true));
-	h.set('ServiceType', 'Project' );
-	h.set('callback', 'cbFillResults' );
-	h.set('method', 'create_calc' );
-	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-} // end function calc(form)

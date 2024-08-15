@@ -35,6 +35,8 @@ use vars qw( %ServicePrices %Specifications);
   'Scoring' => { units=> ['per hour', 'per m']},
 );
 %Specifications = (
+  'PerfScoreRunSpeed' => {range_units => [ 'calliper'], units=>'per hour'},
+  'Perf Score Run Speed' => {range_units => [ 'calliper'], units=>'per hour'},
   'RunSpeed' => {range_units => [ 'calliper'], units=>'per hour'},
   'Scoring Overs' => {range_units => [ 'impressions' ], units=>['percent']},
   'Scoring Capable' => { value=>['Y','N', 'For Pocket Folders', 'When PerfectBound', 'When Stitching' ] },
@@ -173,7 +175,7 @@ sub signature_needs {
 			$openprint::log->error('Loading paper in Scoring::signature_needs');
 			$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
 		}
-	$openprint::log->debug( "Score Required for form $form!: " . $Paper->score_required() );
+    $openprint::log->debug( "Score Required for form $form!: ".($$Paper{id} ? $$Paper{id} : 'Custom').' '.$Paper->score_required() );
 		if ( $Paper->score_required() ) {
 			return 1;
 		} # end if
@@ -196,7 +198,7 @@ sub neccessary {
 		return 0;
 	} # end if
   my $book_type = $Project->get_book_type();
-  if (sets::isin($book_type, ['Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound'])) {
+  if ($book_type and sets::isin($book_type, ['Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound'])) {
 		return 0;
   }
 
@@ -262,7 +264,7 @@ sub calc {
 		my $qtyTotal = 0;
 		my $price = 0;
 
-		foreach my $signature_service_index ( $Project->signatures() ) {
+		foreach my $signature_service_index ( $Project->signatures( { sort=> 1 }) ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $form = $$sig_specs{SignatureIndex};
 			$qty = $$specs{"txtQuantity$qty_index"};
@@ -306,12 +308,12 @@ sub calc {
 					foreach my $I ( @{$Price{Impositions}} ) {
 						$I->Equipment( $Price{Equipment} );
 						@$specs{
-							"ImpQty-$form-$qty_index-$imp_index",
-								"ImpOut-$form-$qty_index-$imp_index",
-								"ImpColumns-$form-$qty_index-$imp_index",
-								"ImpRows-$form-$qty_index-$imp_index"} =
-									@$I{'quantity','imposition','columns','rows'};
-						$imp_index += 1;
+              "ImpQty-$form-$qty_index-$imp_index",
+                "ImpOut-$form-$qty_index-$imp_index",
+                "ImpColumns-$form-$qty_index-$imp_index",
+                "ImpRows-$form-$qty_index-$imp_index"} =
+                  @$I{'quantity','imposition','columns','rows'};
+            $imp_index += 1;
           } # end foreach 
           if ( ! $$specs{"chkOverrideImposition-$form-$qty_index"} ) {
             foreach my $imp_index ($imp_index .. 4) {
@@ -338,7 +340,11 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= $Price{Breakdown}.'</fieldset>';
 			$$specs{alert} .= $Price{alert} if $Price{alert};
 
-			if ( (!defined$$specs{"txtVerticalQty-$form"}) and (!defined$$specs{"txtHorizontalQty-$form"}) ) {
+			if (
+          (!defined($$specs{"txtVerticalQty-$form"}) or $$specs{"txtVerticalQty-$form"} eq '')
+          and
+          (!defined($$specs{"txtHorizontalQty-$form"}) or $$specs{"txtHorizontalQty-$form"} eq '')
+         ) {
 				$$specs{alert} .= 'Please specify # of scores for form ' . $form;
 				$status = 'uncalculated';
 			} else {
@@ -349,10 +355,14 @@ sub calc {
 			$status = 'uncalculated' if $Price{Status} eq 'uncalculated';
 		} # end foreach signature
 
+
 		my $unitPrice = 0;
 
 		if ( $qtyTotal ) {
 			$unitPrice = $price / $qty if $qty;
+    } else {
+      $$specs{alert} .= 'Please specify # of scores or remove scoring from project.<br/>' if ! $$specs{alert};
+      $status = 'uncalculated';
 		} # end if
 
 		if ( $Project->markup() ) {
@@ -787,7 +797,6 @@ sub get_price {
 		} # end if
 	} # end if
 	my $score_qty = $horizontal_rule + $vertical_rule;
-	my %setupPrice;
 	my $UseScoringMakeReadyService;
 	my $UseScoringService;
 	my %servicePrice;
@@ -800,13 +809,17 @@ sub get_price {
 		$UseScoringMakeReadyService = $ScoringMakeReadyService;
 	} 
 
-	%setupPrice = $UseScoringMakeReadyService->get_price(undef, $Equipment);
-	if ( $setupPrice{range_units} eq 'scores' ) {
-		$score_qty = $vertical + $horizontal;
-		%setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
-	} else {
-		%setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
-	}
+  my %setupPrice = $UseScoringMakeReadyService->get_price(undef, $Equipment);
+  if (%setupPrice) {
+    if ( $setupPrice{range_units} eq 'scores' ) {
+      $score_qty = $vertical + $horizontal;
+      %setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
+    } else {
+      %setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
+    }
+  } else {
+    $setupPrice{Total} = 0;
+  }
 
 	$Results{Breakdown} .= sprintf('MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice{Price}) if %setupPrice;
 	$Results{Breakdown} .= "Imposition: $$I{columns}x$$I{rows}=$$I{imposition}: ";
@@ -850,6 +863,7 @@ sub get_price {
     }
   } else {
     $runspeed = $Equipment->Specification('PerfScoreRunSpeed');
+    $runspeed = $Equipment->Specification('Perf Score Run Speed') if !$runspeed;
     $runspeed = $Equipment->Specification('RunSpeed', undef, 1) if !$runspeed;
     if ($runspeed) {
       if ($$runspeed{range_units} and ($$runspeed{range_units} eq 'impressions')) {
@@ -902,6 +916,7 @@ sub get_price {
 				$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>',
 						@horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
 			} else {
+        $horizontal_price{Total} = $horizontal_price{Price};
 				$openprint::log->error("Unknown units set on horizontal material price ($horizontal_price{units}) on $$Equipment{strid}");
 
 				$Results{Breakdown} .= "Unknown units set on horizontal material price ($horizontal_price{units})<br/>";
@@ -936,6 +951,7 @@ sub get_price {
 					$vertical_price{Total} = $vertical_price{Price} * $vertical_length/12;
 					$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
 				} else {
+          $vertical_price{Total} = $vertical_price{Price};
 					$openprint::log->error("Unknown units set on vertical material price ($vertical_price{units}) on $$Equipment{name}");
 					$Results{Breakdown} .= "Unknown units set on vertical material price ($vertical_price{units})<br/>";
 				} # end if
@@ -954,7 +970,7 @@ sub get_price {
 	return \%Results;
 } # end sub get_price
 
-# figures ou the number of scores needed. May return 0 if signature doesn't need it.
+# figures out the number of scores needed. May return 0 if signature doesn't need it.
 sub get_scores {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 

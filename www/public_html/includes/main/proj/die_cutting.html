@@ -28,7 +28,6 @@
 			input( type=>'float', name=>'txtDieHeight-'.$$variable{SignatureIndex}, value=>$$variable{txtDieHeight}, oninput=>'calc(this.form.name);', placeholder=>'height' ),
 			write_override( 'chkOverrideDimensions-'.$$variable{SignatureIndex}, $$variable{'chkOverrideDimensions-'.$$variable{SignatureIndex}}, '', q`calc('f1');` ),
 		); ) ?>
-	</li>
 		<? echo ( input( type=>'float', name=>'txtSteelRuleLength-'.$$variable{SignatureIndex}, value=>$$variable{'txtSteelRuleLength-'.$$variable{SignatureIndex}}, oninput=>'calc(this.form.name);' ); ) ?>
 		Linear Inches
 	</li>

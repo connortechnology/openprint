@@ -61,30 +61,47 @@
 	@{$$variable{suppliers}} = keys %suppliers;
 ) ?>
 <? if ( @{$$variable{Stocks}} ) ?>
-	<table id="StocksTable" class="List sortable" style="table-layout: auto;">
+	<table id="StocksTable" class="List sortable table-striped"
+    data-pagination="true"
+    data-search="true"
+    data-show-pagination-switch="true"
+    data-cookie="true"
+    data-cookie-same-site="Strict"
+    data-cookie-id-table="MaterialsTable"
+    data-cookie-expire="2y"
+    data-show-columns="true"
+    data-show-export="true"
+    data-columns-hidden="[]"
+    data-uncheckAll="true"
+    data-click-to-select="true"
+    data-check-on-init="true"
+    data-mobile-responsive="true"
+    data-min-width="562"
+
+>
 			<thead>
 			<tr>
 				<th class="checkbox"><input type="checkbox" onclick="select_all(document.f1, 'chkStock', this.checked );"/></th>
 				<? if ( @{$$variable{InventoryNumbers}} > 1 ) ?>
-				<th class="inventory">Inventory #</th>
+				<th class="inventory" data-field="inventory" data-sortable="true">Inventory #</th>
 				<? endif ( @{$$variable{InventoryNumbers}} > 1 ) ?>
-        <th class="grade">Grade</th>
+        <th class="grade" data-field="grade" data-sortable="true">Grade</th>
 				<? if ( @{$$variable{Groups}} ) ?>
-				<th class="group">Group</th>
+				<th class="group" data-field="group" data-sortable="true">Group</th>
 				<? endif ( @{$$variable{Groups}} ) ?>
-				<th class="manufacturer">Manufacturer</th>
+				<th class="manufacturer" data-field="manufacturer" data-sortable="true">Manufacturer</th>
 <? if ( @{$$variable{suppliers}} ) ?>
-				<th class="supplier">Supplier</th>
+				<th class="supplier" data-field="supplier" data-sortable="true">Supplier</th>
 <? endif ( @{$$variable{suppliers}} ) ?>
-				<th class="brand">Brand</th>
-				<th class="finish">Finish</th>
-				<th class="colour">Colour</th>
-				<th class="weight">Weight</th>
-				<th class="quality">Quality</th>
-				<th class="size">Size</th>
-				<th class="calliper">Calliper</th>
-				<th class="mweight">MWeight / Basis</th>
-				<th class="gsm">GSM</th>
+				<th class="brand" data-field="brand" data-sortable="true">Brand</th>
+				<th class="finish" data-field="finish" data-sortable="true">Finish</th>
+				<th class="colour" data-field="colour" data-sortable="true">Colour</th>
+				<th class="weight" data-field="weight" data-sortable="true">Weight</th>
+				<th class="quality" data-field="quality" data-sortable="true">Quality</th>
+				<th class="size" data-field="size" data-sortable="true">Size</th>
+				<th class="calliper" data-field="calliper" data-sortable="true">Calliper</th>
+				<th class="mweight" data-field="mweight" data-sortable="true">MWeight / Basis</th>
+				<th class="gsm" data-field="gsm" data-sortable="true">GSM</th>
 				<th class="spp_min">SPP / Min</th>
 				<th class="pricing">Pricing CWT</th>
 			</tr>
@@ -168,4 +185,3 @@
 <? else ( @{$$variable{Stocks}} ) ?>
 There were no matching stocks.
 <? endif ( @{$$variable{Stocks}} ) ?>
-<script type="text/javascript"> TableKit.reloadTable('StocksTable'); </script>

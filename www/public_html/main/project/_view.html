@@ -539,7 +539,6 @@ $html .= '</td>';
   $html .= '
     </tbody>
 	</table>
-<br/>
 ';
 if ( $$variable{Project}->currency_id() != $session{Currency_id} ) {
   $html .= '<span class="Currency">Project originally quoted in '.$$variable{Project}->Currency()->name().'.</span>';

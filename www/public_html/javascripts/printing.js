@@ -32,22 +32,27 @@ function filter_colours( side, signature ) {
 } // end function filter_colours
 
 function SpecialColour_onchange( element, side, index, signature ) {
-	var spec = 'ColourCoating'+index+side+signature;
+  const form = element.form;
+	const spec = 'ColourCoating'+index+side+signature;
 
-	var type_element = $('ColourCoatingType'+index+side+signature);
-	if ( ! type_element ) alert( 'ColourCoatingType'+index+side+signature + ' not found!');
-	var type = type_element.value;
+	const type_element = $('ColourCoatingType'+index+side+signature);
+  if ( ! type_element ) {
+    alert( 'ColourCoatingType'+index+side+signature + ' not found!');
+    return;
+  }
+	const type = type_element.value;
 	if ( type ) {
-		element.form.elements['chk'+spec].checked=true;
+		form.elements['chk'+spec].checked=true;
 
 		if ( ! $('ColourCoating'+(1+parseInt(index))+side+signature) ) {
 			// Add another colour
 			new Ajax.Request('/includes/main/proj/_additional_colour_coating.html', { 
 				method: 'get', 
 				parameters: { 
-					'Side': side, 
-					'index' : 1+parseInt(index),
-					'Signature' : signature 
+          project_id: form.elements['ProjectIndex'].value,
+					Side: side, 
+					index : 1+parseInt(index),
+					Signature : signature 
 				},
 				onSuccess: function(response){
 					new Insertion.After($(spec), response.responseText);

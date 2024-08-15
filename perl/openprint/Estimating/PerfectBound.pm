@@ -312,7 +312,6 @@ sub signature_calc {
 			} # end if sizes	
 
 			if ( $Equipment->specification('Type') eq 'Press' ) {
-#next if $$specs{'txtPockets'.$qty_index} > 1;
 				if ( $$Press{id} != $$Equipment{id} ) {
 					$results{Breakdown} .= 'Press not the same: ' . $$Press{name} . ' != ' . $$Equipment{name} . '<br/>';
 					next;
@@ -346,6 +345,7 @@ sub signature_calc {
 	} # while ! bestPrice and imposition
 
 	if ( $bestPrice ) {
+    $results{pockets} = $pockets;
 		$results{Imposition} = $$bestPrice{Imposition};
 		$results{Equipment} = $bestEquipment;
 		$results{Status} = 'calculated';
@@ -526,18 +526,20 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', $price{'Calliper Markup'} ) if $price{'Calliper Markup'};
       my $pass = 1;
       foreach my $pass_price (@{$price{Passes}}) {
-        $$specs{'hdnBreakdown'.$qty_index} .= 'Pass '.$pass.'<br/>' if @{$price{Passes}}>1;
+        $$specs{'hdnBreakdown'.$qty_index} .= 'Pass '.$pass.' ' .$$pass_price{Pockets}.' pockets<br/>' if @{$price{Passes}}>1;
         #$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity ' . $$specs{'txtQuantity'.$qty_index}.'+'.$$pass_price{overs}.' overs = '.($$specs{'txtQuantity'.$qty_index}+$$pass_price{overs}).'<br/>' if $$pass_price{overs};
         #$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: @'.$price{RunSpeed}.'/Hr = '. Math::Round::nearest( 0.1, $price{RunTime} ) . ',<br/>' if $price{RunSpeed};
         my $MakeReadyPrice = $$pass_price{MakeReadyPrice};
 			  $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Make Ready: $%.2f%s = $%.2f', @$MakeReadyPrice{qw(Price units Total)}).'<br/>' if $MakeReadyPrice;
-			  $$specs{'hdnBreakdown'.$qty_index} .= 'Pocket Make Ready: $' . sprintf('%.2f', Math::Round::nearest(0.01, $$pass_price{PocketMakeReady})).'<br/>' if $$pass_price{PocketMakeReady};
+        my $PocketMakeReadyPrice = $$pass_price{PocketMakeReadyPrice};
+			  $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Pocket Make Ready: $%.2f%s * %dpockets = $%.2f', @$PocketMakeReadyPrice{qw(Price units Pockets Total)}).'<br/>' if $PocketMakeReadyPrice;
 
         if ( my $servicePrice = $$pass_price{ServicePrice} ) {
           if ($$servicePrice{units} eq 'per 1000' or $$servicePrice{units} eq 'per m') {
             $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s $%.2f%s * %d = $%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','quantity','Total'});
           } else {
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s $%.2f%s @%d per hour %d = %.2fhours = $%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','RunSpeed','quantity','RunTime','Total'});
+            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s $%.2f%s %d@%d per hour = %.2fhours = $%.2f<br/>',
+              $$servicePrice{Service}->name(), @$servicePrice{'Price','units','quantity','RunSpeed','RunTime','Total'});
           }
         } # end if
         $pass ++;
@@ -636,29 +638,28 @@ sub get_price {
 
   # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
-    my %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady'. $$specs{"txtPockets$qty_index"}.'Pockets', $price{Imposition}, $Equipment );
+    my %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady'. $maxPockets.'Pockets', $price{Imposition}, $Equipment );
     if ( ! %MakeReady ) {
-      %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+      %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady', $maxPockets, $Equipment );
     } # end if
     $MakeReady{Total} = $MakeReady{Price};
-    $price{MakeReady} = $MakeReady{Price}; # if %MakeReady and $MakeReady{Price};
-    my $pocketMakeReady = openprint::service::get_price( $$specs{ServiceType}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
-    if ($pocketMakeReady) {
-      $price{MakeReady} += ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} ));
+    my %pocketMakeReadyPrice = openprint::service::get_price_object( $$specs{ServiceType}.'PocketMakeReady', $maxPockets, $Equipment );
+    if (%pocketMakeReadyPrice) {
+      $pocketMakeReadyPrice{Pockets} = $maxPockets;
+      $pocketMakeReadyPrice{Total} = $pocketMakeReadyPrice{Price} * $maxPockets;
     }
 
-    $price{RunTime} += $neededPockets * $pocket_make_ready_time if $pocket_make_ready_time;
-    $openprint::log->debug("Needed Pockets: $neededPockets") if DEBUG;
-
+    $price{RunTime} += $maxPockets * $pocket_make_ready_time if $pocket_make_ready_time;
     # Loaded here, so we don't do it in the loop many times
 		my %servicePrice;
 		if ( ! ( %servicePrice = openprint::service::get_price_object( $$specs{ServiceType}.$maxPockets.'Pockets', $qty, $Equipment ) ) ) {
 			%servicePrice = openprint::service::get_price_object( $$specs{ServiceType}, $maxPockets, $Equipment );
 		} # end if
 
-		my $unitsPerHour = $Equipment->specification('Units Per Hour', $maxPockets);
-		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
-    $price{RunTime} += $runtime * 360;
+		my $unitsPerHour = $servicePrice{RunSpeed} = $Equipment->specification( 'Units Per Hour', $maxPockets );
+		my $runtime = $servicePrice{RunTime} = $unitsPerHour ? $qty/$unitsPerHour : 0; # in hours
+    $price{RunTime} += $runtime * 360; #seconds
+    $servicePrice{quantity} = $qty;
 
 		my $loopbreak_pockets = $neededPockets;
 		while ($neededPockets > $maxPockets) {
@@ -669,34 +670,42 @@ sub get_price {
 				$servicePrice{Total} = $servicePrice{Price} * $qty;
 				$price{Service} += $servicePrice{Total};
 			} elsif ( $servicePrice{units} =~ /per hour/i ) {
+        if (!$runtime) {
+          $$specs{alert} .= 'Per hour pricing but no runtime calculated! Check Units Per Hour settings on '.$Equipment->name().'</br>';
+        }
 				$servicePrice{Total} = $servicePrice{Price} * $runtime;
 				$price{Service} += $servicePrice{Total}
 			} else {
 				$openprint::log->error("Unknown Unit Type: ($servicePrice{units}) on $$specs{ServiceType}");
 			} # end if
 			$price{MPrice} += ( $servicePrice{Total} / $qty ) * 1000;
+      $price{MakeReady} += $MakeReady{Price}; # if %MakeReady and $MakeReady{Price};
+      $price{MakeReady} += $pocketMakeReadyPrice{Total};
 
 # The minus 1 is because the result of the first pass, takes up one pocket
 			$neededPockets -= ( $maxPockets - 1 );
 			last if $neededPockets == $loopbreak_pockets;
       push @{$price{Passes}}, {
+        Pockets => $maxPockets,
         MakeReadyPrice => \%MakeReady,
         ServicePrice => \%servicePrice,
-        PocketMakeReady => $pocketMakeReady,
+        PocketMakeReadyPrice => \%pocketMakeReadyPrice,
       };
 		} # end while
 	} # end if
 
 # Calculate Last Pass
-  my %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady'. $$specs{"txtPockets$qty_index"}.'Pockets', $price{Imposition}, $Equipment );
+  my %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady'. $neededPockets.'Pockets', $price{Imposition}, $Equipment );
   if ( ! %MakeReady ) {
-    %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+    %MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady', $neededPockets, $Equipment );
   } # end if
-  $price{MakeReady} = $MakeReady{Price}; # if %MakeReady and $MakeReady{Price};
+  $price{MakeReady} += $MakeReady{Price}; # if %MakeReady and $MakeReady{Price};
   $MakeReady{Total} = $MakeReady{Price};
-  my $pocketMakeReady = openprint::service::get_price( $$specs{ServiceType}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
-  if ($pocketMakeReady) {
-    $price{MakeReady} += ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} ));
+  my %pocketMakeReadyPrice = openprint::service::get_price_object( $$specs{ServiceType}.'PocketMakeReady', $neededPockets, $Equipment );
+  if (%pocketMakeReadyPrice) {
+    $pocketMakeReadyPrice{Pockets} = $neededPockets;
+    $pocketMakeReadyPrice{Total} = $pocketMakeReadyPrice{Price} * $neededPockets;
+    $price{MakeReady} += $pocketMakeReadyPrice{Total};
   }
 	my %servicePrice;
 	if ( ! ( %servicePrice = openprint::service::get_price_object( $$specs{ServiceType}.$neededPockets.'Pockets', $qty, $Equipment ) ) ) {
@@ -705,7 +714,7 @@ sub get_price {
 	if ( %servicePrice and $servicePrice{Price} ) {
     $servicePrice{quantity} = $qty;
 		my $unitsPerHour = $servicePrice{RunSpeed} = $Equipment->specification( 'Units Per Hour', $neededPockets );
-		my $runtime = $servicePrice{RunTime} = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
+		my $runtime = $servicePrice{RunTime} = $unitsPerHour ? $qty/$unitsPerHour : 0; # in hours
     $price{RunTime} += $runtime * 360;
 		if ( $servicePrice{units} eq 'per m' or $servicePrice{units} eq 'per 1000') {
 			$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
@@ -714,6 +723,9 @@ sub get_price {
 			$servicePrice{Total} = $servicePrice{Price} * $qty;
 			$price{Service} += $servicePrice{Total};
 		} elsif ( $servicePrice{units} =~ 'per hour' ) {
+      if (!$runtime) {
+        $$specs{alert} .= 'Per hour pricing but no runtime calculated! Check Units Per Hour settings on '.$Equipment->name().'</br>';
+      }
 			$servicePrice{Total} = $servicePrice{Price} * $runtime;
 			$price{Service} += $servicePrice{Total}
 		} else {
@@ -721,11 +733,12 @@ sub get_price {
 		} # end if
 		$price{MPrice} += ( $servicePrice{Total} / $qty ) * 1000;
 		push @{$price{Passes}}, {
-        MakeReadyPrice => \%MakeReady,
-        ServicePrice => \%servicePrice,
-        PocketMakeReady => $pocketMakeReady,
+      Pockets => $neededPockets,
+      MakeReadyPrice => \%MakeReady,
+      ServicePrice => \%servicePrice,
+      PocketMakeReadyPrice => \%pocketMakeReadyPrice,
     }
-	} # end if
+  } # end if
 
 	if ( $$specs{glue_id} ) {
 		my $Material = new openprint::Material( $$specs{glue_id} );
@@ -759,7 +772,7 @@ sub get_price {
 	my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index} if $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} and $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
 	if ( $gateFolds and ( $gateFolds > 0 ) and ( $$specs{rdbGateFoldFit} eq 'Exact' ) ) {
 		$price{Service} += openprint::service::get_price( $$specs{ServiceType}, $gateFolds, $Equipment );
-		$price{MakeReady} += $MakeReady{Price} + ( $pocketMakeReady * ( $gateFolds + 1 ) );
+		$price{MakeReady} += $MakeReady{Price} + ( $pocketMakeReadyPrice{Price} * ( $gateFolds + 1 ) );
 	} # end if
 
 	$price{'Calliper Markup'} = $Equipment->specification( 'Calliper Price Adjustment', $$specs{txtCalliper} );
