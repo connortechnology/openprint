@@ -1164,7 +1164,7 @@ sub get_Stocks {
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		next if ! $$specs{'chkOverrideSheetSize'.$qty_index};
 
-		if ( ! ( $$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index} ) ) {
+		if (!($$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index})) {
 			@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split( 'x', $$specs{'ddmStockSheetSize'.$qty_index} );
 $log->debug('size: ' . $$specs{'ddmStockSheetSize'.$qty_index} . ' width: ' . $$specs{'OverrideStockWidth'.$qty_index} . ' height: ' . $$specs{'OverrideStockHeight'.$qty_index} ) if DEBUG;
 		} # end if
@@ -6036,7 +6036,7 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 	} # end if
 
 	# Now we know the bindery overs
-	my $bindery_overs = sets::max( $$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}, $scoring_results{Overs}, $uv_results{Overs}, $diecutting_results{Overs}, $price{'Cutting Overs'} );
+	my $bindery_overs = ceil(sets::max( $$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}, $scoring_results{Overs}, $uv_results{Overs}, $diecutting_results{Overs}, $price{'Cutting Overs'} ));
 	$bindery_overs = 0 if ! defined $bindery_overs;
 	$bindery_overs *= $Paper->parts() if $Paper->parts();
 	$overs = $bindery_overs if $bindery_overs > $overs;
