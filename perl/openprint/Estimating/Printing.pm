@@ -3217,7 +3217,7 @@ sub save_price( $$$$$ ) {
 		$$specs{txtSpecificStockCalliper} = $$Paper{calliper};
 	} # end if
 	if ( $$Paper{type} eq 'Roll' ) {
-		$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width} . '" Roll';
+		$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width};
 		$$specs{'txtPressSheetQty'.$qty_index} = $$price{'Stock Weight'}.'lbs';
 		$$specs{'minimum_stock_size'.$qty_index} = $Imposition->used_width().'&quot;';
 		$$specs{'StockQuantity'.$qty_index} = $$price{'Stock Weight'};
