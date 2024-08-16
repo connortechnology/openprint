@@ -970,7 +970,7 @@ sub get_price {
 			cover	=>	$plusCover,
 			);
 
-	my $qty = $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantity'.$qty_index} : $Project->quantity($qty_index);
+	my $qty = ($$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantity'.$qty_index} : $Project->quantity($qty_index)) / $price{Imposition};
   $price{base_quantity} = $qty;
   if ( my $Overs = $Equipment->Specification('Stitching Overs') ) {
     my $overs = 0;
