@@ -46,7 +46,7 @@
 		$html .= '<span class="'.$$variable{Columns}.'Columns">';
 		$html .= input( type=>'cardinal', name=>'Imposition'.$qty_index, value=>$$variable{'Imposition'.$qty_index}, oninput=>'calc(this.form.name);' ). 'out';
 		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-			$html .= write_override( 'OverrideImposition'.$qty_index, $$variable{'OverrideImposition'.$qty_index}, '', 'calc(this.form.name);' );
+			$html .= write_override( 'OverrideImposition'.$qty_index, $$variable{'OverrideImposition'.$qty_index}, '', 'calc(\'f1\');' );
 		} else {
 			$html .= input(type=>'hidden', name=>'OverrideImposition'.$qty_index, value=>$$variable{'OverrideImposition'.$qty_index});
 			$html .= ' Overriden';
