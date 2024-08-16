@@ -114,6 +114,8 @@ sub edit {
         if ( ! ( $variable{error} = $Equipment->save( \%param ) ) ) {
           (new openprint::Log())->save({ Object=>$Equipment, action=>($param{ddmEquipment}?'Edited Equipment':'Saved Equipment'), note=>join('<br/>', @changes) });
         }
+      } else {
+        (new openprint::Log())->save({ Object=>$Equipment, action=>'Edited Equipment', note=>'No changes' });
       }
       my %prices = misc::make_hash_from_array('service_id', openprint::ServicePrice->find(
             equipment_id=>$Equipment->id(),

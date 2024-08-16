@@ -138,3 +138,12 @@ width: 49%;
 .imposition input[name="txtLayoutHeight3"] {
   width: 85px;
 }
+.templates ul {
+  display: flex;
+  flex-wrap: wrap;
+}
+@media screen and (min-width:1900px) {
+.templates ul {
+  flex-wrap: nowrap;
+}
+}

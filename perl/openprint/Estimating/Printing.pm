@@ -35,7 +35,7 @@ require misc;
 
 my $threading = 0;
 #use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
@@ -43,11 +43,11 @@ use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_AFTER_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
-use constant DEBUG_INKS => 1;
+use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
 use constant USE_PRICE_CACHE => 1;
-use constant DEBUG_IMPOSITIONS => 1;
+use constant DEBUG_IMPOSITIONS => 0;
 
 %ServicePrices = (
 	Roll2Sheet => {
@@ -1172,9 +1172,9 @@ $log->debug('size: ' . $$specs{'ddmStockSheetSize'.$qty_index} . ' width: ' . $$
 
 		# The reason for the reverse is that if we have already added a stock, then we will find it slightly quicker.
 		foreach my $P ( reverse @Papers ) {
-#$log->debug("Paper $qty_index " . $P->width() .'x'.$P->height() . ' ' . "$$specs{'OverrideStockWidth'.$qty_index }x$$specs{'OverrideStockHeight'.$qty_index}" );
+      #$log->debug("Paper $qty_index " . $P->width() .'x'.$P->height() . ' ' . "$$specs{'OverrideStockWidth'.$qty_index }x$$specs{'OverrideStockHeight'.$qty_index}" );
 			if ( $P->width() == $$specs{'OverrideStockWidth'.$qty_index} and $P->height() == $$specs{'OverrideStockHeight'.$qty_index} ) {
-#$log->debug('gound it'); 
+        #$log->debug('found it'); 
 				$found = 1;
 				# Don't need to add it, because it's already in @Papers
 				last;
@@ -3222,7 +3222,8 @@ sub save_price( $$$$$ ) {
 		$$specs{'minimum_stock_size'.$qty_index} = $Imposition->used_width().'&quot;';
 		$$specs{'StockQuantity'.$qty_index} = $$price{'Stock Weight'};
 	} elsif ( $$Paper{type} eq 'Sheet' ) {
-		$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width} . '" x ' . $$Paper{height}.'"';
+		$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width}.'x'.$$Paper{height};
+    #$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width} . '" x ' . $$Paper{height}.'"';
 		$$specs{'txtPressSheetQty'.$qty_index} = $$price{'Gross Sheet Count'} .'sheets';
 		$$specs{'hdnNetSheetCount'.$qty_index} = $$price{'Net Sheet Count'};
 		$$specs{'StockQuantity'.$qty_index} = $$price{'Gross Sheet Count'};

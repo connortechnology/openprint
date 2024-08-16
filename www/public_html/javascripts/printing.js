@@ -265,13 +265,20 @@ function calc_print( formName, force, options ) {
 
 function clear_price_data( form ) {
 	for ( let qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
-		if ( quantities[qtyNum-1] > 0 ) {
+		if ( quantities[qtyNum] > 0 ) {
+
+      const el = document.getElementById('hdnBreakdown'+qtyNum);
+      if (el) el.innerHTML = '';
+
+      if (form.elements['txtPressSheetQty'+qtyNum]) form.elements['txtPressSheetQty'+qtyNum].value = '';
+      else console.log("Nothing found for txtPressSheetQty"+qtyNum);
+
+			if ( form.elements['MPrice'+qtyNum] ) form.elements["MPrice"+qtyNum].value = '';
+			if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
 			if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! get_value(form.elements['OverridePrice'+qtyNum]) ) form.elements["txtPrice"+qtyNum].value = '';
 			continue;
+
 			if ( form.elements['StockType'+qtyNum] ) form.elements["StockType"+qtyNum].value = '';
-			if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
-			if ( form.elements['MPrice'+qtyNum] ) form.elements["MPrice"+qtyNum].value = '';
-			if ( form.elements["txtPressSheetQty"+qtyNum] ) form.elements["txtPressSheetQty"+qtyNum].value = '';
 			if ( form.elements["txtPlateQuantity"+qtyNum] ) form.elements["txtPlateQuantity"+qtyNum].value = '';
 			
 			if ( form.elements["txtImposition"+qtyNum] ) {
@@ -330,6 +337,7 @@ function cbFillPrintResults( results ) {
 		
 			if ( type == 'Sheet' ) {
 				if ( ! ddm_select_by_value( ddm, width + 'x' + height, false ) ) {
+          console.log("adding", width, height);
 					ddm.options[ddm.options.length] = new Option( width+'" x ' + height+'"', width + 'x' + height, true );
 					ddm_select_by_value( ddm, width + 'x' + height, false );
 				} // end if
@@ -338,6 +346,8 @@ function cbFillPrintResults( results ) {
 					ddm.options[ddm.options.length] = new Option( width + '" Roll', width, true );
 					ddm_select_by_value( ddm, width );
 				} // end if
+      } else {
+        console.log("Unknown type of stock", type);
 			} // end if
 		} // end if
 	} // end for
