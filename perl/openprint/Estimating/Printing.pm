@@ -5640,7 +5640,7 @@ sub calc_price {
 				$$PressRunOvers{total} = $$PressRunOvers{value};
 			} else {
 				#Percentage
-				$$PressRunOvers{total} = int($$PressRunOvers{value} * $net_sheets);
+				$$PressRunOvers{total} = int($$PressRunOvers{value}/100 * $net_sheets);
 			}
 			$price{'Run Overs'} = { impressions=>$net_sheets, value=>$$PressRunOvers{value}, units=>$$PressRunOvers{units}, total=>$$PressRunOvers{total} };
 		} else {
