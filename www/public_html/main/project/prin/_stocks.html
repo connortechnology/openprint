@@ -2,7 +2,7 @@
 	my $Project = new openprint::Project( $param{project_id} );
 	my $ProjectType = $param{projecttype_id} ? new openprint::ProjectType( $param{projecttype_id} ) : $Project->Type();
 
-	my @user_types = (undef,'');
+	my @user_types = ('');
     push @user_types, 'C' if $session{user_id};
     push @user_types, 'E' if $session{user_type} eq 'E';
     push @user_types, ('A','E') if $session{user_type} eq 'A';
@@ -27,7 +27,7 @@
 			( $param{material_id} ? ( material_id => $param{material_id} ) : () ),
 			( $param{types} ? ( type => [ split(',', $param{types} ) ] ) : () ),
 			( $param{fsc_code} ? ( fsc_code	=> $param{fsc_code} ) : () ),
-			user_type => \@user_types,
+			'user_type null or in' => \@user_types,
 			($ProjectType->id()?('project_type_id any'    =>  $ProjectType->id()) : ()),
 		) ];
 ) ?>
