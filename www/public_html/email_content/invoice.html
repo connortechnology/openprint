@@ -149,7 +149,7 @@ $html .= '
         <li class="terms"><label>Invoice Terms</label>
 <?echo(
   my $Credit = $$variable{Invoice}->Invoicee()->Credit( $$variable{Invoice}{invoicer_id} );
-  my $html = 'Net ' . $$Credit{terms}. ' days';
+  my $html = 'Net ' . $$Credit{terms}. ' days' if $$Credit{terms};
   if ( $$variable{Invoice}->monthly_interest() > 0 ) {
    $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
   }
