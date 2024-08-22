@@ -5746,7 +5746,8 @@ sub calc_price {
 	} # end if
 	$overs = $additional_overs;
 
-	if ( ( $_ = $Press->Specification('Overs') ) and ( $$_{value} eq 'All' ) ) {
+  my $all_overs = $Press->Specification('Overs');
+	if ( $all_overs and ($$all_overs{value} eq 'All') ) {
 		$overs += ceil($setup_overs + $run_overs);
 	} else {
 		$overs += ceil(($setup_overs > $run_overs) ? $setup_overs : $run_overs);
@@ -6075,7 +6076,12 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 	} # end if
 
 	# Now we know the bindery overs
-	my $bindery_overs = ceil(sets::max( $$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}, $scoring_results{Overs}, $uv_results{Overs}, $diecutting_results{Overs}, $price{'Cutting Overs'} ));
+	my $bindery_overs;
+  if ( $all_overs and ($$all_overs{value} eq 'All') ) {
+    $bindery_overs = ceil($$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}+ $scoring_results{Overs}+ $uv_results{Overs}+ $diecutting_results{Overs}+ $price{'Cutting Overs'});
+  } else {
+    $bindery_overs = ceil(sets::max( $$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}, $scoring_results{Overs}, $uv_results{Overs}, $diecutting_results{Overs}, $price{'Cutting Overs'} ));
+  }
 	$bindery_overs = 0 if ! defined $bindery_overs;
 	$bindery_overs *= $Paper->parts() if $Paper->parts();
 	$overs = $bindery_overs if $bindery_overs > $overs;
@@ -6245,7 +6251,7 @@ if ( 1 ) {
 
 	my $total_overs = 0;
 
-	if ( $_ = $Press->Specification('Overs') and $$_{value} eq 'All' ) {
+	if ( $all_overs and ($$all_overs{value} eq 'All') ) {
 		$total_overs += ceil( $run_overs + $setup_overs );
 	} else {
 		$total_overs += ceil( ( $setup_overs > $run_overs ) ? $setup_overs : $run_overs );
