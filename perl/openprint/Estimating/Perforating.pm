@@ -28,9 +28,12 @@ use constant DEBUG => 0;
 
 use vars qw( %ServicePrices %Specifications);
 %ServicePrices = (
-  PerforatingMinimumCharge => {},
-  PerforatingMakeReady => {},
-  Perforating => { units=> ['per hour', 'per m']},
+  PerforatingMinimumCharge => { range_units => [''], units=>['']},
+  PerforatingMakeReady => { range_units => [''], units=>['']},
+  PerforatingMakeReadySimple => { range_units => [''], units=>['']},
+  PerforatingMakeReadyAverage => { range_units => [''], units=>['']},
+  PerforatingMakeReadyComplex => { range_units => [''], units=>['']},
+  Perforating => { range_units=>['impressions'], units=> ['per hour', 'per m']},
 );
 %Specifications = (
   'RunSpeed' => {range_units => [ 'calliper'], units=>'per hour'},
@@ -42,7 +45,7 @@ sub ServicePriceConfiguration {
   my $name = shift;
   return $ServicePrices{$name} if $ServicePrices{$name};
   foreach my $key (keys %ServicePrices) {
-    return $ServicePrices{$key} if ($name =~ /$key/i);
+    return $ServicePrices{$key} if $name eq$key;
   }
   return undef;
 }

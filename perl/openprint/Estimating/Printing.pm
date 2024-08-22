@@ -1527,6 +1527,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				} else {
 					$$project{'Add Colour Bar'} = $Press->specification('Process Colour Bar Default');
 				} # end if
+        $$project{'Add Colour Bar'} = 'Y' if ! $$project{'Add Colour Bar'}; # default to on
 			} # end if
 			if ( $$project{'Add Colour Bar'} and ( $$project{'Add Colour Bar'} eq 'Y' ) ) {
 				if ( @{$$project{non_process_colours}} ) {
