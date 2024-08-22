@@ -160,6 +160,11 @@ if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/QuoteLevels.sql}) );
   get_tables();
 	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='quotelevels'", 'column_name');
+	if ( ! exists $$data{sorting} ) {
+		$dbh->do('ALTER TABLE quotelevels ADD sorting integer');
+	} # end if
 } # end if
 
 sub rename_column {

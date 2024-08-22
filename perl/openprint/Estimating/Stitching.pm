@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -27,7 +27,7 @@ require openprint::Project;
 my %Services;
 
 my %Specifications = (
-	'Maximum Calliper'	=> {},
+	'Maximum (\w+) Calliper'	=> {},
 	'Units Per Hour( \d out)'	=>	{},
 	'Maximum Pieces'	=>	{},
 	'Maximum Finished Width'	=>	{},

@@ -147,3 +147,9 @@ width: 49%;
   flex-wrap: nowrap;
 }
 }
+.overs .value {
+  text-align: right;
+}
+.overs .totals {
+	border-top: 1px solid #024293;
+}

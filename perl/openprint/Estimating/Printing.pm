@@ -85,6 +85,29 @@ use constant DEBUG_IMPOSITIONS => 0;
 sub ServicePriceConfiguration {
   return $ServicePrices{shift};
 }
+%Specifications = (
+  'Colour Bar Size' => { units => ['Inches'] },
+  'Default Colour Proof' => {},
+  'Default Layout Proof' => {},
+  'Envelope Capable' => { units => ['Y/N'] },
+  'Grip' => { units => 'Inches' },
+  'Gutter' => { units => 'Inches' },
+  'MakeReadyOvers Rate' => { units => ['sheets per colour']},
+  'Maximum Calliper' => { units => ['Inches'] },
+  'Maximum Image Area Length' => { units => ['Inches'] },
+  'Maximum Image Area Width' => { units => ['Inches'] },
+  'Maximum Plate Impressions' => { units => [''] },
+  'Maximum Sheet Length' => { units => ['Inches'] },
+  'Maximum Sheet Width' => { units => ['Inches'] },
+  'Minimum Sheet Length' => { units => ['Inches'] },
+  'Minimum Sheet Width' => { units => ['Inches'] },
+  'Number of Colours' => { units => [] },
+  'Overs' => { units => [], values=>['','All'] },
+  'Plate Size' => { units => [ 'Inches' ]},
+  'Plate Type' => { values => [ 'Convential', 'CTP', 'DI' ]},
+  'Press Run Overs' => { range_units => [] },
+
+);
 sub SpecificationConfiguration {
   return $Specifications{shift};
 }
@@ -1389,7 +1412,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				push @side_two_colours, @side_two_varnishes;
 			} # end if
 		}
-		if ( 1 ) {
+		if ( 0 ) {
 			$log->debug("$$Press{strid} Side One varnishes @side_one_varnishes");
 			$log->debug("$$Press{strid} Side Two varnishes @side_two_varnishes");
 			$log->debug("$$Press{strid} Side One colours @side_one_colours");
@@ -3409,18 +3432,33 @@ sub breakdown {
 
 	if ( $stock_qty ) {
 		my $RunOvers = $$price{'Run Overs'};
-		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %s*%d=%d, Additional Setups: %d*%d=%d Run: %dimpressions @ %f %s = %s FM:%s Additional Plate:%d * %d changes (minimum %d) = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d',
-					@$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs'},
+		$breakdown .= sprintf('<b>Overs:</b><br/>
+<table class="overs">
+  <tr><td>Initial Setups:</td><td>%s*%d=</td><td class="value">%d</td></tr>
+  <tr><td>Additional Setups:</td><td>%d*%d=</td><td class="value">%d</td></tr>
+  <tr><td> Run:</td><td> %dimpressions @ %.2f %s =</td><td class="value">%d</td></tr>',
+					@$stock_qty{
+          'Initial Setup Rate','Initial Setup Count','Initial Setup Overs',
+          'Additional Setup Rate','Additional Setup Count','Additional Setup Overs'},
 					@$RunOvers{'impressions','value','units','total'},
-					@$stock_qty{'FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs Minimum','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
-#foreach ( 'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs Rate', 'Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers' ) {
-#$log->debug("$_ $$stock_qty{$_}");
-#}
-		$breakdown .= ' Cutting: ' . $$stock_qty{CuttingOvers} if $$stock_qty{CuttingOvers};
-		$breakdown .= $$stock_qty{ScoringOvers} if $$stock_qty{ScoringOvers};
-		$breakdown .= ' DieCutting: ' . $$stock_qty{DieCuttingOvers} if $$stock_qty{DieCuttingOvers};
-		$breakdown .= ' UV Coating: ' . $$stock_qty{UVOvers} if $$stock_qty{UVOvers};
-		$breakdown .= ') Total: ' . $$stock_qty{'Total Overs'};
+        );
+    $breakdown .= '<tr class="fm"><td>FM:</td><td></td><td class="value">'.$$stock_qty{'FM Overs'}.'</td></tr>' if $$stock_qty{'FM Overs'};
+    $breakdown .= sprintf('<tr><td>Additional Plate:</td><td>%d * %d changes (minimum %d) =</td><td class="value">%d</td></tr>
+  <tr><td>Bindery:</td><td>',
+					@$stock_qty{'Additional Plate Overs Rate','Plate Changes',
+          'Additional Plate Overs Minimum','Additional Plate Overs',
+          }
+ );
+		$breakdown .= ' Folding: MR '.$$stock_qty{FoldingMakeReadyOvers}. ' + Run '.$$stock_qty{FoldingRunOvers}.'</br>' if $$stock_qty{FoldingMakeReadyOvers} or $$stock_qty{FoldingRunOvers};
+		$breakdown .= ' Cutting: ' . $$stock_qty{CuttingOvers}.'</br>' if $$stock_qty{CuttingOvers};
+		$breakdown .= ' Scoring: '.$$stock_qty{ScoringOvers}.'<br/>' if $$stock_qty{ScoringOvers};
+		$breakdown .= ' DieCutting: ' . $$stock_qty{DieCuttingOvers}.'<br/>' if $$stock_qty{DieCuttingOvers};
+		$breakdown .= ' UV Coating: ' . $$stock_qty{UVOvers}.'<br/>' if $$stock_qty{UVOvers};
+    $breakdown .= '</td><td class="value">'.$$stock_qty{'BinderyOvers'}.'</td></tr>';
+		$breakdown .= '<tr class="totals"><td>Total Overs:</td><td></td><td class="value"> ' . $$stock_qty{'Total Overs'}.'</td></tr>';
+		$breakdown .= '<tr ><td>Net Sheets:</td><td></td><td class="value"> ' . $$stock_qty{'Net Sheet Count'}.'</td></tr>';
+		$breakdown .= '<tr ><td>Gross Sheets:</td><td></td><td class="value"> ' . $$stock_qty{'Gross Sheet Count'}.'</td></tr>';
+    $breakdown .= '</table>';
 		$breakdown .= ' Used Minimum Overs ' if $$stock_qty{'Minimum Overs'} and ( $$stock_qty{'Minimum Overs'} == $$stock_qty{'Total Overs'} );
 		$breakdown .= '<br/>';
 	} # end if
@@ -5709,7 +5747,8 @@ sub calc_price {
 	} # end if
 	$overs = $additional_overs;
 
-	if ( ( $_ = $Press->Specification('Overs') ) and ( $$_{value} eq 'All' ) ) {
+  my $all_overs = $Press->Specification('Overs');
+	if ( $all_overs and ($$all_overs{value} eq 'All') ) {
 		$overs += ceil($setup_overs + $run_overs);
 	} else {
 		$overs += ceil(($setup_overs > $run_overs) ? $setup_overs : $run_overs);
@@ -6031,14 +6070,19 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 			$price{ComparisonCost} += $cutting_results{Price};
 			$price{ComparisonCost} += $cutting_results{FoldingPrice};
 			$price{'Comparison Log'} .= "Cutting : $cutting_results{Price} PreFolding: $cutting_results{FoldingPrice} total: $price{ComparisonCost}<br/>" if COMPARISON_LOG;
-			$price{'Cutting Overs'} = $cutting_results{Overs};
+			$price{'Cutting Overs'} = $cutting_results{overs};
 		} # end if
 	#} else {
 		#$log->debug("Has no cutting") if DEBUG;
 	} # end if
 
 	# Now we know the bindery overs
-	my $bindery_overs = ceil(sets::max( $$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}, $scoring_results{Overs}, $uv_results{Overs}, $diecutting_results{Overs}, $price{'Cutting Overs'} ));
+	my $bindery_overs;
+  if ( $all_overs and ($$all_overs{value} eq 'All') ) {
+    $bindery_overs = ceil($$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}+ $scoring_results{Overs}+ $uv_results{Overs}+ $diecutting_results{Overs}+ $price{'Cutting Overs'});
+  } else {
+    $bindery_overs = ceil(sets::max( $$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}, $scoring_results{Overs}, $uv_results{Overs}, $diecutting_results{Overs}, $price{'Cutting Overs'} ));
+  }
 	$bindery_overs = 0 if ! defined $bindery_overs;
 	$bindery_overs *= $Paper->parts() if $Paper->parts();
 	$overs = $bindery_overs if $bindery_overs > $overs;
@@ -6208,7 +6252,7 @@ if ( 1 ) {
 
 	my $total_overs = 0;
 
-	if ( $_ = $Press->Specification('Overs') and $$_{value} eq 'All' ) {
+	if ( $all_overs and ($$all_overs{value} eq 'All') ) {
 		$total_overs += ceil( $run_overs + $setup_overs );
 	} else {
 		$total_overs += ceil( ( $setup_overs > $run_overs ) ? $setup_overs : $run_overs );
