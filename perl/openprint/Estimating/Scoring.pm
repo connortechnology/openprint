@@ -30,9 +30,9 @@ use constant DEBUG => 0;
 
 use vars qw( %ServicePrices %Specifications);
 %ServicePrices = (
-  ScoringMinimumCharge => {},
-  'ScoringMakeReady' => {},
-  'Scoring' => { units=> ['per hour', 'per m']},
+  ScoringMinimumCharge => { range_units=>[''], units=>['']},
+  'ScoringMakeReady' => { range_units=>[''], units=>['']},
+  'Scoring' => { range_units=>['impressions'], units=> ['per hour', 'per m']},
 );
 %Specifications = (
   'PerfScoreRunSpeed' => {range_units => [ 'calliper'], units=>'per hour'},
