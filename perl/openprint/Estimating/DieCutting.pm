@@ -23,8 +23,9 @@ use constant DEBUG => 1;
 use vars qw( %ServicePrices %Specifications);
 %ServicePrices = (
   DieCuttingMinimumCharge => {},
-  DieCuttingMakeReady => {},
+  'DieCutting(Average|Simple|Complex)MakeReady' => { units => ['']},
   DieCutting => { units=> ['per hour', 'per m']},
+  'DieCuttingRuleBending(Simple|Average|Complex)' => { units => ['per bend'] },
 );
 %Specifications = (
   RunSpeed => {range_units => ['calliper','impressions'], units=>'per hour'},
