@@ -85,6 +85,29 @@ use constant DEBUG_IMPOSITIONS => 0;
 sub ServicePriceConfiguration {
   return $ServicePrices{shift};
 }
+%Specifications = (
+  'Colour Bar Size' => { units => ['Inches'] },
+  'Default Colour Proof' => {},
+  'Default Layout Proof' => {},
+  'Envelope Capable' => { units => ['Y/N'] },
+  'Grip' => { units => 'Inches' },
+  'Gutter' => { units => 'Inches' },
+  'MakeReadyOvers Rate' => { units => ['sheets per colour']},
+  'Maximum Calliper' => { units => ['Inches'] },
+  'Maximum Image Area Length' => { units => ['Inches'] },
+  'Maximum Image Area Width' => { units => ['Inches'] },
+  'Maximum Plate Impressions' => { units => [''] },
+  'Maximum Sheet Length' => { units => ['Inches'] },
+  'Maximum Sheet Width' => { units => ['Inches'] },
+  'Minimum Sheet Length' => { units => ['Inches'] },
+  'Minimum Sheet Width' => { units => ['Inches'] },
+  'Number of Colours' => { units => [] },
+  'Overs' => { units => [], values=>['','All'] },
+  'Plate Size' => { units => [ 'Inches' ]},
+  'Plate Type' => { values => [ 'Convential', 'CTP', 'DI' ]},
+  'Press Run Overs' => { range_units => [] },
+
+);
 sub SpecificationConfiguration {
   return $Specifications{shift};
 }
@@ -6045,7 +6068,7 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 			$price{ComparisonCost} += $cutting_results{Price};
 			$price{ComparisonCost} += $cutting_results{FoldingPrice};
 			$price{'Comparison Log'} .= "Cutting : $cutting_results{Price} PreFolding: $cutting_results{FoldingPrice} total: $price{ComparisonCost}<br/>" if COMPARISON_LOG;
-			$price{'Cutting Overs'} = $cutting_results{Overs};
+			$price{'Cutting Overs'} = $cutting_results{overs};
 		} # end if
 	#} else {
 		#$log->debug("Has no cutting") if DEBUG;
