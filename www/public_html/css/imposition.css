@@ -6,6 +6,11 @@
     stroke: black;
     stroke-width: .125; /* 1/8" */
 }
+#foldline {
+    stroke-width: 0.1;
+    opacity: 0.75;
+    stroke-dasharray: 1 0.75 0.25 0.75;
+}
 #centreline {
     stroke: black;
     stroke-width: 0.1;

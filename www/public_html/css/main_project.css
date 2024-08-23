@@ -209,6 +209,11 @@ svg.Imposition rect.background {
 	background: none;
 	fill: white;
 }
+svg.Imposition .foldline {
+    stroke-width: 0.1;
+    opacity: 0.75;
+    stroke-dasharray: 1 0.75 0.25 0.75;
+}
 svg.Imposition rect.sheet {
 	background-color: white;
 	border: 1px solid black;
