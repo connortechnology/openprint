@@ -1054,43 +1054,40 @@ sub add_imposition_define {
 
 	foreach my $column ( 1 .. $$self{columns} ) {
 		foreach my $row ( 1 .. $$self{rows} ) {
-			my $image_x = (($column-1)*$image_width);# + ($column*2);
+			my $image_x = (($column-1)*$image_width) + $$self{gutter};# + ($column*2);
 			my $image_y = (($row-1)*$image_height);# + ($row*2);
-			$canvas->rect(class=>'image', x=>$image_x, y=>$image_y,
+			my $object = $canvas->rect(class=>'image', x=>$image_x, y=>$image_y,
           width=>$object_width, height=>$object_height,
           fill=>'rgb(255,255,255)');
 
 			if ( $self->page_columns() > 1 ) {
-$openprint::log->debug("Adding page_columns");
-				my $page_width = int( $image_width / $self->page_columns() );
-				my $page_height = int( $image_height / $self->page_rows() );
+				my $page_width = $object_width / $self->page_columns();
+				my $page_height = $object_height / $self->page_rows();
 					my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) ? 'red' : 'black';
 
-				#if ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) {
 				foreach my $page_column ( 2 .. $self->page_columns() ) {
 					my $page_x1 = $image_x + ($page_column-1)*$page_width;
 					my $page_x2 = $image_x + ($page_column-1)*$page_width;
 
 					my $page_y1 = $image_y;
-# + $page_height;
 					my $page_y2 = $image_y + ($page_height * $self->page_rows());
 
 # This is the linees between pages, One of these will be the spine.
-					$canvas->line(x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour, 'stroke-dasharray'=>"5,5");
+					$canvas->line(x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour, class=>'foldline');
 				} # end foreach page column
 			} # draw pages
 
 	  	if ( $self->page_rows() > 1 ) {
 				my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Horizontal ) ? 'red' : 'black';
-				my $page_width = int( $image_width / $self->page_columns() );
-				my $page_height = int( $image_height / $self->page_rows() );
+				my $page_width = $image_width / $self->page_columns();
+				my $page_height = $image_height / $self->page_rows();
 				foreach my $page_row ( 2 .. $self->page_rows() ) {
 					my $page_x1 = $image_x;
 					my $page_x2 = $image_x + ($page_width * $self->page_columns);
 
 					my $page_y1 = $image_y + ($page_row-1)*$page_height;
 					my $page_y2 = $image_y + ($page_row-1)*$page_height;
-					$canvas->line(x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour, 'stroke-dasharray'=>"5,5");
+					$canvas->line(x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour, class=>'foldline');
 				}
 			}
 			
@@ -1132,7 +1129,7 @@ $openprint::log->debug("Adding page_columns");
             my $page_y2 = $image_y + ($page_height * $self->page_rows());
 
   # This is the linees between pages, One of these will be the spine.
-            $canvas->line(x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour, 'stroke-dasharray'=>"5,5");
+            $canvas->line(class=>'foldline', x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour);
           }
         }
 
@@ -1146,7 +1143,7 @@ $openprint::log->debug("Adding page_columns");
 
             my $page_y1 = $image_y + ($page_row-1)*$page_height;
             my $page_y2 = $image_y + ($page_row-1)*$page_height;
-            $canvas->line(x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour, 'stroke-dasharray'=>"5,5");
+            $canvas->line(class=>'foldline', x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour);
           }
         }
 
