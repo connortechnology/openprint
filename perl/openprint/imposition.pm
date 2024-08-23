@@ -670,6 +670,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 			if ( $$specs{dutch} ) {
 				foreach my $imp ( calc_dutch( $setup1, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
 					$imp->columns( $$imp{columns} * 2 );
+          $imp->start_columns($$imp{columns});
 					$imp->dutch_columns( $$imp{dutch_columns} * 2 );
 					$imp->Paper()->width( $imp->used_width() ) if ! $imp->Paper()->start_width();
 					$openprint::log->debug( sprintf('CHECK 1 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $setup1->image_width(), $setup1->image_height(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
@@ -677,6 +678,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 				} # end foreach
 			} # end if grain_direction
 			$setup1->columns( $$setup1{columns} * 2 );
+			$setup1->start_columns( $$setup1{columns} );
 			if ( ! $setup1->Paper()->width() ) {
 				$setup1->Paper()->width( $setup1->used_width()*2 );
 			} # end if
@@ -898,6 +900,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 			if ( $$specs{dutch} ) {
 				foreach my $imp ( calc_dutch( $setup2, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
 					$imp->columns( $$imp{columns} * 2 );
+					$imp->start_columns($$imp{columns});
 					$imp->dutch_columns( $$imp{dutch_columns} * 2 );
 					$imp->Paper()->width( $imp->used_width() ) if ! $imp->Paper()->start_width();
 					#$openprint::log->debug( sprintf('CHECK 2 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $setup2->image_height(), $setup2->image_width(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
@@ -1146,7 +1149,7 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 				my $newimp = $imp->copy();
 
 				$newimp->rows($rows);
-				$$newimp{start_rows} = $rows;
+				#$$newimp{start_rows} = $rows;
 				$newimp->columns($cols);
 				$$newimp{start_columns} = $cols;
 				#$newimp->imposition($rows * $cols);
