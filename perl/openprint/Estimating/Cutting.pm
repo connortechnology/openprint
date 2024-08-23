@@ -461,6 +461,7 @@ sub signature_calc {
   my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $folding_specs, $calc_hash ) = @_;
 
   my %results = (
+    overs => 0,
       Status		=>	'calculated',
       Breakdown	=>	'<b>Post press:</b><br/>',
       );
@@ -672,6 +673,7 @@ sub signature_calc {
           } else {
             $openprint::log->error("Invalid units on Cutting Overs $$Spec{units}");
           } # end if
+          $results{overs} += $overs;
           $results{Breakdown} .= $sheets.'sheets + '.$$Spec{value}.$$Spec{units}.' = '.$overs.' total = '.($sheets+$overs).'<br/>';
           $sheets += $overs;
         } # end if
@@ -820,7 +822,7 @@ EQUIPMENT: foreach my $Equipment ( @my_equipment ) {
       } # end if
           $results{Breakdown} .= $sheets.'sheets + '.$$Spec{value}.$$Spec{units}.' = '.$overs.' total = '.($sheets+$overs).'<br/>';
       $sheets += $overs;
-      $results{overs} = $overs;
+      $results{overs} += $overs;
     } # end if
 
     my ( $sheet_width, $sheet_height ) = ( $Paper->width(), $Paper->height() );

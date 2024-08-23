@@ -15,16 +15,19 @@
   margin-bottom: 5px;
 }
 .Inks,
+.dims_and_other,
 .PagesAndSizes {
   display: flex;
   align-items: stretch;
   position: relative;
 }
 .BleedsColourBarsStockOverrides > div,
+.dims_and_other > div,
 .PagesAndSizes > div {
   flex: 1;
 }
 .BleedsColourBarsStockOverrides > div fieldset,
+.dims_and_other > div fieldset,
 .Inks > div fieldset,
 .PagesAndSizes > div fieldset {
   height: 100%;
@@ -134,4 +137,19 @@ width: 49%;
 .imposition input[name="txtLayoutHeight2"] ,
 .imposition input[name="txtLayoutHeight3"] {
   width: 85px;
+}
+.templates ul {
+  display: flex;
+  flex-wrap: wrap;
+}
+@media screen and (min-width:1900px) {
+.templates ul:not(:has(li:nth-child(8))) {
+  flex-wrap: nowrap;
+}
+}
+.overs .value {
+  text-align: right;
+}
+.overs .totals {
+	border-top: 1px solid #024293;
 }

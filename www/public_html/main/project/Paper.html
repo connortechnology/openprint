@@ -103,7 +103,7 @@ function calc_weight_from_sheets(e) {
 		my $stock_id = $$Stock_Entry{index};
 		my $Stock = $$Stock_Entry{Stock};
 
-		$html .= '<li><label>'.$Stock->can_edit() ? $Stock->link_to($Stock->to_string()) : $Stock->to_string()."</label>\n";
+		$html .= '<li><label>'.($Stock->can_edit() ? $Stock->link_to($Stock->to_string()) : $Stock->to_string())."</label>\n";
 
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			my $key = $stock_id.'-'.$qty_index;

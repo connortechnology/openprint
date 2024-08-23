@@ -23,7 +23,7 @@
 	} // end function cbBookResults
 
 	function validate_data(formName) {
-		var form = getFormObj(formName);
+		const form = getFormObj(formName);
 		if ( ! form.PageQuantity.value > 0 ) {
 			alert('Please enter the total quantity of pages.');
 			return 0;
@@ -48,7 +48,7 @@
 			<fieldset><legend>Pad Specifications</legend>
 				<ul>
 				<li id="NotepadPages">
-					<label>Pages per pad</label>
+					<label>Sheets per pad</label>
 					<? echo ( input( type=>'cardinal', name=>'PageQuantity', value=>$$variable{PageQuantity}, onkeyup=>'calc(this.form.name);' ); ) ?>
 				</li>
 				<input type="hidden" name="txtTotalPageQuantity" value="2" />
@@ -72,7 +72,7 @@
 					} # end if
 					$$variable{txtServiceDescription1} = 'Backing';
 				} # end if
-				$$variable{txtSignatureType1} = 'Cover Pages';
+				$$variable{txtSignatureType1} = 'Backing Pages';
 
 				if ( ! sets::isin( 2, \@Groups ) ) {
 					# Ensure 1 interior pages

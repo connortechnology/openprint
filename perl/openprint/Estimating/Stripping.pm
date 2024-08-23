@@ -196,7 +196,13 @@ sub calc {
 					if ( $$Price{ServicePrice}{units} eq 'per hour' ) {
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d impressions/%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{Runspeed}{value} );
           } elsif ( $$Price{ServicePrice}{units} eq 'per lb' ) {
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%.4f * %5$d impressions=%6$.2flbs) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $Project->finished_weight(), $$Price{Impressions}, $Project->finished_weight()*$$Price{Impressions}, $$Price{Runspeed}{value} );
+            my $weight = $Imposition->Paper()->sheet_weight();
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$.4f * %5$d impressions=%6$.2flbs) = </td><td class="Price">$%3$.2f</td></tr>',
+              @{$$Price{ServicePrice}}{'Price','units','Total'},
+
+              $weight, $$Price{Impressions},
+              $weight*$$Price{Impressions},
+              );
 					} else {
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions} );
 					} # end if
@@ -215,17 +221,17 @@ sub calc {
 					} # end if
 					$$specs{'hdnBreakdown'.$qty_index} .= '</table>';
 
-					@$specs{
-                        "ImpQty-$form-$qty_index-$imp_index",
-                        "ImpOut-$form-$qty_index-$imp_index",
-                        "ImpColumns-$form-$qty_index-$imp_index",
-                        "ImpRows-$form-$qty_index-$imp_index"} =
-                        $Imposition->get('quantity','imposition','columns','rows');
-                    $imp_index += 1;
-				} # end foreach Imposition
-			} # end if Equipment
+          @$specs{
+          "ImpQty-$form-$qty_index-$imp_index",
+          "ImpOut-$form-$qty_index-$imp_index",
+          "ImpColumns-$form-$qty_index-$imp_index",
+          "ImpRows-$form-$qty_index-$imp_index"} =
+          $Imposition->get('quantity','imposition','columns','rows');
+          $imp_index += 1;
+        } # end foreach Imposition
+      } # end if Equipment
 
-			foreach $imp_index ( $imp_index .. 4 ) {
+      foreach $imp_index ( $imp_index .. 4 ) {
 				@$specs{
 					"ImpQty-$form-$qty_index-$imp_index",
 					"ImpOut-$form-$qty_index-$imp_index",
@@ -296,7 +302,8 @@ sub signature_calc {
 
 	my $services = $Project->services();
 
-	$$Imposition{impressions} = int( $$specs{"txtQuantity$qty_index"} / ( $$Imposition{quantity} * $$Imposition{imposition} ) );
+  #$$Imposition{impressions} = int( $$specs{"txtQuantity$qty_index"} / ( $$Imposition{quantity} * $$Imposition{imposition} ) );
+	$$Imposition{impressions} = int( $$specs{"txtQuantity$qty_index"} / $$Imposition{imposition} );
 	my @Impositions;
   my $DieCutting_specs = {};
 	if ( $$services{DieCutting} and @{$$services{DieCutting}} ) {
@@ -402,7 +409,8 @@ sub calc_price {
 				if ( $$ServicePrice{units} eq 'per m' ) {
 					$$ServicePrice{Total} = Math::Round::nearest( 0.01, $$ServicePrice{Price} * $$Imposition{impressions} / 1000 );
         } elsif ( $$ServicePrice{units} eq 'per lb' ) {
-          my $weight = $project->finished_weight();
+          my $weight = $Imposition->Paper()->sheet_weight();
+          #my $weight = $project->finished_weight();
 					$$ServicePrice{Total} = Math::Round::nearest( 0.01, $$ServicePrice{Price} * $$Imposition{impressions} * $weight );
 				} elsif ( $$ServicePrice{units} eq 'per hour' ) {
 					my $Runspeed = $Equipment->Specification( 'Stripping Runspeed' );
@@ -534,18 +542,22 @@ sub load_Impositions($$$) {
 		#my ( $pages ) = $$specs{"ImpType-$form-$qty_index-$fold_index"} =~ /^(\d+)PageFold$/;
 		#$imp->pages( $pages );
 		$imp->quantity( $$specs{"ImpQty-$form-$qty_index-$imp_index"} );
+    $imp->display("impressions: ".$imp->impressions());
+    $imp->impressions($imp->impressions() * ($$Imposition{imposition}/$$imp{imposition}));
 		push @impos, $imp;
 	} # end foreach imp_index
 	my $quantity = $$specs{"txtQuantity$qty_index"};
 
-	if ( @impos == 1 ) {
-		$impos[0]{impressions} = int( $quantity / ( $impos[0]{quantity} * $impos[0]{imposition} ) );
-	} else {
-		my $parts = misc::sum( map { $$_{imposition} * $$_{quantity} } @impos );
-		foreach my $I ( @impos ) {
-			$$I{impressions} = int( ($quantity / $parts ) * $$_{imposition} * $$_{quantity} );
-		} # end foreach I
-	} # end if
+  #if ( @impos == 1 ) {
+    #$impos[0]{impressions} = int( $quantity / $impos[0]{imposition} );
+    #$impos[0]{impressions} = int( $quantity / ( $impos[0]{quantity} * $impos[0]{imposition} ) );
+    #} else {
+    #my $parts = misc::sum( map { $$_{imposition} * $$_{quantity} } @impos );
+    #foreach my $I ( @impos ) {
+      #$$I{impressions} = int( ($quantity / $parts ) * $$_{imposition} * $$_{quantity} );
+      #$$I{impressions} = int( ($quantity / $parts ) * $$_{imposition} * $$_{quantity} );
+      #} # end foreach I
+      #} # end if
 	return @impos;
 } # end sub load_Impositions
 

@@ -127,7 +127,7 @@ function recalc_prices( form ) {
 
 function calc_price( element ) {
 	const form = element.form;
-	const matches = element.name.match( /^cost-(.*)$/ );
+	let matches = element.name.match( /^cost-(.*)$/ );
 	if (matches) {
 		const index = matches[1];
 		const costcwt = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );

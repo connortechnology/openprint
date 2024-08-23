@@ -101,7 +101,7 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 				} else {
 					switch_company( $C );
 				} # end if
-        %param = ();
+        undef (@param{'btnFunction','ddmCompany'});
 			} # end if
 		} elsif ( $param{btnFunction} eq 'SelectPricelist' ) {
 			my $Pricelist = new openprint::Pricelist( $param{pricelist_id} );
@@ -109,7 +109,7 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 				$Pricelist = openprint::Pricelist::get_current();
 			} # end if
 			$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
-      %param = ();
+      undef (@param{'btnFunction','pricelist_id'});
 		} # end if
 	} # end if
 

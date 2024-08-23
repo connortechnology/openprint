@@ -1,6 +1,3 @@
-<div class="PageTitle">
-<h1>Printing</h1>
-</div>
 <script src="<?hash_link(/javascripts/service.js)?>"></script>
 <script src="<?hash_link(/javascripts/printing.js)?>"></script>
 <script src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
@@ -14,6 +11,10 @@
 </script>
 <?include(/main/project/prin/_templates.html)?>
 <div class="Service">
+<div class="PageTitle">
+<h1>Project <?echo($$variable{Project}->link_to())?></h1>
+<h2>Printing</h2>
+</div>
 <? if ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
     <div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>
 <? endif ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
@@ -24,7 +25,7 @@
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
 		<? if ( $$variable{txtSignatureType} eq 'Cover Pages' or $$variable{txtSignatureType} eq 'Gate Folded Pages' ) ?>
 			<?include(/includes/main/proj/templates/signature_template_select.html)?>
-			<?include(/includes/main/proj/templates/signatures.html)?>
+			<?include(/includes/main/proj/templates/_signatures.html)?>
 		<? endif ( $$variable{txtSignatureType} eq 'Cover Pages' or $$variable{txtSignatureType} eq 'Gate Folded Pages' ) ?>
 		<fieldset><legend><? echo ( $$variable{Project}->Type()->description() ) ?> <?txtSignatureType?></legend>
 			<? if ( $$variable{txtSignatureType} ) ?>
@@ -68,28 +69,34 @@
             <?include('/includes/main/proj/presentation_folder_printing.html')?>
             </div>
 	<? endif ( $$variable{Group} == 1 ) ?>
-</div>
+</div><!--PagesAndSizes-->
+<div class="dims_and_other">
 <? else ( $$variable{txtSignatureType} ) ?>
 	<? echo ( 
 		if ( $$variable{ProjectType}->name() eq 'Envelopes' ) {
+        '<div class="dims_and_other">',
 			return include('/includes/main/proj/templates/generic.html');
 		} elsif ( $$variable{ProjectType}->name() eq 'Custom' ) {
+        '<div class="dims_and_other">',
 			return include('/includes/main/proj/dimensions_boxes_only.html');
 		} elsif ( $$variable{ProjectType}->name() eq 'Cards' ) {
 			return join("\n",
 				include('/includes/main/proj/templates/project_template_select.html'),
 				include('/includes/main/proj/templates/cards.html'),
+        '<div class="dims_and_other">',
 				include('/includes/main/proj/dimensions.html'),
 				);
 		} elsif ( $$variable{ProjectType}->name() eq 'Banners' ) {
 			return join("\n",
 					include('/includes/main/proj/templates/generic.html'),
+        '<div class="dims_and_other">',
 					include('/includes/main/proj/dimensions.html'),
 					include('/includes/main/proj/banner_printing.html'),
 				);
 		} elsif ( $$variable{ProjectType}->name() eq 'Covers' ) {
 			return join("\n",
 					include('/includes/main/proj/templates/signatures.html'),
+        '<div class="dims_and_other">',
 					include('/includes/main/proj/dimensions.html'),
 			);
 		} elsif ( $$variable{ProjectType}->name() eq 'Envelopes' ) {
@@ -103,18 +110,21 @@
 			return join("\n",
 				include('/includes/main/proj/templates/project_template_select.html'),
 				include('/includes/main/proj/templates/newsletters.html'),
+        '<div class="dims_and_other">',
 				include('/includes/main/proj/dimensions.html'),
 			);
 		} elsif ( $$variable{ProjectType}->name() eq 'BusinessCards' ) {
 			return join("\n",
 				include('/includes/main/proj/templates/generic.html'),
 				include('/includes/main/proj/business_card_names.html'),
+        '<div class="dims_and_other">',
 				include('/includes/main/proj/dimensions.html'),
 			);
 		} elsif ( $$variable{ProjectType}->name() eq 'Pamphlets/Leaflets' ) {
 			return join("\n",
 				include('/includes/main/proj/templates/project_template_select.html'),
 				include('/includes/main/proj/templates/brochures.html'),
+        '<div class="dims_and_other">',
 				include('/includes/main/proj/dimensions.html'),
 			);
 		} elsif ( $$variable{ProjectType}->name() eq 'PressSheetCombination' ) {
@@ -122,6 +132,7 @@
 		} elsif ( $$variable{ProjectType}->name() eq 'PresentationFolders' ) {
 			return join("\n",
 				include('/includes/main/proj/templates/generic.html'),
+        '<div class="dims_and_other">',
 				include('/includes/main/proj/dimensions.html'),
 				include('/includes/main/proj/presentation_folder_printing.html'),
 			);
@@ -129,17 +140,20 @@
 			return join("\n",
 				include('/includes/main/proj/templates/project_template_select.html'),
 				include('/includes/main/proj/templates/tags_tickets.html'),
+        '<div class="dims_and_other">',
 				include('/includes/main/proj/dimensions.html'),
 			);
 		} elsif ( $$variable{ProjectType}->name() eq 'Forms' ) {
 			return join("\n",
 				include('/includes/main/proj/templates/project_template_select.html'),
 				include('/includes/main/proj/templates/forms.html'),
+        '<div class="dims_and_other">',
 				include('/includes/main/proj/dimensions.html'),
 			);
 		} elsif ( $$variable{ProjectType}->name() eq 'ScratchPads' ) {
 			return join("\n",
 				include('/includes/main/proj/templates/generic.html'),
+        '<div class="dims_and_other">',
 				'<p id="NotepadPages"><label>Pages per pad</label>',
 				input(type=>'cardinal', name=>'PageQuantity', value=>$$variable{PageQuantity}, oninput=>'calc(this.form.name);' ),
 				'</p>',
@@ -148,6 +162,7 @@
 		} else {
 			return join("\n",
 				include('/includes/main/proj/templates/generic.html'),
+        '<div class="dims_and_other">',
 				include('/includes/main/proj/dimensions.html'),
 			);
 		} # end if
@@ -175,6 +190,7 @@
 		</div>
 	</fieldset>
 	</div>
+</div><!--dimands_and_other-->
 <br class="spacer"/>
 	<?include(/includes/main/proj/colours_coatings.html)?>
 <br class="spacer"/>

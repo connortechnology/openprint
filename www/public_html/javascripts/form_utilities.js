@@ -73,23 +73,22 @@ function get_values(obj) {
 }
 
 function set_value( obj, value ) {
-	if ( ! obj ) {
-		console.log("No object passed to set_value");
+	if (!obj) {
+		console.log('No object passed to set_value');
 		return;
 	} // end if
-	if ( obj.type == 'select-one' ) {
-		ddm_select_by_value( obj, value );
-	} else if ( obj.type == 'radio' || obj.type == 'checkbox' ) {
+	if (obj.type == 'select-one') {
+		ddm_select_by_value(obj, value);
+	} else if (obj.type == 'radio' || obj.type == 'checkbox') {
 		set_rdb_value( obj, value );
 	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'tel' ) {
 		obj.value = value;
 	} else if ( obj.length ) {
-		for ( var x = 0, len=obj.length; x < len; x += 1 ) {
-			if ( obj[x].value == value ) {
-				obj[x].checked = 'checked';
-			} // end if
+		for ( let x = 0, len=obj.length; x < len; x += 1 ) {
+      obj[x].checked = ( obj[x].value == value );
 		}
-	} else {
+	} else if (obj.type == 'fieldset') {
+	} else if (obj.type == 'textarea') {
 		obj.innerHTML = value;
 	} // end if
 }
@@ -127,13 +126,17 @@ function get_select_value ( ddm ) {
 } // end function get_select_value
 
 function set_rdb_value( rdb, value ) {
-	for ( var x = 0; x < rdb.length; x ++ ) {
-		if ( rdb[x].value == value ) {
-			rdb[x].checked = true;
-		} else {
-			rdb[x].checked = false;
-		} // end if
-	} // end for
+  if (rdb.length) {
+    for ( let x = 0; x < rdb.length; x ++ ) {
+      if ( rdb[x].value == value ) {
+        rdb[x].checked = true;
+      } else {
+        rdb[x].checked = false;
+      } // end if
+    } // end for
+  } else {
+    rdb.checked = ( rdb.value == value );
+  }
 }
 
 function get_rdb_value( rdb ) {
@@ -537,9 +540,11 @@ function select_all( form, name, checked, checker ) {
       if (element[i] != checker) {
         const on_click_this = element[i].getAttribute('on_click_this');
         if (on_click_this) {
-          if (window[on_click_this]) window[on_click_this](element[i]);
-        } else {
-          console.error("No function for "+on_click_this);
+          if (window[on_click_this]) {
+            window[on_click_this](element[i]);
+          } else {
+            console.error("No function for "+on_click_this);
+          }
         }
       }
 		} // end for
@@ -1668,7 +1673,7 @@ function to_hostname(e) {
 }
 function floatize(e) {
 	if ( e.value.match(/[^\d\+\-\.%\*eE]/) ) {
-		e.value = parseFloat(e.value.replace(/[^\d\+\-\.%\*eE]/g,''));
+		e.value = parseFloat(e.value.replace(/[^\d\+\-\.%\*eE]/g, ''));
 	} 
 	if ( e.value == 'NaN' )
 		e.value = '';
@@ -1821,16 +1826,25 @@ function update_event_bindings() {
       return;
     }
     el.onchange = window[fnName].bind(el, el);
-    console.log('setting onchange on '+el.name+' to '+fnName);
+    //console.log('setting onchange on '+el.name+' to '+fnName);
   });
 
+  document.querySelectorAll("select[on_change]").forEach(function attachOnChangeThis(el) {
+    const fnName = el.getAttribute("on_change");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName + " on "+el.name);
+      return;
+    }
+    el.onchange = window[fnName].bind(el, el);
+    //console.log('setting onchange on '+el.name+' to '+fnName);
+  });
   document.querySelectorAll('select[data-on-change-this]').forEach(function(el) {
     const fnName = el.getAttribute('data-on-change-this');
     if ( !window[fnName] ) {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onchangefor " + el.name + " to " + fnName);
+    //console.log("Setting up onchangefor " + el.name + " to " + fnName);
     el.onchange = window[fnName].bind(el, el);
   });
   document.querySelectorAll('select[on_change_this]').forEach(function(el) {
@@ -1839,7 +1853,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onchangefor " + el.name + " to " + fnName);
+    //console.log("Setting up onchangefor " + el.name + " to " + fnName);
     el.onchange = window[fnName].bind(el, el);
   });
 
@@ -1858,7 +1872,7 @@ function update_event_bindings() {
       console.error("Nothing found to bind to " + fnName);
       return;
     } else {
-      console.log("Setting oninput for "+el.name+" to "+fnName);
+      //console.log("Setting oninput for "+el.name+" to "+fnName);
     }
     el.oninput = window[fnName].bind(el, el);
   });
@@ -1869,7 +1883,7 @@ function update_event_bindings() {
       console.error("Nothing found to bind to " + fnName);
       return;
     }
-    console.log("Setting up oninput for " + el.name + " to " + fnName);
+    //console.log("Setting up oninput for " + el.name + " to " + fnName);
     el.oninput = window[fnName].bind(el, el);
   });
 
@@ -1879,7 +1893,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    //console.log("Setting up onclick for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
 
@@ -1889,7 +1903,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onkeyup_this for " + el.name + " to " + fnName);
+    //console.log("Setting up onkeyup_this for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
   document.querySelectorAll('button[on_click_this], input[on_click_this]').forEach(function(el) {
@@ -1898,7 +1912,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    //console.log("Setting up onclick for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
 
@@ -1908,7 +1922,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    //console.log("Setting up onclick for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
 
@@ -1919,7 +1933,7 @@ function update_event_bindings() {
       return;
     }
 
-    console.log('Setting for on_click to ' + fnName + ' for element ' + el.getAttribute('id'));
+    //console.log('Setting for on_click to ' + fnName + ' for element ' + el.getAttribute('id'));
     el.onclick = function(ev) {
       window[fnName](ev);
     };
@@ -1931,7 +1945,7 @@ function update_event_bindings() {
       return;
     }
 
-    console.log('Setting for data-on-click to ' + fnName + ' for element ' + el.getAttribute('id'));
+    //console.log('Setting for data-on-click to ' + fnName + ' for element ' + el.getAttribute('id'));
     el.onclick = function(ev) {
       window[fnName](ev);
     };

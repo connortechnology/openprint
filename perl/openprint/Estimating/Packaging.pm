@@ -22,6 +22,8 @@ require openprint::service;
 require sql;
 
 my @variables = (
+  'alert',
+  'hdnBreakdown1', 'hdnBreakdown2', 'hdnBreakdown3',
 	'txtItemsPerPackage','AccurateCount','bands_per_package',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'Markup1','Markup2','Markup3',
@@ -34,7 +36,7 @@ my @variables = (
 	'type_id',
 );
 sub variables {
-    return @variables;
+  return @variables;
 }
 
 my @no_outputs = (
@@ -51,6 +53,8 @@ sub no_outputs {
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
+
+  $$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
@@ -89,10 +93,6 @@ sub calc {
 		} # end if
         return $$specs{Status} = 'uncalculated';
 	} # end if
-	if ( ! $$specs{rdbCardboardBacking} ) {
-    $$specs{alert} = 'Please select whether you need cardboard backing.';
-    return $$specs{Status} = 'uncalculated';
-  } # end if
 
 	$$specs{bands_per_package} =~ s/[^\d\.]//g;
 	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
@@ -108,10 +108,15 @@ sub calc {
 	}
 	my $Cardboard = openprint::Material->find_one(name=>'CardboardBackingFor'.$ServiceType->name());
   $Cardboard = openprint::Material->find_one(name=>'CardboardBacking') if ! $Cardboard;
+	if ($Cardboard and ! $$specs{rdbCardboardBacking}) {
+    $$specs{alert} = 'Please select whether you need cardboard backing.';
+    return $$specs{Status} = 'uncalculated';
+  } # end if
 	my @Materials = openprint::Material->find( category=>$ServiceType->name() );
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
+    $$specs{"hdnBreakdown$qty_index"} = '';
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
@@ -214,6 +219,7 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # endif
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $unitPrice/$qty ) * (1+$Project->markup()/100) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( 1000*$unitPrice/$qty ) * (1+$Project->markup()/100) );
 	} # end foreach
 
 	return $$specs{Status} = $status;

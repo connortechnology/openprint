@@ -489,7 +489,7 @@ sub to_string {
 		$string .= ' '. Math::Round::nearest( 0.1, 1000*$self->calliper()).'PT' if $self->calliper() and ! ( $self->weight() =~ /PT/ );
 		}
 		if ( $openprint::config{Show_Stock_GSM} ne 'N' ) {
-		$string .= ' '. $self->gsm().'gsm' if $self->gsm();
+		$string .= ' '. Math::Round::nearest(1, $self->gsm()).'gsm' if $self->gsm();
 		}
 		$string .= ' FSC:' . $$self{fsc_code} if $$self{fsc_code};
 		#$string .= 'Minimum: ' . $$self{minimum_order} if $$self{minimum_order};

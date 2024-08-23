@@ -8,12 +8,12 @@
 				<? echo ( join("\n",
               join( ' to ',
                 datetime_select_session( $$variable{uri}, 'log_created_on_start', {
-                  onchange	=>'load_logs_form();',
+                  on_change	=>'load_logs_form',
                   with_today=>1,
                   with_clear=>1,
                   } ),
                 datetime_select_session( $$variable{uri}, 'log_created_on_end', {
-                  onchange	=>'load_logs_form();',
+                  on_change	=>'load_logs_form',
                   with_today=>1,
                   with_clear=>1,
                   } ),
@@ -24,13 +24,13 @@
                 { 
                   name			=>	'log_action_id', 
                   prepend		=>	[ '', 'All Actions' ],
-                  onchange	=>  'load_logs_form();',
+                  on_change	=>  'load_logs_form',
                 }),
               ssi::select( [ 10, 10, 20, 20, 50, 50, '', 'All' ], $session{$$variable{uri}.'?log_limit'}, {
                   name=>'log_limit',
-                  onchange	=>  'load_logs_form();',
+                  on_change	=>  'load_logs_form',
                 }),
-              button('LoadLog', { onclick=>'load_logs_form();', text=>'Load' }),
+              button('LoadLog', { on_click=>'load_logs_form', text=>'Load' }),
             );
         ) ?>
 			</li>

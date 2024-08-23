@@ -138,6 +138,7 @@ sub make {
 		my $Order = new openprint::Order( $param{order_id} );
 		require PayPal;
 		my $PayPal = PayPal->new('api_USER'=>$config{'PayPal_API_Username'},'api_PWD'=>$config{'PayPal_API_Password'},'api_SIGNATURE'=>$config{'PayPal_API_Signature'} );
+
 		my $result = $PayPal->Call_Service({
 					METHOD			=>	'SetExpressCheckout',
 					PAYMENTACTION	=>	'Sale',

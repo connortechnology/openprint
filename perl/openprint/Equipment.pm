@@ -170,9 +170,14 @@ sub Fold {
 
 	if ( ( ! $$params{type} ) and $$params{pages} ) {
 		$$params{type} = $$params{pages}.'PageFold';
+    $openprint::log->debug("Form type auto set to $$params{type}");
 	}
 
+  if (!($$self{Folds}{$$params{type}} and @{$$self{Folds}{$$params{type}}})) {
+    $openprint::log->debug("No folds for type $$params{type}");
+  }
 	foreach my $Fold ( $$params{type} ? @{$$self{Folds}{$$params{type}}} : map { @{$$self{Folds}{$_}} } keys %{$$self{Folds}} ) {
+
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
 			$openprint::log->debug("Wrong type at fold: " . $Fold->name() ) if DEBUG_FOLDING;
 			next;
@@ -331,7 +336,7 @@ sub Fold {
 			next;
 		} # end if
 		if ( exists $$params{gsm} ) {
-			#$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
+			$openprint::log->debug("Wanted gsm: $$params{gsm}") if DEBUG_FOLDING;
 			my $RunSpeed = $Fold->RunSpeed( $$params{gsm} );
 			if ( ! $RunSpeed ) {
 				$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{gsm})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() ) if DEBUG_FOLDING;
@@ -349,7 +354,7 @@ $openprint::log->debug("Got fold" . $Fold->to_string()) if DEBUG_FOLDING;
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'strname, dblmin NULLS FIRST', @_ );
+	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'sorting NULLS FIRST,strname, dblmin NULLS FIRST', @_ );
 } # end sub Specifications
 
 sub specification {

@@ -32,22 +32,27 @@ function filter_colours( side, signature ) {
 } // end function filter_colours
 
 function SpecialColour_onchange( element, side, index, signature ) {
-	var spec = 'ColourCoating'+index+side+signature;
+  const form = element.form;
+	const spec = 'ColourCoating'+index+side+signature;
 
-	var type_element = $('ColourCoatingType'+index+side+signature);
-	if ( ! type_element ) alert( 'ColourCoatingType'+index+side+signature + ' not found!');
-	var type = type_element.value;
+	const type_element = $('ColourCoatingType'+index+side+signature);
+  if ( ! type_element ) {
+    alert( 'ColourCoatingType'+index+side+signature + ' not found!');
+    return;
+  }
+	const type = type_element.value;
 	if ( type ) {
-		element.form.elements['chk'+spec].checked=true;
+		form.elements['chk'+spec].checked=true;
 
 		if ( ! $('ColourCoating'+(1+parseInt(index))+side+signature) ) {
 			// Add another colour
 			new Ajax.Request('/includes/main/proj/_additional_colour_coating.html', { 
 				method: 'get', 
 				parameters: { 
-					'Side': side, 
-					'index' : 1+parseInt(index),
-					'Signature' : signature 
+          project_id: form.elements['ProjectIndex'].value,
+					Side: side, 
+					index : 1+parseInt(index),
+					Signature : signature 
 				},
 				onSuccess: function(response){
 					new Insertion.After($(spec), response.responseText);
@@ -260,13 +265,20 @@ function calc_print( formName, force, options ) {
 
 function clear_price_data( form ) {
 	for ( let qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
-		if ( quantities[qtyNum-1] > 0 ) {
+		if ( quantities[qtyNum] > 0 ) {
+
+      const el = document.getElementById('hdnBreakdown'+qtyNum);
+      if (el) el.innerHTML = '';
+
+      if (form.elements['txtPressSheetQty'+qtyNum]) form.elements['txtPressSheetQty'+qtyNum].value = '';
+      else console.log("Nothing found for txtPressSheetQty"+qtyNum);
+
+			if ( form.elements['MPrice'+qtyNum] ) form.elements["MPrice"+qtyNum].value = '';
+			if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
 			if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! get_value(form.elements['OverridePrice'+qtyNum]) ) form.elements["txtPrice"+qtyNum].value = '';
 			continue;
+
 			if ( form.elements['StockType'+qtyNum] ) form.elements["StockType"+qtyNum].value = '';
-			if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
-			if ( form.elements['MPrice'+qtyNum] ) form.elements["MPrice"+qtyNum].value = '';
-			if ( form.elements["txtPressSheetQty"+qtyNum] ) form.elements["txtPressSheetQty"+qtyNum].value = '';
 			if ( form.elements["txtPlateQuantity"+qtyNum] ) form.elements["txtPlateQuantity"+qtyNum].value = '';
 			
 			if ( form.elements["txtImposition"+qtyNum] ) {
@@ -325,6 +337,7 @@ function cbFillPrintResults( results ) {
 		
 			if ( type == 'Sheet' ) {
 				if ( ! ddm_select_by_value( ddm, width + 'x' + height, false ) ) {
+          console.log("adding", width, height);
 					ddm.options[ddm.options.length] = new Option( width+'" x ' + height+'"', width + 'x' + height, true );
 					ddm_select_by_value( ddm, width + 'x' + height, false );
 				} // end if
@@ -333,6 +346,8 @@ function cbFillPrintResults( results ) {
 					ddm.options[ddm.options.length] = new Option( width + '" Roll', width, true );
 					ddm_select_by_value( ddm, width );
 				} // end if
+      } else {
+        console.log("Unknown type of stock", type);
 			} // end if
 		} // end if
 	} // end for
@@ -613,18 +628,18 @@ function cbStockFillResults( results ) {
 window.addEventListener('DOMContentLoaded', function() {
 	calc('f1');
 
-// Register side linking and set initial page state.
-  const link = document.getElementById('side_link');
-  const side = document.getElementById('InksOnBackQuestions');
-
-  if (! (side && link) ) {
-    console.log(link,side,'not found');
-    return;
-  }
-
-  // Set the initial status on page load.
-  if (link.checked) link_sides.apply(link);
-  link.onclick = link_sides.bind(link);
+  $j('.side_link').each(function(index, link) {
+    const signature_index = link.getAttribute('data_signature_index');
+    const side = document.getElementById('InksOnBackQuestions'+signature_index);
+      console.log(link,side, 'not found');
+    if (! (side && link) ) {
+      console.log(link,side, 'not found');
+      return;
+    }
+    // Set the initial status on page load.
+    if (link.checked) link_sides.apply(link);
+    link.onclick = link_sides.bind(link);
+  });
   console.log('done');
 });
 
@@ -632,7 +647,8 @@ window.addEventListener('DOMContentLoaded', function() {
 // handles replicating the fields across when they are linked.
 function link_sides(e) {
   const linked = this.checked;
-  const side   = $('InksOnBackQuestions');
+  const signature_index = this.getAttribute('data_signature_index');
+  const side   = document.getElementById('InksOnBackQuestions'+signature_index);
   const colour = linked ? '#999999' : '';
 
   // When disabled we grey out the side.
@@ -641,7 +657,7 @@ function link_sides(e) {
   side.style.borderColor     = colour;
 
   // Display a message to the user if we're disabled.
-  const side2_linked = $('side2_linked');
+  const side2_linked = document.getElementById('side2_linked'+signature_index);
   if (side2_linked) side2_linked.style.display = linked ? 'block' : 'none';
 
   side.descendants().each(function (elem) {

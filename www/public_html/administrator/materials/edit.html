@@ -87,7 +87,7 @@
       </li>
       <li class="service_type">
         <label>Service Type</label>
-        <select id="servicetype_id" name="servicetype_id">
+        <select id="servicetype_id" name="servicetype_id" multiple="multiple" class="chosen">
           <option value="">All/Unspecified</option>
           <? echo ( make_drop_down( openprint::ServiceType->dropdown(order=>'lower(name)'), $$variable{Material}->servicetype_id() ); ) ?>
         </select>

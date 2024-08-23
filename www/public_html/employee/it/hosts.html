@@ -1,6 +1,7 @@
 <script>
 function load_host( form, options ) {
-	form = $j(form);
+  console.log(form);
+	form = form ? $j(form) : $j('#f1');
 	const p = form.serialize(true);
 	if ( options && options.order )
 		p = p+'&order='+options.order;
@@ -132,7 +133,7 @@ q`
       </li>
     <? endif ( $config{'RADIUS Support'} ) ?>
       <li><label>Deleted</label>
-        <? echo ( radio( 'deleted', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{$r->uri().'?deleted'} ); ) ?>
+        <? echo ( radio( 'deleted', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {on_click=>'load_host'} ); ) ?>
       </li>
 		</ul>
     </div>

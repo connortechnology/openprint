@@ -45,7 +45,7 @@ text-align: right;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
 
-    padding: 0 0 0 75px;
+    padding: 0 0 0 85px;
 }
 .filters .docket label:not(.radio), .filters .project_id label:not(.radio) {
     margin: 0;

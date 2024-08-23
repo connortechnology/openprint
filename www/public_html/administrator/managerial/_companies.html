@@ -5,6 +5,7 @@
 		order	=>	'lower(name)',
 		( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
 		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+		( $session{$uri.'?supplier'} ne '' ? ( supplier => $session{$uri.'?supplier'} ) : () ),
 		( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
 		date_filter( $uri.'?created_on_end', 'created_on <=' ),
 		date_filter( $uri.'?created_on_start', 'created_on >=' ),
@@ -78,10 +79,10 @@
 <p class="button">
 '. join("\n",
 $can_destroy ? (
-      button( 'destroy', { 'data-on-click'=>'destroy_clicked', text=>'Destroy Checked' } ),
-      button( 'undelete', { 'data-on-click'=>'undelete_clicked', text=>'Undelete Checked' } ),
+      button( 'destroy', { on_click=>'destroy_clicked', text=>'Destroy Checked' } ),
+      button( 'undelete', { on_click=>'undelete_clicked', text=>'Undelete Checked' } ),
       ) : (
-      button( 'delete', { 'data-on-click'=>'delete_clicked', text=>'Delete Checked' } ),
+      button( 'delete', { on_click=>'delete_clicked', text=>'Delete Checked' } ),
       )
 ).' </p>';
 	return $html;

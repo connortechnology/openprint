@@ -208,18 +208,16 @@ sub edit {
 			} # end if
 
 		} elsif ( $param{btnFunction} eq 'Copy' ) {
-			my @prices = $Material->prices();
-
 			my $NewMaterial = $Material->copy();
 			$$NewMaterial{name} = 'Copy of ' . $$NewMaterial{name};
 
-			if ( $_ = $NewMaterial->save() ) {
+			if ($_ = $NewMaterial->save()) {
 				$variable{error} .= $_;
 			} else {
 				(new openprint::Log())->save({action=>'Copy Material', Object=>$NewMaterial } );
-				foreach my $price ( @prices ) {
+				foreach my $price ( $Material->prices() ) {
+          $price = $price->copy();
 					$$price{material_id} = $$NewMaterial{id};
-					delete $$price{id};
 					$variable{error} .= $price->save();
 				} # end foreach
 				foreach my $Spec ( $Material->Specifications() ) {
@@ -245,16 +243,20 @@ sub _prices_table_body {
     $variable{error} .= $Price->save({map { $_=>$param{$_} } qw( equipment_id pricelist_id material_id) });
   } else {
     my $Price = new openprint::MaterialPrice( $param{price_id} );
-    $variable{Equipment} = $Price->Equipment();
-    $variable{Pricelist} = $Price->Pricelist();
-    my $Material = $variable{Material} = $Price->Material();
-    if ( $param{action} eq 'copy' ) {
-      $Price = $Price->copy();
-      $variable{error} .= $Price->save();
-      (new openprint::Log())->save({Object=>$Material, action=>'Copy Material Price', note=>$Price->to_string() }) if ! $variable{error};
-    } elsif ( $param{action} eq 'delete' ) {
-      $variable{error} .= $Price->delete();
-      (new openprint::Log())->save({Object=>$Material, action=>'Delete Material Price', note=>$Price->to_string() }) if ! $variable{error};
+    if (!$Price->id()) {
+      $variable{error} .= 'Material price '.$param{price_id}.' not found.<br/>';
+    } else {
+      $variable{Equipment} = $Price->Equipment();
+      $variable{Pricelist} = $Price->Pricelist();
+      my $Material = $variable{Material} = $Price->Material();
+      if ( $param{action} eq 'copy' ) {
+        $Price = $Price->copy();
+        $variable{error} .= $Price->save();
+        (new openprint::Log())->save({Object=>$Material, action=>'Copy Material Price', note=>$Price->to_string() }) if ! $variable{error};
+      } elsif ( $param{action} eq 'delete' ) {
+        $variable{error} .= $Price->delete();
+        (new openprint::Log())->save({Object=>$Material, action=>'Delete Material Price', note=>$Price->to_string() }) if ! $variable{error};
+      } # end if
     } # end if
   } # end if
   $variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];

@@ -12,21 +12,21 @@
 				<label for="order_id">Order ID</label>
 				<? echo ( join("\n",
 					input( type=>'cardinal', id=>'order_id', name=>'order_id', onkeydown=>'if(event.keyCode == 13){f1.submit();}' ),
-					button( 'Go1', { onclick=>"LoadContent('Results','/main/order/_history.html',f1);", text=>'Go' } ),
+					button( 'Go1', { on_click=>'load_orders', text=>'Go' } ),
 				); ) ?>
 			</li>
 			<li>
 				<label>Docket</label>
 				<? echo ( join("\n",
 					input( type=>'cardinal', id=>'Docket', name=>'Docket', onkeydown=>'if(event.keyCode == 13){f1.submit();}' ),
-					button( 'Go2', { onclick=>"LoadContent('Results','/main/order/_history.html',f1);", text=>'Go' } ),
+					button( 'Go2', { on_click=>'load_orders', text=>'Go' } ),
 				); ) ?>
 			</li>
 			<li>
 				<label>Invoice</label>
 				<? echo ( join("\n",
 					input( type=>'text', id=>'invoice', name=>'invoice', onkeydown=>'if(event.keyCode == 13){f1.submit();}' ),
-					button( 'Go3', { onclick=>"LoadContent('Results','/main/order/_history.html',f1);", text=>'Go' } ),
+					button( 'Go3', { on_click=>'load_orders', text=>'Go' } ),
 				); ) ?>
 			</li>
 			</ul>
@@ -37,7 +37,7 @@
 			<ul>
 				<li>
 					<label>Status</label>
-					<select name="status_id" onchange="LoadContent('Results','/main/order/_history.html',f1);">
+					<select name="status_id" on_change="load_orders">
 						<option value="">All</option>
 						<? echo ( make_drop_down( openprint::Order_Status->dropdown(), [ split(',', $session{$r->uri().'?status_id'} )] );) ?>
 					</select>
@@ -46,13 +46,13 @@
 				<li>
 					<label>Company</label>
 					<input class="filter" type="text" oninput="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" />
-					<select name="company_id" id="company_id" onchange="LoadContent('Results','/main/order/_history.html',f1);">
+					<select name="company_id" id="company_id" on_change="load_orders">
 						<option value="">All</option>
 <? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$session{company_id}, 'last_order_id is null'=>0}), $session{$r->uri().'?company_id'} ) ) ?>
 					</select>
 				</li>
 				<li><label>Sales Rep</label>
-					<select name="salesrep_id" size="1">
+					<select name="salesrep_id" size="1" on_change="load_orders">
 						<option value="">All Employees</option>
 						<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales']), $session{$r->uri().'?salesrep_id'} ); ) ?>
 					</select>
@@ -60,7 +60,7 @@
 <? endif ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ?>
 			<li>
 				<label>Ordered by</label>
-				<select id="user_id" name="user_id" size="1" onchange="LoadContent('Results','/main/order/_history.html',this.form);">
+				<select id="user_id" name="user_id" size="1" on_change="load_orders">
 					<option value="">All</option>
 					<? echo ( 
 						make_drop_down( openprint::User->dropdown(company_id => $session{company_id}), $session{$r->uri().'?ddmOrderedBy'} );
@@ -69,9 +69,9 @@
 			</li>
 			<li> 
 				<label>Created</label>
-<? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>q`LoadContent('Results','_history.html','f1');`,with_clear=>1,with_today=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_start', { on_change=>'load_orders',with_clear=>1,with_today=>1 } ); ) ?>
 				to
-<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>q`LoadContent('Results','_history.html','f1');`,with_clear=>1,with_today=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_end', { on_change=>'load_orders',with_clear=>1,with_today=>1 } ); ) ?>
 			</li>
 			</ul>
 			<br class="spacer"/>

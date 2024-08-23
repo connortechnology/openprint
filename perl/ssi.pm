@@ -608,12 +608,12 @@ sub button {
 ' : '</a>
 ';
   if ( $$options{onclick} ) {
-    $html .= '<script nonce="'.$config{CSP_NONCE}.qq`">
+    $html .= '<script'.($config{CSP_NONCE}?' nonce="'.$config{CSP_NONCE}.'"':'').">
     document.getElementById('Button$name').onclick = function(){
     $$options{onclick};
     };
     </script>
-    `;
+    ";
     delete $$options{onclick};
   } # end if
 
@@ -901,7 +901,9 @@ sub boolean_override {
 sub write_override {
 	my ( $for, $value, $locked_js, $unlocked_js ) = @_;
 	if ( 1 ) {
-		return sprintf(q`<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/><img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt="" title="Click to override"/>`, 
+		return sprintf(q`
+      <input type="hidden" id="%1$s" name="%1$s" value="%2$s"/>
+      <img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt="" title="Click to override"/>`, 
 				$for,
 				((defined($value) and sets::isin($value, ['Y', '1' ]) ) ? 'Y' : '' ),
 				((defined($value) and sets::isin($value, ['Y', '1' ])) ? 'locked' : 'unlocked'),
@@ -1344,6 +1346,7 @@ sub navmenu {
     if ( ref $$menu{$category} ) {
       my @keys;
       my %urls;
+      my $category_on = 0;
 
       if ( ref $$menu{$category} eq 'ARRAY' ) {
         %urls = @{$$menu{$category}};
@@ -1361,7 +1364,7 @@ sub navmenu {
         if (ref $urls{$url}) {
           my ($sub_html, $new_on) = navmenu({$url=>$urls{$url}}, $current_uri);
           $submenu_html .= $sub_html;
-          $on = 1 if $new_on;
+          $category_on = 1 if $new_on;
         } else {
           my $text = $urls{$url};
           if ( $text ) {
@@ -1371,7 +1374,8 @@ sub navmenu {
               $submenu_html .= "\n";
             } # end if
           }
-          $on = 1 if $current_uri eq $url;
+          $category_on = 1 if $current_uri eq $url;
+#$log->error("Setting on to $on because $current_uri eq $url");
         } # end if submenu
       } # end foreach url
 
@@ -1379,10 +1383,11 @@ sub navmenu {
         $html .= join( $submenu_html,
           sprintf(q`
             <li id="%1$sMenu" class="%2$s"><a href="#" onclick="toggleMenu($('%1$sMenu'), 'off', 'on');return false;">%1$s</a>
-            <ul>`, $category, ( $on ? 'on' : 'off' ) ),'</ul>
+            <ul>`, $category, ( $category_on ? 'on' : 'off' ) ),'</ul>
           </li>
           ' );
       }
+      $on = $category_on;
     } else {
       $html .= sprintf( q`
         <li id="%1$sMenu" class="menu-item %2$s"><a href="%2$s">%1$s</a></li>
@@ -1470,8 +1475,14 @@ sub bootstrap_navmenu {
               ),'</ul></li>' );
       }
 		} else {
-			$html .= sprintf( q`<li id="%1$sMenu" class="nav-item %3$s"><a href="%3$s">%2$s</a></li>`, $category_id, $category, $$menu{$category} );
-		}
+      my $url = $$menu{$category};
+      my $Page_Setting = openprint::Page_Setting::get( $url );
+      if ($Page_Setting->can_view()) {
+        $html .= sprintf( q`<li id="%1$sMenu" class="nav-item %3$s"><a href="%3$s">%2$s</a></li>`, $category_id, $category, $url);
+      } else {
+        $log->debug("Not permitted to view $url");
+      }
+    }
 	} # end foreach category
   #$log->error($html);
 	return $html;

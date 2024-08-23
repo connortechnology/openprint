@@ -13,15 +13,18 @@
 
   my $Configuration;
   if ($Material->servicetype_id()) {
-    my $module = 'openprint::Estimating::'.$Material->ServiceType()->type();
-    eval ( 'require '.$module.';' );
-    $log->error("eval error $@") if $@;
-    $log->debug("Has servicetype for $module");
+    foreach my $service_type ($Material->ServiceTypes()) {
+      my $module = 'openprint::Estimating::'.$service_type->type();
+      eval ( 'require '.$module.';' );
+      $log->error("eval error $@") if $@;
+      $log->debug("Has servicetype for $module");
 
-    if (my $function = $module->can('MaterialPriceConfiguration')) {
-      $log->debug("Has function for $module");
-      $Configuration = $function->($$Material{name});
-  $openprint::log->debug( Data::Dumper::Dumper($Configuration));
+      if (my $function = $module->can('MaterialPriceConfiguration')) {
+        $log->debug("Has function for $module");
+        $Configuration = $function->($$Material{name});
+    $openprint::log->debug( Data::Dumper::Dumper($Configuration));
+        last if $Configuration;
+      }
     }
   }
   $openprint::log->debug( Data::Dumper::Dumper($Configuration));
@@ -62,8 +65,8 @@
 			'<td class="buttons">',
 		($Price->id() ? 
 		join("\n", 
-			button( 'x'.$Price->id(), { on_click_this=>'del_price', data_pricelist_id=>$$variable{Pricelist}{id}, data_equipment_id=>$$variable{Equipment}{id}, data_service_id=>$$variable{Material}{id}, data_price_id=>$$Price{id}, text=>'X', title=>'Delete', type=>'button' } ),
-			button( 'c'.$Price->id(), { on_click_this=>'copy_price', data_pricelist_id=>$$variable{Pricelist}{id}, data_equipment_id=>$$variable{Equipment}{id}, data_service_id=>$$variable{Material}{id}, data_price_id=>$$Price{id}, text=>'C', title=>'Copy', type=>'button' } ),
+			button( 'x'.$Price->id(), { on_click_this=>'del_price', data_pricelist_id=>$$variable{Pricelist}{id}, data_equipment_id=>$$variable{Equipment}{id}, data_material_id=>$$variable{Material}{id}, data_price_id=>$$Price{id}, text=>'X', title=>'Delete', type=>'button' } ),
+			button( 'c'.$Price->id(), { on_click_this=>'copy_price', data_pricelist_id=>$$variable{Pricelist}{id}, data_equipment_id=>$$variable{Equipment}{id}, data_material_id=>$$variable{Material}{id}, data_price_id=>$$Price{id}, text=>'C', title=>'Copy', type=>'button' } ),
 			) : ''),
        '</td>',
 		'</tr>');

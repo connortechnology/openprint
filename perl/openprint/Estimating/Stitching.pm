@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -27,7 +27,7 @@ require openprint::Project;
 my %Services;
 
 my %Specifications = (
-	'Maximum Calliper'	=> {},
+	'Maximum (\w+) Calliper'	=> {},
 	'Units Per Hour( \d out)'	=>	{},
 	'Maximum Pieces'	=>	{},
 	'Maximum Finished Width'	=>	{},
@@ -322,10 +322,10 @@ sub signature_calc {
 				my $Fold = $$FI{Fold};
 $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets was: $pockets") if DEBUG;
 				if ( $$FI{imposition} < $imposition ) {
-					$openprint::log->debug("Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out");
+					$openprint::log->debug("Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out") if DEBUG;
 					$imposition = $$FI{imposition};
 				} elsif ( $$FI{imposition} % 2 ) {
-					$openprint::log->debug("Setting stitching imposition to 1 out because Folding imposition is $$FI{imposition} is odd");
+					$openprint::log->debug("Setting stitching imposition to 1 out because Folding imposition is $$FI{imposition} is odd") if DEBUG;
 					$imposition = 1;
 				}
 				if ( !$$I{Folder} ) {
@@ -970,7 +970,7 @@ sub get_price {
 			cover	=>	$plusCover,
 			);
 
-	my $qty = $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantity'.$qty_index} : $Project->quantity($qty_index);
+	my $qty = ($$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantity'.$qty_index} : $Project->quantity($qty_index)) / $price{Imposition};
   $price{base_quantity} = $qty;
   if ( my $Overs = $Equipment->Specification('Stitching Overs') ) {
     my $overs = 0;

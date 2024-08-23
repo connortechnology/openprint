@@ -291,6 +291,8 @@ sub load {
 	$$self{image_width} = $$self{object_width} if ! $$self{image_width};
 	$$self{image_height} = $$specs{'txtImageHeight'.$qty_index};
 	$$self{image_height} = $$self{object_height} if ! $$self{image_height};
+  $$self{colour_bar_size} = $$self{Press}->specification('Colour Bar Size');
+  $$self{colour_bar_orientation} = $$self{Press}->specification('Colour Bar Orientation');
 
 	$$self{imposition} = $$specs{'txtImposition'.$qty_index};
 	$$self{versions} = $$specs{'Versions'.$qty_index};
@@ -494,6 +496,7 @@ sub load_used {
 	} # end if
 	$$self{Paper} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{Paper};
 } # end sub load_used
+
 sub spread_rows {
 	( my $self ) = @_;
 
@@ -750,6 +753,7 @@ sub equals {
 
 sub to_string {
 	my $self = $_[0];
+  $$self{to_string} = $_[1] if @_ > 1;
 	if ( ! $_[0]{to_string} ) {
 		if ( $_[0]{Paper} ) {
 			my $Paper = $_[0]{Paper};
@@ -759,10 +763,10 @@ sub to_string {
 					$_[0]->image_orientation_text() );
 		} else {
 			if ( $_[0]{quantity} > 1 ) {
-			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'), 
+			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]{Press}->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'), 
 					@Orientations{@$self{'image_orientation_text','spine_direction'}} );
 			} else {
-			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'),
+			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]{Press}->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'),
 					@Orientations{@$self{'image_orientation_text','spine_direction'}} );
 			}
 		} # end if
@@ -850,7 +854,7 @@ sub Equipment {
 sub Press { 
 	$_[0]{Press} = $_[1] if @_ > 1;
 	if ( ! $_[0]{Press} ) {
-		$openprint::log->error("No Press in Imposition:Press");
+		$openprint::log->error('No Press in Imposition:Press');
 		$_[0]{Press} = new openprint::Equipment();
 	} # end if
 	return $_[0]{Press};
@@ -926,9 +930,41 @@ sub to_svg {
 	my $sheet_y = int($margin*$height_scale);
 
 	$svg .= qq`<rect class="sheet" x="$sheet_x" y="$sheet_y" width="$sheet_width" height="$sheet_height" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>`;
+  if ($$self{grip}) {
+    my $grip_height = int($$self{grip}*$height_scale);
+    $svg .= '<pattern id="diagonalHatch" patternUnits="userSpaceOnUse" width="4" height="4">
+  <path d="M-1,1 l2,-2
+           M0,4 l4,-4
+           M3,5 l2,-2" 
+        style="stroke:black; stroke-width:1" />
+</pattern>';
+    $svg .= qq`<rect class="grip" x="$sheet_x" y="$sheet_y" width="$sheet_width" height="$grip_height" style="fill:url(#diagonalHatch);"
+title="$$self{grip} inches grip"
+/>`;
+    $sheet_y += $grip_height;
+  }
+  if ($$self{colour_bar_size}) {
+    $svg .= '<pattern id="processColours" patternUnits="userSpaceOnUse" viewbox="0 0 16.5 2" x=0 y=0 width="16.5" height="2">';
 
-	my $image_width = int( ($sheet_width-4 - $$self{columns} ) / $$self{columns});
-	my $image_height = int( ($sheet_height-4 - $$self{rows} ) / $$self{rows});
+# Draw a box for each of the process colours.
+    my %common = (width => 4.25, y => 0, height => '100%',);
+
+    my $offset = $common{width};
+    for my $colour (qw(cyan yellow magenta black)) {
+      $svg .= qq`<rect width="$common{width}" y="$common{y}" height="$common{height}" x="$offset" fill="$colour"/>`;
+      $offset += $common{width};
+    }
+    $svg .= '</pattern>';
+
+    my $colour_bar_height = int($$self{colour_bar_size} * $height_scale);
+    $svg .= qq`<rect class="colourbar" x="$sheet_x" y="$sheet_y" width="$sheet_width" height="$colour_bar_height" style="fill:url(#processColours);"/>`;
+    $sheet_y += $colour_bar_height;
+  }
+
+	my $image_width = int(((($$self{image_orientation} == Vertical ) ? $$self{image_width} : $$self{image_height})*$width_scale)-4);
+	my $image_height = int(((($$self{image_orientation} == Vertical ) ? $$self{image_height} : $$self{image_width}) * $height_scale)-4);
+	#my $image_width = int( ($sheet_width-4 - $$self{columns} ) / $$self{columns});
+	#my $image_height = int( ($sheet_height-4 - $$self{rows} ) / $$self{rows});
 
 	foreach my $column ( 1 .. $$self{columns} ) {
 		foreach my $row ( 1 .. $$self{rows} ) {
@@ -972,6 +1008,60 @@ $openprint::log->debug("Adding page_columns");
 			
 		} # end foreach row
 	} # end foreach column
+
+  if ($$self{dutch_columns}) {
+    if ($sheet_width - ($$self{columns} * $image_width) > $image_height*$$self{dutch_columns}) {
+      # can fit beside
+      $sheet_x += ($$self{columns} * $image_width) + 4;
+    } else {
+      $sheet_y += ($$self{rows} * $image_height) + 4;
+    }
+	my $image_width = int(((($$self{image_orientation} == Vertical ) ? $$self{image_height} : $$self{image_width})*$width_scale)-4);
+	my $image_height = int(((($$self{image_orientation} == Vertical ) ? $$self{image_width} : $$self{image_height}) * $height_scale)-4);
+    foreach my $column ( 1 .. $$self{dutch_columns} ) {
+      foreach my $row ( 1 .. $$self{dutch_rows} ) {
+        my $image_x = $sheet_x + int(($column-1)*$image_width) + ($column*2);
+        my $image_y = $sheet_y + int(($row-1)*$image_height) + ($row*2);
+        $svg .= qq`<rect class="image" x="$image_x" y="$image_y" width="$image_width" height="$image_height" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>`;
+
+        if ( $self->page_columns() > 1 ) {
+  $openprint::log->debug("Adding page_columns");
+          my $page_width = int( $image_width / $self->page_columns() );
+          my $page_height = int( $image_height / $self->page_rows() );
+          my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) ? 'red' : 'black';
+
+          #if ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) {
+          foreach my $page_column ( 2 .. $self->page_columns() ) {
+            my $page_x1 = $image_x + ($page_column-1)*$page_width;
+            my $page_x2 = $image_x + ($page_column-1)*$page_width;
+
+            my $page_y1 = $image_y;
+  # + $page_height;
+            my $page_y2 = $image_y + ($page_height * $self->page_rows());
+
+  # This is the linees between pages, One of these will be the spine.
+            $svg .= qq`<line x1="$page_x1" y1="$page_y1" x2="$page_x2" y2="$page_y2" stroke="$colour" stroke-dasharray="5,5"/>`;
+          }
+        }
+
+        if ( $self->page_rows() > 1 ) {
+          my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Horizontal ) ? 'red' : 'black';
+          my $page_width = int( $image_width / $self->page_columns() );
+          my $page_height = int( $image_height / $self->page_rows() );
+          foreach my $page_row ( 2 .. $self->page_rows() ) {
+            my $page_x1 = $image_x;
+            my $page_x2 = $image_x + ($page_width * $self->page_columns);
+
+            my $page_y1 = $image_y + ($page_row-1)*$page_height;
+            my $page_y2 = $image_y + ($page_row-1)*$page_height;
+            $svg .= qq`<line x1="$page_x1" y1="$page_y1" x2="$page_x2" y2="$page_y2" stroke="$colour" stroke-dasharray="5,5"/>`;
+          }
+        }
+
+      } # end foreach row
+    } # end foreach column
+  } # end if has dutch
+
 	$svg .= '</svg>';
 	return $svg;
 }

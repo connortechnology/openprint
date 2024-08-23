@@ -1,8 +1,9 @@
-@import 'project.css';
-
 .SidesTheSame {
 	top: -22px; left: 50px; position: relative; width: 120px;padding-left: 5px;
 	background-color: #DEDCB7;
+}
+.Service {
+min-width: 1000px;
 }
 .Service input[type="text"],
 .Service input[type="number"] {
@@ -16,12 +17,21 @@
 	width: 100%;
 	text-align: left;
 }
+.Service a:link {
+color: black;
+}
 .pagequantity input[type="number"],
 .pagequantity input[type="text"],
 .imposition input[type="number"],
 .imposition input[type="text"] {
 	width: 40px;
 }
+.Project .View table tr .price1 input[type="number"],
+.Project .View table tr .price1 input[type="text"],
+.price2 input[type="number"],
+.price2 input[type="text"],
+.price3 input[type="number"],
+.price3 input[type="text"],
 .quantity input[type="number"],
 .quantity input[type="text"],
 .unitprice input[type="number"],

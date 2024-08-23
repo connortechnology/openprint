@@ -13,9 +13,10 @@
 		<tr>
 			<th class="payment_id">Ref #</th>
 			<th class="type">Type</th>
-			<th class="TransactionID">Transaction ID</th>
+			<th class="TransactionID">Transaction</th>
 			<th class="description">Description</th>
-			<th class="DateTime">Received On</th>
+			<th class="DateInput">Received On</th>
+      <th class="Currency">Currency</th>
 			<th class="Price">Amount</th>
 			<th class="buttons">&nbsp;</th>
 		</tr>
@@ -32,8 +33,9 @@
 	<td class="type">%3$s</td>
 	<td class="TransactionID">%4$s</td>
 	<td class="description">%5$s</td>
-	<td class="DateTime">%6$s</td>
-	<td class="Price">%7$s %8$s</td>
+	<td class="DateInput">%6$s</td>
+  <td class="Currency">%7$s</td>
+	<td class="Price">%8$s</td>
 	<td class="buttons">%9$s</td>
 </tr>
 				`, $rowclass, $Payment->id(), $Payment->method(), $Payment->transaction_id(), $Payment->memo(), 
@@ -54,8 +56,9 @@
 						<td class="Method">%s</td>
             <td class="TransactionID"><input type="text" name="transaction_id"/></td>
             <td class="description"><input type="text" name="memo"/></td>
-						<td class="DateTime">%s</td>
-            <td class="Price">%s%s</td>
+						<td class="DateInput">%s</td>
+            <td class="Currency">%s</td>
+            <td class="Price">%s</td>
             <td class="buttons">%s</td>
         </tr>
 			</tfoot>
@@ -74,9 +77,10 @@
 		<tr>
 			<th class="payment_id">Ref #</th>
 			<th class="type">Type</th>
-			<th class="TransactionID">Transaction ID</th>
+			<th class="TransactionID">Transaction</th>
 			<th class="description">Description</th>
-			<th class="DateTime">Date</th>
+			<th class="DateInput">Date</th>
+      <th class="Currency">Currency</th>
 			<th class="Price">Amount</th>
 		</tr>
 	</thead><tbody>';
@@ -88,7 +92,8 @@
 	<td class="TransactionID">%4$s</td>
 	<td class="description">%5$s</td>
 	<td class="DateTime">%6$s</td>
-	<td class="Price">%7$s %8$s</td>
+	<td class="Currency">%7$s</td>
+	<td class="Price">%8$s</td>
 </tr>
 					`, $rowclass, $Payment->id(), $Payment->method(), $Payment->transaction_id(), $Payment->memo(), 
 					format_datetime($Payment->created_on()),

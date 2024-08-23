@@ -1,7 +1,7 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script>
 function load_results() {
-	LoadContent('Results','/employee/accounting/_search.html', $('f1') );
+	LoadContent('Results','/employee/accounting/_search.html', $j('#f1').serialize() );
 }
 function jump_to( docket ) {
 	new Ajax.Request('/employee/accounting/_jump.json', { parameters: { docket: docket } } );
@@ -79,9 +79,9 @@ Choose criteria and click show results. You may the download the results in CSV 
 		</li>
 		<li> 
 			<label>Order Date</label>
-			<? echo ( date_select_session( '/employee/accounting/search.html', 'ordered_on_start', { onchange => q`load_results();`, with_today=>1, with_clear=>1 } ); ) ?>
+			<? echo ( date_select_session( '/employee/accounting/search.html', 'ordered_on_start', { on_change => 'load_results', with_today=>1, with_clear=>1 } ); ) ?>
 			to
-			<? echo ( date_select_session( '/employee/accounting/search.html', 'ordered_on_end', { onchange => q`load_results();`, with_today=>1, with_clear=>1, } ); ) ?>
+			<? echo ( date_select_session( '/employee/accounting/search.html', 'ordered_on_end', { onchange => 'load_results', with_today=>1, with_clear=>1, } ); ) ?>
 		</li>
 		<li> 
 			<label>Total Range</label>
@@ -93,8 +93,8 @@ Choose criteria and click show results. You may the download the results in CSV 
 	</div>
 	</div>
 		<p class="buttons">
-		<? echo ( join('',
-					button( 'ShowResults', { onclick=> q`load_results();`, text=>'Show Results' } ),
+		<? echo ( join("\n",
+					button( 'ShowResults', { on_click=> 'load_results', text=>'Show Results' } ),
 					#ssi::button( 'DownloadCSV', { onclick=>"f1.action='/employee/accounting/search.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
 					button( 'Reset', { onclick=>'f1.reset();' } ),
 					); ) ?>
@@ -104,4 +104,4 @@ Choose criteria and click show results. You may the download the results in CSV 
 </form>
 <div id="Results">Select criteria and click Show Results.</div>
 </div></div>
-<script type="text/javascript">document.forms['f1'].StartDocket.focus();</script>
+<script>document.forms['f1'].StartDocket.focus();</script>

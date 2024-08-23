@@ -160,6 +160,11 @@ if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/QuoteLevels.sql}) );
   get_tables();
 	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='quotelevels'", 'column_name');
+	if ( ! exists $$data{sorting} ) {
+		$dbh->do('ALTER TABLE quotelevels ADD sorting integer');
+	} # end if
 } # end if
 
 sub rename_column {
@@ -745,7 +750,16 @@ $dbh->do('ALTER TABLE orders RENAME COLUMN stremail to email') or die $dbh->errs
   if (exists $$data{stremail} and !exists $$data{email}) {
     $dbh->do('ALTER TABLE orders RENAME COLUMN stremail to email') or die $dbh->errstr();
   }
+  if (exists $$data{id} and ! $$data{column_default}) {
+    $dbh->do("ALTER TABLE orders ALTER id set default nextval('order_id_seq'::regclass)");
+  }
 }
+
+
+if ( sets::isin( 'docketnumber_seq', \@sequences ) ) {
+  $log->debug("Adding docketnumber_seq");
+  $dbh->do('CREATE SEQUENCE docketnumber_seq');
+} # end if
 
 if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
@@ -1793,6 +1807,10 @@ if ( ! sets::isin( 'tbl_equipment_specifications', \@tables ) ) {
 		if ( ! exists $$data{range_units} ) {
 			$log->debug("Adding range_units to tbl_equipment_specifications");
 			$dbh->do('ALTER TABLE tbl_equipment_specifications ADD range_units         text');
+		}
+		if ( ! exists $$data{sorting} ) {
+			$log->debug("Adding sorting to tbl_equipment_specifications");
+			$dbh->do('ALTER TABLE tbl_equipment_specifications ADD sorting INTEGER');
 		}
 	} # end if
 } # end if
@@ -4272,6 +4290,7 @@ if ( $version < $new_version ) {
 if ( ! sets::isin( 'paper_prices', \@tables ) ) {
   if (sets::isin('tbl_paper_prices', \@tables)) {
     $dbh->do('ALTER TABLE tbl_paper_prices RENAME to paper_prices') or die $dbh->errstr();
+    push @tables, 'paper_prices';
   } else {
     load_sql( 'Paper_Prices' );
   }

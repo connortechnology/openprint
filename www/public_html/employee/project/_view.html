@@ -20,6 +20,102 @@
 </div>
 <br/>
 <form id="<?formname?>" name="<?formname?>" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
+<div class="buttons">
+  <span style="float: left;">
+    <? echo ( join("\n",
+    button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{ProjectIndex}');", text=>'Docket' } ),
+    button( 'Summary'.$$variable{Project}{id}, { href=> "/main/project/summary.html?ProjectIndex=$$variable{ProjectIndex}", text=>'Summary' } ),
+    button( 'UploadPDFs'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
+    #button( 'ExportJDF', { onclick=>qq`form_submit('$$variable{formname}','Export JDF');`, text=>'JDF' } ),
+    #button( 'ExportMXML', { onclick=>qq`form_submit('$$variable{formname}','Export MXML');`, text=>'MXML' } ),
+    button( 'RelatedDockets'.$$variable{Project}{id}, { onclick=>"popup_window('/employee/project/_related_projects.html','project_id=$$variable{ProjectIndex}', { width: 800, height: 600 } );", text=>'Related Dockets' } ),
+    ); ) ?>
+  </span>
+  
+  <span style="float: right;">
+    <? echo ( 
+      my $html;
+      if ( ! $$variable{Project}->rush() ) {
+        $html .= button( 'Rush'.$$variable{Project}{id}, { onclick=>qq`if(confirm('Are you sure you want to rush this job?')) {form_submit('$$variable{formname}','Rush');}`, text=>'Rush' } );
+      } else {
+        $html .= button( 'NoRush'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','No Rush');`, text=>'No Rush' } );
+      } # end if
+      
+      if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
+        my $need_add = 0;
+        my $pending = 0;
+        foreach my $sig_id ( $$variable{Project}->signatures() ) {
+          my $Job = openprint::ScheduledJob->find_one(project_id=>$$variable{ProjectIndex}, 'service_id any'=>$sig_id );
+          if ( ! $Job ) {
+            $need_add = 1;
+          } elsif ( ! $Job->starttime() ) {
+            $pending = 1;
+          } # end if
+        } # end foreach sig_id
+
+        if ( $need_add ) {
+          $html .= button( 'AddToPressSchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','AddToPressSchedule');`, text=>'Add To Schedule' } );
+        } else {
+          $html .= button( 'RemoveFromPressSchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','RemoveFromPressSchedule');`, text=>'Remove from Schedule' } );
+        } # end if
+        if ( $pending ) {
+          $html .= button( 'ScheduleJob'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BumpSchedule');`, text=>'Schedule' } );
+        } # end if
+      } # end if
+      if ( openprint::usergroup::is_user_in( ['Scheduling','Production'], $session{user_id} ) ) {
+        $html .= button( 'CompletePrinting'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Complete Printing');`, text=>'Complete Printing' } ) if $$variable{Project}->status() eq 'Approved';
+      }
+
+      my @bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{ProjectIndex}, 'Bindery' );
+if ( 0 ) {
+
+      if ( $$variable{ProjectStatus} eq 'Printed' and @bindery_services and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{ProjectIndex} ) ) ) {
+        $html .= button( 'AddToBinderySchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','AddToBinderySchedule');`, text=>'Add To Bindery Schedule' } );
+      } # end if
+      #if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{user_id} ) ) {
+      #$html .= button( 'Complete'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Complete');`, text=>'Complete' } );
+      #} # end if
+}
+      if ( @bindery_services and ( $openprint::User->in_Group('Scheduling') or $openprint::User->in_Group('Bindery Manager') ) ) {
+        $html .= button( 'CompleteBindery'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BinderyComplete');`, text=>'Complete Bindery' } );
+      } # end if
+
+			# If we are a shipping user
+			if ( $openprint::User->in_Group('Shipping','Accounting') ) {
+				if ( sets::isin( $$variable{Project}->shippingtype(), [ 'Delivery', 'Shipping' ] ) and $$variable{Project}->status() ne 'Shipped' ) {
+
+					$html .= button( 'Shipped'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Shipped');`, text=>'Shipped' } );
+				} # end if
+
+				if ( ( (!$$variable{Project}->shippingtype()) or $$variable{Project}->shippingtype() eq 'CustomerPickUp' ) and $$variable{Project}->status() ne 'Picked Up' ) {
+					$html .= button( 'PickedUp'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Picked Up');`, text=>'Picked Up' } );
+				} # end if
+			} # end if is Shipping User
+
+      if ( $session{user_type} eq 'A' or $openprint::User->id() == $$variable{Order}->salesrep_id() or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{user_id} ) ) {
+        $html .= button( 'Delete'.$$variable{Project}{id}, { onclick=>qq`form_submit( '$$variable{formname}', 'DeleteServices');`, text=>'Delete Checked Services' } );
+      } # end if
+
+			if ( $session{user_type} eq 'A' ) {
+				if ( $$variable{Order}->do_not_pay_commission() ) {
+					$html .= button('PayCommission'.$$variable{Project}{id}, { href=>'/employee/project/view.html?action=PayCommission&docket='.$$variable{Project}{docket},
+							text=>'Ok To Pay Commission'
+ } );
+				} else {
+					$html .= button('DoNotPayCommission'.$$variable{Project}{id}, {
+							href=>'/employee/project/view.html?action=DoNotPayCommission&docket='.$$variable{Project}{docket},
+							text=>'Do Not Pay Commission'
+							} );
+				
+				}
+			}
+
+      return $html;
+    ) ?>
+  </span>
+  <br class="spacer"/>
+</div>
+  <br class="spacer"/>
   <table class="List">
     <tr> 
       <? if ( $$variable{checkboxes} ) ?>
@@ -565,99 +661,6 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
   <span class="Currency">All prices in <? echo ( new openprint::Currency( $session{Currency_id} )->name() ) ?>.&nbsp;</span>
   <? endif ( $$variable{canseepricing} ) ?>
   <br/>
-  <span style="float: left;">
-    <? echo ( join("\n",
-    button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{ProjectIndex}');", text=>'Docket' } ),
-    button( 'Summary'.$$variable{Project}{id}, { href=> "/main/project/summary.html?ProjectIndex=$$variable{ProjectIndex}", text=>'Summary' } ),
-    button( 'UploadPDFs'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
-    #button( 'ExportJDF', { onclick=>qq`form_submit('$$variable{formname}','Export JDF');`, text=>'JDF' } ),
-    #button( 'ExportMXML', { onclick=>qq`form_submit('$$variable{formname}','Export MXML');`, text=>'MXML' } ),
-    button( 'RelatedDockets'.$$variable{Project}{id}, { onclick=>"popup_window('/employee/project/_related_projects.html','project_id=$$variable{ProjectIndex}', { width: 800, height: 600 } );", text=>'Related Dockets' } ),
-    ); ) ?>
-  </span>
-  
-  <span style="float: right;">
-    <? echo ( 
-      my $html;
-      if ( ! $$variable{Project}->rush() ) {
-        $html .= button( 'Rush'.$$variable{Project}{id}, { onclick=>qq`if(confirm('Are you sure you want to rush this job?')) {form_submit('$$variable{formname}','Rush');}`, text=>'Rush' } );
-      } else {
-        $html .= button( 'NoRush'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','No Rush');`, text=>'No Rush' } );
-      } # end if
-      
-      if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
-        my $need_add = 0;
-        my $pending = 0;
-        foreach my $sig_id ( $$variable{Project}->signatures() ) {
-          my $Job = openprint::ScheduledJob->find_one(project_id=>$$variable{ProjectIndex}, 'service_id any'=>$sig_id );
-          if ( ! $Job ) {
-            $need_add = 1;
-          } elsif ( ! $Job->starttime() ) {
-            $pending = 1;
-          } # end if
-        } # end foreach sig_id
-
-        if ( $need_add ) {
-          $html .= button( 'AddToPressSchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','AddToPressSchedule');`, text=>'Add To Schedule' } );
-        } else {
-          $html .= button( 'RemoveFromPressSchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','RemoveFromPressSchedule');`, text=>'Remove from Schedule' } );
-        } # end if
-        if ( $pending ) {
-          $html .= button( 'ScheduleJob'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BumpSchedule');`, text=>'Schedule' } );
-        } # end if
-      } # end if
-      if ( openprint::usergroup::is_user_in( ['Scheduling','Production'], $session{user_id} ) ) {
-        $html .= button( 'CompletePrinting'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Complete Printing');`, text=>'Complete Printing' } ) if $$variable{Project}->status() eq 'Approved';
-      }
-
-      my @bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{ProjectIndex}, 'Bindery' );
-if ( 0 ) {
-
-      if ( $$variable{ProjectStatus} eq 'Printed' and @bindery_services and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{ProjectIndex} ) ) ) {
-        $html .= button( 'AddToBinderySchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','AddToBinderySchedule');`, text=>'Add To Bindery Schedule' } );
-      } # end if
-      #if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{user_id} ) ) {
-      #$html .= button( 'Complete'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Complete');`, text=>'Complete' } );
-      #} # end if
-}
-      if ( @bindery_services and ( $openprint::User->in_Group('Scheduling') or $openprint::User->in_Group('Bindery Manager') ) ) {
-        $html .= button( 'CompleteBindery'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BinderyComplete');`, text=>'Complete Bindery' } );
-      } # end if
-
-			# If we are a shipping user
-			if ( $openprint::User->in_Group('Shipping','Accounting') ) {
-				if ( sets::isin( $$variable{Project}->shippingtype(), [ 'Delivery', 'Shipping' ] ) and $$variable{Project}->status() ne 'Shipped' ) {
-
-					$html .= button( 'Shipped'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Shipped');`, text=>'Shipped' } );
-				} # end if
-
-				if ( ( (!$$variable{Project}->shippingtype()) or $$variable{Project}->shippingtype() eq 'CustomerPickUp' ) and $$variable{Project}->status() ne 'Picked Up' ) {
-					$html .= button( 'PickedUp'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Picked Up');`, text=>'Picked Up' } );
-				} # end if
-			} # end if is Shipping User
-
-      if ( $session{user_type} eq 'A' or $openprint::User->id() == $$variable{Order}->salesrep_id() or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{user_id} ) ) {
-        $html .= button( 'Delete'.$$variable{Project}{id}, { onclick=>qq`form_submit( '$$variable{formname}', 'DeleteServices');`, text=>'Delete Checked Services' } );
-      } # end if
-
-			if ( $session{user_type} eq 'A' ) {
-				if ( $$variable{Order}->do_not_pay_commission() ) {
-					$html .= button('PayCommission'.$$variable{Project}{id}, { href=>'/employee/project/view.html?action=PayCommission&docket='.$$variable{Project}{docket},
-							text=>'Ok To Pay Commission'
- } );
-				} else {
-					$html .= button('DoNotPayCommission'.$$variable{Project}{id}, {
-							href=>'/employee/project/view.html?action=DoNotPayCommission&docket='.$$variable{Project}{docket},
-							text=>'Do Not Pay Commission'
-							} );
-				
-				}
-			}
-
-      return $html;
-    ) ?>
-  </span>
-  <br class="spacer"/>
   <? if ( $$variable{Project}->status() eq 'Waiting For Customer Approval' ) ?>
   <div id="AdditionalChargeActions<?echo($$variable{Project}{id})?>" class="AdditionalChargeActions"><?include(_additional_charge_notifications.html)?></div>
   <? endif ( $$variable{Project}->status() eq 'Waiting For Customer Approval' ) ?>
