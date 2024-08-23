@@ -3,25 +3,8 @@ use utf8;
 use lib '/var/www/openprint/perl';
 use strict;
 
-require configuration;
-require sql;
-require openprint::Host;
-require logger;
-require openprint::Email;
-require openprint::Log;
-
-use vars qw( $log $dbh %config);
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
-$log = logger->new();
-$log->{level} = 'debug';
-
 use Getopt::Long;
 use File::Basename qw(basename);
-#require Net::SSH::Perl;
-#require Net::SSH;
-require Net::SSH2;
 my $program = basename($0);
 
 my %options;
@@ -41,10 +24,24 @@ my %defaults = (
 foreach my $default ( keys %defaults ) {
 	$options{$default} = $defaults{$default} if ! $options{$default};
 } # end foreach
+
+require configuration;
+require sql;
+require openprint::Host;
+require logger;
+require openprint::Email;
+require openprint::Log;
+
+use vars qw( $log $dbh %config);
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
+$log = logger->new();
+$log->{level} = 'debug';
 configuration::init( );
 configuration::from_file( $options{config} );
 configuration::merge( \%options );
-
+print "Loaded config\n";
 foreach my $param ('db_name', 'db_user', 'db_pass') {
   die "$program: missing required --$param parameter" if ! $config{$param};
 } # end foreach required-param
@@ -68,12 +65,14 @@ $dbh = sql::open_sql( $log,
 		password	=> $config{db_pass},
 		);
 die "Error opening db. $!" if !$dbh;
+print "Connected to db\n";
 
+require Net::SSH2;
 require Net::Ping;
 # udp has less network traffic overhead
 my $p = Net::Ping->new('icmp', 10);
 
-my @Hosts = $options{host_id} ? openprint::Host->find(id=>$options{host_id}) : openprint::Host->find(monitored=>1,order=>'id');
+my @Hosts = $options{host_id} ? openprint::Host->find(id=>$options{host_id}) : openprint::Host->find(monitored=>1, order=>'id');
 $log->debug( 'Checking ' . @Hosts . ' hosts.' );
 foreach my $Host ( @Hosts ) {
 	foreach my $HI ( $Host->Interfaces() ) {
@@ -113,9 +112,9 @@ foreach my $Host ( @Hosts ) {
       #'sudo -S cp vueip_install/etc/sudoers.d/upgrades /etc/sudoers.d/',
       'sudo /usr/bin/apt update',
       'sudo /usr/bin/apt -y -f -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade',
-      'cd /usr/share/zoneminder/www/skins/classic/css/VueIP/ && sudo /usr/bin/git pull /home/ipc/VueIPSkin',
-      'mysql -u zmuser --password=zmpass zm -e "UPDATE Config SET Value=\'<img width=\"212\" height=\"63\" src=\"/skins/classic/css/VueIP/graphics/vueiplogo2023_horizontal.png\"/>\' WHERE Name=\'ZM_HOME_CONTENT\'"',
-      'mysql -u zmuser --password=zmpass zm -e "UPDATE Config SET Value=\'https://ipcnv.com/surveillance\' WHERE Name=\'ZM_HOME_URL\'"',
+      #'cd /usr/share/zoneminder/www/skins/classic/css/VueIP/ && sudo /usr/bin/git pull /home/ipc/VueIPSkin',
+      #'mysql -u zmuser --password=zmpass zm -e "UPDATE Config SET Value=\'<img width=\"212\" height=\"63\" src=\"/skins/classic/css/VueIP/graphics/vueiplogo2023_horizontal.png\"/>\' WHERE Name=\'ZM_HOME_CONTENT\'"',
+      #'mysql -u zmuser --password=zmpass zm -e "UPDATE Config SET Value=\'https://ipcnv.com/surveillance\' WHERE Name=\'ZM_HOME_URL\'"',
 
     ) {
       print "Execing $cmd\n";
@@ -168,7 +167,7 @@ sub confirm {
   }
   $_=<STDIN>; chomp;
   return 1 if $_ and ( lc($_) eq 'y');
-  return 1 if (!$_) and ($default eq 'y');
+  return 1 if (!$_) and (lc $default eq 'y');
   return 0;
 }
 1;
