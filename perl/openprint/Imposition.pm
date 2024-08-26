@@ -979,22 +979,26 @@ sub add_sheet {
       filter => 'url(#dropShadow)',
       );
 
-
-  if ($$self{grip}) {
-    $$self{grip} /= 2 if ($$self{runstyle} eq 'Work & Tumble');
-    $canvas->rect(class=>'grip', id=>'grip', x=>0, y=>0, width=>$$self{sheet_width}, height=>$$self{grip}, fill=>'url(#diagonalHatch)');
+  my $grip = $$self{grip};
+  if ($grip) {
+    $grip /= 2 if ($$self{runstyle} eq 'Work & Tumble' or $$self{runstyle} eq 'Perfecting');
+    $canvas->rect(class=>'grip', id=>'grip', x=>0, y=>0, width=>$$self{sheet_width}, height=>$grip, fill=>'url(#diagonalHatch)');
   }
 
   if ($$self{colour_bar_size}) {
     my $colour_bar_height = $$self{colour_bar_size};
-    my $colour_bar = $canvas->rect( class=>'colourbar', x=>0, y=>$$self{grip}, width=>$$self{sheet_width}, height=>$colour_bar_height, fill=>'url(#processColours)');
+    my $colour_bar = $canvas->rect( class=>'colourbar', x=>0, y=>$grip, width=>$$self{sheet_width}, height=>$colour_bar_height, fill=>'url(#processColours)');
     if ($$self{runstyle} eq 'Work & Tumble') {
-      $colour_bar->setAttributes({x => 0, y => $$self{sheet_height} - $$self{grip}});
-    }
+      $colour_bar->setAttributes({x => 0, y => $$self{sheet_height} - $grip});
+    } else {
+     # We've decreased the availible space.
+     $canvas = $canvas->g(transform => "translate(0, $colour_bar_height)");
+   }
   }
 
+
   my $x = ($self->sheet_width() - 2*$$self{gutter} - $self->layout_width()) / 2;
-  my $y = ($self->sheet_height() - $$self{grip}     - $self->layout_height()) / 2;
+  my $y = ($self->sheet_height() - $grip - $self->layout_height()) / 2;
 
 # Centre the imposition on the printable page area.
   my $group = $canvas->group(transform => "translate($x, $y)");
@@ -1049,8 +1053,10 @@ sub add_imposition_define {
 
   my $image_width = ($$self{image_orientation} == Vertical ? $$self{image_width} : $$self{image_height});
   my $image_height = ($$self{image_orientation} == Vertical ? $$self{image_height} : $$self{image_width});
-  my $object_width = ($$self{image_orientation} == Vertical ? $$self{object_width} : $$self{object_height});
-  my $object_height = ($$self{image_orientation} == Vertical ? $$self{object_height} : $$self{object_width});
+  my $object_width = ($$self{image_orientation} == Vertical ? $$self{image_width} : $$self{image_height});
+  my $object_height = ($$self{image_orientation} == Vertical ? $$self{image_height} : $$self{image_width});
+  #my $object_width = ($$self{image_orientation} == Vertical ? $$self{object_width} : $$self{object_height});
+  #my $object_height = ($$self{image_orientation} == Vertical ? $$self{object_height} : $$self{object_width});
 
 	foreach my $column ( 1 .. $$self{columns} ) {
 		foreach my $row ( 1 .. $$self{rows} ) {
@@ -1175,10 +1181,10 @@ sub add_drop_shadow_define {
 }
 sub add_colour_bar_define {
   my ($defines) = @_;
-  my $processColours = $defines->pattern( id=>'processColours', patternUnits=>'userSpaceOnUse', viewbox=>'0 0 16.5 2', x=>0, y=>0, width=>16.5, height=>2);
+  my $processColours = $defines->pattern( id=>'processColours', patternUnits=>'userSpaceOnUse', viewbox=>'0 0 1.5 2', x=>0, y=>0, width=>1.5, height=>2);
 
 # Draw a box for each of the process colours.
-  my $width = 4.25;
+  my $width = 0.25;
   my $offset = $width;
   for my $colour (qw(cyan yellow magenta black)) {
     $processColours->rect(width=>$width, y=>0, height=>'100%', x=>$offset, fill=>$colour);
