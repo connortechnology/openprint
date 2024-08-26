@@ -4,9 +4,9 @@ use Carp;
 
 use openprint::Imposition;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_DUTCH => 0;
-use constant DEBUG_CONVERT => 0;
+use constant DEBUG_CONVERT => 1;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -1149,7 +1149,7 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 				my $newimp = $imp->copy();
 
 				$newimp->rows($rows);
-				#$$newimp{start_rows} = $rows;
+				$$newimp{start_rows} = $rows;
 				$newimp->columns($cols);
 				$$newimp{start_columns} = $cols;
 				#$newimp->imposition($rows * $cols);
