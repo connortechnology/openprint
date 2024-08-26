@@ -1642,8 +1642,8 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
         if (!$setupPrice{units}){
           if (! $makereadies{$$Equipment{id}}{$$Fold{type}.$imposition}) {
             # This is the most common so test for it first.
-            $setupPrice{Total} = $setupPrice{Price};
-            $setupPrice{units} ||= '';
+            $setupPrice{Total} = $setupPrice{Price} //= 0;
+            $setupPrice{units} //= '';
             $total_MR += $setupPrice{Total};
             $Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
           }
