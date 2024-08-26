@@ -807,5 +807,44 @@ sub neccessary {
 	return 0;
 } # end sub neccessary
 
+sub load_Impositions {
+  my ( $Imposition, $specs, $form, $qty_index ) = @_;
+
+  my @impos;
+  my @results;
+  foreach my $imp_index ( 1 .. 4 ) {
+    next if ! $$specs{"ImpQty-$form-$qty_index-$imp_index"};
+
+    my $imp = $Imposition->copy();
+    $imp->columns( $$specs{"ImpColumns-$form-$qty_index-$imp_index"} );
+    $imp->rows( $$specs{"ImpRows-$form-$qty_index-$imp_index"} );
+    my $paper = $$imp{Paper};
+    $paper->width( $$paper{width} / ($$Imposition{columns} / $$imp{columns}));
+    $paper->height( $$paper{height} / ($$Imposition{rows} / $$imp{rows}));
+
+
+    #$imp->type( $$specs{"ImpType-$form-$qty_index-$imp_index"} );
+    #my ( $pages ) = $$specs{"ImpType-$form-$qty_index-$fold_index"} =~ /^(\d+)PageFold$/;
+    #$imp->pages( $pages );
+    $imp->quantity( $$specs{"ImpQty-$form-$qty_index-$imp_index"} );
+    $imp->display("impressions: ".$imp->impressions());
+    $imp->impressions($imp->impressions() * ($$Imposition{imposition}/$$imp{imposition}));
+    push @impos, $imp;
+  } # end foreach imp_index
+  my $quantity = $$specs{"txtQuantity$qty_index"};
+
+  #if ( @impos == 1 ) {
+    #$impos[0]{impressions} = int( $quantity / $impos[0]{imposition} );
+    #$impos[0]{impressions} = int( $quantity / ( $impos[0]{quantity} * $impos[0]{imposition} ) );
+    #} else {
+    #my $parts = misc::sum( map { $$_{imposition} * $$_{quantity} } @impos );
+    #foreach my $I ( @impos ) {
+      #$$I{impressions} = int( ($quantity / $parts ) * $$_{imposition} * $$_{quantity} );
+      #$$I{impressions} = int( ($quantity / $parts ) * $$_{imposition} * $$_{quantity} );
+      #} # end foreach I
+      #} # end if
+  return @impos;
+} # end sub load_Impositions
+
 1;
 __END__
