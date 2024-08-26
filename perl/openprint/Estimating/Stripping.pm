@@ -526,7 +526,7 @@ sub save {
 	# Might have to update the DieCutting price.
 } # end sub save
 
-sub load_Impositions($$$) {
+sub load_Impositions {
 	my ( $Imposition, $specs, $form, $qty_index ) = @_;
 
 	my @impos;
@@ -537,6 +537,10 @@ sub load_Impositions($$$) {
 		my $imp = $Imposition->copy();
 		$imp->columns( $$specs{"ImpColumns-$form-$qty_index-$imp_index"} );
 		$imp->rows( $$specs{"ImpRows-$form-$qty_index-$imp_index"} );
+    my $paper = $$imp{Paper};
+    $paper->width( $$paper{width} / ($$Imposition{columns} / $$imp{columns}));
+    $paper->height( $$paper{height} / ($$Imposition{rows} / $$imp{rows}));
+
 
 		#$imp->type( $$specs{"ImpType-$form-$qty_index-$imp_index"} );
 		#my ( $pages ) = $$specs{"ImpType-$form-$qty_index-$fold_index"} =~ /^(\d+)PageFold$/;
