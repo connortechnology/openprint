@@ -118,7 +118,7 @@
 		} # end if
 		$html .= ' </ul> </fieldset>';
 		if ( $$services{Folding} ) {
-			$html .= '<fieldset><legend>Pre-Folding Cutting</legend><ul>';
+			$html .= '<fieldset><legend>Pre-Bindery Cutting</legend><ul>';
 			$html .= '<li class="foldingcuts"><label>Cuts</label>';
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 				next if ! $$sig_specs{"txtImposition$qty_index"};
@@ -141,7 +141,7 @@
 				write_override( "OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index", $$variable{"OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
 );
 			} # end foreach qty_index
-			$html .= '</li><li><label>Pre-Folding price ('.$$variable{CurrencySymbol}.')</label>';
+			$html .= '</li><li><label>Pre-Bindery price ('.$$variable{CurrencySymbol}.')</label>';
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 				next if ! $$sig_specs{"txtImposition$qty_index"};
 				$html .= '<span class="'.$$variable{Columns}.'Columns">';
