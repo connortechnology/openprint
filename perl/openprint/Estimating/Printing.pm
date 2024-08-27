@@ -752,7 +752,6 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 	openprint::Estimating::Folding::init($Project, \%project) if $project{NeedFolding};
 	$project{NeedUVCoating} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
 	$project{NeedAqueous} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
-	openprint::Estimating::Aqueous::init($Project, \%project) if $project{NeedAqueous};
 	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
 
 	# These aer questionable: Should not modify a project in calculation
@@ -777,6 +776,7 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 
     if (@{$$services{Aqueous}}) {
       $project{HasAqueous} = $$services{Aqueous}[0];
+      openprint::Estimating::Aqueous::init($Project, $project{HasAqueous}, \%project);
       my $aq_specs = openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] );
       %{$project{AqueousSpecs}} = %{$aq_specs};
 
@@ -6689,13 +6689,19 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 	$$specs{'ddmPress'.$qty_index} = $$Press{strid};
 	# Used to be hasAQ.. but that doesn't make any sense.	Must be NeedAQ.
 	if ( $$project{NeedAqueous} ) {
-		my $aq_time = gettimeofday();
-		my %aq_results = openprint::Estimating::Aqueous::signature_calc(
-				$Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition, $aq_makereadies );
+    my %aq_results;
+    if (DEBUG) {
+      my $aq_time = gettimeofday();
+      %aq_results = openprint::Estimating::Aqueous::signature_calc(
+        $Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition, $aq_makereadies );
 
-		my $aq_elapsed = sprintf('%.4f seconds', (gettimeofday() - $aq_time)*1000);
-		$log->debug("AQ elapsed: $aq_elapsed") if DEBUG;
-#$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
+      my $aq_elapsed = sprintf('%.4f seconds', (gettimeofday() - $aq_time)*1000);
+      $log->debug("AQ elapsed: $aq_elapsed") if DEBUG;
+    } else {
+      %aq_results = openprint::Estimating::Aqueous::signature_calc(
+        $Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition, $aq_makereadies );
+    }
+$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
 		if ( $aq_results{Status} eq 'uncalculated' ) {
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} ".
 				$$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
