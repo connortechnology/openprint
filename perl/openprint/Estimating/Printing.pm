@@ -35,7 +35,7 @@ require misc;
 
 my $threading = 0;
 #use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
@@ -47,7 +47,7 @@ use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
 use constant USE_PRICE_CACHE => 1;
-use constant DEBUG_IMPOSITIONS => 1;
+use constant DEBUG_IMPOSITIONS => 0;
 
 %ServicePrices = (
 	Roll2Sheet => {
@@ -1431,7 +1431,7 @@ $log->error("For press $$Press{strid} $printing_type ".join(',', $$specs{Printin
       }
 			$$project{Runstyles} = $$specs{"ddmRunStyle$qty_index"};
 		} 
-    $log->error("Runstyles: $$project{Runstyles}");
+    $log->error("Project Runstyles: $$project{Runstyles}");
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
 		my $do_perfecting = 1;
 		if ( $$project{print_sides} == 1 ) {
@@ -1576,10 +1576,12 @@ $log->error("For press $$Press{strid} $printing_type ".join(',', $$specs{Printin
 			while ( $cut_off >= $min ) {
 				push @cut_offs, $cut_off;
 # Neccessary due to floating point arithmetic errors
-				$cut_off = Math::Round::nearest(0.00001, $cut_off - $increment );
+        # # Really?  This is just add/sub.  multi/div would be a problem
+        #$cut_off = Math::Round::nearest(0.00001, $cut_off - $increment );
+				$cut_off = $cut_off - $increment;
 			} # end while cutoff > min
 		} # end if
-#$log->debug("Cut Offs for Press $$Press{strid} @cut_offs");
+$log->debug("Cut Offs for Press $$Press{strid} @cut_offs");
 		my %feeds = map { $_, 1 } split(',',$_ ) if $_ = $Press->specification('Feed');
 		$$Press{Feeds} = \%feeds;
 		my $maximum_sheet_width = $Press->specification('Maximum Sheet Width') or 0;
@@ -1731,21 +1733,25 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 					# We need to do some initial filtering here.	
 					my %paper_impositions;
 					foreach my $cut_off ( @cut_offs ) {
-						if ( DEBUG_IMPOSITIONS and $$Overrides{"OverrideCutOff$qty_index"} and $$specs{"CutOff$qty_index"} ) {
-							next if $cut_off != $$specs{"CutOff$qty_index"};
+            if ( DEBUG_IMPOSITIONS and $$Overrides{"OverrideCutOff$qty_index"} and $$specs{"CutOff$qty_index"}
+                and (0+$$specs{"CutOff$qty_index"} != 0+$cut_off)) {
+              $log->debug("Next cuz Cut off $cut_off != ".$$specs{"CutOff$qty_index"} . ' '.(0+$$specs{"CutOff$qty_index"}).'!='.(0+$cut_off) . ' ' . ((0+$$specs{"CutOff$qty_index"} != 0+$cut_off)));
+              next;
+            } else {
+              $log->debug("Not Next cuz Cut off $cut_off != ".$$specs{"CutOff$qty_index"});
 						}
 						$$project{'Cut Off'} = $cut_off;
 						my @temp_imps = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
-#if ( DEBUG_IMPOSITIONS ) {
-#$log->error("Got " . @temp_imps . " for " . $P->to_string() );
-#foreach my$i( @temp_imps ) {
-#$i->display( 'Returned from get_imposition' );
-#}
-#}
+if ( DEBUG_IMPOSITIONS ) {
+$log->error("Got " . @temp_imps . " for " . $P->to_string() );
+foreach my$i( @temp_imps ) {
+$i->display( 'Returned from get_imposition' );
+}
+}
 						foreach my $i ( @temp_imps ) {
 							my $AP = $$i{Paper};
 							if ( $maximum_roll_width and ( $$AP{width} > $maximum_roll_width ) ) {
-								$log->debug("Next due to maximum roll siwth $$AP{width} > $maximum_roll_width ") if DEBUG_IMPOSITIONS;
+								$log->debug("Next due to maximum roll width $$AP{width} > $maximum_roll_width ") if DEBUG_IMPOSITIONS;
 								next;
 							}
 #$i->display('doig');
@@ -1757,6 +1763,7 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 								if ( ! $do_initial_filtering ) {
 								} elsif ( ( defined $$specs{'OverrideCutOff'.$qty_index} ) and ( $$P{height} == $$specs{"CutOff$qty_index"} ) and ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) ) {
 									# Shouldn't really do this here.
+                  $i->display('Not adding because cut off is overriden');
 								} else {
 								
 									my $iarea = $AP->area();
@@ -1768,7 +1775,7 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 										next if ( (defined $$specs{'OverrideCutOff'.$qty_index} ) and ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $$B{height} == $$specs{"CutOff$qty_index"} ) );
 										my $jarea = $B->area();
 										if ( $iarea < $jarea ) {
-if ( DEBUG_INITIAL_FILTERING and $$AP{width} == 35 ) {
+if ( DEBUG_INITIAL_FILTERING ) {
 	$j->display('1 dumping');
 	$i->display('1 for');
 }
@@ -1776,7 +1783,7 @@ if ( DEBUG_INITIAL_FILTERING and $$AP{width} == 35 ) {
 											$imp_index -= 1;
 	#$i->display('1 for');
 										} elsif ( $jarea < $iarea ) {
-if ( DEBUG_INITIAL_FILTERING and $$AP{width} == 35 ) {
+if ( DEBUG_INITIAL_FILTERING ) {
 	$i->display('2 dumping');
 	$j->display('2 for');
 }
@@ -3044,10 +3051,10 @@ $log->debug('after sorting presses: ' . ( sprintf('%.4f', tv_interval( [$master_
 #$log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 
 		convert_impositions( $Project, $project, $specs, $qty_index, \%impositions );
-		if ( 0 ) {
+		if ( DEBUG_IMPOSITIONS ) {
 			foreach my $press ( keys %impositions ) {
 				foreach my $I ( @{$impositions{$press} } ) {
-					$I->display("Iniital converted_impositions");
+					$I->display("Initial converted_impositions");
 				}
 			}
 		}
@@ -3082,7 +3089,7 @@ $log->debug('after sorting presses: ' . ( sprintf('%.4f', tv_interval( [$master_
 		} # end foreach sig_id
 		if ( DEBUG ) {
 		foreach my $I ( @other_impositions ) {
-			$I->display("Iniital other_impositions Group $$specs{Group}");
+			$I->display("Initial other_impositions Group $$specs{Group}");
 		}
 		} 
 
