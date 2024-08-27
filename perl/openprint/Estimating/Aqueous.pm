@@ -19,6 +19,7 @@ use strict;
 use warnings;
 use vars qw( %ServicePrices %MaterialPrices );
 use Data::Dumper;
+use constant DEBUG => 1;
 
 %ServicePrices = (
 	AqueousMinimumCharge	=> { },
@@ -66,7 +67,6 @@ require openprint::Imposition;
 require openprint::Ink;
 
 use vars qw( @outputs );
-use constant DEBUG => 1;
 use Storable 'dclone';
 
 my %Inks;
@@ -330,7 +330,7 @@ $openprint::log->error(Data::Dumper::Dumper(\%results));
 		$GrandTotal *= ( 1+$$specs{"Markup$qty_index"}/100 ) if $$specs{"Markup$qty_index"};
 
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $GrandTotal / $qty );
-		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+		if (!$$specs{'OverridePrice'.$qty_index} or ( $$specs{'OverridePrice'.$qty_index} ne 'Y')) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $GrandTotal );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{'txtPrice'.$qty_index} );
@@ -349,7 +349,7 @@ sub signature_calc {
 				$openprint::log->debug("Makereadies before aq calc equipment: $equipment_id $type: ".join(',',@{$$MakeReadies{$equipment_id}{$type}}));
 			}
 		}
-		$Imposition->display();
+		$Imposition->display('AQ::signature_calc');
 	}
 
 	my $form = $$sig_specs{SignatureIndex};
