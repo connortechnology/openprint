@@ -6,7 +6,7 @@ require Math::Round;
 require Data::Dumper;
 use SVG;
 use vars qw( $AUTOLOAD %Orientations @RunStyles);
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;
@@ -589,25 +589,13 @@ sub save {
 sub used_width {
 	my $self = shift;
 	my $width = $$self{layout_width} + $$self{gutters} + $$self{cropmark_left} + $$self{cropmark_right} + ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 );
-	$openprint::log->debug( "used_width: width $width = layout: $$self{layout_width} + gutters: $$self{gutters} + cropleft $$self{cropmark_left} + cropright $$self{cropmark_right} + ( $$self{colour_bar_orientation} eq 'Length' ? cb: $$self{colour_bar_size} : 0 );") if DEBUG;
-if ( 0 ) { # DOn't need to do this anymore, is taken care of in layout_width
-	if ( ($$self{runstyle} eq 'Perfecting' ) and $$self{Press} and $$self{Paper} ) {
-		if ( $$self{Paper}->perfecting() ne 'Y' ) {
-			if ( $$self{columns} > 1 and $$self{columns} % 2 ) {
-			$width += $$self{Press}->specification('Perfecting Double Gutter Size') - $$self{Press}->specification('Perfecting Single Gutter Size');
-	$openprint::log->debug( "used_width: adding perfecting wheel space: $$self{Press}->specification('Perfecting Double Gutter Size') - $$self{Press}->specification('Perfecting Single Gutter Size');" );
-			} # end if
-		} # end if
-	} # end if
-	} # end if
-$openprint::log->debug("Setting used_width ($width) = using layout:$$self{layout_width} + gutters:$$self{gutters} + cropleft:$$self{cropmark_left} + crop_right:$$self{cropmark_right} + cb: ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 )") if DEBUG;
+  $openprint::log->debug("Setting used_width ($width) = using layout:$$self{layout_width} + gutters:$$self{gutters} + cropleft:$$self{cropmark_left} + crop_right:$$self{cropmark_right} + cb: ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 )") if DEBUG;
 	return $width;
 }
 sub used_height {
-    my $self = shift;
+  my $self = shift;
 	my $height = $$self{layout_height} + $$self{grip} + $$self{cropmark_top} + $$self{cropmark_bottom} + ( $$self{colour_bar_orientation} eq 'Width' ? $$self{colour_bar_size} : 0 );
-#$openprint::log->warn("Height: $height");
-    return $height;
+  return $height;
 } # end sub used_height
 
 sub object_area {

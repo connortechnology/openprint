@@ -35,7 +35,7 @@ require misc;
 
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
@@ -47,7 +47,7 @@ use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
 use constant USE_PRICE_CACHE => 1;
-use constant DEBUG_IMPOSITIONS => 0;
+use constant DEBUG_IMPOSITIONS => 1;
 
 %ServicePrices = (
 	Roll2Sheet => {
@@ -887,33 +887,31 @@ sub get_colours {
 	} # end if
 
 	foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
-	#foreach my $k ( keys %$specs ) {
-		#if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
-      if (! $$specs{"chkColourCoating$index$side"} ) {
-        $log->debug("No chkColourCoating for $index $side");
-        next ;
-      }
-			my $c = {
-				type => $$specs{"ColourCoatingType$index$side"},
-			};
-			next if ! $$c{type};
-			next if $$specs{'ColourCoatingColour'.$index.$side} and ( $$specs{'ColourCoatingColour'.$index.$side} eq 'None' );
-			#$log->debug("Found Colour $index.$side $signature $type");
-			if ( $$c{type} =~ /^PMS/ ) {
-				if ( ! $$specs{'ColourCoatingColour'.$index.$side} ) {
-					$$specs{'ColourCoatingColour'.$index.$side} = "PMS $index";
-					$$v{'ColourCoatingColour'.$index.$side} = [ sets::union( 'output', @{$$v{'ColourCoatingColour'.$index.$side}} ) ];
-				} #end if
-				$$c{name} = $$specs{'ColourCoatingColour'.$index.$side};
-			} else {
-# Non-PMS doesn't enter the Colour NAME
-				$$specs{'ColourCoatingColour'.$index.$side} = '';
-				$$v{'ColourCoatingColour'.$index.$side} = [ sets::union( 'output', @{$$v{'ColourCoatingColour'.$index.$side}} ) ];
-				$$c{name} = $$c{type};
-			} # end if type eq PMS
-			$$c{coverage} = $$specs{'ColourCoatingCoverage'.$index.$side};
-			$$c{coverage_key} = 'ColourCoatingCoverage'.$index.$side;
-			push @colours, $c;
+    if (! $$specs{"chkColourCoating$index$side"} ) {
+      $log->debug("No chkColourCoating for $index $side") if DEBUG_INKS;
+      next ;
+    }
+    my $c = {
+      type => $$specs{"ColourCoatingType$index$side"},
+    };
+    next if ! $$c{type};
+    next if $$specs{'ColourCoatingColour'.$index.$side} and ( $$specs{'ColourCoatingColour'.$index.$side} eq 'None' );
+    #$log->debug("Found Colour $index.$side $signature $type");
+    if ( $$c{type} =~ /^PMS/ ) {
+      if ( ! $$specs{'ColourCoatingColour'.$index.$side} ) {
+        $$specs{'ColourCoatingColour'.$index.$side} = "PMS $index";
+        $$v{'ColourCoatingColour'.$index.$side} = [ sets::union( 'output', @{$$v{'ColourCoatingColour'.$index.$side}} ) ];
+      } #end if
+      $$c{name} = $$specs{'ColourCoatingColour'.$index.$side};
+    } else {
+      # Non-PMS doesn't enter the Colour NAME
+      $$specs{'ColourCoatingColour'.$index.$side} = '';
+      $$v{'ColourCoatingColour'.$index.$side} = [ sets::union( 'output', @{$$v{'ColourCoatingColour'.$index.$side}} ) ];
+      $$c{name} = $$c{type};
+    } # end if type eq PMS
+    $$c{coverage} = $$specs{'ColourCoatingCoverage'.$index.$side};
+    $$c{coverage_key} = 'ColourCoatingCoverage'.$index.$side;
+    push @colours, $c;
 	} # end foreach index
 	return @colours;
 } # end sub get_colours
@@ -1317,7 +1315,6 @@ $log->debug('Considering: ' . $P->id_string() ) if DEBUG;
 } # end sub get_Stocks
 
 sub get_impositions {
-#sub get_impositions($$$$$$$$) {
 	my ( $Project, $specs, $project, $qty, $qty_index, $Presses, $Papers, $Overrides ) = @_;
 	my %impositions;
 
@@ -1365,8 +1362,10 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			} # end if
 		} else {
 # FIXME
+$log->error("For press $$Press{strid} $printing_type ".join(',', $$specs{PrintingTypes} ? @{$$specs{PrintingTypes}} : ('none') ));
 			if ( $$specs{PrintingTypes} and $printing_type and ! sets::isin( $printing_type, $$specs{PrintingTypes} ) ) {
 				if ( $$specs{'chkOverridePress'.$qty_index} and ( $$specs{'ddmPress'.$qty_index} eq $$Press{strid} ) ) {
+          next;
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
         } elsif ( $$project{ProjectSpecs}{"ddmPress-$$specs{Group}"} and ( $$project{ProjectSpecs}{"ddmPress-$$specs{Group}"} eq $$Press{strid} ) ) {
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
@@ -3559,7 +3558,11 @@ $log->debug("Using overriden page quantity $needed_pages");
 			my $printing_type = $Press->specification('Printing Type');
 			if ( $printing_type and ! sets::isin( $printing_type, $$sig_specs{PrintingTypes} ) ) {
 				next;
+      } else {
+      $log->error("NO skipping because of PrintingTypes press $$Press{strid} sig:$$sig_specs{PrintingTypes} type: $printing_type");
 			} # end if
+    } else {
+      $log->error("NO skipping because of PrintingTypes press $$Press{strid} sig:$$sig_specs{PrintingTypes}");
 		} # end if
 
 		my @press_impositions = @{ $$impositions{$strid} };
@@ -3970,8 +3973,6 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 		# in initial filtering, we loaded up stock_lbs, not stock_qty, so this will run every time.
 		if ( ! $$imp{stock_qty} ) {
 			my $stock_qty = POSIX::ceil( $qty/$$imp{imposition} );
-	#$log->debug("Before	stockqty: $stock_qty = int( $qty/$$imp{imposition} ) * $$Paper{factor}");
-	#$log->debug("Before	stockqty: $stock_qty upq ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} ."pages $$imp{pages} ");
 			if ( $needed_pages > 0 and $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} > $$imp{pages} ) {
 				$stock_qty *= int( $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} / $$imp{pages} );
 			} # end if
@@ -4014,7 +4015,7 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 
 				if ( ! exists $$PaperCounts{$SuppliedPaper->id_string()} ) {
 					if ( DEBUG ) {
-						$log->error("No stock in papercounts for " . $SuppliedPaper->id_string());
+						$log->debug("No stock in papercounts for " . $SuppliedPaper->id_string());
 						foreach my $k ( keys %{$PaperCounts} ) {
 							$log->debug(" $k => $$PaperCounts{$k}");
 						}
@@ -6242,12 +6243,12 @@ if ( 1 ) {
   my $initial_setup_overs;
   if ($initial_setup_rate) {
     $initial_setup_overs = ceil( $plate_setup{'Setup Plate Count'} * $initial_setup_rate );
-    $openprint::log->error("Initial overs from rate $initial_setup_overs $initial_setup_rate");
+    #$openprint::log->debug("Initial overs from rate $initial_setup_overs $initial_setup_rate");
   } else {
     $initial_setup_overs = $Press->specification( 'MakeReady Overs ' . $Paper->material(), $plate_setup{'Plate Count'} );
     $initial_setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{runstyle}, $plate_setup{'Plate Count'} ) if ! $initial_setup_overs;
     $initial_setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $initial_setup_overs;
-    $openprint::log->error("Initial overs from flat $initial_setup_overs $initial_setup_rate");
+    #$openprint::log->debug("Initial overs from flat $initial_setup_overs $initial_setup_rate");
 	} # end if
 
 	my $total_overs = 0;
@@ -6481,7 +6482,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 
 		foreach my $C ( @{$special_colours{$colour}} ) {
 			if ( ( ! ( $$C{grades} and scalar @{$$C{grades}} ) ) or sets::isin($grade, $C->grades()) ) {
-        $log->debug("Found ink $$C{name}");
+        $log->debug("Found ink $$C{name}") if DEBUG_INKS;
 				$Ink = $C;
 				last;
 			} # end if
@@ -6512,7 +6513,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			$ink_price{Total} += $InkService{Total};
 			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f = $%5$.2f', @InkService{'Price','units','Total'}, $colour_impressions, $ink_price{Total} );
     } else {
-      $log->debug("No ink service found for $$Ink{name}");
+      $log->debug("No ink service found for $$Ink{name}") if DEBUG_INKS;
 		} # end if
 
 # Washed_colours contains each colour used in the other signatures
@@ -7248,7 +7249,7 @@ sub press_setup_cost {
     #$Price{Total} = 0;
     #} else {
     if (@previous_impositions) {
-      $log->error("Previous impositions: " . @previous_impositions);
+      #$log->error("Previous impositions: " . @previous_impositions);
 
       foreach my $prev_i (@previous_impositions) {
         my $sig_specs = $$prev_i{specs};
@@ -7269,8 +7270,8 @@ sub press_setup_cost {
           #$log->warn("Charging $Price{Price} setup for $$specs{SignatureIndex}");
           $Price{Total} = $unit_count * $Price{Price};
           last;
-        } else {
-          $log->error("Previous imp with index $$sig_specs{SignatureIndex} <=> $$specs{SignatureIndex} has press ".$$prev_i{Press}->strid().' ours is '.$$Press{strid});
+          #} else {
+          #$log->error("Previous imp with index $$sig_specs{SignatureIndex} <=> $$specs{SignatureIndex} has press ".$$prev_i{Press}->strid().' ours is '.$$Press{strid});
         } # end if
       } #end 
     } # end if parent

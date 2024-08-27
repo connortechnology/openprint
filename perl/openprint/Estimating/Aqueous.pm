@@ -488,6 +488,7 @@ sub signature_calc {
 #map { $_ => [ @{$$MakeReadies{$_}} ] } keys %{$MakeReadies} if $MakeReadies;
 			my %Price = (
 				BlanketCut	=>	0,
+        washups => 0,
 			);
 			my $run_qty = $impressions;
 			$run_qty *= ( $$Imposition{imposition} / $$imp{imposition} ) if $$Imposition{imposition} != $$imp{imposition};
