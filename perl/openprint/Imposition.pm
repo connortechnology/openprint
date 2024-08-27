@@ -945,7 +945,6 @@ sub to_svg {
 	my $sheet_height = $self->sheet_height();
 
   my $translate = join(q{, }, (($target_width - $sheet_width) / 2), (($target_height - $sheet_height) / 2));
-$openprint::log->error($translate, "(($target_width - $sheet_width) / 2), (($target_height - $sheet_height) / 2))");
 
 # Translate the canvas so padding doesn't effect our co-ordinate system.
   my $canvas = $svg->g(transform => "translate($translate)");
