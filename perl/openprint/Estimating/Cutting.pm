@@ -30,7 +30,7 @@ require openprint::service;
 require openprint::Service;
 require openprint::Estimating::DieCutting;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my @equipment;
 my @PreFoldingEquipment;
@@ -135,7 +135,7 @@ sub signature_needs {
       #if ( $$Imposition{Folds} ) {
       #@folding_impositions = @{$$Imposition{Folds}};
       #} else {
-        my @folding_impositions = openprint::Estimating::Folding::get_Folds( $folding_specs, $sig_specs, $qty_index );
+      my @folding_impositions = openprint::Estimating::Folding::get_Folds( $folding_specs, $sig_specs, $qty_index );
         #}
       if (@folding_impositions>1 or (@folding_impositions==1 and $folding_impositions[0]->quantity() > 1)) {
         return 1;
@@ -463,9 +463,9 @@ sub signature_calc {
 
   my %results = (
     overs => 0,
-      Status		=>	'calculated',
-      Breakdown	=>	'<b>Post press:</b><br/>',
-      );
+    Status		=>	'calculated',
+    Breakdown	=>	'<b>Post press:</b><br/>',
+  );
   if ( !$$Paper{cuttable} ) {
     $results{alert} = $Paper->to_string() . ': Stock is not cuttable.';
     return %results;
@@ -546,12 +546,11 @@ sub signature_calc {
   my $has_uv = $$services{UVCoating} and openprint::Estimating::UVCoating::signature_needs($Project, $sig_specs);
   my $trim_before_folding = 0;
 
-    my $Folder = undef;
-    my $Press = $Imposition->Press();
-    my $output_format = $Press->specification('OutputFormat');
-    my $I = $Imposition->copy();
-    my @folding_impositions;
-
+  my $Folder = undef;
+  my $Press = $Imposition->Press();
+  my $output_format = $Press->specification('OutputFormat');
+  my $I = $Imposition->copy();
+  my @folding_impositions;
 
   # The idea is that we are either folding or DieCutting but not both
   if ($$services{DieCutting} and @{$$services{DieCutting}}) {
@@ -697,7 +696,7 @@ sub signature_calc {
       } # end foreach fold_index
     } # end if
 
-  #$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
+  $openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
 
     if ( $stitching_specs and $stitching_imposition ) {
       if ( $$Imposition{image_orientation} == openprint::Imposition::Horizontal ) {
@@ -712,8 +711,6 @@ sub signature_calc {
         }
       } # end if
     } # end if
-  #$openprint::log->debug("Stitching imposition: $stitching_imposition");
-
 
   # Take care of cutting before folding
     if ( @folding_impositions and $Folder and ( $$Folder{id} != $$Press{id} ) ) {
@@ -763,8 +760,8 @@ sub signature_calc {
             $folding_cuts += $folding_impositions[0]{rows}-1;
           } # end if
         } # end if
-      } # end if
-
+      } # end if folding_impositions
+$openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
       if ( $folding_cuts ) {
         load_equipment($Project) if ! @PreFoldingEquipment;
         my @PreFoldEquipment = @PreFoldingEquipment;
@@ -786,6 +783,10 @@ sub signature_calc {
           @PreFoldEquipment = ( new openprint::Equipment($$specs{"FoldingEquipment-$form-$qty_index"}) );
         } # end if
         foreach my $Equipment ( @PreFoldEquipment ) {
+          my %price = (
+            overs => 0,
+          );
+
           my $liftDepth = $Equipment->specification('Maximum Lift Depth', $calliper);
           my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
           $sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
@@ -798,13 +799,12 @@ sub signature_calc {
             } else {
               $openprint::log->error("Invalid units on Cutting Overs $$Spec{units}");
             } # end if
-            $results{overs} += $overs;
+            $price{overs} += $overs;
             $results{Breakdown} .= $sheets.'sheets + '.$$Spec{value}.$$Spec{units}.' = '.$overs.' total = '.($sheets+$overs).'<br/>';
             $sheets += $overs;
           } # end if
           my $piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
           $results{Breakdown} .= '# of pre-folding cuts: ' . $folding_cuts . ' => ' .($folding_cuts * $sheets) . '<br/>';
-          my %price;
 
           if ( $CuttingMakeReady ) {
             my %setup = $CuttingMakeReady->get_price(undef, $Equipment);
@@ -868,12 +868,13 @@ sub signature_calc {
               } # end if
             } # end if
           } elsif ( DEBUG ) {
-            $openprint::log->debug("No PileHandling");
+            $openprint::log->debug('No PileHandling');
           } # end PileHandling
 
           $results{Breakdown} .= sprintf( 'Pre-folding cutting total: $%.2f<br/>', $price{Total});
 
           if ( ( ! defined $results{FoldingPrice} ) or ( $price{Total} < $results{FoldingPrice} ) ) {
+            $results{overs} += $price{overs};
             $results{FoldingPrice} = $price{Total};
             $results{FoldingEquipment} = $Equipment;
           } # end if
@@ -885,107 +886,107 @@ sub signature_calc {
     } # end if @folding
   } # end if Folding/DieCutting
 
-    #The Paper might be a roll, and the output of printing might still be a roll.
-    my $bestPrice = undef;
-    my $bestM = 0;
-    my $bestEquipment;
-    EQUIPMENT: foreach my $Equipment ( @my_equipment ) {
-      next if ! $$Equipment{id};
-      $results{Breakdown} .= 'Equipment ' . $$Equipment{name} .':';
-      if ( $$services{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) ) {
-        $results{Breakdown} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
+  #The Paper might be a roll, and the output of printing might still be a roll.
+  my $bestPrice = undef;
+  my $bestM = 0;
+  my $bestEquipment;
+  EQUIPMENT: foreach my $Equipment ( @my_equipment ) {
+    next if ! $$Equipment{id};
+    $results{Breakdown} .= 'Equipment ' . $$Equipment{name} .':';
+    if ( $$services{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) ) {
+      $results{Breakdown} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
+      next;
+    } # end if
+    my $cutting_capable = $Equipment->specification('Cutting Capable');
+
+    if ( $cutting_capable eq 'When Folding' ) {
+      if ( ! $folding_specs ) {
+        $results{Breakdown} .= 'Not folding<br/>';
         next;
       } # end if
-      my $cutting_capable = $Equipment->specification('Cutting Capable');
-
-      if ( $cutting_capable eq 'When Folding' ) {
-        if ( ! $folding_specs ) {
-          $results{Breakdown} .= 'Not folding<br/>';
-          next;
-        } # end if
-        if ( $trim_before_folding ) {
-          $results{Breakdown} .= 'is 1out, so trim before folding.<br/>';
-          next;
-        } # end 
-
-        if ( ! $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
-          $results{Breakdown} .= "Unknown folding equipment for form $form qty $qty_index<br/>";
-          next;
-        } elsif( $$folding_specs{"ddmEquipment-$form-$qty_index"} ne $$Equipment{id} ) {
-          $results{Breakdown} .= 'Not folding on ' . $$Equipment{strid}. ' Folder is ' . ( $Folder ? $$Folder{strid} : '' ). '<br/>';
-          next;
-        } # end if
-      } elsif ( ( $cutting_capable eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) ) {
-        $results{Breakdown} .= 'Not printing on '.$$Equipment{strid}.'<br/>';
+      if ( $trim_before_folding ) {
+        $results{Breakdown} .= 'is 1out, so trim before folding.<br/>';
         next;
-      } elsif ( $cutting_capable eq 'When Stitching' ) {
-        if ( ! $$stitching_specs{'ddmEquipment'.$qty_index} ) {
-          $results{Breakdown} .= 'Stitching not calculated yet.<br/>';
-          next;
-        } # end if
-        if ( $$stitching_specs{'ddmEquipment'.$qty_index} != $$Equipment{id} ) {
-          $results{Breakdown} .= 'Not stitching on ' . $$Equipment{strid} . '<br/>';
-          next;
-        } # end if
-        if ( keys %pretrim_sides ) {
-          $results{Breakdown} .= 'Needs pre-trim before Stitching, cant use Stitcher for cutting<br/>';
-          next;
-        } # end if
-      } # end if
+      } # end 
 
-      my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
-      $sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
-      $sheets *= $$sig_specs{'PageQuantity'.$qty_index} if ($$sig_specs{txtSignatureType} and ($$sig_specs{txtSignatureType} eq 'Pad Pages')) and $$sig_specs{'PageQuantity'.$qty_index};
-
-      if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
-        my $overs = 0;
-        if ( $$Spec{units} eq 'Sheets' ) {
-          $overs = int($$Spec{value});
-        } elsif ( $$Spec{units} eq 'percent' ) {
-          $overs = int($sheets * $$Spec{value}/100);
-        } else {
-          $openprint::log->error("Invalid units on Cutting Overs $$Spec{units}");
-        } # end if
-        $results{Breakdown} .= $sheets.'sheets + '.$$Spec{value}.$$Spec{units}.' = '.$overs.' total = '.($sheets+$overs).'<br/>';
-        $sheets += $overs;
-        $results{overs} += $overs;
-      } # end if
-
-      my ( $sheet_width, $sheet_height ) = ( $Paper->width(), $Paper->height() );
-      if ( $output_format and ( $output_format eq 'Roll' ) ) {
-        if ( ( $_ = $Equipment->specification('Maximum Sheet Width') ) and ( $sheet_width > $_ ) ) {
-          $results{Breakdown} .= 'Doesnt fit.<br/>';
-          next;
-        } # end if
-        # Adjust imposition to account for cutting to maximum size
-        $sheet_height = $Equipment->specification('Maximum Sheet Length');
-        if ( ! $sheet_height ) {
-          $I->rows( $sheets );
-          $I->dutch_rows( $sheets ) if $$I{dutch_rows};
-          $sheet_height = $I->layout_height();
-          $sheets = 1;
-        } else {
-          $I->rows( $I->rows() * int($sheet_height / $I->layout_height()) );
-          $I->dutch_rows( $I->dutch_rows() * int($sheet_height / $I->layout_height()) ) if $I->dutch_rows();
-          $sheets = ceil( $sheets / $I->rows() );
-        } # end if
-        $results{Breakdown} .= $I->to_string() . '<br/>';
-      } elsif ( my $reason = $Equipment->fits( $sheet_width, $sheet_height ) ) {
-        $results{Breakdown} .= $reason . '<br/>';
+      if ( ! $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
+        $results{Breakdown} .= "Unknown folding equipment for form $form qty $qty_index<br/>";
+        next;
+      } elsif( $$folding_specs{"ddmEquipment-$form-$qty_index"} ne $$Equipment{id} ) {
+        $results{Breakdown} .= 'Not folding on ' . $$Equipment{strid}. ' Folder is ' . ( $Folder ? $$Folder{strid} : '' ). '<br/>';
         next;
       } # end if
-      #$results{Breakdown} .= '<br/>';
-    
+    } elsif ( ( $cutting_capable eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) ) {
+      $results{Breakdown} .= 'Not printing on '.$$Equipment{strid}.'<br/>';
+      next;
+    } elsif ( $cutting_capable eq 'When Stitching' ) {
+      if ( ! $$stitching_specs{'ddmEquipment'.$qty_index} ) {
+        $results{Breakdown} .= 'Stitching not calculated yet.<br/>';
+        next;
+      } # end if
+      if ( $$stitching_specs{'ddmEquipment'.$qty_index} != $$Equipment{id} ) {
+        $results{Breakdown} .= 'Not stitching on ' . $$Equipment{strid} . '<br/>';
+        next;
+      } # end if
+      if ( keys %pretrim_sides ) {
+        $results{Breakdown} .= 'Needs pre-trim before Stitching, cant use Stitcher for cutting<br/>';
+        next;
+      } # end if
+    } # end if
 
-      my $liftDepth = $Equipment->specification('Maximum Lift Depth with UVCoating') if $has_uv;
-      $liftDepth = $Equipment->specification('Maximum Lift Depth', $calliper) if ! $liftDepth;
-      $liftDepth = 0 if ! defined $liftDepth;
-      $results{Breakdown} .= "(Lift: $liftDepth)<br/>";
-  # calculate cuts
-      my $vertical_cuts = 0;
-      my $horizontal_cuts = 0;
-      my $dutch_vertical_cuts = 0;
-      my $dutch_horizontal_cuts = 0;
+    my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
+    $sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
+    $sheets *= $$sig_specs{'PageQuantity'.$qty_index} if ($$sig_specs{txtSignatureType} and ($$sig_specs{txtSignatureType} eq 'Pad Pages')) and $$sig_specs{'PageQuantity'.$qty_index};
+
+    if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
+      my $overs = 0;
+      if ( $$Spec{units} eq 'Sheets' ) {
+        $overs = int($$Spec{value});
+      } elsif ( $$Spec{units} eq 'percent' ) {
+        $overs = int($sheets * $$Spec{value}/100);
+      } else {
+        $openprint::log->error("Invalid units on Cutting Overs $$Spec{units}");
+      } # end if
+      $results{Breakdown} .= $sheets.'sheets + '.$$Spec{value}.$$Spec{units}.' = '.$overs.' total = '.($sheets+$overs).'<br/>';
+      $sheets += $overs;
+      $results{overs} += $overs;
+    } # end if
+
+    my ( $sheet_width, $sheet_height ) = ( $Paper->width(), $Paper->height() );
+    if ( $output_format and ( $output_format eq 'Roll' ) ) {
+      if ( ( $_ = $Equipment->specification('Maximum Sheet Width') ) and ( $sheet_width > $_ ) ) {
+        $results{Breakdown} .= 'Doesnt fit.<br/>';
+        next;
+      } # end if
+      # Adjust imposition to account for cutting to maximum size
+      $sheet_height = $Equipment->specification('Maximum Sheet Length');
+      if ( ! $sheet_height ) {
+        $I->rows( $sheets );
+        $I->dutch_rows( $sheets ) if $$I{dutch_rows};
+        $sheet_height = $I->layout_height();
+        $sheets = 1;
+      } else {
+        $I->rows( $I->rows() * int($sheet_height / $I->layout_height()) );
+        $I->dutch_rows( $I->dutch_rows() * int($sheet_height / $I->layout_height()) ) if $I->dutch_rows();
+        $sheets = ceil( $sheets / $I->rows() );
+      } # end if
+      $results{Breakdown} .= $I->to_string() . '<br/>';
+    } elsif ( my $reason = $Equipment->fits( $sheet_width, $sheet_height ) ) {
+      $results{Breakdown} .= $reason . '<br/>';
+      next;
+    } # end if
+    #$results{Breakdown} .= '<br/>';
+
+
+    my $liftDepth = $Equipment->specification('Maximum Lift Depth with UVCoating') if $has_uv;
+    $liftDepth = $Equipment->specification('Maximum Lift Depth', $calliper) if ! $liftDepth;
+    $liftDepth = 0 if ! defined $liftDepth;
+    $results{Breakdown} .= "(Lift: $liftDepth)<br/>";
+    # calculate cuts
+    my $vertical_cuts = 0;
+    my $horizontal_cuts = 0;
+    my $dutch_vertical_cuts = 0;
+    my $dutch_horizontal_cuts = 0;
   # Final cutting
   if ($$services{DieCutting}) {
     $results{Breakdown} .= 'Signature is being Die Cut. Assuming further cutting not needed<br/>';
