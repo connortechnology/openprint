@@ -1,4 +1,3 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
 <div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
@@ -12,15 +11,15 @@
 ) ?>
 			</li>
 <? eval ( 
-	@{$$variable{'GlueTypes'}} = openprint::Material->find('category'=>'PerfectBound Glue');
+	@{$$variable{GlueTypes}} = openprint::Material->find(category=>'PerfectBound Glue');
 ) ?>
 <? if ( @{$$variable{'GlueTypes'}} > 1 ) ?>
 		<li>
 			<label>Glue Type</label>
 			<select id="glue_id" name="glue_id" onchange="calc(this.form.name);">
-<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'GlueTypes'}} ], $$variable{'glue_id'} ); ) ?>
+<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{GlueTypes}} ], $$variable{glue_id} ); ) ?>
 			</select>
-<? echo ( write_override( 'override_glue_id', $$variable{'override_glue_id'}, '', 'calc(this.form);' ); ) ?>
+<? echo ( write_override( 'override_glue_id', $$variable{override_glue_id}, '', 'calc(this.form);' ); ) ?>
 		</li>
 <? else ( @{$$variable{'GlueTypes'}} > 1 ) ?>
 	<li style="display:none;"><input type="hidden" name="glue_id" value="<?glue_id?>" /></li>
@@ -31,17 +30,17 @@
 					my $html;
 					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			
-						$html .= '<span class="'.$$variable{Columns}.'Columns">';
-						foreach my $page ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
-							$html .= input( 
-								name	=>	"txtSignatureQty${page}Page-${qty_index}", 
-								value	=>	$$variable{"txtSignatureQty${page}Page-${qty_index}"},
-								type	=>	'cardinal',
-								onkeyup	=>	'calc(this.form.name);', 
-								readonly=>	!sets::isin( $session{user_type}, ['A','E'] ),
-								);
-							$html .= $page . ' Page Signature(s)<br/>';
-						} # end foreach page
+						$html .= join("\n", '<span class="'.$$variable{Columns}.'Columns">',
+                ( map {
+                  input( 
+                      name	=>	'txtSignatureQty'.$_.'Page-'.$qty_index, 
+                      value	=>	$$variable{'txtSignatureQty'.$_.'Page-'.$qty_index},
+                      type	=>	'cardinal',
+                      onkeyup	=>	'calc(this.form.name);', 
+                      readonly=>	!sets::isin( $session{user_type}, ['A','E'] ),
+                      ).' '.$_.' Page Signature(s)<br/>'
+                  } ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) ), 
+                );
 						$html .= input(
 							name	=>	"txtSignatureQtyGateFolded-$qty_index", 
 							value	=>	$$variable{"txtSignatureQtyGateFolded-$qty_index"},
@@ -95,4 +94,4 @@
 		<input type="hidden" name="Status" value="<?Status?>" />
 	</form>
 </div>
-
+<script src="<?hash_link(/javascripts/service.js)?>"></script>

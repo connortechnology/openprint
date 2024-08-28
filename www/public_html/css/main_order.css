@@ -51,3 +51,6 @@ p.buttons {
   float: right;
   margin: 10px 0;
 }
+.controls {
+display: flex;
+}

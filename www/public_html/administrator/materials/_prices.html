@@ -1,65 +1,38 @@
 <? echo (
-	my $html = '';
-	my $equipment_array = $variable{Equipment} ? $variable{Equipment} : [ map { $_->id()=>$_->strid().': '.$_->name() } openprint::Equipment->find( order=>'lower('.$openprint::Equipment::fields{strid}.')') ];
-	my %equipment_ids = @{$equipment_array};
+	my $html;
+  my $Material = $$variable{Material};
+
+	my @Equipment = openprint::Equipment->find( order=>'lower(strid)' );
+	my @equipment_dropdown = map { $_->id(), $_->strid() . ': ' . $_->name() } @Equipment;
+
+	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+
+	my $prices_per_equipment = slurp_content( '/administrator/materials/_prices_per_equipment.html' );
 
 	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
+		$$variable{Pricelist} = $Pricelist;
+		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend><div id=\"pricelist-$$Pricelist{id}\">";
+		my @Prices = openprint::MaterialPrice->find( material_id=>$$variable{Material}->id(), pricelist_id=>$Pricelist->id() );
 
-		$html .= '<fieldset><legend>Pricing for Price List: '. $Pricelist->name() .'</legend>';
-		my @Prices = openprint::MaterialPrice->find( material_id=>$$variable{Material}->id(), pricelist_id=>$$Pricelist{id} );
-		my @Equipment = sort { $$a{strid} cmp $$b{strid} } map { $_ ? new openprint::Equipment( $_ ) : () } sets::union( map{ $_->equipment_id() } @Prices );
-		foreach my $Equipment ( @Equipment, { } ) {
-			$html .= '<fieldset class="Equipment">
-				<p>
-					<label>Equipment</label>';
-			$html .= ssi::select( 
-					( $equipment_ids{$$Equipment{id}} ? $equipment_array : [ ( $$Equipment{id}, $$Equipment{name} ), @{$equipment_array} ]),
-					$$Equipment{id},
-					{ name=>join('-', 'equipment_id', $$Pricelist{id}, $$Equipment{id}), prepend=>['', 'All Equipment'] },
-					);
-			$html .= '
-				</p>
-				<table class="List">
-					<tr> 
-						<th class="checkbox">&nbsp;</th>
-						<th class="ActivityCode">Activity Code</th>
-						<th class="Range">Quantity Range</th>
-						<th class="Units">Units</th>
-						<th class="Cost">Cost</th>
-						<th class="Markup">Mark up</th>
-						<th class="Price">Price</th>
-						<th class="Discount">Discount?</th>
-					</tr>';
-			my @Prices = openprint::MaterialPrice->find(
-					material_id		=>	$$variable{Material}->id(), 
-					pricelist_id	=>	$$Pricelist{id},
-					equipment_id	=>	( $$Equipment{id} ? $$Equipment{id} : undef ),	
-					order			=>	'lngmin NULLS FIRST,lngmax NULLS FIRST, id' );
-			foreach my $Price ( @Prices, { } ) {
-				$html .= sprintf('<tr>
-					<td class="checkbox">%1$s</td>
-					<td class="ActivityCode">%2$s</td>
-					<td class="Range">%3$s - %4$s</td>
-					<td class="Units">%5$s</td>
-					<td class="Cost">%6$s</td>
-					<td class="Markup">%7$s</td>
-					<td class="Price">%8$s</td>
-					<td class="Discount">%9$s</td>
-					</tr>
-',
-checkboxes( join('-', 'chk', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), ( $$Price{id} ? [ $$Price{id} ] : undef ), $$Price{id} ),
-input( type=>'text', name=>join('-', 'activity_code', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{activity_code} ),
-input( type=>'float', name=>join('-', 'min', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{min} ),
-input( type=>'float', name=>join('-', 'max', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{max} ),
-input( type=>'text', name=>join('-', 'units', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{units} ),
-input( type=>'float', name=>join('-', 'cost', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{cost}, onkeyup=>'calc_from_cost(this);', oninput=>'this.onkeyup();' ),
-input( type=>'float', name=>join('-', 'markup', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{markup}, onkeyup=>'calc_from_markup(this);', oninput=>'this.onkeyup();' ),
-input( type=>'float', name=>join('-', 'price', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{price}, onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
-radio( 'discountable-'.$$Pricelist{id}.'-'.$$Equipment{id}.'-'.$$Price{id}, ['Y','Yes','N','No'], $$Price{discountable}, { default=>'Y' } ),
- );
-			} # end foreach Price
-			$html .= '</table></fieldset><!--Equipment-->';
+		my @equipment_ids = $session{$r->uri().'?equipment_id'} ? ($session{$r->uri().'?equipment_id'}) : sort( sets::union( map{ $_->equipment_id() } @Prices ) );
+		push @equipment_ids, undef if ! @equipment_ids;
+		foreach my $Equipment ( map{new openprint::Equipment($_)} @equipment_ids ) {
+			next if $Equipment->deleted();
+			$$variable{Equipment} = $Equipment;
+			$html .= variable_substitution( \$prices_per_equipment );
 		} # end foreach Equipment
+
+		$html .= '</div>';
+		if ( ! $param{equipment_id} ) {
+			$html .= '<p><label>New Price</label>';
+			$html .= ssi::select( \@equipment_dropdown, undef, { name=>"equipment_id-$$Pricelist{id}", id=>"equipment_id-$$Pricelist{id}", prepend=>['','All'] } );
+			$html .= button( 'a'.$$Pricelist{id}.'new', {
+        on_click_this=>'add_new_price',
+        data_pricelist_id=>$$Pricelist{id}, data_material_id=>$$Material{id},
+        text=>'+', title=>'Add New Price'
+        } );
+			$html .= '</p>';
+		}
 		$html .= '</fieldset><!--Pricelist-->';
 	} # end foreach Pricelist
 	return $html;

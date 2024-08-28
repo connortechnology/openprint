@@ -27,3 +27,5 @@ CREATE TABLE hosts (
   manufacturer_id     INTEGER, FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id),
 	PRIMARY KEY (id)
 );
+
+create index hosts_hostname on hosts(hostname);

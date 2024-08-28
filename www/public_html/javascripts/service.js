@@ -1,6 +1,9 @@
+"use strict";
 // The following are GLOBAL variables
 var gettingNewPrice = false;
 var submitForm = false;
+// Default, can be overriden in services
+var results_callback = cbFillResults;
 
 var breakdownWin = new Array();
 
@@ -21,8 +24,8 @@ function show_breakdown( index ) {
 			} );
 		breakdownWin[breakdownWin[index]] = index;
 
-		// Set up a windows observer, check ou debug window to get messages
-		myObserver = {
+		// Set up a windows observer, check our debug window to get messages
+		const myObserver = {
 			onDestroy: function(eventName, win) {
 				if ( win == breakdownWin[breakdownWin[win]] ) {
 					breakdownWin[breakdownWin[win]] = null;
@@ -40,13 +43,13 @@ function show_breakdown( index ) {
 } // end function show_breakdown
 
 function submit_handler( formName ) {
-	var form = getFormObj( formName );
+	const form = getFormObj( formName );
 	if ( ! form ) {
 		return false;
 	}
-	var AlertDiv = document.getElementById('AlertDiv');
+	const AlertDiv = document.getElementById('AlertDiv');
 	if ( AlertDiv && AlertDiv.innerHTML ) {
-		var alert_content = AlertDiv.innerHTML;
+		let alert_content = AlertDiv.innerHTML;
 		alert_content = alert_content.replace(/<br\/?>/g, "\n" );
 		alert_content = alert_content.replace(/&lt;/g, '<' );
 		alert_content = alert_content.replace(/&gt;/g, '>' );
@@ -59,7 +62,7 @@ function submit_handler( formName ) {
 		return false;
 	} // end if
 
-	var Status = true;
+	let Status = true;
 	if ( typeof(validate_data) == 'function' ) {
 		Status = validate_data(formName);
 	} // end if
@@ -68,83 +71,116 @@ function submit_handler( formName ) {
 		form.submit();
 	} // end if
 	return Status;
-
 } // end function submit_form
 
 function cbWindowSaveClose( results ) {
 	window.close();
 } 
-var timeout;
-var block_calc = false;
 
 function body_onLoad() {
 	if ( typeof(selectProjectTemplate) == 'function' ) {
 		selectProjectTemplate( 'f1' );
 	} else if ( typeof(calc) == 'function' ) {
 		calc('f1');
+  } else {
+    console.log("Nothing to do in service.js");
 	} // end if
 }
 
-function calc( formName, force, options ) {
+var timeout;
+var block_calc = false;
+function calc( formName='f1', force, options ) {
+  console.log('calc', formName);
 	if ( block_calc ) return;
-	var form = getFormObj( formName );
-	if ( form && form.ServiceType ) {
-		if ( gettingNewPrice && ! force ) {
-			if ( timeout ) clearTimeout( timeout );
-			if ( options ) {
-				timeout = setTimeout("calc_print('"+formName+"', 0, " + Object.toJSON( options ) + ");", 1000 );	
-			} else {
-				timeout = setTimeout( "calc('" + formName + "');", 1000 );
-			}
-		} else {
-			timeout = null;
-			var AlertDiv = document.getElementById('AlertDiv');
-			if ( AlertDiv ) {
-				AlertDiv.innerHTML = '';
-				AlertDiv.hide();
-			} // end if
-			var div = document.getElementById('InformationDiv');
-			if ( div ) {
-				div.innerHTML = 'Calculating';
-			} // end if
-			gettingNewPrice = true;
-			clear_price_data( form );
-			var data = Form.serialize(form,true);
-			var h = $H(data);
-			h.each(function(pair) {
-					if ( options ) {
-						h.merge( options );
-					}
-					if ( pair.value == '' ) 
-						h.unset(pair.key);
-					if ( pair.key == 'btnFunction' ) 
-						h.unset(pair.key);
-					if ( pair.key == 'alert' ) 
-						h.unset(pair.key);
-					});
-			new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-		} // end if
-	} // end if
+
+	const form = getFormObj( formName );
+  if (!form) {
+    console.log("No form found for "+formName);
+    return;
+  }
+  if (!form.ServiceType) {
+    alert("No ServiceType found. Please contact your developer.");
+    return;
+  }
+
+  if ( gettingNewPrice && ! force ) {
+    if ( timeout ) clearTimeout( timeout );
+    if ( options ) {
+      timeout = setTimeout("calc_print('"+formName+"', 0, " + Object.toJSON( options ) + ");", 1000 );	
+    } else {
+      timeout = setTimeout("calc('" + formName + "');", 1000);
+    }
+  } else {
+    timeout = null;
+    const AlertDiv = document.getElementById('AlertDiv');
+    if ( AlertDiv ) {
+      AlertDiv.innerHTML = '';
+      AlertDiv.hide();
+    } // end if
+    const div = document.getElementById('InformationDiv');
+    if ( div ) {
+      div.innerHTML = 'Calculating';
+    } // end if
+    gettingNewPrice = true;
+    clear_price_data( form );
+    const data = $j(form).serializeArray();
+    //if ( options ) {
+    //data.merge( options );
+    //}
+    for (let i=0; i < data.length; i++) {
+      const pair = data[i];
+      if (
+        (pair.value == '') 
+        ||
+        (pair.name == 'btnFunction') 
+        ||
+        (pair.name == 'alert') 
+      ) {
+        data.splice(i,1);
+      }
+    }
+    //new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+    $j.ajax({
+      type: "POST",
+      url: '/main/project/_calc.json',
+      data: data,
+      dataType: 'json',
+      success: function(data, textStatus, jqXHR) {
+        console.log(data);
+        results_callback(data);
+      }
+    }).done(function(data) {
+      console.log(data);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      gettingNewPrice = false;
+      console.log("fail", jqXHR, textStatus);
+    });
+  } // end if
 } // end calc()
 
 function cbFillResults( results ) {
+  if (!results) {
+    console.log("cbFillResults called without results.");
+    return;
+  }
 	block_calc = true;
-	var form = getFormObj('f1');
-	var AlertDiv = $('AlertDiv');
+	const form = getFormObj('f1');
+	const AlertDiv = $('AlertDiv');
 	if ( AlertDiv ) {
 		AlertDiv.innerHTML = '';
 		AlertDiv.hide();
 	} // end if
 	if ( $('InformationDiv') )
 		$('InformationDiv').hide();
-	var keys = results.keys();
+	const keys = Object.keys(results);
 
-	for ( var index = 0, leni = keys.length; index < leni; index += 1 ) {
-		var key = keys[index];
-		var value = results.get(keys[index]);
+  for (const [key, value] of Object.entries(results)) {
+	//for ( let index = 0, leni = keys.length; index < leni; index += 1 ) {
+		//const key = keys[index];
+		//const value = results.get(keys[index]);
 		if ( key == 'alert') {
 			if (value != '') {
-				var div = $('AlertDiv');
+				const div = $('AlertDiv');
 				if ( div ) {
 					div.innerHTML = value;
 					div.show();
@@ -152,15 +188,15 @@ function cbFillResults( results ) {
 					alert( value );
 				} // end if
 			} // end if
-			var div = $('alert');
-			if ( div ) { div.value = value };
+			const alert_div = $('alert');
+			if ( alert_div ) { alert_div.value = value };
 			continue;
 		} else if ( key == 'popup') {
 			alert( value );
 			continue;
 		} else if ( key == 'information') {
 			if (value != '') {
-				var div = $("InformationDiv");
+				const div = $("InformationDiv");
 				if ( div ) {
 					div.innerHTML = value;
 					div.show();
@@ -169,7 +205,7 @@ function cbFillResults( results ) {
 			continue;
 		} // end if
 
-		var element = form.elements[key];
+		const element = form.elements[key];
 		if ( element ) {
 
 //if ( element.onchange ) {
@@ -198,7 +234,7 @@ function cbFillResults( results ) {
 					} // endif
 				} // end if
 			} else if ( element.type == 'radio' ) {
-console.log(element.name + " is a radio... which we don't handle");
+        console.log(element.name + " is a radio... which we don't handle");
 			} else if ( element.type == 'text' || element.type == 'number' || element.type == 'email' ) {
 
 				if ( element.value != value ) {
@@ -213,8 +249,8 @@ console.log(element.name + " is a radio... which we don't handle");
 			} else if ( element.type == 'hidden' ) {
 				element.value = value;
 			} else if ( element.length ) {
-				var elements = element;
-				for ( var j=0, lenj = elements.length; j < lenj; j += 1 ) {
+				const elements = element;
+				for ( let j=0, lenj = elements.length; j < lenj; j += 1 ) {
 					if ( elements[j].value == value ) {
 						if ( ! elements[j].checked ) {
 							elements[j].checked = true;
@@ -235,32 +271,35 @@ console.log(element.name + " is a radio... which we don't handle");
 				} // end for
 
 			} // end if
-		} else if ( div = $(key) ) {
-			if ( typeof(value)== "object" ) {
-				if ( value.addClassName ) {
-					div.addClassName( value.addClassName );
-				}
-				if (value.removeClassName ) {
-					div.removeClassName( value.removeClassName );
-				}
-			} else {
-			//console.log('filling: ' + key + ' with: ' + value );
-			//div.hide();
-			div.innerHTML = value;
-			//d//iv.show();
-			}
 		} else {
-			//console.log("didnt find " + key );
-		} // end if
+      const div = $(key);
+      if (div) {
+        if ( typeof(value)== "object" ) {
+          if ( value.addClassName ) {
+            div.addClassName( value.addClassName );
+          }
+          if (value.removeClassName ) {
+            div.removeClassName( value.removeClassName );
+          }
+        } else {
+          //console.log('filling: ' + key + ' with: ' + value );
+          //div.hide();
+          div.innerHTML = value;
+          //d//iv.show();
+        }
+      } else {
+        //console.log("didnt find " + key );
+      } // end if
+    } // end if
 	} // end for each 
 	gettingNewPrice = false;
 	block_calc = false;
 } // end function cbFillResults
 
 function clear_price_data( form ) {
-    for ( var qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
-            if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! get_value(form.elements['OverridePrice'+qtyNum]) ) form.elements["txtPrice"+qtyNum].value = '';
-            if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
-            if ( form.elements['MPrice'+qtyNum] ) form.elements["MPrice"+qtyNum].value = '';
-	} // end for
+  for ( let qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
+    if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! get_value(form.elements['OverridePrice'+qtyNum]) ) form.elements["txtPrice"+qtyNum].value = '';
+    if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
+    if ( form.elements['MPrice'+qtyNum] ) form.elements["MPrice"+qtyNum].value = '';
+  } // end for
 } // end function clear_price_data( form )

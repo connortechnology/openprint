@@ -1,8 +1,8 @@
 //"use strict";
 
 function isin( array, value ) {
-	if ( array ) {
-		for ( var i = 0; i < array.length; i += 1 ) {
+	if (array) {
+		for (let i=0; i < array.length; i += 1 ) {
 			if ( array[i] == value ) 
 				return true;
 		} // end for
@@ -35,10 +35,8 @@ function get_value( obj ) {
 			} // end if
 		}
 
-    /*
 		if ( value.length == 0 ) return;
 		if ( value.length == 1 ) return value[0];
-    */
 		return value;
 	} else {
 		return obj.innerHTML;
@@ -46,24 +44,51 @@ function get_value( obj ) {
 	return obj.value;
 }
 
+function get_values(obj) {
+  if (!obj) return [];
+  if ( obj.type == 'select-one' ) {
+    return get_ddm_value( obj );
+  } else if ( obj.type == 'radio' || obj.type == 'checkbox' ) {
+    if ( obj.checked ) {
+      return [obj.value];
+    } else {
+      return [];
+    }
+  } else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'textarea' ) {
+    return [obj.value];
+  } else if (obj.length) {
+    const values = [];
+    for ( let x = 0, len=obj.length; x < len; x += 1 ) {
+      if ( obj[x].checked ) {
+        if ( obj[x].type == 'radio' ) return [obj[x].value];
+        values[values.length] = obj[x].value;
+      } // end if
+    }
+
+    return values;
+  } else {
+    return [obj.innerHTML];
+  } // end if
+  return [obj.value];
+}
+
 function set_value( obj, value ) {
-	if ( ! obj ) {
-		console.log("No object passed to set_value");
+	if (!obj) {
+		console.log('No object passed to set_value');
 		return;
 	} // end if
-	if ( obj.type == 'select-one' ) {
-		ddm_select_by_value( obj, value );
-	} else if ( obj.type == 'radio' || obj.type == 'checkbox' ) {
+	if (obj.type == 'select-one') {
+		ddm_select_by_value(obj, value);
+	} else if (obj.type == 'radio' || obj.type == 'checkbox') {
 		set_rdb_value( obj, value );
 	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'tel' ) {
 		obj.value = value;
 	} else if ( obj.length ) {
-		for ( var x = 0, len=obj.length; x < len; x += 1 ) {
-			if ( obj[x].value == value ) {
-				obj[x].checked = 'checked';
-			} // end if
+		for ( let x = 0, len=obj.length; x < len; x += 1 ) {
+      obj[x].checked = ( obj[x].value == value );
 		}
-	} else {
+	} else if (obj.type == 'fieldset') {
+	} else if (obj.type == 'textarea') {
 		obj.innerHTML = value;
 	} // end if
 }
@@ -101,13 +126,17 @@ function get_select_value ( ddm ) {
 } // end function get_select_value
 
 function set_rdb_value( rdb, value ) {
-	for ( var x = 0; x < rdb.length; x ++ ) {
-		if ( rdb[x].value == value ) {
-			rdb[x].checked = true;
-		} else {
-			rdb[x].checked = false;
-		} // end if
-	} // end for
+  if (rdb.length) {
+    for ( let x = 0; x < rdb.length; x ++ ) {
+      if ( rdb[x].value == value ) {
+        rdb[x].checked = true;
+      } else {
+        rdb[x].checked = false;
+      } // end if
+    } // end for
+  } else {
+    rdb.checked = ( rdb.value == value );
+  }
 }
 
 function get_rdb_value( rdb ) {
@@ -135,6 +164,7 @@ function fill_ddm ( ddm, options, onchange ) {
 		ddm.disabled = false;
 	} // end if
 } // end function fill_ddm
+
 function fill_ddm_from_array ( ddm, options, onchange ) {
 	if ( ddm ) {
 		ddm.disabled = true;
@@ -147,15 +177,12 @@ function fill_ddm_from_array ( ddm, options, onchange ) {
 } // end function fill_ddm_from_array
 
 function clear_ddm ( ddm ) {
-
 	if ( ddm ) {
-		var disabled = ddm.disabled;
-		if ( ! disabled ) {
-			ddm.disabled = true;
-		} // end if
+		const disabled = ddm.disabled;
+		if ( ! disabled ) ddm.disabled = true;
 
 		if ( ddm.options ) {
-			for ( var index = ddm.options.length; index >= 0; index -- ) {
+			for ( let index = ddm.options.length; index >= 0; index -- ) {
 				// this last if eliminates the mac problem.
 				if (ddm.options[index])
 					ddm.options[index] = null;
@@ -192,7 +219,6 @@ function sort_ddm(ddm) {
 		//add_option( ddm, copyOption[i][0], copyOption[i][1] );
 	ddm_select_by_value( ddm, selectedValue, 0 );
 }
-
 
 function add_option( ddm, value, text, selectedValue ) {
 	if ( ddm ) {
@@ -463,6 +489,7 @@ function setDaysDropDown(year, month, dayDropDown, selectedDay, previousMonth ) 
 	ddm_select_by_value( dayDropDown, selectedDay );
 }
 
+// FIXME: What uses this? replace with jquery
 function Serialize( form ) {
 	var parameters = new Array();
 	for ( var index = 0, len = form.elements.length; index <len ; index += 1 ) {
@@ -498,27 +525,36 @@ function Serialize( form ) {
 		} // end if
 	} // end for
 	return parameters;
-} // end function serialize
+} // end function Serialize
 
 function select_all_this(element) {
-  return select_all(element.form, element.name, element.checked);
+  return select_all(element.form, element.name, element.checked, element);
 }
 
-function select_all( form, name, checked ) {
-	if ( ! form.elements[name] ) {
-		return;
-	}	// end if
-	if ( form.elements[name].length ) {
-		for ( let i = 0, len = form.elements[name].length; i < len; i += 1 ) {
-			form.elements[name][i].checked = checked;
+function select_all( form, name, checked, checker ) {
+	if ( ! form.elements[name] ) return;
+  const element = form.elements[name];
+	if (element.length) {
+		for ( let i = 0, len = element.length; i < len; i += 1 ) {
+			element[i].checked = checked;
+      if (element[i] != checker) {
+        const on_click_this = element[i].getAttribute('on_click_this');
+        if (on_click_this) {
+          if (window[on_click_this]) {
+            window[on_click_this](element[i]);
+          } else {
+            console.error("No function for "+on_click_this);
+          }
+        }
+      }
 		} // end for
 	} else {
-		form.elements[name].checked = checked;
+		element.checked = checked;
 	} // end if
 }
 
 function clearSelect( ddm ) {
-	for ( var i = 0, len = ddm.options.length; i < len; i++ ) {
+	for ( let i = 0, len = ddm.options.length; i < len; i++ ) {
 		ddm.options[i].selected = 0;
 	} 
 	ddm.options[0].selected = 1;
@@ -526,8 +562,8 @@ function clearSelect( ddm ) {
 
 function clearForm(form) {
 	form = $(form);
-	for ( var i=0, len = form.elements.length; i < len; i += 1 ) {
-		var e = form.elements[i];
+	for ( let i=0, len = form.elements.length; i < len; i += 1 ) {
+		const e = form.elements[i];
 		if ( ! e.type )
 			continue;
 		if ( e.type == 'checkbox' || e.type == 'radio' ) {
@@ -553,6 +589,7 @@ function update_changed( element ) {
 	if ( element_changed(element) ) {
 	}
 }
+
 function element_changed( element ) {
 	if ( ! element ) {
 //alert('Null element passed to element_changed');
@@ -560,7 +597,7 @@ function element_changed( element ) {
 	}
 
 	if ( element.type == 'select-one' ) {
-		for ( var i = 0, len = element.options.length; i < len; i += 1 ) {
+		for ( let i = 0, len = element.options.length; i < len; i += 1 ) {
 			if ( element.options[i].selected != element.options[i].defaultSelected ) {
 				return true;
 			} // end if
@@ -670,8 +707,8 @@ function submitElementsFormIfHasValue(element) {
 }
 
 function summary(summaryPage) {
-var summaryPage;
-window.open(summaryPage,'pop','newWin,left=140,width=640,top=50,height=400,resizable=yes,scrollbars=yes,menubar=no,toolbar=yes,location=no,directories=yes,status=yes');
+  var summaryPage;
+  window.open(summaryPage,'pop','newWin,left=140,width=640,top=50,height=400,resizable=yes,scrollbars=yes,menubar=no,toolbar=yes,location=no,directories=yes,status=yes');
 }
 
 function checkLoginData( usernameInput, passwordInput ) {
@@ -728,6 +765,14 @@ function toggleMenu( element, a, b ) {
 	} else {
 		element.className = a;
 	} // end if
+}
+// Assume element is a link, toggle the class of the parent.
+function toggle_menu(element) {
+  if (element.parent.className == 'on') {
+    element.parent.className = '';
+  } else {
+    element.parent.className = 'on';
+  }
 }
 
 function email_check(str) {
@@ -932,12 +977,10 @@ function pad_with_zeros(rounded_value, decimal_places) {
 }
 
 function getFormObj( formName ) {
-	var form = document.forms[formName];
-	return form;
+	return document.forms[formName];
 }
  
 function disableDiv(elm) {
-
 	while (elm.tagName !="DIV") {
 		elm = elm.parentNode
 	}
@@ -962,6 +1005,17 @@ function disableDiv(elm) {
 	document.getElementsByTagName("body")[0].appendChild(overlay);
 }
 
+function new_set_today(btn) {
+  const prefix = btn.getAttribute('data_prefix');
+  set_today(
+      document.getElementById(prefix+'_year'),
+      document.getElementById(prefix+'_month'),
+      document.getElementById(prefix+'_day'),
+      document.getElementById(prefix+'_hour'),
+      document.getElementById(prefix+'_minute')
+      );
+}
+
 function set_today( e_y, e_m, e_d, e_h, e_min ) {
 	var d = new Date();
 	ddm_select_by_value( e_y, 1900+d.getYear() );
@@ -973,30 +1027,46 @@ function set_today( e_y, e_m, e_d, e_h, e_min ) {
 		ddm_select_by_value( e_min, d.getMinutes() );
 } // end function set_today
 
+function clear_date(btn) {
+  const prefix = btn.getAttribute('data_prefix');
+  const year = document.getElementById(prefix+'_year');
+  if (!year) {
+    console.log('No element found for '+prefix+'_year');
+    return;
+  }
+  date_clear(year,
+      document.getElementById(prefix+'_month'),
+      document.getElementById(prefix+'_day'),
+      document.getElementById(prefix+'_hour'),
+      document.getElementById(prefix+'_minute')
+      );
+}
+
 function date_clear( e_y, e_m, e_d, e_h, e_min ) {
-	var onchange=e_y.onchange;
-	e_y.onchange='';
+	let onchange = e_y.onchange;
+	e_y.onchange = '';
 	e_y.selectedIndex = 0;
-	e_y.onchange=onchange;
+	e_y.onchange = onchange;
 
-	onchange=e_m.onchange;
-	e_m.onchange='';
+	onchange = e_m.onchange;
+	e_m.onchange = '';
 	e_m.selectedIndex = 0;
-	e_m.onchange=onchange;
+	e_m.onchange = onchange;
 
-	onchange=e_d.onchange;
-	e_d.onchange='';
+	onchange = e_d.onchange;
+	e_d.onchange = '';
 	e_d.selectedIndex = 0;
-	e_d.onchange=onchange;
+	e_d.onchange = onchange;
 	//ddm_select_by_value( e_y, '' );
 	//ddm_select_by_value( e_m, '' );
 	//ddm_select_by_value( e_d, '' );
 	if ( e_h )
-	e_h.selectedIndex = 0;
+    e_h.selectedIndex = 0;
 		//ddm_select_by_value( e_h, '' );
 	if ( e_min )
-	e_min.selectedIndex = 0;
+    e_min.selectedIndex = 0;
 		//ddm_select_by_value( e_min, '' );
+	if (onchange && window[onchange]) window[onchange]();
 } // end function date_clear
 
 function set_date( form, from, to ) {
@@ -1239,6 +1309,7 @@ function convert_lbs_to_kg( from, to ) {
 	} // end for
 	to.value = qtys.join(',');
 } // end function convert_lbs_to_kg
+
 function convert_kg_to_lbs( from, to ) {
 	var qtys = from.value.split(',');
 	for ( var i=0; i< qtys.length; i+=1 ) {
@@ -1409,8 +1480,8 @@ function popup_window( url, parameters, options ) {
   */
 
 	if ( ! options ) options = {};
-	if ( (! options.width) && ! ( options.left && options.right) ) options.width = 400;
-	if ( (! options.height) && ! ( options.top && options.bottom ) ) options.height = 400;
+	if ( (! options.width) && ! ( options.left && options.right) ) options.width = 600;
+	if ( (! options.height) && ! ( options.top && options.bottom ) ) options.height = 600;
 
 	if ( ! popupWin ) {
 		var defaults = {
@@ -1494,18 +1565,19 @@ console.log("txt is visible");
 }
 function getValues( form, element_names, more_values ) {
 	form = $(form);
-	var results = new Hash( more_values );
+	const results = new Hash( more_values );
 	if ( element_names.constructor == Array ) {
-		for ( var index = element_names.length; index; index -- ) {
-			var form_element = form.elements[element_names[index-1]];
+		for ( let index = element_names.length; index; index -- ) {
+			const form_element = form.elements[element_names[index-1]];
 			if ( form_element ) {
+        console.log(form_element.name, get_value( form_element ));
 				results.set(element_names[index-1], get_value( form_element ) );
 			} else {
 				console.log(element_names[index-1] + ' was not found in form' );
 			} // end if
 		} // end for
 	} else if ( element_names.constructor == RegExp ) {
-		for ( var index = 0, len = form.elements.length; index < len; index += 1 ) {
+		for ( let index = 0, len = form.elements.length; index < len; index += 1 ) {
 			if ( element_names.exec( form.elements[index].name ) ) {
 				results.set(form.elements[index].name, get_value( form.elements[index] ) );
 			} // end if	
@@ -1544,10 +1616,8 @@ function changed( e, div ) {
 	} // end if
 } // end function changed
 
-if (!Array.prototype.map)
-{
-	Array.prototype.map = function(fun /*, thisp*/)
-	{
+if (!Array.prototype.map) {
+	Array.prototype.map = function(fun /*, thisp*/) {
 	var len = this.length;
 	if (typeof fun != "function")
 		throw new TypeError();
@@ -1603,7 +1673,7 @@ function to_hostname(e) {
 }
 function floatize(e) {
 	if ( e.value.match(/[^\d\+\-\.%\*eE]/) ) {
-		e.value = parseFloat(e.value.replace(/[^\d\+\-\.%\*eE]/g,''));
+		e.value = parseFloat(e.value.replace(/[^\d\+\-\.%\*eE]/g, ''));
 	} 
 	if ( e.value == 'NaN' )
 		e.value = '';
@@ -1756,16 +1826,34 @@ function update_event_bindings() {
       return;
     }
     el.onchange = window[fnName].bind(el, el);
-    console.log('setting onchange on '+el.name+' to '+fnName);
+    //console.log('setting onchange on '+el.name+' to '+fnName);
   });
 
+  document.querySelectorAll("select[on_change]").forEach(function attachOnChangeThis(el) {
+    const fnName = el.getAttribute("on_change");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName + " on "+el.name);
+      return;
+    }
+    el.onchange = window[fnName].bind(el, el);
+    //console.log('setting onchange on '+el.name+' to '+fnName);
+  });
   document.querySelectorAll('select[data-on-change-this]').forEach(function(el) {
     const fnName = el.getAttribute('data-on-change-this');
     if ( !window[fnName] ) {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onchangefor " + el.name + " to " + fnName);
+    //console.log("Setting up onchangefor " + el.name + " to " + fnName);
+    el.onchange = window[fnName].bind(el, el);
+  });
+  document.querySelectorAll('select[on_change_this]').forEach(function(el) {
+    const fnName = el.getAttribute('on_change_this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    //console.log("Setting up onchangefor " + el.name + " to " + fnName);
     el.onchange = window[fnName].bind(el, el);
   });
 
@@ -1784,7 +1872,7 @@ function update_event_bindings() {
       console.error("Nothing found to bind to " + fnName);
       return;
     } else {
-      console.log("Setting oninput for "+el.name+" to "+fnName);
+      //console.log("Setting oninput for "+el.name+" to "+fnName);
     }
     el.oninput = window[fnName].bind(el, el);
   });
@@ -1795,7 +1883,7 @@ function update_event_bindings() {
       console.error("Nothing found to bind to " + fnName);
       return;
     }
-    console.log("Setting up oninput for " + el.name + " to " + fnName);
+    //console.log("Setting up oninput for " + el.name + " to " + fnName);
     el.oninput = window[fnName].bind(el, el);
   });
 
@@ -1805,7 +1893,26 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    //console.log("Setting up onclick for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll('textarea[on_keyup_this]').forEach(function(el) {
+    const fnName = el.getAttribute('on_keyup_this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    //console.log("Setting up onkeyup_this for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
+  document.querySelectorAll('button[on_click_this], input[on_click_this]').forEach(function(el) {
+    const fnName = el.getAttribute('on_click_this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    //console.log("Setting up onclick for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
 
@@ -1815,27 +1922,37 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up onclick for " + el.name + " to " + fnName);
+    //console.log("Setting up onclick for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
 
-  document.querySelectorAll("i[data-on-click], a[data-on-click], button[data-on-click], input[data-on-click]").forEach(function attachOnClick(el) {
+  document.querySelectorAll("[on_click]").forEach(function attachOnClick(el) {
+    const fnName = el.getAttribute('on_click');
+    if (!window[fnName]) {
+      console.error('Nothing found to bind to ' + fnName + ' on element ' + el.name);
+      return;
+    }
+
+    //console.log('Setting for on_click to ' + fnName + ' for element ' + el.getAttribute('id'));
+    el.onclick = function(ev) {
+      window[fnName](ev);
+    };
+  });
+  document.querySelectorAll("[data-on-click]").forEach(function attachOnClick(el) {
     const fnName = el.getAttribute('data-on-click');
     if (!window[fnName]) {
       console.error('Nothing found to bind to ' + fnName + ' on element ' + el.name);
       return;
     }
 
-    console.log('Setting for data-on-click to ' + fnName + ' for element ' + el.getAttribute('id'));
+    //console.log('Setting for data-on-click to ' + fnName + ' for element ' + el.getAttribute('id'));
     el.onclick = function(ev) {
       window[fnName](ev);
     };
   });
+console.log('done');
 }
 
-window.addEventListener('DOMContentLoaded', function() {
-  update_event_bindings();
-});
 
 function fix_prototype_bootstrap() {
   /*

@@ -37,8 +37,8 @@
 		); ) ?>
 	</li>
 	<li>
-		<label>Page Quantity</label>
-		<? echo ( input( type=>'cardinal', name=>'PageQuantity-'.$$variable{Signature}, value=>$$variable{'PageQuantity-'.$$variable{Signature}}, onkeyup=>q`calc('f1');` ); ) ?>
+		<label>Form Page Quantity</label>
+    <? echo ( input( type=>'cardinal', name=>'PageQuantity-'.$$variable{Signature}, value=>$$variable{'PageQuantity-'.$$variable{Signature}}, oninput=>q`calc('f1');`, placeholder=>'auto' ); ) ?>
 	</li>
 <? echo ( my $html;
 	my @PrintingTypes = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} );

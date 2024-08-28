@@ -1,5 +1,7 @@
 var pendingCalc;
-
+var ScoringQuestionFlag = true;
+var FoldingQuestionFlag = true;
+var CuttingQuestionFlag = true;
 
 function versions_onkeyup( e ) {
 	new Ajax.Updater( 'Version_Descriptions', '_version_descriptions.html', { parameters: Form.serialize(e.form, true) } );
@@ -30,22 +32,27 @@ function filter_colours( side, signature ) {
 } // end function filter_colours
 
 function SpecialColour_onchange( element, side, index, signature ) {
-	var spec = 'ColourCoating'+index+side+signature;
+  const form = element.form;
+	const spec = 'ColourCoating'+index+side+signature;
 
-	var type_element = $('ColourCoatingType'+index+side+signature);
-	if ( ! type_element ) alert( 'ColourCoatingType'+index+side+signature + ' not found!');
-	var type = type_element.value;
+	const type_element = $('ColourCoatingType'+index+side+signature);
+  if ( ! type_element ) {
+    alert( 'ColourCoatingType'+index+side+signature + ' not found!');
+    return;
+  }
+	const type = type_element.value;
 	if ( type ) {
-		element.form.elements['chk'+spec].checked=true;
+		form.elements['chk'+spec].checked=true;
 
 		if ( ! $('ColourCoating'+(1+parseInt(index))+side+signature) ) {
 			// Add another colour
 			new Ajax.Request('/includes/main/proj/_additional_colour_coating.html', { 
 				method: 'get', 
 				parameters: { 
-					'Side': side, 
-					'index' : 1+parseInt(index),
-					'Signature' : signature 
+          project_id: form.elements['ProjectIndex'].value,
+					Side: side, 
+					index : 1+parseInt(index),
+					Signature : signature 
 				},
 				onSuccess: function(response){
 					new Insertion.After($(spec), response.responseText);
@@ -72,8 +79,8 @@ function SpecialColour_onchange( element, side, index, signature ) {
 			var t = document.getElementById('ColourCoatingType'+i+side+signature);
 			if ( ! t ) continue;
 
-			for ( var m = 0; m < type_element.options.length; m += 1 ) {
-				var v = type_element.options[m].value;
+			for ( let m = 0; m < type_element.options.length; m += 1 ) {
+				const v = type_element.options[m].value;
 				// see if it is in there
 				if ( ! isin_ddm( t, v ) ) {
 					add_option( t, v, type_element.options[m].text );
@@ -114,25 +121,25 @@ function chkSpecial_onClick(chkBox) {
 } // end function
 
 function validate_data(formName) {
-	var form = getFormObj( formName );
-	var text = '';
-    if ( form.txtWidth && ! ( 0 < parseFloat(form.txtWidth.value) ) ) {
-        text += "Please enter the Width of your Project\n";
-    } // end if
-    if ( form.txtHeight && ! ( 0 < parseFloat(form.txtHeight.value) ) ) {
-        text += "Please enter the Height of your Project\n";
-    } // end if
-	if ( form.txtWidth && form.txtHeight && form.txtFinalWidth && form.txtFinalHeight ) {
-	   if ( form.txtWidth.value * form.txtHeight.value < form.txtFinalWidth.value * form.txtFinalHeight.value ) {
-	   		text += "Your Finished Dimenstions may not exceed your Flat Dimensions.\n";
-	 	} // end if		
+	const form = getFormObj(formName);
+	let text = '';
+  if ( form.txtWidth && ! ( 0 < parseFloat(form.txtWidth.value) ) ) {
+    text += "Please enter the Width of your Project\n";
+  } // end if
+  if ( form.txtHeight && ! ( 0 < parseFloat(form.txtHeight.value) ) ) {
+    text += "Please enter the Height of your Project\n";
+  } // end if
+  if ( form.txtWidth && form.txtHeight && form.txtFinalWidth && form.txtFinalHeight ) {
+    if ( form.txtWidth.value * form.txtHeight.value < form.txtFinalWidth.value * form.txtFinalHeight.value ) {
+      text += "Your Finished Dimenstions may not exceed your Flat Dimensions.\n";
+    } // end if		
 	} // end if
 
-	var stockBrand = form.ddmStockBrand ? get_ddm_value(form.ddmStockBrand) : '';
-	var stockFinish = form.ddmStockFinish ? get_ddm_value(form.ddmStockFinish) : '';
-	var stockColour = form.ddmStockColour ? get_ddm_value(form.ddmStockColour) : '';
+	let stockBrand = form.ddmStockBrand ? get_ddm_value(form.ddmStockBrand) : '';
+	let stockFinish = form.ddmStockFinish ? get_ddm_value(form.ddmStockFinish) : '';
+	let stockColour = form.ddmStockColour ? get_ddm_value(form.ddmStockColour) : '';
 
-	var stockWeight = form.ddmStockWeight ? get_ddm_value(form.ddmStockWeight) : '';
+	let stockWeight = form.ddmStockWeight ? get_ddm_value(form.ddmStockWeight) : '';
 	if ( stockBrand == 'Customer Supplied' && form.txtSpecificStockCalliper && form.txtSpecificStockCalliper.value ) {
 		stockWeight = form.txtSpecificStockCalliper.value;
 	} // end if
@@ -140,7 +147,10 @@ function validate_data(formName) {
 	if ( stockBrand == '' && form.txtSpecificStockBrand && form.txtSpecificStockBrand.value == '' ) {
 		text += "Please Select a Paper Brand\n";
 	} // end if
-	if ( form.elements['txtSpecificStockWidth'] && form.elements['txtSpecificStockHeight'] && form.txtSpecificStockWidth.value && form.txtSpecificStockHeight.value ) {
+	if ( form.elements['txtSpecificStockWidth'] &&
+    form.elements['txtSpecificStockHeight'] &&
+    form.txtSpecificStockWidth.value &&
+    form.txtSpecificStockHeight.value ) {
 		if ( (parseFloat(form.txtWidth.value) <= parseFloat(form.txtSpecificStockWidth.value) && parseFloat(form.txtHeight.value) <= parseFloat(form.txtSpecificStockHeight.value) )  ||
 				(parseFloat(form.txtWidth.value) <= parseFloat(form.txtSpecificStockHeight.value) && parseFloat(form.txtHeight.value) <= parseFloat(form.txtSpecificStockWidth.value)) ) { 
 			// we have good sheet size
@@ -173,7 +183,7 @@ function validate_data(formName) {
 
 function get_impositions( form, qty_index ) {
 	form = $(form);
-	var h = $H(Form.serialize(form,true));
+	var h = $H(Form.serialize(form, true));
 	h.each(function(pair) {
 		if ( pair.value == '' ) 
 			h.unset(pair.key);
@@ -185,20 +195,18 @@ function get_impositions( form, qty_index ) {
 } 
 
 function calc_print( formName, force, options ) {
-
-	var form = getFormObj( formName );
+	const form = getFormObj( formName );
 
 	if ( timeout ) {
 		clearTimeout( timeout );
 		timeout = null;
 	}
 	if ( gettingNewPrice && ! force ) {
-		if ( pendingCalc ) {
-			pendingCalc.transport.abort();
+		if (pendingCalc) {
+			pendingCalc.abort();
 		} else {
-
 			// This prevents concurrent price getting
-			if ( options ) {
+			if (options) {
 				timeout = setTimeout("calc_print('f1', 0, " + Object.toJSON( options ) + ");", 1000 );	
 			} else {
 				timeout = setTimeout("calc_print('f1' );", 1000 );	
@@ -206,51 +214,71 @@ function calc_print( formName, force, options ) {
 			return;
 		}
 	} // end if
+	gettingNewPrice = true;
 
 	clear_price_data(form);
-	var AlertDiv = $('AlertDiv');
-	if ( AlertDiv ) {
+	const AlertDiv = $('AlertDiv');
+	if (AlertDiv) {
 		AlertDiv.innerHTML = '';
 		AlertDiv.hide();
 	} // end if
-	var div = $('InformationDiv');
-	if ( div ) {
+	const div = $('InformationDiv');
+	if (div) {
 		div.innerHTML = 'Calculating....';
 		div.show();
 	} // end if
-	gettingNewPrice = true;
-	var blah = Form.serialize( form, true );
-	var h = $H(blah);
-	h.each(function(pair) {
-		if ( pair.value == '' ) 
-			h.unset(pair.key);
-		if ( pair.key == 'btnFunction' ) 
-			h.unset(pair.key);
-		if ( pair.key == 'alert' ) 
-			h.unset(pair.key);
-	});
-	if ( options ) {
-		$H(options).each(function(pair) {
-			h.set(pair.key, pair.value);
-		} );
-	} // end if options
-	h.set('ServiceType','Printing' );
-	h.set('callback', 'cbFillPrintResults' );
-	pendingCalc = new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+
+  const data = $j(form).serializeArray();
+  for (let i=0; i < data.length; i++) {
+    const pair = data[i];
+    if (
+      (pair.value == '')
+      ||
+      (pair.name == 'btnFunction')
+      ||
+      (pair.name == 'alert')
+    ) {
+      data.splice(i,1);
+    }
+  }
+  if (options) {
+    for (const [key, value] of Object.entries(options)) {
+      data[data.length] = {name: key, value: value};
+    }
+  }
+	//pendingCalc = new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+  pendingCalc = $j.ajax({
+    type: 'POST',
+    url: '/main/project/_calc.json',
+    data: data,
+    dataType: 'json',
+    success: function(data, textStatus, jqXHR) {
+      cbFillPrintResults(data);
+    }
+  }).done(function(data) {
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+	  gettingNewPrice = false;
+    console.log("fail", textStatus, errorThrown);
+  });
 	return true;
 } // end calc_print
 
-
 function clear_price_data( form ) {
+	for ( let qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
+		if ( quantities[qtyNum] > 0 ) {
 
-	for ( var qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
-		if ( quantities[qtyNum-1] > 0 ) {
+      const el = document.getElementById('hdnBreakdown'+qtyNum);
+      if (el) el.innerHTML = '';
+
+      if (form.elements['txtPressSheetQty'+qtyNum]) form.elements['txtPressSheetQty'+qtyNum].value = '';
+      else console.log("Nothing found for txtPressSheetQty"+qtyNum);
+
+			if ( form.elements['MPrice'+qtyNum] ) form.elements["MPrice"+qtyNum].value = '';
+			if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
 			if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! get_value(form.elements['OverridePrice'+qtyNum]) ) form.elements["txtPrice"+qtyNum].value = '';
 			continue;
+
 			if ( form.elements['StockType'+qtyNum] ) form.elements["StockType"+qtyNum].value = '';
-			if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
-			if ( form.elements['MPrice'+qtyNum] ) form.elements["MPrice"+qtyNum].value = '';
-			if ( form.elements["txtPressSheetQty"+qtyNum] ) form.elements["txtPressSheetQty"+qtyNum].value = '';
 			if ( form.elements["txtPlateQuantity"+qtyNum] ) form.elements["txtPlateQuantity"+qtyNum].value = '';
 			
 			if ( form.elements["txtImposition"+qtyNum] ) {
@@ -296,20 +324,20 @@ function clear_price_data( form ) {
 function cbFillPrintResults( results ) {
 	cbFillResults( results );
 	block_calc = true;
-	var form = getFormObj( 'f1' );
+	const form = getFormObj( 'f1' );
 
-	for ( var i = 1; i <= 3; i += 1 ) {
-		var ddm = form.elements['ddmStockSheetSize'+i];
-		if ( ! ddm ) {
-			continue;
-		} // end if
+  // If nothing get selected for sheet size, it may be a custom stock, so add the custom size to the ddm
+	for (let i = 1; i <= 3; i += 1) {
+		const ddm = form.elements['ddmStockSheetSize'+i];
+		if (!ddm) continue;
 		if ( ddm.selectedIndex == -1 || ddm.selectedIndex == 0 ) {
-			var width = form.elements['StockWidth'+i].value;
-			var height = form.elements['StockHeight'+i].value;
-			var type = get_value( form.elements['StockType'+i] );
+			const width = form.elements['StockWidth'+i].value;
+			const height = form.elements['StockHeight'+i].value;
+			const type = get_value( form.elements['StockType'+i] );
 		
 			if ( type == 'Sheet' ) {
 				if ( ! ddm_select_by_value( ddm, width + 'x' + height, false ) ) {
+          console.log("adding", width, height);
 					ddm.options[ddm.options.length] = new Option( width+'" x ' + height+'"', width + 'x' + height, true );
 					ddm_select_by_value( ddm, width + 'x' + height, false );
 				} // end if
@@ -318,15 +346,16 @@ function cbFillPrintResults( results ) {
 					ddm.options[ddm.options.length] = new Option( width + '" Roll', width, true );
 					ddm_select_by_value( ddm, width );
 				} // end if
+      } else {
+        console.log("Unknown type of stock", type);
 			} // end if
-		} else {
-			alert(ddmSelectedIndex);
 		} // end if
 	} // end for
+ 
 	block_calc = false;
 	gettingNewPrice = false;
 
-	var addServices = new Array();
+	const addServices = new Array();
 	var cancelAddFolding = false;
 	if ( form.NeedFolding.value > 0 ) {
 		if ( form.HasFolding.value == 0 ) {
@@ -362,34 +391,36 @@ function cbFillPrintResults( results ) {
 
 	if ( addServices.length ) {
 		calc_print( 'f1', 0, { action: 'add_service', service_name: addServices } );
+  } else {
+    console.log("Not adding servics");
 	} // end if
 
 } // end function cbFillPrintResults( results )
 
-var ScoringQuestionFlag = true;
-var FoldingQuestionFlag = true;
-var CuttingQuestionFlag = true;
 
 function selectProjectTemplate( formName ) {
-	var form = getFormObj( formName );
-	var ddm = form.ddmProjectSize;
+	const form = getFormObj( formName );
+	const ddm = form.ddmProjectSize;
 	if ( ddm ) {
-		var TemplateType = get_value( form.rdbTemplateType );
-		var selected_size = get_value( form.ddmProjectSize );
+		const TemplateType = get_value( form.rdbTemplateType );
+		const selected_size = get_value( form.ddmProjectSize );
 		clear_ddm(ddm);
 		add_option( form.ddmProjectSize, 'Custom','Custom' );
 		if ( TemplateType ) {
+      if (TemplateType == 'MetalCoil' || TemplateType == 'PlasticCoil' || TemplateType == 'Cerlox') {
+        $j('#SpiralOptions').show();
+      } else {
+        $j('#SpiralOptions').hide();
+      }
 			if ( options[TemplateType] ) {
 				if ( options[TemplateType][0].message ) {
 					alert(options[TemplateType][0].message);
 				}
-				for ( var x = 0, len=options[TemplateType].length; x < len; x += 1 ) {
-					var value = options[TemplateType][x].value;
-					var text = options[TemplateType][x].text;
+				for ( let x = 0, len=options[TemplateType].length; x < len; x += 1 ) {
 					add_option( ddm, options[TemplateType][x].text, options[TemplateType][x].value );
 				} // end for
 			} else {
-				alert("We do not have dimensions for the selected project template at this time.\n\nPlease select custom in the size pull down and input your finished and flat dimensions in the supplied text boxes.");	
+				alert("We do not have dimensions for the selected project template "+TemplateType+" at this time.\n\nPlease select custom in the size pull down and input your finished and flat dimensions in the supplied text boxes.");	
 			} // end if
 		} // end if TemplateType
 		ddm_select_by_value( form.ddmProjectSize, selected_size );
@@ -435,85 +466,122 @@ function dimensions_onChange( form ) {
 	calc(form.name);
 } // end function dimensions_onChange
 
-function Stock_onchange( element, id ) {
-    var form = element.form;
-    if ( gettingNewPrice ) {
-console.log("Waiting....");
-        if ( timeout ) clearTimeout( timeout );
-        timeout = setTimeout( 'Stock_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
-        return;
-    } // end if
-    timeout = null;
+function StockPopup_onchange(data) {
+  const form = document.getElementById(data.form);
+	const filters = new Array( 'Brand','Finish','Colour','Weight','Quality', 'Group', 'SheetSize', 'Size' );
+	for ( let index = 0, len = filters.length; index < len; ++index ) {
+    const filter = form.elements['ddmStock'+filters[index]+data.signature_id];
+    if ( filter ) {
+      filter.disabled = false;
+    } // end if filter exists
+	} // end for 
+	gettingNewPrice = false;
+  $j('#StockPopupResults').load('/main/project/prin/_stocks.html', 
+    $j(form).serialize()
+  );
+}
 
-	var h = new Hash();
-	h.set('project_id', form.elements['ProjectIndex'].value );
-	h.set('selected', element.name );
-	h.set('form', form.id );
-	h.set('signature_id', id );
+function Stock_onchange( element, id ) {
+  const form = element.form;
+  if ( gettingNewPrice ) {
+    console.log("Waiting for calculation....");
+    clearTimeout( timeout );
+    timeout = setTimeout( 'Stock_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
+    return;
+  } // end if
+  timeout = null;
+
+  data = [
+    {name: 'project_id', value: form.elements['ProjectIndex'].value},
+    {name: 'selected', value: element.name },
+    {name: 'form', value: form.id },
+    {name: 'signature_id', value: id }
+  ];
 	if ( form.elements['txtWidth'] ) 
-		h.set( 'width', form.elements['txtWidth'].value );
+		data[data.length] = {name: 'width', value: form.elements['txtWidth'].value };
 	if ( form.elements['txtHeight'] ) 
-		h.set( 'height', form.elements['txtHeight'].value );
+		data[data.length] = {name: 'height', value: form.elements['txtHeight'].value };
 	if ( form.elements['rdbSuppliedStock'+id] ) {
-		h.set('Supplied', get_value( form.elements['rdbSuppliedStock'+id] ) );
+		data[data.length] = {name: 'Supplied', value: get_value( form.elements['rdbSuppliedStock'+id] ) };
 	} // end if
 	if ( form.elements['projecttype_id'] ) {
-		h.set('projecttype_id', get_value( form.elements['projecttype_id'] ) );
+		data[data.length] = {name: 'projecttype_id', value: get_value( form.elements['projecttype_id'] ) };
 	} // end if
 
-	var filters = new Array( 'Brand','Finish','Colour','Weight','Quality', 'Group', 'Size' );
-	for ( var index = 0, len = filters.length; index < len; ++index ) {
-		var filter = form.elements['ddmStock'+filters[index]+id];
+	const filters = new Array( 'Brand','Finish','Colour','Weight','Quality', 'Group', 'Size' );
+	for ( let index = 0, len = filters.length; index < len; ++index ) {
+		const filter = form.elements['ddmStock'+filters[index]+id];
 		if ( filter ) {
-			h.set(filters[index], filter.getValue() );
+			data[data.length] = { name: filters[index], value: filter.getValue() };
 			filter.disabled = true;
 		//} else {
 			//alert('filter ' + 'ddmStock'+filters[index]+id );
 		} // end if filter exists
 	} // end for 
-	h.set( 'callback', 'cbStockFillResults' );
-	new Ajax.Request( '/main/project/prin/_paper.json', { parameters: h, evalScripts: true } );
+	//h.set( 'callback', 'cbStockFillResults' );
+	//new Ajax.Request( '/main/project/prin/_paper.json', { parameters: h, evalScripts: true } );
+  pendingCalc = $j.ajax({
+    type: 'POST',
+    url: '/main/project/prin/_paper.json',
+    data: data,
+    dataType: 'json',
+    success: function(data, textStatus, jqXHR) {
+      if (form.callback) {
+        if (window[form.callback.value] instanceof Function) {
+          window[form.callback.value](data);
+        } else {
+          console.log(form.callback.value, window[form.callback.value]);
+        }
+      } else {
+        cbStockFillResults(data);
+      }
+    }
+  }).done(function(data) {
+    console.log(data);
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    gettingNewPrice = false;
+    console.log("fail", textStatus, errorThrown);
+  });
 } // end function Stock_onchange
 
 function cbStockFillResults( results ) {
-	var form = $(results.get('form'));
+	const form = $(results.form);
 	if ( ! form ) {
-		alert('No form for ' + results.get('form') );
+		alert('No form for ' + results.form );
 		gettingNewPrice = false;
 		return;
 	} // end if
-	results.unset('form');
-	var signature_id = results.get('signature_id');
-	var suffixes = new Array ( '', '1', '2', '3' );
+	//results.unset('form');
+	const signature_id = results.signature_id;
+	const suffixes = new Array ( '', '1', '2', '3' );
 
-    var keys = results.keys();
-
-    for ( var index = 0, len = keys.length; index < len; ++index ) {
-        var key = keys[index];
-        var value = results.get(key);
-		var options = new Array();
+  for (const [key, value] of Object.entries(results)) {
+    //for ( var index = 0, len = keys.length; index < len; ++index ) {
+        //var key = keys[index];
+        //var value = results.get(key);
+		const options = new Array();
 		options[0] = create_option( '', 'select one' );
 
 		if ( key == 'SheetSize' ) {
-			for ( var val_index = 0, val_len = value.length; val_index < val_len; ++val_index ) {
-				var size = value[val_index].split('x');
+			for ( let val_index = 0, val_len = value.length; val_index < val_len; ++val_index ) {
+				const size = value[val_index].split('x');
 				if ( size.length == 1 ) {
 					//Roll
 					options[options.length] = create_option( value[val_index], size[0]+'" Roll' );
 				} else {
-					var dimensions = new Array();
+					const dimensions = new Array();
 					size.each(function(item){ dimensions[dimensions.length] = item+'"';});
 
 					options[options.length] = create_option( value[val_index], dimensions.join( ' x ' ) );
 				} // end if
 			} // end for
-			for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
-				var ddm = form.elements['ddmStock'+key+suffix_index];
+			for ( let suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
+				const ddm = form.elements['ddmStock'+key+suffix_index];
 				if ( ! ddm ) {
 	//alert('No ddmStock'+key+suffix);
 					continue;
 				} // end if
-				var selectedValue = ddm.getValue();
+				const selectedValue = ddm.getValue();
 				fill_ddm( ddm, options );
 				if ( options.length == 2 ) {
 					ddm_select_by_index( ddm, 1 );
@@ -522,14 +590,14 @@ function cbStockFillResults( results ) {
 				} // end if
 			} // end for suffix
 		} else {
-			var ddm = form.elements['ddmStock'+key+signature_id];
+			const ddm = form.elements['ddmStock'+key+signature_id];
 			if ( ! ddm ) {
 //alert('No ddmStock'+key+suffix);
 				continue;
 			} // end if
-			var selectedValue = ddm.getValue();
+			const selectedValue = ddm.getValue();
 
-			for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
+			for ( let ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
 				options[options.length] = create_option( value[ddm_index], value[ddm_index] );
 			} // end for
 			fill_ddm( ddm, options );
@@ -542,11 +610,11 @@ function cbStockFillResults( results ) {
 	} // end for each key
 
 	// turn drop downs back on
-	var filters = new Array( 'Brand','Finish','Colour','Weight','Quality', 'Group', 'SheetSize', 'Size' );
-	for ( var index = 0, len = filters.length; index < len; ++index ) {
-		for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
-			var suffix = suffixes[suffix_index];
-			var filter = form.elements['ddmStock'+filters[index]+signature_id+suffix];
+	const filters = new Array( 'Brand','Finish','Colour','Weight','Quality', 'Group', 'SheetSize', 'Size' );
+	for ( let index = 0, len = filters.length; index < len; ++index ) {
+		for ( let suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
+			const suffix = suffixes[suffix_index];
+			const filter = form.elements['ddmStock'+filters[index]+signature_id+suffix];
 			if ( filter ) {
 				filter.disabled = false;
 			} // end if filter exists
@@ -559,4 +627,64 @@ function cbStockFillResults( results ) {
 
 window.addEventListener('DOMContentLoaded', function() {
 	calc('f1');
+
+  $j('.side_link').each(function(index, link) {
+    const signature_index = link.getAttribute('data_signature_index');
+    const side = document.getElementById('InksOnBackQuestions'+signature_index);
+      console.log(link,side, 'not found');
+    if (! (side && link) ) {
+      console.log(link,side, 'not found');
+      return;
+    }
+    // Set the initial status on page load.
+    if (link.checked) link_sides.apply(link);
+    link.onclick = link_sides.bind(link);
+  });
+  console.log('done');
 });
+
+// Gray out/disable side two when it's "linked" to side one. The server
+// handles replicating the fields across when they are linked.
+function link_sides(e) {
+  const linked = this.checked;
+  const signature_index = this.getAttribute('data_signature_index');
+  const side   = document.getElementById('InksOnBackQuestions'+signature_index);
+  const colour = linked ? '#999999' : '';
+
+  // When disabled we grey out the side.
+  side.style.backgroundColor = linked ? '#EEEEEE' : '';
+  side.style.color           = colour;
+  side.style.borderColor     = colour;
+
+  // Display a message to the user if we're disabled.
+  const side2_linked = document.getElementById('side2_linked'+signature_index);
+  if (side2_linked) side2_linked.style.display = linked ? 'block' : 'none';
+
+  side.descendants().each(function (elem) {
+    // If we're disabling grey out or disable elems, otherwise undo.
+    switch (elem.tagName.toLowerCase()) {
+      case 'fieldset':
+        elem.style.borderColor = colour;
+        break;
+
+      case 'legend':
+        elem.style.color = colour;
+        break;
+
+      case 'input':
+      case 'select':
+      case 'textarea':
+      case 'button':
+        if (linked) {
+          elem.was_disabled = elem.disabled;
+          elem.disabled = true;
+        } else {
+          elem.disabled = elem.was_disabled;
+        }
+        break;
+      default:
+        console.log("Unknown element", elem);
+    }
+  });
+  calc('f1');
+}

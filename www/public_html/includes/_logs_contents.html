@@ -9,7 +9,7 @@
 		( $session{$variable{uri}.'?log_limit'} ? ( limit => $session{$variable{uri}.'?log_limit'} ) : () ),
 		order =>'date_time DESC',
 	);
-	if ( ( ! @Logs ) and ! ( $session{$variable{uri}.'?log_action_id'} ) ) {
+	if ( ( ! @Logs ) and ! ( $session{$variable{uri}.'?log_action_id'} ) and !%param) {
 		@Logs = openprint::Log->find(
 				object_type_id  =>  $$variable{Object}->Object_Type()->id(),
 				object_id       =>  $$variable{Object}->id(),

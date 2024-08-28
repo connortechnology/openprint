@@ -21,7 +21,7 @@
 </div>
 <div class="PageTitle"><h1>PRODUCTION</h1><h2>View Docket</h2></div>
 <br class="spacer"/>
-<script type="text/javascript">
+<script>
 function open_window( page ) {
 	window.open(page,'label','newWin,width=610,top=50,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 }
@@ -254,7 +254,7 @@ function send_notifications( form, project_id ) {
 	</fieldset>
 	<? endif ( $$variable{Order}->docket() ) ?>
 </div>
-<script type="text/javascript">
+<script>
 <? echo (
 	my $html;
 	if ( my $owing = $$variable{Order}->cod_owing_percent() ) {

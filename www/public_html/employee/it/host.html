@@ -1,6 +1,6 @@
 <div class="Host"><div class="Edit">
 <?include(/includes/error_reporting.html)?>
-<form id="f1" name="f1" method="post" action="/employee/it/host.html" enctype="multipart/form-data" autocomplete="off">
+<form id="f1" name="f1" method="post" action="/employee/it/host.html" autocomplete="off">
 	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{Host}->id() ) ?>" />
 	<input type="hidden" id="action" name="action" />
 	<fieldset><legend>Host <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) .($$variable{Host}->deleted() ? ' <span class="warning">Deleted</span>':'')) ?></legend>

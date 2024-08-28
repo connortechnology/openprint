@@ -1,35 +1,67 @@
-		<script language="javascript" src="/javascripts/proj/calc_design.js"></script>
-		<script language="javascript">
-			var service = "Design";
-			var projectType = "Design";
+<script src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script>
+  let default_hours = '<?Default_GraphicDesign?>';
 
-			var services = new Array();
-			<?SERVICE_ARRAYS?>
-			<?SERVICE_PRICES?>
+function Override_GraphicDesign_clicked() {
+  const override = document.getElementById('Override_GraphicDesign');
+  const graphic_design = $j('#GraphicDesign');
+  if (override.value == 'Y') {
+    default_hours = graphic_design.val();
+    graphic_design.removeAttr("disabled");
+  } else {
+    graphic_design.val(default_hours);
+    graphic_design.attr("disabled", "disabled");
+  }
+  calc('f1');
+}
 
-			var quantities = new Array();
-			<?QUANTITIES?>
+  $j('#f1').bind('submit', function() {
+    $j('#GraphicDesign').removeAttr('disabled');
+  });
+	const quantities = new Array();
+	<?QUANTITIES?>
+</script>
+<fieldset><legend>Graphic Design Services</legend>
+  <?include('/includes/main/proj/required_fields.html') ?>
+  <form name="f1" method="post" action="/main/project/view.html">
+    <p>The following quantity of graphic design hours have been automatically allocated to your project. If you feel the graphic design of your project will require more or less time, please input the total amount of hours that you wish us to allocate to your project.</p>
+    <ul>
+      <li><label for="GraphicDesign">Design and Layout</label>
+      <input id="GraphicDesign" name="GraphicDesign" value="<?GraphicDesign?>" type="number" min="0" step="any" <? if ($$variable{Override_GraphicDesign} != 1) ?>disabled="true"<?endif ($$variable{Override_GraphicDesign} != 1) ?> />
+      Hours
+<?echo( write_override( 'Override_GraphicDesign', $$variable{Override_GraphicDesign}, 'Override_GraphicDesign_clicked();', 'Override_GraphicDesign_clicked();' ); )?>
+      </li>
+    </ul>
 
-			function calc() {
-				calc_prepress('f1');
-			}
-		</script>
-		<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
-		<table width="600" border="0" cellpadding="0" cellspacing="0" cols="3">
-			<tr> 
-				<td width="320" valign="top"><b class="lgTxt">Graphic Design Services</b></td>
-				<td width="20">&nbsp;</td>
-				<td width="260">&nbsp;</td>
-			</tr>
-		</table>
-			<form name="f1" method="POST" action="/main/project/view.html">
-				<? echo ( include('/includes/main/proj/design.html'); ) ?>
-				<? echo ( include('/includes/main/proj/prices_design.html'); ) ?>
-				<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
-    <!-- the difference between the book prices include and ALL the other includes is that the prices for books are
-created by server and NEED a substitution variable for the values on the input boxes, which just happens to mess things up
-for all the other pages, hence the two different files -->
-    <? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
-			</form>
-	<script language="javascript">calc_prepress('f1');</script>
+    <p>If your project requires any creative services in addition to the graphic design and layout, please input the quantity of hours that you wish us to allocate to your project.</p>
+    <ul>
+      <li><label for="Logos">Logo Design</label>
+      <input id="Logos" name="Logos" value="<?Logos?>" type="number" min="0" step="any"/>
+      Hours
+      </li>
+
+      <li><label for="Illustrations">Illustration Design</label>
+      <input id="Illustrations" name="Illustrations" value="<?Illustrations?>" type="number" min="0" step="any"/>
+      Hours
+      </li>
+      <li>
+      <label for="ProductPhotos">Product Photography</label>
+      <input id="ProductPhotos" name="ProductPhotos" value="<?ProductPhotos?>" type="number" min="0" step="any"/>
+      Hours
+      </li>
+      <li>
+      <label for="CopyWriting">Copy Writing</label>
+      <input id="CopyWriting" name="CopyWriting" value="<?CopyWriting?>" type="number" min="0" step="any"/>
+      Hours
+      </li>
+    </ul>
+
+    <?include('/includes/main/proj/_comments.html') ?>
+    <ul class="pricing">
+    <?include('/includes/main/proj/prices_prepress.html') ?>
+    </ul>
+    <?include('/includes/main/proj/add_to_project.html') ?>
+    <?include('/includes/main/proj/hdn_fields_prepress.html') ?>
+  </form>
+</fieldset>
 

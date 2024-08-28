@@ -19,7 +19,9 @@ function confirm_cancel(form) {
 <h1>Order History</h1>
 <h2>Viewing Order <?order_id?></h2>
 </div>
+<? echo ( do_css_links( '/order.css' ); ) ?>
 
+<!--
 <div class="navigation">
 	<form id="f2" name="f2" method="get" action="/main/order/history_details.html">
 		<fieldset class="filters">
@@ -42,6 +44,7 @@ function confirm_cancel(form) {
 		</fieldset>
 	</form>
 </div>
+-->
 
 <?include(/includes/error_reporting.html)?>
 

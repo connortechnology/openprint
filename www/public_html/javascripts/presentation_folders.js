@@ -1,6 +1,6 @@
 function selectProjectTemplate( formName ) {
-	var form = getFormObj( formName );
-	var type = get_rdb_value( form, 'rdbTemplateType' );
+	const form = getFormObj( formName );
+	const type = get_rdb_value( form, 'rdbTemplateType' );
 	if ( type == 'PF1Pocket' ) {
 		if ( form.chkLeftPocket.checked && form.chkRightPocket.checked ) {
 			form.chkLeftPocket.checked = false;
@@ -25,9 +25,9 @@ function selectProjectTemplate( formName ) {
 		form.txtHeight.readonly = false;
 	} // end if
 
-	var ddm = form.ddmProjectSize;
+	const ddm = form.ddmProjectSize;
 	if ( ddm ) {
-		var selected_size = get_ddm_value( ddm );
+		const selected_size = get_ddm_value( ddm );
 		clear_ddm(ddm);
 		if ( options[type] ) {
 			for ( var x = 0; x < options[type].length; x++ ) {
@@ -37,6 +37,8 @@ function selectProjectTemplate( formName ) {
 			} // end for
 		} else {
 			if ( type ) {
+        console.log(form.rdbTemplateType);
+        console.log(type);
 				alert("We do not have common dimensions for the selected project template at this time.\n\nPlease select custom in the dimension pull down and input you own finished and flat dimesnions in the supplied text boxes below.");
 			} // type
 		} // end if

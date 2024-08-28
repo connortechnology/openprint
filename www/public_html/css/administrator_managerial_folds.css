@@ -1,5 +1,4 @@
 .Equipment {
-	background-color: none;
 	text-align: left;
 }
 .Pages, .Folds, .Angles {
@@ -10,7 +9,7 @@
 	text-align: left;
 }
 .Speed {
-	width: 180px;
+	width: 340px;
 }
 
 .MRMinutes,
@@ -18,4 +17,16 @@
 .MaxImposition {
 	width: 50px;
 	text-align: center;
+}
+
+.dialog table li {
+  padding-left: 120px;
+}
+.dialog table li label:not(.radio) {
+  margin-left: -120px;
+  width: 120px;
+}
+
+.dialog table li input[type="number"] {
+  width: 50px;
 }

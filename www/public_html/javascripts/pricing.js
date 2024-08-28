@@ -27,7 +27,6 @@ function calc_from_quantity(element) {
 function calc_from_cost(element) {
   let precision = element.getAttribute('precision');
   if (!precision) precision = 5;
-  console.log("Using precision: " + precision);
   const elements = element.form.elements;
   const re = /cost-(.*)/;
   const matches = re.exec(element.name);
@@ -61,8 +60,8 @@ function calc_from_markup(element) {
     const index = matches[1];
 
     const cost = parseFloat(floatize(elements['cost-'+index]));
-    if ( cost != '' ) {
-      const markup = parseFloat(1*floatize(element));
+    if (cost != '') {
+      const markup = parseFloat(1*floatize(element))/100;
       const quantity = elements['quantity-'+index] ?parseFloat(1*floatize(elements['quantity-'+index])) : 1;
 
       if (elements['total-'+index]) {
@@ -74,7 +73,7 @@ function calc_from_markup(element) {
     } // end if
 
     if (elements['chk-'+index]) {
-      elements['chk-'+index].checked=true;
+      elements['chk-'+index].checked = true;
     } // end if
   } // end if matches
 } // end function
@@ -107,75 +106,157 @@ function calc_from_price(element) {
 	} // end if
 } // end function
 
-function add_price (form, pricelist_id, equipment_id) {
-	$('prices-'+pricelist_id+'-'+equipment_id).innerHTML = 'Please wait...loading.';
-	new Ajax.Updater( 'prices-'+pricelist_id+'-'+equipment_id, '_prices_table_body.html?action=add&pricelist_id='+pricelist_id,
-    { method: 'post', parameters:form.serialize(), evalScripts: true } );
-} /* end function del_price() */
+// New price to pricelist
+function add_price(btn) {
+  const form = btn.form;
+  const data = Object.fromEntries(new FormData(form));
 
-function del_price ( form, pricelist_id, equipment_id, price_id ) {
-	$('prices-'+pricelist_id+'-'+equipment_id).innerHTML = 'Please wait...loading.';
-	new Ajax.Updater( 'prices-'+pricelist_id+'-'+equipment_id, '_prices_table_body.html?action=delete&price_id='+price_id,
-    { method: 'post', parameters:form.serialize(), evalScripts: true } );
-} /* end function del_price() */
+  const pricelist_id = btn.getAttribute('data_pricelist_id');
+  const equipment_id = $j('#ddmEquipment-'+pricelist_id).val();
+  const content = '_prices_per_equipment.html';
 
-function copy_price ( form, pricelist_id, equipment_id, price_id ) {
-	$('prices-'+pricelist_id+'-'+equipment_id).innerHTML = 'Please wait...loading.';
-	new Ajax.Updater( 'prices-'+pricelist_id+'-'+equipment_id, '_prices_table_body.html?action=copy&price_id='+price_id,
-    { method: 'post', parameters:form.serialize(), evalScripts: true } );
+  let id;
+  let url = '/administrator/services/'+content;
+  if (id = btn.getAttribute('data_service_id')) {
+    data.service_id = id;
+  } else {
+    id = btn.getAttribute('data_material_id');
+    url = '/administrator/materials/'+content;
+    data.material_id = id;
+  }
+
+  const prices_id = '#pricelist-'+pricelist_id;
+  const div = $j(prices_id);
+  if (!div.length) {
+    alert('Prices div not found for '+prices_id);
+    return;
+  }
+  div.html('Please wait...loading.');
+	div.load(url+'?action=add&pricelist_id='+pricelist_id+'&equipment_id='+equipment_id);
 } /* end function add_price() */
 
-function add_new_price ( service_id, pricelist_id, equipment_id ) {
+function del_price(btn) {
+  const form = btn.form;
+  const pricelist_id = btn.getAttribute('data_pricelist_id');
+  const equipment_id = btn.getAttribute('data_equipment_id');
+  const price_id = btn.getAttribute('data_price_id');
+  const data = {
+    pricelist_id: pricelist_id,
+    equipment_id: equipment_id,
+    action: 'delete'
+  };
+  let id;
+  let url = '/administrator/services/_prices_table_body.html';
+  if (!(id = btn.getAttribute('data_service_id'))) {
+    id = btn.getAttribute('data_material_id');
+    data.material_id = id;
+    url = '/administrator/materials/_prices_table_body.html';
+  } else {
+    data.service_id = id;
+  }
+  if (!id) {
+    alert("Failed to identify the price. Will not proceed");
+    return;
+  }
+  const prices_id = '#prices-'+pricelist_id+'-'+equipment_id+'-'+id;
+  const div = $j(prices_id);
+  div.html('Please wait...loading.');
+	div.load(url+'?price_id='+price_id, data, function() {
+      update_event_bindings();
+      });
+} /* end function del_price() */
 
-	if ( $('prices-'+pricelist_id+'-'+equipment_id) ) {
-		new Ajax.Updater( 'prices-'+pricelist_id+'-'+equipment_id, '_price.html', {
-			parameters: {
-				pricelist_id: pricelist_id,
-				equipment_id: equipment_id,
-				service_id: service_id,
-				action: 'add'
-			 },
-			insertion: 'bottom' }
-			);
-	} else {
-		new Ajax.Updater( 'pricelist-'+pricelist_id, '_prices_per_equipment.html', {
-			parameters: {
-				pricelist_id: pricelist_id,
-				equipment_id: equipment_id,
-				service_id: service_id,
-				action: 'add'
-			 },
-			insertion: 'bottom' }
-			);
+function copy_price(btn) {
+  const form = btn.form;
+  const pricelist_id = btn.getAttribute('data_pricelist_id');
+  const equipment_id = btn.getAttribute('data_equipment_id');
+  let id;
+  let url = '/administrator/services/_prices_table_body.html';
+  if (!(id = btn.getAttribute('data_service_id'))) {
+    id = btn.getAttribute('data_material_id');
+    url = '/administrator/material/_prices_table_body.html';
+  }
+
+  const price_id = btn.getAttribute('data_price_id');
+
+  const prices_id = '#prices-'+pricelist_id+'-'+equipment_id+'-'+id;
+  const div = $j(prices_id);
+  div.html('Please wait...loading.');
+  const data = Object.fromEntries(new FormData(form));
+	div.load(url+'?action=copy&price_id='+price_id, data, function() {
+      update_event_bindings();
+      });
+} /* end function copy_price() */
+
+function add_new_price(btn) {
+  const form = btn.form;
+  const pricelist_id = btn.getAttribute('data_pricelist_id');
+  let equipment_id = btn.getAttribute('data_equipment_id');
+  if (!equipment_id) {
+    equipment_id = $j('#equipment_id-'+pricelist_id).val();
+  }
+  const data = {
+    pricelist_id: pricelist_id,
+    equipment_id: equipment_id,
+    action: 'add'
+  };
+  let id;
+  let url = '/administrator/services/';
+  if (id = btn.getAttribute('data_service_id')) {
+    data.service_id = id;
+  } else {
+    id = btn.getAttribute('data_material_id');
+    url = '/administrator/materials/';
+    data.material_id = id;
+  }
+
+  let prices = $j('#prices-'+pricelist_id+'-'+equipment_id+'-'+id);
+  if (prices.length) {
+    // If there is already a section for the equipment, add it to that section instead of creating a new one.
+    $j.get(url+'_price.html', data).done(function(data) {
+      prices.append(data);
+      update_event_bindings();
+    }).fail(function(data) {
+      alert("Failed adding price");
+      console.log(data);
+    });
+  } else {
+    $j.get(url+'_prices_per_equipment.html', data).done(function(data) {
+      $j('#pricelist-'+pricelist_id).append(data);
+      update_event_bindings();
+    }).fail(function(data) {
+      alert("Failed adding equipment price");
+    console.log(data);
+    });
 	} // end if
-} // end function add_new_price ( service_id, pricelist_id, equipment_id )
+} // end function add_new_price(btn)
 
 function check_price( element ) {
-    var form = element.form;
-    var matches;
-    if ( matches = element.name.match( /^\w+\-(\d+)$/ ) ) {
-        var id = matches[1];
-		var container = $('Price-'+id);
+  var form = element.form;
+  var matches;
+  if ( matches = element.name.match( /^\w+\-(\d+)$/ ) ) {
+    var id = matches[1];
+    var container = $('Price-'+id);
 
-		if ( ! container ) {
-			console.error("No element found for Price-"+id);
-			return;
-		}
-        if (
-            element_changed( form.elements['min-'+id] ) ||
-            element_changed( form.elements['max-'+id] ) ||
-            element_changed( form.elements['units-'+id] ) ||
-            element_changed( form.elements['cost-'+id] ) ||
-            element_changed( form.elements['markup-'+id] ) ||
-            element_changed( form.elements['price-'+id] ) ||
-            element_changed( form.elements['discount-'+id] )
-           ) {
-			container.addClassName('changed');
-        } else {
-            container.removeClassName('changed');
-        } // end if
+    if ( ! container ) {
+      console.error("No element found for Price-"+id);
+      return;
+    }
+    if (
+      element_changed( form.elements['min-'+id] ) ||
+      element_changed( form.elements['max-'+id] ) ||
+      element_changed( form.elements['units-'+id] ) ||
+      element_changed( form.elements['cost-'+id] ) ||
+      element_changed( form.elements['markup-'+id] ) ||
+      element_changed( form.elements['price-'+id] ) ||
+      element_changed( form.elements['discount-'+id] )
+    ) {
+      container.addClassName('changed');
     } else {
-        alert('Not matched' + element.name);
+      container.removeClassName('changed');
     } // end if
+  } else {
+    alert('Not matched' + element.name);
+  } // end if
 } // end function check_field
 

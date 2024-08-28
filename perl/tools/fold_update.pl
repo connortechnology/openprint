@@ -39,13 +39,17 @@ $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV
 die if ! $dbh;
 $config{db_name} = $ARGV[0];
 
-my $FoldingService = openprint::Service->find_one('name'=>'Folding');
-die if ! $FoldingService;
+my $FoldingService = openprint::Service->find_one(name=>'Folding');
+if (! $FoldingService) {
+  $FoldingService = new openprint::Service();
+  $_ = $FoldingService->save({name=>'Folding', category=>'Bindery', description=>'Folding'});
+  die $_ if $_;
+}
 
 foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=>['For Pocket Folders','Y','When Printing','When Stitching']}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
 		# Standard Folder style folding
-		if ( $Spec->name() =~ /^(\d+)PageSignatureFoldRunSpeed$/ ) {
+		if ( $Spec->name() =~ /^(\d+) Page Signature Fold Run Speed$/ ) {
 			my $pages = $1;
 			$log->debug("Upgrading simple $pages Page Fold on $$E{name}");
 			my $Fold = openprint::Fold->find_one('equipment_id'=>$E->id(),'name'=>$pages.'PageFold',type=>$pages.'PageFold',pages=>$pages);
@@ -57,8 +61,32 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 				$Fold->type( $pages . 'PageFold' );
 				$Fold->pages( $pages );
 				$Fold->max_imposition( 2 );
-				$Fold->stitching( 1 );
-				$Fold->perfectbind( 1 );
+        #$Fold->stitching();
+        #$Fold->perfectbind();
+				$_ = $Fold->save();
+				die $_ if $_;
+			} # end if
+			my $FS = new openprint::FoldSpecification();
+			$FS->fold_id( $Fold->id() );
+			$FS->runspeed( $Spec->value() );
+			$FS->interpolate( $Spec->interpolate() );
+			$_ =  $FS->save();
+			die $_ if $_;
+			$Spec->delete();
+    } elsif ( $Spec->name() =~ /^(\d+)PageSignatureFoldRunSpeed$/ ) {
+			my $pages = $1;
+			$log->debug("Upgrading simple $pages Page Fold on $$E{name}");
+			my $Fold = openprint::Fold->find_one('equipment_id'=>$E->id(),'name'=>$pages.'PageFold',type=>$pages.'PageFold',pages=>$pages);
+			if ( ! $Fold ) {
+				$log->debug("Adding simple $pages Page Fold on $$E{name}");
+				$Fold = new openprint::Fold();
+				$Fold->equipment_id( $E->id() );
+				$Fold->name( $pages.'PageFold' );
+				$Fold->type( $pages . 'PageFold' );
+				$Fold->pages( $pages );
+				$Fold->max_imposition( 2 );
+        #$Fold->stitching( 1 );
+        #$Fold->perfectbind( 1 );
 				if ( $_ = $E->Specification($pages.'PageSignatureFoldPrintingType') ) {
 					$Fold->printing_type( $_->value() );
 					$_->delete();
@@ -68,6 +96,30 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 					$Fold->makeready_overs_units( $_->units() );
 					$_->delete();
 				} # end if
+				$_ = $Fold->save();
+				die $_ if $_;
+			} # end if
+			my $FS = new openprint::FoldSpecification();
+			$FS->fold_id( $Fold->id() );
+			$FS->runspeed( $Spec->value() );
+			$FS->interpolate( $Spec->interpolate() );
+			$_ =  $FS->save();
+			die $_ if $_;
+			$Spec->delete();
+		} elsif ( $Spec->name() =~ /^(.*) Fold Run Speed/ ) {
+			my $type = $1.' Fold';
+      my $name = $type;
+      $type =~ s/\s+//g;
+			$log->debug("Upgrading simple $type Page Fold on $$E{name}");
+			my $Fold = openprint::Fold->find_one('equipment_id'=>$E->id(),'name'=>$name,type=>$type);
+			if ( ! $Fold ) {
+				$Fold = new openprint::Fold();
+				$Fold->equipment_id( $E->id() );
+				$Fold->name($name );
+				$Fold->type($type);
+				$Fold->max_imposition( 6 );
+				$Fold->stitching( 1 );
+				$Fold->perfectbind( 1 );
 				$_ = $Fold->save();
 				die $_ if $_;
 			} # end if

@@ -83,10 +83,10 @@ if ( 0 ) {
 		} # end if $i and $param{$options[$i-1]} 
 
 		if ( ! @Stocks ) {
-#$log->warn("No stocks, adding them back for $i $options[$i-1]");
+      #$log->warn("No stocks, adding them back for $i $options[$i-1]");
 			# If we have removed all stocks, then drop the filter, so we get some results.
 
-			# Tetll mem again, why we do this?
+			# Tell mem again, why we do this?
 			push @Stocks, @removed_Stocks;
 			$param{$options[$i]} = '';
 		} elsif ( DEBUG ) {
@@ -121,86 +121,93 @@ if ( 0 ) {
 		} # end if Size or other, size gets special treatment for sorting
 	} # end foreach option
 
-    my @presses = openprint::Equipment->find( 'category any'=>'Printing', useinestimating=>1 );
-	if ( @presses ) {
+  my @presses = openprint::Equipment->find( 'category any'=>'Printing', useinestimating=>1 );
+  if ( @presses ) {
 
-		my $min_width = -1;
-		my $max_width = -1;
-		my $min_height = -1;
-		my $max_height = -1;
-		foreach my $Press ( @presses ) {
-			if ( $_ = $Press->specification('Minimum Sheet Width') and ( $_ < $min_width ) or ( -1 == $min_width ) ) {
-				$min_width = $_;
-			} # end if
-			if ( $_ = $Press->specification('Maximum Sheet Width') and ( $_ > $max_width ) or ( -1 == $max_width ) ) {
-				$max_width = $_;
-			} # end if
-			if ( $_ = $Press->specification('Minimum Sheet Length') and ( $_ < $min_height ) or ( -1 == $min_height ) ) {
-				$min_height = $_;
-			} # end if
-			if ( $_ = $Press->specification('Maximum Sheet Length') and ( $_ > $max_height ) or ( -1 == $max_height ) ) {
-				$max_height = $_;
-			} # end if
-		} # end foreach Press
+    my $min_width = -1;
+    my $max_width = -1;
+    my $min_height = -1;
+    my $max_height = -1;
+    foreach my $Press ( @presses ) {
+      if ( $_ = $Press->specification('Minimum Sheet Width') and ( $_ < $min_width ) or ( -1 == $min_width ) ) {
+        $min_width = $_;
+      } # end if
+      if ( $_ = $Press->specification('Maximum Sheet Width') and ( $_ > $max_width ) or ( -1 == $max_width ) ) {
+        $max_width = $_;
+      } # end if
+      if ( $_ = $Press->specification('Minimum Sheet Length') and ( $_ < $min_height ) or ( -1 == $min_height ) ) {
+        $min_height = $_;
+      } # end if
+      if ( $_ = $Press->specification('Maximum Sheet Length') and ( $_ > $max_height ) or ( -1 == $max_height ) ) {
+        $max_height = $_;
+      } # end if
+    } # end foreach Press
 
-		if ( $param{'width'} and $min_width < $param{'width'} ) {
-			$min_width = $param{'width'};
-		} # end if
-		if ( $param{'height'} and $min_height < $param{'height'} ) {
-			$min_height = $param{'height'};
-		} # end if
+    if ( $param{'width'} and $min_width < $param{'width'} ) {
+      $min_width = $param{'width'};
+    } # end if
+    if ( $param{'height'} and $min_height < $param{'height'} ) {
+      $min_height = $param{'height'};
+    } # end if
 
-		my %results;
-		foreach my $Stock ( @Stocks ) {
-			next if ! $Stock->width();
-			if ( $Stock->type() eq 'Roll' ) {
-				$results{$Stock->width()} = 1;
-			} else {
-				my ( $width, $height ) = ( $Stock->width(), $Stock->height() );
-				# cuts paper until it fits
-				if ( $max_width and $max_height ) {
-					if ( $Stock->cuttable() ) {
-						while (
-								( $width > $max_width or $height > $max_height )
-								and
-								( $width > $max_height or $height > $max_width )
-							  ) {
-							if ( $height > $width ) {
-								$height /= 2;
-							} else {
-								$width /= 2;
-							} # end if
-						} # end while
-					} else {
-						next if ( $width > $max_width or $height > $max_height ) and ( $width > $max_height or $height > $max_width );
-					} # end if
-				} # end if
+    my %results;
+    foreach my $Stock ( @Stocks ) {
+      next if ! $Stock->width();
+      if ( $Stock->type() eq 'Roll' ) {
+        $results{$Stock->width()} = 1;
+      } elsif ($openprint::config{CutDownStocks} and $openprint::config{CutDownStocks} eq 'N') {
+        $results{$Stock->width().'x'.$Stock->height()} = 1;
+      } else {
+          my ( $width, $height ) = ( $Stock->width(), $Stock->height() );
+          # cuts paper until it fits
+          if ( $max_width and $max_height ) {
+            if ( $Stock->cuttable() ) {
+              while (
+                  ( $width > $max_width or $height > $max_height )
+                  and
+                  ( $width > $max_height or $height > $max_width )
+                  ) {
+                if ( $height > $width ) {
+                  $height /= 2;
+                } else {
+                  $width /= 2;
+                } # end if
+              } # end while
+            } else {
+              next if ( $width > $max_width or $height > $max_height ) and ( $width > $max_height or $height > $max_width );
+            } # end if
+          } # end if
 
-				if ( $min_width and $min_height ) {
-					# while the paper fits on a press
-					while (
-							( ( $width >= $min_width ) and ( $height >= $min_height ) )
-							or ( ( $width >= $min_height ) and ( $height >= $min_width ) )
-						  ) {
+          if ( $min_width and $min_height ) {
+            # while the paper fits on a press
+            while (
+                ( ( $width >= $min_width ) and ( $height >= $min_height ) )
+                or ( ( $width >= $min_height ) and ( $height >= $min_width ) )
+                ) {
 
-						last if $results{$width.'x'.$height};
-						$results{$width.'x'.$height} = 1;
-						last if ! $Stock->cuttable();
+              last if $results{$width.'x'.$height};
+              $results{$width.'x'.$height} = 1;
+              last if ! $Stock->cuttable();
 
-						$openprint::log->debug("Cut: $width x $height") if DEBUG;
-						if ( $height > $width ) {
-							$height /= 2;
-						} else {
-							$width /= 2;
-						} # end if
-					} # end while
-				} # end if
-			} # end if type
-		} # end foreach Stock
+              $openprint::log->debug("Cut: $width x $height") if DEBUG;
+              if ( $height > $width ) {
+                $height /= 2;
+              } else {
+                $width /= 2;
+              } # end if
+            } # end while
+          } # end if
+        } # end if type
+      } # end foreach Stock
 
 		@{$specs{'SheetSize'}} = sort {
 			my ( $w1, $h1 ) = split('x', $b );
 			my ( $w2, $h2 ) = split('x', $a );
+      $w1 =~ s/[^\d\.]//g;
+      $w2 =~ s/[^\d\.]//g;
+      $h1 =~ s/[^\d\.]//g;
+      $h2 =~ s/[^\d\.]//g;
+
 			return -1 if $w1 < $w2;
 			return 1 if $w1 > $w2;
 			return -1 if $h1 < $h2;
@@ -212,5 +219,6 @@ if ( 0 ) {
 	$param{'callback'} = 'cbStockFillResults' if ! $param{'callback'};
 	my $json = JSON->new;
 $log->debug($json->encode( \%specs ));
-	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{'callback'}(results);";
+	return $json->encode( \%specs ) . "\n";
+  #$param{'callback'}(results);";
 ) ?>

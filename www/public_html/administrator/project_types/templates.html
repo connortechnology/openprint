@@ -1,22 +1,25 @@
-<script type="text/javascript">
+<script>
 	function copy_template(id) {
-
-new Ajax.Updater( 'T'+id, '_template_line.html', {
-                parameters: {
-                    template_id:    id,
-                    action:         'C'
-                },
-                insertion: 'after',
-                } );
-}
-function delete_template(id) {
-new Ajax.Updater( 'T'+id, '_template_line.html', {
-                parameters: {
-                    template_id:    id,
-                    action:         'X'
-                }
-                } );
-}
+      new Ajax.Updater( 'T'+id, '_template_line.html', {
+          parameters: {
+              template_id:    id,
+              action:         'C'
+            },
+          insertion: 'after',
+        } );
+    }
+  function delete_template(id) {
+      new Ajax.Updater( 'T'+id, '_template_line.html', {
+          parameters: {
+              template_id:    id,
+              action:         'X'
+            }
+        } );
+    }
+  function select_project_type(ddm) {
+      LoadContent('Templates', '_templates.html', ddm.form.serialize());
+      history.replaceState({}, "", "?ddmProjectType="+$j(ddm).val());
+    }
 </script>
 <form id="f1" name="f1" method="post" action="templates.html" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction" value=""/>
@@ -24,7 +27,7 @@ new Ajax.Updater( 'T'+id, '_template_line.html', {
 		<ul>
 		<li>
 			<label>Project Type</label>
-			<select id="ddmProjectType" name="ddmProjectType" size="1" onchange="LoadContent('Templates','_templates.html', this.form.serialize() );">
+      <select id="ddmProjectType" name="ddmProjectType" size="1" on_change_this="select_project_type">
 				<option value="">select one</option>
 				<? echo ( make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)') ], $param{ddmProjectType} ) ) ?>
 			</select>

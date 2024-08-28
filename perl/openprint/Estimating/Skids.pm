@@ -42,7 +42,7 @@ my %variables = (
 	'OverrideItemsPerPackage1'=>['save'], 'OverrideItemsPerPackage2'=>['save'], 'OverrideItemsPerPackage3'=>['save'],
 	'txtPackageWeight1' => ['save','output'], 'txtPackageWeight2' => ['save','output'], 'txtPackageWeight3' => ['save','output'],
 	'totalWeight1' => ['save','output'],'totalWeight2' => ['save','output'],'totalWeight3' => ['save','output'],
-	'alert'=>['output'], 
+	'alert'=>['save','output'], 
 	'hdnBreakdown1'=>['output'], 'hdnBreakdown2'=>['output'], 'hdnBreakdown3'=>['output'],
 
 );
@@ -107,6 +107,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	$$specs{Status} = 'calculated';
+  $$specs{alert} = '';
 
 	$log->debug("********************** START OF CALC SKIDS type:($$specs{ServiceType})**********************") if DEBUG;
 	my $Project = new openprint::Project($project_index);
@@ -208,9 +209,15 @@ sub calc {
 				$$results{breakdown} .= '<fieldset><legend>'.$Material->name().':'.$width.'x'.$height.'x'.$depth.'</legend>';
 
 # Make sure it's not too heavy
-				my $items_by_weight = $item_weight ? int($Material->specification('Maximum Weight') / $item_weight) : 0;
-				$$results{breakdown} .= sprintf('Items by weight: Max %d / item weight %.3f = %d per package<br/>',
-						$Material->specification('Maximum Weight'), $item_weight, $items_by_weight );
+        my $max_weight = $Material->specification('Maximum Weight');
+				my $items_by_weight = 0;
+        if ($max_weight) {
+          $items_by_weight = $item_weight ? int($max_weight / $item_weight) : 0;
+          $$results{breakdown} .= sprintf('Items by weight: Max %d / item weight %.3f = %d per package<br/>',
+            $Material->specification('Maximum Weight'), $item_weight, $items_by_weight );
+        } else {
+          $$results{breakdown} .= 'Please consider setting a Maximum Weight setting on this carton.<br/>';
+        }
 
 				if ($width and $height and $depth) {
 					my $setup = openprint::imposition::fit($item_width, $item_height, $width, $height);
@@ -418,7 +425,7 @@ sub summary {
 
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	my $package = 'skid';
-	if ( $$specs{ServiceType} eq 'Gaylords' ) {
+	if ( $$specs{ServiceType} and ($$specs{ServiceType} eq 'Gaylords')) {
 		$package = 'gaylord';
 	}
 	my $summary;
@@ -426,15 +433,16 @@ sub summary {
 	if ($qty_index) {
 		my $services = $Project->services();
 		my $Material = new openprint::Material( $$specs{'ddmPackageType'.$qty_index} );
+    $package = $Material->name() if $Material->name();
 
     $$specs{'totalWeight'.$qty_index} = 0 if ! defined $$specs{'totalWeight'.$qty_index};
 
 		if ( $$services{BulkSkids} ) {
 			# The purpose of this is to put all the breakdown in the skids line and leave the other packaging summaries empty
 			if ( $$services{BulkSkids}[0] == $service_id ) {
-				if ( !$$specs{items_per_package} ) {
-					$summary .= 'around '.$$specs{"txtItemsPerPackage$qty_index"}.
-						(($$specs{item_type} and ($$specs{item_type} eq 'FloatSheets')) ? ' flat sheets' : ' product').
+				if ($$specs{items_per_package}) {
+					$summary .= 'around '.$$specs{items_per_package}.
+						(($$specs{item_type} and ($$specs{item_type} eq 'FlatSheets')) ? ' flat sheets' : ' product').
 						' per '.$package.'<br/>';
 				}
 				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $package . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
@@ -471,7 +479,7 @@ sub summary {
 							Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
 					);
 				} # end if
-			} else {
+			} elsif ($$specs{"txtPackageQuantity$qty_index"}) {
 				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $Material->name() . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
 				my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
 				if ( $g > 1000 ) {

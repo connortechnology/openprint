@@ -1,8 +1,8 @@
 <? eval (
 	@{$$variable{Products}} = ();
 	foreach my $Product ( openprint::Product->find( 
-		ssi::date_filter( '/product/search.html?created_on_end','created_on <=' ),
-		ssi::date_filter( '/product/search.html?created_on_start','created_on >=' ),
+		date_filter( '/product/search.html?created_on_end','created_on <=' ),
+		date_filter( '/product/search.html?created_on_start','created_on >=' ),
 			( $session{'/product/search.html?category_id'} ? ( category_id => $session{'/product/search.html?category_id'} ) : () ),
 			order				=> 'created_on',
 		) ) {

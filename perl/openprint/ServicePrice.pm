@@ -7,7 +7,7 @@ our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'Service_Prices';
 $serial = 'service_prices_id_seq';
 
@@ -54,6 +54,8 @@ $serial = 'service_prices_id_seq';
 	cost	=>	[ 's/[^\d\.\-]//g' ],
 	markup	=>	[ 's/[^\d\.\-]//g' ],
 	price	=>	[ 's/[^\d\.\-]//g' ],
+	units					=>	[ 's/^\s+//', 's/\s+$//' ],
+	range_units					=>	[ 's/^\s+//', 's/\s+$//' ],
 );
 
 sub next {
@@ -117,6 +119,25 @@ sub id_string {
 		}
 	} # end if
 	return $Price->Pricelist()->name() . ' '. $price_desc . ' on ' . $Price->Equipment()->strid();
+}
+
+sub to_string {
+  my $Price = $_[0];
+  my $price_desc = '';
+  if ( ! ( $Price->min() or $Price->max() ) ) {
+    $price_desc .= 'all quantities';
+  } else {
+    if ( $Price->min() ) {
+      $price_desc .= 1*$Price->min() . ' ';
+    }
+    $price_desc .= 'up';
+    if ( $Price->max() ) {
+      $price_desc .= ' to ' . 1*$Price->max();
+    }
+  } # end if
+  return $Price->Pricelist()->name() . ' '. $price_desc . ' on ' . $Price->Equipment()->strid() .sprintf( '%s to %s $%.2f*%.2f% = $%.2f%s<br/>',
+            $Price->min(), $Price->max(), $Price->cost(), $Price->markup(), $Price->price(), $Price->units() );
+
 }
 
 1;

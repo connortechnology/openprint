@@ -1,7 +1,7 @@
 <table class="List">
 	<tr>
 		<th class="payment_id">ID</th>
-		<th class="Date">Received On</th>
+		<th class="DateInput">Received On</th>
 		<th class="TransactionID">Transaction ID</th>
 		<th class="Method">Method</th>
 		<th class="Memo">Memo</th>
@@ -15,7 +15,7 @@
 			$html .= sprintf(q`
 				<tr%1$s> 
 					<td class="payment_id">%2$d</td>
-					<td class="Date">%3$s</td>
+					<td class="DateInput">%3$s</td>
 					<td class="TransactionID">%4$s</td>
 					<td class="Method">%5$s</td>
 					<td class="Memo">%6$s</td>
@@ -33,7 +33,7 @@
 	) ?>
 	<tr class="totals">
 		<td class="payment_id">New</td>
-		<td class="Date"><? echo ( date_select('received_on', [ Date::Calc::Today() ] ); ) ?></td>
+		<td class="DateInput"><? echo ( date_select('received_on', [ Date::Calc::Today() ] ); ) ?></td>
 		<td class="TransactionID"><input type="text" name="transaction_id" /></td>
 		<td class="Method">
 <? echo ( ssi::select( [ map { $_, $_ } ( '', 'Cash','Cheque','Email Transfer','Paypal','Work In Trade' ) ], undef, { id=>'method', name=>'method' } ); ) ?>

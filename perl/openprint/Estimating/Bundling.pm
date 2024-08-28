@@ -39,9 +39,10 @@ my @variables = (
 	'txtPackageQuantity1', 'txtPackageQuantity2', 'txtPackageQuantity3',
 	'rdbCardboardBacking',
 	'type_id', 'cross_type_id',
+  'alert',
 );
 sub variables {
-    return @variables;
+  return @variables;
 }
 
 my @no_outputs = (
@@ -61,6 +62,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+  $$specs{alert} = '';
 	if ( ! $$services{''} ) {
 		$$specs{alert} .= 'Unable to find project service.<br/>';
 		return $$specs{Status} = 'uncalculated';
@@ -95,7 +97,7 @@ sub calc {
 		} else {
 			$$specs{alert} .= 'Please enter the # of items in each ' . $ServiceType->name();
 		} # end if
-        return $$specs{Status} = 'uncalculated';
+    return $$specs{Status} = 'uncalculated';
 	} # end if
 	if ( ! $$specs{rdbCardboardBacking} ) {
 		$$specs{alert} = 'Please select whether you need cardboard backing.';
@@ -108,12 +110,12 @@ sub calc {
 	my $Service = openprint::Service->find_one( name=>$ServiceType->name() );
 	my $minCharge = openprint::service::get_price( $ServiceType->name().'Minimum', undef, undef );
 	if ( ! $minCharge ) {
-		$log->error("No minimum charge let's do debug $$specs{ServiceType} " . $ServiceType->to_string() );
+		$log->error('No minimum charge lets do debug '.$$specs{ServiceType}.' '.$ServiceType->to_string());
 		my $Minimum = openprint::Service->find_one( name=>$ServiceType->name().'Minimum' );
 		if ( $Minimum ) {
-			$log->error( "Service: " . $Minimum->to_string() );
+			$log->error('Service: ' . $Minimum->to_string());
 		} else {
-			$log->error("No ServiceMinimum ");
+			$log->error('No ServiceMinimum');
 		} # end if
 	}
 	my @Materials;
@@ -149,6 +151,8 @@ sub calc {
 		@CrossMaterials = @Materials;
 		$CrossMaterial = $Material;
 	}
+  my $MaterialService = openprint::Service->find_one(name=>$Material->name()) if $Material;
+  my $MaterialMRService = openprint::Service->find_one(name=>$Material->name().'MakeReady') if $Material;
 	
 	if ( ! ( $$specs{cross_bands_per_package} or $$specs{bands_per_package} ) ) {
 		$$specs{alert} .= 'Please enter the # bands.<br/>';
@@ -170,16 +174,16 @@ sub calc {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{Signature}[0] );
 			if ( $$sig_specs{Versions} ) {
 				my $versions_per_package = int( $qty / $$sig_specs{Versions} );
-$openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions} = $versions_per_package");
+        $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions} = $versions_per_package");
 				if ( $versions_per_package < $$specs{txtItemsPerPackage} ) {
 					$$specs{txtItemsPerPackage} = $versions_per_package;
 				} # end if
 			} else {
 				# No versions?
-				$openprint::log->debug("No versions");
+        #$openprint::log->debug('No versions');
 			} # end if
 		} else {
-			$openprint::log->debug("No signatnures");
+			$openprint::log->debug('No signatnures');
 		} # end if
 		my $package_qty = $$specs{txtItemsPerPackage} ? ceil( $qty/$$specs{txtItemsPerPackage} ) : 0;
 		my $m_qty = $$specs{txtItemsPerPackage} ? ceil( 1000/$$specs{txtItemsPerPackage} ) : 0;
@@ -209,7 +213,40 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 			$unitPrice += $ServicePrice{Total};
 			$mprice += $ServicePrice{MPrice};
 		} # end if
+
+    if ($MaterialService) {
+      my %MaterialServicePrice = $MaterialService->get_price( $qty, undef );
+      if ( %MaterialServicePrice ) {
+        if ( $MaterialServicePrice{units} eq 'per m' ) {
+          $MaterialServicePrice{MPrice} = $MaterialServicePrice{Price};
+          $MaterialServicePrice{Total} = $MaterialServicePrice{Price} * $qty / 1000;
+          $$specs{'hdnBreakdown'.$qty_index} .= $Material->description().sprintf(' $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @MaterialServicePrice{'Price','units','Total'}, $qty );
+        } elsif ( $MaterialServicePrice{units} eq 'each' ) {
+          $MaterialServicePrice{MPrice} = $MaterialServicePrice{Price} * 1000;
+          $MaterialServicePrice{Total} = $MaterialServicePrice{Price} * $qty;
+          $$specs{'hdnBreakdown'.$qty_index} .= $Material->description().sprintf(' $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @MaterialServicePrice{'Price','units','Total'}, $qty );
+        } elsif ( $MaterialServicePrice{units} eq 'per bundle' or $MaterialServicePrice{units} eq 'per package') {
+          $MaterialServicePrice{Total} = $MaterialServicePrice{Price} * $package_qty;
+          $MaterialServicePrice{MPrice} = $MaterialServicePrice{Price} * $m_qty;
+          $$specs{'hdnBreakdown'.$qty_index} .= $Material->description().sprintf(' $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @MaterialServicePrice{'Price','units','Total'}, $package_qty );
+        } else {
+          $$specs{'hdnBreakdown'.$qty_index} .= sprintf('No units set ffor service %s (%s)<br/>', $Material->description(), $MaterialServicePrice{units} );
+          $MaterialServicePrice{Total} = $MaterialServicePrice{Price} * $package_qty;
+        } # end if
+        $unitPrice += $MaterialServicePrice{Total};
+        $mprice += $MaterialServicePrice{MPrice};
+      } # end if
+    }
 		$price = $unitPrice + $makeReady;
+
+    if ($MaterialMRService) {
+      my %MaterialMRServicePrice = $MaterialMRService->get_price( $qty, undef );
+      if ( %MaterialMRServicePrice ) {
+        $MaterialMRServicePrice{Total} = $MaterialMRServicePrice{Price};
+        $$specs{'hdnBreakdown'.$qty_index} .= $MaterialMRService->description().sprintf(' $%.2f<br/>', $MaterialMRServicePrice{Total});
+        $price += $MaterialMRServicePrice{Total};
+      } # end if
+    }
 
 		if ( $$specs{rdbCardboardBacking} eq 'Y' ) {
 			if ( $Cardboard ) {

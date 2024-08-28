@@ -615,57 +615,68 @@ sub change_password_confirmation {
 } # sub change_password
 
 sub login {
-	if ( $param{btnFunction} eq 'Forgotten Password' ) {
-    if ( $config{encrypt_passwords} ) {
-      if (!$param{email}) {
-        $variable{error} .= 'Please enter your email address and try again.<br/>';
-        return;
-      } 
-      # Generate magic link and send it
-      foreach my $User ( openprint::User->find_one(email=>$param{email}) ) {
-        if (!$User) {
-          $variable{error} .= 'User not found matching '.$param{email}.'<br/>';
-          next;
-        }
-        if ($User->web_active() ne 'Y') {
-          $variable{error} .= 'User '.$User->email(). ' is not activated'.$User->web_active().'. Please contact your CSR.<br/>';
-          next;
-        }
-        my %info;
-        $info{User} = $User;
-        $info{auth_code} = openprint::login::auth_code($User);
-        if (!$info{auth_code}) {
-          $variable{error} .= 'Unable to generate auth code for User '.$User->email(). '. Please contact your CSR.<br/>';
-          next;
-        }
+  if ($param{btnFunction}) {
+    if ( $param{btnFunction} eq 'Forgotten Password' ) {
+      if ( $config{encrypt_passwords} ) {
+        if (!$param{email}) {
+          $variable{error} .= 'Please enter your email address and try again.<br/>';
+          return;
+        } 
+        # Generate magic link and send it
+        foreach my $User ( openprint::User->find_one(email=>$param{email}) ) {
+          if (!$User) {
+            $variable{error} .= 'User not found matching '.$param{email}.'<br/>';
+            next;
+          }
+          if ($User->web_active() ne 'Y') {
+            $variable{error} .= 'User '.$User->email(). ' is not activated'.$User->web_active().'. Please contact your CSR.<br/>';
+            next;
+          }
+          my %info;
+          $info{User} = $User;
+          $info{auth_code} = openprint::login::auth_code($User);
+          if (!$info{auth_code}) {
+            $variable{error} .= 'Unable to generate auth code for User '.$User->email(). '. Please contact your CSR.<br/>';
+            next;
+          }
 
-        my $email_template = ssi::slurp_content('/email_template.html');
+          my $email_template = ssi::slurp_content('/email_template.html');
 
-        $info{ReplacementText} = ssi::include('/email_content/magic_link.html', \%info);
-        my $body = ssi::variable_substitution(\$email_template, \%info);
+          $info{ReplacementText} = ssi::include('/email_content/magic_link.html', \%info);
+          my $body = ssi::variable_substitution(\$email_template, \%info);
 
-        my $Email = new openprint::Email();
-        $Email->html_body($body);
-        $Email->send(
-          FROM  => ($config{HelpDeskEmail} ? $config{HelpDeskEmail} : 'iconnor@connortechnology.com'),
-          TO  => $User->email(),
-          SUBJECT => 'Login Link',
-        );
-        $variable{information} .= 'An email with a magic login link has been sent to '.$User->email().'<br/>';
+          my $Email = new openprint::Email();
+          $Email->html_body($body);
+          $Email->send(
+            FROM  => ($config{HelpDeskEmail} ? $config{HelpDeskEmail} : 'iconnor@connortechnology.com'),
+            TO  => $User->email(),
+            SUBJECT => 'Login Link',
+          );
+          $variable{information} .= 'An email with a magic login link has been sent to '.$User->email().'<br/>';
+        }
+      } else {
+        openprint::login::forgotten_password();
       }
+    } elsif ( $param{btnFunction} eq 'Login') {
+      if ( !($param{email}  and $param{password})) {
+        $variable{error} = 'Please enter the email address and password.';
+        return;
+      } # end if
+      openprint::login::logout() if $session{user_id};
+      openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
+    } # end if
+  } elsif ($param{action}) {
+    if ($param{action} eq 'login') {
+      if ( !($param{email} and $param{password})) {
+        $variable{error} = 'Please enter the email address and password.';
+        return;
+      } # end if
+      openprint::login::logout() if $session{user_id};
+      openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
     } else {
-		  openprint::login::forgotten_password();
+      $log->error("Unknown action $param{action}");
     }
-	} elsif ( $param{btnFunction} eq 'Login' or $param{action} eq 'login') {
-		if ( ! $param{email} ) {
-			$variable{error} = 'Please enter the email address of the account to retrieve.';
-			return;
-		} # end if
-		if ( $session{user_id} ) {
-			openprint::login::logout();
-		} # end if
-		openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
-	} # end if
+  } # end if btnFunction or action
 } # end sub login
 
 sub logout {

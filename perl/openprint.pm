@@ -101,6 +101,7 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 				} else {
 					switch_company( $C );
 				} # end if
+        undef (@param{'btnFunction','ddmCompany'});
 			} # end if
 		} elsif ( $param{btnFunction} eq 'SelectPricelist' ) {
 			my $Pricelist = new openprint::Pricelist( $param{pricelist_id} );
@@ -108,6 +109,7 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 				$Pricelist = openprint::Pricelist::get_current();
 			} # end if
 			$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
+      undef (@param{'btnFunction','pricelist_id'});
 		} # end if
 	} # end if
 
@@ -170,6 +172,7 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
   my $ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
   if ($ip) {
     my $safe_ip = openprint::Host_Interface->transform(ip=>$ip);
+    # FIXME :ipv6
     if ($safe_ip and ($safe_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
       openprint::Host_Interface->lock();
       my @Interfaces = openprint::Host_Interface->find(ip=>$safe_ip);

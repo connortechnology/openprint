@@ -1,14 +1,18 @@
+li input[type="text"] {
+  width: 100%;
+}
 #specifications .buttons {
-    width: 150px;
+    width: 175px;
     text-align: right;
 }
 #specifications td.name span,
 #specifications td.min span,
 #specifications td.max span,
 #specifications td.units span,
+#specifications td.range_units span,
 #specifications td.value span {
     width: 100%;
-    float: left;
+    display: block;
 }
 #specifications .name {
     text-align: left;
@@ -48,7 +52,7 @@
 .run_overs input[type="text"],
 .imposition input[type="text"] ,
 .imposition input[type="number"] {
-	width: 55px;
+	width: 65px;
 }
 .run_overs select ,
 .make_ready_overs select {
@@ -65,4 +69,38 @@ table .EquipmentName,
 table .Description,
 table .Services {
 	text-align: left;
+}
+
+.Period,
+.Supplier {
+display: none;
+}
+
+table .PeriodStart, table .PeriodEnd, table .Period {
+  width: 255px;
+  text-align: left;
+}
+table .Range {
+  text-align: center;
+}
+table .Range_Units {
+  text-align: center;
+  width: 200px;
+}
+
+table .Units {
+  text-align: center;
+  width: 200px;
+}
+table .Discount {
+  text-align: center;
+}
+table .Cost,
+table .Price,
+table .Markup {
+  width: 110px;
+  text-align: center;
+}
+#Prices table .buttons {
+  width: 80px;
 }

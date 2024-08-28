@@ -26,6 +26,7 @@ require sql;
 my @variables = (
 		'alert',
 		'txtPageQuantity',
+    'txtCalliper',
 		'ddmEquipment1',
 		'ddmEquipment2',
 		'ddmEquipment3',
@@ -58,7 +59,7 @@ sub neccessary {
 
 	if ( $$services{''} ) {
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		if ( $$printing_specs{'rdbTemplateType'} eq 'CornerStitching' ) {
+		if ( $$printing_specs{rdbTemplateType} eq 'CornerStitching' ) {
 			return 1;
 		} # end if
 	} # end if
@@ -73,35 +74,50 @@ sub neccessary {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
+  $$specs{alert} = '';
 	my $status = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
+  my $ServiceType = $Project->ServiceType($service_index);
 	my %services = $Project->get_services();
 
 	if ( ! $services{''} ) {
-		$$specs{'alert'} = 'No Project service found.<br/>';
+		$$specs{alert} = 'No Project service found.<br/>';
 		return 'uncalculated';
 	} # end if
 
 	my $printing_service_index = $services{''}[0];
-    my $printing_specs = openprint::service::get_specs_ref( $Project, $printing_service_index );
-	if ( $$printing_specs{'txtTotalPageQuantity'} <= 0 ) {
-		$$specs{'alert'} .= 'Unknown # of pages<br/>';
+  my $printing_specs = openprint::service::get_specs_ref( $Project, $printing_service_index );
+	if ( $$printing_specs{txtTotalPageQuantity} <= 0 ) {
+		$$specs{alert} .= 'Unknown # of pages<br/>';
 		$status = 'uncalculated';
 	} # end if
 	@$specs{'txtPageQuantity','txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtTotalPageQuantity','txtFinalWidth','txtFinalHeight'};
+  $$specs{txtCalliper} = $Project->calliper();
 
-	my @possible_equipment;
 
 	my $error = '';
-	my @all_equipment = openprint::Equipment->find( Specifications => {'Stitching Capable'=>'Y'}, useinestimating=>1, order=>'strName');
+	my @all_equipment = openprint::Equipment->find(
+    'servicetype_id any' => $ServiceType->id(),
+    useinestimating=>1, order=>'strName');
+	if ( ! @all_equipment ) {
+		# alert the user that no equipment is good.
+		$$specs{alert} = "We have no equipment for Corner Stitching.<br/>";
+    return $$specs{Status} = 'uncalculated';
+	} # end if
 
+	my @possible_equipment;
 	foreach my $Equipment ( @all_equipment ) {
-
-		my $max_pages = $Equipment->specification('Maximum Pages', undef );
-		if ( $max_pages and $$printing_specs{'txtTotalPageQuantity'} > $max_pages ) {
+		my $max_pages = $Equipment->specification('Stitching Maximum Pages', undef );
+		$max_pages = $Equipment->specification('Maximum Pages', undef ) if ! $max_pages;
+		if ( $max_pages and $$printing_specs{txtTotalPageQuantity} > $max_pages ) {
 			$error .= "For " . $Equipment->name() . ": Only supports $max_pages pages.\n";
-		} elsif ( my $reason = $Equipment->fits( @$printing_specs{'txtFinalWidth','txtFinalHeight'}, $$specs{'txtCalliper'} ) ) {
+		} elsif ( my $reason = $Equipment->fits( @$printing_specs{'txtFinalWidth','txtFinalHeight'} ) ) {
+			$error .= "For " . $Equipment->name() . ":\n". $reason  . "\n";
+		} elsif ( $_ = $Equipment->Specification('Maximum Finished Calliper')
+        and $$_{value} and
+      ($$_{value} < $$specs{txtCalliper}) ) {
+      my $reason  = "Project is too thick. Max Finished Calliper $$_{value} < $$specs{txtCalliper}\n";
 			$error .= "For " . $Equipment->name() . ":\n". $reason  . "\n";
 		} else {
 			push @possible_equipment, $Equipment
@@ -110,7 +126,7 @@ sub calc {
 
 	if ( ! @possible_equipment ) {
 		# alert the user that no equipment is good.
-		$$specs{'alert'} = "Our stitching equipment cannot run this project, for the following reasons:\n$error\n Please only print flat sheets and contact another bindery.";
+		$$specs{alert} = "Our stitching equipment cannot run this project, for the following reasons:\n$error\n Please only print flat sheets and contact another bindery.";
 	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -121,6 +137,10 @@ sub calc {
 
 		my @equipment = ();
 		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
+      if (!$$specs{"ddmEquipment$qty_index"}) {
+        $$specs{alert} .= 'No equipment chosen for quantity '.$qty_index.'<br/>';
+        next;
+      }
 			@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment$qty_index"} ) );
 		} else {
 			@equipment = @possible_equipment;
@@ -129,41 +149,52 @@ sub calc {
 		foreach my $Equipment ( @equipment ) {
 
 			my %price = {
-				'MakeReady' => 0,
-				'Service'	=> 0,
-				'txtPrice'	=> 0,
-				'RunTime'	=> 0,
+				MakeReady => 0,
+				Service	  => 0,
+				txtPrice	=> 0,
+				RunTime	  => 0,
 			};
 
-			$price{'MakeReady'} = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', undef, $Equipment );
+			$price{MakeReady} = openprint::service::get_price( $$specs{ServiceType}.'MakeReady', undef, $Equipment );
+			$price{RunTime} += $Equipment->specification( 'Make Ready', undef );
 
-			$price{'RunTime'} += $Equipment->specification( 'Make Ready', undef );
+      my $runspeed = $Equipment->Specification($$specs{ServiceType}.'Run Speed');
+      $runspeed = $Equipment->Specification('Run Speed') if !$runspeed;
+      $runspeed = $Equipment->Specification('Units Per Hour') if ! $runspeed;
+      if (!$runspeed) {
+        $$specs{alert} .= "No run speed set for $$Equipment{strid}<br/>";
+        next;
+      }
+      if (($$runspeed{min} or $$runspeed{max}) and ! $$runspeed{range_units}) {
+        $$specs{alert} .= "No run speed range units set for $$Equipment{strid}<br/>";
+      } 
 
-# Calculate Last Pass
-			my $unitsPerHour = $Equipment->specification( 'Units Per Hour', undef );
-			my $runtime = $$specs{"txtQuantity$qty_index"}/$unitsPerHour; # in seconds
-				$price{'RunTime'} += $runtime * 360;
-			my %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, undef, $Equipment );
-			if ( $servicePrice{'units'} eq 'per m' ) {
-				$price{'Service'} += $servicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index}/1000;
-			} elsif ( $servicePrice{'units'} eq 'per hour' ) {
-				$price{'Service'} += $servicePrice{'Price'} * $runtime;
+			my $runtime = $$specs{"txtQuantity$qty_index"}/$$runspeed{value} if $runspeed and $$runspeed{value};
+			my %servicePrice = openprint::service::get_price_object( $$specs{ServiceType}, undef, $Equipment );
+			if ( $servicePrice{units} eq 'per m' ) {
+				$price{Service} += $servicePrice{Price} * $$specs{'txtQuantity'.$qty_index}/1000;
+			} elsif ( $servicePrice{units} eq 'per hour' ) {
+        if (!$runtime) {
+          $$specs{alert} .= "Unable to calculate runtime on $$Equipment{strid}.<br/>";
+          next;
+        }
+				$price{Service} += $servicePrice{Price} * $runtime;
 			} else {
-				$log->debug("Unknown Unit Type: $servicePrice{'units'}");
+				$log->debug("Unknown Unit Type: $servicePrice{units}");
 			} # end if
 
-			$price{'txtPrice'} = $price{'MakeReady'} + $price{'Service'};
+			$price{txtPrice} = $price{MakeReady} + $price{Service};
 
-			if ( ! $bestPrice{'txtPrice'} or $price{'txtPrice'} < $bestPrice{'txtPrice'} ) {
+			if ( ! $bestPrice{txtPrice} or $price{txtPrice} < $bestPrice{txtPrice} ) {
 				$bestEquipment = $Equipment;
 				%bestPrice = %price;
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity: ' . $$specs{"txtQuantity$qty_index"} .
 				", Equipment: " . $Equipment->name() . "\n";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $price{'RunTime'} ) . ",\n";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $price{'MakeReady'}).",\n";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Service: $' . sprintf( '%.2f', $price{'Service'}).",\n";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($price{'txtPrice'}))."\n";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $price{RunTime} ) . ",\n";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $price{MakeReady}).",\n";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Service: $' . sprintf( '%.2f', $price{Service}).",\n";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($price{txtPrice}))."\n";
 		} # end foreach
 		if ( ! $bestEquipment ) {
 			$status = 'uncalculated';
@@ -172,10 +203,10 @@ sub calc {
 			$$specs{"ddmEquipment$qty_index"} = $bestEquipment->id();
 		} # end if
 
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, 
-				( $bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} ) * (1+$Project->markup()/100) );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'txtPrice'} * (1+$Project->markup()/100) );
-		$$specs{"txtRunTime$qty_index"} = $bestPrice{'RunTime'};
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, 
+				( $bestPrice{txtPrice}/$$specs{"txtQuantity$qty_index"} ) * (1+$Project->markup()/100) );
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $bestPrice{txtPrice} * (1+$Project->markup()/100) );
+		$$specs{"txtRunTime$qty_index"} = $bestPrice{RunTime};
 	} # end foreach
 	$log->debug("END CORNER STITCHING!!!!!!!");
 	return $status;

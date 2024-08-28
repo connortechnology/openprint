@@ -1,48 +1,18 @@
 <script src="<?hash_link(/javascripts/service.js)?>"></script>
 <script>
-  function calc( formName, force ) {
-    var form = getFormObj( formName );
-    if ( gettingNewPrice ) {
-      if ( timeout ) {
-        clearTimeout( timeout );
-      } // end if
-      if ( ! force ) {
-        setTimeout( "calc('"+formName+"');", 1000 );
-        return;
-      } // end if
-    } // end if
-    timeout = null;
-    gettingNewPrice = true;
-
-    var h = $H(form.serialize(true));
-    h.set('callback', 'cbFoldingResults' );
-    h.set('ServiceType', 'Folding');
-
-    h.each(function(pair) {
-      if ( pair.value == '' )
-        h.unset(pair.key);
-      if ( pair.key == 'btnFunction' )
-        h.unset(pair.key);
-      if ( pair.key == 'alert' ) 
-        h.unset(pair.key);
-    });
-
-    new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-  }
-  function cbFoldingResults( results ) {
-
-    var form = getFormObj('f1');
+  results_callback = function cbFoldingResults(results) {
+    const form = getFormObj('f1');
 
     cbFillResults(results);
-		var re = /FoldQty\-(\d+)\-(\d+)\-(\d+)/;
-		for ( var index = 0, len = form.elements.length; index < len; index += 1 ) {
-			var key = form.elements[index].id;
+		const re = /FoldQty\-(\d+)\-(\d+)\-(\d+)/;
+		for ( let index = 0, len = form.elements.length; index < len; index += 1 ) {
+			const key = form.elements[index].id;
 
-			var matches = re.exec( key );
+			const matches = re.exec( key );
 			if ( matches ) {
-				var f = $('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
+				const f = $('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
 				if ( f ) {
-					var value = form.elements[index].value;
+					const value = form.elements[index].value;
 					// always leave the first or any with a value
 					if ( matches[3] == 1 || value > 0 ) {
 						f.show();
@@ -54,17 +24,16 @@
 				} // end if f
 			} // end if matches
 		} // end foreach pair
-
 	} // end function cbFoldingResults
 
 function show_extra_fold( signature, qty_index ) {
-	var f = $('Fold-'+signature+'-'+qty_index+'-'+'2');
+	const f = $('Fold-'+signature+'-'+qty_index+'-'+'2');
 	f.show();
 }
 function Fold_onchange( element, signature, qty_index, index ) {
-	var spec = signature + '-' + qty_index + '-' + index;
-	var next_index = 1+parseInt(index);
-	var do_calc = 1;
+	const spec = signature + '-' + qty_index + '-' + index;
+	const next_index = 1+parseInt(index);
+	const do_calc = 1;
 
 	if ( element.type == 'select-one' ) {
 		if ( ! element.value ) {
@@ -100,9 +69,9 @@ function Fold_onchange( element, signature, qty_index, index ) {
 
 			foreach my $ss_id ( $Project->signatures({sort=>1}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-				$html .= "<fieldset><legend>For Form $$sig_specs{SignatureIndex}:";
-				$html .= openprint::service::summary( $Project, $ss_id );
-				$html .= '</legend><ul><li><label>Printed</label>';
+        $html .= "<fieldset><legend>For Form $$sig_specs{SignatureIndex}:</legend>";
+        $html .= '<ul><li>'.openprint::service::summary( $Project, $ss_id ).'</li>';
+				$html .= '<li><label>Printed</label>';
 
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$html .= '<div class="'.$$variable{Columns}.'Columns">';
@@ -147,7 +116,7 @@ Override</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{'chkOverr
 						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
 							$html .= sprintf('
               <label class="radio-inline" for="chkOverrideFold-%1$d-%2$d">
-              <input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}else{show_extra_fold(%1$d,%2$d);};" />
+              <input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if (this.checked) { show_extra_fold(%1$d,%2$d); }; calc(this.form.name);" />
                 Override Folds</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"chkOverrideFold-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
 							$html .= sprintf('
               <label class="radio-inline" for="chkOverrideLimits-%1$d-%2$d">
@@ -175,7 +144,6 @@ Override</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{'chkOverr
 					} # end if imposition
 
 					$html .= '</div>';
-
 				} # end foreach qty_index
 				$html .= '</li>';
 				$html .= '</ul></fieldset>';

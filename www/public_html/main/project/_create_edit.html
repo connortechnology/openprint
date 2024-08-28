@@ -67,78 +67,29 @@
 		return '<input type="hidden" name="rdbMode" value="' . $$variable{rdbMode} . '" />';
 	) ?>
 <? endif ( @{$$variable{Modes}} > 1 ) ?>
+<!-- Step 2 questions -->
+<div id="step2Questions" <? echo ( 'style="display:none;"' if $$variable{rdbMode} ne 'Detailed' ) ?>>
 
-<? eval (  @{$$variable{OptionServiceTypes}} = openprint::ServiceType->find( category=>'Options', create_visible=>1, order=>'sorting,lower(description)'); ) ?>
-<? if ( @{$$variable{OptionServiceTypes}} ) ?>
-<fieldset><legend>Options</legend>
-	<ul>
-		<? echo ( 
-			my $html = '';
-			foreach my $ServiceType (@{$$variable{OptionServiceTypes}}) {
-				$html .= sprintf('<li><input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %2$s /> <label for="chkServices%1$s">%3$s</label></li>', 
+<?echo(
+my $html = '';
+foreach my $category ( openprint::ServiceType_Category->find(order=>'sorting,lower(name)')) {
+  next if $category->name() eq 'Packaging';
+  next if $category->name() eq 'Shipping';
+
+  my @service_types = openprint::ServiceType->find( category_id=>$category->id(), create_visible=>1, order=>'sorting,lower(description)');
+  next if ! @service_types;
+  $html .= '<fieldset><legend>What '.lc $category->name().' services are required for the project?</legend><ul>';
+  foreach my $ServiceType (@service_types) {
+		$html .= sprintf('<li><input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" on_click_this="service_onclick" %2$s /> <label for="chkServices%1$s">%3$s</label></li>', 
 				$ServiceType->name(),
 				(sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ? 'checked="checked"' : ''),
 				writeTip( $ServiceType->description() ),
 				);
 			} # end foreach Service Type
+	$html .= '</ul></fieldset>';
+} # end foreach cateoryg
 			return $html;
 		) ?>
-	</ul>
-</fieldset>
-<? endif ( @{$$variable{OptionServiceTypes}} ) ?>
-<!-- Step 2 questions -->
-<div id="step2Questions" <? echo ( 'style="display:none;"' if $$variable{rdbMode} ne 'Detailed' ) ?>>
-<fieldset><legend>What prepress services are required for the project?</legend>
-	<ul>
-<? echo ( 
-	my $html = '';
-	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Prepress','create_visible'=>1,'order'=>'sorting,lower(description)') ) {
-		$html .= sprintf(q`
-			<li>
-				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
-				<label for="chkServices%1$s">%2$s</label>
-			</li>
-		`, $ServiceType->name(), writeTip( $ServiceType->description() ), checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
-	} # end foreach
-	return $html;
-) ?>
-	</ul>
-</fieldset>
-<fieldset class="Bindery"><legend>What type of bindery services are required for the project?</legend>
-	<ul>
-<? echo ( 
-	my $html = '';
-	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Bindery','create_visible'=>1,'order'=>'sorting,lower(description)') ) {
-		$html .= sprintf(q`
-			<li class="%1$s">
-				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
-				<label for="chkServices%1$s">%2$s</label>
-			</li>
-		`, $ServiceType->name(), writeTip( $ServiceType->description() ), checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
-	} # end foreach
-	return $html;
-) ?>
-	</ul>
-</fieldset>
-<? eval ( @{$$variable{SpecialtyServiceTypes}} = openprint::ServiceType->find('category'=>'Specialty','create_visible'=>1,'order'=>'sorting,lower(description)'); ) ?>
-<? if (	@{$$variable{SpecialtyServiceTypes}} ) ?>
-<fieldset><legend>What type of specialty finishing services are required for the project?</legend>
-	<ul>
-<? echo ( 
-	my $html = '';
-	foreach my $ServiceType ( @{$$variable{SpecialtyServiceTypes}} ) {
-		$html .= sprintf(q`
-			<li>
-				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
-				<label for="chkServices%1$s">%2$s</label>
-			</li>
-		`, $ServiceType->name(), writeTip( $ServiceType->description() ), checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
-	} # end foreach
-	return $html;
-) ?>
-	</ul>
-</fieldset>
-<? endif (	@{$$variable{SpecialtyServiceTypes}} ) ?>
 </div>
 <!-- End of Step 2 questions -->
 
@@ -151,7 +102,7 @@
 		foreach my $ServiceType ( @ServiceTypes ) {
 			$html .= sprintf(q`
 				<li>
-					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
+					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" on_click_this="service_onclick" %3$s />
 					<label for="chkServices%1$s">%2$s</label>
 				</li>
 			`, $ServiceType->name(), writeTip( $ServiceType->description() ), checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
@@ -163,15 +114,15 @@
 
 <? echo ( 
 	my $html = '';
-	my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping','create_visible'=>1,'order'=>'sorting,lower(description)');
-	
+	my @ServiceTypes = openprint::ServiceType->find(category=>'Shipping',create_visible=>1,order=>'sorting,lower(description)');
+
 	if ( @ServiceTypes ) {
 		$html .= '<fieldset><legend>Please select your delivery method</legend><ul>';
 
 		foreach my $ServiceType ( @ServiceTypes ) {
 			$html .= sprintf(q`
 				<li>
-					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
+					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" on_click_this="service_onclick" %3$s />
 					<label for="chkServices%1$s">%2$s</label>
 				</li>
 			`, $ServiceType->name(), writeTip( $ServiceType->description() ), checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );

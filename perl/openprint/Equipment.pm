@@ -8,6 +8,7 @@ require openprint::Fold;
 require openprint::Location;
 require openprint::Equipment_Stock_Setting;
 require openprint::Equipment_Operator;
+require openprint::Equipment_Shift;
 require sql;
 
 #use Memoize;
@@ -74,6 +75,7 @@ use constant DEBUG_FOLDING => 0;
 	category_id		=>	undef,
 	useinestimating	=>	undef,
 	useinscheduling	=>	undef,
+  smartscheduling => 0,
 );
 
 sub fits {
@@ -127,12 +129,16 @@ sub fits {
 	} # end if
 
 	if ( $calliper ) {
-		if ( $self->specification("Minimum$service Calliper") and ( 1*$calliper < 1*$self->specification("Minimum$service Calliper") ) ) {
-			return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: " . $self->specification("Minimum$service Calliper") .' Inches.';
+    my $min_calliper = $self->specification("Minimum$service Calliper");
+
+		if ($min_calliper and ($calliper < $min_calliper)) {
+			return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: $min_calliper Inches.";
 		} # end if
-		if ( $self->specification("Maximum$service Calliper") and ( 1*$calliper > 1*$self->specification("Maximum$service Calliper") ) ) {
-			return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specification("Maximum$service Calliper") .' Inches.';
+    my $max_calliper = $self->specification("Maximum$service Calliper");
+		if ($max_calliper and ($calliper > $max_calliper)) {
+			return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: $max_calliper Inches.";
 		} # end if
+    #$openprint::log->debug("Calliper is ok $min_calliper < $calliper < $max_calliper");
 	} # end if
 	return '';
 
@@ -164,9 +170,14 @@ sub Fold {
 
 	if ( ( ! $$params{type} ) and $$params{pages} ) {
 		$$params{type} = $$params{pages}.'PageFold';
+    $openprint::log->debug("Form type auto set to $$params{type}");
 	}
 
+  if (!($$self{Folds}{$$params{type}} and @{$$self{Folds}{$$params{type}}})) {
+    $openprint::log->debug("No folds for type $$params{type}");
+  }
 	foreach my $Fold ( $$params{type} ? @{$$self{Folds}{$$params{type}}} : map { @{$$self{Folds}{$_}} } keys %{$$self{Folds}} ) {
+
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
 			$openprint::log->debug("Wrong type at fold: " . $Fold->name() ) if DEBUG_FOLDING;
 			next;
@@ -325,7 +336,7 @@ sub Fold {
 			next;
 		} # end if
 		if ( exists $$params{gsm} ) {
-			#$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
+			$openprint::log->debug("Wanted gsm: $$params{gsm}") if DEBUG_FOLDING;
 			my $RunSpeed = $Fold->RunSpeed( $$params{gsm} );
 			if ( ! $RunSpeed ) {
 				$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{gsm})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() ) if DEBUG_FOLDING;
@@ -343,7 +354,7 @@ $openprint::log->debug("Got fold" . $Fold->to_string()) if DEBUG_FOLDING;
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'strname, dblmin NULLS FIRST', @_ );
+	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'sorting NULLS FIRST,strname, dblmin NULLS FIRST', @_ );
 } # end sub Specifications
 
 sub specification {
@@ -586,7 +597,14 @@ sub Operators {
 } # end sub Operators
 
 sub link_to {
-	return '<a href="/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ > 1 ? $_[1] : $_[0]{strid}).'</a>';
+  my $self = shift;
+  my $text = @_ ? shift : $$self{strid};
+  my $options = @_ ? shift : {};
+	return '<a href="/administrator/equipment/edit.html?ddmEquipment='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>';
+}
+sub button_to {
+  my $self = shift;
+  return ssi::button('EquipmentButton'.$$self{id}, {href=>'/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ ? shift : $$self{strid})});
 }
 
 1;

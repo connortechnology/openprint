@@ -84,6 +84,7 @@ sub edit {
             my @sd_changes = $SD->changes($changes);
             if ( @sd_changes ) {
               $variable{error} .= $SD->save($changes) if @sd_changes;
+              last if $variable{error};
               push @changes, @sd_changes;
             } # end if changes
           } # end if
@@ -160,8 +161,8 @@ sub edit {
         $log->warn('No file given to upload.');
       } # end if
     } elsif ( $param{btnFunction} eq 'Export' ) {
-       my @header = ( 'Service Type', 'Name', 'Value' );
-       my @data = map { $_->ServiceType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{'name'});
+       my @header = ( 'Project Type', 'Name', 'Value' );
+       my @data = map { $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{'name'});
       misc::export_csv( $r, $log, \%variable, $ServiceType->name().'_ServiceTypeDefaults.csv', \@header, \@data );
       # Add record to audit log - action "Export Project Types".
       (new openprint::Log())->save({
@@ -349,16 +350,22 @@ sub _index {
 }
 sub categories {
 	my $ServiceType_Category = new openprint::ServiceType_Category( $param{category_id} );
+	$variable{ServiceType_Category} = $ServiceType_Category;
+  return if ! $param{btnFunction};
 	if ( $param{btnFunction} eq 'Save' ) {
 		$variable{error} .= $ServiceType_Category->save(\%param);
-		foreach my $st_id ( ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : $param{servicetype_id} ) {
+    my @service_types = ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : ($param{servicetype_id});
+      
+		foreach my $st_id (@service_types) {
+      next if !$st_id;
 			my $ServiceType = new openprint::ServiceType( $st_id );
 			$variable{error} .= $ServiceType->save({ category_id=>$ServiceType_Category->id()});
 		} # end foreach st_id
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $ServiceType_Category->delete();
+  } else {
+    $openprint::log->error("Unknown value for btnFunction $param{btnFunction}");
 	} # end if
-	$variable{ServiceType_Category} = $ServiceType_Category;
 } # end sub categories
 
 sub category {
@@ -369,7 +376,9 @@ sub category {
 			next if sets::isin( $$Type{id}, $param{servicetype_id} );
 			$variable{error} .= $Type->save({category_id=>undef});
 		} # end if
-		foreach my $st_id ( ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : $param{servicetype_id} ) {
+    my @service_types = ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : ($param{servicetype_id});
+		foreach my $st_id ( @service_types ) {
+      next if !$st_id;
 			my $ServiceType = new openprint::ServiceType( $st_id );
 			$variable{error} .= $ServiceType->save({ category_id=>$ServiceType_Category->id()});
 		} # end foreach st_id

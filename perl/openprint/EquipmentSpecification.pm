@@ -1,11 +1,13 @@
 use strict;
+use warnings;
+
 package openprint::EquipmentSpecification;
 our @ISA = qw( openprint::Object );
 require openprint::Equipment;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'tbl_Equipment_Specifications';
 $serial = 'tbl_equipment_specifications_id_seq';
 
@@ -14,9 +16,10 @@ $serial = 'tbl_equipment_specifications_id_seq';
 	equipment_id	=>	'lngequipmentindex',
 	min				=>	'dblmin',
 	max				=>	'dblmax',
-	units			=>	'strunits',
+  range_units => 'range_units',
 	name			=>	'strname',
 	value			=>	'strvalue',
+	units			=>	'strunits',
 	interpolate		=>	'interpolate',
 );
 %transforms = (

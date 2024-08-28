@@ -1,4 +1,3 @@
-<script src="<?hash_link(/javascripts/service.js)?>"></script>
 <div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
         <fieldset><legend><?ServiceTypeName?></legend>
@@ -37,7 +36,14 @@
 					$html .= ssi::select( \@tooth_options, $$variable{'HorizontalTeeth-'.$signature_index}, {
 							name=>'HorizontalTeeth-'.$signature_index, onchange=>'calc(this.form.name);', prepend=>['','select']
 							});
-					$html .= '</div></li></ul></div>';
+					$html .= '</div></li>';
+          my @complexityoptions = map { openprint::Service->find_one(name=>'PerforatingMakeReady'.$_) ? $_ : () } ( 'Simple','Average', 'Complex' );
+          if (@complexityoptions) {
+            $html .= '<li class="complexity"><label>Complexity</label>';
+            $html .= radio('complexity', [map { $_=>$_ } @complexityoptions], $$variable{complexity}, {onclick=>'calc(\'f1\');'});
+            $html .= '</li>';
+          }
+          $html .= '</ul></div>';
 				} # end foreach signature
 				return $html;
 			) ?>
@@ -56,3 +62,4 @@
 		<input type="hidden" name="ContinueProject" value="Y" />
 	</form>
 </div>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>

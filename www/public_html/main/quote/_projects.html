@@ -1,9 +1,10 @@
 <? if ( openprint::ProjectType->find_one() ) ?>
+<fieldset><legend>Projects</legend>
 <? if ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) or $openprint::Company->reseller() eq 'Y' ) ?>
 <table class="List">
 	<thead>
 		<tr> 
-			<th class="description">Projects</th>
+			<th class="description">Description</th>
 			<th class="weight">Weight</th>
 			<!--<th class="markup">Markup</th>-->
 			<th class="quantity">Qty</th>
@@ -153,4 +154,5 @@ if ( 0 ) {
 	) ?>
 </table>
 <? endif ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) or $openprint::Company->reseller() eq 'Y' ) ?>
+</fieldset>
 <? endif ( openprint::ProjectType->find_one() ) ?>

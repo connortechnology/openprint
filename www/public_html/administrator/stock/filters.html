@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script>
 	function load( e ) {
 		new Ajax.Request( '_filters_load.json', { method: 'post', parameters: { type: e.name, id: e.value }, evalScripts: true } );
 	} // end function load(e)
@@ -30,7 +30,7 @@
 </script>
 <? echo ( 
 	my $html = '';
-	foreach my $type ( 'Manufacturer','StockBrand','StockFinish','StockColour','StockWeight' ) {
+	foreach my $type ( 'Manufacturer','StockBrand','StockFinish','StockColour','StockWeight', 'StockGroup' ) {
 		$html .= sprintf(q`
 			<p>
 				<label>%1$s</label>

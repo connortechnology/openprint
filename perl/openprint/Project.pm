@@ -21,6 +21,7 @@ require openprint::Todo;
 require openprint::Bug;
 require openprint::service;
 require openprint::Project_Log;
+require openprint::Estimating::Printing;
 
 $debug = 0;
 
@@ -179,7 +180,7 @@ sub Type {
 } # end sub Type
 
 sub type {
-	return new openprint::ProjectType( $_[0]{type_id} );
+	return new openprint::ProjectType( $_[0]{type_id} )->name();
 } # end sub type
 
 sub get_project_type_service_index {
@@ -436,7 +437,8 @@ if ( 1 ) {
 
 sub get_quantities {
 	my $self = shift;
-$openprint::log->error("DEPRECATED call to get_quantities");
+	my ( $caller, undef, $line ) = caller;
+$openprint::log->error("DEPRECATED call to get_quantities from $caller:$line");
 	return @$self{'quantity1','quantity2','quantity3'};
 } # end sub get_quantities
 
@@ -577,11 +579,11 @@ $openprint::log->debug("Service : " . $Service->service_type() . ' ' . $Service-
 				if ( openprint::service::status( $$self{id}, $services{CustomerPickUp}[0] ) eq 'Complete' ) {
 					$new_status = 'Picked Up';
 				} # end if
-			} elsif ( $self->shippingtype() eq 'CustomerPickup' ) {
+			} elsif ( $self->shipping_type() eq 'CustomerPickup' ) {
 				if ( $$self{status} ne 'Picked Up' ) {
 					$new_status = 'Waiting For Pickup';
 				} # end if
-			} elsif ( $self->shippingtype() eq 'Delivery' ) {
+			} elsif ( $self->shipping_type() eq 'Delivery' ) {
 				$new_status = 'Shipped';
 			} else {
 				if ( ! sets::isin( $$self{status}, [ 'Shipped', 'Picked Up' ] ) ) {
@@ -661,8 +663,8 @@ sub save {
 } # eend sub save
 
 sub quantity_indexes {
-	my ( $self ) = @_;
-	$$self{quantity_indexes} = $_[1] if @_ > 1;
+	my $self = shift;
+	$$self{quantity_indexes} = shift if @_;
 	if ( ! $$self{quantity_indexes} ) {
 		$$self{quantity_indexes} = [];
 		foreach my $qty_index ( 1 .. 3 ) {
@@ -674,8 +676,7 @@ sub quantity_indexes {
 
 sub quantities {
 	my $self = shift;
-$openprint::log->error("DEPRECATED call to quantities");
-	return @$self{map { $$self{"quantity$_"} ? "quantity$_" : () } ( 1 .. 3 )};
+	return @$self{map { $$self{'quantity'.$_} ? 'quantity'.$_ : () } ( 1 .. 3 )};
 } # end sub quantities
 
 sub quantity {
@@ -804,16 +805,16 @@ sub get_services {
 } # end sub get_service_hash
 
 sub servicetype_id {
-	my ( $self, $s_id ) = @_;
-	if ( ! exists $$self{service_types} ) {
+	my ($self, $s_id) = @_;
+	if (!exists $$self{service_types}) {
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	} # end if
-	if ( ! exists $$self{service_types}{$s_id} ) {
-	my ( $caller, undef, $line ) = caller;
+	if (!exists $$self{service_types}{$s_id}) {
+    my ( $caller, undef, $line ) = caller;
 		#$openprint::log->error("Request for servicetype_id for $s_id, reloading from $caller:$line");
 		Carp::cluck("No servicetype_id for $s_id Project::Service");
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
-		if ( ! $$self{service_types}{$s_id} ) {
+		if (!$$self{service_types}{$s_id}) {
 			$openprint::log->error("Request for servicetype_id for $s_id, not found ");
 		}
 	} # end if
@@ -822,10 +823,22 @@ sub servicetype_id {
 } # end sub servicetype_id
 
 sub ServiceType {
-	my ( $self, $s_id ) = @_;
-$openprint::log->error("No s_id passed to ServiceType for project $$self{id}") if ! $s_id;
+  my ( $self, $s_id ) = @_;
+  if (!$s_id) {
+    $openprint::log->error("No s_id passed to ServiceType for project $$self{id}");
+    return undef;
+  }
 	return new openprint::ServiceType( $self->servicetype_id( $s_id ) );
 } # end sub ServiceType
+
+sub has_service {
+	my $self = shift;
+  my $service = shift;
+
+  my $services = $self->services();
+  return $$services{$service} ? @{$$services{$service}} : () if wantarray;
+  return $$services{$service} ? $$services{$service}[0] : undef;
+}
 
 sub services {
 	my $self = $_[0];
@@ -859,18 +872,18 @@ sub summary {
 		if ( $$services{''} and @{$$services{''}} ) {
 			my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
 			if ( $$printing_specs{Versions} ) {
-				$summary .= $$printing_specs{Versions} .= ' versions ';
+				$summary .= ' '.$$printing_specs{Versions}.' versions ';
 			} # end if
 			if ( $$printing_specs{PageQuantity} ) {
-				$summary .= $$printing_specs{PageQuantity} .= 'pg ';
+				$summary .= ' '.$$printing_specs{PageQuantity}.'pg ';
 			} # end if
 
 			if ( $self->Type()->name() eq 'PresentationFolders' ) {
-				$summary .= $$printing_specs{rdbPanels} . ' Panel ' . $$printing_specs{PocketSize} . '&quot; ';
+				$summary .= ' '.$$printing_specs{rdbPanels} . ' Panel ' . $$printing_specs{PocketSize} . '&quot; ';
 			} # end if
 
 			if ( $$printing_specs{txtTotalPageQuantity} ) {
-				$summary .= sprintf( '%s&quot;x%s&quot; ', 1*$$printing_specs{txtFinalWidth},1*$$printing_specs{txtFinalHeight});
+				$summary .= sprintf(' %s&quot;x%s&quot; ', 1*$$printing_specs{txtFinalWidth},1*$$printing_specs{txtFinalHeight});
 				if ( $$printing_specs{rdbCover} eq 'Different' ) {
 					my $cover_pages = 0;
 					foreach my $ss_id ( $self->signatures({Group=>1}) ) {
@@ -969,7 +982,7 @@ sub requested_for {
 	return $$OP{requested_for};
 } # end sub requested_for
 
-sub shippingtype {
+sub shipping_type {
 	my $OP = $_[0]->Ordered_Project();
 	
 	if ( @_ > 1 ) {
@@ -980,7 +993,7 @@ sub shippingtype {
 		$$OP{shipping_type} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find(project_id=>$_[0]{id},category=>'Shipping') );
 	} # end if
 	return $$OP{shipping_type};
-} # end sub shippingtype
+} # end sub shipping_type
 
 sub ordered_quantity {
 	my $qty_index = $_[0]->ordered_quantity_index();
@@ -1623,6 +1636,12 @@ sub recalculate {
 		if ( $status eq 'calculated' ) {
 			# Recalc signatures
 			my $module = 'openprint::Estimating::'.$$Type{type};
+			if ( my $function = $module->can('save') ) {
+				$status = $function->($$self{id}, $$services{''}[0], {});
+				$openprint::log->debug("$$Type{type}::save: status: $status");
+      } else {
+        $openprint::log->error("No calculate signatures function for $$Type{type}");
+			} # end if
 			if ( my $function = $module->can('calculate_signatures') ) {
 				$status = $function->($self);
 				$openprint::log->debug("$$Type{type}::Calculate_Sigs: status: $status");
@@ -2080,6 +2099,74 @@ sub is_fsc {
 		}
 	}
 	return 0;
+}
+sub stock_name {
+  my $self = shift;
+  my $services = $self->services();
+  if ($$services{Paper}) {
+    return join('<br/>', openprint::Estimating::Paper::summary($self, $$services{Paper}[0]));
+  }
+}
+
+sub ink_sum {
+  my $self = shift;
+  my $services = $self->services();
+  my $ink_sum = '';
+  my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
+
+
+  my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{id}, 'Group' );
+  if (@groups) {
+# I believe the point of this is to stick the Printed Web or Sheetfed into the summary. Nastily executed.
+# The logic is, each group has to be either all sheetfed, or all web (or digital, etc). 
+    foreach my $group_id ( sort @groups ) {
+      my @sigs = $self->signatures({Group=>$group_id});
+      if ( ! @sigs ) {
+        $openprint::log->error( "No sigs for Group $group_id, but there pretty much to be since we have this group index.  Signatures must be out of date");
+      } # end if
+
+      my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
+      $ink_sum .= openprint::Estimating::Printing::get_colour_description_no_coverage($self, $sig_specs);
+    }
+  } else {
+    my @sigs = $self->signatures();
+    my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
+    $ink_sum .= openprint::Estimating::Printing::get_colour_description_no_coverage($self, $sig_specs);
+  }
+
+  return $ink_sum;
+}
+
+sub parent_sheet_count {
+  my $self = shift;
+  my $services = $self->services();
+  if ($$services{Paper}) {
+    return join('<br/>', openprint::Estimating::Paper::summary($self, $$services{Paper}[0], undef, $self->ordered_quantity_index()) );
+  }
+}
+
+sub dims_finished {
+  my $self = shift;
+  my $services = $self->services();
+  if ( $$services{''} and @{$$services{''}} ) {
+    my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
+    return $$printing_specs{txtWidth}.'x'.$$printing_specs{txtHeight};
+  }
+  foreach my $sig_id ($self->signatures()) {
+    my $printing_specs = openprint::service::get_specs_ref($self, $sig_id);
+    return $$printing_specs{txtWidth}.'x'.$$printing_specs{txtHeight};
+  }
+  return 'unknown';
+}
+
+sub equipment {
+  my $self = shift;
+  my %equipment;
+	foreach my $sig_id ( $self->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $self, $sig_id );
+    $equipment{$$sig_specs{'ddmPress'.$self->ordered_quantity_index()}} = 1;
+	}
+  return join(', ', keys %equipment);
 }
 
 1;

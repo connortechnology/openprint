@@ -5,14 +5,20 @@
 }
 table .Qty,
 table .Imp {
-	width: 27px;
+	width: 30px;
+}
+table .Type {
+  vertical-align: top;
+}
+table .Type select {
+  max-width: 100%;
 }
 .Folding table .Folds, 
 .Folding table .Angles {
 	width: 30px;
 }
 .Folding table .Speed {
-	width: 80px;
+	width: 110px;
 	vertical-align: middle;
 }
 .Folding table .Speed img {
@@ -28,7 +34,7 @@ table .Imp {
 }
 .Folding table .Speed input[type="text"],
 .Folding table .Speed input[type="number"] {
-	width: 50px;
+	width: 75px;
 }
 .Folding table th {
 	font-size: x-small;

@@ -1,13 +1,18 @@
 <? if ( $$variable{Signature} ) ?>
 <fieldset id="SignatureGroup<?Signature?>" <? echo ( ( $$variable{Signature} == 1 and ( $$variable{rdbCover} ne 'Different' and $$variable{Backing} ne 'Printed' ) ) 
 ? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
-
-<? if ( $$variable{'txtSignatureType'.$$variable{Signature}} eq 'Cover Pages' ) ?>
-	<?include('/includes/main/proj/templates/signatures.html')?>
-<? endif ( $$variable{'txtSignatureType'.$$variable{Signature}} eq 'Cover Pages' ) ?>
-
 <legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ? $$variable{'txtServiceDescription'.$$variable{Signature}} : ( $$variable{Signature} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
-	<div class="leftColumn">
+  <div id="templates<?Signature?>" >
+<? echo (
+  if ($$variable{'txtSignatureType'.$$variable{Signature}} eq 'Cover Pages') {
+	  return include('/includes/main/proj/templates/_signatures.html');
+  } elsif ($$variable{'txtSignatureType'.$$variable{Signature}} eq 'Gate Folded Pages') {
+	  return include('/includes/main/proj/templates/_gatefolds.html');
+  }
+) ?>
+  </div>
+<div class="PagesAndSizes">
+	<div>
 		<ul>
 <?if($$variable{Project}->Type()->type() eq 'MultiPage' or $$variable{Project}->Type()->type() eq 'ScratchPads' ) ?>
 		<li id="GroupPageQuantity<?echo($$variable{Signature})?>_container"<?echo( if ($$variable{'OverrideGroupPageQuantity'.$$variable{Signature}} and ! $$variable{'GroupPageQuantity'.$$variable{Signature}} ) { return ' class="error"' }; ) ?>>
@@ -17,6 +22,7 @@
 				write_override( 'OverrideGroupPageQuantity'.$$variable{Signature}, $$variable{'OverrideGroupPageQuantity'.$$variable{Signature}}, '', q`calc('f1');` ),
 			); ) ?>
 		</li>
+    <input type="hidden" name="txtSpreadSize<?Signature?>" value="<?echo($$variable{'txtSpreadSize'.$$variable{Signature}})?>"/>
 		<li class="Description">
 			<label>Description</label>
 			<input type="text" name="txtServiceDescription<?Signature?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ) ?>" />
@@ -37,7 +43,7 @@
 		</li>
 		</ul>
 	</div>
-	<div class="rightColumn">
+	<div class="SignatureOptions">
 		<div id="PresentationFolderQuestions<?Signature?>" <? echo (
 			($$variable{'rdbTemplateType'.$$variable{Signature}} and 
 			 sets::isin( $$variable{'rdbTemplateType'.$$variable{Signature}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] )
@@ -55,7 +61,7 @@
 <? else ( $$variable{Signature} == 1 or $$variable{Signature} == 2 ) ?>
 		<li>
 			<label>Signature Type</label>
-			<select name="txtSignatureType<?Signature?>" onchange="calc(this.form.name);">
+      <select name="txtSignatureType<?Signature?>" on_change_this="signature_type_change">
 <? echo (
 	my @options = (
 		'unknown', 'Please select',
@@ -86,15 +92,17 @@
 		</li>
 		<?include(_press_proof_approval.html)?>
 		</ul>
-	</div>
-	<br class="spacer"/>
+	</div><!--SignaturOptions-->
+</div><!--PagesAndSizes-->
 	<? echo (
 		my $html .= slurp_content( '/includes/main/proj/colours_coatings.html' );
+    $html .= '<div class="BleedsColourBarsStockOverrides">';
 		$html .= slurp_content( '/includes/main/proj/bleeds_colourbars.html' );
 		$html .= slurp_content( '/includes/main/proj/paper_dropdowns.html' );
 		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
 			$html .= slurp_content( '/main/project/prin/_overrides.html' );
 		} # end if
+    $html .= '</div>';
 
 		return variable_substitution( \$html, $variable );
 	) ?>

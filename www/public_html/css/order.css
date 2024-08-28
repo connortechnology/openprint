@@ -36,9 +36,13 @@
 	width: 100%;
     border-bottom: 1px solid #000088;
     margin-bottom: 5px;
+display: flex;
+align-items: stretch;
 }
-.Order div.Header:after,
-.Order #Contents {
+.Order .Header div {
+flex: 1;
+}
+.Order #Contents:after {
     content: ".";
     display: block;
     height: 0;
@@ -46,12 +50,15 @@
     visibility: hidden;
 }
 
-.Order div.Header fieldset {
+.Order div.Header div > fieldset {
+/*
 	border-left: none;
     border-right: none;
     border-bottom: none;
+*/
     margin-bottom: 0;
     text-align: left;
+height: 100%;
 }
 .Order div.Header #Information {
 	width: 49%;
@@ -119,7 +126,6 @@ text-align: right;
 }
 
 .Order .Project {
-	border: 1px solid #000088;;
 	padding: 5px;
 }
 .Order .Project:after {
@@ -130,12 +136,17 @@ text-align: right;
     visibility: hidden;
 }
 .Order .Project h3 {
-	width: 50%;
+	width: 49%;
 	float: left;
 }
+h3 a {
+color: white;
+}
 .Order .Project p.buttons {
-	width: 50%;
+	width: 100%;
+/*
 	float: right;
+*/
 }
 
 .Order .Project div.Header div.Summary {
@@ -144,6 +155,7 @@ text-align: right;
 }
 .Order .Project div.Header div.Summary li {
 	padding: 0;
+text-align: left;
 }
 .Order .Project div.Header div.Information {
 	float: right;
@@ -176,7 +188,6 @@ text-align: right;
     margin-top: -20px;
     margin-right: 10px;
     text-align: right;
-	background-color: #DEDCB7;
 	float: right;
 	padding: 0px 5px 0px 5px;
 }

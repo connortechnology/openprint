@@ -6,3 +6,6 @@ function order_action(command) {
     jQuery('#Results').load('_history.html?btnFunction='+command, { order_id: order_ids } );
   }
 }
+function load_orders() {
+  LoadContent('Results','/main/order/_history.html', $j('#f1').serialize());
+}

@@ -52,7 +52,22 @@
 <? if ( $openprint::User->email() =~ /iconnor/ ) ?>
 		<li> 
 			<label>Type</label>
-			<input type="text" name="type" value="<? echo ( $$variable{ServiceType}->type() ) ?>" /> 
+<?echo (
+ return ssi::select([map {$_=>$_}
+sort { $a cmp $b } qw(AdditionalProofs  Coating CornerStitching  FilmStripping  Mounting      PlateMaking     Sewing          ThreeKnifeTrim
+Aqueous           Counting         Folding        MultiPage     PolyBagging     Shipping        Tipping
+Blowing           CustomService    Gluing         NoBindery     Prepress        ShrinkWrapping  Turnaround
+Bundling          CustomerPickUp   Grommeting     NoPrinting    Printing        SinglePage      UPS
+CDBurning         Cutting          HStands        Numbering     Project         Skids           UVCoating
+CanadaPost        DTaping          HandAssembly   Packaging     Proofs          SoftFolding
+ChannelLetters    DieCutting       Imposition     Padding       RoundCornering  SpinePaste
+ClipSealing       Drilling         Inkjetting     Paper         Scanning        Spiral
+Collating         Embossing        Lamination     PerfectBound  Scoring         Stitching
+CopyDot           ExtraBurns       ManualLabour   Perforating   ScratchPads     Stripping
+VariableData
+)], $$variable{ServiceType}->type(), {name=>'type', prepend=>['','choose one']});
+)?>
+
 		</li>
 		<li> 
 			<label>URL</label>
@@ -81,14 +96,18 @@
 		</li>
 		</ul>
 	</fieldset>
-	<input type="hidden" name="btnFunction"/>
 	<fieldset><legend>Defaults</legend>
 		<div id="Defaults">
 		<?include('_defaults.html')?>
 		</div>
 	</fieldset>
+<fieldset><legend>Service Prices</legend>
+		<?include('_service_prices.html')?>
+</fieldset>
+	<input type="hidden" name="btnFunction"/>
 </form>
 <? if ( $$variable{ServiceType}->id() ) ?>
 <? echo ( include_logs( $$variable{ServiceType} ); ) ?>
 <? endif ( $$variable{ServiceType}->id() ) ?>
 
+<script src="<?hash_link(/javascripts/pricing.js)?>"></script>

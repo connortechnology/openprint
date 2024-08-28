@@ -1041,7 +1041,7 @@ sub promo_codes {
 } # end sub promo_codes
 
 sub logs {
-	ssi::setup_date_select( $r->uri, 'date_start', -7 );
+	ssi::setup_date_select( $r->uri, 'date_start', -1 );
 	ssi::setup_date_select( $r->uri, 'date_end', '' );
   _logs();
 } # end sub logs
@@ -1138,7 +1138,7 @@ sub companies {
 
 sub _companies {
 	ssi::save_params( '/administrator/managerial/companies.html', (
-				'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted',
+				'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted','supplier',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),
@@ -1148,11 +1148,11 @@ sub _companies {
 				) );
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
   if ($param{action} eq 'delete') {
-    foreach my $Company ( openprint::Company->find( id=> (ref $param{'company_id[]'} eq 'ARRAY') ? $param{'company_id[]'} : $param{company_id}) ) {
+    foreach my $Company ( openprint::Company->find( id=> (ref $param{company_id} eq 'ARRAY') ? $param{company_id} : $param{company_id}) ) {
       $Company->delete();
     }
   } elsif ($param{action} eq 'undelete' ) {
-    my @company_ids = (ref $param{'company_id[]'} eq 'ARRAY') ? @{$param{'company_id[]'}} : ($param{company_id});
+    my @company_ids = (ref $param{company_id} eq 'ARRAY') ? @{$param{company_id}} : ($param{company_id});
     while (@company_ids) {
       foreach my $Company ( openprint::Company->find( id=> [ splice(@company_ids, 0, 100) ], deleted=>1) ) {
         if (!$Company->deleted()) {
@@ -1163,7 +1163,7 @@ sub _companies {
       } # end foreach Company
     } # end while company_ids
   } elsif ($param{action} eq 'destroy' ) {
-    my @company_ids = ($param{'company_id[]'} ? @{$param{'company_id[]'}} : ($param{company_id}));
+    my @company_ids = (ref $param{company_id} eq 'ARRAY' ? @{$param{company_id}} : ($param{company_id}));
     while (@company_ids) {
       foreach my $Company ( openprint::Company->find( id=> [ splice(@company_ids, 0, 100) ], deleted=>1) ) {
         if (!$Company->deleted()) {
@@ -1177,11 +1177,19 @@ sub _companies {
 } # end sub _companies
 
 sub folds {
+  require openprint::Estimating::Folding; # for fold_types
 	_folds();
 } # end sub folds
 
 sub _folds {
-	ssi::save_params( '/administrator/managerial/folds.html', ( 'equipment_id', 'type' ) );
+	ssi::save_params( '/administrator/managerial/folds.html', ( 'equipment_id', 'type', 'imposition',
+   'stitching','perfectbind','spinepaste' ) );
+  return if !$param{action};
+  if ($param{action} eq 'delete') {
+    foreach my $fold ( openprint::Fold->find(id=>$param{fold_id}) ) {
+      $variable{error} .= $fold->delete();
+    }
+  }
 } # end sub _folds
 
 sub shipping_rates {
@@ -1269,7 +1277,7 @@ sub _users {
     if ($param{btnFunction} eq 'destroy') {
       foreach my $User ( openprint::User->find(
           deleted => 1,
-          id=>[$param{'user_id[]'} ? @{$param{'user_id[]'}} : ($param{user_id})])) {
+          id=>$param{user_id})) {
           if (!$User->deleted()) {
             $variable{error} .= 'User ' . $User->email() . ' not destroyed because not deleted<br/>';
             next;
@@ -1277,8 +1285,7 @@ sub _users {
           $variable{error} .= $User->destroy();
       }
     } elsif ($param{btnFunction} eq 'delete') {
-      my @user_ids = exists($param{'user_id[]'}) ? @{$param{'user_id[]'}} : (
-        ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id}) );
+      my @user_ids = ( ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : ($param{user_id}) );
       foreach my $User ( openprint::User->find(id=>\@user_ids) ) {
           if ($User->deleted()) {
             $variable{error} .= 'User ' . $User->email() . ' not deleted because already deleted<br/>';
@@ -1387,6 +1394,54 @@ $log->debug("sudo /usr/sbin/postsuper -d $queue_id");
 		}
 	}
 } # end sub mailqueue
+
+sub fold {
+  require openprint::Estimating::Folding; # for fold_types
+  require openprint::Fold; # for fold_types
+	my $Fold = $variable{Fold} = new openprint::Fold( $param{fold_id} );
+  return if !$param{action};
+
+	if ( $param{action} eq 'add' ) {
+		foreach my $k ( 'equipment_id' ) {
+			$$Fold{$k} = $param{$k};
+		} # end foreach
+		$Fold->save();
+		$variable{Fold} = $Fold;
+	} elsif ( $param{action} eq 'copy' ) {
+		my $NewFold = $Fold->copy();
+		delete $param{fold_id};
+		$variable{error} .= $NewFold->save(\%param);
+		if ( ! $variable{error} ) {
+		foreach my $Spec ( $NewFold->Specifications() ) {
+			$_ = $Spec->save( {fold_id=>$NewFold->id() });
+		} # end foreach Spec
+		}
+		$variable{Fold} = $NewFold;
+		$param{fold_id} = $NewFold->id();
+		
+	} elsif ( $param{action} eq 'save' ) {
+		my @changes = $Fold->changes( \%param );
+		$variable{error} = $Fold->save(\%param);
+		if ( ! $variable{error} ) {
+      foreach my $spec ($Fold->Specifications()) {
+        my %data = map { $_ => $param{$_.'-'.$spec->id() }} ('min','max','units','runspeed','interpolate' );
+        my @spec_changes = $spec->changes(\%data);
+        $spec->save(\%data) if @spec_changes;
+        push @changes, @spec_changes;
+      }
+			my $Equipment = $Fold->Equipment();
+			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>'Save Fold', 
+				note=>$$Fold{name} . ' ' . join('<br/>', @changes ) });
+      $variable{ExternalRedirect} = '/administrator/managerial/folds.html';
+		} # end if
+		$variable{Fold} = $Fold;
+	} elsif ( $param{action} eq 'delete' ) {
+		$variable{error} = $Fold->delete();
+    if (!$variable{error}) {
+      $variable{ExternalRedirect} = '/administrator/managerial/folds.html';
+    }
+	} # end if
+} # end sub _fold
 
 1;
 __END__

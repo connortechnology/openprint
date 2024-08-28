@@ -44,3 +44,6 @@
 	</fieldset>
 	<input type="hidden" name="btnFunction" />
 </form>
+<? if ( $$variable{ProjectTypeCategory}->id() ) ?>
+	<? echo ( include_logs( $$variable{ProjectTypeCategory} ); ) ?>
+<? endif ( $$variable{ProjectTypeCategory}->id() ) ?>

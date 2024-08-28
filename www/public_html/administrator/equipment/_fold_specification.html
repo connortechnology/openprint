@@ -2,22 +2,22 @@
 	$$variable{foldok} = '';
 ) ?>
 <tr <? if ( $$variable{foldok} ) ?>style="background-color: red;"<? endif ( $$variable{foldok} ) ?> id="FoldSpecification-<? echo ( $$variable{Specification}->id(); ) ?>" >
-	<td><span style="width:100%; float: left;" id="min_weight-<? echo ( $$variable{Specification}->id() ) ?>"><? echo (
-( (!$$variable{Specification}->min_weight()) or ($$variable{Specification}->min_weight() eq '')) ? '&nbsp;' : $$variable{Specification}->min_weight(); ) ?></span></td>
-	<td><span style="width:100%; float: left;" id="max_weight-<? echo ( $$variable{Specification}->id(); ) ?>"><? echo (
-( (!$$variable{Specification}->max_weight()) or ($$variable{Specification}->max_weight() eq '')) ? '&nbsp;' : $$variable{Specification}->max_weight(); ) ?></span></td>
-	<td><span style="width:100%; float: left;" id="weight_units-<? echo ( $$variable{Specification}->id(); ) ?>"><? echo (
-( (!$$variable{Specification}->weight_units()) or ($$variable{Specification}->weight_units() eq '')) ? '&nbsp;' : $$variable{Specification}->weight_units(); ) ?></span></td>
-	<td><span style="width:100%; float: left;" id="runspeed-<? echo ( $$variable{Specification}->id(); ) ?>"><? echo (
-( (! $$variable{Specification}->runspeed()) or ($$variable{Specification}->runspeed() eq '') ) ? '&nbsp;' : $$variable{Specification}->runspeed(); ) ?></span></td>
-	<td><span style="width:100%; float: left;" id="interpolate-<? echo ( $$variable{Specification}->id(); ) ?>" onclick="new Ajax.Updater('interpolate-<? echo ( $$variable{Specification}->id(); ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=interpolate', {} );"><? echo ( $$variable{Specification}->interpolate() ? 'Yes' : 'No' ) ?></span></td>
+	<td class="min"><input type="number" min="0" step="1" name="min-<? echo ( $$variable{Specification}->id() ) ?>"
+                                                        id="min-<? echo ( $$variable{Specification}->id() ) ?>"
+                                                        value="<? echo ($$variable{Specification}->min() ) ?>"/></td>
+	<td class="max"><input type="number" min="0" step="1" name="max-<? echo ( $$variable{Specification}->id(); ) ?>"
+                                                       id="max-<? echo ( $$variable{Specification}->id(); ) ?>"
+                                                       value="<? echo ($$variable{Specification}->max() ) ?>"/></td>
+	<td class="runspeed"><input type="number" min="0" step="1" name="runspeed-<? echo ( $$variable{Specification}->id(); ) ?>"
+                                            id="runspeed-<? echo ( $$variable{Specification}->id(); ) ?>"
+                                            value="<? echo ( $$variable{Specification}->runspeed(); ) ?>" /></td>
+	<td class="units"><select name="units-<? echo ( $$variable{Specification}->id(); ) ?>" id="units-<? echo ( $$variable{Specification}->id(); ) ?>">
+      <? echo (make_drop_down([map {$_=>$_} ('gsm','inches per hour')], $$variable{Specification}->units()); ) ?></td>
+
+	<td class="interpolate">
+    <?echo( radio('interpolate-'. $$variable{Specification}->id(), ['1'=>'Yes','0'=>'No'], $$variable{Specification}->interpolate() ); ) ?>
+  </td>
 	<td class="buttons">
 	<? echo ( button( 'deletefoldspec'.$$variable{Specification}->id(), { onclick=>"delete_fold_spec($$variable{Specification}{id});", text=>'Delete' } ); ) ?>
 	</td>
 </tr>
-<script type="text/javascript">
-	  new Ajax.InPlaceEditor( 'min_weight-<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=min_weight',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
-	  new Ajax.InPlaceEditor( 'max_weight-<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=max_weight',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
-	  new Ajax.InPlaceEditor( 'weight_units-<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=weight_units',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
-	  new Ajax.InPlaceEditor( 'runspeed-<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=runspeed',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
-</script>

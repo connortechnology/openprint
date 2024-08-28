@@ -1,88 +1,58 @@
-<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
-<script type="text/javascript">
-    function calc( formName, force ) {
-        var form = getFormObj( formName );
-        if ( gettingNewPrice ) {
-            if ( timeout ) {
-                clearTimeout( timeout );
-            } // end if
-            if ( ! force ) {
-                setTimeout( "calc('"+formName+"');", 1000 );
-                return;
-            } // end if
-        } // end if
-        timeout = null;
-        gettingNewPrice = true;
+<script src="<?hash_link('/javascripts/service.js')?>"></script>
+<script>
+  results_callback = function cbDieCuttingResults( results ) {
+      if (!results) {
+          console.log("No results!");
+          return;
+        }
 
-		var blah = Form.serialize( form, true );
-		var h = $H(blah);
-		h.each(function(pair) {
-			if ( pair.value == '' )
-				h.unset(pair.key);
-			if ( pair.key == 'btnFunction' )
-				h.unset(pair.key);
-			if ( pair.key == 'alert' )
-				h.unset(pair.key);
-		});
-		h.set('ServiceType','DieCutting' );
-		h.set('callback', 'cbDieCuttingResults' );
- 
-        new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-    }
-    function cbDieCuttingResults( results ) {
-        
-        var form = getFormObj('f1');
+      const form = getFormObj('f1');
 
-        var re = /ImpQty-(\d+)-(\d+)-(\d+)/;
-        var keys = results.keys();
-        for ( var index = 0, len = keys.length; index < len; index += 1 ) {
-            var key = keys[index];
-            var value = results.get(keys[index]);
-
-            var matches = re.exec( key );
-            if ( matches ) {
-                var f = $('Imp-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
-                if ( f ) {
-                    if ( matches[3] == 1 || value > 0 ) {
-                        f.show();
+      const re = /ImpQty-(\d+)-(\d+)-(\d+)/;
+      for (const [key, value] of Object.entries(results)) {
+          const matches = re.exec( key );
+          if ( matches ) {
+              var f = $('Imp-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
+              if ( f ) {
+                  if ( matches[3] == 1 || value > 0 ) {
+                      f.show();
                     } else {
                         f.hide();
-                    } // end if
+                      } // end if
                 } else {
                     alert('debug mesage: No html for imp ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
-                } // end if f
+                  } // end if f
             } // end if matches
         } // end foreach pair
-        cbFillResults(results);
-
-	} // end fucntion
-function show_extra_imposition( signature, qty_index ) {
-    var f = $('Imp-'+signature+'-'+qty_index+'-'+'2');
-    f.show();
-}
+      cbFillResults(results);
+    } // end function
+  function show_extra_imposition( signature, qty_index ) {
+      const f = $j('#Imp-'+signature+'-'+qty_index+'-'+'2');
+      f.show();
+    }
 function Imposition_onchange( element, signature, qty_index, index ) {
-    var spec = signature + '-' + qty_index + '-' + index;
-    var next_index = 1+parseInt(index);
+    const spec = signature + '-' + qty_index + '-' + index;
+    const next_index = 1+parseInt(index);
     var do_calc = 1;
 
     if ( element.type == 'select-one' ) {
         if ( ! element.value ) {
             $('ImpQty-'+spec).value = '';
-        } else {
-            if ( ! $('ImpQty-'+spec).value ) {
-                $('ImpQty-'+spec).value = 1;
+          } else {
+              if ( ! $('ImpQty-'+spec).value ) {
+                  $('ImpQty-'+spec).value = 1;
+                } // end if
             } // end if
+      } else { // must be the qty field
         } // end if
-    } else { // must be the qty field
-    } // end if
 
     if ( ! $('ImpQty-'+spec).value ) {
-    } else {
-        $('Imp-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
-    } // end if
+      } else {
+          $('Imp-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
+        } // end if
     if ( do_calc ) 
-        calc(element.form.name);
-} // end function
+      calc(element.form.name);
+  } // end function
 </script>
 <div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
@@ -146,7 +116,9 @@ if ( 1 ) {
 			return $html;
 			) ?>
 			</div><!--Signatures-->
-		<ul>
+
+			<?include('/includes/main/proj/_comments.html') ?>
+		<ul class="pricing">
 <li id="DiePrice">
 	<label>Die Price (<?CurrencySymbol?>)</label>
 <? echo (
@@ -171,12 +143,12 @@ if ( 1 ) {
 			</ul>
 		</fieldset>
 		<hr/>
-        <?include('/includes/main/proj/add_to_project.html')?>
-        <input type="hidden" name="btnFunction" value="Save Service"/>
-        <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
-        <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
-        <input type="hidden" name="ContinueProject" value="Y" />
-        <input type="hidden" name="ServiceType" value="<?ServiceTypeType?>" />
+    <?include('/includes/main/proj/add_to_project.html')?>
+    <input type="hidden" name="btnFunction" value="Save Service"/>
+    <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
+    <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
+    <input type="hidden" name="ContinueProject" value="Y" />
+    <input type="hidden" name="ServiceType" value="<?ServiceTypeType?>" />
 		<input type="hidden" name="Status" value="<?Status?>" />
 	</form>
 </div>

@@ -19,7 +19,7 @@
 		<? echo ( join("\n",
 			input( type=>'text', name=>'new_info_name', id=>'new_info_name', placeholder=>'name' ),
 			input( type=>'text', name=>'new_info_value', id=>'new_info_value', placeholder=>'value' ),
-			button( 'AddInfo', { 'data-on-click'=>'add_information', text=>'Add' } ),
+			button( 'AddInfo', { on_click=>'add_information', text=>'Add' } ),
 			); ) ?>
 	</li>
 </ul>

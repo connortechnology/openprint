@@ -1,6 +1,16 @@
 <div id="Inks<?Signature?>" class="Inks">
+  <div class="link-outer" id="cc_link<?Signature?>">
+    <div class="link-inner">
+      <label for="side_link<?Signature?>" class="radio linkage" title="Link Side One &amp; Side Two">
+<img src="/images/misc/link.png" />
+<input type="checkbox" name="side_link<?Signature?>" class="side_link" id="side_link<?Signature?>" value="1" data_signature_index="<?Signature?>" <?echo(checked($$variable{side_link}))?>/>
+<img src="/images/misc/link.png" />
+</label>
+    </div>
+  </div>
 <div class="InksFront">
 	<fieldset><legend>Front</legend>
+    <div id="InksOnFrontQuestions<?Signature?>">
 		<div class="SpotColours">
       <span class="checkOption">Spot Colours</span>
 		<? echo ( 
@@ -68,12 +78,18 @@
 				return $html;
 			) ?>
 		</div>
+    </div>
 	</fieldset>
 </div>
 <div class="InksBack">
-	<fieldset><legend>Back image same as front image?
-<? echo ( radio( 'sides_the_same'.$$variable{Signature}, [ 'Y','Yes','N','No' ], $$variable{"sides_the_same$$variable{Signature}"}, { default=>'N', onclick=>qq`if(this.value=='Y'){\$('InksOnBackQuestions$$variable{Signature}').hide();}else{\$('InksOnBackQuestions$$variable{Signature}').show();};calc(this.form.name);` } ); ) ?>
+  <fieldset><legend>Back<span id="sides_the_same"> image same as front image?
+        <? echo ( radio( 'sides_the_same'.$$variable{Signature}, [ 'Y','Yes','N','No' ], $$variable{"sides_the_same$$variable{Signature}"}, { default=>'N', onclick=>qq`if(this.value=='Y'){\$('InksOnBackQuestions$$variable{Signature}').hide();}else{\$('InksOnBackQuestions$$variable{Signature}').show();};calc(this.form.name);` } ); ) ?></span>
 </legend>
+<div id="side2_linked<?Signature?>"<?echo($$variable{'side_link'.$$variable{Signature}} ? '' : ' style="display: none;"')?>>
+    This side shares the same specifications as the front.<br />
+    Click the chain / checkbox above to unlink them.
+  </div>
+
 		<div id="InksOnBackQuestions<?Signature?>" <? echo ( $$variable{'sides_the_same'.$$variable{Signature}} eq 'Y' ? ' style="display:none;"':'') ?>>
 		<div class="SpotColours">
       <span class="checkOption">Spot Colours</span>

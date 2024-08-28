@@ -84,7 +84,7 @@ sub outputs {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $form = $$sig_specs{SignatureIndex};
 		foreach my $key ( keys %{$specs} ) {
-			if ( $key =~ /^txtProofIndex-$form-(\d+)-(\d+)$/ ) {
+			if ( $key =~ /^txtProofIndex\-$form\-(\d+)\-(\d+)$/ ) {
 				my ( $proof_index, $qty_index ) = ( $1, $2 );
 
 				push @v,	(
@@ -108,7 +108,8 @@ sub no_outputs {
 sub get_indexes {
 	my ( $specs, $qty_index, $indexes, $types ) = @_;
 	foreach my $key ( keys %{$specs} ) {
-		if ( $key =~ /^txtProofIndex-(\d+)-(\d+)-$qty_index$/ ) {
+		if ( $key =~ /^txtProofIndex\-(\d+)\-(\d+)\-$qty_index$/ ) {
+      $openprint::log->debug($key);
 			$$indexes{$1}[$$specs{$key}] = $$specs{$key};
 			push @{$$types{$1}}, $$specs{"ddmProofType-$1-$2-$qty_index"};
 		} # end if
@@ -122,13 +123,15 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
+  $$specs{alert} = '';
 
 	$log->debug("START PROOFS!!!!!!!!!!!!!!!!!! ($project_index) ($service_index)") if DEBUG;
 	my $Project = new openprint::Project($project_index);
+  my $ServiceType = $Project->ServiceType($service_index);
 
 	my @signature_service_indices = $Project->signatures();
 	my $minCharge = openprint::service::get_price('ProofsMinimumCharge', undef, undef);
-	%ProofServices = map { $_->name(), $_ } openprint::Service->find(category=>'Proofs');
+	%ProofServices = map { $_->name(), $_ } openprint::Service->find(servicetype_id=>$ServiceType->id());#category=>'Proofs');
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} = '';
@@ -196,11 +199,13 @@ sub calc {
 					"txtProofQuantity-$form-$proof_index-$qty_index",
 						"ddmProofType-$form-$proof_index-$qty_index",
 				};
-				if ( ! $proof_totals{$type} ) {
-					$proof_totals{$type} = { Quantity => 0, Price => 0 };
-				} # end if
-				$proof_totals{$type}{Quantity} += $quantity;
-				$totalQuantity += $quantity;
+        if ($type) {
+          if ( ! $proof_totals{$type} ) {
+            $proof_totals{$type} = { Quantity => 0, Price => 0 };
+          } # end if
+          $proof_totals{$type}{Quantity} += $quantity;
+				  $totalQuantity += $quantity;
+        }
 			} # end foreach my $proof_index
 		} # end foreach my $signature_service_index
 
@@ -320,17 +325,19 @@ sub signature_calc {
 		$$specs{join('-','MRPrice',$form,$proof_index,$qty_index)} = $MakeReady{Price};
 		my %price;
 		if ( $ProofService ) {
+      $openprint::log->debug("Proofs service: $$ProofService{name}");
 			if ( $type eq 'PressProof' ) {
 				%price = $ProofService->get_price($$totals{$type}{Quantity}, $Equipment);
 			} else {
 				%price = $ProofService->get_price($$totals{$type}{Quantity});
 			} # end if
 		} # end if
+    $price{Price} = 0 if ! defined $price{Price};
+		$price{units} = 'each' if ! $price{units};
 		$$specs{join('-','ServicePrice',$form,$proof_index,$qty_index)} = $price{Price};
 		$$specs{join('-','ServiceUnits',$form,$proof_index,$qty_index)} = $price{units};
 
 		$Results{Breakdown} .= "Proof: $proof_index: Quantity: $quantity, Type: $type ";
-		$price{units} = 'each' if ! $price{units};
 		if ( $price{units} eq 'per square inch' ) {
 			$Results{status} = 'uncalculated' if ! $$specs{"txtProofWidth-$form-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$form-$proof_index-$qty_index"};
 			$price{Total} = Math::Round::nearest( 0.01,
@@ -340,10 +347,13 @@ sub signature_calc {
 			$Results{status} = 'uncalculated' if ! $$specs{"txtProofWidth-$form-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$form-$proof_index-$qty_index"};
 			$price{Total} = $price{Price} * $$specs{"txtProofWidth-$form-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$form-$proof_index-$qty_index"} / 144 * $quantity;
 			$Results{Breakdown} .= sprintf('MR: %.2f + %d * %sx%s * $%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, $$specs{"txtProofWidth-$form-$proof_index-$qty_index"},$$specs{"txtProofHeight-$form-$proof_index-$qty_index"}, @price{'Price','units','Total'} );
-		} else {
-			$price{Price} = 0 if !$price{Price};
+		} elsif ($price{units} eq 'each' or lc($price{units})eq 'per proof') {
+			$price{Total} = $price{Price} * $quantity;
+			$Results{Breakdown} .= sprintf('MR: $%.2f + %d*$%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, @price{'Price','units','Total'} );
+    } else {
 			$price{Total} = $price{Price} * $quantity;
 			$Results{Breakdown} .= sprintf('MR: %.2f + %d*$%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, @price{'Price','units','Total'} );
+      $Results{Breakdown} .= '<div class="error">Warning unsupported units for '.$ProofService->description().'</div>';
 		} # end if
 		$$specs{"txtProofUnitPrice-$form-$proof_index-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $price{Total});
 		$Results{Total} += $price{Total} + $MakeReady{Price};
@@ -435,37 +445,35 @@ sub insert_colour_proof {
 	#$log->debug("*** Inserting Colour Proof *******");
 	my $Equipment = $Imposition->Press();
 	if ( ! $Equipment ) {
-		$openprint::log->error("No equipment in insert_layout_proof");
+		$openprint::log->error('No equipment in insert_layout_proof');
 		$Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if $$sig_specs{'ddmPress'.$qty_index};
 		if ( ! $Equipment ) {
-			$openprint::log->error("No equipment in insert_layout_proof");
+			$openprint::log->error('No equipment in insert_layout_proof');
 		} # end if
 	} # end if
 
-	my ( $default_proof_type ) = $Equipment->specification( 'Default Colour Proof' ) if $Equipment;
 	my $quantity = 0;
-
+	my ( $default_proof_type ) = $Equipment->specification( 'Default Colour Proof' ) if $Equipment;
 	if ( $default_proof_type ) {
-		if ( 
-				( $$specs{RequireColourProofs} eq 'Y' and @{$$sig_specs{SideOneColours}} )  or (
-					($$specs{RequireColourProofs} ne 'N') and $$sig_specs{chkProcessColourSideOne} ) ) {
-			$quantity += 1;
-		} # end if
-		if ( 
-				( $$specs{RequireColourProofs} eq 'Y' and @{$$sig_specs{SideTwoColours}} )  or (
-					($$specs{RequireColourProofs} ne 'N') and $$sig_specs{chkProcessColourSideTwo} ) ) {
-			$quantity += 1;
+		if ($$specs{RequireColourProofs} and ($$specs{RequireColourProofs} eq 'Y')) {
+			$quantity += 1 if @{$$sig_specs{SideOneColours}};
+			$quantity += 1 if @{$$sig_specs{SideTwoColours}};
+    } elsif (!$$specs{RequireColourProofs} or $$specs{RequireColourProofs} ne 'N') {
+			$quantity += 1 if $$sig_specs{chkProcessColourSideOne};
+			$quantity += 1 if $$sig_specs{chkProcessColourSideTwo};
 		} # end if
 
 		# we need extra proofs for business cards.
 		if ( $$sig_specs{txtNameQuantity} and ( $$sig_specs{txtNameQuantity} > 1) ) {
 			$quantity *= $$sig_specs{txtNameQuantity};
 		} # end if
-		if ( $$sig_specs{'PageQuantity'.$qty_index} and ( $$sig_specs{'PageQuantity'.$qty_index} > 1) ) {
-			$quantity *= $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize} if $$sig_specs{txtSpreadSize};
+    if ($Project->Type()->type() eq 'MultiPage') {
+      if ( $$sig_specs{'PageQuantity'.$qty_index} and ( $$sig_specs{'PageQuantity'.$qty_index} > 1) ) {
+        $quantity *= $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize} if $$sig_specs{txtSpreadSize};
+      } # end if
 		} # end if
 
-		if ( $$specs{RequireColourProofs} eq 'N' ) {
+		if ( $$specs{RequireColourProofs} and($$specs{RequireColourProofs} eq 'N')) {
 			$quantity = 0;
 		} # end if
 	} # end if
@@ -538,7 +546,8 @@ sub load_proof_info {
 				"txtProofHeight-$form-$proof_index-$qty_index",
 				"ddmProofType-$form-$proof_index-$qty_index"
 		};
-		push @proof_info, $proof_index, $quantity, 1*$width, 1*$height, $type, ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service->find('category'=>'Proofs') ], $type );
+		push @proof_info, $proof_index, $quantity, 1*$width, 1*$height, $type;
+    #, ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service->find('category'=>'Proofs') ], $type );
 	} # end foreach
 	return @proof_info;
 } # end sub load_proof_info
@@ -613,7 +622,8 @@ sub get_proof_specs {
 #$openprint::log->debug("Have $quantity $width x $height $type for form $form qty $qty_index");
 				push @{$$variable{'Proofs-'.$form.'-'.$qty_index}},
 						 $proof_index, $quantity, 1*$width, 1*$height, $type,
-						 ssi::make_drop_down(\@service_dropdown, $type);
+             #ssi::make_drop_down(\@service_dropdown, $type);
+           ;
 			} # end foreach proof
 
 		} # end foreach signature
@@ -795,7 +805,7 @@ sub breakupsummary {
 						my $desc = sprintf('<td align="left">%s&quot;x%s&quot;</td><td align="left">%s', @$specs{
 								"txtProofWidth-$form-$proof_index-$qty_index",
 								"txtProofHeight-$form-$proof_index-$qty_index"}, $Service->description() );
-						my $qty      = $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
+						my $qty = $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"} // 0;
 						if ( $qty != 0 ) {
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
 							my $Uprice   = $$specs{"txtProofUnitPrice-$form-$proof_index-$qty_index"};
@@ -805,7 +815,7 @@ sub breakupsummary {
 							} # end if
 							$proof_tot{$type}{Quantity} += $qty;
 							my %MkReady  = openprint::service::get_price_object( $type.'MakeReady', $proof_tot{$type}{Quantity}, undef );
-							$Totprice{$desc} += ($Uprice*$qty) + $MkReady{Price};
+							$Totprice{$desc} += ($Uprice*$qty) + ($MkReady{Price}//0);
 						} # end if
 					} # end if
 				} # end if

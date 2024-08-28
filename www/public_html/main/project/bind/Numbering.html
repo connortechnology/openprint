@@ -26,13 +26,16 @@
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $ss_id );
 					$$variable{SignatureIndex} = $$sig_specs{SignatureIndex};
 					$html .= '<fieldset><legend>Signature '.$$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription}.'</legend>';
+          $html .= '<ul>';
 					$html .= include( '/includes/main/proj/signature_imposition_with_override.html' );
 					$html .= include( '/includes/main/proj/signature_equipment.html' );
+          $html .= '</ul>';
 					$html .= '</fieldset>';
 				} # end foreach ss_id
 				return $html;
 			) ?>
-			<ul>
+			<?include('/includes/main/proj/_comments.html')?>
+			<ul class="pricing">
 			<?include('/includes/main/proj/quantities_prices.html')?>
 			</ul>
 		</fieldset>

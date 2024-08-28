@@ -1,4 +1,5 @@
 
+DROP SEQUENCE IF EXISTS Paper_id_seq;
 CREATE SEQUENCE Paper_id_seq;
 
 CREATE TABLE Papers (
@@ -11,6 +12,7 @@ CREATE TABLE Papers (
 	colour_id	INTEGER NOT NULL, FOREIGN KEY (colour_id) REFERENCES StockColours (id),
 	weight_id	INTEGER NOT NULL, FOREIGN KEY (weight_id) REFERENCES StockWeights (id),
 	quality_id	INTEGER NOT NULL, FOREIGN KEY (quality_id) REFERENCES StockQualities (id),
+	material_id	INTEGER NOT NULL, FOREIGN KEY (material_id) REFERENCES StockMaterials (id),
 	cuttable	boolean NOT NULL default true,
 	doublesided	boolean	NOT NULL default true,
 	perfecting	boolean NOT NULL default false,

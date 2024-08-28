@@ -26,13 +26,42 @@ require openprint::Imposition;
 
 use constant DEBUG => 0;
 
+use vars qw( %ServicePrices %Specifications);
+%ServicePrices = (
+  PerforatingMinimumCharge => { range_units => [''], units=>['']},
+  PerforatingMakeReady => { range_units => [''], units=>['']},
+  PerforatingMakeReadySimple => { range_units => [''], units=>['']},
+  PerforatingMakeReadyAverage => { range_units => [''], units=>['']},
+  PerforatingMakeReadyComplex => { range_units => [''], units=>['']},
+  Perforating => { range_units=>['impressions'], units=> ['per hour', 'per m']},
+);
+%Specifications = (
+  'RunSpeed' => {range_units => [ 'calliper'], units=>'per hour'},
+  'Perforating Overs' => {range_units => [ 'impressions' ], units=>['percent']},
+  'Perforating Capable' => { value=>['Y','N', 'When Printing', 'When Folding', 'When Stitching' ] },
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if $name eq$key;
+  }
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
+
+
 my @all_equipment;
 my @stitchers;
 my %Materials;
 
 my @variables = (
+  'alert', 'complexity',
 	'txtQuantity1','txtQuantity2','txtQuantity3',
-    'txtPrice1','txtPrice2','txtPrice3',
+  'txtPrice1','txtPrice2','txtPrice3',
 	'MPrice1', 'MPrice2', 'MPrice3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'Markup1', 'Markup2', 'Markup3',
@@ -60,7 +89,7 @@ sub variables {
 } # end sub variables
 
 my @no_output = (
-	'Markup1', 'Markup2', 'Markup3',	
+	'Markup1', 'Markup2', 'Markup3', 'complexity',
 );
 
 sub no_outputs {
@@ -97,7 +126,7 @@ sub signature_has_perforation {
 sub neccessary {
 	my ( $Project ) = @_;
 
-    $Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
+  $Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 	return 1 if ( $Project->signatures({'type'=>'PerfReplyCard'}) );
 #
     #my %services = $Project->get_services( );
@@ -115,8 +144,8 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
-
 	my $Project = new openprint::Project( $project_index );
+  $$specs{alert} = '';
 
 	$log->debug('BEGIN PERFING!!!!!!!!!!!!!!!!!!') if DEBUG;
 
@@ -165,6 +194,11 @@ sub calc {
 				$$specs{"txtLayoutHeight-$form-$qty_index"} = 0;
 				next;
 			} # end if
+      $$specs{alert} .= $Price{alert};
+			$$specs{'hdnBreakdown'.$qty_index} .= $Price{Breakdown};
+			$qtyTotal += $$specs{"txtVerticalQty-$form"};
+			$qtyTotal += $$specs{"txtHorizontalQty-$form"};
+
 			if ( $Price{Equipment} ) {
 				$$specs{"ddmEquipment-$form-$qty_index"} = $Price{Equipment}->id();
 				if ( $Price{Imposition} ) {
@@ -180,15 +214,13 @@ sub calc {
 				$$specs{"txtLayoutHeight-$form-$qty_index"} = 0;
 				$status = 'uncalculated';
 				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
-					$$specs{alert} = "The selected equipment can not handle your project.  This may be because the stock is too heavy, or too large.";
+					$$specs{alert} = 'The selected equipment can not handle your project. This may be because the stock is too heavy, or too large.' if !$$specs{alert};
 				} else {
-					$$specs{alert} = "No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.";
+					$$specs{alert} = 'No suitable equipment could be found for your project. This may be because the stock is too heavy, or too large.' if !$$specs{alert};
 				} # end if
+        next;
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= $Price{Breakdown};
-			$qtyTotal += $$specs{"txtVerticalQty-$form"};
-			$qtyTotal += $$specs{"txtHorizontalQty-$form"};
-            $price += $Price{SetupPrice} + $Price{ServicePrice}{Total} + $Price{VerticalPrice}{Total} + $Price{HorizontalPrice}{Total};
+      $price += $Price{SetupPrice} + $Price{ServicePrice}{Total} + $Price{VerticalPrice}{Total} + $Price{HorizontalPrice}{Total};
 			$mprice += ( ( $Price{ServicePrice}{Total} + $Price{VerticalPrice}{Total} + $Price{HorizontalPrice}{Total} ) / $qty ) * 1000;
 		} # end foreach signature
 
@@ -225,6 +257,7 @@ sub signature_calc {
 	my $form = $$sig_specs{SignatureIndex};
 
 	my %Results = (
+      alert => '',
 			Status => 'calculated',
 			Breakdown	 => '',
 			);
@@ -247,7 +280,7 @@ sub signature_calc {
 # Can only use the stitcher for scoring if we are stitching.  There are also thickness constraints
 	$stitching_service_index = $$services{LoopStitching}[0] if ( ! $stitching_service_index) and $$services{LoopStitching};
 
-	if ( ! @all_equipment ) {
+	if (!@all_equipment) {
 		@all_equipment = openprint::Equipment->find( Specifications => {'Perforating Capable'=>['Y','When Printing', 'When Folding']}, useinestimating=>1 );
 	} # end if
 
@@ -259,6 +292,7 @@ sub signature_calc {
 			@equipment = openprint::Equipment->find( id=>$$specs{"ddmEquipment-$form-$qty_index"} );
 		} else {
 			$Results{alert} .= 'Please select the equipment.<br/>';
+      $Results{Status} = 'uncalculated';
 			return %Results;
 		} # end if
 		#$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) if DEBUG;
@@ -266,7 +300,14 @@ sub signature_calc {
 		@equipment = sets::exclude( \@stitchers, \@all_equipment );
 	} else {
 		@equipment = @all_equipment;
-	} # end if
+  } # end if
+
+  my @complexityoptions = map { openprint::Service->find_one(name=>'PerforatingMakeReady'.$_) ? $_ : () } ( 'Simple','Average', 'Complex' );
+  if (@complexityoptions and ! $$specs{complexity}) {
+    $Results{alert} .= 'Please select the complexity.<br/>';
+    $Results{Status} = 'uncalculated';
+    return %Results;
+  } # end if
 
 	if ( ! $imposition ) {
 		$openprint::log->error('Really shouldn\'t be loading imposition here, too slow');
@@ -276,7 +317,7 @@ sub signature_calc {
 
 	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
 		if ( $$specs{"txtImposition-$form-$qty_index"} > $$imposition{imposition} or $$specs{"txtImposition-$form-$qty_index"} <= 0 ) {
-			$$specs{alert} = 'The specified imposition is not possible.';
+			$Results{alert} .= 'The specified imposition is not possible.<br/>';
 			$Results{Status} = 'uncalculated';
 			return %Results;
 		} # end if
@@ -322,7 +363,7 @@ sub signature_calc {
 		( $scor_equipment, $scor_imposition ) = @$score_specs{"ddmEquipment-$form-$qty_index", "txtImposition-$form-$qty_index"};
 		if ( ( $$score_specs{"txtVerticalQty-$form"} or $$score_specs{"txtHorizontalQty-$form"} ) and ! $scor_equipment ) {
 			$openprint::log->debug("No equipment selected for scoring.  Quitting.") if DEBUG;
-			$$specs{alert} = 'Scoring calculations are not complete.  Your project contains a scoring service.  It must be completed before the Perforating service.';
+			$Results{alert} = 'Scoring calculations are not complete.  Your project contains a scoring service.  It must be completed before the Perforating service.';
 			$Results{Status} = 'uncalculated';
 			return %Results;
 		} # end if
@@ -409,7 +450,10 @@ sub signature_calc {
 		my $Runspeed = $Equipment->Specification('PerfScoreRunSpeed');
 		$Runspeed = $Equipment->Specification('Perforating Runspeed') if ! $Runspeed;
 		my $MaxRunSpeed = $Equipment->Specification('PerfScoreMaximumRunSpeed');
-		my $setupPrice = openprint::service::get_price('PerforatingMakeReady', undef, $Equipment);
+
+
+    my $mr_service = 'PerforatingMakeReady'. ($$specs{complexity} ? $$specs{complexity} : '');
+		my $setupPrice = openprint::service::get_price($mr_service, undef, $Equipment);
 		$Results{Breakdown} .= sprintf('Setup: $%.2f<br/>', $setupPrice);
 		my $max_impo = $Equipment->specification('Maximum Perforation Imposition');
 
@@ -492,12 +536,11 @@ sub signature_calc {
 			if ( $scor_equipment and ( $scor_equipment eq $$Equipment{strid} ) and ( $scor_imposition == $$I{imposition} ) ) {
 				$Results{Breakdown} .= 'Same equipment as scoring, no service price needed.<br/>';
 			} else {
-				%servicePrice = openprint::service::get_price_object( 'Perforating', $qty/$$I{imposition}, $Equipment );
+				%servicePrice = openprint::service::get_price_object( 'Perforating', $qty, $Equipment );
 				#%servicePrice = openprint::service::get_price_object( 'Perforating', $rule_qty, $Equipment );
 # I don't know if we should be multiplying by this or not.. how many perfs can a given piece of equipment do in an impression?
 #$servicePrice *= $$specs{"txtQty-$signature_index"};
 			} # end if
-
 
 			my $runspeed = 0;
 
@@ -524,6 +567,10 @@ sub signature_calc {
 				} else {
 					$Results{Breakdown} .= 'no runspeed';
 				} # end if
+      } else {
+        $openprint::log->error('Invalid units '.$servicePrice{units}.' on Perforating on '.$$Equipment{strid});
+        $Results{Breakdown} .= 'Invalid units '.$servicePrice{units}.' on Perforating on '.$$Equipment{strid}.'<br/>';
+        $$specs{alert} .= 'Invalid units '.$servicePrice{units}.' on Perforating on '.$$Equipment{strid}.'<br/>';
 			} # end if
 # Div by imposition
 			#$servicePrice /= $$imposition{imposition} if $$imposition{imposition};

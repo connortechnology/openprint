@@ -80,7 +80,7 @@ p.minimum_order label, p.fsc_code label, p.inventory_number label, p.message lab
 }
 
 #calliper_mm, #calliper, #size, #mweight, #width, #height {
-width: 60px;
+width: 70px;
 }
 #BasisSize input {
 	width: 60px;
@@ -97,4 +97,7 @@ width: 60px;
 }
 .SetupPrices, .SupplyPrices {
 	display: none;
+}
+#Prices td select {
+  width: 100%;
 }

@@ -104,6 +104,7 @@ sub edit {
 					} # end if
 				} # end if
 			} # end if
+
 			my @changes = $Material->changes( \%param );
 
 			if ( @changes or ! $$Material{id} ) {	
@@ -116,49 +117,32 @@ sub edit {
 			my @Equipment = map { new openprint::Equipment($_) } sets::union( map { $_->equipment_id() } @Prices );
 
 			# This adds entries for the blank new line, but since the checkbox won't be checked they won't have effect
-			my @NewPrices;
-			foreach my $Pricelist ( @Pricelists ) {
-				foreach my $Equipment ( @Equipment, {} ) {
-					my $NewPrice = new openprint::MaterialPrice();
-					$NewPrice->set({
-							pricelist_id=>$$Pricelist{id},
-							equipment_id=>$$Equipment{id},
-							material_id=>$$Material{id}
-							});
-					push @NewPrices,$NewPrice;
-				} # end foreach Equipment
-			} # end foreach Pricelist;
+      #my @NewPrices;
+      #foreach my $Pricelist ( @Pricelists ) {
+      #foreach my $Equipment ( @Equipment, {} ) {
+      #my $NewPrice = new openprint::MaterialPrice();
+      #$NewPrice->set({
+      #pricelist_id=>$$Pricelist{id},
+      #equipment_id=>$$Equipment{id},
+      #material_id=>$$Material{id}
+      #});
+      #push @NewPrices, $NewPrice;
+      #} # end foreach Equipment
+      #} # end foreach Pricelist;
 
 			my @pricing_changes;
-			foreach my $Price ( @Prices, @NewPrices ) {
-				if ( ! $param{join('-',('chk',$$Price{pricelist_id},($$Price{equipment_id}?$$Price{equipment_id}:''),
-								($$Price{id}?$$Price{id}:'')
-								))} ) {
-					if ( $$Price{id} ) {
-						$Price->delete();
-						push @pricing_changes, 'Delete price: ' . $Price->to_string();
-					}
-				} else {
-					my %data = (
-							equipment_id => $param{join('-', 'equipment_id', $$Price{pricelist_id}, ($$Price{equipment_id}?$$Price{equipment_id}:''))},
-									( map { $_ => $param{join('-', $_,
-											$$Price{pricelist_id},
-											($$Price{equipment_id}?$$Price{equipment_id}:''),
-											($$Price{id}?$$Price{id}:'')
-											)} } qw(
-												min					
-												max					
-												units				
-												cost				
-												markup			
-												price				
-												discountable
-												)
-									)
-									);
-		
+			foreach my $Price ( @Prices) {
+        #, @NewPrices ) {
+        #if ( ! $param{join('-',('chk',$$Price{pricelist_id},($$Price{equipment_id}?$$Price{equipment_id}:''),
+        #($$Price{id}?$$Price{id}:'')
+        #))} ) {
+        #if ( $$Price{id} ) {
+        #$Price->delete();
+        #push @pricing_changes, 'Delete price: ' . $Price->to_string();
+        #}
+        #} else {
+					my %data = map { $_ => $param{join('-', $_, $$Price{id})} } qw( min					max					units				cost				markup			price				discountable);
 					my @price_changes = $Price->changes( \%data );
-
 					if ( @price_changes ) {
 						if ( $Price->set(\%data) ) {
 							$_ = $Price->save();
@@ -169,8 +153,10 @@ sub edit {
 							} # end if
 						} # end if
 						push @pricing_changes, @price_changes;
+          } else {
+            $log->debug("No changes to price $$Price{id}");
 					} # end if price_changes
-				} # end if delete
+          #} # end if delete
 			} # end foreach Price
 			push @changes, @pricing_changes;
 
@@ -222,18 +208,16 @@ sub edit {
 			} # end if
 
 		} elsif ( $param{btnFunction} eq 'Copy' ) {
-			my @prices = $Material->prices();
-
 			my $NewMaterial = $Material->copy();
 			$$NewMaterial{name} = 'Copy of ' . $$NewMaterial{name};
 
-			if ( $_ = $NewMaterial->save() ) {
+			if ($_ = $NewMaterial->save()) {
 				$variable{error} .= $_;
 			} else {
 				(new openprint::Log())->save({action=>'Copy Material', Object=>$NewMaterial } );
-				foreach my $price ( @prices ) {
+				foreach my $price ( $Material->prices() ) {
+          $price = $price->copy();
 					$$price{material_id} = $$NewMaterial{id};
-					delete $$price{id};
 					$variable{error} .= $price->save();
 				} # end foreach
 				foreach my $Spec ( $Material->Specifications() ) {
@@ -242,12 +226,82 @@ sub edit {
 					$variable{error} .= $Spec->save();
 				} # end foreach
 				$Material = $NewMaterial;
+				$variable{ExternalRedirect} = '/administrator/materials/edit.html?material_id='.$Material->id();
 			} # end if
 		} # end if
 	} # end if btnFunction
 	$variable{Material} = $Material;
 
 } # end sub edit
+
+sub _prices_table_body {
+  if ( $param{action} eq 'add' ) {
+    my $Material = $variable{Material} = new openprint::Material( $param{material_id} );
+    my $Pricelist = $variable{Pricelist} = new openprint::Pricelist($param{pricelist_id});
+    $variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
+    my $Price = $variable{Price} = new openprint::MaterialPrice();
+    $variable{error} .= $Price->save({map { $_=>$param{$_} } qw( equipment_id pricelist_id material_id) });
+  } else {
+    my $Price = new openprint::MaterialPrice( $param{price_id} );
+    if (!$Price->id()) {
+      $variable{error} .= 'Material price '.$param{price_id}.' not found.<br/>';
+    } else {
+      $variable{Equipment} = $Price->Equipment();
+      $variable{Pricelist} = $Price->Pricelist();
+      my $Material = $variable{Material} = $Price->Material();
+      if ( $param{action} eq 'copy' ) {
+        $Price = $Price->copy();
+        $variable{error} .= $Price->save();
+        (new openprint::Log())->save({Object=>$Material, action=>'Copy Material Price', note=>$Price->to_string() }) if ! $variable{error};
+      } elsif ( $param{action} eq 'delete' ) {
+        $variable{error} .= $Price->delete();
+        (new openprint::Log())->save({Object=>$Material, action=>'Delete Material Price', note=>$Price->to_string() }) if ! $variable{error};
+      } # end if
+    } # end if
+  } # end if
+  $variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+} # end sub _prices_table_body
+
+sub _price {
+  $variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
+  $variable{Pricelist} = new openprint::Pricelist( $param{pricelist_id} );
+  $variable{Material} = new openprint::Material( $param{material_id} );
+  $variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+  if ( $param{action} eq 'add' ) {
+    my $Price = $variable{Price} = new openprint::MaterialPrice();
+    $variable{error} .= $Price->save({ map { $_=>$param{$_} } qw(equipment_id pricelist_id material_id)});
+  } # end if
+} # end sub _price
+
+sub _prices_per_equipment {
+  $variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
+  $variable{Pricelist} = new openprint::Pricelist( $param{pricelist_id} );
+  $variable{Material} = new openprint::Material( $param{material_id} );
+  $variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+  if ( $param{action} eq 'add' ) {
+    my $Price = new openprint::MaterialPrice();
+    $variable{error} .= $Price->save({ map { $_=>$param{$_} } qw(equipment_id pricelist_id material_id)});
+  } # end if
+} # end sub _prices_per_equipment
+
+sub list {
+  _list();
+  $openprint::session{$r->uri().'?deleted'} = '0' if ! exists $openprint::session{$r->uri().'?deleted'};
+}
+sub _list {
+  ssi::save_params( '/administrator/materials/list.html', (
+      'deleted', 'material_name', 'equipment_id', 'category_id',
+    ) );
+  return if ! $param{btnFunction};
+
+  if ($param{btnFunction} eq 'delete') {
+    my @ids = exists($param{'material_id[]'}) ? @{$param{'material_id[]'}} : (
+      ref $param{material_ids} eq 'ARRAY' ? @{$param{material_ids}} : ($param{material_ids}) );
+    foreach my $material ( openprint::Material->find(id=>\@ids) ) {
+      $variable{error} .= $material->delete();
+    }
+  }
+}
 
 1;
 __END__

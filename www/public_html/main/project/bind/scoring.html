@@ -1,62 +1,32 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
-<script type="text/javascript">
-    function calc( formName, force ) {
-        var form = getFormObj( formName );
-        if ( gettingNewPrice ) {
-            if ( timeout ) {
-                clearTimeout( timeout );
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script>
+  results_callback = function cbScoringResults( results ) {
+      cbFillResults(results);
+      const form = getFormObj('f1');
+      const re = /ImpQty-(\d+)-(\d+)-(\d+)/;
+      for (const [key, value] of Object.entries(results)) {
+        const matches = re.exec( key );
+        if ( matches ) {
+          const tr = document.getElementById('Imp-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
+          const qty = document.getElementById('ImpQty-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
+          if ( tr ) {
+            const value = qty.value;
+            console.log(tr, value);
+            if ( matches[3] == 1 || value > 0 ) {
+              tr.show();
+            } else {
+              tr.hide();
             } // end if
-            if ( ! force ) {
-                setTimeout( "calc('"+formName+"');", 1000 );
-                return;
-            } // end if
-        } // end if
-        timeout = null;
-        gettingNewPrice = true;
-
-        var blah = Form.serialize( form, true );
-        var h = $H(blah);
-        h.each(function(pair) {
-            if ( pair.value == '' )
-                h.unset(pair.key);
-            if ( pair.key == 'btnFunction' )
-                h.unset(pair.key);
-            if ( pair.key == 'alert' )
-                h.unset(pair.key);
-        });
-        h.set('ServiceType','Scoring' );
-        h.set('callback', 'cbScoringResults' );
- 
-        new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-    }
-    function cbScoringResults( results ) {
-        var form = getFormObj('f1');
-        var re = /ImpQty-(\d+)-(\d+)-(\d+)/;
-        var keys = results.keys();
-        for ( var index = 0, len = keys.length; index < len; index += 1 ) {
-            var key = keys[index];
-            var value = results.get(keys[index]);
-
-            var matches = re.exec( key );
-            if ( matches ) {
-                var f = $('Imp-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
-                if ( f ) {
-                    if ( matches[3] == 1 || value > 0 ) {
-                        f.show();
-                    } else {
-                        f.hide();
-                    } // end if
-                } else {
-                    alert('debug mesage: No html for imp ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
-                } // end if f
-            } // end if matches
-        } // end foreach pair
-        cbFillResults(results);
-
+          } else {
+            alert('debug mesage: No html for imp ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
+          } // end if f
+        } // end if matches
+      } // end foreach pair
     } // end fucntion
-function show_extra_imposition( signature, qty_index ) {
-    var f = $('Imp-'+signature+'-'+qty_index+'-'+'2');
-    f.show();
+
+  function show_extra_imposition( signature, qty_index ) {
+      const f = $('Imp-'+signature+'-'+qty_index+'-'+'2');
+      f.show();
 }
 function Imposition_onchange( element, signature, qty_index, index ) {
     var spec = signature + '-' + qty_index + '-' + index;
@@ -82,8 +52,6 @@ function Imposition_onchange( element, signature, qty_index, index ) {
         calc(element.form.name);
 } // end function
 </script>
-
-
 <div class="Service <?ServiceType?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
@@ -91,14 +59,17 @@ function Imposition_onchange( element, signature, qty_index, index ) {
 				foreach my $signature_id ( $$variable{Project}->signatures({sort=>1}) ) {
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $signature_id );
 
-					$html .= qq`<div class="Signature">Information for form $$sig_specs{SignatureIndex} ($$sig_specs{txtServiceDescription}):
+					$html .= qq`<div class="Signature">Information for form $$sig_specs{SignatureIndex}`.
+            ($$sig_specs{txtServiceDescription} ? '('.$$sig_specs{txtServiceDescription}.')' : '').':
 					<ul>
-					<li><label>Score Quantity</label>`;
-					$html .= input( name=>'txtVerticalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtVerticalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', oninput=>'calc(this.form.name);' );
-					$html .= ' Vertical + ';
-					$html .= input( name=>'txtHorizontalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtHorizontalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', oninput=>'calc(this.form.name);' );
-					$html .= ' Horizontal ';
-					$html .= write_override( 'chkOverrideQty-'.$$sig_specs{SignatureIndex}, $$variable{'chkOverrideQty-'.$$sig_specs{SignatureIndex}}, '', "calc('f1');" );
+					<li><label>Score Quantity</label>';
+					$html .= join("\n",
+          input( name=>'txtVerticalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtVerticalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', oninput=>'calc(this.form.name);' ),
+					' Vertical + ',
+					input( name=>'txtHorizontalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtHorizontalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', oninput=>'calc(this.form.name);' ),
+					' Horizontal ',
+					write_override( 'chkOverrideQty-'.$$sig_specs{SignatureIndex}, $$variable{'chkOverrideQty-'.$$sig_specs{SignatureIndex}}, '', "calc('f1');" ),
+          '');
 					$html .= '</li>
 					</ul>
 				</div>';
@@ -154,7 +125,8 @@ if ( 1 ) {
 	} # end foreach sig
 	return $html;
 ) ?>
-			<ul>
+    <?include('/includes/main/proj/_comments.html') ?>
+      <ul class="pricing">
 			<?include('/includes/main/proj/quantities_prices.html')?>
 			</ul>
 		</fieldset>

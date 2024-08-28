@@ -143,7 +143,7 @@ sub variable_substitution {
 					if ( $@ ) {
 						$log->error("Eval error ($@) of ($1)")
 					} else {
-						$result .= $_ if $_;
+						$result .= $_;
 					}
 				}
 			} elsif ( $command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
@@ -268,7 +268,7 @@ sub encode_html {
 
 sub make_drop_down {
 	require HTML::Entities;
-	my ( $search_data, $checkval, $options ) = @_;
+	my ( $data, $checkval, $options ) = @_;
 	$options = {} if ! $options;
 	my $check_array;
 	if ( ref $checkval eq 'ARRAY' ) {
@@ -279,37 +279,51 @@ sub make_drop_down {
 
 	my %selected = map { $_ => $_ } @$check_array;
 
-	my $temp = '';
+	my $html = '';
 	if ( $$options{prepend} ) {
 		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2 ) {
-			$temp .= sprintf('<option value="%s"%s>%s</option>',
+			$html .= sprintf('<option value="%s"%s>%s</option>',
 					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])) : $$options{prepend}[$n] ),
 					( $selected{ $$options{prepend}[$n] } ? ' selected="selected"' : '' ),
 					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) : $$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ),
 					);
 		} # end for
 	} # end if
-	for ( my $n = 0; $n < @{$search_data}; $n += 2 ) {
+
+  for (my $i = 0; $i < @{$data}; $i++) {
+    my $value;
+    my $label;
+    if ( ref $$data[$i] eq 'ARRAY' ) {
+      my $row = $$data[$i];
+      $value = $$row[0];
+      $label = $$row[1];
+    } else {
+      $value = $$data[$i];
+      $i++;
+      $label = $$data[$i];
+    }
+  
+    if ($$options{length}) {
+      $label = substr($label,0, $$options{length});
+    }
+    if ($$options{encode}) {
+      $value = HTML::Entities::encode_entities(Encode::encode('utf-8', $value));
+      $label = HTML::Entities::encode_entities(Encode::encode('utf-8', $label));
+    }
 		
-		$temp .= join('','<option value="',
-				( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])) : $$search_data[$n] ),
-				'"',
-				( $selected{ $$search_data[$n] } ? ' selected="selected"' : '' ),
-				'>',
-				( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) : ( $$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ),
-				'</option>',
-				);
+		$html .= join('','<option value="', $value, '"', ( $selected{ $value } ? ' selected="selected"' : '' ), '>', $label, '</option>');
 	} # end for
+
 	if ( $$options{append} ) {
 		for ( my $n = 0; $n < @{$$options{append}}; $n += 2 ) {
-			$temp .= sprintf('<option value="%s"%s>%s</option>',
+			$html .= sprintf('<option value="%s"%s>%s</option>',
 					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{append}[$n])) : $$options{append}[$n] ),
 					( $selected{ $$options{append}[$n] } ? ' selected="selected"' : '' ),
 					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ) ) : $$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ),
 					);
 		} # end for
 	} # end if
-	return $temp;
+	return $html;
 } # sub make_drop_down
 
 sub fill_drop_down {
@@ -552,7 +566,8 @@ sub button {
     # Default non-a types to a button
     $$options{type} = 'button';
 	} # end if
-	$$options{text} = $name if ! exists $$options{text};
+	$$options{text} = $$options{value} if ! $$options{text};
+	$$options{text} = $name if ! $$options{text};
   if ( $$options{text} and ! $$options{value}) {
     $$options{value} = $$options{text};
   }
@@ -584,19 +599,21 @@ sub button {
       delete $$options{text};
 		} # end if
     delete $$options{image};
-	} elsif ( $openprint::config{SimpleButtons} eq 'Y' ) {
-		$html .= $$options{text};
+    #} elsif ( $openprint::config{SimpleButtons} and $openprint::config{SimpleButtons} eq 'Y' ) {
+    #$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
 	} else {
-		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
+		$html .= $$options{text};
 	}
-	$html .= $$options{type} ? '</button>' : '</a>';
+	$html .= $$options{type} ? '</button>
+' : '</a>
+';
   if ( $$options{onclick} ) {
-    $html .= '<script nonce="'.$config{CSP_NONCE}.qq`">
+    $html .= '<script'.($config{CSP_NONCE}?' nonce="'.$config{CSP_NONCE}.'"':'').">
     document.getElementById('Button$name').onclick = function(){
     $$options{onclick};
     };
     </script>
-    `;
+    ";
     delete $$options{onclick};
   } # end if
 
@@ -724,30 +741,32 @@ sub date_select {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{onchange} );
 			$html .= return_years( $start_year, $end_year, $year );
-			$html .= '</select>';
+			$html .= '</select>'."\n";
 #$log->debug($html);
 		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin('month', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"><option value=""> </option>`, $prefix, $$options{onchange} );
 			$html .= getmonths( $month );
-			$html .= '</select>';
+			$html .= '</select>'."\n";
 #$log->debug($html);
 		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin('day', \@fields) ) ) {
 			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""> </option>', $prefix, $$options{onchange} );
 			$html .= getdays( $day, int($year), int($month) );
-			$html .= '</select>';
+			$html .= '</select>'."\n";
 #$log->debug($html);
 		} # endif
 	} # end foreach o
   $html .= "\n";
 	if ( $$options{with_clear} ) {
 		$html .= button( $prefix.'_clear', {
-				onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+				#onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+				on_click_this=>'clear_date', data_prefix=>$prefix,
 				text=>'C', title=>'Clear', class=>'Clear',
 				} );
 	} # end if
 	if ( $$options{with_today} ) {
 		$html .= button( $prefix.'_today', {
-				onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+        on_click_this=>'new_set_today', data_prefix=>$prefix,
+				#onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
 				text=>'T', title=>'Today', class=>'Today',
 				} );
 	} # end if
@@ -853,11 +872,13 @@ sub datetime_text {
 
 sub save_params {
 	my ( $url, @keys ) = @_;
+  return if !%param;
 
 	foreach ( @keys ) {
 		$openprint::log->debug('save_params: key '.$_) if Debug;
 		if (!exists $param{$_}) {
 			$openprint::log->debug('save_params: does not exist in param key '.$_) if Debug;
+			undef($session{$url.'?'.$_});
 			next;
 		}
 		if (ref $param{$_} eq 'ARRAY') {
@@ -880,7 +901,9 @@ sub boolean_override {
 sub write_override {
 	my ( $for, $value, $locked_js, $unlocked_js ) = @_;
 	if ( 1 ) {
-		return sprintf(q`<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/><img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt=""/>`, 
+		return sprintf(q`
+      <input type="hidden" id="%1$s" name="%1$s" value="%2$s"/>
+      <img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt="" title="Click to override"/>`, 
 				$for,
 				((defined($value) and sets::isin($value, ['Y', '1' ]) ) ? 'Y' : '' ),
 				((defined($value) and sets::isin($value, ['Y', '1' ])) ? 'locked' : 'unlocked'),
@@ -918,6 +941,7 @@ sub radio {
 	if ( exists($$options{default}) and ! defined($selected) ) {
 #$log->debug("Selecting default $$options{default} for radio $name");
 		$selected = $$options{default};
+    delete $$options{default};
 	} # end if
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
@@ -1113,7 +1137,7 @@ sub input {
 	$html .= ' readonly="readonly"' if $options{readonly};
 	$html .= '/>';
 	if ( $options{with_clear} ) {
-		$html .= qq`<span class="input-clear" onclick="console.log(this.previousSibling);this.previousSibling.value='';this.previousSibling.focus();">x</span>`;
+		$html .= qq`<span class="input-clear" title="clear input" onclick="this.previousSibling.value='';this.previousSibling.focus();">x</span>`;
 		#$html .= qq`<span class="input-clear" onclick="this.parentNode.value='';this.parentNode.focus();\$j('[name=$options{name}]').val('').focus();">x</span>`;
 	}
 	return $html;
@@ -1152,7 +1176,9 @@ sub hash_link {
 	my ( $path ) = @_;
 
 	my $src;
-	if ( -e $config{SkinPath}.$path ) {
+  if ( -e $path ) {
+    $src = $path;
+	} elsif ( -e $config{SkinPath}.$path ) {
 		$src = $config{SkinPath}.$path;
 	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
 		$src = $ENV{DOCUMENT_ROOT}.$path;
@@ -1281,16 +1307,16 @@ sub do_css_links {
     $css = join('_', @parts ) . '.css';
     #$log->debug("$css");
     if ( -e $config{SkinPath}.'/css/'.$css ) {
-      #$log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
-      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
+      #$log->debug("exist at " . $config{SkinPath}.'/css/'.$css);
+      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link($config{SkinPath}.'/css/'.$css).'"/>';
     } elsif ( Debug ) {
-      $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
+      $log->debug('Does not exist at ' . $config{SkinPath}.'/css/'.$css);
     } # end if
     if ( -e $ENV{DOCUMENT_ROOT}.'/css/'.$css ) {
       #$log->debug("xist at " . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
-      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/base_css/'.$css).'"/>';
+      push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link($ENV{DOCUMENT_ROOT}.'/css/'.$css).'"/>';
     } elsif ( Debug ) {
-      $log->debug("Does not exist at " . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
+      $log->debug('Does not exist at ' . $ENV{DOCUMENT_ROOT}.'/css/'.$css);
     }
     pop @parts;
   } # end while
@@ -1302,58 +1328,75 @@ sub navmenu {
   my $current_uri = shift;
 
   my $html;
+  my $on = 0;
 
   my @categories;
   if ( ref $menu eq 'ARRAY' ) {
-    @categories = map { $_ % 2 ? () : $$menu[$_] } 0 .. (scalar @{$menu}-1);
     my %m = @{$menu};
+    while (@{$menu}) {
+      push @categories, shift @{$menu};
+      shift @{$menu};
+    }
     $menu = \%m;
   } else {
-    @categories = sort keys %{$menu};
+    @categories = sort { $a cmp $b } keys %{$menu};
   }
 
   foreach my $category ( @categories ) {
     if ( ref $$menu{$category} ) {
       my @keys;
       my %urls;
+      my $category_on = 0;
 
       if ( ref $$menu{$category} eq 'ARRAY' ) {
         %urls = @{$$menu{$category}};
+        # Maintain ordering
         while(@{$$menu{$category}}) {
           push @keys, shift @{$$menu{$category}};
           shift @{$$menu{$category}};
-        };
-      } else {
-       %urls = %{$$menu{$category}};
-       @keys =  sort { $urls{$a} cmp $urls{$b} } keys %urls;
-     }
-      my $submenu_html;
-      my $on = 0;
-      foreach my $url (@keys) {
-        my $text = $urls{$url};
-        if ( $text ) {
-          my $Page_Setting = openprint::Page_Setting::get( $url );
-          if ( $Page_Setting->can_view() ) {
-            $submenu_html .= sprintf('<li%s><a href="%s">%s</a></li>', ($current_uri eq $url ? ' class="on"':''), $url, $urls{$url} );
-          } # end if
         }
-        $on = 1 if $current_uri eq $url;
+      } elsif ( ref $$menu{$category} eq 'HASH' ) {
+        %urls = %{$$menu{$category}};
+        @keys =  sort { $urls{$a} cmp $urls{$b} } keys %urls;
+      }
+      my $submenu_html;
+      foreach my $url (@keys) {
+        if (ref $urls{$url}) {
+          my ($sub_html, $new_on) = navmenu({$url=>$urls{$url}}, $current_uri);
+          $submenu_html .= $sub_html;
+          $category_on = 1 if $new_on;
+        } else {
+          my $text = $urls{$url};
+          if ( $text ) {
+            my $Page_Setting = openprint::Page_Setting::get( $url );
+            if ( $Page_Setting->can_view() ) {
+              $submenu_html .= sprintf('<li%s><a href="%s">%s</a></li>', ($current_uri eq $url ? ' class="on"':''), $url, $urls{$url} );
+              $submenu_html .= "\n";
+            } # end if
+          }
+          $category_on = 1 if $current_uri eq $url;
+#$log->error("Setting on to $on because $current_uri eq $url");
+        } # end if submenu
       } # end foreach url
 
       if ( $submenu_html ) {
         $html .= join( $submenu_html,
           sprintf(q`
             <li id="%1$sMenu" class="%2$s"><a href="#" onclick="toggleMenu($('%1$sMenu'), 'off', 'on');return false;">%1$s</a>
-            <ul>`, $category, ( $on ? 'on' : 'off' ) ),'</ul>
+            <ul>`, $category, ( $category_on ? 'on' : 'off' ) ),'</ul>
           </li>
           ' );
       }
+      $on = $category_on;
     } else {
       $html .= sprintf( q`
         <li id="%1$sMenu" class="menu-item %2$s"><a href="%2$s">%1$s</a></li>
         `, $category, $$menu{$category} );
     }
   } # end foreach category
+  if (wantarray) {
+    return ($html, $on);
+  }
   return $html;
 }
 
@@ -1362,6 +1405,7 @@ sub bootstrap_navmenu {
 	my $current_uri = shift;
 
 	my $html;
+	my $on = 0;
 
   my @categories;
   if ( ref $menu eq 'ARRAY' ) {
@@ -1371,7 +1415,6 @@ sub bootstrap_navmenu {
   } else {
     @categories = sort keys %{$menu};
   }
-$log->error("categoryies @categories");
 	foreach my $category ( @categories ) {
     my $category_id = $category;
     $category_id =~ s/\s+//g;
@@ -1379,7 +1422,6 @@ $log->error("categoryies @categories");
 		if ( ref $$menu{$category} eq 'HASH' ) {
 			my %urls = %{$$menu{$category}};
 			my $submenu_html = '';
-			my $on = 0;
 			foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
 				my $text = $urls{$url};
 				if ( $text ) {
@@ -1413,7 +1455,7 @@ $log->error("categoryies @categories");
           if ($Page_Setting->can_view()) {
             $submenu_html .= sprintf('<li><a class="dropdown-item" href="%1$s">%2$s</a></li>', $url, $text )."\n";
           } else {
-            $log->error("Not permitted to view $url");
+            $log->debug("Not permitted to view $url");
           } # end if
           #} else {
           #$log->error("No text for $url");
@@ -1433,8 +1475,14 @@ $log->error("categoryies @categories");
               ),'</ul></li>' );
       }
 		} else {
-			$html .= sprintf( q`<li id="%1$sMenu" class="nav-item %3$s"><a href="%3$s">%2$s</a></li>`, $category_id, $category, $$menu{$category} );
-		}
+      my $url = $$menu{$category};
+      my $Page_Setting = openprint::Page_Setting::get( $url );
+      if ($Page_Setting->can_view()) {
+        $html .= sprintf( q`<li id="%1$sMenu" class="nav-item %3$s"><a href="%3$s">%2$s</a></li>`, $category_id, $category, $url);
+      } else {
+        $log->debug("Not permitted to view $url");
+      }
+    }
 	} # end foreach category
   #$log->error($html);
 	return $html;

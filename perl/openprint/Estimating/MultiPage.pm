@@ -40,10 +40,9 @@ my %variables = (
 	ReplyCardQuantity=>['save'],
 	PrintingType=>['save'],rdbTemplateType=>['save'],
 	help=>['output'],alert=>['output','save'],
-	ProjectIndex=>[], ServiceIndex=>[], ServiceType=>[], NewBook=>[],
+	ProjectIndex=>[], ServiceIndex=>[], ServiceType=>[],
 	remaining_pages=>['output'],next_group_id=>['output'],groups=>['output','save'],
 	spine	=>	 ['save'],
-
 	);
 
 @signature_variables = (
@@ -55,6 +54,7 @@ my %variables = (
 		'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
 		'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
 		'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
+    'side_link',
 		'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace', 'OverrideAddGrip',
 		'ddmRunStyle-', 'ddmPress-', 'PrintingType-', 'StockType-',
 		'txtPlateChangeQuantity-', 'PlateChangeType-',
@@ -73,7 +73,8 @@ my %variables = (
 		'CustomStockPrice', 'StockPricePerM', 'txtStockGSM','CustomSheetDoubleSided',
 		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package','full_packages',
 		'sides_the_same','rdbPressProof','PressApproval',
-		'pages_supplied','supplied_format',
+		'pages_supplied','supplied_format','rdbTemplateType','txtSpreadSize',
+    'txtServiceDescription'
 		);
 
 sub variables {
@@ -108,38 +109,38 @@ sub no_outputs {
     return @v;
 }
 sub outputs {
-	my ( $project_index, $service_index, $specs ) = @_;
-    my @v;
-    foreach my $k ( keys %variables ) {
-        push @v, $k, if sets::isin( 'output', $variables{$k} );
-    } # end foreach;
-	my @outputs = openprint::Estimating::Printing::outputs( $project_index, $service_index, $specs );
-	foreach my $Group ( groups( $project_index, $specs ) ) {
-		push @v, map { $_.$Group } @outputs;
-		if ( ! $$specs{"chkOverrideDimensions$Group"} ) {
-		push @v, map { $_.$Group } ( 'txtFinalWidth','txtFinalHeight' );
-		}
-	} # end foreach Group
-    return @v;
+  my ( $project_index, $service_index, $specs ) = @_;
+  my @v;
+  foreach my $k ( keys %variables ) {
+    push @v, $k, if sets::isin( 'output', $variables{$k} );
+  } # end foreach;
+  my @outputs = openprint::Estimating::Printing::outputs( $project_index, $service_index, $specs );
+  foreach my $Group ( groups( $project_index, $specs ) ) {
+    push @v, map { $_.$Group } @outputs;
+    if ( ! $$specs{"chkOverrideDimensions$Group"} ) {
+      push @v, map { $_.$Group } ( 'txtFinalWidth','txtFinalHeight' );
+    }
+  } # end foreach Group
+  return @v;
 }
 
 sub groups {
 	my ( $project_index, $specs ) = @_;
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
-	if ( $$specs{rdbCover} eq 'Different' ) {
-        if ( ! sets::isin( 1, \@Groups ) ) {
-            push @Groups, 1;
-        } # end if
-    } else {
-        @Groups = sets::exclude( [1], \@Groups );
+  if ( $$specs{rdbCover} eq 'Different' ) {
+    if ( ! sets::isin( 1, \@Groups ) ) {
+      unshift @Groups, 1;
     } # end if
-    if ( ! sets::isin( 2, \@Groups ) ) {
-        push @Groups, 2;
-    } # end if
-    if ( $$specs{txtGateFoldedSpreadQuantity} and ! sets::isin( 3, \@Groups ) ) {
-        push @Groups, 3;
-    } # end if
-	return @Groups;
+  } else {
+    @Groups = sets::exclude( [1], \@Groups );
+  } # end if
+  if ( ! sets::isin( 2, \@Groups ) ) {
+    push @Groups, 2;
+  } # end if
+  if ( $$specs{txtGateFoldedSpreadQuantity} and ! sets::isin( 3, \@Groups ) ) {
+    push @Groups, 3;
+  } # end if
+  return @Groups;
 } # end sub groups
 
 sub calc {
@@ -152,7 +153,7 @@ sub calc {
 	} # end if
 
 	if ( ! ( $$specs{txtFinalWidth} or $$specs{txtFinalHeight} ) ) {
-		$$specs{alert} = 'Please select the dimensions.<br/>';
+		$$specs{alert} .= 'Please select the dimensions.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 	if ( ! $$specs{spine} ) {
@@ -187,6 +188,7 @@ sub calc {
 	my $remaining_pages = $$specs{txtTotalPageQuantity};
 	my %override_pages;
 	foreach my $group_id ( @Groups ) {
+
 		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} and $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
 			if ( ! $$specs{'GroupPageQuantity'.$group_id} ) {
 # We still set override so that it doesn't auto-fill	
@@ -209,8 +211,7 @@ sub calc {
 				}
 				my @g_signatures = $Project->signatures({Group=>$group_id});
 				if ( ! @g_signatures ) {
-
-# calc shouldn't really alter the project.
+          # calc shouldn't really alter the project.
 					$Project->add_signature( undef, undef, {
 							Group=>$group_id,
 							( $group_id == 1 ? ( txtSignatureType=>'Cover Pages', txtServiceDescription=>'Cover' ) : () ),
@@ -218,26 +219,48 @@ sub calc {
 							( $group_id == 3 ? ( txtSignatureType=>'Gate Folded Pages', txtServiceDescription=>'Gate Folded Pages' ) : () ),
 							} );
 				} # end if
-			} # end if
-			$remaining_pages -= $override_pages{$group_id};
+			} # end if type
+			$remaining_pages -= $override_pages{$group_id} if $override_pages{$group_id};
 			if ( $$specs{"PageQuantity-$group_id"} and ( $$specs{"PageQuantity-$group_id"} > $$specs{'GroupPageQuantity'.$group_id} ) ) {
 				$$specs{alert} .= "You have specified to print more pages per signature than are required for group $group_id.<br/>";
 			} # end if
-		} else {
+    } else {
+      # Not overriden
+      if ( $$specs{'txtSignatureType'.$group_id} eq 'Gate Folded Pages' ) {
+        if ($$specs{'rdbTemplateType'.$group_id} eq 'SingleGateFold') {
+          $override_pages{$group_id} = 6;
+          $$specs{'txtSpreadSize'.$group_id} = 6;
+        } elsif ($$specs{'rdbTemplateType'.$group_id} eq 'DoubleGateFold') {
+          $override_pages{$group_id} = 8;
+          $$specs{'txtSpreadSize'.$group_id} = 8;
+        } else {
+          $override_pages{$group_id} = 4;
+          $$specs{'txtSpreadSize'.$group_id} = 4;
+        }
+        $remaining_pages -= $override_pages{$group_id};
+      }
 			$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
 		} # end if override
 	} # end foreach group
 
 	# if there is a cover, then force it to be non-zero
 	if ( (! $override_pages{1}) and ($$specs{OverrideGroupPageQuantity1} ne 'Y') and ($$specs{rdbCover} eq 'Different') ) {
-		my $new_remaining = int(($remaining_pages-4) / $$specs{txtSpreadSize} ) * $$specs{txtSpreadSize} if $$specs{txtSpreadSize};
+    my $pages = 4;
+    if ($$specs{rdbTemplateType1} eq 'SingleGateFold') {
+      $pages = $$specs{GroupPageQuantity1} = 6;
+      $$specs{txtSpreadSize1} = 6;
+    } elsif ($$specs{rdbTemplateType1} eq 'DoubleGateFold') {
+      $pages = $$specs{GroupPageQuantity1} = 8;
+      $$specs{txtSpreadSize1} = 8;
+    }
+		my $new_remaining = int(($remaining_pages-$pages) / $$specs{txtSpreadSize1} ) * $$specs{txtSpreadSize1} if $$specs{txtSpreadSize1};
 		if ( 0 ) {
 # I think the idea here is to give the cover either 4 or 6 pages... depending on the total # of pages.
 			$override_pages{1} = $remaining_pages - $new_remaining;
 			$remaining_pages = $new_remaining;
 		} else {
 # Not sure what else we can do. I suppose we could try to figure out if it a 6pg or 8pg.. but really how often is that going to happen?
-			$override_pages{1} = 4;
+			$override_pages{1} = $pages;
 			$remaining_pages -= $override_pages{1};
 			#$openprint::log->warn("FIXM E using coverages = 4 instead of " . ( $remaining_pages - $new_remaining ) );
 		} # end if
@@ -245,7 +268,7 @@ sub calc {
 	$remaining_pages = 0 if $remaining_pages < 0;
 
 	if ( ! $$specs{txtTotalPageQuantity} ) {
-		$$specs{alert} = 'Please enter the # of pages<br/>';
+		$$specs{alert} .= 'Please enter the # of pages<br/>';
 		$$specs{Status} = 'uncalculated';
 	} elsif ( $$specs{txtTotalPageQuantity} > 2000 ) {
 		$$specs{alert} .= 'The maximum # of pages is 2000.<br/>';
@@ -256,11 +279,6 @@ sub calc {
 #$openprint::log->debug("Overrides: @overrides . " . @overrides . ' Groups: ' . @Groups );
 	if ( $remaining_pages and ( @overrides >= @Groups ) ) {
 		$$specs{alert} .= 'There are ' . $remaining_pages . ' unspecified pages.<br/>';
-		$$specs{Status} = 'uncalculated';
-	} # end if
-
-	if ( ! $$specs{rdbCover} ) {
-		$$specs{alert} = 'Please select the cover type.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
@@ -301,6 +319,12 @@ sub calc {
 		my @side_two_colours = openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideTwo', \%variables );
 
 		my @Stocks = openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
+
+    if (!$$specs{'chkOverrideDimensions'.$group_id}) {
+      # Delete them so that set_size will auto-calculate
+      delete $sig_specs{txtWidth};
+      delete $sig_specs{txtHeight};
+    }
 		openprint::Estimating::Printing::set_size( $Project, \%sig_specs, $specs );
 
 		if ( ! ( @side_one_colours or @side_two_colours ) ) {
@@ -323,7 +347,10 @@ sub calc {
 			}
 		}
 		$$specs{alert} .= $sig_specs{alert} .' for group ' . $group_id . ' ' . $$specs{'txtServiceDescription'.$group_id}. '<br/>' if $sig_specs{alert};
-		@$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
+    @$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
+    #foreach (@signature_variables) {
+    #$openprint::log->error("Group $group_id $_ => $sig_specs{$_}");
+    #}
 		if ( ! ( $variables{'GroupPageQuantity'.$group_id} and @{$variables{'GroupPageQuantity'.$group_id}} ) ) {
 			$openprint::log->debug("Setting output on GroupPageQuantity$group_id") if DEBUG;
 			$variables{'GroupPageQuantity'.$group_id} = [sets::union('output', @{$variables{'GroupPageQuantity'.$group_id}})];
@@ -650,7 +677,7 @@ $openprint::log->debug("Starting Multipage::save");
 					txtSignatureType		=> 'Cover Pages',
 					txtServiceDescription	=> 'Cover',
 					Group					=>  1,
-					PrintingType			=> $$param{PrintingType},
+					PrintingType			=> $$specs{PrintingType},
 					txtSpreadSize			=>  4,
 					} );
 		} # end if
@@ -668,7 +695,7 @@ $openprint::log->debug("Starting Multipage::save");
 				txtSignatureType		=> 'Interior Pages',
 				txtServiceDescription	=> 'Interior Pages',
 				Group					=>  2,
-				PrintingType			=> $$param{PrintingType},
+				PrintingType			=> $$specs{PrintingType},
 				txtSpreadSize			=>  4,
 				} );
 	}

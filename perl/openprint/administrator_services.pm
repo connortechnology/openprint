@@ -30,6 +30,8 @@ sub edit {
     } elsif ( $param{btnFunction} eq 'Delete' ) {
       $variable{error} .= $Service->delete() if ! $variable{error};
       $Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
+    } elsif ( $param{btnFunction} eq 'Undelete' ) {
+      $variable{error} .= $Service->undelete() if ! $variable{error};
     } elsif ( $param{btnFunction} eq 'Destroy' ) {
       foreach my $T ( openprint::Timetrack->find(service_id=>$Service->id() ) ) {
         $variable{error} .= sprintf('Service is used in <a href="/timetrack/edit.html?timetrack_id=%1$d">Timetrack %1$d</a><br/>', $T->id() );
@@ -230,8 +232,20 @@ sub list {
 }
 sub _list {
   ssi::save_params( '/administrator/services/list.html', (
-      'deleted', 'service_name', 'equipment_id', 'category_id',
+      'deleted', 'service_name', 'equipment_id', 'category_id','servicetype_id'
     ) );
+  return if ! $param{btnFunction};
+
+  if ($param{btnFunction} eq 'delete') {
+    my @ids = ref $param{service_id} eq 'ARRAY' ? @{$param{service_id}} : ($param{service_id});
+    foreach my $service ( openprint::Service->find(id=>\@ids, deleted=>[0,1]) ) {
+      if ($service->deleted()) {
+        $variable{error} .= $service->destroy();
+      } else {
+        $variable{error} .= $service->delete();
+      }
+    }
+  }
 }
 
 1;

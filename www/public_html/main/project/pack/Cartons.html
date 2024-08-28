@@ -1,9 +1,8 @@
-<script src="<?hash_link(/javascripts/service.js)?>"></script>
 <div class="Service">	
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
-<input type="hidden" name="item_type" value="FinishedProduct"/>
-<input type="hidden" name="item_type_lock" value="1"/>
+      <input type="hidden" name="item_type" value="FinishedProduct"/>
+      <input type="hidden" name="item_type_lock" value="1"/>
 			<ul>
 				<?include(/includes/main/proj/finished_dimensions.html)?>
 				<?include(/includes/main/proj/finished_calliper.html)?>
@@ -34,3 +33,4 @@
 		<input type="hidden" name="Status"/>
 	</form>
 </div>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>

@@ -23,6 +23,7 @@ require openprint::Equipment;
 require openprint::service;
 
 my @variables = (
+  'alert',
 		'Markup1', 'Markup2', 'Markup3',
 		'txtPrice1', 'txtPrice2', 'txtPrice3',
 		'MPrice1', 'MPrice2', 'MPrice3',
@@ -57,6 +58,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 	
 	$$specs{Status} = 'calculated';
+  $$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
@@ -92,7 +94,9 @@ sub calc {
 	} # end if
 	my $stitching_specs = openprint::service::get_specs_ref( $Project, $stitching_service_index ) if $stitching_service_index;
 
-	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'Drilling Capable'=>\@capabilities}, 'useinestimating'=>1, order=>'strName');
+	my @possible_equipment = openprint::Equipment->find(
+      Specifications => {'Drilling Capable'=>\@capabilities},
+      useinestimating=>1, order=>'strName');
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
@@ -100,7 +104,7 @@ sub calc {
 		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		my %BestPrice;
-		$$specs{'hdnBreakdown'.$qty_index} = "QTY $qty_index ($qty):<br/>";
+		$$specs{'hdnBreakdown'.$qty_index} = "QTY $qty_index ($qty), ";
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{txtFinishedCalliper}.'<br/>';
 		if ( $$specs{txtPressSheetComboItems} > 1 ) {
 			$qty *= $$specs{txtPressSheetComboItems};
@@ -116,19 +120,23 @@ sub calc {
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("<br/>Equipment: %s Lift: %s<br/>", $Equipment->name(), $Equipment->specification('Maximum Lift Depth') );
+      my $liftDepth = $Equipment->Specification('Maximum Lift Depth', $$specs{txtHoleSize});
+      $liftDepth = $Equipment->Specification('Lift Depth', $$specs{txtHoleSize}, 1) if !$liftDepth;
+			$$specs{'hdnBreakdown'.$qty_index} .= '<br/>Equipment: '.$Equipment->name();
+      $$specs{'hdnBreakdown'.$qty_index} .= ' Lift: '.($liftDepth ? $liftDepth->value().$liftDepth->units():' no lift depth set');
+      $$specs{'hdnBreakdown'.$qty_index} .= '<br/>';
 			my $equipment_type = $Equipment->specification('Type');
 			if ( $equipment_type eq 'Stitcher' ) {
 				if ( ! $stitching_service_index ) {
-					$$specs{'hdnBreakdown'.$qty_index} .="Not stitching <br/>";
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Not stitching <br/>';
 					next;
 				} # end if
 				if ( $$stitching_specs{'Imposition'.$qty_index} > 1 ) {
-					$$specs{'hdnBreakdown'.$qty_index} .="Not when stitching more than 1 out<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Not when stitching more than 1 out<br/>';
 					next;
 				} # end if
 				if ( $$stitching_specs{"ddmEquipment$qty_index"} != $Equipment->id() ) {
-					$$specs{'hdnBreakdown'.$qty_index} .="Not stitching on this stitcher<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Not stitching on this stitcher<br/>';
 					next;
 				} # end if
 
@@ -147,24 +155,25 @@ sub calc {
 				my $min_spine_length = $Equipment->specification('Drilling Minimum Spine Length', $$specs{txtHoleQty} );
 				$$specs{'hdnBreakdown'.$qty_index} .= " Spine Length: $spine_length, min: $min_spine_length, max: $max_spine_length<br/>";
 				if ( $max_spine_length and ( $max_spine_length < $spine_length ) ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= " Spine too long.\n";
+					$$specs{'hdnBreakdown'.$qty_index} .= ' Spine too long.<br/>';
 					next;
 				} # end if
 				if ( $min_spine_length and ( $min_spine_length > $spine_length ) ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= " Spine too short.\n";
+					$$specs{'hdnBreakdown'.$qty_index} .= ' Spine too short.<br/>';
 					next;
 				} # end if
 			} # end if
 			if ( $Equipment->specification('Hole Sizes') and ! sets::isin( $$specs{txtHoleSize}, [split ',', $Equipment->specification('Hole Sizes', $$specs{txtHoleQty} ) ] ) ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= " Doesn't support $$specs{txtHoleSize}\" holes.\n";
+				$$specs{'hdnBreakdown'.$qty_index} .= ' Doesn\'t support '.$$specs{txtHoleSize}.' holes.<br/>';
 				next;
 			} # end if
-			if ( $Equipment->specification('Maximum Lift Depth') and $Equipment->specification('Maximum Lift Depth') < $$specs{txtFinishedCalliper} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= " Too thick.\n";
+			if ( $liftDepth and $$liftDepth{value} < $$specs{txtFinishedCalliper} ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= ' Too thick.<br/>';
 				next;
 			} # end if
-			if ( ! $Equipment->specification('Number of Drills') ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= " has no drills!\n";
+			my $heads = $Equipment->specification('Number of Drills') || $Equipment->specification('Drill Heads');
+			if ( ! $heads) {
+				$$specs{'hdnBreakdown'.$qty_index} .= ' has no drills! Please set the Drill Heads specification<br/>';
 				next;
 			} # end if
 
@@ -179,8 +188,8 @@ sub calc {
 				if ( ( $$services{Scoring} or $$services{Perforating} ) and $Equipment->specification('PerfScoreDrillingItemsPerLift') ) {
 					$items_per_lift = $Equipment->specification('PerfScoreDrillingItemsPerLift');
 					$$specs{'hdnBreakdown'.$qty_index} .= 'Settings items per lift to 10 because the items are scored or perfed<br/>';
-				} elsif ( $Equipment->specification('Maximum Lift Depth') ) {
-					$items_per_lift = int($Equipment->specification('Maximum Lift Depth')/$$specs{txtFinishedCalliper});
+				} elsif ($liftDepth) {
+					$items_per_lift = int($$liftDepth{value}/$$specs{txtFinishedCalliper});
 				} else {
 					$items_per_lift = 1;
 				} # end if
@@ -189,7 +198,10 @@ sub calc {
 			} # end if
 
 			my $makeReady = openprint::service::get_price( 'DrillingMakeReady', $$specs{txtHoleQty}, $Equipment );
-			$$specs{'hdnBreakdown'.$qty_index} .= "MakeReadyPrice: $makeReady<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReadyPrice: $%.2f<br/>', $makeReady);
+			my $headMakeReady = openprint::service::get_price( 'DrillingHeadMakeReady', $$specs{txtHoleQty}, $Equipment ) * $$specs{txtHoleQty};
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('HeadMakeReadyPrice: $%.2f<br/>', $headMakeReady);
+
 			my %servicePrice = openprint::service::get_price_object( 'Drilling', $qty, $Equipment);
 			if ( ! %servicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No Service Price found for this quantity.<br/>";
@@ -203,7 +215,7 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * %.3f %s = $%.2f<br/>',$qty, $servicePrice{Price}, @servicePrice{'units','Total'} );
 			} elsif ( $servicePrice{units} eq 'percent' ) {
 				$servicePrice{Total} = $$stitching_specs{"MPrice$qty_index"} * ( $qty / 1000 ) * ( $servicePrice{Price}/100 );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * %.3f per M * %s %s = $%.2f<br/>',$qty, $$stitching_specs{"MPrice$qty_index"},$servicePrice{Price}, @servicePrice{'units','Total'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * $%.3f per M * $%.2f %s = $%.2f<br/>',$qty, $$stitching_specs{"MPrice$qty_index"}, @servicePrice{'Price','units','Total'} );
 			} elsif ( sets::isin( $servicePrice{units}, [ 'per lift', 'per drill' ] ) ) {
 				if ( $items_per_lift ) {
 					$runs *= ceil($qty/$items_per_lift);
@@ -213,15 +225,36 @@ sub calc {
 				} # end if
 
 				$servicePrice{Total} = $runs * $servicePrice{Price};
-				$$specs{'hdnBreakdown'.$qty_index} .= "ServicePrice: $runs lifts * $servicePrice{Price} $servicePrice{units} = $servicePrice{Total}<br/>";
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d lifts * $%.2f %s = $%.2f<br/>', $runs, @servicePrice{qw(Price units Total)});
+      } elsif ($servicePrice{units} eq 'per hour') {
+				if ( $items_per_lift ) {
+					$runs *= ceil($qty/$items_per_lift);
+					$$specs{'hdnBreakdown'.$qty_index} .= "$items_per_lift Items per lift = $runs lifts.<br/>";
+				} else {
+					$$specs{'hdnBreakdown'.$qty_index} .= "$runs runs.<br/>";
+				} # end if
+        my $runtime;
+        my $runspeed = $Equipment->specification( 'Run Speed', $$specs{txtHoleQty} );
+        if ( ! $runspeed ) {
+          if ( $Equipment->specification('Type') ne 'Stitcher' ) {
+            $$specs{'hdnBreakdown'.$qty_index} .= $Equipment->name().' does not hae a run speed setting!<br/>';
+          } 
+        } else {
+          $runtime = ($runs / $runspeed );
+          $servicePrice{Total} = $runtime * $servicePrice{Price};
+          $$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d lifts @ %d per hour * $%.2f %s = $%.2f<br/>',
+            $runs, $runspeed, @servicePrice{qw(Price units Total)});
+        }
+
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units ( $servicePrice{units} ) for service price!<br/>";
 			} # end if
 
-			$price = $makeReady + $servicePrice{Total};
+			$price = $makeReady + $headMakeReady + $servicePrice{Total};
 			if ( $minPrice > 0 and $price < $minPrice ) {
 				$price = $minPrice;
 			} # end if
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $price);
 			if ( $price < $BestPrice{Total} or ! %BestPrice ) {
 				$BestPrice{Total} = $price;
 				$BestPrice{Equipment} = $Equipment;
@@ -283,17 +316,18 @@ sub runtime {
 	my ( $p_id, $s_id, $specs, $qty_index ) = @_;
 	return 0 if ! $$specs{'ddmEquipment'.$qty_index};
 
+	my $runs = $$specs{txtHoleQty};
+
 	my $runtime;
 	my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
 	my $makeready = $Equipment->specification( 'Make Ready Time', undef );
-	my $runspeed = $Equipment->specification( 'Run Speed', undef );
+	my $runspeed = $Equipment->specification( 'Run Speed', $$specs{txtHoleQty} );
 	if ( ! $runspeed ) {
 		if ( $Equipment->specification('Type') ne 'Stitcher' ) {
 			$openprint::log->error("Non-Stitcher driling should have a runspeed!");
 		}
 		return $makeready;
 	}
-	my $runs = $$specs{txtHoleQty};
 
 # Should be the # of drills in the machine
 	$runs = ceil($runs/3);

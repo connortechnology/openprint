@@ -11,6 +11,7 @@
 				<tr>
 					<th class="Service">Service</th>
 					<th class="Range">Quantity Range</th>
+					<th class="Units">Range Units</th>
 					<th class="Cost">Cost CWT</th>
 					<th class="Markup">Mark up</th>
 					<th class="Price">Price CWT</th>
@@ -55,7 +56,8 @@
 	</fieldset>
 	<fieldset><legend><input type="radio" id="modeother" name="mode" value="other" /> Other</legend>
 		<ul>
-			<li><label>Score required</label> <?echo( radio('score_required', ['1','Yes','0','No','','Unchanged'], { onclick=>q`$('modeother').checked=true;` } ); ) ?> </li>
+			<li><label>Score required</label> <?echo( radio('score_required', ['1','Yes','0','No','','Unchanged'], undef, { onclick=>q`$('modeother').checked=true;`, default=>'' } ); ) ?> </li>
+			<li><label>Suitable for digital?</label> <?echo( radio('digital', ['1','Yes','0','No','','Unchanged'], undef, { onclick=>q`$('modeother').checked=true;`, default=>'' } ); ) ?> </li>
 			<li><label>New GSM</label> <?echo(input(type=>'float', name=>'gsm', oninput=>q`$('modeother').checked=true;` ); ) ?> </li>
 		</ul>
 	</fieldset>

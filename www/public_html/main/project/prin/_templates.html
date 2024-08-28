@@ -1,9 +1,12 @@
-<script type="text/javascript">
-	var options = new Array();
+<script>
+	const options = new Array();
 <? echo (
 	my $html = '';
-	my $ProjectType = $$variable{'Project'}->Type();
+	my $ProjectType = $$variable{Project}->Type();
 	my @Templates = $ProjectType->Templates();
+  if (!@Templates) {
+      $log->error("No templates for ".$ProjectType->name());
+    }
 
 	my %types = map { $_->type(), 1 } @Templates;
 	foreach my $type ( keys %types ) {

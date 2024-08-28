@@ -90,12 +90,13 @@ sub new {
 	my $sub_cache = $cache{$config{db_name}}{$parent};
 #$log->debug("New parent:$parent id:$id data:$data ref:$ref");
 
-	if ( ! $ref ) {
-		if ( $id and (!$dont_cache) and $$sub_cache{$id} ) {
+	if (!$ref) {
+		if ($id and (!$dont_cache) and $$sub_cache{$id}) {
 			if ( $data ) {
 				my $self = $$sub_cache{$id};
 				# The reason to use load is if we have overriden it in the object, like in Paper
         # 2022-04-21 had commented it out for some reason. Probably performance, but we need it if we are using find()
+        #$openprint::log->debug("New:loading for $id $$data{id} ($data)");
         $self->load($data);
         #$log->debug("Loading object $parent $id from cache and populating with data new objcet is $self old cache is " . $$sub_cache{$id}) if DEBUG_CACHE;
 				return $self;
@@ -112,13 +113,14 @@ sub new {
 #$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
 				#$self->load( $data );
 			#} # end if
-			$log->debug("not cached from $caller:$line no ref, $parent id: $id, dont_cache: ".(defined($dont_cache)?$dont_cache:'undef').' sub '.$sub_cache.' '.$$sub_cache{$id}) if $id;
+			$log->debug("not cached from $caller:$line no ref, $parent id: $id, dont_cache: ".(defined($dont_cache)?$dont_cache:'undef').' sub '.$sub_cache.' '.$$sub_cache{$id} . ' data '.$data) if $id;
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
 		bless $self, $parent;
 
 if ( 1 ) {
+  # Refresh contents from data or db
 	if ( ( $$self{id} = $id ) or $data ) {
 		#if ( $debug or DEBUG_ALL ) {
 			#my ( $caller, undef, $line ) = caller;
@@ -171,7 +173,7 @@ sub load {
 	$debug = DEBUG_ALL if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 	if ( ! $data ) {
-#$log->debug("Object::load Loading from db $type");
+$log->debug("Object::load Loading from db $type");
 		my $table = ${$type.'::table'};
 		if ( ! $table ) {
 			$log->error( 'NO table for type ' . $type );
@@ -204,12 +206,13 @@ sub load {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
+
 	if ( $data and %$data ) {
 		my %keys = map { (defined $$fields{$_} ? ($_=>$$fields{$_}) : (exists $$data{$_} ? ($_=>$_) : ()) ) } keys %$fields;
     #$log->debug(join(',', map { $_ .'=>'.$keys{$_} } sort { $a cmp $b} keys %keys));
 		@$self{keys %keys} = @$data{ values %keys };
   } else {
-    $log->warn("No data? ".ref $data);
+    $log->warn('No data for ? '.$self->to_string() . ' ref data: '.ref $data);
 	} # end if
 } # end sub load
 
@@ -385,11 +388,11 @@ sub save {
 
   # Isn't this inefficient?
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
-  if ($serial) {
-    if ( ! ( $type =~ /Log/i ) ) {
+  if (0 and $serial) {
+    if ($type !~ /Log/i) {
       my ( $caller, undef, $line ) = caller;
       if ( $caller ne 'openprint::Log' ) {
-        (new openprint::Log())->save({Object=>$self, action=>'Created'});
+        (new openprint::Log())->save({Object=>$self, action=>($$self{id} ? 'Saved' : 'Created')});
       }
     }
   }
@@ -424,21 +427,25 @@ $log->warn('Object::changes called on an object with no fields');
 		}
 		if ( ref $$self{$field} eq 'ARRAY'  ) {
       my @new_value = (ref $$params{$field} eq 'ARRAY' ? @{$$params{$field}} : ( $$params{$field} ));
-			if ( @{$$self{$field}} != sets::intersection(@{$$self{$field}}, @new_value) ) {
+      my @intersection = sets::intersection(@{$$self{$field}}, @new_value);
+			if ( @{$$self{$field}} != @intersection or @new_value != @intersection) {
 				push @results, $field.' changed from '.join(',',@{$$self{$field}}).' to '.join(',', @new_value);
       } elsif ( $debug ) {
-        $log->debug( "$field not changed from ".join(',',@{$$self{$field}}).' to '.join(',', @new_value));
-			}
-		} elsif ( $$self{$field} ne $$params{$field} ) {
-			if ( $field eq 'password' ) {
-				push @results, "$field changed";
-			} else {
-				push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$$params{$field}.'\'';
+        $log->debug( "$field not changed from ".join(',',@{$$self{$field}}).' to '.join(',', @new_value).' intersection:'.join(',',sets::intersection(@{$$self{$field}}, @new_value)));
 			}
 		} else {
-			if ( $debug ) {
-				$log->debug("$field eq $$self{$field} to $$params{$field}");
-			}
+      my $newvalue = $self->transform($field=>$$params{$field});
+      if ( $$self{$field} ne $newvalue ) {
+        if ( $field eq 'password' ) {
+          push @results, "$field changed";
+        } else {
+          push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$newvalue.'\'';
+        }
+      } else {
+        if ( $debug ) {
+          $log->debug("$field eq $$self{$field} to $newvalue");
+        }
+      } # end if
 		} # end if
 	} # end foreach field
 	return @results;
@@ -1211,20 +1218,23 @@ sub to_string {
 sub dropdown {
 	my $self = shift;
 	my %params = @_;
+
+  my $type = ref($self);
+  $type = $self if ! $type;
 	if ( ! $params{order} ) {
-		my $type = ref($self);
-		$type = $self if ! $type;
 		my $order = eval '$'.$type.'::default_sort';
 #$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
 		$params{order} = $order if $order;
 	}
+  my $field = eval '$'.$type.'::dropdown_field';
+  $field = 'name' if ! $field;
 
 	# User has firstname,lastname
 	#if ( ( ! $params{columns} ) {
 		#$params{columns} = 'id,name';
 	#}
 
-	return [ map { $$_{id}, ssi::html_escape($_->name()) } $self->find(%params) ];
+	return [ map { $$_{id}, ssi::html_escape($_->$field()) } $self->find(%params) ];
 } # end sub dropdown
 
 sub sort_value {

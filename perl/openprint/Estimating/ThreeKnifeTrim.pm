@@ -6,6 +6,23 @@ use POSIX           qw(ceil);
 
 use constant DEBUG => 0;
 
+use vars qw( %ServicePrices );
+%ServicePrices = (
+  ThreeKnifeTrimMakeReady => {
+    units => [],
+    range_units => [],
+  },
+  'ThreeKnifeTrim(\d+)Sides' => {
+    units => [ 'per m', 'each' ],
+    range_units => ['caliper'],
+    },
+  ThreeKnifeTrim => {
+    units => [ 'per m', 'each' ],
+    range_units => ['caliper'],
+    },
+  );
+
+
 my %variables = (
 	'Sides' => ['save'],
 	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],
@@ -36,7 +53,7 @@ sub neccessary {
 
 	my $services = $Project->services();
 
-	if ( $$services{'NoBindery'} ) {
+	if ( $$services{NoBindery} ) {
 		$openprint::log->debug(" ** Project is marked as No bindery, ThreeKnifeTrim not needed ! ** ");
 		return 0;
 	} # end if
@@ -44,7 +61,7 @@ sub neccessary {
 
 	my $printing_service_index = $$services{''}[0] if $$services{''};
 	my $specs = openprint::service::get_specs_ref( $Project, $printing_service_index );
-	if ( sets::isin( $$specs{'rdbTemplateType'},[ 'SpinePasting','Unbound','NoBindery'] ) ) {
+	if ( sets::isin( $$specs{rdbTemplateType},[ 'SpinePasting','Unbound','NoBindery'] ) ) {
 		return 1;
 	} # end if
 
@@ -56,16 +73,16 @@ sub calc {
 
 	my $Project = new openprint::Project( $pid );
 
-	$$specs{'Sides'} =~ s/\D//g;
-	if ( ! $$specs{'Sides'} ) {
-		$$specs{'alert'} = 'Please enter the # of sides to be trimmed.';
-		return $$specs{'Status'} = 'uncalculated';
+	$$specs{Sides} =~ s/\D//g;
+	if ( ! $$specs{Sides} ) {
+		$$specs{alert} = 'Please enter the # of sides to be trimmed.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my @Equipment = openprint::Equipment->find('Specifications'=>{'ThreeKnifeTrim Capable'=>'Y'},'useinestimating'=>1);
 	if ( ! @Equipment ) {
-		$$specs{'alert'} = 'We have no three knife trimmers.';
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} = 'We have no three knife trimmers.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $services = $Project->services();
@@ -88,27 +105,27 @@ sub calc {
 
 			my $total = 0;
 
-			my %MakeReady = openprint::service::get_price_object('ThreeKnifeTrimMakeReady', $$specs{'Sides'}, $Equipment );
+			my %MakeReady = openprint::service::get_price_object('ThreeKnifeTrimMakeReady', $$specs{Sides}, $Equipment );
 			if ( ! %MakeReady ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady price.<br/>';
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady Price: $%1$.2f%2$s<br/>', @MakeReady{'Price','units'} );
-				$total += $MakeReady{'Price'};
+				$total += $MakeReady{Price};
 			} # end if
 
-			my %ServicePrice = openprint::service::get_price_object( 'ThreeKnifeTrim'.$$specs{'Sides'}.'Sides', $finished_calliper, $Equipment ); 
+			my %ServicePrice = openprint::service::get_price_object( 'ThreeKnifeTrim'.$$specs{Sides}.'Sides', $finished_calliper, $Equipment ); 
 			if ( ! %ServicePrice ) {
 				%ServicePrice = openprint::service::get_price_object( 'ThreeKnifeTrim', $finished_calliper, $Equipment ); 
 			} # end if
 
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
-			} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {
-				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
+			} elsif ( lc $ServicePrice{units} eq 'per m' ) {
+				$ServicePrice{Total} += $ServicePrice{Price} * $$specs{'txtQuantity'.$qty_index} / 1000;
 			} else {
-				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index};
+				$ServicePrice{Total} += $ServicePrice{Price} * $$specs{'txtQuantity'.$qty_index};
 			} # end if
-			$total += $ServicePrice{'Total'};
+			$total += $ServicePrice{Total};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'} );
 
 			if ( my $minimumcharge = openprint::service::get_price('ThreeKnifeTrimMinimumCharge', undef, $Equipment ) ) {
@@ -116,25 +133,25 @@ sub calc {
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $total );
 			
-			if ( ( ! defined $BestPrice{'Total'} ) or $total < $BestPrice{'Total'} ) {
-				$BestPrice{'Total'} = $total;
-				$BestPrice{'Equipment'} = $Equipment;
-				$BestPrice{'ServicePrice'} = \%ServicePrice;
+			if ( ( ! defined $BestPrice{Total} ) or $total < $BestPrice{Total} ) {
+				$BestPrice{Total} = $total;
+				$BestPrice{Equipment} = $Equipment;
+				$BestPrice{ServicePrice} = \%ServicePrice;
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
         } # end foreach Equipment
 
-		if ( ! defined $BestPrice{'Total'} ) {
+		if ( ! defined $BestPrice{Total} ) {
 			$status = 'uncalculated';
 		} else {
-			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
+			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{Equipment}->id();
 		} # end if
 
-        $$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, ( ($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'LastServicePrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} ) * (1+$Project->markup()/100) );
+        $$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, ( ($BestPrice{ServicePrice}{'Total'} + $BestPrice{'LastServicePrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} ) * (1+$Project->markup()/100) );
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'} * (1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $BestPrice{Total} * (1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
 		} else {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
 
     } # end foreach qty_index
@@ -153,18 +170,18 @@ sub summary {
 	} # end if
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-	return $$specs{'Sides'} . 'side' . ($$specs{'Sides'} == 1 ? '' : 's');
+	return $$specs{Sides} . 'side' . ($$specs{Sides} == 1 ? '' : 's');
 } # end sub summary
 
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{'Equipment'}} = openprint::Equipment->find( 
-			'Specifications'	=>	{'ThreeKnifeTrim Capable'=>'Y'},
-			'useinestimating'	=>	1,
-			'order'				=>	'lower(strName)'
+	@{$$variable{Equipment}} = openprint::Equipment->find( 
+			Specifications	=>	{'ThreeKnifeTrim Capable'=>'Y'},
+			useinestimating	=>	1,
+			order				=>	'lower(strName)'
 			);
-$openprint::log->warn("ThreeKnifeTrim Equipment: " . @{$$variable{'Equipment'}} );
+$openprint::log->warn("ThreeKnifeTrim Equipment: " . @{$$variable{Equipment}} );
 } # end sub display
 
 1;

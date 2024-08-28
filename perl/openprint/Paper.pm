@@ -35,7 +35,7 @@ use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %g
 
 use constant DEBUG_PRICING => 0;
 
-$debug = 0;
+$debug = 1;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -84,7 +84,6 @@ $serial	= 'paper_id_seq';
 		parts				=>	'parts',
 		material_id			=>	'material_id',
 		user_type			=>	'user_type',
-		manufacturers_name	=>	'manufacturers_name',
 		available_to_order	=>	'available_to_order',
 		department_id		=>	'department_id',
 		Supplied			=>	undef,
@@ -226,7 +225,7 @@ sub Prices {
 sub save {
 	my ( $self, $hash ) = @_;
 
-	$self->set($hash ? $hash : {} );
+	$self->set($hash ? $hash : {});
 	
 	if ( $$self{group} and ! $$self{group_id} ) {
 		my $Group = openprint::StockGroup->find_one('name lc'=>lc openprint::StockGroup->transform( 'name', $$self{group} ) );
@@ -321,7 +320,7 @@ sub save {
 	$$self{height} = undef if $$self{type} eq 'Roll';
 	
 	my $error;
-	$error .= 'An owner must be selected.<br/>' if ! $$self{owner_id};
+	#$error .= 'An owner must be selected.<br/>' if ! $$self{owner_id};
 	# Why?
 	#$error .= 'A manufacturer must be selected.<br/>' if ! $$self{manufacturer_id};
 
@@ -347,6 +346,11 @@ sub save {
 	foreach my $rec ( @recommendations ) {
 		next if ! $rec;
 		sql::insert( undef, undef, 'Paper_Recommendations', 'lngPaperIndex', $$self{id},'lngProjectTypeIndex', $rec );
+    if ( $openprint::dbh->errstr() ) {
+      $openprint::dbh->rollback();
+      sql::end_transaction( $openprint::dbh, $ac );
+      return $openprint::dbh->errstr();
+    } # end if
 	} # end foreach
 
 	foreach my $Price ( $self->Prices() ) {
@@ -393,6 +397,10 @@ sub delete {
 	$error .= $openprint::dbh->errstr();
 	sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE paper_id=?}, $$self{id} );
 	$error .= $openprint::dbh->errstr();
+	sql::execute( undef, undef, q{DELETE FROM inventory_check_entries WHERE paper_id=?}, $$self{id} );
+	$error .= $openprint::dbh->errstr();
+	sql::execute( undef, undef, q{UPDATE manifest_content_types SET paper_id=NULL WHERE paper_id=?}, $$self{id});
+	$error .= $openprint::dbh->errstr();
 	foreach my $ESS ( openprint::Equipment_Stock_Setting->find( stock_id=>$$self{id} ) ) {
 		$ESS->destroy();
 	} # end foreach
@@ -400,10 +408,6 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM Papers WHERE id=?}, $$self{id} );
 	$error .= $openprint::dbh->errstr();
 
-	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT manufacturer_id FROM Papers WHERE manufacturer_id=?}, $$self{manufacturer_id} ) ) {
-		sql::execute( undef, undef, q{DELETE FROM Manufacturers WHERE Id=?}, $$self{manufacturer_id} );
-		$error .= $openprint::dbh->errstr();
-	} # end if
 	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT brand_id FROM Papers WHERE brand_id=?}, $$self{brand_id} ) ) {
 		sql::execute( undef, undef, q{DELETE FROM StockBrands WHERE id=?}, $$self{brand_id} );
 	$error .= $openprint::dbh->errstr();
@@ -471,13 +475,13 @@ sub to_string {
 					$self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight(),
 					) );
 		if ( $self->type() eq 'Roll' ) {
-			$string .= ' ' . $self->width.'"' if $$self{width};
+			$string .= ' ' . 1*$self->width.'"' if $$self{width};
 			$string .= ' Roll ';
 		} else {
 			if ( $$self{start_width} and ( ( $$self{width} != $$self{start_width} ) or ( $$self{height} != $$self{start_height} ) ) ) {
 				$string .= ' ' . $$self{start_width}.'x'.$$self{start_height} . ' => '. $$self{width}.'x'.$$self{height};
 			} else {
-				$string .= ' ' . $$self{width}.'x'.$$self{height};
+				$string .= ' ' . 1*$$self{width}.'x'.1*$$self{height};
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
@@ -485,7 +489,7 @@ sub to_string {
 		$string .= ' '. Math::Round::nearest( 0.1, 1000*$self->calliper()).'PT' if $self->calliper() and ! ( $self->weight() =~ /PT/ );
 		}
 		if ( $openprint::config{Show_Stock_GSM} ne 'N' ) {
-		$string .= ' '. $self->gsm().'gsm' if $self->gsm();
+		$string .= ' '. Math::Round::nearest(1, $self->gsm()).'gsm' if $self->gsm();
 		}
 		$string .= ' FSC:' . $$self{fsc_code} if $$self{fsc_code};
 		#$string .= 'Minimum: ' . $$self{minimum_order} if $$self{minimum_order};
@@ -564,23 +568,24 @@ sub Manufacturer {
 	return openprint::Manufacturer( $_[0]{manufacturer_id} );
 }
 sub manufacturer {
-	if ( defined $_[1] ) {
-		$_[1] = openprint::Manufacturer->transform( 'name', $_[1] );
-		if ( ! $_[0]{custom} ) {
-			my $Manufacturer = openprint::Manufacturer->find_one('name lc'=> lc $_[1] );
+  my $self = shift;
+	if ( @_ ) {
+		my $new = openprint::Manufacturer->transform( 'name', shift );
+		if ( ! $$self{custom} ) {
+			my $Manufacturer = openprint::Manufacturer->find_one('name lc'=> lc $new );
 			if ( $Manufacturer ) {
-				@{$_[0]}{'manufacturer_id','manufacturer'} = @$Manufacturer{'id','name'};
+				@$self{'manufacturer_id','manufacturer'} = @$Manufacturer{'id','name'};
 			} else {
-				@{$_[0]}{'manufacturer_id','manufacturer'} = ( undef, $_[1] );
+				@$self{'manufacturer_id','manufacturer'} = ( undef, $new );
 			} # end if
 		} else {
-			$_[0]{manufacturer} = $_[1];
-			$_[0]{manufacturer_id} = undef;
+			$$self{manufacturer} = $new;
+			$$self{manufacturer_id} = undef;
 		} # end if
-	} elsif ( $_[0]{manufacturer_id} and ! $_[0]{manufacturer} ) {
-		$_[0]{manufacturer} = new openprint::Manufacturer( $_[0]{manufacturer_id} )->name();
+	} elsif ( $$self{manufacturer_id} and ! $$self{manufacturer} ) {
+		$$self{manufacturer} = new openprint::Manufacturer( $$self{manufacturer_id} )->name();
 	} # end if
-	return $_[0]{manufacturer};
+	return $$self{manufacturer};
 } # end sub manufacturer
 
 sub Finish {
@@ -1249,9 +1254,10 @@ sub gsm {
 	if ( ! $$self{gsm} ) {
 		if ( $self->wpsi(undef) ) {
 			$$self{gsm} = Math::Round::nearest( 0.01, $$self{wpsi} * 703064.5 );
+			$openprint::log->warn('calculate gsm for ' . $$self{id} . ' ' . $self->to_string() ) if $$self{brand};
 		} else { 
 			$$self{gsm} = 'unknown';
-			$openprint::log->warn("Can't calculate gsm for " . $$self{id} . ' ' . $self->to_string() ) if $$self{brand};
+			$openprint::log->warn('Cant calculate gsm for ' . $$self{id} . ' ' . $self->to_string() ) if $$self{brand};
 		} # end if
 	} # end if
 	return $$self{gsm};
@@ -1561,10 +1567,11 @@ $log->debug("Didn't find specific paper $params{width} x $params{height} $$specs
 			and
 			( ( $$Paper{height} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{width} != $$specs{'StockHeight'.$qty_index} ) )
 		   ) {
-#Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
-#$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
+         #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
+$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$$Paper{Supplied} = $Supplied;
 			if ( ! $Supplied->start_width() ) {
+        $openprint::log->debug("No start width?");
 				$Supplied->width( $$specs{'StockWidth'.$qty_index} );
 				$Supplied->start_width( $Supplied->width() );
 			} 
@@ -1786,11 +1793,13 @@ sub init_cache {
 }
 
 sub link_to {
-	if ( $openprint::variable{uri} and ( $openprint::variable{uri} =~ /administrator/ ) ) {
+  my $self = shift;
+  my $text = @_ ? shift : $self->to_string();
 
-	return sprintf('<a href="/administrator/stock/stock.html?stock_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
+	if ( $openprint::variable{uri} and ( $openprint::variable{uri} =~ /administrator/ ) ) {
+	  return '<a href="/administrator/stock/stock.html?stock_id='.$$self{id}.'">'.$text.'</a>';
 	} else {
-	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
+	  return '<a href="/employee/inventory/paper_details.html?paper_id='.$$self{id}.'">'.$text.'</a>';
 	} # end if
 } # end sub link_to
 

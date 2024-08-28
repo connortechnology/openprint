@@ -3,12 +3,36 @@
 <h2>List</h2>
 </div>
 <script>
-var openprint_load_content_ajax = null;
+var load_page_ajax = null;
 
 function load_page() {
-	if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
-	openprint_load_content_ajax = new Ajax.Updater( 'Results', '_list.html', { parameters: $('f1').serialize() } );
-} 
+  if ( load_page_ajax ) load_page_ajax.abort();
+  $j('#Results').html('Loading');
+  load_page_ajax = $j.ajax({
+    url: '_list.html',
+    data: $j('#f1').serialize(),
+    success: function(data) {
+      load_page_ajax = null;
+      $j('#Results').html(data);
+      $j('#Services').bootstrapTable({ });
+    }
+  });
+}
+
+addEventListener('DOMContentLoaded', (event) => {
+  $j('#Services').bootstrapTable({ });
+/*
+    $j('table.sortable').each(function(index){
+        new DataTable(this, {
+columns: [ {title: 'Service Id', ariaTitle: 'Service Id'},
+{title: 'Service Name'},
+null, null, null, null ],
+orderable: true,
+order: [[1, 'asc']]
+});
+        });
+*/
+    });
 </script>
 <div class="Services">
 <form id="f1" name="f1" method="post" action="list.html">
@@ -27,7 +51,7 @@ function load_page() {
 		</li>
 		<li><label>Category</label>
 			<?echo( ssi::select( 
-						openprint::Service_Category->dropdown(order=>'lower(name)'), 
+						openprint::ServiceCategory->dropdown(order=>'lower(name)'), 
 						$session{$r->uri().'?category_id'}, { 
 						name=>'category_id', 
 						prepend=>[ '', 'All' ],
@@ -37,8 +61,8 @@ function load_page() {
 		<li><label>Type</label>
 			<?echo( ssi::select( 
 						openprint::ServiceType->dropdown(order=>'lower(name)'), 
-						$session{$r->uri().'?type_id'}, { 
-						name=>'type_id', 
+						$session{$r->uri().'?servicetype_id'}, { 
+						name=>'servicetype_id', 
 						prepend=>[ '', 'All' ],
 						onchange=>'load_page();',
 						} ); ) ?>
@@ -81,6 +105,7 @@ function load_page() {
 				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
 				button( 'New', { href=>'/administrator/services/edit.html', text=>'New' } ),
 				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+        button( 'delete', { onclick=>q`jQuery('#Results').load('/administrator/services/_list.html?btnFunction=delete', { service_id: get_value( document.getElementById('f1').service_ids ) } );`, text=>'Delete Checked' } ),
 ); ) ?>
 		</p>
 	</fieldset>

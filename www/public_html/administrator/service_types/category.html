@@ -33,7 +33,7 @@
 			<? echo (
 				my $html = '';
        my %pt_ids = map { $$_{id}, $_ } $$variable{ServiceType_Category}->ServiceTypes();
-				foreach my $ST ( openprint::ServiceType->find( order=>'sorting,lower(name)' ) ) {
+				foreach my $ST ( openprint::ServiceType->find( order=>'lower(name)' ) ) {
 					$html .= sprintf('<li><input type="checkbox" name="servicetype_id" value="%d" %s/> %s</li>',
           $ST->id(), checked( $pt_ids{$$ST{id}} ), $ST->description() );
 				} # end foreach	

@@ -7,8 +7,9 @@ fieldset p label {
 	width: 20px;
 	text-align: center;
 }
+th.Range,
 .Range  {
-	width: auto;
+	width: 250px;
 	text-align: center;
 }
 .Range input[type="text"], .Range input[type="number"] {
@@ -22,6 +23,9 @@ fieldset p label {
 .Supplier select {
 	max-width: 100%;
 }
+select.equipment, select.service {
+width: auto;
+}
 .Mode {
 /*
 , .Period {
@@ -29,6 +33,9 @@ fieldset p label {
 	display: none;
 }
 	
+.Equipment select {
+max-width: 100%;
+}
 
 .Equipment,
 .Min,
@@ -37,24 +44,29 @@ fieldset p label {
 .Name {
   text-align: left;
 }
+th.Units,
 .Units {
-	width: 120px;
+	width: 160px;
 	text-align: center;
 }
+th.Cost,
 .Cost {
 	width: 90px;
-	text-align: right;
+	text-align: center;
 }
+th.Markup,
 .Markup {
 	width: 80px;
-	text-align: right;
+	text-align: center;
 }
+th.Price,
 .Price {
 	width: 90px;
-	text-align: right;
+	text-align: center;
 }
+th.Discount,
 .Discount {
-	width: 95px;
+	width: 150px;
 	text-align: center;
 }
 .Price input, .Cost input, .Markup input {
@@ -74,6 +86,9 @@ fieldset.Fold p label {
 fieldset.Fold p input {
 	width: auto;
 }
+.units select {
+  max-width: 100%;
+}
 
 #Prices table .buttons {
 	width: 80px;
@@ -91,4 +106,12 @@ input[type="numeric"] {
 .UserType {
 	width: 100px;
 	text-align: left;
+}
+
+li input[type="text"] {
+  width: 100%;
+}
+#ServicePrices tr th button.btn {
+  font-size: 1.5rem;
+  padding: 0.25rem 0.6rem;
 }
