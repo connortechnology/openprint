@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require openprint::Equipment;
 require openprint::service;
@@ -1182,7 +1182,7 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 			$Services{$service_name} = openprint::Service->find_one(name=>$service_name);
 		}
 		my $Service = $Services{$service_name};
-    $openprint::log->debug("Service? $Service $$Service{name}");
+    $openprint::log->debug("Service? $Service $$Service{name}") if $Service;
 		my $servicePrice = $Service ? $Service->get_Price($qty, $Equipment) : 0;
 		if ( !$servicePrice ) {
 			$Service = $BaseService;
