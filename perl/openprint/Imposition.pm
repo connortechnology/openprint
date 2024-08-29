@@ -5,7 +5,7 @@ package openprint::Imposition;
 require Math::Round;
 require Data::Dumper;
 use SVG;
-use vars qw( $AUTOLOAD %Orientations @RunStyles);
+use vars qw( $AUTOLOAD %Orientations @RunStyles %ShortStyles);
 use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
@@ -17,6 +17,13 @@ use constant Horizontal => 1;
 );
 
 @RunStyles = ( 'Sheet Work', 'Work & Turn', 'Work & Tumble', 'Perfecting', 'Web' );
+%ShortStyles = (
+  'Sheet Work' => 'SW',
+  'Work & Turn' => 'WT',
+  'Work & TUmble' => 'WF',
+  'Perfecting' => 'PF',
+  'Web'   => 'Web',
+);
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
@@ -768,10 +775,16 @@ sub bleed_size {
 	$_[0]{bleed_size} = $_[1] if @_ > 1;
 	return $_[0]{bleed_size};
 } # end sub bleed_size
+
 sub runstyle {
 	$_[0]{runstyle} = $_[1] if @_ > 1;
 	return $_[0]{runstyle};
 } # end sub runstyle
+
+sub rs {
+  return $ShortStyles{$_[0]{runstyle}};
+}
+
 sub quantity {
 	$_[0]{quantity} = $_[1] if @_ > 1;
 	return $_[0]{quantity};
@@ -918,20 +931,6 @@ sub to_svg {
   add_drop_shadow_define($defs);
   add_colour_bar_define($defs);
   add_diagonal_hatch_define($defs);
-  if ($$self{runstyle} eq 'Work & Turn') {
-    my $half = $self->copy();
-    $half->columns($$half{columns}/2);
-    $half->dutch_columns($$half{dutch_columns}/2);
-    add_imposition_define($defs, $half);
-  } elsif ($$self{runstyle} eq 'Work & Tumble') {
-    my $half = $self->copy();
-    $half->rows($$half{rows}/2);
-    $half->dutch_rows($$half{dutch_rows}/2);
-    add_imposition_define($defs, $half);
-  } else {
-    add_imposition_define($defs, $self);
-  }
-
 # Draw a white backgound as transparency prints as black on many browsers.
   $svg->rect(
       id     => 'background',
@@ -971,6 +970,7 @@ sub add_sheet {
     $grip /= 2 if ($$self{runstyle} eq 'Work & Tumble' or $$self{runstyle} eq 'Perfecting');
     $canvas->rect(class=>'grip', id=>'grip', x=>0, y=>0, width=>$$self{sheet_width}, height=>$grip, fill=>'url(#diagonalHatch)');
   }
+  $canvas = $canvas->g(transform => "translate(0, $grip)");
 
   if ($$self{colour_bar_size}) {
     my $colour_bar_height = $$self{colour_bar_size};
@@ -983,16 +983,18 @@ sub add_sheet {
    }
   }
 
-
   my $x = ($self->sheet_width() - 2*$$self{gutter} - $self->layout_width()) / 2;
+  $x = 0 if $x < 0;
   my $y = ($self->sheet_height() - $grip - $self->layout_height()) / 2;
+  $y = 0 if $y < 0;
 
 # Centre the imposition on the printable page area.
   my $group = $canvas->group(transform => "translate($x, $y)");
-  $group->use(-href => "#imposition");
-
-  # Draw a centre line to indicate a WT/WF job (which are mirrored).
-  if ($self->{runstyle} eq 'Work & Turn') {
+  if ($$self{runstyle} eq 'Work & Turn') {
+    my $half = $self->copy();
+    $half->columns($$half{columns}/2);
+    $half->dutch_columns($$half{dutch_columns}/2);
+    add_imposition($group, $half);
 # just grab the first half of the image in a new viewport and mirror.
     my $dim = $self->layout_width() / 2;
 
@@ -1002,13 +1004,19 @@ sub add_sheet {
         overflow => 'hidden',
         x => $dim,
         y => 0,
+        transform => "translate($dim, 0) scale(-1,1)",
         );
-    $mirror->use(-href => "#imposition", transform => "translate($dim, 0) scale(-1,1)");
+    add_imposition($mirror, $half);
 
-# Draw a vertical centre line (y-axis).
+    # Draw a vertical centre line (y-axis).
     my $centre = $self->sheet_width() / 2 - $$self{gutter};
     $canvas->line( id => 'centreline', x1 => $centre,   x2 => $centre, y1 => - 2, y2 => $self->sheet_height() + 2);
+
   } elsif ($$self{runstyle} eq 'Work & Tumble') {
+    my $half = $self->copy();
+    $half->rows($$half{rows}/2);
+    $half->dutch_rows($$half{dutch_rows}/2);
+    add_imposition($group, $half);
 # just grab the first half of the image in a new viewport and mirror.
     my $dim = $self->layout_height() / 2;
 
@@ -1018,9 +1026,9 @@ sub add_sheet {
         overflow => 'hidden',
         x => 0,
         y => $dim,
+  transform => "translate(0, $dim) scale(1,-1)"
         );
-    $mirror->use(-href => "#imposition", transform => "translate(0, $dim) scale(1,-1)");
-
+    add_imposition($mirror, $half);
 # Draw a horizontal centre line (x-axis).
     my $centre = $self->sheet_height() / 2 - $$self{grip};
     $canvas->line(
@@ -1028,16 +1036,24 @@ sub add_sheet {
         x1 => - 2, x2 => $self->sheet_width() + 2,
         y1 => $centre,   y2 => $centre,
         );
+
+  } else {
+    add_imposition($group, $self);
   }
 
   return $sheet;
 } # end sub add_sheet
 
-sub add_imposition_define {
+sub id_string {
+  my $self = shift;
+  my $stock = $self->Paper();
+  return sprintf('%s%dx%dd%dx%don%dx%d', $self->rs(), @$self{'columns','rows','dutch_columns','dutch_rows'}, @$stock{'width','height'});
+}
+sub add_imposition {
   my ($define, $self) = @_;
 
-  $openprint::log->error(Dumper($self));
-  my $canvas = $define->group(id => 'imposition');
+  $openprint::log->error($self->to_string());
+  my $canvas = $define->group();
 
   my $image_width = ($$self{image_orientation} == Vertical ? $$self{image_width} : $$self{image_height});
   my $image_height = ($$self{image_orientation} == Vertical ? $$self{image_height} : $$self{image_width});
@@ -1045,7 +1061,6 @@ sub add_imposition_define {
   my $object_height = ($$self{image_orientation} == Vertical ? $$self{image_height} : $$self{image_width});
   #my $object_width = ($$self{image_orientation} == Vertical ? $$self{object_width} : $$self{object_height});
   #my $object_height = ($$self{image_orientation} == Vertical ? $$self{object_height} : $$self{object_width});
-
 	foreach my $column ( 1 .. $$self{columns} ) {
 		foreach my $row ( 1 .. $$self{rows} ) {
 			my $image_x = (($column-1)*$image_width) + $$self{gutter};# + ($column*2);
@@ -1053,11 +1068,10 @@ sub add_imposition_define {
 			my $object = $canvas->rect(class=>'image', x=>$image_x, y=>$image_y,
           width=>$object_width, height=>$object_height,
           fill=>'rgb(255,255,255)');
-
 			if ( $self->page_columns() > 1 ) {
 				my $page_width = $object_width / $self->page_columns();
 				my $page_height = $object_height / $self->page_rows();
-					my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) ? 'red' : 'black';
+        my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) ? 'red' : 'black';
 
 				foreach my $page_column ( 2 .. $self->page_columns() ) {
 					my $page_x1 = $image_x + ($page_column-1)*$page_width;
@@ -1145,8 +1159,7 @@ sub add_imposition_define {
     } # end foreach column
   } # end if has dutch
   return $canvas;
-} # end add_imposition_define
-
+} # end add_imposition
 
 # Add a drop shadow filter effect to the document.
 sub add_drop_shadow_define {
