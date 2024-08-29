@@ -1036,6 +1036,7 @@ sub add_sheet {
 sub add_imposition_define {
   my ($define, $self) = @_;
 
+  $openprint::log->error(Dumper($self));
   my $canvas = $define->group(id => 'imposition');
 
   my $image_width = ($$self{image_orientation} == Vertical ? $$self{image_width} : $$self{image_height});
