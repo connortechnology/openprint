@@ -110,7 +110,7 @@ sub signature_calc {
 				$ImpositionMakeReady{Total} = $ImpositionMakeReady{Price} * $Imposition->sides();
 			} elsif ( $ImpositionMakeReady{units} eq 'per job' ) {
         my @signatures = $Project->signatures( { sort=>1 } );
-        my $sig_specs = openprint::service::get_specs_ref( $Project, @signatures[0] );
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[0] );
         my $specs = $Imposition->specs();
         if ($$specs{SignatureIndex} == $$sig_specs{SignatureIndex}) {
           $ImpositionMakeReady{Total} = $ImpositionMakeReady{Price};
