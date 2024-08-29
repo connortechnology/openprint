@@ -1,6 +1,6 @@
-<script type="text/javascript">
+<script>
 function load_page() {
-	new Ajax.Updater( 'Results', '_page_settings.html', { parameters: $('f1').serialize() } );
+  $j('#Results').load('_page_settings.html', $j('#f1').serialize() );
 } 
 </script>
 <?include('/includes/error_reporting.html')?>

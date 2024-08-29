@@ -1182,13 +1182,16 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 			$Services{$service_name} = openprint::Service->find_one(name=>$service_name);
 		}
 		my $Service = $Services{$service_name};
+    $openprint::log->debug("Service? $Service $$Service{name}");
 		my $servicePrice = $Service ? $Service->get_Price($qty, $Equipment) : 0;
 		if ( !$servicePrice ) {
 			$Service = $BaseService;
+      $openprint::log->debug("No price, going with $$BaseService{name}");
 			$servicePrice = $Service->get_Price($neededPockets, $Equipment) if $Service;
 		} # end if
 		if ( $servicePrice ) {
 			$pass{ServicePrice} = $servicePrice;
+    $openprint::log->debug("ServicePrice? $$servicePrice{ServiceName} $$servicePrice{units}");
 		} else {
 			$openprint::log->error("No service price for $$Service{name}");
 		}

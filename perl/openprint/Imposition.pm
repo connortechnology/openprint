@@ -276,9 +276,10 @@ sub load {
 #Carp::cluck("No press in Imposition::load");
 		} else {
 #Carp::cluck("Loading press in Imposition::load");
-			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
+			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>0);
 			if ( ! $$self{Press} ) {
 				$openprint::log->error("load: No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
+        $$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>1);
 			} # end if
 		} # end if
 		$$self{Press} = new openprint::Equipment() if ! $$self{Press};

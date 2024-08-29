@@ -1,5 +1,5 @@
 <ul>
-  <li><label>Finished Calliper</label><span id="txtCalliper"><?txtCalliper?></span>&quot;</li>
+  <li><label>Finished Calliper</label><span id="txtCalliper"><?echo($$variable{Project}->calliper() )?></span>&quot;</li>
   <?if($$variable{ServiceType}->name() eq 'SaddleStitching')?>
   <li><label># of stitches</label><?echo( radio('stitches', [2=>2, 3=>3], $$variable{stitches}, {default=>2}); )?></li>
   <?endif($$variable{ServiceType}->name() eq 'SaddleStitching')?>

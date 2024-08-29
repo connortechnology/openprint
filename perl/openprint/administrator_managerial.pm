@@ -722,9 +722,14 @@ sub _company_accounting_contacts {
 
 sub payment_options {
 	require openprint::PaymentType;
-	$variable{PaymentType} = new openprint::PaymentType( $param{paymenttype_id} );
+	my $PaymentType = $variable{PaymentType} = new openprint::PaymentType( $param{paymenttype_id} );
 	if ( $param{btnFunction} eq 'Save' ) {
-		$variable{error} .= $variable{PaymentType}->save(\%param);
+    my @changes = $PaymentType->changes(\%param);
+    if (@changes) {
+      $variable{error} .= $PaymentType->save(\%param);
+      (new openprint::Log())->save({Object=>$PaymentType, action=>'Edit', note=>join('<br/>', @changes) });
+    }
+		$variable{ExternalRedirect} = '/administrator/managerial/payment_options.html' if ! $variable{error};
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $variable{PaymentType}->delete();
 		$variable{ExternalRedirect} = '/administrator/managerial/payment_options.html' if ! $variable{error};

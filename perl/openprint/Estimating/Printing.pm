@@ -1651,27 +1651,27 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 				} # end foreach P
 			} # end if DEBUG
 		} # end if
-			if ( 0 and DEBUG_IMPOSITIONS ) {
-				foreach my $P ( @Papers ) {
-					$log->debug("Stocks: " . $P->to_string() );
-				} # end foreach P
-			} 
+    if ( 0 and DEBUG_IMPOSITIONS ) {
+      foreach my $P ( @Papers ) {
+        $log->debug("Stocks: " . $P->to_string() );
+      } # end foreach P
+    } 
 		my %imps;
 		foreach my $Paper ( @Papers ) {
 #Paper might have different calliperso# Is this needed anymore
 			#$$project{Calliper} = $$Paper{calliper};
-			if ( DEBUG_IMPOSITIONS and $$Overrides{"chkOverrideSheetSize$qty_index"} and $$specs{"ddmStockSheetSize$qty_index"} ) {
+			if (DEBUG_IMPOSITIONS and $$Overrides{"chkOverrideSheetSize$qty_index"} and $$specs{"ddmStockSheetSize$qty_index"} ) {
 
 				my ( $width, $height ) = split('x', $$specs{"ddmStockSheetSize$qty_index"} );
 				if ( $width and ( $width != $$Paper{width} ) ) {
-	$log->debug("Skipping cuz not desired width: $$Paper{width}x$$Paper{height} != $width");
+	$log->debug("Skipping cuz not desired width: $$Paper{width}x$$Paper{height} != $width") if DEBUG_IMPOSITIONS;
 					next;
 				} 
 				if ( $height and ( $height != $$Paper{height} ) ) {
-	$log->debug("Skipping cuz not desired height $$Paper{width}x$$Paper{height} != $height");
+	$log->debug("Skipping cuz not desired height $$Paper{width}x$$Paper{height} != $height") if DEBUG_IMPOSITIONS;
 					next;
 				} 
-				$log->debug("Have acceptable sheet $width x $height");
+				$log->debug("Have acceptable sheet $width x $height") if DEBUG_IMPOSITIONS;
 			} 
 
 			if ( $$specs{Group} ) {
@@ -4253,7 +4253,7 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 		%imps = ();
 		my $bump_count = 0;
 # Now need to look at each paper and filter out small impositions
-# Can also look at cases where same roll width, different cut off... but less impo... seems to me we want to maximuize plate usage
+# Can also look at cases where same roll width, different cut off... but less impo... seems to me we want to maximize plate usage
 		foreach my $I ( @results ) {
 			my $Paper = $$I{Paper};
 			my $key = join('-',@$Paper{'width','height','minimum_order'}, @$I{'pages','image_orientation','runstyle'}, $I->Press()->id() );
@@ -7652,7 +7652,7 @@ sub get_weight {
 		$weight *= $$specs{'PageQuantity'.$qty_index}/$$specs{txtSpreadSize};
 	} # end if
 # This is business cards, etc.
-#$log->debug("Get_weight: Spreadsize($$specs{txtSpreadSize} ($$specs{'PageQuantity'.$qty_index} > 0 ? $$specs{'PageQuantity'.$qty_index} : 1 ) * ( $$specs{txtWidth} * $$specs{txtHeight} ) * ".$Paper->gsm().'gsm '.$Paper->wpsi() . '==='.$Paper->wpsi(undef)." wpsi = $sig_weight * $$specs{'PageQuantity'.$qty_index} = " . $weight);
+#$log->debug("Get_weight: Spreadsize($$specs{txtSpreadSize} ($$specs{'PageQuantity'.$qty_index} > 0 ? $$specs{'PageQuantity'.$qty_index} : 1 ) * ( $$specs{txtWidth} * $$specs{txtHeight} ) * ".$Paper->gsm().'gsm '.$Paper->wpsi() . '=='.$Paper->wpsi(undef)." wpsi = $sig_weight * $$specs{'PageQuantity'.$qty_index} = " . $weight);
 	return $weight;
 } # end sub get_weight
 
