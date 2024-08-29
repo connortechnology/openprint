@@ -205,10 +205,12 @@ sub get_best_prices {
     $log->debug('Using new style price caching' ) if DEBUG;
     if ($price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}) {
       @pricing = @{$price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}};
-      $log->debug("Have prices in cache for $price_type $$Object{id} #".@pricing);
-    foreach my $p ( @pricing ) {
-      $log->debug($p->to_string());
-    }
+      if (DEBUG) {
+        $log->debug("Have prices in cache for $price_type $$Object{id} #".@pricing);
+        foreach my $p ( @pricing ) {
+          $log->debug($p->to_string());
+        }
+      }
     } else {
       @pricing = $Object->Prices();
     }
