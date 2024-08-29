@@ -202,7 +202,6 @@ select {
 }
 svg.Imposition {
 	width: 320px;
-	height: 240px;
 	color: white;
 }
 svg.Imposition rect.background {
