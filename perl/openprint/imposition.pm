@@ -4,9 +4,9 @@ use Carp;
 
 use openprint::Imposition;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_DUTCH => 0;
-use constant DEBUG_CONVERT => 0;
+use constant DEBUG_CONVERT => 1;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -179,22 +179,22 @@ sub check_setup {
     return 0;
   }
 
-  my $Equipment = $setup->Press();
-  if ( 0 and $Equipment ) {
-		# Run Equipment Tests
-		if ( $setup->layout_width() > $Equipment->specification( 'Maximum Image Width' ) ) {
-			$setup->rows(0);
-		} # end if
-		if ( $setup->layout_width() < $Equipment->specification( 'Minimum Image Width' ) ) {
-			$setup->rows(0);
-		} # end if
-		if ( $setup->layout_height() > $Equipment->specification( 'Maximum Image Height' ) ) {
-			$setup->rows(0);
-		} # end if
-		if ( $setup->layout_height() < $Equipment->specification( 'Minimum Image Height' ) ) {
-			$setup->rows(0);
-		} # end if
-	} # end if
+  #my $Equipment = $setup->Press();
+  #if ( 0 and $Equipment ) {
+  ## Run Equipment Tests
+  #if ( $setup->layout_width() > $Equipment->specification( 'Maximum Image Width' ) ) {
+  #$setup->rows(0);
+  #} # end if
+  #if ( $setup->layout_width() < $Equipment->specification( 'Minimum Image Width' ) ) {
+  #$setup->rows(0);
+  ##} # end if
+  #if ( $setup->layout_height() > $Equipment->specification( 'Maximum Image Height' ) ) {
+  #$setup->rows(0);
+  #} # end if
+  #if ( $setup->layout_height() < $Equipment->specification( 'Minimum Image Height' ) ) {
+  #$setup->rows(0);
+  #} # end if
+  #} # end if
 
 	$openprint::log->debug("Checking used_width against sheetwidth " . $setup->used_width() . ' <=> ' . $setup->sheet_width() ) if DEBUG;
 	if ( $setup->used_width() > $setup->sheet_width() ) {
@@ -285,13 +285,13 @@ sub calc_setup_object {
 	} # end if Perfecting
 
 	if ( my $amount = $Press->specification($run_style.' Pre-trim stock') ) {
-$openprint::log->debug("Pretrimming by $amount") if DEBUG;
+    #$openprint::log->debug("Pretrimming by $amount") if DEBUG;
 		$Paper = $Paper->clone();
 		$Paper->cut( $$Paper{width} - $amount, $$Paper{height} - $amount );
 		$Paper->width( 0 ) if $$Paper{width} < 0;
 		$Paper->height( 0 ) if $$Paper{height} < 0;
 	} else {
-$openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
+    #$openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	} # end if
 
 	my $setup1 = new openprint::Imposition();
@@ -525,13 +525,10 @@ $openprint::log->debug("Gutters: specs : $$specs{Gutter}, bindery: $bindery_gutt
 
 	my $colour_bar = 0;
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
-
-# if colour bar is at bottom,
 		$colour_bar = $$setup1{colour_bar_size};
 
 # colour bar is at bottom or top, then can bleed into it.  Or it can go in the middle, in which case you put it in the bleed space. W&Tumble we put it in grip, so don't do this at all.
-		if ( $run_style eq 'Work & Tumble' ) {
-		} else {
+		if ( $run_style ne 'Work & Tumble' ) {
 			#$colour_bar -= $bleed_size if $bleed_locations{Top};
 			#$colour_bar -= $bleed_size if $bleed_locations{Bottom};
 			#$colour_bar = 0 if $colour_bar < 0;
@@ -539,7 +536,7 @@ $openprint::log->debug("Gutters: specs : $$specs{Gutter}, bindery: $bindery_gutt
 # If impo was x2 then it can go in middle, but we don't know that yet.
 			# Apparently you can
 # 2014-09-25: Brendan and Rick say you really can't.  You need a minimum of bleed space.
-# SInce we don't know it rows > 1 yet, let's just only subtract 1
+# SInce we don't know if rows > 1 yet, let's just only subtract 1
 			if ( $bleed_size ) {
 			$colour_bar -= ( $bleed_size - $min_bleed_size ) if $bleed_locations{Top} or $bleed_locations{Bottom};
 			#$colour_bar -= ( $bleed_size - $min_bleed_size ) if $bleed_locations{Top} and $bleed_locations{Bottom};
@@ -554,7 +551,7 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 	} # end if
 
 	if ( $Paper->cuttable() ) {
-	# There needs to be enough space to put crop marks, but they can go in th bleed space, so it's only an nissue if we are running small or no bleeds.
+	# There needs to be enough space to put crop marks, but they can go in th bleed space, so it's only an issue if we are running small or no bleeds.
 		$cropmarkspace = $$specs{CropMarkSpace};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Top};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
@@ -569,7 +566,7 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 	} # end if
 
 	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
-	$openprint::log->debug("Height: $adjusted_paper_height - CB $$specs{colour_bar_size} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
+	$openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
 
 	my $adjusted_paper_width = $paper_width;
 	if ( $Paper->cuttable() ) {
@@ -1193,10 +1190,10 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
             }
           }
         }
-        if ( $newimp->layout_width() <= $newimp->sheet_width() and $newimp->layout_height() <= $newimp->sheet_height() ) {
+        if ( $newimp->used_width() <= $newimp->sheet_width() and $newimp->used_height() <= $newimp->sheet_height() ) {
 				push @imps, $newimp;
       } elsif (DEBUG_CONVERT) {
-        $newimp->display("Too big: " . $newimp->layout_width().' < '.$newimp->sheet_width() . ' and '. $newimp->layout_height().' < '. $newimp->sheet_height() );
+        $newimp->display("Too big: " . $newimp->used_width().' < '.$newimp->sheet_width() . ' and '. $newimp->used_height().' < '. $newimp->sheet_height() );
       }
 			} # end foreach block
 			#last if @imps and (@imps[@imps-1]->imposition() >= 4);

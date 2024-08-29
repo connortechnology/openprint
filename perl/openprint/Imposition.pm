@@ -79,9 +79,8 @@ sub new {
 } # end sub new
 
 sub layout_width {
-	if ( @_ > 1 ) {
-		$_[0]{layout_width} = $_[1];
-	} 
+  $_[0]{layout_width} = $_[1] if @_ > 1;
+
 	if ( ! defined $_[0]{layout_width} ) {
 		if ( $_[0]{image_orientation} == Vertical ) {
 			$_[0]{layout_width} = ( $_[0]{columns} * $_[0]{image_width} ) + $_[0]{perfecting_wheel_space};
@@ -136,9 +135,7 @@ $openprint::log->warn("layout_width: Unknown orientation ($_[0]{image_orientatio
 }
 
 sub layout_height {
-	if ( @_ > 1 ) {
-		$_[0]{layout_height} = $_[1];
-	} 
+  $_[0]{layout_height} = $_[1] if @_ > 1;
 	if ( ! defined $_[0]{layout_height} ) {
 		if ( $_[0]{image_orientation} == Vertical ) {
 			$_[0]{layout_height} = $_[0]{rows} * $_[0]{image_height};
@@ -156,9 +153,11 @@ sub layout_height {
 			my $folio_size = $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} );
 			$folio_size -= $_[0]{colour_bar_size} if $_[0]{colour_bar_orientation} eq 'Width';
 			$folio_size -= $_[0]{grip};
-			if ( $_[0]{folio_lip} > 0 ) {
-				#$openprint::log->debug("Adding folio lip size $folio_size to height  $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} ) - $_[0]{colour_bar_size} $_[0]{colour_bar_orientation}  grip: $_[0]{grip}"  );
+			if ( $folio_size > 0 ) {
+				$openprint::log->debug("Adding folio lip size $folio_size to height  $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} ) - $_[0]{colour_bar_size} $_[0]{colour_bar_orientation}  grip: $_[0]{grip}"  );
 				$_[0]{layout_height} += $folio_size;
+        #} else {
+        #$openprint::log->debug("Not Adding folio lip size $folio_size to height  $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} ) - $_[0]{colour_bar_size} $_[0]{colour_bar_orientation}  grip: $_[0]{grip}"  );
 			}
 
 			if ( $_[0]{dutch_columns} ) {
