@@ -1418,20 +1418,37 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
                 $height_folds = $$Fold{page_rows}-1;
                 $openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") if DEBUG;
               } else {
-                $openprint::log->debug("Fold does not have page_rows and page_columns filled in" . $Fold->to_string() ) if DEBUG;
+                $openprint::log->debug('Fold does not have page_rows and page_columns filled in:' . $Fold->to_string() ) if DEBUG;
                 $openprint::log->debug("old: $width_folds x $height_folds source: $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} x $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight} ") if DEBUG;
                 if ( 1 ) {
-                  $width_folds = Math::Round::nearest( 1, $$Imposition{layout_width} / $$Imposition{object_width} )-1 if $$Imposition{object_width};
+                  if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
+                    $width_folds = Math::Round::nearest( 1, $$Imposition{layout_width} / $$Imposition{object_width} )-1 if $$Imposition{object_width};
+                    $height_folds = Math::Round::nearest( 1, $$Imposition{layout_height}/ $$Imposition{object_height} )-1 if $$Imposition{object_height};
+                    if ($$Imposition{spine} eq 'height') {
+                      $height_folds -= 1;
+                    } else {
+                      $width_folds -= 1;
+                    }
+                  $openprint::log->debug("new: $width_folds x $height_folds from $$Imposition{layout_width} / $$Imposition{object_width} x $$Imposition{layout_height}/ $$Imposition{object_height}") if DEBUG;
+                  } else {
+                    $width_folds = Math::Round::nearest( 1, $$Imposition{layout_width} / $$Imposition{object_height} ) if $$Imposition{object_height};
+                    $height_folds = Math::Round::nearest( 1, $$Imposition{layout_height}/ $$Imposition{object_width} ) if $$Imposition{object_width};
+                    if ($$Imposition{spine} eq 'height') {
+                      $width_folds -= 1;
+                    } else {
+                      $height_folds -= 1;
+                    }
+                  $openprint::log->debug("new: $width_folds x $height_folds x $$Imposition{layout_width} / $$Imposition{object_height} x $$Imposition{layout_height}/ $$Imposition{object_width}") if DEBUG;
+                  }
+
                   if ( $width_folds < 0 ) {
-                    $openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
+                    $openprint::log->debug("Got negative width_folds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
                     $width_folds = 0;
                   } # end if
-                  $height_folds = Math::Round::nearest( 1, $$Imposition{layout_height}/ $$Imposition{object_height} )-1 if $$Imposition{object_height};
                   if ( $height_folds < 0 ) {
-                    $openprint::log->debug("Got negative width_folkds from $$Imposition{layout_height}/ $$Imposition{object_height}-1");
+                    $openprint::log->debug("Got negative width_folds from $$Imposition{layout_height}/ $$Imposition{object_height}-1");
                     $height_folds = 0;
                   } # end if
-                  $openprint::log->debug("new: $width_folds x $height_folds x $$Imposition{layout_width} / $$Imposition{object_width} x $$Imposition{layout_height}/ $$Imposition{object_height}") if DEBUG;
                 }
               }
 
@@ -1452,8 +1469,8 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
                     } # end if
                   } # end if
                 } else {
-                  # decide whether it's running portrait or landscape basessd on which way the folds go
-                  $openprint::log->debug("Has max feed width width_folds: $width_folds height_folds: $height_folds final_width $$sig_specs{txtWidth} final_heigh $$sig_specs{txtHeight} max_feed $max_feed_width") if DEBUG;
+                  # decide whether it's running portrait or landscape based on which way the folds go
+                  $openprint::log->debug("Has max feed width width_folds: $width_folds height_folds: $height_folds final_width $$sig_specs{txtWidth} final_height $$sig_specs{txtHeight} max_feed $max_feed_width") if DEBUG;
                   if ( ( $width_folds and ! $height_folds )
                     #or ( ((!defined $$Fold{folds}) or ($width_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($height_folds == $$Fold{angles})) and ( $width_folds < $height_folds ) )
                   ) {
@@ -1921,7 +1938,7 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
 			$Breakdown .= '</table><br/>';
 
 			if ( ( ! defined $bestComparison ) or ( $comparison_cost < $bestComparison ) ) {
-$openprint::log->debug("Got better prrice $totalPrice < $bestPrice comparison $comparison_cost < ".(defined($bestComparison) ? $bestComparison : undef).' '.$Equipment->name() ) if DEBUG;
+$openprint::log->debug("Got better price for qty $qty_index sig $form ".(defined $totalPrice ? $totalPrice : 'undef').' < '.(defined($bestPrice) ? $bestPrice : 'undef')." comparison $comparison_cost < ".(defined($bestComparison) ? $bestComparison : undef).' '.$Equipment->name() ) if DEBUG;
 				$bestM = $mprice;
 				$bestComparison = $comparison_cost;
 				$bestPrice = $totalPrice;
@@ -1930,19 +1947,13 @@ $openprint::log->debug("Got better prrice $totalPrice < $bestPrice comparison $c
 				$bestFolds = \%folds;
 				$bestImpositions = \@Used_Impositions;
         $bestBreakdown = $Breakdown;
-
-				# folding could be free, in which case, we can probably just give up now.
-				# No cannot give up.  ANother free imposition may allow 2up stitching for example.
-				#if ( ! $bestPrice ) {
-					#$openprint::log->debug("Quiting because we got a free price.") if DEBUG;
-					#last;
-				#} # end if
+      } else {
+$openprint::log->debug("NotGot better price for qty $qty_index sig $form ".(defined $totalPrice ? $totalPrice : 'undef').' < '.(defined($bestPrice) ? $bestPrice : 'undef')." comparison $comparison_cost < ".(defined($bestComparison) ? $bestComparison : undef).' '.$Equipment->name() ) if DEBUG;
 			} # end if
-
 		} # end foreach set of Impositions
 
 		# The idea is that if we find a price on the press, then we are done, cuz nothing else will be better....
-		# Can't quit early ... case of digital cover on offset interioer, stitched... the stitcher does the cover
+		# Can't quit early ... case of digital cover on offset interior, stitched... the stitcher does the cover
 		#last if $bestPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
 	} # end foreach Equipment
 
