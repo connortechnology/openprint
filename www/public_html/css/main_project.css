@@ -202,18 +202,43 @@ select {
 }
 svg.Imposition {
 	width: 320px;
-	height: 240px;
 	color: white;
 }
 svg.Imposition rect.background {
 	background: none;
 	fill: white;
 }
+svg.Imposition .foldline {
+    stroke-width: 0.1;
+    opacity: 0.75;
+    stroke-dasharray: 1 0.75 0.25 0.75;
+}
 svg.Imposition rect.sheet {
 	background-color: white;
 	border: 1px solid black;
 	color: white;
+  fill: white;
+    stroke: black;
+    stroke-width: .03125;
 }
+svg.Imposition rect.image {
+	background-color: white;
+	border: 1px solid black;
+	color: white;
+  fill: white;
+    shape-rendering: geometricPrecision;
+    stroke: black;
+    stroke-width: .03125;
+}
+#centreline {
+    stroke: black;
+    stroke-width: 0.1;
+    opacity: 0.75;
+    stroke-dasharray: 1 0.75 0.25 0.75;
+}
+pattern { shape-rendering: optimizeSpeed }
+
+
 .link-outer {
   margin: 2ex 25% 0ex 25%;
   border-bottom: 0;

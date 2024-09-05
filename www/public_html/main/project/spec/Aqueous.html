@@ -8,17 +8,16 @@
 				$$variable{Reference} = openprint::service::summary( $$variable{Project}->id(), $$variable{SignatureServiceIndex} );
 				$$variable{SignatureIndex} = $$variable{sig_specs}{SignatureIndex};
 				$$variable{FrontCoatings} = join(',', openprint::Estimating::Aqueous::get_colours( $$variable{sig_specs}, 'SideOne' ) );
-				#$$variable{FrontCoatings} = 'None' if $$variable{FrontCoatings} eq '';
 				$$variable{BackCoatings} = join(',', openprint::Estimating::Aqueous::get_colours( $$variable{sig_specs}, 'SideTwo' ) );
-				#$$variable{BackCoatings} = 'None' if ! $$variable{BackCoatings};
 			) ?>
-			<? if ( $$variable{FrontCoatings} ne 'None' or $$variable{BackCoatings} ne 'None' ) ?>
+			<? if ( $$variable{FrontCoatings} or $$variable{BackCoatings} ) ?>
 			<fieldset><legend>Signature <? echo ( $$variable{sig_specs}{SignatureIndex} ) ?></legend>
 				Information for <?Reference?><br/>
 				<div class="Front leftColumn">
-					<p>
+					<p class="coatings">
 						<label>Coatings on Front</label>
 <? echo ( 
+  return $$variable{FrontCoatings};
   $$variable{Side} = 'One';
   @{$$variable{Services}} = openprint::Service->find(category=>'Coating', 'name ilike'=>'%Aqueous%', order=>'lower(name)') if !$$variable{Services};
   my @options = map { $_->name(), $_->description() } @{$$variable{Services}};
@@ -36,9 +35,10 @@
 					</p>
 				</div>
 				<div class="Back rightColumn">
-					<p>
+					<p class="coatings">
 						<label>Coatings on Back</label>
 <? echo ( 
+             return $$variable{BackCoatings};
   $$variable{Side} = 'Two';
   my @options = map { $_->name(), $_->description() } @{$$variable{Services}};
 
@@ -130,7 +130,7 @@
 				</div>
 				<br class="spacer"/>
 			</fieldset><!--Signature-->
-			<? endif ( $$variable{FrontCoatings} ne 'None' or $$variable{BackCoatings} ne 'None' ) ?>
+			<? endif ( $$variable{FrontCoatings} or $$variable{BackCoatings} ) ?>
 		<? endwhile ( $$variable{SignatureServiceIndex} = shift @{$$variable{Signatures}} ) ?>
 		<?include('/includes/main/proj/_comments.html') ?>
 		</fieldset>

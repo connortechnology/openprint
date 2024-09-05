@@ -944,7 +944,8 @@ sub radio {
     delete $$options{default};
 	} # end if
 
-	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+  for (my $i = 0; $i < @{$values}; $i += 2) {
+    my ($value, $label) = ( $$values[$i], $$values[$i+1] );
 		$html .= $$container[0] if $container;
 		$html .= sprintf(q`
       <div class="form-check%7$s">

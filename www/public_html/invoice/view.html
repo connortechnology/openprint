@@ -161,6 +161,7 @@ return $html;
         </ul>
       </fieldset>
     </div>
+    <?include(_payment_options.html)?>
 <?include(_totals.html)?>
 <? if ( $$variable{Invoice}->owing() ) ?>
 	<? if ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>

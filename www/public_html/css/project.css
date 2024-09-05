@@ -39,7 +39,9 @@ margin-bottom: 5px;
 .Reference br {
   line-height: 0;
   height: 0;
+  /*
   display: none;
+  */
 }
 
 .Project .Header fieldset  {

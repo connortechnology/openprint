@@ -688,3 +688,6 @@ function link_sides(e) {
   });
   calc('f1');
 }
+
+function clear_stock() {
+}

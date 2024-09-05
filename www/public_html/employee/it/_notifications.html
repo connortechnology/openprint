@@ -24,11 +24,13 @@
 		<select name="new_notification_id" id="new_notification_id">
 			<option value=""> select one </option>
 		<? echo ( 
-      my @users = sets::exclude(
+      my @user_ids = sets::exclude(
             [ map { $_->user_id() } $$variable{Host}->Notifications() ],
-            [ map { $_->id() } openprint::User->find( company_id=>$openprint::User->company_id() ) ]
+            [ map { $_->id() } openprint::User->find( company_id=>[$openprint::User->company_id(),
+            ( $$variable{Host}->owner_id() ? $$variable{Host}->owner_id() : ()),
+            ] ) ]
           );
-			return make_drop_down( openprint::User->dropdown( id=>\@users ) ) if @users;
+      return make_drop_down( [ map { $_->id()=>$_->name().' '.$_->email() } openprint::User->find( id=>\@user_ids )]) if @user_ids;
       return;
 		) ?>
 		</select>
