@@ -1,5 +1,5 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
-<script type="text/javascript">
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script>
 function calc_sheets_from_weight(e) {
     var re = /qty-(.*)/
     var matches = re.exec( e.name );
@@ -31,6 +31,10 @@ function calc_weight_from_sheets(e) {
 }
 </script>
 <div class="Service <?ServiceTypeID?>">
+<div class="PageTitle">
+<h1>Project <?echo($$variable{Project}->link_to())?></h1>
+<h2>Paper</h2>
+</div>
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 <? echo (

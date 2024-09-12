@@ -636,3 +636,7 @@ UPDATE services set lngsortorder = 3172 where name='KissCuttingMinimumCharge';
 UPDATE services set lngsortorder = 3173 where name='ScoringMakeReady';
 UPDATE services set lngsortorder = 3174 where name='Scoring';
 UPDATE services set lngsortorder = 3175 where name='ScoringMinimumCharge';
+
+update service_prices set units='per m' where service_id=(SELECT id from services where name='EmbossingSimple');
+update service_prices set units='per m' where service_id=(SELECT id from services where name='EmbossingAverage');
+update service_prices set units='per m' where service_id=(SELECT id from services where name='EmbossingComplex');
