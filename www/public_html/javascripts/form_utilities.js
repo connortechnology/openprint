@@ -1877,6 +1877,15 @@ function update_event_bindings() {
     el.oninput = window[fnName].bind(el, el);
   });
 
+  document.querySelectorAll("input[on_input_this]").forEach(function(el) {
+    const fnName = el.getAttribute("on_input_this");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    }
+    //console.log("Setting up oninput for " + el.name + " to " + fnName);
+    el.oninput = window[fnName].bind(el, el);
+  });
   document.querySelectorAll("input[data_oninput_this]").forEach(function(el) {
     const fnName = el.getAttribute("data_oninput_this");
     if ( !window[fnName] ) {
