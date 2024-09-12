@@ -39,6 +39,23 @@ function paper_price_calc( element, group ) {
 	} // end if
 } // end function
 
+function calc_basis_weight_from_weight(weight_element) {
+  let re = /([\d\.]+)lb/i;
+  let matches = re.exec(weight_element.value);
+  if (matches) {
+    const weight = matches[1];
+    re = /^txtSpecificStockWeight(\d*)$/;
+    matches = re.exec(weight_element.name);
+    const signature = matches[1];
+    console.log(signature, weight);
+    const form = weight_element.form;
+    form.elements['basis_mweight'+signature].value = weight * 2;
+    mweight_to_gsm(form, signature);
+    calc(form.name);
+  } else {
+    console.log("No match against "+weight_element.value);
+  }
+}
 
 function mweight_to_gsm( form, signature ) {
 	var width;
