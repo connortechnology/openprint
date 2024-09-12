@@ -1551,6 +1551,17 @@ $log->error("For press $$Press{strid} $printing_type ".join(',', $$specs{Printin
 			$$project{colour_bar_size} = 0;
 		} # end if Envelopes
 		$$project{Orientation} = $Press->specification('Orientation');
+    if (!$$project{Orientation}) {
+      my $max_image_width = $Press->specification('Maximum Image Width');
+      my $max_image_length = $Press->specification('Maximum Image Length');
+      if ($max_image_width and $max_image_length) {
+        if ($max_image_width > $max_image_length) {
+          $$project{Orientation} = 'Landscape';
+        } else {
+          $$project{Orientation} = 'Portrait';
+        }
+      }
+    } # end if ! orientation
 		$$project{dutch} = 1; # default to on
 		if ( $$specs{"dutch$qty_index"} and ( $$specs{"dutch$qty_index"} eq 'N' ) ) {
 			$$project{dutch} = 0;

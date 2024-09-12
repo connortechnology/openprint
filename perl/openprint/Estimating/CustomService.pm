@@ -24,7 +24,7 @@ require openprint::service;
 my @variables = (
 		'txtPrice1', 'txtPrice2', 'txtPrice3',
 		'Price', 'Units',
-'ServiceName',
+    'ServiceName',
 );
 
 sub variables {
@@ -42,7 +42,7 @@ sub no_outputs {
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
-	my $status = 'calculated';
+	my $status = $$specs{Status} = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
 
