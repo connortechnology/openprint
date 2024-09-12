@@ -30,7 +30,7 @@ require openprint::service;
 require openprint::Service;
 require openprint::Estimating::DieCutting;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my @equipment;
 my @PreFoldingEquipment;
