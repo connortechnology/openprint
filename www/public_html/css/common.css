@@ -352,7 +352,9 @@ hr {
 	margin: 1px;
 	padding: 0;
 	height: 1px;
+  /*
 	border: 0;
+  */
 }
 
 .error, .warning, .warning a {
