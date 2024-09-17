@@ -169,6 +169,7 @@ sub get_signature_count {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
+  #$openprint::log->debug("COLLATING");
 	$$specs{Status} = 'calculated';
   $$specs{alert} = '';
 
@@ -216,7 +217,7 @@ sub calc {
         $$Imposition{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $Imposition, $qty_index ) ];
         if ( DEBUG ) {
           foreach my $F ( @{$$Imposition{Folds}} ) {
-            $F->display("Stitching::calc Fold: pq($$F{page_quantity})");
+            $F->display("Collating::calc Fold: pq($$F{page_quantity})");
           } # end foreach F
         } # end if
       }
@@ -242,12 +243,10 @@ sub internal_calc {
 
   get_signature_count($Project, $specs, $qty_index, $impositions, $calc_hash);
 
-	my $minimumCharge = openprint::service::get_price( 'CollatingMinimumCharge', undef, undef );
-
 	my @possible_equipment;
 	my @all_equipment = openprint::Equipment->find(
     Specifications => {'Collating Capable'=>['Y','When Printing']},
-    useinestimating=>1,order=>'strName');
+    useinestimating=>1, order=>'strName');
 	my $error = '';
 	if ( ! @all_equipment ) {
 		$error .= 'We have no collating equipment.<br/>';
@@ -267,6 +266,7 @@ sub internal_calc {
 		return %bestPrice;
 	} # end if
 
+	my $minimumCharge = openprint::service::get_price( 'CollatingMinimumCharge', undef, undef );
 	$CollatingMakeReady = openprint::Service->find_one(name=>'CollatingMakeReady');
 	$CollatingPocketMakeReady = openprint::Service->find_one(name=>'CollatingPocketMakeReady');
 	$Collating = openprint::Service->find_one(name=>'Collating');
@@ -407,7 +407,7 @@ sub get_price {
     $price{Breakdown} .= $pass_price{Breakdown};
     $pass_index ++;
   } # end while pockets
-  $price{Breakdown} .= '<hr/>Grant Total $'.sprintf('%.2f<br/>', $price{Total});
+  $price{Breakdown} .= '<hr/>Grand Total $'.sprintf('%.2f<br/>', $price{Total});
 
   return %price;
 } # end sub get_price
