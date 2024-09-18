@@ -303,7 +303,7 @@ sub signature_calc {
 	my $services = $Project->services();
 
   #$$Imposition{impressions} = int( $$specs{"txtQuantity$qty_index"} / ( $$Imposition{quantity} * $$Imposition{imposition} ) );
-	$$Imposition{impressions} = int( $$specs{"txtQuantity$qty_index"} / $$Imposition{imposition} );
+  #$$Imposition{impressions} = int( $$specs{"txtQuantity$qty_index"} / $$Imposition{imposition} );
 	my @Impositions;
   my $DieCutting_specs = {};
 	if ( $$services{DieCutting} and @{$$services{DieCutting}} ) {
