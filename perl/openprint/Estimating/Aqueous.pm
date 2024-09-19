@@ -487,6 +487,9 @@ sub signature_calc {
 			my $MakeReadies_clone = $MakeReadies ? dclone($MakeReadies) : {};
 #map { $_ => [ @{$$MakeReadies{$_}} ] } keys %{$MakeReadies} if $MakeReadies;
 			my %Price = (
+        MakeReady => 0,
+        Service => 0,
+        Material => 0,
 				BlanketCut	=>	0,
         washups => 0,
 			);
