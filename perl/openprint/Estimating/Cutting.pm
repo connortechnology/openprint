@@ -1004,7 +1004,7 @@ $openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
         if ( $$sig_specs{txtSignatureType} and ($$sig_specs{txtSignatureType} ne 'Pad Pages') ) {
 
   # but if we are cutting into smaller signatures, then we need more cutting
-  $openprint::log->debug("Stitching $stitching_imposition out printing $$sig_specs{'txtImposition'.$qty_index}out") if DEBUG;
+  #$openprint::log->debug("Stitching $stitching_imposition out printing $$sig_specs{'txtImposition'.$qty_index}out") if DEBUG;
   #$openprint::log->debug("have signaturetype $$sig_specs{txtSignatureType} ");
   #$openprint::log->debug("What is folder?: ($Folder)" . ($Folder ? join(',', map { $_ . ' => ' . $$Folder{$_} } keys %{$Folder} ) : '' ) );
           if ( ($cutting_capable ne 'When Stitching') and $I->pages() and ! ( $folding_specs and $Folder and $Folder->specification('Cutting Capable') ) ) {
