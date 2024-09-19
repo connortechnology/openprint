@@ -302,6 +302,13 @@ sub supplier {
 
 sub servicetype_id {
   my $self = shift;
+  if (@_) {
+    if (ref($_[0]) eq 'ARRAY') {
+      $$self{servicetype_id} = shift;
+    } else {
+      $$self{servicetype_id} = [shift];
+    }
+  }
   return [] if ! $$self{servicetype_id};
   return $$self{servicetype_id};
 } # end sub servicetype_id

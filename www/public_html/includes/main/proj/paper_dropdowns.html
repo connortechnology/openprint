@@ -31,7 +31,7 @@
 			<input type="text" name="txtSpecificStockColour<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockColour'.$$variable{Signature}} ? $$variable{'txtSpecificStockColour'.$$variable{Signature}} : 'White' ) ?>" />
 			</li>
 			<li class="Weight"><label>Weight</label>
-			<input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{Signature}} ) ?>" />
+        <input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{Signature}} ) ?>" on_input_this="calc_basis_weight_from_weight"/>
 			</li>
 			<li class="calliper"><label>Calliper</label>
 				<? echo ( input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature}, value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ); ) ?>
@@ -55,7 +55,7 @@
 				<? echo ( input( type=>'float', name=>'txtCustomMWeight'.$$variable{Signature}, value=>$$variable{'txtCustomMWeight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
 			</li>
 			<li class="Basis" id="BasisSize<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{Signature}} ne 'Roll' ) ?>>
-				<label>Basis MWeight</label>
+				<label>Basis Weight</label>
 				<? echo ( input( type=>'float', name=>'basis_mweight'.$$variable{Signature}, value=>$$variable{'basis_mweight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?><br/>
 				<label>Basis Size</label>
 				<? echo ( input( type=>'float', name=>'basis_width'.$$variable{Signature}, value=>$$variable{'basis_width'.$$variable{Signature}} ? $$variable{'basis_width'.$$variable{Signature}} : 25, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>

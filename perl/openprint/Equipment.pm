@@ -174,7 +174,7 @@ sub Fold {
 	}
 
   if (!($$self{Folds}{$$params{type}} and @{$$self{Folds}{$$params{type}}})) {
-    $openprint::log->debug("No folds for type $$params{type}");
+    $openprint::log->debug("No folds for type $$params{type} on $$self{strid}");
   }
 	foreach my $Fold ( $$params{type} ? @{$$self{Folds}{$$params{type}}} : map { @{$$self{Folds}{$_}} } keys %{$$self{Folds}} ) {
 
@@ -345,7 +345,7 @@ sub Fold {
 #$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
 			} # end if
 		} # end if
-$openprint::log->debug("Got fold" . $Fold->to_string()) if DEBUG_FOLDING;
+$openprint::log->debug('Got fold' . $Fold->to_string()) if DEBUG_FOLDING;
 		return $Fold;
 #$openprint::log->debug("NEVER Got fold" . $Fold->description()) if $debug;
 	} # end foreach Fold

@@ -43,6 +43,7 @@
 			<th class="MinMaxImposition" data-field="MinMaxImposition" data-sortable="true">Min/Max Imposition</th>
 			<th class="MinMaxWidth" data-sortable="true">Min/Max Width</th>
 			<th class="MinMaxHeight" data-sortable="true">Min/Max Height</th>
+			<th class="MinMaxCalliper" data-sortable="true">Min/Max Calliper</th>
 			<th class="MRMinutes" data-sortable="true">MR Minutes</th>
 			<th class="Speed" data-sortable="true">Speed</th>
 		</tr>
@@ -66,8 +67,9 @@
 	<td class="MinMaxImposition">%10$s / %11$s</td>
 	<td class="MinMaxWidth">%12$s / %13$s</td>
 	<td class="MinMaxHeight">%14$s / %15$s</td>
-	<td class="MRTime">%16$d</td>
-	<td class="Speed">%17$s</td>
+	<td class="MinMaxCalliper">%16$s / %17$s</td>
+	<td class="MRTime">%18$d</td>
+	<td class="Speed">%19$s</td>
 </tr>
 `, $rowclass, $$Fold{id}, $Fold->link_to($Fold->Equipment()->name()), $Fold->link_to($$Fold{name}),
 $Fold->link_to($Fold->type()),
@@ -90,6 +92,7 @@ join(' ',
 ),
 $Fold->min_width(), $Fold->max_width(),
 $Fold->min_height(), $Fold->max_height(),
+$Fold->min_calliper(), $Fold->max_calliper(),
 $Fold->makeready_time(),
 join( '<br/>', map { join(' to ',
   ($_->min() ? $_->min() : ()),

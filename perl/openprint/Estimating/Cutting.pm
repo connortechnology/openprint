@@ -128,6 +128,15 @@ sub signature_needs {
       $openprint::log->debug(" ** Imposition > 1, Cutting needed ! ** ") if DEBUG;
       return 1;
     } # end if
+    
+    if ($$sig_specs{"ddmBleedSize$qty_index"}) {
+      foreach my $key ('BleedBottom','BleedTop','BleedLeft','BleedRight') {
+        return 1 if $$sig_specs{$key};
+      }
+    }
+    if (!$$sig_specs{rdbColourBar} or $$sig_specs{rdbColourBar} ne 'N') {
+      return 1;
+    }
 
     # If folding imposition doesn't match printed imposition
     if ( $$services{Folding} and @{$$services{Folding}} ) {

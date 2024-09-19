@@ -20,7 +20,7 @@ results_callback = function cbEmbossingResults( results ) {
     } // end if matches
   } // end foreach pair
   cbFillResults(results);
-} // end fucntion
+} // end function
 
 function show_extra_imposition( signature, qty_index ) {
     const f = $j('#Imp-'+signature+'-'+qty_index+'-'+'2');
@@ -29,7 +29,7 @@ function show_extra_imposition( signature, qty_index ) {
 function Imposition_onchange( element, signature, qty_index, index ) {
   const spec = signature + '-' + qty_index + '-' + index;
   const next_index = 1+parseInt(index);
-  var do_calc = 1;
+  let do_calc = 1;
 
   if ( element.type == 'select-one' ) {
     if ( ! element.value ) {
@@ -68,45 +68,45 @@ function Imposition_onchange( element, signature, qty_index, index ) {
 					$html .= '<fieldset class="Signature">';
 					$html .= '<legend>Form '. $form . ' '.$$sig_specs{txtServiceDescription}.'</legend><p>'. openprint::service::summary( $$variable{ProjectIndex}, $sig_id ) . '</p>';
 					$html .= '<ul>
-						<li>
-							<label>Embossing Needed</label>';
+						<li><label>Embossing Needed</label>';
 
 					$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onclick=>qq`if(get_rdb_value(f1.elements['Needed-$form']) == 'Y' ) { \$('Embossing-$form').show();}else{\$('Embossing-$form').hide();};calc(this.form.name);` } );
 					$html .= qq`</li>
 				</ul>
 				<div id="Embossing-$form" `. ( $$variable{'Needed-'.$form} ne 'Y' ? 'style="display:none;"' : '' ). '><ul>';
 				$html .= include('/main/project/spec/_embossing.html');
-				$html .= '<li><label>Foil</label>'. ssi::select( 
-                    [ map { $_->name(), $_->description() } openprint::Material->find( category=>'Embossing Foils', order=>'lower(name)') ],
-					$$variable{'Foil-'.$$variable{SignatureIndex}}, { name=>'Foil-'.$$variable{SignatureIndex}, onchange=>'calc(this.form.name);', prepend=>['','None'] } );
-				$html .= '</li>';
+        my @materials = openprint::Material->find( category=>'Foil', 'servicetype_id any'=>$$variable{ServiceType}->id(), order=>'lower(name)');
+        if (@materials) {
+          $html .= '<li><label>Foil</label>'. ssi::select( 
+              [ map { $_->name(), $_->description() } @materials ],
+              $$variable{'Foil-'.$$variable{SignatureIndex}},
+              { name=>'Foil-'.$$variable{SignatureIndex}, onchange=>'calc(this.form.name);', prepend=>['','None'] } );
+          $html .= '</li>';
+        } # end if materials
 				$html .= include('/includes/main/proj/signature_equipment.html');
         $html .= '<li><label>Imposition</label>';
         foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-            $html .= '<div class="'.$$variable{Columns}.'Columns">';
-            if ( $$sig_specs{"txtImposition$qty_index"} ) {
-if ( 1 ) {
-                if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-      $html .= write_override( "OverrideImposition-$form-$qty_index", $$variable{"OverrideImposition-$form-$qty_index"}, , qq`show_extra_imposition($form,$qty_index);`, q`calc('f1');` );
-      $html .= 'Override';
+          $html .= '<div class="'.$$variable{Columns}.'Columns">';
+          if ( $$sig_specs{"txtImposition$qty_index"} ) {
+            if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+              $html .= write_override( "OverrideImposition-$form-$qty_index", $$variable{"OverrideImposition-$form-$qty_index"}, , qq`show_extra_imposition($form,$qty_index);`, q`calc('f1');` );
+              $html .= 'Override';
+            } elsif ( $$variable{"OverrideImposition-$form-$qty_index"} ) {
+              $html .= sprintf('<input type="hidden" name="OverrideImposition-%1$d-%2$d" value="Y" /> Overriden<br/>', $form, $qty_index );
+            } # end if
+            $$variable{qty_index} = $qty_index;
 
-    } elsif ( $$variable{"OverrideImposition-$form-$qty_index"} ) {
-                    $html .= sprintf('<input type="hidden" name="OverrideImposition-%1$d-%2$d" value="Y" /> Overriden<br/>', $form, $qty_index );
-                } # end if
-}
-                $$variable{qty_index} = $qty_index;
+            $html .= '<table class="Impositions"><tr><th class="Qty">Qty</th><th class="Imp">Columns x Rows = Imposition</th></tr>';
+            foreach my $index ( 1 .. 4 ) {
+              $$variable{index} = $index;
+              $html .= variable_substitution( \$fragment, $variable );
+            } # end foreach
+            $html .= '</table>';
+          } else {
+            $html .= '&nbsp;';
+          } # end if imposition
 
-                $html .= '<table class="Impositions"><tr><th class="Qty">Qty</th><th class="Imp">Columns x Rows = Imposition</th></tr>';
-                foreach my $index ( 1 .. 4 ) {
-                    $$variable{index} = $index;
-                    $html .= variable_substitution( \$fragment, $variable );
-                } # end foreach
-                $html .= '</table>';
-            } else { $html .= '&nbsp;';
-            } # end if imposition
-
-            $html .= '</div>';
-
+          $html .= '</div>';
         } # end foreach qty_index
         $html .= '</li>';
 				$html .= '</ul>

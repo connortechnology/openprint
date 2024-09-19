@@ -20,7 +20,7 @@ use constant Horizontal => 1;
 %ShortStyles = (
   'Sheet Work' => 'SW',
   'Work & Turn' => 'WT',
-  'Work & TUmble' => 'WF',
+  'Work & Tumble' => 'WF',
   'Perfecting' => 'PF',
   'Web'   => 'Web',
 );
@@ -976,16 +976,16 @@ sub add_sheet {
     my $colour_bar_height = $$self{colour_bar_size};
     my $colour_bar = $canvas->rect( class=>'colourbar', x=>0, y=>$grip, width=>$$self{sheet_width}, height=>$colour_bar_height, fill=>'url(#processColours)');
     if ($$self{runstyle} eq 'Work & Tumble') {
-      $colour_bar->setAttributes({x => 0, y => $$self{sheet_height} - $grip});
+      $colour_bar->setAttributes({x => 0, y => $$self{sheet_height} - $grip*2});
     } else {
-     # We've decreased the availible space.
-     $canvas = $canvas->g(transform => "translate(0, $colour_bar_height)");
-   }
+      # We've decreased the availible space.
+      $canvas = $canvas->g(transform => "translate(0, $colour_bar_height)");
+    }
   }
 
   my $x = ($self->sheet_width() - 2*$$self{gutter} - $self->layout_width()) / 2;
   $x = 0 if $x < 0;
-  my $y = ($self->sheet_height() - $grip - $self->layout_height()) / 2;
+  my $y = ($self->sheet_height() - $self->layout_height()) / 2;
   $y = 0 if $y < 0;
 
 # Centre the imposition on the printable page area.
@@ -998,42 +998,45 @@ sub add_sheet {
 # just grab the first half of the image in a new viewport and mirror.
     my $dim = $self->layout_width() / 2;
 
-    my $mirror = $group->svg(
-        width  => $dim,
-        height => $self->layout_height(),
-        overflow => 'hidden',
-        x => $dim,
-        y => 0,
-        transform => "translate($dim, 0) scale(-1,1)",
-        );
-    add_imposition($mirror, $half);
+    $group = $group->g(transform=>'translate('.$dim.', 0)');
+        #width  => $dim,
+        #height => $self->layout_height(),
+        #overflow => 'hidden',
+        #x => $self->layout_width(),
+        #y => 0,
+        ##transform => "translate($dim, 0) scale(-1,1)",
+        ##transform => "rotate(180 ".($dim/2).' '.($self->layout_height()/2).')',
+        #);
+    my $impo = add_imposition($group, $half);
+    $impo->setAttributes({transform=>'rotate(180 '.($dim/2).' '.($self->layout_height()/2).')'});
 
     # Draw a vertical centre line (y-axis).
     my $centre = $self->sheet_width() / 2 - $$self{gutter};
     $canvas->line( id => 'centreline', x1 => $centre,   x2 => $centre, y1 => - 2, y2 => $self->sheet_height() + 2);
 
   } elsif ($$self{runstyle} eq 'Work & Tumble') {
+# just grab the first half of the image in a new viewport and mirror.
     my $half = $self->copy();
     $half->rows($$half{rows}/2);
     $half->dutch_rows($$half{dutch_rows}/2);
     add_imposition($group, $half);
-# just grab the first half of the image in a new viewport and mirror.
-    my $dim = $self->layout_height() / 2;
 
-    my $mirror = $group->svg(
-        width  => $self->layout_width(),
-        height => $dim,
-        overflow => 'hidden',
-        x => 0,
-        y => $dim,
-  transform => "translate(0, $dim) scale(1,-1)"
+    my $mirror = $group->g(
+        #width  => $self->layout_width(),
+        #height => $dim,
+        #overflow => 'hidden',
+        #x => 0,
+        #y => $dim,
+  #transform => "translate(0, $dim) scale(1,-1)"
+        #transform=>'translate(0, '.($self->layout_height()/2).')',
         );
-    add_imposition($mirror, $half);
+    my $impo = add_imposition($mirror, $half);
+    $impo->setAttributes({transform=>'rotate(180 '.($self->layout_width()/2).' '.($self->layout_height()/2).')'});
 # Draw a horizontal centre line (x-axis).
-    my $centre = $self->sheet_height() / 2 - $$self{grip};
+    my $centre = $self->sheet_height() / 2;
     $canvas->line(
         id => 'centreline',
-        x1 => - 2, x2 => $self->sheet_width() + 2,
+        x1 => - 4, x2 => $self->sheet_width() + 4,
         y1 => $centre,   y2 => $centre,
         );
 
