@@ -1199,7 +1199,7 @@ $openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
                 @setup{'Price','units','Total'}, $cuts );
               $price{total} += $setup{Total};
             } else {
-              $openprint::log->debug("unknown units on $$CuttingMakeReady{units}") if DEBUG;
+              $openprint::log->debug("unknown units on $$CuttingMakeReady{ServiceName}") if DEBUG;
               $results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price} );
               $price{total} += $setup{Price};
             } # end if
