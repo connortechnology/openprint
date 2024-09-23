@@ -1921,7 +1921,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    //console.log("Setting up onclick for " + el.name + " to " + fnName);
+    console.log("Setting up on_click_this for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
 
