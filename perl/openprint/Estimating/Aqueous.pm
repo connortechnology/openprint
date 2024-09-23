@@ -19,7 +19,7 @@ use strict;
 use warnings;
 use vars qw( %ServicePrices %MaterialPrices );
 use Data::Dumper;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 %ServicePrices = (
 	AqueousMinimumCharge	=> { },
@@ -498,7 +498,7 @@ sub signature_calc {
 			if ( !index($$Imposition{runstyle}, 'Work') ) {
 # need to merge any overalls into spots
 				foreach my $type ( @different_types ) {
-$openprint::log->error("$type to W&T front: $front_aq{$type} back: $back_aq{$type}");
+          $openprint::log->debug("$type to W&T front: ".($front_aq{$type} ? $front_aq{$type} : 'none').' back: '.($back_aq{$type} ? $back_aq{$type} : 'none')) if DEBUG;
 					if ( ! ( $front_aq{$type} and $back_aq{$type} ) ) {
 						$type =~ s/Overall/W&T/;
 						push @types, { name => $type, coverage=> $front_aq{$type} ? $front_aq{$type}{coverage}/2 : $back_aq{$type}{coverage}/2 };
