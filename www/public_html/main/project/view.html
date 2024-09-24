@@ -132,7 +132,7 @@
   return include('_view.html');
 ) ?>
 
-	<? if ( sets::isin( $session{user_type},'A','E') and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
+<? if ( $$variable{Project}->can_edit() and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 	<table class="List">
 		<tr class="totals unprintable">
 			<td class="description"><input type="text" name="txtServiceName" placeholder="enter custom service line description here"/></td>
@@ -145,7 +145,7 @@
 			<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
 		</tr>
 	</table>
-	<? endif ( sets::isin( $session{user_type},'A','E') and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
+<? endif ( $$variable{Project}->can_edit() and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 <?if ( $session{user_type} eq 'A' ) ?>
 <fieldset><legend>Summaries</legend>
 <table class="List Services">
