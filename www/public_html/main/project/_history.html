@@ -198,7 +198,7 @@ $count += 1;
                     $rowclass, $Project->id(), $Project->reference(),
                     $Project->status(),
 					format_date($Project->created_on() ),
-					format_date_time($Project->created_on() ),
+					format_datetime($Project->created_on() ),
                     ( ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '2' : '1' ),
                     $Project->summary(),
 										$Project->User()->name(),
