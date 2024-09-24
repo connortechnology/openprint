@@ -60,6 +60,7 @@ my @fields = (
 	'runspeed',
 	'impressions',
   'net_sheets',
+  'gross_sheets',
 	'equipment_id', 'Equipment',
 	'inkCoverage',
 	'folio_lip',
@@ -464,6 +465,9 @@ $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}
 $$self{impressions} = $$specs{"hdnImpressionQuantity$qty_index"};
 $$self{net_sheets} = $$specs{"hdnNetSheetCount$qty_index"};
 $$self{gross_sheets} = $$specs{"StockQuantity$qty_index"};
+if (!$$self{gross_sheets}) {
+  $openprint::log->error("No gross sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
+}
 $self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
