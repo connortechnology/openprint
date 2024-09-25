@@ -2002,10 +2002,10 @@ sub can_edit {
 		$openprint::log->debug("can_view 1 cuz i am the creator") if $debug;
 		return 1;
 	}
-	if ( $openprint::session{company_id} == $_[0]{company_id} ) {
-		$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
-		return 1;
-	}
+  #if ( $openprint::session{company_id} == $_[0]{company_id} ) {
+  #$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
+  #return 1;
+  #}
 	if ( $openprint::session{user_type} eq 'A' ) {
 		$openprint::log->debug("can_edit 1 cuz admin") if $debug;
 		return 1 
@@ -2016,7 +2016,7 @@ sub can_edit {
 	} # end if
   
   return 0;
-} # end sub can_view
+} # end sub can_edit
 
 sub change_due_date {
 	my $Project = shift;

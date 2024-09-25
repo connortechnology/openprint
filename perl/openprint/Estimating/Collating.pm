@@ -160,7 +160,7 @@ sub get_signature_count {
           $$specs{'txtSignatureCount'.$qty_index} += 1;
         }
       } else {
-        $openprint::log->error("Do not Have $coilname $$services{$coilname} ");
+        $openprint::log->debug("Do not have $coilname");
       }
     }
   } # end if override
