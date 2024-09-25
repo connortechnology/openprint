@@ -285,12 +285,12 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->Paper()->to_string() . '<br/>';
 
       if (!$$specs{"chkOverrideImposition-$form-$qty_index"}) {
-        foreach my $imp_index (1..4) {
+        foreach my $imp_index (1 .. 4) {
           @$specs{
           "ImpQty-$form-$qty_index-$imp_index",
           "ImpOut-$form-$qty_index-$imp_index",
           "ImpColumns-$form-$qty_index-$imp_index",
-          "ImpRows-$form-$qty_index-$imp_index"} =('','','','');
+          "ImpRows-$form-$qty_index-$imp_index"} = ('','','','');
         } # end foreach 
       } # end if
 
@@ -308,11 +308,11 @@ sub calc {
 					foreach my $I ( @{$Price{Impositions}} ) {
 						$I->Equipment( $Price{Equipment} );
 						@$specs{
-              "ImpQty-$form-$qty_index-$imp_index",
-                "ImpOut-$form-$qty_index-$imp_index",
-                "ImpColumns-$form-$qty_index-$imp_index",
-                "ImpRows-$form-$qty_index-$imp_index"} =
-                  @$I{'quantity','imposition','columns','rows'};
+            "ImpQty-$form-$qty_index-$imp_index",
+            "ImpOut-$form-$qty_index-$imp_index",
+            "ImpColumns-$form-$qty_index-$imp_index",
+            "ImpRows-$form-$qty_index-$imp_index"} =
+            @$I{'quantity','imposition','columns','rows'};
             $imp_index += 1;
           } # end foreach 
           if ( ! $$specs{"chkOverrideImposition-$form-$qty_index"} ) {
@@ -431,20 +431,14 @@ sub signature_calc {
 	my @equipment;	
 	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} and ($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y') ) {
 		@equipment = openprint::Equipment->find( id=>$$specs{"ddmEquipment-$form-$qty_index"} );
-		$openprint::log->debug('Overriding Equipment to: ' . $$specs{"ddmEquipment-$form-$qty_index"} );
+		$openprint::log->debug('Overriding Equipment to: ' . $$specs{"ddmEquipment-$form-$qty_index"} ) if DEBUG;
 	} else {
-
-		if ( ! @all_equipment ) {
+		if (!@all_equipment) {
 			$openprint::log->warn('This should have been already done');
 			init( $Project, $calc_hash );
 		}
 		@equipment = @all_equipment;
 	} # endif
-	if ( DEBUG ) {
-		foreach my $E ( @equipment ) {
-#$openprint::log->debug( "Equipment: " . $E->strid() );
-		}
-	}
 
 # Get the impositions to consider
 	if ( ! $$SignatureImposition{imposition} ) {
@@ -486,6 +480,7 @@ sub signature_calc {
 			push @Sets_of_Impositions, $i;
 		} # end if
 
+
 # Get rid of dutches
 		if ( $$SignatureImposition{dutch_columns} ) {
 			my @Impositions = ();
@@ -522,7 +517,12 @@ sub signature_calc {
 				} # end foreach
 			} # end if
 		} # end if dutch
+
+
 		@All_Impositions = openprint::Estimating::Folding::reduce_impositions( \@Sets_of_Impositions );
+    if (@Folds and (@Folds > 1 or $Folds[0]{quantity} > 1)) {
+      push @All_Impositions, [@Folds];
+    }
 		@All_Impositions = openprint::Estimating::Folding::remove_duplicates( @All_Impositions );
 		if ( DEBUG ) {
 			$openprint::log->debug('Sets of Maximum Impositions: ' . @All_Impositions);
@@ -584,7 +584,7 @@ sub signature_calc {
         $openprint::log->debug(" override count: $overriden_count $$SignatureImposition{quantity} * $$SignatureImposition{imposition}");
       } # end if
     }
-  } # end if overriden
+  } # end if overriden Imposition
 
 EQUIPMENT: foreach my $Equipment ( @equipment ) {
 		 $Results{Breakdown} .= "<br/>Equipment: $$Equipment{name}, ";
@@ -704,6 +704,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 			 foreach my $Set_Of_Impositions ( @All_Impositions ) {
 				 my @impositions = @{$Set_Of_Impositions};
 				 if ( $type eq 'Press' ) {
+           $openprint::log->debug("Next because $type and @impositions > 1") if DEBUG;
 					 next if @impositions > 1;
 				 } # end if
 
@@ -711,7 +712,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 my $complete = 1;
 
 				 foreach my $I ( @impositions ) {
-					 $I->Press( $Equipment );
+					 $I->Press( $Equipment ); # WHY? To make to_string list the right equipent
 					 $Results{Breakdown} .= '<br/>Fold: '.$I->to_string(undef).'<br/>';
            if (!$$I{imposition}) {
              $Results{Breakdown} .= 'No imposition in Imposition!<br/>';
