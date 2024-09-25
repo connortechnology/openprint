@@ -49,6 +49,7 @@ function load_page() {
 						} ); ) ?>
 		</li>
 		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {on_click=>'load_page'} ); ) ?></li>
+		<li><label>Use In Estimating?</label><? echo ( radio( 'useinestimating', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?useinestimating'}, {on_click=>'load_page'} ); ) ?></li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
