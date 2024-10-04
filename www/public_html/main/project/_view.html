@@ -12,7 +12,7 @@
 	} # end if
 	my @quantity_indexes = $Project->quantity_indexes();
 
-	my $editable = $$variable{editable} = ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ! $$variable{Quote};
+  my $editable = $$variable{editable} = $Project->can_edit() and ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ! $$variable{Quote};
   my $html = '
 <table class="List Services">
 	<thead>

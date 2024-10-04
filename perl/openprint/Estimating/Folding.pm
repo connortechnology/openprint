@@ -34,7 +34,7 @@ use openprint::Imposition;
 require openprint::Estimating::Perforating;
 require openprint::Estimating::Collating;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my %ServicePrices = (
@@ -1609,11 +1609,13 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				$run_qty = POSIX::ceil( $run_qty * $impo_qty/$$SignatureImposition{imposition}) if $impo_qty != $$SignatureImposition{imposition};
 
 				$openprint::log->debug("Pricing qindex $qty_index runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out	of fold $$Fold{type} on " . $Equipment->name()) if DEBUG;
-				if ( $$Fold{makeready_overs} ) {
-					my $overs = $$Fold{makeready_overs_units} eq 'Percent' ? $run_qty * ( $$Fold{makeready_overs} /100 ) : $$Fold{makeready_overs};
-          $Breakdown .= "Run Overs $$Fold{makeready_overs}$$Fold{makeready_overs_units} = $overs, total = ".($run_qty+$overs)."<br/>";
-          $run_qty += $overs;
-				} # end if
+        if ( ! $makereadies{$$Equipment{id}}{$$Fold{type}.$imposition} ) {
+          if ( $$Fold{makeready_overs} ) {
+            my $overs = $$Fold{makeready_overs_units} eq 'Percent' ? $run_qty * ( $$Fold{makeready_overs} /100 ) : $$Fold{makeready_overs};
+            $Breakdown .= "Run Overs $$Fold{makeready_overs}$$Fold{makeready_overs_units} = $overs, total = ".($run_qty+$overs)."<br/>";
+            $run_qty += $overs;
+          } # end if
+        }
         #$Breakdown .= $Fold->to_string();
 				if ( $$Fold{run_overs} ) {
 					my $overs = $$Fold{run_overs_units} eq 'Percent' ? $run_qty * ($$Fold{run_overs}/100) : $$Fold{run_overs};

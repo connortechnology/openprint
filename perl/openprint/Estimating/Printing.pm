@@ -8220,7 +8220,7 @@ $log->warn("Unknown printing type in sig $$sig_specs{SignatureIndex} : " . $$sig
 			} # end if PrintingTypes
 			if ( $cover_type ) {
 				if ( $cover_type eq 'Digital' ) {
-					$results = ['Digital'];
+					$results = ['Digital', 'Sheetfed'];
 				} elsif ( $cover_type eq 'Waterless' ) {
 					$results = [ 'Waterless', 'Offset' ];
 				} elsif ( $cover_type eq 'Offset' ) {
