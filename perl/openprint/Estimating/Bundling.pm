@@ -396,7 +396,7 @@ sub summary {
 			my $Material = new openprint::Material($$specs{type_id});
 			$text .= ' ' . $Material->description() . ' ';
 		} 
-		if ( $$specs{cross_type_id} ) {
+		if ( $$specs{cross_type_id} and $$specs{cross_bands_per_package}) {
 			my $CrossMaterial = new openprint::Material($$specs{cross_type_id});
 			$text .= ' ' . $CrossMaterial->description() . ' ';
 		} 

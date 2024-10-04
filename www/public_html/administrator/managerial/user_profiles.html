@@ -147,6 +147,12 @@ Please select a company or user to obtain login information.<br/>
 								return make_drop_down( $variable{companies_ddm}, $$variable{User}->company_id() );
 							) ?>
 						</select>
+            <? echo (
+            if ( $$variable{User}->company_id() ) {
+              return button( 'GoCompany2', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Go' } );
+            }
+            return;
+          ) ?>
 					</li>
 					<li class="salutation">
 						<label>Salutation</label>

@@ -198,6 +198,8 @@ sub get_price {
 	$price{currency_id} = $Pricelist->currency_id();
 	$price{ServiceName} = $$self{name};
 	$price{Service} = $self;
+  $price{range_units} //= '';
+  $price{units} //= '';
 	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
 	return %price;
 } # end sub get_price
