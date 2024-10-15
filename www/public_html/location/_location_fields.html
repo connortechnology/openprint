@@ -10,7 +10,7 @@
 		<script>
 window.addEventListener('DOMContentLoaded', function() {
   const loc = $j('#location');
-  if (loc)
+  if (loc && loc.autocomplete)
     loc.autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/location/_locations.html?type=place' } );
 });
 		</script>
