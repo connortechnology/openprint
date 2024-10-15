@@ -149,7 +149,7 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
       <th class="radius">RADIUS</th>
 <? endif ( $config{RADIUS_Support} eq 'Y' ) ?>
 			<th class="buttons">
-<? echo ( button( 'AddInterface', { 'data-on-click'=>'add_interface', text=>'+', title=>'Add Interface' } );) ?>
+<? echo ( button( 'AddInterface', { on_click=>'add_interface', text=>'+', title=>'Add Interface' } );) ?>
       </th>
 		</tr>
 <? echo (
