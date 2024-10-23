@@ -819,7 +819,7 @@ sub get_price {
       %setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
     }
   } else {
-    $setupPrice{Total} = 0;
+    $setupPrice{Total} = $setupPrice{Price} = 0;
   }
 
 	$Results{Breakdown} .= sprintf('MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice{Price}) if %setupPrice;
