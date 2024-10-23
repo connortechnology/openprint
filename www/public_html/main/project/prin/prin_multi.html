@@ -93,6 +93,10 @@
 </script>
 <?include('/main/project/prin/_templates.html')?>
 <div class="Service">
+<div class="PageTitle">
+<h1>Project <?echo($$variable{Project}->link_to())?></h1>
+<h2>Printing</h2>
+</div>
 <? if ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
     <div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>
 <? endif ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
