@@ -25,8 +25,8 @@ table .Type select {
 	vertical-align: middle;
 }
 
-.Folding table input[type="text"],
-.Folding table input[type="number"] {
+.Folding fieldset li table input[type="text"],
+.Folding fieldset li table input[type="number"] {
 	width: 100%;
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
