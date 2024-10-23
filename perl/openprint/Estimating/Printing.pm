@@ -106,6 +106,7 @@ sub ServicePriceConfiguration {
   'Plate Size' => { units => [ 'Inches' ]},
   'Plate Type' => { values => [ 'Convential', 'CTP', 'DI' ]},
   'Press Run Overs' => { range_units => [] },
+  'Runstyles'=> { values=>['Sheet Work', 'Work & Turn', 'Work & Tumble', 'Perfecting', 'Web'] },
 
 );
 sub SpecificationConfiguration {
@@ -1427,6 +1428,11 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
       $$project{Runstyles} = 'Sheet Work';
 		}
     %{$$project{RunstylesHash}} = map { $_ => $_ } split(',',$$project{Runstyles});
+    foreach my $style ( keys %{$$project{RunstylesHash}}) {
+      if (!sets::isin($style, $Specifications{Runstyles}{values})) {
+        $$specs{alert} .= 'Invalid runstyle for '.$Press->name().' '.$style.'. Valid values are:'.join(',', @{$Specifications{Runstyles}{values}}).'<br/>';
+      }
+    }
 		if (DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"}) {
       if (!$$project{RunstylesHash}{$$specs{"ddmRunStyle$qty_index"}}) {
         $log->warn("Press $$Press{strid} does not do ".$$specs{"ddmRunStyle$qty_index"});
@@ -3542,10 +3548,10 @@ $log->debug("Using overriden page quantity $needed_pages");
 	my $filter_press = '';
 	if ( $$sig_specs{"chkOverridePress$qty_index"} ) {
 		$filter_press = $$sig_specs{"ddmPress$qty_index"};
-		$log->debug("Have Override Press " . $filter_press . ' from chkOverride');
+		$log->debug('Have Override Press ' . $filter_press . ' from chkOverride');
   } elsif ($$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"}) {
 		$filter_press = $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"};
-		$log->debug("Have Override Press " . $filter_press . ' from book specs');
+		$log->debug('Have Override Press ' . $filter_press . ' from book specs');
 	} elsif ( $$sig_specs{PreviousPress} ) {
 		$filter_press = $$sig_specs{PreviousPress};
 		$log->debug("Have PreviousPress $$sig_specs{PreviousPress} from $$sig_specs{SignatureIndex}");
@@ -3639,8 +3645,8 @@ $log->debug("Using overriden page quantity $needed_pages");
 
 	} # end foreach press
 
-	if ( ! @impositions ) {
-		$log->debug("No impsoitions!" );
+	if (!@impositions) {
+		$log->debug('No impsoitions!');
 		return ();
 	} 
 
