@@ -3265,6 +3265,7 @@ sub save_price( $$$$$ ) {
 		$$specs{'txtPressSheetQty'.$qty_index} = $$price{'Stock Weight'}.'lbs';
 		$$specs{'minimum_stock_size'.$qty_index} = $Imposition->used_width().'&quot;';
 		$$specs{'StockQuantity'.$qty_index} = $$price{'Stock Weight'};
+		$$specs{'hdnNetSheetCount'.$qty_index} = $$price{'Net Sheet Count'};
 	} elsif ( $$Paper{type} eq 'Sheet' ) {
 		$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width}.'x'.$$Paper{height};
     #$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width} . '" x ' . $$Paper{height}.'"';
