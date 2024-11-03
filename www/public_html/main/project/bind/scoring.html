@@ -53,6 +53,10 @@ function Imposition_onchange( element, signature, qty_index, index ) {
 } // end function
 </script>
 <div class="Service <?ServiceType?>">
+<div class="PageTitle">
+<h1>Project <?echo($$variable{Project}->link_to())?></h1>
+<h2>Scoring</h2>
+</div>
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<? echo ( my $html;

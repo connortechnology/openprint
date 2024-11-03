@@ -13,11 +13,11 @@
 		return radio( 'rdbSuppliedDie-'.$$variable{SignatureIndex}, \@options, 
 			( $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} or $$variable{rdbSuppliedDie} ), 
 			{
-				onclick=>qq`if(this.value=='Y'){\$('CustomDie$$variable{SignatureIndex}').hide();}else{\$('CustomDie$$variable{SignatureIndex}').show();} calc(this.form.name);` } );
+				onclick=>qq`calc(this.form.name);` } );
 	) ?>	
 </li>
 </ul>
-<ul id="CustomDie<?SignatureIndex?>" style="<? echo ( 'display: none;' if $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} eq 'Y' ) ?>" >
+<ul id="CustomDie<?SignatureIndex?>">
 	<li><label>Die size? (Inches)</label>
 		<? echo ( join("\n",
 			input( type=>'float', name=>'txtDieWidth-'.$$variable{SignatureIndex}, value=>$$variable{txtDieWidth}, oninput=>'calc(this.form.name);', placeholder=>'width' ),
@@ -26,7 +26,7 @@
 			write_override( 'chkOverrideDimensions-'.$$variable{SignatureIndex}, $$variable{'chkOverrideDimensions-'.$$variable{SignatureIndex}}, '', q`calc('f1');` ),
 		); ) ?>
 	</li>
-	<li><label>Die Type</label>
-		<? echo ( radio( 'rdbEmbossing-'.$$variable{SignatureIndex}, [ map { $_, $_ } ( 'Simple','Average','Complex' ) ], $$variable{'rdbEmbossing-'.$$variable{SignatureIndex}}, { onclick=>'calc(this.form.name);' } ); ) ?>
+	<li><label>Complexity</label>
+		<? echo ( radio( 'complexity-'.$$variable{SignatureIndex}, [ map { $_, $_ } ( 'Simple','Average','Complex' ) ], $$variable{'complexity-'.$$variable{SignatureIndex}}, { onclick=>'calc(this.form.name);' } ); ) ?>
 	</li>
 </ul>

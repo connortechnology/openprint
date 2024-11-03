@@ -1,4 +1,9 @@
 <? eval (
+  if ($param{category}) {
+    my $category = openprint::Product_Category->find_one(name=>openprint::Product_Category->transform(name=>$param{category}));
+    $session{'/product/search.html?category_id'} = $category->id() if $category;
+  }
+
 	@{$$variable{Products}} = ();
 	foreach my $Product ( openprint::Product->find( 
 		date_filter( '/product/search.html?created_on_end','created_on <=' ),

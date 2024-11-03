@@ -128,6 +128,15 @@ sub signature_needs {
       $openprint::log->debug(" ** Imposition > 1, Cutting needed ! ** ") if DEBUG;
       return 1;
     } # end if
+    
+    if ($$sig_specs{"ddmBleedSize$qty_index"}) {
+      foreach my $key ('BleedBottom','BleedTop','BleedLeft','BleedRight') {
+        return 1 if $$sig_specs{$key};
+      }
+    }
+    if (!$$sig_specs{rdbColourBar} or $$sig_specs{rdbColourBar} ne 'N') {
+      return 1;
+    }
 
     # If folding imposition doesn't match printed imposition
     if ( $$services{Folding} and @{$$services{Folding}} ) {
@@ -1004,7 +1013,7 @@ $openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
         if ( $$sig_specs{txtSignatureType} and ($$sig_specs{txtSignatureType} ne 'Pad Pages') ) {
 
   # but if we are cutting into smaller signatures, then we need more cutting
-  $openprint::log->debug("Stitching $stitching_imposition out printing $$sig_specs{'txtImposition'.$qty_index}out") if DEBUG;
+  #$openprint::log->debug("Stitching $stitching_imposition out printing $$sig_specs{'txtImposition'.$qty_index}out") if DEBUG;
   #$openprint::log->debug("have signaturetype $$sig_specs{txtSignatureType} ");
   #$openprint::log->debug("What is folder?: ($Folder)" . ($Folder ? join(',', map { $_ . ' => ' . $$Folder{$_} } keys %{$Folder} ) : '' ) );
           if ( ($cutting_capable ne 'When Stitching') and $I->pages() and ! ( $folding_specs and $Folder and $Folder->specification('Cutting Capable') ) ) {
@@ -1055,7 +1064,7 @@ $openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
                 } # end if
               } # end foreach
             } # end if
-          } elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
+          } elsif ( $$printing_specs{rdbTemplateType} and ($$printing_specs{rdbTemplateType} eq 'PlasticCoil') ) {
   # This is special... something about if it's plasticCoil... you have to cut it into 8's...
 
             if ( $I->pages() > 8 ) {
@@ -1199,7 +1208,7 @@ $openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
                 @setup{'Price','units','Total'}, $cuts );
               $price{total} += $setup{Total};
             } else {
-              $openprint::log->debug("unknown units on $$CuttingMakeReady{units}") if DEBUG;
+              $openprint::log->debug("unknown units on $$CuttingMakeReady{ServiceName}") if DEBUG;
               $results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price} );
               $price{total} += $setup{Price};
             } # end if

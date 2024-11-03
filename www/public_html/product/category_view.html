@@ -1,8 +1,18 @@
-<script type="text/javascript">
+<script>
 	function filter_products() {
 		new Ajax.Updater( 'Products', '_category_view_products.html?category_id=<? echo ( $$variable{Category}->id(); ) ?>', { parameters: $('f1').serialize() } );
 	}
 </script>
+
+<div class="PageTitle">
+<h1>Products</h1>
+<h2><?echo (
+my @categories = ($$variable{Category}->name());;
+while ( $$variable{Category}->parent_id()) {
+
+ join(' ', m
+</h2>
+</div>
 <form name="f1" id="f1" action="/product/category_view.html?category_id=<? echo ( $$variable{Category}->id(); ) ?>" method="post">
 	<fieldset>
 		<legend> <? echo ( $$variable{Category}->name()) ?> </legend>

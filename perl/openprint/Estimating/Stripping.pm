@@ -17,7 +17,7 @@
 package openprint::Estimating::Stripping;
 use strict;
 use warnings;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use Data::Dumper;
 
 # Stripping tends to be a manual process.  There are tools to help... 
@@ -164,10 +164,10 @@ sub calc {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $form = $$sig_specs{SignatureIndex};
 
-			$$specs{'hdnBreakdown'.$qty_index} .= "Form $form: ".($$sig_specs{txtServiceDescription}?$$sig_specs{txtServiceDescription}:'').'<br/>';
 			my $SignatureImposition = new openprint::Imposition();
 			$SignatureImposition->load( $sig_specs, $qty_index, $Project );
-			$$specs{'hdnBreakdown'.$qty_index} .= $SignatureImposition->to_string() . '<br/>';
+
+			$$specs{'hdnBreakdown'.$qty_index} .= "Form $form: ".($$sig_specs{txtServiceDescription}?$$sig_specs{txtServiceDescription}.'<br/>':'').'Printed '. $SignatureImposition->to_string() . '<br/>';
 
 			my %results = signature_calc( $Project, $Service, $sig_specs, $specs, $qty_index, $SignatureImposition );
 			$$specs{'hdnBreakdown'.$qty_index} .= $results{breakdown} if $results{breakdown};
@@ -183,7 +183,7 @@ sub calc {
 					my $Imposition = $$Price{Imposition};	
 
 # This should be a different string from above, or maybe the same if it wasn't cut.
-					$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string() . '<br/><table>';
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Stripping at '.$Imposition->to_string() . '<br/><table>';
 					if ( $$Price{MakeReady}{units} ) {
 						if ( $$Price{MakeReady}{units} eq 'per hour' ) {
 							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>MakeReady: $%1$.2f%2$s * %4$s%5$s = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{MakeReady}}{'Price','units','Total'}, @{$$Price{'MakeReadyTime'}}{'value','units'} );
@@ -194,17 +194,17 @@ sub calc {
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>MakeReady: </td><td class="Price">$%.2f</td></tr>', $$Price{MakeReady}{Price});
 					} # end if
 					if ( $$Price{ServicePrice}{units} eq 'per hour' ) {
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d impressions/%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{Runspeed}{value} );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d sheets/%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{Runspeed}{value} );
           } elsif ( $$Price{ServicePrice}{units} eq 'per lb' ) {
             my $weight = $Imposition->Paper()->sheet_weight();
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$.4f * %5$d impressions=%6$.2flbs) = </td><td class="Price">$%3$.2f</td></tr>',
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$.4f * %5$d sheets=%6$.2flbs) = </td><td class="Price">$%3$.2f</td></tr>',
               @{$$Price{ServicePrice}}{'Price','units','Total'},
 
               $weight, $$Price{Impressions},
               $weight*$$Price{Impressions},
               );
 					} else {
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions} );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * %4$d sheets = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions} );
 					} # end if
 
 					$totalUnitPrice += $Price->{UnitPrice};
@@ -226,7 +226,7 @@ sub calc {
           "ImpOut-$form-$qty_index-$imp_index",
           "ImpColumns-$form-$qty_index-$imp_index",
           "ImpRows-$form-$qty_index-$imp_index"} =
-          $Imposition->get('quantity','imposition','columns','rows');
+          @$Imposition{'quantity','imposition','columns','rows'};
           $imp_index += 1;
         } # end foreach Imposition
       } # end if Equipment
@@ -302,8 +302,6 @@ sub signature_calc {
 
 	my $services = $Project->services();
 
-  #$$Imposition{impressions} = int( $$specs{"txtQuantity$qty_index"} / ( $$Imposition{quantity} * $$Imposition{imposition} ) );
-	$$Imposition{impressions} = int( $$specs{"txtQuantity$qty_index"} / $$Imposition{imposition} );
 	my @Impositions;
   my $DieCutting_specs = {};
 	if ( $$services{DieCutting} and @{$$services{DieCutting}} ) {
@@ -373,7 +371,7 @@ sub signature_calc {
 sub calc_price {
   my ( $project, $specs, $Equipment, $qty_index, $Imposition, $form ) = @_;
 
-	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'', Impressions=>$$Imposition{impressions} );
+	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'', Impressions=>$$Imposition{gross_sheets} );
 
 	my $MakeReadyService = openprint::Service->find_one( name => 'Stripping-'.$$specs{'Complexity-'.$form}.'MakeReady' ) if $$specs{'Complexity-'.$form};
 	$MakeReadyService = openprint::Service->find_one( name => 'StrippingMakeReady' ) if ! $MakeReadyService;
@@ -407,16 +405,15 @@ sub calc_price {
 			my $ServicePrice = $StrippingService->get_Price( undef, $Equipment );
 			if ( $ServicePrice ) {
 				if ( $$ServicePrice{units} eq 'per m' ) {
-					$$ServicePrice{Total} = Math::Round::nearest( 0.01, $$ServicePrice{Price} * $$Imposition{impressions} / 1000 );
+					$$ServicePrice{Total} = Math::Round::nearest( 0.01, $$ServicePrice{Price} * $$Imposition{gross_sheets} / 1000 );
         } elsif ( $$ServicePrice{units} eq 'per lb' ) {
           my $weight = $Imposition->Paper()->sheet_weight();
-          #my $weight = $project->finished_weight();
-					$$ServicePrice{Total} = Math::Round::nearest( 0.01, $$ServicePrice{Price} * $$Imposition{impressions} * $weight );
+					$$ServicePrice{Total} = Math::Round::nearest( 0.01, $$ServicePrice{Price} * $$Imposition{gross_sheets} * $weight );
 				} elsif ( $$ServicePrice{units} eq 'per hour' ) {
 					my $Runspeed = $Equipment->Specification( 'Stripping Runspeed' );
 					if ( $Runspeed and $$Runspeed{value} ) {
 						$Total{Runspeed} = $Runspeed;
-						my $hours = $$Imposition{impressions} / $$Runspeed{value};
+						my $hours = $$Imposition{gross_sheets} / $$Runspeed{value};
 						$$ServicePrice{Total} = Math::Round::nearest( 0.01, $$ServicePrice{Price} * $hours );
 					} else {
 						$Total{alert} .= "No stripping speed on $$Equipment{name}<br/>";
@@ -437,7 +434,7 @@ sub calc_price {
 			$Total{alert} .= 'No Stripping service in the system.<br/>';
 		} # en dif
 	} else {
-		$Total{MPrice} += ( $$specs{"Price$qty_index"} / $$Imposition{impressions} ) * 1000;
+		$Total{MPrice} += ( $$specs{"Price$qty_index"} / $$Imposition{gross_sheets} ) * 1000;
 		$Total{Total} += $$specs{"Price$qty_index"};
 	} # end if
 
@@ -546,8 +543,10 @@ sub load_Impositions {
 		#my ( $pages ) = $$specs{"ImpType-$form-$qty_index-$fold_index"} =~ /^(\d+)PageFold$/;
 		#$imp->pages( $pages );
 		$imp->quantity( $$specs{"ImpQty-$form-$qty_index-$imp_index"} );
-    $imp->display("impressions: ".$imp->impressions());
-    $imp->impressions($imp->impressions() * ($$Imposition{imposition}/$$imp{imposition}));
+    #$imp->display("impressions: ".$$imp{impressions} . ' gross sheets '.$$imp{gross_sheets});
+    $imp->impressions($$imp{impressions} * ($$Imposition{imposition}/$$imp{imposition}));
+    $imp->gross_sheets($$imp{gross_sheets} * ($$Imposition{imposition}/$$imp{imposition}));
+    $imp->net_sheets($$imp{net_sheets} * ($$Imposition{imposition}/$$imp{imposition}));
 		push @impos, $imp;
 	} # end foreach imp_index
 	my $quantity = $$specs{"txtQuantity$qty_index"};

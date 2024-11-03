@@ -1353,6 +1353,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			$log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) is not the book overriden type " . $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} ) if DEBUG_IMPOSITIONS;
 			next;
 		} # end if
+
 		if ( ( defined $$specs{'OverridePrintingType'.$qty_index} ) and ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) ) {
 			if ( $printing_type ne $$specs{'PrintingType'.$qty_index} ) {
 				$log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if DEBUG_IMPOSITIONS;
@@ -1360,13 +1361,15 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			} else {
 				$log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) IS the overriden type " . $$specs{'PrintingType'.$qty_index} ) if DEBUG_IMPOSITIONS;
 			} # end if
+    } elsif ( $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} and ( $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} eq $printing_type) ) {
+      $log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) IS the overriden type " . $$project{ProjectSpecs}{'PrintingType-'.$$specs{Group}} ) if DEBUG_IMPOSITIONS;
 		} else {
-# FIXME
-$log->error("For press $$Press{strid} $printing_type ".join(',', $$specs{PrintingTypes} ? @{$$specs{PrintingTypes}} : ('none') ));
+      # FIXME, fix what?
+      $log->error("For press $$Press{strid} $printing_type ".join(',', $$specs{PrintingTypes} ? @{$$specs{PrintingTypes}} : ('none') ));
 			if ( $$specs{PrintingTypes} and $printing_type and ! sets::isin( $printing_type, $$specs{PrintingTypes} ) ) {
 				if ( $$specs{'chkOverridePress'.$qty_index} and ( $$specs{'ddmPress'.$qty_index} eq $$Press{strid} ) ) {
-          next;
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
+          next;
         } elsif ( $$project{ProjectSpecs}{"ddmPress-$$specs{Group}"} and ( $$project{ProjectSpecs}{"ddmPress-$$specs{Group}"} eq $$Press{strid} ) ) {
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
 				} elsif ( $$specs{'OverridePrintingType'.$qty_index} and ( $printing_type eq $$specs{'PrintingType'.$qty_index} ) ) {
@@ -1551,6 +1554,17 @@ $log->error("For press $$Press{strid} $printing_type ".join(',', $$specs{Printin
 			$$project{colour_bar_size} = 0;
 		} # end if Envelopes
 		$$project{Orientation} = $Press->specification('Orientation');
+    if (!$$project{Orientation}) {
+      my $max_image_width = $Press->specification('Maximum Image Width');
+      my $max_image_length = $Press->specification('Maximum Image Length');
+      if ($max_image_width and $max_image_length) {
+        if ($max_image_width > $max_image_length) {
+          $$project{Orientation} = 'Landscape';
+        } else {
+          $$project{Orientation} = 'Portrait';
+        }
+      }
+    } # end if ! orientation
 		$$project{dutch} = 1; # default to on
 		if ( $$specs{"dutch$qty_index"} and ( $$specs{"dutch$qty_index"} eq 'N' ) ) {
 			$$project{dutch} = 0;
@@ -3561,6 +3575,7 @@ $log->debug("Using overriden page quantity $needed_pages");
 			and ( !$$sig_specs{"chkOverridePress$qty_index"} )
       and ( !$$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} )
 			and ( !$$sig_specs{"OverridePrintingType$qty_index"} )
+			and ( !$$project{ProjectSpecs}{"PrintingType-$$sig_specs{Group}"} )
 			) {
 			my $printing_type = $Press->specification('Printing Type');
 			if ( $printing_type and ! sets::isin( $printing_type, $$sig_specs{PrintingTypes} ) ) {
@@ -5674,7 +5689,7 @@ sub calc_price {
 	#$setup_overs *= ( 1 + ( $roll2sheet_setup_overs_rate / 100 ) ) if $roll2sheet_setup_overs_rate;
 
 	if ( $$specs{'OverrideRun'.$qty_index} and ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
-		$price{'Run Overs'} = { value=>$$specs{'OverRun'.$qty_index}, total=>$$specs{'OverRun'.$qty_index} };
+		$price{'Run Overs'} = { impressions=>$net_sheets, value=>$$specs{'OverRun'.$qty_index}, units=>'overriden sheets', total=>$$specs{'OverRun'.$qty_index} };
 	} else {
 # Should include bindery overs, but not setups, because the setup overs do the same job as the Run Overs
 		my $PressRunOvers = $Press->Specification('Press Run Overs', $net_sheets);
@@ -8205,7 +8220,7 @@ $log->warn("Unknown printing type in sig $$sig_specs{SignatureIndex} : " . $$sig
 			} # end if PrintingTypes
 			if ( $cover_type ) {
 				if ( $cover_type eq 'Digital' ) {
-					$results = ['Digital'];
+					$results = ['Digital', 'Sheetfed'];
 				} elsif ( $cover_type eq 'Waterless' ) {
 					$results = [ 'Waterless', 'Offset' ];
 				} elsif ( $cover_type eq 'Offset' ) {
