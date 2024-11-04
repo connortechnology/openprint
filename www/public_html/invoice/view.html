@@ -105,12 +105,12 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
           my $formatted_end = format_date( $Timetrack->ending() );
 
 					$html .= sprintf('<td class="Date">%s</td>', $Timetrack->Employee()->link_to() );
-					$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
+          $html .= sprintf('<td class="Service">%s</td>', $Timetrack->link_to( $Timetrack->Service()->name() ) );
 					$html .= '<td class="PO">'.html_escape($Timetrack->po()) . '</td>';
 					$html .= '<td class="Interval">'.$Timetrack->elapsed_formatted().'</td>';
-					my $Price = $Timetrack->Price();
-					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{price} ), $$Price{units} );
-					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{total} ) );
+					my $price = $Timetrack->Price();
+					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$price{price} ), $$price{units} );
+					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$price{total} ) );
 					$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
           if ( $Timetrack->date_associated() ) {
             $html .= '<td>'. $formatted_start . ( ( $formatted_start ne $formatted_end ) ? ( '<br/>through<br/>' .  $formatted_end ) : '' ) .  '</td>';
@@ -120,7 +120,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 
           $html .= '<td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
-					$$variable{service_total} += $$Price{Total};
+					$$variable{service_total} += $$price{total};
 					$$variable{elapsed_total} += $Timetrack->elapsed();
 					$rowclass = $rowclass ? '' : 'class="colRow"';
 				} # end foreach Timetrack
@@ -161,7 +161,6 @@ return $html;
         </ul>
       </fieldset>
     </div>
-    <?include(_payment_options.html)?>
 <?include(_totals.html)?>
 <? if ( $$variable{Invoice}->owing() ) ?>
 	<? if ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
