@@ -21,19 +21,33 @@
 			} // end if
 		} // end if
 	}
+
 	function load_expenses( form ) {
-    $j('#ExpenseList').load('_expenses.html', $j('#f1').serialize(), function() {
-      //$j('#ExpensesTable').DataTable();
+    $j('#ExpenseList').html('Loading');
+    load_page_ajax = $j.ajax({
+      url: '_expenses.html',
+      data: $j('#f1').serialize(),
+      success: function(data) {
+        load_page_ajax = null;
+        $j('#ExpenseList').html(data);
+        $j('#ExpensesTable').bootstrapTable({ });
+      }
     });
+  }
 
-		//LoadContent( 'ExpenseList','_expenses.html', $('f1') );
-	} // end function
+  function reset() {
+    const f1 = document.getElementById('f1');
+    for (let i=0, len = f1.elements.length; i<len; i++) {
+      const element = f1.elements[i];
+      set_value( element, '' );
+    }
+    load_page();
+  }
 
-  $j(document).ready( function () {
-        //$j('#ExpensesTable').DataTable();
-    //load_expenses();
+  addEventListener('DOMContentLoaded', (event) => {
+    $j('#ExpensesTable').bootstrapTable({ });
   });
-</script>	 
+</script>
 <? include(/includes/error_reporting.html) ?>
 <form id="f1" name="f1" method="post" action="/employee/accounting/expenses.html">
 	<input type="hidden" name="btnFunction"/>
