@@ -72,6 +72,10 @@ tr.error {
 	clear: both;
 }
 
+table.List tr:hover {
+  background-color: #afb3e9;
+}
+
 form {
 	margin: 0;
 }
