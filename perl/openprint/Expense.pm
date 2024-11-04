@@ -8,7 +8,7 @@ package openprint::Expense_Category;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'expense_categories';
 $serial = 'expense_categories_id_seq';
 %fields = (
@@ -235,8 +235,8 @@ sub Taxes {
       #$T->save({ 'expense_id'=>  $$self{id}}) if $$self{id};
       push @{$$self{Taxes}}, $T;
     } # end foreach Tax
-  } else {
-    $openprint::log->debug('Not loading taxes: ' . (scalar @{$$self{Taxes}}) . ' country: ' . $self->Company()->country() . ' state: ' . $self->Company()->state() . ' invoiced_on: ' . ($$self{invoiced_on}?$$self{invoiced_on}:'never'));
+    #} else {
+    #$openprint::log->debug('Not loading taxes: ' . (scalar @{$$self{Taxes}}) . ' country: ' . $self->Company()->country() . ' state: ' . $self->Company()->state() . ' invoiced_on: ' . ($$self{invoiced_on}?$$self{invoiced_on}:'never'));
   } # end if
   return @{$$self{Taxes}};
 } # end sub Taxes
