@@ -1365,7 +1365,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
       $log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) IS the overriden type " . $$project{ProjectSpecs}{'PrintingType-'.$$specs{Group}} ) if DEBUG_IMPOSITIONS;
 		} else {
       # FIXME, fix what?
-      $log->error("For press $$Press{strid} $printing_type ".join(',', $$specs{PrintingTypes} ? @{$$specs{PrintingTypes}} : ('none') ));
+      #$log->error("For press $$Press{strid} $printing_type ".join(',', $$specs{PrintingTypes} ? @{$$specs{PrintingTypes}} : ('none') ));
 			if ( $$specs{PrintingTypes} and $printing_type and ! sets::isin( $printing_type, $$specs{PrintingTypes} ) ) {
 				if ( $$specs{'chkOverridePress'.$qty_index} and ( $$specs{'ddmPress'.$qty_index} eq $$Press{strid} ) ) {
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
@@ -1434,7 +1434,6 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
       }
 			$$project{Runstyles} = $$specs{"ddmRunStyle$qty_index"};
 		} 
-    $log->error("Project Runstyles: $$project{Runstyles}");
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
 		my $do_perfecting = 1;
 		if ( $$project{print_sides} == 1 ) {
