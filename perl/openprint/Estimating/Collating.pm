@@ -382,7 +382,11 @@ sub get_price {
       $pass_price{Service} = $qty*$servicePrice{Price}/1000; # Service Price for Collating is per 1000
       $pass_price{MPrice} = $pass_price{Service};
     } elsif ($servicePrice{units} eq 'per hour') {
-      my $runspeed = $Equipment->Specification('Run Speed', $pass_pockets);
+      my $runspeed = $Equipment->Specification('Run Speed');
+      if ($$runspeed{range_units} eq 'calliper') {
+      } else {
+        $runspeed = $Equipment->Specification('Run Speed', $pass_pockets);
+      }
       if ($runspeed) {
         if (lc $$runspeed{units} eq 'per hour') {
           $servicePrice{speed} = $$runspeed{value};
@@ -394,7 +398,7 @@ sub get_price {
       } else {
         $pass_price{Service} = $servicePrice{Price};
         $pass_price{Breakdown} .= 'Service: Pricing is per hour but no run speed found.<br/>';
-        $$specs{alert} .= $servicePrice{Service}->description().' pricing is per hour but no run speed has been set for '.$$Equipment->name().'.<br/>';
+        $$specs{alert} .= $servicePrice{Service}->description().' pricing is per hour but no run speed has been set for '.$Equipment->name().'.<br/>';
       }
     } else {
       $$specs{alert} .= 'Unknown units in service price.<br/>';

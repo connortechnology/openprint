@@ -1064,7 +1064,7 @@ $openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
                 } # end if
               } # end foreach
             } # end if
-          } elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
+          } elsif ( $$printing_specs{rdbTemplateType} and ($$printing_specs{rdbTemplateType} eq 'PlasticCoil') ) {
   # This is special... something about if it's plasticCoil... you have to cut it into 8's...
 
             if ( $I->pages() > 8 ) {
