@@ -735,8 +735,8 @@ sub date_select {
 	$class .= 'C' if $$options{with_clear};
 	$class .= 'T' if $$options{with_today};
 
-	my $html = '<span class="'.$class.'">';
-	$html .= sprintf('<span id="%1$s_date">', $prefix );
+	my $html = '<span class="'.$class.'" id="'.$prefix.'_date">
+';
 	foreach my $o ( split(',', $$options{order}) ) {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{onchange} );
@@ -770,8 +770,8 @@ sub date_select {
 				text=>'T', title=>'Today', class=>'Today',
 				} );
 	} # end if
-	$html .= '<span id="'.$prefix.'_alert"></span>';
-	$html .= '</span></span>';
+	$html .= '<span id="'.$prefix.'_alert"></span>
+</span>';
 	return $html;
 } # end sub date_select
 
