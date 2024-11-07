@@ -90,7 +90,6 @@ function body_onLoad() {
 var timeout;
 var block_calc = false;
 function calc( formName='f1', force, options ) {
-  console.log('calc', formName);
 	if ( block_calc ) return;
 
 	const form = getFormObj( formName );
@@ -111,6 +110,7 @@ function calc( formName='f1', force, options ) {
       timeout = setTimeout("calc('" + formName + "');", 1000);
     }
   } else {
+    gettingNewPrice = true;
     timeout = null;
     const AlertDiv = document.getElementById('AlertDiv');
     if ( AlertDiv ) {
@@ -121,36 +121,32 @@ function calc( formName='f1', force, options ) {
     if ( div ) {
       div.innerHTML = 'Calculating';
     } // end if
-    gettingNewPrice = true;
     clear_price_data( form );
     const data = $j(form).serializeArray();
     //if ( options ) {
     //data.merge( options );
     //}
-    for (let i=0; i < data.length; i++) {
-      const pair = data[i];
-      if (
-        (pair.value == '') 
+    const filtered_data = data.filter((pair) => {
+      return !(
+        (pair.value == '')
         ||
-        (pair.name == 'btnFunction') 
+        (pair.name == 'btnFunction')
         ||
-        (pair.name == 'alert') 
-      ) {
-        data.splice(i,1);
-      }
-    }
+        (pair.name == 'alert'));
+    });
+
     //new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
     $j.ajax({
       type: "POST",
       url: '/main/project/_calc.json',
-      data: data,
+      data: filtered_data,
       dataType: 'json',
       success: function(data, textStatus, jqXHR) {
         console.log(data);
         results_callback(data);
       }
     }).done(function(data) {
-      console.log(data);
+      console.log("done", data);
     }).fail(function(jqXHR, textStatus, errorThrown) {
       gettingNewPrice = false;
       console.log("fail", jqXHR, textStatus);
