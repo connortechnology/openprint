@@ -1611,8 +1611,9 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 
         if (!$makereadies{$$Equipment{id}}{$$Fold{type}.$imposition}) {
           my $overs = 0;
+          $$Fold{makeready_overs_value} = 0;
           if ( $$Fold{makeready_overs} ) {
-            my $overs = $$Fold{makeready_overs_units} eq 'Percent' ? $run_qty * ( $$Fold{makeready_overs} /100 ) : $$Fold{makeready_overs};
+            my $overs = $$Fold{makeready_overs_value} = $$Fold{makeready_overs_units} eq 'Percent' ? $run_qty * ( $$Fold{makeready_overs} /100 ) : $$Fold{makeready_overs};
             $Breakdown .= "MR Overs $$Fold{makeready_overs}$$Fold{makeready_overs_units} = $overs, total = ".($run_qty+$overs)."<br/>";
             $run_qty += $overs;
           } # end if
@@ -1620,12 +1621,13 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
           $Breakdown .= 'MR Overs 0<br/>';
         }
         #$Breakdown .= $Fold->to_string();
+        $$Fold{run_overs_value} = 0;
 				if ( $$Fold{run_overs} ) {
-					my $overs = $$Fold{run_overs_units} eq 'Percent' ? $run_qty * ($$Fold{run_overs}/100) : $$Fold{run_overs};
+					my $overs = $$Fold{run_overs_value} = $$Fold{run_overs_units} eq 'Percent' ? $run_qty * ($$Fold{run_overs}/100) : $$Fold{run_overs};
           $Breakdown .= "Run Overs $$Fold{run_overs}$$Fold{run_overs_units} = $overs, total = ".($run_qty+$overs)."<br/>";
           $run_qty += $overs;
 				} # end if
-				$$Imposition{impressions} = $run_qty;
+				$$Fold{impressions} = $$Imposition{impressions} = $run_qty;
 
 				my $runspeed;
         if ($$Fold{runspeed_units} eq 'calliper') {
@@ -1975,7 +1977,6 @@ $openprint::log->debug("NotGot better price for qty $qty_index sig $form ".(defi
 		MakeReadyOvers		=>	0,
 		RunOvers					=>	0,
 		);
-# if defined $bestPrice;
 
 	foreach my $FI ( @{$bestImpositions} ) {
 		my $Fold = $$FI{Fold};
@@ -1984,26 +1985,10 @@ $openprint::log->debug("NotGot better price for qty $qty_index sig $form ".(defi
 			$openprint::log->warn('Fold didnt have equipment');
 		}
 		$FI->Equipment( $Fold->Equipment() );
-		my $printed_sheets = (($$specs{'txtQuantity'.$qty_index}/$$FI{imposition})/$$SignatureImposition{imposition});
 
 		$results{MakeReadyTime} = $$Fold{makeready_time} if $results{MakeReadyTime} < $$Fold{makeready_time};
-		if ( $$Fold{makeready_overs} ) {
-			if ( $$Fold{makeready_overs_units} eq 'Percent' ) {
-				my $new_overs_percent = Math::Round::nearest( 0.01, $printed_sheets * $$Fold{makeready_overs} /100 );
-				$results{MakeReadyOvers} = $new_overs_percent if $results{MakeReadyOvers} < $new_overs_percent;
-			} else {
-				$results{MakeReadyOvers} = $$Fold{makeready_overs} if $results{MakeReadyOvers} < $$Fold{makeready_overs};
-			} # end if
-    } else {
-      $results{MakeReadyOvers} = 0;
-		} # end if
-		if ( $$Fold{run_overs} ) {
-			$results{RunOvers} = $$Fold{run_overs} if $results{RunOvers} < $$Fold{run_overs};
-			my $run_overs = $printed_sheets * $$Fold{run_overs} /100;
-			$results{RunOvers} = $run_overs if $results{RunOvers} < $run_overs;
-    } else {
-      $results{RunOvers} = 0;
-		}
+		$results{MakeReadyOvers} += $$Fold{makeready_overs_value} if $$Fold{makeready_overs_value};
+		$results{RunOvers} += $$Fold{run_overs_value} if $$Fold{run_overs_value};
 	} # end foreach
 
 	return \%results;
