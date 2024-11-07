@@ -2696,7 +2696,7 @@ sub cut_spreads {
 $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $openprint::Imposition::Orientations{$$I{spine_direction}} . " spread cols: $$I{spread_columns} spread_rows $$I{spread_rows}" ) if DEBUG;
 
 	# Something like doing 16pg as 2 8pgs, why are we not handling the horizontal case?
-	if ( $$I{spine_direction} == openprint::Imposition::Vertical and ( $$I{spread_rows} % 2 == 0 ) ) {
+	if ( $$I{spine_direction} == openprint::Imposition::Vertical and int($$I{spread_rows}) and ( ($$I{spread_rows} % 2) == 0 ) ) {
 		my $i1 = $I->copy();
 
 		# So becomes pages/2, imposition * 2, page quantity * 2, meaning if it is now 4pg 2out, it is in fact 8pages.
@@ -2709,7 +2709,7 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 					$I->quantity(), $I->pages(), $$I{imposition},
 					$i1->quantity(), $i1->pages(), $$i1{imposition}, $$I{page_quantity} ) ) if DEBUG;
 		push @results, [ $i1 ];
-	} elsif ( $$I{spine_direction} == openprint::Imposition::Horizontal and ( $$I{spread_columns} % 2 == 0 ) ) {
+	} elsif ( $$I{spine_direction} == openprint::Imposition::Horizontal and int($$I{spread_columns}) and ( ($$I{spread_columns} % 2) == 0 ) ) {
 		my $i1 = $I->copy();
 
     # So becomes pages/2, imposition * 2, page quantity * 2, meaning if it is now 4pg 2out, it is in fact 8pages.
