@@ -83,12 +83,12 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[:\._a-zA-Z0-9\-]+)(\s+user\=\w+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (fatal: )?Unable to negotiate with (?<IP>[:\._a-zA-Z0-9\-]+) port [0-9]+',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for [\._a-zA-Z0-9\-]+ from (?<IP>[:\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for (invalid|illegal) user [\._a-zA-Z0-9\-]+ from (?<IP>[:\._a-zA-Z0-9\-:]+) port [0-9]+ ssh2$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for (invalid|illegal) user .+? from (?<IP>[:\._a-zA-Z0-9\-:]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: fatal: Timeout before authentication for (?<IP>[:\._a-zA-Z0-9\-:]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for (illegal user root|[\._a-zA-Z0-9\-]+) from (?<IP>[:\._a-zA-Z0-9\-:]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (error: )?PAM: [[:digit:]]+ more authentication failures?; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[:\._a-zA-Z0-9\-:]+)(\s+user=\w+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting: Too many authentication failures for (invalid user )?[^[:space:]]* from (?<IP>[.:[:xdigit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (Connection (closed|reset) by|Disconnected from) ((authenticating|invalid) user [.@[:alnum:]]+ )?(?<IP>[.:[:xdigit:]]+)( port [[:digit:]]+)?( \[preauth\])?$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (Connection (closed|reset) by|Disconnected from) ((authenticating|invalid) user [.@ [:alnum:]]+? )?(?<IP>[.:[:xdigit:]]+)( port [[:digit:]]+)?( \[preauth\])?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting ((authenticating|invalid) )? user [[:alnum:]]* (?<IP>[.:[:xdigit:]]+) port [[:digit:]]+: Change of username or service not allowed:',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: maximum authentication attempts exceeded for (invalid user )?[[:alnum:]]+ from (?<IP>[.:[:xdigit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \S* from (?<IP>[.:[:xdigit:]]+)',
@@ -242,7 +242,7 @@ while(1) {
 	# Is an IP
 					$log->debug("$source is an ip") if $config{debug};
 					$ip = $source;
-        } elsif ( $source =~ /^[\d:]+$/ ) {
+        } elsif ( $source =~ /^(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$/ ) {
 	# Is an IP
 					$log->debug("$source is an ipv6") if $config{debug};
 					$ip = $source;
@@ -259,16 +259,17 @@ while(1) {
 						$log->debug("Got $ip for $source") if $config{debug};
 					} # end if
 				} # end if
+
+				if ( ! $ip ) {
+					$log->debug("No ip for $source") if $config{debug};
+					next;
+				} # end if
+
 				if ( $ip eq '127.0.0.1' ) {
 					$log->debug('No more testing for localhost');
 					next;
 				} else {
 					$log->debug("IP is $ip");
-				} # end if
-
-				if ( ! $ip ) {
-					$log->debug("No ip for $source") if $config{debug};
-					next;
 				} # end if
 
 				if ( $whitelist{$ip} ) {

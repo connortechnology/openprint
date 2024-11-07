@@ -234,7 +234,6 @@ $log->error("No calc for $project_type");
 				openprint::print_project::continue_project($Project);
 				return if $variable{ExternalRedirect};
 			} elsif ( $param{btnFunction} eq 'Modify Project' ) {
-$openprint::log->error("Modify Project");
 				my $service_name = $param{txtServiceName} ? $param{txtServiceName} : 'Adjustment';
 				my $CurrentCurrency = openprint::Currency::get_current();
 				my $ProjectCurrency = $Project->Currency();

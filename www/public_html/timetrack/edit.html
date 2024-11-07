@@ -139,7 +139,7 @@ function service_onchange() {
 					<textarea id="description" name="description" rows="<? echo ( ssi::count_lines( $$variable{Timetrack}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Timetrack}->description() ) ?></textarea>
 				</li>
 				<li><label>Keywords</label> <? echo ( input( type=>'text', name=>'keywords', value=>$$variable{Timetrack}->keywords() ); ) ?> </li>
-				<li><label for="po">Purchase Order #</label> <? echo ( input(type=>'text',name=>'po', value=>$$variable{Timetrack}->po() ); ) ?> </li>
+        <li><label for="po">Purchase Order #</label> <? echo ( input(type=>'text', id=>'po', name=>'po', value=>$$variable{Timetrack}->po() ); ) ?> </li>
 				<? if ( $$variable{Timetrack}->invoice_id() ) ?>
 				<li>
 					<label>Invoice</label>

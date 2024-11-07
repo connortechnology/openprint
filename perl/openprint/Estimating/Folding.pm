@@ -34,7 +34,7 @@ use openprint::Imposition;
 require openprint::Estimating::Perforating;
 require openprint::Estimating::Collating;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
 my %ServicePrices = (
