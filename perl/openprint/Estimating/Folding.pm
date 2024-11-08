@@ -1594,7 +1594,6 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 
 				$fold_specs{"FoldType-$form-$qty_index-$fold_index"} = $$Fold{type};
 				$fold_specs{"FoldQty-$form-$qty_index-$fold_index"} = $$Imposition{quantity};
-				#$Imposition->page_quantity( int($SignatureImposition->pages()/$Imposition->pages() ) );
 				$fold_specs{"FoldPageQty-$form-$qty_index-$fold_index"} = $$Imposition{page_quantity};
 				$fold_specs{"FoldImposition-$form-$qty_index-$fold_index"} = $$Imposition{imposition};
 				$fold_specs{"FoldColumns-$form-$qty_index-$fold_index"} = $$Imposition{columns};
@@ -1609,12 +1608,16 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				$run_qty = POSIX::ceil( $run_qty * $impo_qty/$$SignatureImposition{imposition}) if $impo_qty != $$SignatureImposition{imposition};
 
 				$openprint::log->debug("Pricing qindex $qty_index runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out	of fold $$Fold{type} on " . $Equipment->name()) if DEBUG;
-        if ( ! $makereadies{$$Equipment{id}}{$$Fold{type}.$imposition} ) {
+
+        if (!$makereadies{$$Equipment{id}}{$$Fold{type}.$imposition}) {
+          my $overs = 0;
           if ( $$Fold{makeready_overs} ) {
             my $overs = $$Fold{makeready_overs_units} eq 'Percent' ? $run_qty * ( $$Fold{makeready_overs} /100 ) : $$Fold{makeready_overs};
-            $Breakdown .= "Run Overs $$Fold{makeready_overs}$$Fold{makeready_overs_units} = $overs, total = ".($run_qty+$overs)."<br/>";
+            $Breakdown .= "MR Overs $$Fold{makeready_overs}$$Fold{makeready_overs_units} = $overs, total = ".($run_qty+$overs)."<br/>";
             $run_qty += $overs;
           } # end if
+        } else {
+          $Breakdown .= 'MR Overs 0<br/>';
         }
         #$Breakdown .= $Fold->to_string();
 				if ( $$Fold{run_overs} ) {
@@ -1659,7 +1662,7 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
         } # end if
         $Breakdown .= '<table><tr><td class="Description">MR: ';
         if (!$setupPrice{units}){
-          if (! $makereadies{$$Equipment{id}}{$$Fold{type}.$imposition}) {
+          if (!$makereadies{$$Equipment{id}}{$$Fold{type}.$imposition}) {
             # This is the most common so test for it first.
             $setupPrice{Total} = $setupPrice{Price} //= 0;
             $setupPrice{units} //= '';
@@ -2174,7 +2177,7 @@ $openprint::log->debug("Not needed for form $form") if DEBUG;
     #$openprint::log->debug( Data::Dumper::Dumper($results) );
       #my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, [ sets::exclude( [ $Imposition ], \@Signature_Impositions ) ], $calc_hash );
       $$specs{'hdnBreakdown'.$qty_index} .= $$results{Breakdown} if $$results{Breakdown};
-      $$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>MR Waste: %d, Run Waste: %d<br/>', @$results{'MakeReadyOvers','RunOvers'} );
+      #$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>MR Waste: %d, Run Waste: %d<br/>', @$results{'MakeReadyOvers','RunOvers'} );
       $$specs{"Price-$form-$qty_index"} = $$results{Price};
       $price += $$results{Price} if $$results{Price};
       $mprice += $$results{MPrice};
@@ -2696,7 +2699,7 @@ sub cut_spreads {
 $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $openprint::Imposition::Orientations{$$I{spine_direction}} . " spread cols: $$I{spread_columns} spread_rows $$I{spread_rows}" ) if DEBUG;
 
 	# Something like doing 16pg as 2 8pgs, why are we not handling the horizontal case?
-	if ( $$I{spine_direction} == openprint::Imposition::Vertical and ( $$I{spread_rows} % 2 == 0 ) ) {
+	if ( $$I{spine_direction} == openprint::Imposition::Vertical and int($$I{spread_rows}) and ( ($$I{spread_rows} % 2) == 0 ) ) {
 		my $i1 = $I->copy();
 
 		# So becomes pages/2, imposition * 2, page quantity * 2, meaning if it is now 4pg 2out, it is in fact 8pages.
@@ -2709,7 +2712,7 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 					$I->quantity(), $I->pages(), $$I{imposition},
 					$i1->quantity(), $i1->pages(), $$i1{imposition}, $$I{page_quantity} ) ) if DEBUG;
 		push @results, [ $i1 ];
-	} elsif ( $$I{spine_direction} == openprint::Imposition::Horizontal and ( $$I{spread_columns} % 2 == 0 ) ) {
+	} elsif ( $$I{spine_direction} == openprint::Imposition::Horizontal and int($$I{spread_columns}) and ( ($$I{spread_columns} % 2) == 0 ) ) {
 		my $i1 = $I->copy();
 
     # So becomes pages/2, imposition * 2, page quantity * 2, meaning if it is now 4pg 2out, it is in fact 8pages.
