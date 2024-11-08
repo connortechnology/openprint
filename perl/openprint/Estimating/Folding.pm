@@ -1604,8 +1604,13 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				$fold_specs{"FoldAngles-$form-$qty_index-$fold_index"} = $$Fold{angles};
 
         # specs can be empty if we have added a virtual folding service. FIXME
-				my $run_qty = $$specs{"txtQuantity$qty_index"} ? $$specs{"txtQuantity$qty_index"} : $Project->quantity($qty_index);;
-				$run_qty = POSIX::ceil( $run_qty * $impo_qty/$$SignatureImposition{imposition}) if $impo_qty != $$SignatureImposition{imposition};
+        #my $run_qty = $$specs{"txtQuantity$qty_index"} ? $$specs{"txtQuantity$qty_index"} : $Project->quantity($qty_index);;
+        my $run_qty = $$SignatureImposition{net_sheets};
+        $Breakdown .= 'Printed net sheets '.$run_qty;
+        if ($impo_qty != 1) {
+				  $run_qty = POSIX::ceil($run_qty * $impo_qty);
+          $Breakdown .= ' folding '.$run_qty.' sheets';
+        }
 
 				$openprint::log->debug("Pricing qindex $qty_index runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out	of fold $$Fold{type} on " . $Equipment->name()) if DEBUG;
 
@@ -1613,20 +1618,19 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
           my $overs = 0;
           $$Fold{makeready_overs_value} = 0;
           if ( $$Fold{makeready_overs} ) {
-            my $overs = $$Fold{makeready_overs_value} = $$Fold{makeready_overs_units} eq 'Percent' ? $run_qty * ( $$Fold{makeready_overs} /100 ) : $$Fold{makeready_overs};
-            $Breakdown .= "MR Overs $$Fold{makeready_overs}$$Fold{makeready_overs_units} = $overs, total = ".($run_qty+$overs)."<br/>";
-            $run_qty += $overs;
+            my $overs = $$Fold{makeready_overs_value} = $$Fold{makeready_overs_units} eq 'Percent' ? POSIX::ceil($run_qty * ( $$Fold{makeready_overs} /100 )) : $$Fold{makeready_overs};
+            $Breakdown .= " MR Overs $$Fold{makeready_overs}$$Fold{makeready_overs_units} = $overs";
           } # end if
         } else {
           $Breakdown .= 'MR Overs 0<br/>';
         }
-        #$Breakdown .= $Fold->to_string();
         $$Fold{run_overs_value} = 0;
 				if ( $$Fold{run_overs} ) {
-					my $overs = $$Fold{run_overs_value} = $$Fold{run_overs_units} eq 'Percent' ? $run_qty * ($$Fold{run_overs}/100) : $$Fold{run_overs};
-          $Breakdown .= "Run Overs $$Fold{run_overs}$$Fold{run_overs_units} = $overs, total = ".($run_qty+$overs)."<br/>";
-          $run_qty += $overs;
+					my $overs = $$Fold{run_overs_value} = $$Fold{run_overs_units} eq 'Percent' ? POSIX::ceil($run_qty * ($$Fold{run_overs}/100)) : $$Fold{run_overs};
+          $Breakdown .= " Run Overs $$Fold{run_overs}$$Fold{run_overs_units} = $overs";
 				} # end if
+        $run_qty += $$Fold{makeready_overs_value} + $$Fold{run_overs_value};
+        $Breakdown .= ', total='.$run_qty.'<br/>';
 				$$Fold{impressions} = $$Imposition{impressions} = $run_qty;
 
 				my $runspeed;
@@ -1651,7 +1655,7 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				my $width = $Imposition->layout_width();
 
 				$Breakdown .= sprintf( '%s %s: %d*%dout %s layout: %sx%s qty: %d StockWeight %.2fgsm calliper:%.4f<br/>',
-						@$Fold{'type','name'}, $impo_qty, @$Imposition{'imposition','image_orientation', 'layout_width', 'layout_height'}, $run_qty, @$Paper{'gsm','calliper'} );
+						$fold_types{$$Fold{type}}, $Fold->link_to(), $impo_qty, @$Imposition{'imposition','image_orientation', 'layout_width', 'layout_height'}, $run_qty, @$Paper{'gsm','calliper'} );
 
 				my $total_MR = 0;
 				my %setupPrice = openprint::service::get_price_object($$Fold{type}.'MakeReady', $imposition, $Equipment);
