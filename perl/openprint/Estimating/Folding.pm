@@ -1608,7 +1608,7 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
         my $run_qty = $$SignatureImposition{net_sheets};
         $Breakdown .= 'Printed net sheets '.$run_qty;
         if ($impo_qty != 1) {
-				  $run_qty = POSIX::ceil($run_qty * $impo_qty);
+          $run_qty = POSIX::ceil($run_qty * $impo_qty);
           $Breakdown .= ' folding '.$run_qty.' sheets';
         }
 
@@ -1630,7 +1630,12 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
           $Breakdown .= " Run Overs $$Fold{run_overs}$$Fold{run_overs_units} = $overs";
 				} # end if
         $run_qty += $$Fold{makeready_overs_value} + $$Fold{run_overs_value};
-        $Breakdown .= ', total='.$run_qty.'<br/>';
+        $Breakdown .= ', total folding overs ='.($$Fold{makeready_overs_value} + $$Fold{run_overs_value});
+        if ($impo_qty) {
+          $$Fold{makeready_overs_value} = POSIX::ceil($$Fold{makeready_overs_value}/$impo_qty);
+          $$Fold{run_overs_value} = POSIX::ceil($$Fold{run_overs_value}/$impo_qty);
+        }
+        $Breakdown .= ' = '.($$Fold{makeready_overs_value} + $$Fold{run_overs_value}).' press sheets<br/>';
 				$$Fold{impressions} = $$Imposition{impressions} = $run_qty;
 
 				my $runspeed;
