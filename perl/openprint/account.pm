@@ -667,8 +667,8 @@ sub login {
     } # end if
   } elsif ($param{action}) {
     if ($param{action} eq 'login') {
-      if ( !($param{email} and $param{password})) {
-        $variable{error} = 'Please enter the email address and password.';
+      if ( !($param{email} and $param{auth_code})) {
+        $variable{error} = 'Please enter the email address and authentication code.';
         return;
       } # end if
       openprint::login::logout() if $session{user_id};
