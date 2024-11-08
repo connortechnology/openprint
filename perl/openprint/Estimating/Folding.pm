@@ -1682,7 +1682,7 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 					} elsif ( $setupPrice{units} eq 'per hour' ) {
 						my $makeready_time = eval($$Fold{makeready_time});
 						if ( (! $makeready_time) or $? ) {
-$openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? );
+              $openprint::log->error('No makeready_time on ' . $Fold->to_string() . ': ' . $? );
 						}
 						$totalTime += $makeready_time;
 						$setupPrice{Total} = $setupPrice{Price} * $makeready_time / 60;
@@ -1714,7 +1714,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? 
 					} # end if
 					$Breakdown .= sprintf( ' =</td><td class="Price">$%.2f</td></tr>', $total_MR );
 				} else {
-					$Breakdown .= "Already made ready from another form.</td><td></td></tr>";
+					$Breakdown .= 'Already made ready from another form.</td><td></td></tr>';
 				} # end if
 				$totalPrice += $total_MR;
 
