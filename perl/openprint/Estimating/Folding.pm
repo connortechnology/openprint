@@ -819,7 +819,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 
 	my $override_folds = ( $$specs{"chkOverrideFold-$form-$qty_index"} and ( $$specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) ) ? 1 : 0;
 
-	if ( $$SignatureImposition{pages} > $$SignatureImposition{spread_size} ) {
+	if ( $$SignatureImposition{pages} and ($$SignatureImposition{pages} > $$SignatureImposition{spread_size})) {
 		@All_Impositions = reduce_pages( \@All_Impositions, $override_folds );
 		if ( DEBUG ) {
 			$openprint::log->debug('Sets of Maximum Impositions: # of sets: ' . @All_Impositions);
@@ -1604,8 +1604,12 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				$fold_specs{"FoldAngles-$form-$qty_index-$fold_index"} = $$Fold{angles};
 
         # specs can be empty if we have added a virtual folding service. FIXME
-        #my $run_qty = $$specs{"txtQuantity$qty_index"} ? $$specs{"txtQuantity$qty_index"} : $Project->quantity($qty_index);;
         my $run_qty = $$SignatureImposition{net_sheets};
+        if (!$$SignatureImposition{net_sheets}) {
+          $openprint::log->error("No net sheets in Siganture impo");
+          $run_qty = $$specs{"txtQuantity$qty_index"} ? $$specs{"txtQuantity$qty_index"} : $Project->quantity($qty_index);
+          $run_qty /= $$SignatureImposition{imposition};
+        }
         $Breakdown .= 'Printed net sheets '.$run_qty;
         if ($impo_qty != 1) {
           $run_qty = POSIX::ceil($run_qty * $impo_qty);
