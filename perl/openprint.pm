@@ -167,7 +167,11 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
   } # end if
   if ($session{Pricelist_id}) {
     $Pricelist = new openprint::Pricelist( $session{Pricelist_id} );
-    $openprint::log->debug("openrpint Pricelist $$Pricelist{id} from $session{Pricelist_id}");
+    if (!$$Pricelist{id}) {
+      $openprint::log->error("openrpint Pricelist $$Pricelist{id} from $session{Pricelist_id}");
+    } elsif (Debug) {
+      $openprint::log->debug("openrpint Pricelist $$Pricelist{id} from $session{Pricelist_id}");
+    }
   }
 
   my $ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
