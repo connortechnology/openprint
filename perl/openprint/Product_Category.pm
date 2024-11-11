@@ -80,6 +80,7 @@ sub Album {
   my $Album = new openprint::Photo_Album( $_[0]{album_id} );
   if ( ! $Album->id() ) {
     $Album->name('Photos for product '.$_[0]{name});
+    #$Album->save();
   } # end if
   return $Album;
 } # end sub Album
@@ -130,9 +131,12 @@ sub Parents {
 	return $_[0]{Parents};
 }
 
+sub children {
+return $_[0]->Categories();
+}
 sub Categories {
 	if ( ! $_[0]{Categories} ) {
-		$_[0]{Categories} = [ openprint::Product_Category->find( 'parent_ids @>'=>$_[0]{id} ) ];
+		$_[0]{Categories} = [ openprint::Product_Category->find( 'parent_ids @>'=>$_[0]{id}, order=>'sorting, lower(name)' ) ];
 	}
 	return @{$_[0]{Categories}};
 } # end sub Categories
@@ -147,6 +151,10 @@ sub upload {
 	}
 	return $Album->upload(@_);
 } # end sub upload
+
+sub thumbnail_id {
+return undef;
+}
 
 1;
 __END__
