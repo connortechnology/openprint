@@ -27,6 +27,7 @@ my @variables = (
 		'Markup1', 'Markup2', 'Markup3',
 		'txtPrice1', 'txtPrice2', 'txtPrice3',
 		'MPrice1', 'MPrice2', 'MPrice3',
+    'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 		'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 		'txtHoleQty',
 		'txtHoleSize',
@@ -348,7 +349,7 @@ sub has_overrides {
         push @v, map { $$specs{$_} ? $_ : () } ( 'chkOverrideFinishedCalliper', 'OverrideItemsPerLift' );
     } else {
         foreach my $qty_index ( $Project->quantity_indexes() ) {
-			push @v, map { $$specs{$_.$qty_index} ? $_.$qty_index : () } ( 'chkOverrideEquipment' );
+			push @v, map { $$specs{$_.$qty_index} ? $_.$qty_index : () } ( 'chkOverrideEquipment', 'OverridePrice' );
         } # end foreach
     } # end if
 
