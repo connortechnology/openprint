@@ -160,6 +160,11 @@ if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/QuoteLevels.sql}) );
   get_tables();
 	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='quotelevels'", 'column_name');
+	if ( ! exists $$data{sorting} ) {
+		$dbh->do('ALTER TABLE quotelevels ADD sorting integer');
+	} # end if
 } # end if
 
 sub rename_column {
@@ -749,6 +754,12 @@ $dbh->do('ALTER TABLE orders RENAME COLUMN stremail to email') or die $dbh->errs
     $dbh->do("ALTER TABLE orders ALTER id set default nextval('order_id_seq'::regclass)");
   }
 }
+
+
+if ( sets::isin( 'docketnumber_seq', \@sequences ) ) {
+  $log->debug("Adding docketnumber_seq");
+  $dbh->do('CREATE SEQUENCE docketnumber_seq');
+} # end if
 
 if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Expense_Accounts.sql' ) );
@@ -1796,6 +1807,10 @@ if ( ! sets::isin( 'tbl_equipment_specifications', \@tables ) ) {
 		if ( ! exists $$data{range_units} ) {
 			$log->debug("Adding range_units to tbl_equipment_specifications");
 			$dbh->do('ALTER TABLE tbl_equipment_specifications ADD range_units         text');
+		}
+		if ( ! exists $$data{sorting} ) {
+			$log->debug("Adding sorting to tbl_equipment_specifications");
+			$dbh->do('ALTER TABLE tbl_equipment_specifications ADD sorting INTEGER');
 		}
 	} # end if
 } # end if
@@ -2924,6 +2939,12 @@ if ( ! sets::isin( 'product_categories', \@tables ) ) {
   }
 }
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='product_categories'", 'column_name');
+if ($$data{column_default} ne "nextval('categories_id_seq'::regclass)") {
+  $log->debug("Altering product_categories id default");
+  $dbh->do('ALTER sequence categories_id_seq RENAME TO product_categories_id_seq');
+  $dbh->do("ALTER TABLE Product_Categories ALTER id SET default nextval('product_categories_id_seq'::regclass)")  or die $dbh->errstr();
+;
+}
 if ( ! exists $$data{parent_ids} ) {
   $log->debug("Adding parent_ids t product_categories");
   $dbh->do('ALTER TABLE Product_Categories ADD parent_ids INTEGER[]') or die $dbh->errstr();
@@ -3030,7 +3051,7 @@ if ( ! exists $$data{supplier_id} ) {
 
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {
   print "Adding product_specifications\n";
-	$dbh->do( misc::load_file( $log, q{../../sql/Product_Specifications.sql}) );
+	$dbh->do( misc::load_file( $log, q{../../sql/Product_Specifications.sql}) ) or die $dbh->errstr() if $dbh->errstr();
 } # end if
 if ( ! sets::isin( 'product_prices', \@tables ) ) {
   print "Adding product_pricess\n";

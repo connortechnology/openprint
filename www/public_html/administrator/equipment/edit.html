@@ -48,6 +48,7 @@
 	</fieldset>
 </form>
 <form id="f2" name="f2" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
 	<fieldset><legend>Equipment Information</legend>
 		<div class="leftColumn">
@@ -171,7 +172,9 @@
 	</fieldset>
 <? if ( $$variable{Equipment}->id() ) ?>
 <div id="ServicePrices">
-  <fieldset><legend>Service Prices <span id="toggle_service_prices" on_click="toggle_service_prices">+</span></legend>
+  <fieldset><legend>Service Prices <span id="toggle_service_prices" on_click="toggle_service_prices" title="Toggle visibility of service prices">
+<?echo($session{$r->uri().'?show_service_prices'} ? '-' : '+')?>
+</span></legend>
   <p class="buttons">
 			<input type="file" name="fileServicePrices"/>
 			<? echo ( join("\n",
@@ -235,7 +238,6 @@
 </div>
 	</fieldset>
 <? endif ( $$variable{Equipment}->id() ) ?>
-	<input type="hidden" name="btnFunction"/>
 </form>
 <? if ( $$variable{Equipment}->specification('Folding Capable') ) ?>
 	<fieldset><legend>Fold Specifications</legend>
@@ -282,7 +284,7 @@
 <? endif ( $$variable{Equipment}->id() ) ?>
 <script src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script src="<?hash_link(/javascripts/pricing.js)?>"></script>
-<script src="<?hash_link(edit.js)?>"></script>
+<script src="<?hash_link(/administrator/equipment/edit.js)?>"></script>
 <script>
   const equipment_id='<?echo($$variable{Equipment}->id())?>';
 </script>

@@ -98,6 +98,7 @@ return '';
 					<input type="text" oninput="filter_companies('ddmOwner', { name: this.value,selected_id: get_ddm_value($('ddmOwner')) } );" class="filter" />
 					<select id="ddmOwner" name="ddmOwner"><option value=""> select </option><? echo ( 
 							my @owner_ids = sql::execute(undef,undef,q`SELECT DISTINCT owner_id FROM Papers`);
+              push @owner_ids, $openprint::Owner->id() if ! @owner_ids or !sets::isin( $openprint::Owner->id(), @owner_ids);
 							make_drop_down( openprint::Company->dropdown( id=>\@owner_ids ), $$variable{Stock}->owner_id() );
 					) ?></select>
 				</li>

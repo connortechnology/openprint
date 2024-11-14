@@ -13,6 +13,7 @@ CREATE TABLE tbl_Equipment_Specifications (
 	strValue			TEXT,
 	strUnits			TEXT,
 	interpolate			BOOLEAN NOT NULL DEFAULT false,
+  sorting       INTEGER,
 	PRIMARY KEY (lngIndex)
 );
 

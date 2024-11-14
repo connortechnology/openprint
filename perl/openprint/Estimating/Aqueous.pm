@@ -19,6 +19,7 @@ use strict;
 use warnings;
 use vars qw( %ServicePrices %MaterialPrices );
 use Data::Dumper;
+use constant DEBUG => 0;
 
 %ServicePrices = (
 	AqueousMinimumCharge	=> { },
@@ -66,7 +67,6 @@ require openprint::Imposition;
 require openprint::Ink;
 
 use vars qw( @outputs );
-use constant DEBUG => 1;
 use Storable 'dclone';
 
 my %Inks;
@@ -330,7 +330,7 @@ $openprint::log->error(Data::Dumper::Dumper(\%results));
 		$GrandTotal *= ( 1+$$specs{"Markup$qty_index"}/100 ) if $$specs{"Markup$qty_index"};
 
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $GrandTotal / $qty );
-		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+		if (!$$specs{'OverridePrice'.$qty_index} or ( $$specs{'OverridePrice'.$qty_index} ne 'Y')) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $GrandTotal );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{'txtPrice'.$qty_index} );
@@ -349,7 +349,7 @@ sub signature_calc {
 				$openprint::log->debug("Makereadies before aq calc equipment: $equipment_id $type: ".join(',',@{$$MakeReadies{$equipment_id}{$type}}));
 			}
 		}
-		$Imposition->display();
+		$Imposition->display('AQ::signature_calc');
 	}
 
 	my $form = $$sig_specs{SignatureIndex};
@@ -487,7 +487,11 @@ sub signature_calc {
 			my $MakeReadies_clone = $MakeReadies ? dclone($MakeReadies) : {};
 #map { $_ => [ @{$$MakeReadies{$_}} ] } keys %{$MakeReadies} if $MakeReadies;
 			my %Price = (
+        MakeReady => 0,
+        Service => 0,
+        Material => 0,
 				BlanketCut	=>	0,
+        washups => 0,
 			);
 			my $run_qty = $impressions;
 			$run_qty *= ( $$Imposition{imposition} / $$imp{imposition} ) if $$Imposition{imposition} != $$imp{imposition};
@@ -497,7 +501,7 @@ sub signature_calc {
 			if ( !index($$Imposition{runstyle}, 'Work') ) {
 # need to merge any overalls into spots
 				foreach my $type ( @different_types ) {
-$openprint::log->error("$type to W&T front: $front_aq{$type} back: $back_aq{$type}");
+          $openprint::log->debug("$type to W&T front: ".($front_aq{$type} ? $front_aq{$type} : 'none').' back: '.($back_aq{$type} ? $back_aq{$type} : 'none')) if DEBUG;
 					if ( ! ( $front_aq{$type} and $back_aq{$type} ) ) {
 						$type =~ s/Overall/W&T/;
 						push @types, { name => $type, coverage=> $front_aq{$type} ? $front_aq{$type}{coverage}/2 : $back_aq{$type}{coverage}/2 };
@@ -759,7 +763,7 @@ $openprint::log->error("$type to W&T front: $front_aq{$type} back: $back_aq{$typ
 
 sub breakdown {
 	my $Price = shift;
-	my $breakdown = $$Price{Imposition}{imposition} . 'out on ' . ($$Price{Equipment} ? $$Price{Equipment}->name() : 'unknown').'<br/>';
+	my $breakdown = $$Price{Imposition}{imposition} . 'out on ' . ($$Price{Equipment} ? $$Price{Equipment}->name() : 'unknown').'<br/>' if $$Price{Imposition};
 	for ( my $i = 0; $i < ( $$Price{types} ? scalar @{$$Price{types}} : 0); $i ++ ) {
 		my $type = $$Price{types}[$i];
 		my $SetupPrice = $$Price{SetupPrices}[$i];
@@ -813,8 +817,23 @@ sub summary {
       }
     } # end foreah;
   } else {
-  }
+		foreach my $s_s_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			my $form = $$sig_specs{SignatureIndex};
+      if (
+          ($$specs{'ColourCoatingTypeOne'.$form} and ($$specs{'ColourCoatingTypeOne'.$form} ne 'None'))
+          or
+          ($$specs{'ColourCoatingTypeTwo'.$form} and ($$specs{'ColourCoatingTypeTwo'.$form} ne 'None'))
+         ) {
+        $summary .= 'Form '.$form.': '.join(' ',
+            ($$specs{'ColourCoatingTypeOne'.$form} and ($$specs{'ColourCoatingTypeOne'.$form} ne 'None') ? $$specs{'ColourCoatingTypeOne'.$form}. ' on front' : ()),
+            ($$specs{'ColourCoatingTypeTwo'.$form} and ($$specs{'ColourCoatingTypeTwo'.$form} ne 'None') ? $$specs{'ColourCoatingTypeTwo'.$form}. ' on back' : ()),
+            ).
+          '<br/>';
 
+      }
+    } # end foreach sig
+  } # end if qtu
   return $summary;
 } # end sub summary
 

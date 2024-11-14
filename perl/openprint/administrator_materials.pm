@@ -208,18 +208,16 @@ sub edit {
 			} # end if
 
 		} elsif ( $param{btnFunction} eq 'Copy' ) {
-			my @prices = $Material->prices();
-
 			my $NewMaterial = $Material->copy();
 			$$NewMaterial{name} = 'Copy of ' . $$NewMaterial{name};
 
-			if ( $_ = $NewMaterial->save() ) {
+			if ($_ = $NewMaterial->save()) {
 				$variable{error} .= $_;
 			} else {
 				(new openprint::Log())->save({action=>'Copy Material', Object=>$NewMaterial } );
-				foreach my $price ( @prices ) {
+				foreach my $price ( $Material->prices() ) {
+          $price = $price->copy();
 					$$price{material_id} = $$NewMaterial{id};
-					delete $$price{id};
 					$variable{error} .= $price->save();
 				} # end foreach
 				foreach my $Spec ( $Material->Specifications() ) {

@@ -101,15 +101,13 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 				} else {
 					switch_company( $C );
 				} # end if
-        %param = ();
+        undef (@param{'btnFunction','ddmCompany'});
 			} # end if
 		} elsif ( $param{btnFunction} eq 'SelectPricelist' ) {
-			my $Pricelist = new openprint::Pricelist( $param{pricelist_id} );
-			if ( ! $Pricelist->id() ) {
-				$Pricelist = openprint::Pricelist::get_current();
-			} # end if
-			$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
-      %param = ();
+			my $pricelist = new openprint::Pricelist( $param{pricelist_id} );
+      $pricelist = openprint::Pricelist::get_current() if !$pricelist->id();
+			$session{Pricelist_id} = $pricelist->id() if $pricelist->id();
+      undef (@param{'btnFunction','pricelist_id'});
 		} # end if
 	} # end if
 
@@ -158,16 +156,23 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 	} # end if
 
 	if ( ! $session{Pricelist_id} ) {
-		my $Pricelist = openprint::Pricelist::get_current();
-		$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
+		my $pricelist = openprint::Pricelist::get_current();
+		$session{Pricelist_id} = $pricelist->id() if $pricelist->id();
 	} else {
-		my $Pricelist = new openprint::Pricelist( $session{Pricelist_id} );
-		if ( ! $Pricelist->id() ) {
-			$Pricelist = openprint::Pricelist::get_current();
-			$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
+		my $pricelist = new openprint::Pricelist( $session{Pricelist_id} );
+		if ( ! $pricelist->id() ) {
+			$pricelist = openprint::Pricelist::get_current();
+			$session{Pricelist_id} = $pricelist->id() if $pricelist->id();
 		} # end if
-	} # end if
-	$Pricelist = new openprint::Pricelist( $session{Pricelist_id} ) if $session{Pricelist_id};
+  } # end if
+  if ($session{Pricelist_id}) {
+    $Pricelist = new openprint::Pricelist( $session{Pricelist_id} );
+    if (!$$Pricelist{id}) {
+      $openprint::log->error("openrpint Pricelist $$Pricelist{id} from $session{Pricelist_id}");
+    } elsif (Debug) {
+      $openprint::log->debug("openrpint Pricelist $$Pricelist{id} from $session{Pricelist_id}");
+    }
+  }
 
   my $ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
   if ($ip) {

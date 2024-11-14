@@ -50,7 +50,7 @@ flex: 1;
     visibility: hidden;
 }
 
-.Order div.Header fieldset {
+.Order div.Header div > fieldset {
 /*
 	border-left: none;
     border-right: none;
@@ -143,8 +143,10 @@ h3 a {
 color: white;
 }
 .Order .Project p.buttons {
-	width: 49%;
+	width: 100%;
+/*
 	float: right;
+*/
 }
 
 .Order .Project div.Header div.Summary {
@@ -153,6 +155,7 @@ color: white;
 }
 .Order .Project div.Header div.Summary li {
 	padding: 0;
+text-align: left;
 }
 .Order .Project div.Header div.Information {
 	float: right;

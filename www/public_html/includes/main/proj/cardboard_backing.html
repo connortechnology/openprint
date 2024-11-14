@@ -1,8 +1,9 @@
-<li>
-    <label>Cardboard backing?</label>
-	<input type="radio" id="rdbCardboardBackingY" name="rdbCardboardBacking" value="Y" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCardboardBacking'} eq 'Y' ) ?> />
-	<label class="radio" for="rdbCardboardBackingY">Yes</label>
-	<input type="radio" id="rdbCardboardBackingN" name="rdbCardboardBacking" value="N" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCardboardBacking'} eq 'N' ) ?> />
-	<label class="radio" for="rdbCardboardBackingN">No</label>
-</li>
-
+<?echo(
+  if (openprint::Material->find_one(name=>'CardboardBacking')) {
+    return join("\n",'<li><label>Cardboard backing?</label>',
+      radio('rdbCardboardBacking', ['Y'=>'Yes','N'=>'No'], $$variable{rdbCardboardBacking}, {onclick=>'calc(this.form.name)'}),
+    '</li>'
+    );
+  }
+  return '';
+) ?>

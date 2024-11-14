@@ -1636,6 +1636,12 @@ sub recalculate {
 		if ( $status eq 'calculated' ) {
 			# Recalc signatures
 			my $module = 'openprint::Estimating::'.$$Type{type};
+			if ( my $function = $module->can('save') ) {
+				$status = $function->($$self{id}, $$services{''}[0], {});
+				$openprint::log->debug("$$Type{type}::save: status: $status");
+      } else {
+        $openprint::log->error("No calculate signatures function for $$Type{type}");
+			} # end if
 			if ( my $function = $module->can('calculate_signatures') ) {
 				$status = $function->($self);
 				$openprint::log->debug("$$Type{type}::Calculate_Sigs: status: $status");
@@ -1996,10 +2002,10 @@ sub can_edit {
 		$openprint::log->debug("can_view 1 cuz i am the creator") if $debug;
 		return 1;
 	}
-	if ( $openprint::session{company_id} == $_[0]{company_id} ) {
-		$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
-		return 1;
-	}
+  #if ( $openprint::session{company_id} == $_[0]{company_id} ) {
+  #$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
+  #return 1;
+  #}
 	if ( $openprint::session{user_type} eq 'A' ) {
 		$openprint::log->debug("can_edit 1 cuz admin") if $debug;
 		return 1 
@@ -2010,7 +2016,7 @@ sub can_edit {
 	} # end if
   
   return 0;
-} # end sub can_view
+} # end sub can_edit
 
 sub change_due_date {
 	my $Project = shift;

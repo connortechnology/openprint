@@ -7,11 +7,19 @@ $log->warn("No servicetype in params in calc");
 		return;
 	} # end if
 
-	my %specs = openprint::main_project::calc( $debug );
+my %specs;
+eval {
+	%specs = openprint::main_project::calc( $debug );
   if ($debug or 1) {
     use Data::Dumper;
     $log->debug(Dumper(\%specs));
   }
+};
+if ($@) {
+  $specs{Status} = 'uncalculated';
+$specs{alert} = 'Calculation has crashed. Please contact the developer.<br/>'.$@;
+$log->error($@);
+}
 
 	$param{callback} = 'cbFillResults' if ! $param{callback};
 	my $json = JSON->new;

@@ -1,28 +1,5 @@
 <?include(/includes/project_header.html) ?>
-<table class="List Services">
-	<thead>
-		<tr> 
-			<th class="description">Services</th>
-			<? echo (
-				my $html = '';
-				if ( $$variable{Project}->Ordered_Product() ) {
-					$html .= '<th class="price">'.$$variable{Project}->Ordered_Product()->quantity() .'</th>';
-				} else {
-					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-						$html .= '<th class="price">'.$$variable{Project}->quantity( $qty_index ) .'</th>';
-					} # end foreach qty_index
-				} # end if Ordered Product
-				return $html;
-			) ?>
-			<th class="status">Status</th>
-			<? if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-			<th class="unprintable actions">Actions</th>
-			<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-		</tr>
-	</thead>
-  <tbody>
 <? echo ( 
-	my $html = '';
 	my $rowclass = '';
 	my $Project = $$variable{Project};
 	my $Project_Type = $Project->Type();
@@ -35,15 +12,39 @@
 	} # end if
 	my @quantity_indexes = $Project->quantity_indexes();
 
-	my $editable = ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ! $$variable{Quote};
+  my $editable = $$variable{editable} = $Project->can_edit() and ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ! $$variable{Quote};
+  my $html = '
+<table class="List Services">
+	<thead>
+		<tr> 
+			<th class="description">Services</th>';
+  if ( $$variable{Project}->Ordered_Product() ) {
+    $html .= '<th class="price">'.$$variable{Project}->Ordered_Product()->quantity() .'</th>';
+  } else {
+    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+      $html .= '<th class="price">'.$$variable{Project}->quantity( $qty_index ) .'</th>';
+    } # end foreach qty_index
+  } # end if Ordered Product
+  $html .= '<th class="status">Status</th>';
+  $html .= '<th class="unprintable actions">Actions</th>' if $editable;
+  $html .= '
+		</tr>
+	</thead>
+  <tbody>
+';
 
 	@{$$variable{Categories}} = openprint::ServiceType_Category->find( order=>'sorting,name');
 	$$variable{category_totals} = {};
 
 	foreach my $ServiceCategory ( @{$$variable{Categories}} ) {
 		if ( $ServiceCategory->name() eq 'Printing' ) {
-    $html .= '<tr class="category '.$ServiceCategory->name().'">
-        <td class="description">'.$ServiceCategory->name().'</td>'.join("\n", (map { '<td class="price"></td>' } $Project->quantities()), '<td class="status"></td><td class="actions unprintable"></td>').'</tr>';
+      $html .= '
+<tr class="category '.$ServiceCategory->name().'">
+  <td class="description">'.$ServiceCategory->name().'</td>'.
+  join("\n", (
+        map { '<td class="price"></td>' } $Project->quantities()), '<td class="status"></td>',
+      ($editable ? '<td class="actions unprintable"></td>' : ()),
+      '</tr>');
 
 			my $function_name = 'openprint::Estimating::'.$Project_Type->type();
 			my $summary = '';
@@ -270,7 +271,7 @@
       next if !@service_ids;
     $html .= '
 <tr class="category '.$ServiceCategory->name().'">
-  <td class="description">'.$ServiceCategory->name().'</td>'.join("\n", (map { '<td class="price"></td>' } $Project->quantities()), '<td class="status"></td><td class="actions unprintable"></td>').'</tr>';
+  <td class="description">'.$ServiceCategory->name().'</td>'.join("\n", (map { '<td class="price"></td>' } $Project->quantities()), '<td class="status"></td>',($editable ? '<td class="actions unprintable"></td>' : ())).'</tr>';
 
 
       foreach my $service_id (@service_ids) {
@@ -368,9 +369,7 @@ $html .= '</td>';
               $html .= '</td>';
             } # end foreach qty_index
             $html .= '<td>&nbsp;</td>';
-            if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
-              $html .= '<td class="unprintable actions">&nbsp;</td>';
-            }
+            $html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
             $html .= '</tr>';
           } # end foreach summary
         } # end if summaries
@@ -384,9 +383,7 @@ $html .= '</td>';
             }
           } 
           $html .= '<td>&nbsp;</td>';
-          if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
-            $html .= '<td class="unprintable actions">&nbsp;</td>';
-          }
+          $html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
           $html .= '</tr>';
         } # end if
         $rowclass = $rowclass ? '' : ' class="colRow"';
@@ -487,83 +484,65 @@ $html .= '</td>';
 					$html .= '</td>';
 				} # end foreach qty_index
 				$html .= '<td>&nbsp;</td>';
-				if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
-					$html .= '<td class="unprintable actions">&nbsp;</td>';
-				}
+				$html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
 				$html .= '</tr>';
 			} # end foreach summary
 		} # end if summaries
 		if ( $$specs{alert} ) {
 			$html .= qq`<tr$rowclass><td class="error" colspan="`. ( scalar(@quantity_indexes) + 1 ) . '">' . $$specs{alert}. '</td>';
 			$html .= '<td>&nbsp;</td>';
-			if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
-				$html .= '<td class="unprintable actions">&nbsp;</td>';
-			}
+			$html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
 			$html .= '</tr>';
 		} # end if
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 	}
-	return $html;
-) ?>
-<? if ( $session{user_type} eq 'A' or ! $$variable{Project}->Ordered_Product() ) ?>
+  if (($session{user_type} eq 'A') or ! $$variable{Project}->Ordered_Product() ) {
+    $html .= '
 			<tr class="Prices UnitPrices"> 
 				<td class="description">Unit Prices</td>
-				<? echo ( my $html = '';
-					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-						$html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $$variable{Project}->unit_price($qty_index)), 4).'</td>';
-					} # end foreach qty_index
-					return $html;
-				) ?>
-				<td class="status">&nbsp;</td>
-				<? if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-				<td class="unprintable actions">&nbsp;</td>
-				<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
+';
+    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+      $html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $$variable{Project}->unit_price($qty_index)), 4).'</td>';
+    } # end foreach qty_index
+    $html .= '<td class="status">&nbsp;</td>';
+    $html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
+    $html .= '
 			</tr>
 			<tr class="Prices MPrices">
 				<td class="description">Additional M Prices</td>
-				<? echo ( my $html = '';
-					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-						$html .= '<td class="price">'.openprint::Currency::format($$variable{Project}->Currency()->convert_from( $$variable{Project}->m_price($qty_index)), 4).'</td>';
-					} # end foreach qty_index
-					return $html;
-				) ?>
-				<td class="status">&nbsp;</td>
-				<? if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-				<td class="unprintable actions">&nbsp;</td>
-				<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-			</tr>
-
+';
+    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+      $html .= '<td class="price">'.openprint::Currency::format($$variable{Project}->Currency()->convert_from( $$variable{Project}->m_price($qty_index)), 4).'</td>';
+    } # end foreach qty_index
+    $html .= '<td class="status">&nbsp;</td>';
+    $html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
+    $html .= '</tr>
 			<tr class="TotalPrices"> 
-				<td>Total Before Taxes</td>
-				<? echo ( 
-					my $html = '';
-					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-						$html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $$variable{Project}->price( $qty_index ))).'</td>';
-					} # end foreach
-					return $html;
-				) ?>
-				<td class="status">&nbsp;</td>
-				<? if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-				<td class="unprintable actions">&nbsp;</td>
-				<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-			</tr>
-<? endif ( $session{user_type} eq 'A' or ! $$variable{Project}->Ordered_Product() ) ?>
-<? if ( $$variable{Project}->Ordered_Product() ) ?>
+				<td class="description">Total Before Taxes</td>';
+    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+      $html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $$variable{Project}->price( $qty_index ))).'</td>';
+    } # end foreach
+    $html .= '<td class="status">&nbsp;</td>';
+    $html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
+    $html .= '</tr>';
+  } # en dif A or ! ordered
+  if ( $$variable{Project}->Ordered_Product() ) {
+    $html .= '
 			<tr class="totals">
-				<td>Ordered Price</td>
-				<td class="price"><? echo ( openprint::Currency::format( $$variable{Project}->Currency()->convert_from($$variable{Project}->Ordered_Product()->price() ) ); ) ?></td>
-				<td class="status">&nbsp;</td>
-				<? if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-				<td class="unprintable actions">&nbsp;</td>
-				<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-			</tr>
-<? endif ( $$variable{Project}->Ordered_Product() ) ?>
+				<td class="description">Ordered Price</td>
+				<td class="price">'. openprint::Currency::format( $$variable{Project}->Currency()->convert_from($$variable{Project}->Ordered_Product()->price() ) ).'</td>
+				<td class="status">&nbsp;</td>';
+    $html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
+    $html .= '
+			</tr>';
+  }
+  $html .= '
     </tbody>
 	</table>
-
-
-<br/>
-<? if ( $$variable{Project}->currency_id() != $session{Currency_id} ) ?>
-<span class="Currency">Project originally quoted in <? echo ( $$variable{Project}->Currency()->name() ) ?>.</span>
-<? endif ( $$variable{Project}->currency_id() != $session{Currency_id} ) ?>
-<span class="Currency">All prices in <? echo ( openprint::Currency::get_current()->name(); ) ?>.&nbsp;</span>
+';
+if ( $$variable{Project}->currency_id() != $session{Currency_id} ) {
+  $html .= '<span class="Currency">Project originally quoted in '.$$variable{Project}->Currency()->name().'.</span>';
+}
+$html .= '<span class="Currency">All prices in '.$openprint::Currency->name().'.&nbsp;</span>';
+return $html;
+)?>

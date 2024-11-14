@@ -1,4 +1,3 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Collating</legend>
@@ -8,7 +7,7 @@
 					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 						$html .= '<span class="'.$$variable{Columns}.'Columns">';
 						$html .= input( type=>'cardinal', name=>'txtSignatureCount'.$qty_index, id=>'txtSignatureCount'.$qty_index, value=>$$variable{'txtSignatureCount'.$qty_index}, onkeyup=>'calc(this.form.name);' );
-						$html .= write_override( 'OverrideSignatureCount'.$qty_index, $$variable{'txtSignatureCount'.$qty_index}, '', "calc('f1');" );
+						$html .= write_override( 'OverrideSignatureCount'.$qty_index, $$variable{'OverrideSignatureCount'.$qty_index}, '', "calc('f1');" );
 						$html .= '</span>';
 					} # end foreach qty_index
 					return $html;
@@ -30,4 +29,4 @@
         <input type="hidden" name="ServiceType" value="<?ServiceTypeType?>" />
 	</form>
 </div>
-
+<script src="<?hash_link(/javascripts/service.js)?>"></script>

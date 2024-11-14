@@ -105,12 +105,12 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
           my $formatted_end = format_date( $Timetrack->ending() );
 
 					$html .= sprintf('<td class="Date">%s</td>', $Timetrack->Employee()->link_to() );
-					$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
+          $html .= sprintf('<td class="Service">%s</td>', $Timetrack->link_to( $Timetrack->Service()->name() ) );
 					$html .= '<td class="PO">'.html_escape($Timetrack->po()) . '</td>';
 					$html .= '<td class="Interval">'.$Timetrack->elapsed_formatted().'</td>';
-					my $Price = $Timetrack->Price();
-					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{price} ), $$Price{units} );
-					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{total} ) );
+					my $price = $Timetrack->Price();
+					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$price{price} ), $$price{units} );
+					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$price{total} ) );
 					$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
           if ( $Timetrack->date_associated() ) {
             $html .= '<td>'. $formatted_start . ( ( $formatted_start ne $formatted_end ) ? ( '<br/>through<br/>' .  $formatted_end ) : '' ) .  '</td>';
@@ -120,7 +120,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 
           $html .= '<td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
-					$$variable{service_total} += $$Price{Total};
+					$$variable{service_total} += $$price{total};
 					$$variable{elapsed_total} += $Timetrack->elapsed();
 					$rowclass = $rowclass ? '' : 'class="colRow"';
 				} # end foreach Timetrack
@@ -149,15 +149,17 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
           <li class="Date PostedOn"><label>Posted On</label><? echo ( format_date( $$variable{Invoice}->posted_on() ); ) ?></li>
           <li class="Date DueOn"><label>Due On</label><? echo ( format_date( $$variable{Invoice}->due_on() ); ) ?></li>
           <li class="ExternalNotes"><label>Notes</label><? echo ( $$variable{Invoice}->external_notes() ) ?></td></tr>
-          <li class="terms"><label>Invoice Terms</label>
 <?echo(
-my $Credit = $$variable{Invoice}->Invoicee()->Credit( $$variable{Invoice}{invoicer_id} );
-my $html = 'Net ' . $$Credit{terms}. ' days';
-if ( $$variable{Invoice}->monthly_interest() > 0 ) {
- $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
-}
-return $html;
-)?></li>
+  my $Credit = $$variable{Invoice}->Invoicee()->Credit( $$variable{Invoice}{invoicer_id} );
+  if ($$Credit{terms}) {
+  my $html = '<li class="terms"><label>Invoice Terms</label>';
+  $html .= 'Net ' . $$Credit{terms}. ' days';
+  if ( $$variable{Invoice}->monthly_interest() > 0 ) {
+   $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
+  }
+  $html .= '</li>';
+  return $html;
+)?>
         </ul>
       </fieldset>
     </div>

@@ -114,6 +114,8 @@ sub edit {
         if ( ! ( $variable{error} = $Equipment->save( \%param ) ) ) {
           (new openprint::Log())->save({ Object=>$Equipment, action=>($param{ddmEquipment}?'Edited Equipment':'Saved Equipment'), note=>join('<br/>', @changes) });
         }
+      } else {
+        (new openprint::Log())->save({ Object=>$Equipment, action=>'Edited Equipment', note=>'No changes' });
       }
       my %prices = misc::make_hash_from_array('service_id', openprint::ServicePrice->find(
             equipment_id=>$Equipment->id(),
@@ -531,13 +533,13 @@ sub list {
 sub _list {
     ssi::save_params( '/administrator/equipment/list.html', (
                 ( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
-				'deleted', 'equipment_name', 'servicetype_id', 'category_id',
+				'deleted', 'equipment_name', 'servicetype_id', 'category_id', 'useinestimating',
                 ) );
 }
 
 sub _service_prices {
   $variable{Equipment} = new openprint::Equipment($param{equipment_id});
-  if ($param{hide}) {
+  if ($param{hide} eq '1') {
     $openprint::session{'/administrator/equipment/edit.html?show_service_prices'} = 0;
     $variable{PageContent} = '';
   } else  {

@@ -594,3 +594,49 @@ update paper_prices set strunits='per 100lbs' where strunits='100 lbs';
 
 update papers set score_required=true where calliper > 0.008;
 update service_prices set units='per m' where units ilike '%Per%' AND service_id=(SELECT id from services where name='Scoring');
+
+delete from tbl_equipment_specifications where strname='Non-Parallel Perforating / Scoring';
+delete from tbl_equipment_specifications where strname='Parallel Perforating / Scoring';
+delete from service_prices where service_id=(SELECT id from services where name='ScorePerforationMinimumCharge');
+delete from services where name='ScorePerforationMinimumCharge';
+UPDATE tbl_Equipment_specifications set strname='Maximum Image Length' WHERE strname='Maximum Image Area Length';
+UPDATE tbl_Equipment_specifications set strname='Maximum Image Width' WHERE strname='Maximum Image Area Width';
+UPDATE tbl_Equipment_specifications set strvalue = strvalue::float * 100 WHERE strname='Press Run Overs' and strvalue::float < 1;
+Update services set name='DieCuttingRuleBendingComplex' where name='DieCutRuleBendingComplex';
+Update services set name='DieCuttingRuleBendingSimple' where name='DieCutRuleBendingSimple';
+Update services set name='DieCuttingRuleBendingAverage' where name='DieCutRuleBendingAverage';
+Update services set name='KissCuttingRuleBendingComplex' where name='KissCutRuleBendingComplex';
+Update services set name='KissCuttingRuleBendingSimple' where name='KissCutRuleBendingSimple';
+Update services set name='KissCuttingRuleBendingAverage' where name='KissCutRuleBendingAverage';
+UPDATE service_prices set range_units='impressions' WHERE range_units='Per 1000 Impressions' and service_id IN (SELECT id from services where name LIKE 'DieCutting%');
+update services set servicetype_id=(SELECT id from service_types where name='KissCutting') where name like 'KissCutt%';
+
+UPDATE services set lngsortorder = 3151 where name='DieCuttingSimpleMakeReady';
+UPDATE services set lngsortorder = 3152 where name='DieCuttingAverageMakeReady';
+UPDATE services set lngsortorder = 3153 where name='DieCuttingComplexMakeReady';
+UPDATE services set lngsortorder = 3154 where name='DieCuttingSimple';
+UPDATE services set lngsortorder = 3155 where name='DieCuttingAverage';
+UPDATE services set lngsortorder = 3156 where name='DieCuttingComplex';
+UPDATE services set lngsortorder = 3157 where name='DieCuttingRuleBendingSimple';
+UPDATE services set lngsortorder = 3158 where name='DieCuttingRuleBendingAverage';
+UPDATE services set lngsortorder = 3159 where name='DieCuttingRuleBendingComplex';
+UPDATE services set lngsortorder = 3160 where name='HoleClearing';
+UPDATE services set lngsortorder = 3161 where name='DieCuttingMinimumCharge';
+UPDATE services set lngsortorder = 3162 where name='KissCuttingSimpleMakeReady';
+UPDATE services set lngsortorder = 3163 where name='KissCuttingAverageMakeReady';
+UPDATE services set lngsortorder = 3164 where name='KissCuttingComplexMakeReady';
+UPDATE services set lngsortorder = 3165 where name='KissCuttingSimple';
+UPDATE services set lngsortorder = 3166 where name='KissCuttingAverage';
+UPDATE services set lngsortorder = 3167 where name='KissCuttingComplex';
+UPDATE services set lngsortorder = 3168 where name='KissCuttingRuleBendingSimple';
+UPDATE services set lngsortorder = 3169 where name='KissCuttingRuleBendingAverage';
+UPDATE services set lngsortorder = 3170 where name='KissCuttingRuleBendingComplex';
+UPDATE services set lngsortorder = 3172 where name='KissCuttingMinimumCharge';
+
+UPDATE services set lngsortorder = 3173 where name='ScoringMakeReady';
+UPDATE services set lngsortorder = 3174 where name='Scoring';
+UPDATE services set lngsortorder = 3175 where name='ScoringMinimumCharge';
+
+update service_prices set units='per m' where service_id=(SELECT id from services where name='EmbossingSimple');
+update service_prices set units='per m' where service_id=(SELECT id from services where name='EmbossingAverage');
+update service_prices set units='per m' where service_id=(SELECT id from services where name='EmbossingComplex');

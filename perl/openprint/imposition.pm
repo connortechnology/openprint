@@ -179,22 +179,22 @@ sub check_setup {
     return 0;
   }
 
-  my $Equipment = $setup->Press();
-  if ( 0 and $Equipment ) {
-		# Run Equipment Tests
-		if ( $setup->layout_width() > $Equipment->specification( 'Maximum Image Width' ) ) {
-			$setup->rows(0);
-		} # end if
-		if ( $setup->layout_width() < $Equipment->specification( 'Minimum Image Width' ) ) {
-			$setup->rows(0);
-		} # end if
-		if ( $setup->layout_height() > $Equipment->specification( 'Maximum Image Height' ) ) {
-			$setup->rows(0);
-		} # end if
-		if ( $setup->layout_height() < $Equipment->specification( 'Minimum Image Height' ) ) {
-			$setup->rows(0);
-		} # end if
-	} # end if
+  #my $Equipment = $setup->Press();
+  #if ( 0 and $Equipment ) {
+  ## Run Equipment Tests
+  #if ( $setup->layout_width() > $Equipment->specification( 'Maximum Image Width' ) ) {
+  #$setup->rows(0);
+  #} # end if
+  #if ( $setup->layout_width() < $Equipment->specification( 'Minimum Image Width' ) ) {
+  #$setup->rows(0);
+  ##} # end if
+  #if ( $setup->layout_height() > $Equipment->specification( 'Maximum Image Height' ) ) {
+  #$setup->rows(0);
+  #} # end if
+  #if ( $setup->layout_height() < $Equipment->specification( 'Minimum Image Height' ) ) {
+  #$setup->rows(0);
+  #} # end if
+  #} # end if
 
 	$openprint::log->debug("Checking used_width against sheetwidth " . $setup->used_width() . ' <=> ' . $setup->sheet_width() ) if DEBUG;
 	if ( $setup->used_width() > $setup->sheet_width() ) {
@@ -250,8 +250,8 @@ sub calc_setup_object {
 		} elsif ( DEBUG ) {
 			$openprint::log->debug("Proper grain Paper(".$Paper->grain_direction().") Press($press_grain)") if DEBUG;
 		} # end if
-	} elsif ( DEBUG ) {
-		$openprint::log->debug("No grain direction. $$Paper{gsm}gsm");
+    #} elsif ( DEBUG ) {
+    #$openprint::log->debug("No grain direction. $$Paper{gsm}gsm");
 	} # end if press_grain
 
 	if ( $run_style eq 'Perfecting' ) {
@@ -285,13 +285,13 @@ sub calc_setup_object {
 	} # end if Perfecting
 
 	if ( my $amount = $Press->specification($run_style.' Pre-trim stock') ) {
-$openprint::log->debug("Pretrimming by $amount") if DEBUG;
+    #$openprint::log->debug("Pretrimming by $amount") if DEBUG;
 		$Paper = $Paper->clone();
 		$Paper->cut( $$Paper{width} - $amount, $$Paper{height} - $amount );
 		$Paper->width( 0 ) if $$Paper{width} < 0;
 		$Paper->height( 0 ) if $$Paper{height} < 0;
 	} else {
-$openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
+    #$openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	} # end if
 
 	my $setup1 = new openprint::Imposition();
@@ -478,7 +478,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	if ( $bleed_locations{Left} ) {
 		$gutters -= $bleed_size;
 	} # end if
-$openprint::log->debug("Gutters: specs : $$specs{Gutter}, bindery: $bindery_gutters, minus bleeds: $gutters bleed_width: $bleed_width beleed_height: $bleed_height") if DEBUG;
+$openprint::log->debug("Gutters: specs : $$specs{Gutter}, bindery: $bindery_gutters, minus bleeds: $gutters bleed_width: $bleed_width bleed_height: $bleed_height") if DEBUG;
 
 	$gutters = 0 if $gutters < 0;
 
@@ -525,13 +525,10 @@ $openprint::log->debug("Gutters: specs : $$specs{Gutter}, bindery: $bindery_gutt
 
 	my $colour_bar = 0;
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
-
-# if colour bar is at bottom,
 		$colour_bar = $$setup1{colour_bar_size};
 
 # colour bar is at bottom or top, then can bleed into it.  Or it can go in the middle, in which case you put it in the bleed space. W&Tumble we put it in grip, so don't do this at all.
-		if ( $run_style eq 'Work & Tumble' ) {
-		} else {
+		if ( $run_style ne 'Work & Tumble' ) {
 			#$colour_bar -= $bleed_size if $bleed_locations{Top};
 			#$colour_bar -= $bleed_size if $bleed_locations{Bottom};
 			#$colour_bar = 0 if $colour_bar < 0;
@@ -539,7 +536,7 @@ $openprint::log->debug("Gutters: specs : $$specs{Gutter}, bindery: $bindery_gutt
 # If impo was x2 then it can go in middle, but we don't know that yet.
 			# Apparently you can
 # 2014-09-25: Brendan and Rick say you really can't.  You need a minimum of bleed space.
-# SInce we don't know it rows > 1 yet, let's just only subtract 1
+# SInce we don't know if rows > 1 yet, let's just only subtract 1
 			if ( $bleed_size ) {
 			$colour_bar -= ( $bleed_size - $min_bleed_size ) if $bleed_locations{Top} or $bleed_locations{Bottom};
 			#$colour_bar -= ( $bleed_size - $min_bleed_size ) if $bleed_locations{Top} and $bleed_locations{Bottom};
@@ -554,7 +551,7 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 	} # end if
 
 	if ( $Paper->cuttable() ) {
-	# There needs to be enough space to put crop marks, but they can go in th bleed space, so it's only an nissue if we are running small or no bleeds.
+	# There needs to be enough space to put crop marks, but they can go in th bleed space, so it's only an issue if we are running small or no bleeds.
 		$cropmarkspace = $$specs{CropMarkSpace};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Top};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
@@ -569,7 +566,7 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 	} # end if
 
 	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
-	$openprint::log->debug("Height: $adjusted_paper_height - CB $$specs{colour_bar_size} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
+	$openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
 
 	my $adjusted_paper_width = $paper_width;
 	if ( $Paper->cuttable() ) {
@@ -631,7 +628,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		$adjusted_paper_width -= $$setup1{cropmark_right};
 		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
 	} # end if
-	$openprint::log->debug("P Width gutters: $adjusted_paper_width") if DEBUG;
+	$openprint::log->debug("Paper Width after gutters bleeds and crops gutters: $adjusted_paper_width") if DEBUG;
 
 	if ( $run_style eq 'Perfecting' or $run_style eq 'Sheet Work' or $run_style eq 'Web' ) {
 		calc_setup( $setup1, @$setup1{'image_width','image_height'}, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $$setup1{image_height} );
@@ -670,6 +667,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 			if ( $$specs{dutch} ) {
 				foreach my $imp ( calc_dutch( $setup1, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
 					$imp->columns( $$imp{columns} * 2 );
+          $imp->start_columns($$imp{columns});
 					$imp->dutch_columns( $$imp{dutch_columns} * 2 );
 					$imp->Paper()->width( $imp->used_width() ) if ! $imp->Paper()->start_width();
 					$openprint::log->debug( sprintf('CHECK 1 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $setup1->image_width(), $setup1->image_height(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
@@ -677,6 +675,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 				} # end foreach
 			} # end if grain_direction
 			$setup1->columns( $$setup1{columns} * 2 );
+			$setup1->start_columns( $$setup1{columns} );
 			if ( ! $setup1->Paper()->width() ) {
 				$setup1->Paper()->width( $setup1->used_width()*2 );
 			} # end if
@@ -898,6 +897,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 			if ( $$specs{dutch} ) {
 				foreach my $imp ( calc_dutch( $setup2, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
 					$imp->columns( $$imp{columns} * 2 );
+					$imp->start_columns($$imp{columns});
 					$imp->dutch_columns( $$imp{dutch_columns} * 2 );
 					$imp->Paper()->width( $imp->used_width() ) if ! $imp->Paper()->start_width();
 					#$openprint::log->debug( sprintf('CHECK 2 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $setup2->image_height(), $setup2->image_width(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
@@ -907,6 +907,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 			$setup2->columns( $$setup2{columns} * 2 );
 			$Paper2->width( $setup2->used_width() ) if ! $$Paper2{width};
 			$Paper2->height( $setup2->used_height() ) if ! $$Paper2{height};
+      $openprint::log->debug( sprintf('CHECK 2 adjusted Work&Turn Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, @$setup2{'image_height','image_width','imposition','columns','rows'} ) ) if DEBUG;
 			push @results, $setup2;
 		} # end if imposition
 	} elsif ( $run_style eq 'Work & Tumble' ) {
@@ -1160,36 +1161,40 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 				$newimp->spread_columns( $col );
 				$newimp->spread_rows( $row );
 				$newimp->display( 'To: ' ) if DEBUG_CONVERT;
-if ( $spread_size == 2 and $signature_size > 1 ) {
-				if ( $spine eq 'width' ) {
-					if ( $$imp{image_orientation} == openprint::Imposition::Vertical ) {
-						if ( $row < 2 ) {
-							$openprint::log->debug("Next because page_row $row == 1 and $$imp{image_orientation} eq Vertical and spine is on the width") if DEBUG_CONVERT;
-							next;
-						}
-					} else {
-						if ( $col < 2 ) {
-							$openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq Horizontal and spine is on the width") if DEBUG_CONVERT;
-							next;
-						}
-					}
-				} else {
-					if ( $$imp{image_orientation} == openprint::Imposition::Vertical ) {
 
-						if ( $col < 2 ) {
-							$openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq Vertical and spine is on the height") if DEBUG_CONVERT;
-							next;
-						}
-					} else {
-						if ( $row < 2 ) {
-							$openprint::log->debug("Next because page_row $row == 1 and $$imp{image_orientation} eq Horizontal and spine is on the height") if DEBUG_CONVERT;
-							next;
-						}
-					}
-				}
-}
-				push @imps, $newimp if ( $newimp->layout_width() < $newimp->sheet_width() and $newimp->layout_height() < $newimp->sheet_height() );
-#$newimp->display();
+        if ( $spread_size == 2 and $signature_size > 1 ) {
+          if ( $spine eq 'width' ) {
+            if ( $$imp{image_orientation} == openprint::Imposition::Vertical ) {
+              if ( $row < 2 ) {
+                $openprint::log->debug("Next because page_row $row == 1 and $$imp{image_orientation} eq Vertical and spine is on the width") if DEBUG_CONVERT;
+                next;
+              }
+            } else {
+              if ( $col < 2 ) {
+                $openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq Horizontal and spine is on the width") if DEBUG_CONVERT;
+                next;
+              }
+            }
+          } else {
+            if ( $$imp{image_orientation} == openprint::Imposition::Vertical ) {
+
+              if ( $col < 2 ) {
+                $openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq Vertical and spine is on the height") if DEBUG_CONVERT;
+                next;
+              }
+            } else {
+              if ( $row < 2 ) {
+                $openprint::log->debug("Next because page_row $row == 1 and $$imp{image_orientation} eq Horizontal and spine is on the height") if DEBUG_CONVERT;
+                next;
+              }
+            }
+          }
+        }
+        if ( $newimp->used_width() <= $newimp->sheet_width() and $newimp->used_height() <= $newimp->sheet_height() ) {
+				push @imps, $newimp;
+      } elsif (DEBUG_CONVERT) {
+        $newimp->display("Too big: " . $newimp->used_width().' < '.$newimp->sheet_width() . ' and '. $newimp->used_height().' < '. $newimp->sheet_height() );
+      }
 			} # end foreach block
 			#last if @imps and (@imps[@imps-1]->imposition() >= 4);
 			#last if @imps and ($signature_size < $start/2);

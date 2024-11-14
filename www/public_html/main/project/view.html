@@ -6,6 +6,29 @@
 	function open_project_docket() {
 		window.open('/main/project/docket_sheet.html?ProjectIndex=<?echo($$variable{Project}{id})?>','projectdocket','newWin,width=610,top=50,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 	}
+  function calc_from_cost( element, index ) {
+    element.value = element.value.replace(/[^\d\.\-]/,'');
+    const cost = parseFloat(1*element.value);
+
+    const markup = parseFloat(1*element.form.elements['Markup'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
+    element.form.elements['txtPrice'+index].value = do_decimals( cost * ( 1 + markup ), 2 );
+  } // end function calc_from_cost
+
+  function calc_from_markup( element, index ) {
+    element.value = element.value.replace(/[^\d\.\-]/,'');
+    const markup = parseFloat(1*element.value);
+    const cost = parseFloat(1*element.form.elements['Cost'+index].value.replace(/[^\d\-\.]/g, '' ));
+    const newvalue = cost * ( markup/100 + 1 );
+    element.form.elements['txtPrice'+index].value = do_decimals( newvalue, 2 );
+  } // end function calc_from_markup
+  function calc_from_price( element, index ) {
+    element.value = element.value.replace(/[^\d\.\-]/,'');
+    const cost = parseFloat(element.form.elements['Cost'+index].value.replace(/[^\d\-\.]/g, '' ) );
+    if ( cost ) {
+      const price = parseFloat(element.value);
+      element.form.elements['Markup'+index].value = do_decimals( ((price / cost)-1)*100, 2 );
+    } // end if
+  } // end function calc_from_price
 </script>
 <div class="Project"><div class="View">
 <?include(/includes/error_reporting.html)?>
@@ -22,11 +45,11 @@
 		<input type="hidden" name="ProjectIndex" value="<?echo($$variable{Project}{id})?>"/>
 		<p class="unprintable">
 			Please confirm services, prices and quantities before clicking &quot;Add to 
-			Quote&quot; or &quot;Add to Order&quot;. If changes are required, please use 
-			the &quot;Edit&quot; or &quot;Remove&quot; links.<br/>
+      Quote&quot; or &quot;Add to Order&quot;.<br/>
+      If changes are required, please use the &quot;Edit&quot; or &quot;Remove&quot; links.<br/>
 		</p>
 		<div class="buttons">
-			<div style="float:left;">
+			<div class="left">
 				<? echo ( my $html;
 
 				if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
@@ -43,10 +66,19 @@
 					);
 				} # end if
 				$html .= button( 'Copy', { href=>'/main/project/reuse.html?project_id='.$$variable{Project}{id} } );
+        if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
+          my @QuoteLevels = sql::execute( undef, undef, 'SELECT id, name FROM QuoteLevels ORDER BY sorting ASC,lower(name)' );
+          if ( @QuoteLevels > 1 ) {
+            $html .= '<label>Style</label><select name="quote_level" onchange="this.form.submit();">';
+            
+            $html .= make_drop_down( \@QuoteLevels, $$variable{Project}->style_id() );
+            $html .= '</select>';
+          } # end if
+        } # end if
 				return $html;
 			) ?>
 			</div>
-			<div style="float: right;">
+			<div class="right">
 				<? echo (
 					my $html = '';
 					if ( ( sets::isin( $$variable{Project}->status(), ['Unordered','uncalculated','Calculating','Deleted'] ) or $$variable{Project}->Order()->status() eq 'Re-Opened' ) and $$variable{Project}->can_edit() ) {
@@ -90,10 +122,17 @@
 			) ?>
 		</div>
 	</div>
-	<br class="spacer"/>
 <?include(/includes/error_reporting.html)?>
-	<?include('_view.html')?>
-	<? if ( sets::isin( $session{user_type},'A','E') and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
+<? echo (
+  @$variable{QuoteLevel} = sql::execute( undef, undef, 'SELECT name FROM QuoteLevels WHERE id=?', $$variable{Project}->style_id() ) if $$variable{Project}->style_id();
+  if ($$variable{QuoteLevel}) {
+    $_ = include( '/main/project/view_'.$$variable{QuoteLevel}.'.html');
+    return $_ if $_;
+  }
+  return include('_view.html');
+) ?>
+
+<? if ( $$variable{Project}->can_edit() and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 	<table class="List">
 		<tr class="totals unprintable">
 			<td class="description"><input type="text" name="txtServiceName" placeholder="enter custom service line description here"/></td>
@@ -106,16 +145,15 @@
 			<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
 		</tr>
 	</table>
-	<? endif ( sets::isin( $session{user_type},'A','E') and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
-<br class="spacer"/>
+<? endif ( $$variable{Project}->can_edit() and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 <?if ( $session{user_type} eq 'A' ) ?>
-<br/>
 <fieldset><legend>Summaries</legend>
 <table class="List Services">
 <? echo (
-	my $html;
-my $rowclass;
+  my $html;
+  my $rowclass;
 	foreach my $Category ( @{$$variable{Categories}} ) {
+    next if ( !($$variable{category_totals}{$$Category{id}}[0] or $$variable{category_totals}{$$Category{id}}[1] or $$variable{category_totals}{$$Category{id}}[2]) );
 		$html .= '<tr'.$rowclass.'><td class="description">'.$Category->name() . ' total</td>';
 		$html .= join("\n", map {
 						'<td class="price">'.openprint::Currency::format( $$variable{category_totals}{$$Category{id}}[$_] ).'</td>'
@@ -163,6 +201,7 @@ const tinymce_options = {
 
   };
 tinyMCE.init(tinymce_options);
+  if (document.getElementById('reference'))
 new Ajax.InPlaceRichEditor( 'reference', '/main/project/_update.html?project_id=<?echo($$variable{Project}->id())?>&action=update&field=reference',{
 	okButton:true,
 	cancelButton:true,

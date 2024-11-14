@@ -108,8 +108,9 @@ sub calc {
   my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
 
 	my $Project = new openprint::Project( $pid );
-  my $ServiceType = $Project->ServiceType($sid);
+  my $Service = $Project->Service($sid);
 
+  $$specs{alert} = '';
 	$$specs{Status} = 'calculated';
 	$$specs{SetsOfNumbers} =~ s/\D//g;
 	if ( ! $$specs{SetsOfNumbers} ) {
@@ -135,7 +136,7 @@ sub calc {
 			next if ! $$sig_specs{"txtImposition$qty_index"};
 
 			my $Imposition = new openprint::Imposition()->load( $sig_specs, $qty_index, $Project );
-			my $Results = signature_calc( $Project, $ServiceType, $specs, $sig_specs, $qty_index, $Imposition );
+			my $Results = signature_calc( $Project, $Service, $specs, $sig_specs, $qty_index, $Imposition );
 			if ( ! $Results ) {
 				$$specs{alert} .= 'No result from signature_calc.';
 				$$specs{Status} = 'uncalculated';
@@ -189,7 +190,7 @@ $openprint::log->debug("Equipment is : " . $$Results{Equipment}->to_string() );
 } # end sub calc
 
 sub signature_calc {
-	my ( $Project, $ServiceType, $specs, $sig_specs, $qty_index, $Imposition ) = @_;
+	my ( $Project, $Service, $specs, $sig_specs, $qty_index, $Imposition ) = @_;
 
 	my %Results;
 	my $services = $Project->services();
@@ -213,7 +214,7 @@ sub signature_calc {
 	} else {
 		@Equipment = openprint::Equipment->find(
         useinestimating=>1,
-        'servicetype_id any'=>$ServiceType->id(),
+        'servicetype_id any'=>$Service->servicetype_id(),
 # 'Specifications'=>{'Numbering Capable'=>['Y','When Printing']},
         );
 	} # end if

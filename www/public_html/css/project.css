@@ -1,6 +1,8 @@
 
 .Project .Header {
+  /*
   margin-bottom: 5px;
+  */
 	width: 100%;
   flex-wrap: wrap;
   display: flex;
@@ -23,7 +25,7 @@ height: 100%;
 .Project .Header .Reference {
     flex: 1;
     width: 48%;
-    min-width: 275px;
+    min-width: 375px;
 margin-bottom: 5px;
 }
 .Project .Header .Comments li ,
@@ -37,7 +39,9 @@ margin-bottom: 5px;
 .Reference br {
   line-height: 0;
   height: 0;
+  /*
   display: none;
+  */
 }
 
 .Project .Header fieldset  {
@@ -119,12 +123,12 @@ margin-bottom: 5px;
 }
 .Service fieldset li,
 .Service fieldset p:not(.buttons) {
-	padding-left: 180px;
+	padding-left: 190px;
 }
 .Service fieldset li label:not(.radio):not(.radio-inline),
 .Service fieldset p label:not(.radio):not(.radio-inline) {
-	width: 175px;
-	margin-left: -180px;
+	width: 185px;
+	margin-left: -190px;
 	text-align: left;
 }
 .Service fieldset li select,

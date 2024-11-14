@@ -22,22 +22,42 @@ use constant DEBUG => 1;
 
 use vars qw( %ServicePrices %Specifications);
 %ServicePrices = (
-  DieCuttingMinimumCharge => {},
-  DieCuttingMakeReady => {},
-  DieCutting => { units=> ['per hour', 'per m']},
+  DieCuttingMinimumCharge => { range_units => [''], units => [''] },
+  DieCuttingAverageMakeReady => {range_units => [''],  units => ['', 'per hour']},
+  DieCuttingSimpleMakeReady => {range_units => [''],  units => ['', 'per hour']},
+  DieCuttingComplexMakeReady => {range_units => [''],  units => ['', 'per hour']},
+  DieCuttingAverage => { range_units => ['calliper','impressions'], units=> ['per hour', 'per m']},
+  DieCuttingSimple => { range_units => ['calliper','impressions'], units=> ['per hour', 'per m']},
+  DieCuttingComplex => { range_units => ['calliper','impressions'], units=> ['per hour', 'per m']},
+  DieCuttingRuleBendingSimple => { range_units => [''], units => ['per bend'] },
+  DieCuttingRuleBendingAverage => { range_units => [''], units => ['per bend'] },
+  DieCuttingRuleBendingComplex => { range_units => [''], units => ['per bend'] },
+  KissCuttingMinimumCharge => { range_units => [''], units => [''] },
+  KissCuttingAverageMakeReady => {range_units => [''],  units => ['', 'per hour']},
+  KissCuttingSimpleMakeReady => {range_units => [''],  units => ['', 'per hour']},
+  KissCuttingComplexMakeReady => {range_units => [''],  units => ['', 'per hour']},
+  KissCuttingAverage => { range_units => ['calliper','impressions'], units=> ['per hour', 'per m']},
+  KissCuttingSimple => { range_units => ['calliper','impressions'], units=> ['per hour', 'per m']},
+  KissCuttingComplex => { range_units => ['calliper','impressions'], units=> ['per hour', 'per m']},
+  KissCuttingRuleBendingSimple => { range_units => [''], units => ['per bend'] },
+  KissCuttingRuleBendingAverage => { range_units => [''], units => ['per bend'] },
+  KissCuttingRuleBendingComplex => { range_units => [''], units => ['per bend'] },
 );
 %Specifications = (
   RunSpeed => {range_units => ['calliper','impressions'], units=>'per hour'},
   'DieCutting Overs' => {range_units => [ 'impressions' ], units=>['percent']},
   'DieCutting Capable' => { value=>['Y','N'] },
   'DieCutting W&T'  => { value=>['Y','N'] },
+  'KissCutting Overs' => {range_units => [ 'impressions' ], units=>['percent']},
+  'KissCutting Capable' => { value=>['Y','N'] },
+  'KissCutting W&T'  => { value=>['Y','N'] },
 );
 
 sub ServicePriceConfiguration {
   my $name = shift;
   return $ServicePrices{$name} if $ServicePrices{$name};
   foreach my $key (keys %ServicePrices) {
-    return $ServicePrices{$key} if ($name =~ /$key/i);
+    return $ServicePrices{$key} if $name eq $key;
   }
   return undef;
 }
@@ -78,7 +98,7 @@ sub variables {
 			 'rdbSuppliedDie','txtDieCutPunches',
        'txtDieWidth','txtDieHeight',
         'chkOverrideDimensions',
-			 'txtSteelRuleLength', 'txtDieCutBends', 'txtHoleClearingHoles' );
+			 'txtSteelRuleLength', 'txtDieCutBends', 'txtDueCutPunches', 'txtHoleClearingHoles' );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v,map { "$_-$form-$qty_index" } (
 				 'ddmEquipment', 'chkOverrideEquipment',
@@ -164,17 +184,23 @@ sub calc_price {
 				%DiePrice = $Material->get_price( undef, $Equipment );
 			} # end if
 		} # end if
-		if ( ( ! %DiePrice ) and $$specs{'Complexity-'.$form} ) {
+		if ( ( ! %DiePrice ) and $complexity ) {
 			if ( my $Material = openprint::Material->find_one( name=>$complexity.'Die') ) {
 				%DiePrice = $Material->get_price( undef, $Equipment );
 			} # end if
 		} # end if
 			
 		if ( ! %DiePrice ) {
-      if ( $$specs{txtDieCutBends} ) {
-        my %BendingPrice = openprint::service::get_price_object( 'DieCutRuleBending',$$specs{txtDieCutBends}*$$Imposition{imposition}, undef );
+      my $bends = int($$specs{'txtDieCutBends-'.$form} // 0);
+      if ( $bends > 0 ) {
+        my $BendingService = openprint::Service->find_one(name=>'DieCuttingRuleBending'.$complexity);
+        $BendingService = openprint::Service->find_one(name=>'DieCuttingRuleBending') if ! $BendingService;
+        my %BendingPrice = $BendingService->get_price($bends*$$Imposition{imposition}, undef);
         if ( %BendingPrice ) {
-          $BendingPrice{Total} = $BendingPrice{Price} * $$specs{txtDieCutBends} * $$Imposition{imposition};
+          $BendingPrice{bends} = $bends;
+          $BendingPrice{imposition} = $$Imposition{imposition};
+          $BendingPrice{Total} = $BendingPrice{Price} * $bends * $$Imposition{imposition};
+          $DiePrice{BendingPrice} = \%BendingPrice;
           $DiePrice{Price} += $BendingPrice{Total};
         }
       }
@@ -192,11 +218,15 @@ sub calc_price {
 #$die_price += $steel_rule_price;
 #$log->debug(" ** Adding Rule Cost: $steel_rule_price For $$specs{txtSteelRuleLength} Inches, MakeReady Total: $make_ready ** ");
 #
-			if ( $$specs{txtDieCutPunches} and ( $$specs{txtDieCutPunches} > 0 ) ) {
+      my $punches = int($$specs{'txtDieCutPunches-'.$form} // 0);
+			if ( $punches > 0) {
 ##punches are optional
-				if ( my $Material = openprint::Material->find_one( name=>'DieCutPunch'.$complexity) ) {
-					my %PunchPrice = $Material->get_price( $$specs{'txtDieCutPunches-'.$form}*$$Imposition{imposition}, $Equipment );
-					$PunchPrice{Total} = $PunchPrice{Price} * $$specs{'txtDieCutPunches-'.$form} * $$Imposition{imposition};
+				if ( my $Material = openprint::Material->find_one( name=>'DieCutPunch') ) {
+					my %PunchPrice = $Material->get_price( $punches*$$Imposition{imposition}, $Equipment );
+					$PunchPrice{Total} = $PunchPrice{Price} * $punches * $$Imposition{imposition};
+          $PunchPrice{punches} = $punches;
+          $PunchPrice{imposition} = $$Imposition{imposition};
+          $DiePrice{PunchPrice} = \%PunchPrice;
 					$DiePrice{Price} += $PunchPrice{Total};
 				} # end if
 #$die_price += $punch_price;
@@ -439,7 +469,19 @@ sub calc {
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>MakeReady: </td><td class="Price">$%.2f</td></tr>', $$Price{MakeReady}{Price});
 					} # endif
 					if ( $$Price{DiePrice} and $$Price{DiePrice}{Price} ) {
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>DiePrice: </td><td class="Price">$%.2f</td></tr>', $$Price{DiePrice}{Price});
+						$$specs{'hdnBreakdown'.$qty_index} .= '<tr><td>DiePrice: ';
+            if ($$Price{DiePrice}{BendingPrice}) {
+              my $bendingPrice = $$Price{DiePrice}{BendingPrice};
+              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('bends: $%.2f%s * %d * %dout = $%.2f',
+                  @$bendingPrice{'Price','units','bends','imposition','Total'});
+            }
+            if ($$Price{DiePrice}{PunchPrice}) {
+              my $punchPrice = $$Price{DiePrice}{PunchPrice};
+              $$specs{'hdnBreakdown'.$qty_index} .= ' + ' if $$Price{DiePrice}{BendingPrice};
+              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('punches: $%.2f%s * %d * %d out = $%.2f',
+                  @$punchPrice{'Price','units','punches','imposition','Total'});
+            }
+            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('</td><td class="Price">$%.2f</td></tr>', $$Price{DiePrice}{Price});
 						$totalDiePrice += $Price->{DiePrice}{Price};
 					} else {
 						$$specs{'hdnBreakdown'.$qty_index} .= '<tr><td>DiePrice: </td><td class="Price">$0.00</td></tr>';
@@ -764,6 +806,45 @@ sub neccessary {
 
 	return 0;
 } # end sub neccessary
+
+sub load_Impositions {
+  my ( $Imposition, $specs, $form, $qty_index ) = @_;
+
+  my @impos;
+  my @results;
+  foreach my $imp_index ( 1 .. 4 ) {
+    next if ! $$specs{"ImpQty-$form-$qty_index-$imp_index"};
+
+    my $imp = $Imposition->copy();
+    $imp->columns( $$specs{"ImpColumns-$form-$qty_index-$imp_index"} );
+    $imp->rows( $$specs{"ImpRows-$form-$qty_index-$imp_index"} );
+    my $paper = $$imp{Paper};
+    $paper->width( $$paper{width} / ($$Imposition{columns} / $$imp{columns}));
+    $paper->height( $$paper{height} / ($$Imposition{rows} / $$imp{rows}));
+
+
+    #$imp->type( $$specs{"ImpType-$form-$qty_index-$imp_index"} );
+    #my ( $pages ) = $$specs{"ImpType-$form-$qty_index-$fold_index"} =~ /^(\d+)PageFold$/;
+    #$imp->pages( $pages );
+    $imp->quantity( $$specs{"ImpQty-$form-$qty_index-$imp_index"} );
+    $imp->display("impressions: ".$imp->impressions());
+    $imp->impressions($imp->impressions() * ($$Imposition{imposition}/$$imp{imposition}));
+    push @impos, $imp;
+  } # end foreach imp_index
+  my $quantity = $$specs{"txtQuantity$qty_index"};
+
+  #if ( @impos == 1 ) {
+    #$impos[0]{impressions} = int( $quantity / $impos[0]{imposition} );
+    #$impos[0]{impressions} = int( $quantity / ( $impos[0]{quantity} * $impos[0]{imposition} ) );
+    #} else {
+    #my $parts = misc::sum( map { $$_{imposition} * $$_{quantity} } @impos );
+    #foreach my $I ( @impos ) {
+      #$$I{impressions} = int( ($quantity / $parts ) * $$_{imposition} * $$_{quantity} );
+      #$$I{impressions} = int( ($quantity / $parts ) * $$_{imposition} * $$_{quantity} );
+      #} # end foreach I
+      #} # end if
+  return @impos;
+} # end sub load_Impositions
 
 1;
 __END__

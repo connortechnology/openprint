@@ -4,7 +4,8 @@
 		order	=>	'lower(name)',
 		#( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
 		#( $session{$uri.'?materialtype_id'} ne '' ? ( 'materialtype_id' => $session{$uri.'?materialtype_id'} ) : () ),
-		( $session{$uri.'?category_id'} ne '' ? ( 'category_id' => $session{$uri.'?category_id'} ) : () ),
+		( $session{$uri.'?category_id'} ne '' ? ( category_id => $session{$uri.'?category_id'} ) : () ),
+		( $session{$uri.'?equipment_id'} ne '' ? ( 'equipment_id any'=> $session{$uri.'?equipment_id'} ) : () ),
 		);
 	if (  $session{$uri.'?material_name'} ) {
 		if ( ! ( $session{$uri.'?material_name'}  =~ /%/ ) ) {
@@ -75,7 +76,7 @@
 	} # end foreach
 	return $html;
 ) ?>
-</body>
+</tbody>
 </table>
 <? else ( @{$$variable{Material}} ) ?>
 There were no results matching your criteria.<br>

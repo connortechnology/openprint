@@ -15,9 +15,11 @@
 			}
 			} );
 	}
+function service_onchange() {
+}
 </script>
 <div class="Timetrack">
-<?include(/includes/error_reporting.html)?>
+  <?include(/includes/error_reporting.html)?>
   <? if ( $$variable{Timetrack}->can_edit() ) ?>
 <form name="f1" id="f1" action="edit.html" method="post" onsubmit="$j('#buttons').html('Please wait...');return true;">
 	<input type="hidden" name="referrer_invoice_id" value="<? echo ( $param{invoice_id} ) ?>" />
@@ -97,7 +99,7 @@
         </script>
 			</li>
 			<li><label>Service</label>
-				<select id="service_id" name="service_id">
+				<select id="service_id" name="service_id" on_change="service_onchange">
 					<option value=""> select </option>
 					<? echo ( make_drop_down( openprint::Service->dropdown(order=>'lower(name)'), $$variable{Timetrack}->service_id() ); ) ?>
 				</select>
@@ -137,7 +139,7 @@
 					<textarea id="description" name="description" rows="<? echo ( ssi::count_lines( $$variable{Timetrack}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Timetrack}->description() ) ?></textarea>
 				</li>
 				<li><label>Keywords</label> <? echo ( input( type=>'text', name=>'keywords', value=>$$variable{Timetrack}->keywords() ); ) ?> </li>
-				<li><label for="po">Purchase Order #</label> <? echo ( input(type=>'text',name=>'po', value=>$$variable{Timetrack}->po() ); ) ?> </li>
+        <li><label for="po">Purchase Order #</label> <? echo ( input(type=>'text', id=>'po', name=>'po', value=>$$variable{Timetrack}->po() ); ) ?> </li>
 				<? if ( $$variable{Timetrack}->invoice_id() ) ?>
 				<li>
 					<label>Invoice</label>

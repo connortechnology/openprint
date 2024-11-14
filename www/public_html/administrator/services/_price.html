@@ -13,18 +13,23 @@
 
   my $Configuration;
   if ($Service->servicetype_id()) {
-    my $module = 'openprint::Estimating::'.$Service->ServiceType()->type();
-    eval ( 'require '.$module.';' );
-    $log->error("eval error $@") if $@;
-    $log->debug("Has servicetype for $module");
+    my $module = $Service->ServiceType()->type();
+    if (!$module) {
+      $log->error("No service type set for ".$Service->name());
+    } else {
+      $module = 'openprint::Estimating::'.$module;
+      eval ( 'require '.$module.';' );
+      $log->error("eval error $@") if $@;
+#$log->debug("Has servicetype for $module");
 
-    if (my $function = $module->can('ServicePriceConfiguration')) {
-      $log->debug("Has function for $module");
-      $Configuration = $function->($$Service{name});
-  $openprint::log->debug( Data::Dumper::Dumper($Configuration));
+      if (my $function = $module->can('ServicePriceConfiguration')) {
+#$log->debug("Has function for $module");
+        $Configuration = $function->($$Service{name});
+#$openprint::log->debug( Data::Dumper::Dumper($Configuration));
+      }
     }
   }
-  $openprint::log->debug( Data::Dumper::Dumper($Configuration));
+  #$openprint::log->debug( Data::Dumper::Dumper($Configuration));
 	#my $Configuration = $openprint::Service::Configuration{$$variable{Service}{name}};
   my $Currency = $$variable{Pricelist}->Currency();
 
@@ -33,16 +38,27 @@
     my $config = shift;
     my $field = shift;
     if (!($config and $$config{$field})) {
-      $log->debug("Not config or not $field for $$Service{name}");
-      $openprint::log->debug( Data::Dumper::Dumper($config));
+      #$log->debug("Not config or not $field for $$Service{name}");
+      #$openprint::log->debug( Data::Dumper::Dumper($config));
       return input( type=>'text', name=>join('-', $field, $$price{id} ), value=>$price->$field() );
     }
     if (!@{$$config{$field}}) {
       return '';
     } elsif (@{$$config{$field}}==1) {
-      return input( type=>'hidden', name=>join('-', $field, $$price{id} ), value=>$price->$field() ).$config{$field}[0];
+      return input( type=>'hidden', name=>join('-', $field, $$price{id} ), value=>$$config{$field}[0] ).$$config{$field}[0];
     }
-    return ssi::select( [ map { $_, $_ } @{$$config{$field}} ], $$price{$field}, { prepend=>['','unset'], name=>join('-', $field, $$price{id}) } )
+    my @values = map { $_, $_ } @{$$config{$field}};
+    if ($$price{$field} and !sets::isin($$price{$field}, $$config{$field})) {
+      push @values, $$price{$field}, 'Invalid value '.$$price{$field};
+    }
+    if ((!defined $$price{$field}) and sets::isin('', $$config{$field})) {
+      $$price{$field} = '';
+    }
+    if (!sets::isin('', $$config{$field})) {
+      unshift @values, '','no units set';
+    }
+#$log->debug("$$price{$field}");
+    return ssi::select( \@values, $$price{$field}, { name=>join('-', $field, $$price{id}) } )
   }
 
 	$html .= sprintf('

@@ -1,10 +1,14 @@
 <script src="/javascripts/service.js"></script>
+<div class="PageTitle">
+<h1>Project <?echo($$variable{Project}->link_to())?></h1>
+<h2><?ServiceTypeName?></h2>
+</div>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 
 <? echo (
-  $$variable{type_options} = ['None', 'None', map { $_->name(), $_->description() } openprint::Material->find(category=>'Lamination Types', order=>'lower(name)') ];
+  $$variable{type_options} = ['', 'None', map { $_->name(), $_->description() } openprint::Material->find(category=>'Lamination Types', order=>'lower(name)') ];
   my $html = '';
 
   foreach my $sig_id ($$variable{Project}->signatures( { sort => 1 } )) {
@@ -22,14 +26,12 @@
     $html .= '(W x H) in inches</li>';
     $html .= '<li><label>Type for front</label>';
       $html .= ssi::select($$variable{type_options}, $$variable{'TypeFront-'.$form}, {
-      prepend=>[''=>'Please select one'],
       name=>'TypeFront-'.$form,
       , size=>1, onchange=>'calc(this.form.name);' }
       );
     $html .= '</li>
       <li><label>Type for back</label>';
         $html .= ssi::select($$variable{type_options}, $$variable{'TypeBack-'.$form}, {
-        prepend=>[''=>'Please select one'],
         name=>'TypeBack-'.$form,
         , size=>1, onchange=>'calc(this.form.name);' }
       );

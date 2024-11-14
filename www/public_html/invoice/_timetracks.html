@@ -32,7 +32,8 @@
     <td class="Price">%11$s</td>
     <td class="buttons">%12$s</td>
 </tr>
-`, $Timetrack->id(), $$variable{Invoice}->id(), ( $Timetrack->user_id() ? htmlize( $Timetrack->Employee()->name() ) : '&nbsp;' ),
+`, $Timetrack->id(), $$variable{Invoice}->id(),
+( $Timetrack->user_id() ? htmlize( $Timetrack->Employee()->name() ) : '&nbsp;' ),
 $Timetrack->service_id() ? htmlize( $Timetrack->Service()->name() ) : '',
 $Timetrack->po(),
 $Timetrack->date_associated() ? (
@@ -41,7 +42,7 @@ Date::Format::time2str( $Timetrack->time_associated() ? $config{DateTimeFormat} 
 ) : ( '','' ),
 $Timetrack->elapsed_formatted(),
 #misc::seconds_to_pretty_interval( $Timetrack->elapsed() ),
-openprint::Currency::format( $$Price{price} ) . $Timetrack->Currency()->short(), $Price->units(),
+openprint::Currency::format( $$Price{price} ).$Timetrack->Currency()->short(), $$Price{units},
 openprint::Currency::format( $$Price{total} ),
 button( 'del'.$Timetrack->id(), { 'data-on-click-this'=>'del_timetrack', 'data-id'=>$$Timetrack{id}, text=>'-' } ),
 $desc );
@@ -59,7 +60,11 @@ $desc );
 		</tr>
 	</table>
 </fieldset>
-<fieldset><legend>Available Timetracks</legend>
+<fieldset><legend>Available Timetracks 
+<? echo ( date_select_session('/invoice/edit.html', 'timetrack_start', { on_change_this=>'load_timetracks', with_today=>1,with_clear=>1 }); ) ?>
+					to 
+<? echo ( date_select_session('/invoice/edit.html', 'timetrack_end', { on_change_this=>'load_timetracks', with_today=>1,with_clear=>1 }); ) ?>
+  </legend>
 	<table class="List sortable" id="availabletimetracks_table">
 		<tr>
 			<th class="Employee">Employee</th>
@@ -76,6 +81,8 @@ $desc );
 			my @Timetracks;
 			$$variable{elapsed_total} = $$variable{service_total} = 0;
 			foreach my $T ( openprint::Timetrack->find(
+        date_filter( '/invoice/edit.html?timetrack_end', 'starting <=' ),
+        date_filter( '/invoice/edit.html?timetrack_start', 'starting >=' ),
 				billable	=>	1,
 				owner_id	=> $session{company_id},	
 				company_id	=> $variable{Invoice}->invoicee_id(),
@@ -99,8 +106,8 @@ if ( $T->date_associated() ) {
 }
 				$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $T->elapsed() ) );
 				my $Price = $T->Price();
-				$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
-				$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
+				$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{price} ), $$Price{units} );
+				$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{total} ) );
         $html .= sprintf('<td class="buttons">%s</td>', button( 'add'.$T->id(), { 'data-on-click-this'=>'add_timetrack', 'data-id'=>$$T{id}, text=> '+' } ) );
 				$html .= "</tr>\n";
 			$$variable{service_total} += $$Price{Total};

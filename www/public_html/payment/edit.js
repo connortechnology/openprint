@@ -3,11 +3,10 @@ function calc(element) {
   var form = element.form;
   var value_locked = ( form.value_locked.type == 'checkbox' && form.value_locked.checked ) 
       ||
-      ( form.value_locked.type == 'hidden' && form.value_locked.value=='Y' );
+      ( form.value_locked.type == 'hidden' && form.value_locked.value == 'Y' );
   var amount_locked = ( form.amount_locked.type == 'checkbox' && form.amount_locked.checked ) 
     ||
-    ( form.amount_locked.type == 'hidden' && form.amount_locked.valye == 'Y' );
-
+    ( form.amount_locked.type == 'hidden' && form.amount_locked.value == 'Y' );
 
   if ( element.name == 'amount' ) {
     if ( form.value.value && value_locked ) {
@@ -30,6 +29,8 @@ function calc(element) {
     } else {
       alert('can\'t adjust amount or value because both are locked!');
     }
+  } else {
+    console.log("Unknown element calcing on", element);
   } // end if element
 }
 

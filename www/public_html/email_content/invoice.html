@@ -78,6 +78,7 @@
 					$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
 					$html .= '<td class="PO">'.html_escape( $Timetrack->po() ).'</td>';
 					$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
+          $$variable{interval_total} += $Timetrack->elapsed();
 					my $Price = $Timetrack->Price();
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{price} ), $$Price{units} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{total} ) );
@@ -89,7 +90,7 @@
           }
           $html .= '</td><td class="Service" colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
-					$$variable{service_total} += $$Price{Total};
+					$$variable{service_total} += $$Price{total};
 					$rowclass = $rowclass ? '' : 'class="colRow"';
 					my @desc = split('<p>', $Timetrack->description() );
 					#$count += scalar @desc;
@@ -112,20 +113,25 @@ format_date( $Timetrack->ending() ) : '' ) );
 						$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
 						$html .= '<td class="PO">'.html_escape( $Timetrack->po() ).'</td>';
 						$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
+            $$variable{interval_total} += $Timetrack->elapsed();
 						my $Price = $Timetrack->Price();
-						$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
-						$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
+						$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{price} ), $$Price{units} );
+						$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{total} ) );
 						$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
 						$html .= '<td>&nbsp;</td><td class="Service" colspan="4">'.$Timetrack->description().'</td><td class="Price">&nbsp;</td>';
 						$html .= '</tr>';
-						$$variable{service_total} += $$Price{Total};
+						$$variable{service_total} += $$Price{total};
 						$rowclass = $rowclass ? '' : 'class="colRow"';
 					} # end foreach Timetrack
 				} # end if more Timetracks
           if ( ! $$variable{Invoice}{subtotal_override} ) {
 				$html .= '
 			<tr class="totals">
-				<td colspan="5">Totals</td>
+        <td class="Date"></td>
+        <td class="Service"></td>
+        <td class="PO"></td>
+        <td class="Interval">'. misc::seconds_to_pretty_interval($$variable{interval_total}).'</td>
+				<td class="Rate">Service Total</td>
 				<td class="Price">'.openprint::Currency::format( $$variable{service_total} ).'</td>
 			</tr>
 ';
@@ -145,17 +151,19 @@ $html .= '
         <li class="PostedOn"><label>Posted On</label><? echo ( format_date( $$variable{Invoice}->posted_on() ); ) ?></li>
 
         <li class="DueOn"><label>Due On</label><? echo ( format_date( $$variable{Invoice}->due_on() ); ) ?></li>
+        <? if ( $$variable{Invoice}->external_notes() ) ?>
         <li class="ExternalNotes"><label>Notes</label><? echo ( $$variable{Invoice}->external_notes() ) ?></li>
-        <li class="terms"><label>Invoice Terms</label>
+        <? endif ( $$variable{Invoice}->external_notes() ) ?>
 <?echo(
   my $Credit = $$variable{Invoice}->Invoicee()->Credit( $$variable{Invoice}{invoicer_id} );
-  my $html = 'Net ' . $$Credit{terms}. ' days';
-  if ( $$variable{Invoice}->monthly_interest() > 0 ) {
-   $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
-  }
+  if ($$Credit{terms}) {
+    my $html = '<li class="terms"><label>Invoice Terms</label>Net ' . $$Credit{terms}. ' days.' if $$Credit{terms};
+    if ( $$variable{Invoice}->monthly_interest() > 0 ) {
+     $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
+    }
+    $html .= '</li>';
   return $html;
 )?>
-        </li>
       </ul>
     </fieldset>
   </div>

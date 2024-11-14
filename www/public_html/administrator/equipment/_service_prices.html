@@ -1,4 +1,5 @@
 <? echo (
+return '' if !$session{'/administrator/equipment/edit.html?show_service_prices'};
 my $html = '';
 my $Equipment = $$variable{Equipment};
 
@@ -11,7 +12,7 @@ foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
     order=>'min NULLS FIRST, max NULLS LAST');
   my %prices = misc::make_hash_from_array('service_id', @prices);
 
-  my @services = openprint::Service->find(id=>[map { $_->service_id() } @prices], order=>'lower(name)') if @prices;
+  my @services = openprint::Service->find(id=>[map { $_->service_id() } @prices], order=>'lngsortorder ASC,lower(name)') if @prices;
 
   $html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->link_to() . "</legend><div id=\"pricelist-$$Pricelist{id}\">";
   foreach my $service (@services) {
@@ -32,7 +33,10 @@ foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
           <th class="Mode">Mode</th>
           <th class="buttons">
     '.
-    button( join('_', 'add',$$Pricelist{id},$$Equipment{id},$$service{id}), { type=>'button', onclick=>qq`add_price( \$('f2'), '$$Pricelist{id}', '$$Equipment{id}','$$service{id}' );`, text=>'+', title=>'Add New Price to '.$Equipment->strid() .' for '.$service->description()} ) . qq`</th>
+    button( join('_', 'add',$$Pricelist{id},$$Equipment{id},$$service{id}), { type=>'button',
+        on_click_this=>'add_new_price',
+        data_pricelist_id=>$$Pricelist{id}, data_equipment_id=>$$Equipment{id}, data_service_id=>$$service{id},
+        text=>'+', title=>'Add New Price to '.$Equipment->strid() .' for '.$service->description()} ) . qq`</th>
       </tr></thead><tbody id="prices-$$Pricelist{id}-$$Equipment{id}-$$service{id}">`;
     foreach my $price (@{$prices{$service->id()}}) {
       $$variable{Price} = $price;

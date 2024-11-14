@@ -529,7 +529,9 @@ sub admin_url_to {
 }
 
 sub admin_link_to {
-	return sprintf('<a href="/administrator/managerial/user_profiles.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+  my $self = shift;
+	return sprintf('<a href="/administrator/managerial/user_profiles.html?ddmCustomer=%3$d&user_id=%1$d">%2$s</a>',
+    $$self{id}, @_ ? $_[0] : $self->name(), $$self{company_id} );
 } # end sub admin_link_to
 
 sub html {

@@ -138,3 +138,18 @@ width: 49%;
 .imposition input[name="txtLayoutHeight3"] {
   width: 85px;
 }
+.templates ul {
+  display: flex;
+  flex-wrap: wrap;
+}
+@media screen and (min-width:1900px) {
+.templates ul:not(:has(li:nth-child(8))) {
+  flex-wrap: nowrap;
+}
+}
+.overs .value {
+  text-align: right;
+}
+.overs .totals {
+	border-top: 1px solid #024293;
+}

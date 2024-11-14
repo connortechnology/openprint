@@ -11,7 +11,7 @@
 		<fieldset><legend>Project Information</legend>
 			<div class="content">
 				<ul>
-					<li><label>Project #</label><? echo ( $$variable{Project}->id() ) ?></li>
+					<li><label>Project #</label><? echo ( $$variable{Project}->link_to() ) ?></li>
 					<li class="<? echo ( $_ = $$variable{Project}->status(); $_  =~ s/ //g; return $_; ) ?>">
 						<label>Status</label>
 						<? echo ( $$variable{Project}->status() ) ?>

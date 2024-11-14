@@ -91,7 +91,7 @@
 </tr>
 <tr%1$s> 
 	<td>&nbsp;</td>
-	<td colspan="7"><a href="/main/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
+	<td colspan="6"><a href="/main/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
 	<td class="User">%11$s</td>
 </tr>`,
 					$rowclass, $Project->id(), $Project->Company()->name(), $Project->reference(), 
@@ -136,9 +136,11 @@
 			my @html;
 			my $rowclass;
 			my $has_Products = openprint::Product->find_one();
+      my $count = 0;
 
 			foreach my $Project ( @{$$variable{Projects}} ) {
 if ( $Project->can_view() ) {
+$count += 1;
 				push @html, sprintf(q`
 <tr%1$s> 
 	<td class="project_id"><a href="/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>`, $rowclass, $Project->id() );
@@ -196,7 +198,7 @@ if ( $Project->can_view() ) {
                     $rowclass, $Project->id(), $Project->reference(),
                     $Project->status(),
 					format_date($Project->created_on() ),
-					format_date_time($Project->created_on() ),
+					format_datetime($Project->created_on() ),
                     ( ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '2' : '1' ),
                     $Project->summary(),
 										$Project->User()->name(),
@@ -205,6 +207,8 @@ if ( $Project->can_view() ) {
 }
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Project
+    push @html, '<tr class="totals">
+      <td colspan="'.(((!$session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '9' : '8' ).'">'.$count.' projects</td></tr>';
 			return join( "\n", @html );
 		) ?>
 	</table>

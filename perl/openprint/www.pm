@@ -546,22 +546,31 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename =~ /^(\w*).html$/ ) {
 						my $module = $1;
-						require "openprint/Estimating/$module.pm";
-						if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
-							$function->($log, $dbh, \%variable, $project_index, $service_index );
-						} else {
-							$log->error( "Eval error of require(bind) openprint::Estimating::$module display() :: Reason: $?" );
-						}
+						$module = $variable{ServiceType}->type() if $variable{ServiceType} and $variable{ServiceType}->type();
+              
+            eval {
+              require "openprint/Estimating/$module.pm";
+              if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
+                $function->($log, $dbh, \%variable, $project_index, $service_index );
+              } else {
+                $log->error( "Eval error of require(bind) openprint::Estimating::$module display() :: Reason: $?" );
+              }
+            };
+						$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
+
 					} # end if
 				} elsif ($third eq 'spec') {
 					if ( $filename =~ /^(\w*).html$/ ) {
-						my $module = $1;
-						require "openprint/Estimating/$module.pm";
-						if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
-							$function->($log, $dbh, \%variable, $project_index, $service_index );
-						} else {
-							$log->error( "Eval error of require $module :: display, Reason: " );
-						}
+            my $module = $1;
+            eval {
+              require "openprint/Estimating/$module.pm";
+              if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
+                $function->($log, $dbh, \%variable, $project_index, $service_index );
+              } else {
+                $log->error( "Eval error of require $module :: display, Reason: " );
+              }
+						};
+						$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
 					} # end if
 				} elsif ($third eq 'pack') {
 					if ( $filename eq 'pack_by_weight.html' ) {

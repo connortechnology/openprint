@@ -1,32 +1,30 @@
-<li>
-	<label>Equipment</label>
-	<? echo ( my $html;
-		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+<? echo (
+my $html;
+my $options = $$variable{Equipment} ? [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ] :
+  openprint::Equipment->dropdown('servicetype_id any'=>$$variable{ServiceType}->id(), useinestimating=>1);
+if (@{$options}) {
+  $html .= ' <li> <label>Equipment</label>';
+  foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+    $html .= '<span class="'.$$variable{Columns}.'Columns">';
 
-			if ( $$variable{Equipment} ) {
-				$html .= ssi::select( 
-					[ '', 'select', map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], 
-					$$variable{"ddmEquipment-$$variable{SignatureIndex}-$qty_index"},
-					{ 
-						name=>"ddmEquipment-$$variable{SignatureIndex}-$qty_index",
-						onchange=>'calc(this.form.name)',
-					} );
-      } else {
-        $html .= ssi::select(
-            openprint::Equipment->dropdown('servicetype_id any'=>$$variable{ServiceType}->id(), useinestimating=>1),
-            $$variable{join('-','ddmEquipment', $$variable{SignatureIndex}, $qty_index)},
-            {
-            prepend=>['','select'],
-            name=>"ddmEquipment-$$variable{SignatureIndex}-$qty_index",
-            onchange=>'calc(this.form.name)',
-          } );
-			} # end if
-			$html .= write_override(
-					"chkOverrideEquipment-$$variable{SignatureIndex}-$qty_index",
-					$$variable{"chkOverrideEquipment-$$variable{'SignatureIndex'}-$qty_index"}, '', q`calc('f1');` );
-			$html .= '</span>';
-		} # end foreach qty_index
-		return $html;
+    if (@{$options} > 2) { 
+      $html .= ssi::select( 
+        $options,
+        $$variable{"ddmEquipment-$$variable{SignatureIndex}-$qty_index"},
+        { 
+          prepend=>['', 'select one'],
+          name=>"ddmEquipment-$$variable{SignatureIndex}-$qty_index",
+          onchange=>'calc(this.form.name)',
+        } );
+      $html .= write_override(
+          "chkOverrideEquipment-$$variable{SignatureIndex}-$qty_index",
+          $$variable{"chkOverrideEquipment-$$variable{'SignatureIndex'}-$qty_index"}, '', q`calc('f1');` );
+    } else {
+      $html .= $$options[1];
+    } # end if
+		$html .= '</span>';
+	} # end foreach qty_index
+  $html .= '</li>';
+} # end if options
+return $html;
 ) ?>
-</li>

@@ -7,7 +7,7 @@
   my $html;
   my @types = @{$$variable{PaperTypes}} if $$variable{PaperTypes};
 
-  my @user_types = (undef, '');
+  my @user_types = ('');
   push @user_types, 'C' if $session{user_id};
   push @user_types, 'E' if $session{user_type} eq 'E';
   push @user_types, ('A','E') if $session{user_type} eq 'A';

@@ -72,6 +72,10 @@ tr.error {
 	clear: both;
 }
 
+table.List tr:hover {
+  background-color: #afb3e9;
+}
+
 form {
 	margin: 0;
 }
@@ -352,7 +356,9 @@ hr {
 	margin: 1px;
 	padding: 0;
 	height: 1px;
+  /*
 	border: 0;
+  */
 }
 
 .error, .warning, .warning a {

@@ -4,8 +4,9 @@ use Carp qw( cluck );
 package openprint::Imposition;
 require Math::Round;
 require Data::Dumper;
-use vars qw( $AUTOLOAD %Orientations @RunStyles);
-use constant DEBUG => 1;
+use SVG;
+use vars qw( $AUTOLOAD %Orientations @RunStyles %ShortStyles);
+use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;
@@ -16,6 +17,13 @@ use constant Horizontal => 1;
 );
 
 @RunStyles = ( 'Sheet Work', 'Work & Turn', 'Work & Tumble', 'Perfecting', 'Web' );
+%ShortStyles = (
+  'Sheet Work' => 'SW',
+  'Work & Turn' => 'WT',
+  'Work & Tumble' => 'WF',
+  'Perfecting' => 'PF',
+  'Web'   => 'Web',
+);
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
@@ -52,6 +60,7 @@ my @fields = (
 	'runspeed',
 	'impressions',
   'net_sheets',
+  'gross_sheets',
 	'equipment_id', 'Equipment',
 	'inkCoverage',
 	'folio_lip',
@@ -78,9 +87,8 @@ sub new {
 } # end sub new
 
 sub layout_width {
-	if ( @_ > 1 ) {
-		$_[0]{layout_width} = $_[1];
-	} 
+  $_[0]{layout_width} = $_[1] if @_ > 1;
+
 	if ( ! defined $_[0]{layout_width} ) {
 		if ( $_[0]{image_orientation} == Vertical ) {
 			$_[0]{layout_width} = ( $_[0]{columns} * $_[0]{image_width} ) + $_[0]{perfecting_wheel_space};
@@ -135,9 +143,7 @@ $openprint::log->warn("layout_width: Unknown orientation ($_[0]{image_orientatio
 }
 
 sub layout_height {
-	if ( @_ > 1 ) {
-		$_[0]{layout_height} = $_[1];
-	} 
+  $_[0]{layout_height} = $_[1] if @_ > 1;
 	if ( ! defined $_[0]{layout_height} ) {
 		if ( $_[0]{image_orientation} == Vertical ) {
 			$_[0]{layout_height} = $_[0]{rows} * $_[0]{image_height};
@@ -155,9 +161,11 @@ sub layout_height {
 			my $folio_size = $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} );
 			$folio_size -= $_[0]{colour_bar_size} if $_[0]{colour_bar_orientation} eq 'Width';
 			$folio_size -= $_[0]{grip};
-			if ( $_[0]{folio_lip} > 0 ) {
-				#$openprint::log->debug("Adding folio lip size $folio_size to height  $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} ) - $_[0]{colour_bar_size} $_[0]{colour_bar_orientation}  grip: $_[0]{grip}"  );
+			if ( $folio_size > 0 ) {
+				$openprint::log->debug("Adding folio lip size $folio_size to height  $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} ) - $_[0]{colour_bar_size} $_[0]{colour_bar_orientation}  grip: $_[0]{grip}"  );
 				$_[0]{layout_height} += $folio_size;
+        #} else {
+        #$openprint::log->debug("Not Adding folio lip size $folio_size to height  $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} ) - $_[0]{colour_bar_size} $_[0]{colour_bar_orientation}  grip: $_[0]{grip}"  );
 			}
 
 			if ( $_[0]{dutch_columns} ) {
@@ -276,9 +284,10 @@ sub load {
 #Carp::cluck("No press in Imposition::load");
 		} else {
 #Carp::cluck("Loading press in Imposition::load");
-			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
+			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>0);
 			if ( ! $$self{Press} ) {
 				$openprint::log->error("load: No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
+        $$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>1);
 			} # end if
 		} # end if
 		$$self{Press} = new openprint::Equipment() if ! $$self{Press};
@@ -291,6 +300,8 @@ sub load {
 	$$self{image_width} = $$self{object_width} if ! $$self{image_width};
 	$$self{image_height} = $$specs{'txtImageHeight'.$qty_index};
 	$$self{image_height} = $$self{object_height} if ! $$self{image_height};
+  $$self{colour_bar_size} = $$self{Press}->specification('Colour Bar Size');
+  $$self{colour_bar_orientation} = $$self{Press}->specification('Colour Bar Orientation');
 
 	$$self{imposition} = $$specs{'txtImposition'.$qty_index};
 	$$self{versions} = $$specs{'Versions'.$qty_index};
@@ -454,6 +465,12 @@ $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}
 $$self{impressions} = $$specs{"hdnImpressionQuantity$qty_index"};
 $$self{net_sheets} = $$specs{"hdnNetSheetCount$qty_index"};
 $$self{gross_sheets} = $$specs{"StockQuantity$qty_index"};
+if (!$$self{net_sheets}) {
+  $openprint::log->error("No net sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
+}
+if (!$$self{gross_sheets}) {
+  $openprint::log->error("No gross sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
+}
 $self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
@@ -494,6 +511,7 @@ sub load_used {
 	} # end if
 	$$self{Paper} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{Paper};
 } # end sub load_used
+
 sub spread_rows {
 	( my $self ) = @_;
 
@@ -585,25 +603,13 @@ sub save {
 sub used_width {
 	my $self = shift;
 	my $width = $$self{layout_width} + $$self{gutters} + $$self{cropmark_left} + $$self{cropmark_right} + ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 );
-	$openprint::log->debug( "used_width: width $width = layout: $$self{layout_width} + gutters: $$self{gutters} + cropleft $$self{cropmark_left} + cropright $$self{cropmark_right} + ( $$self{colour_bar_orientation} eq 'Length' ? cb: $$self{colour_bar_size} : 0 );") if DEBUG;
-if ( 0 ) { # DOn't need to do this anymore, is taken care of in layout_width
-	if ( ($$self{runstyle} eq 'Perfecting' ) and $$self{Press} and $$self{Paper} ) {
-		if ( $$self{Paper}->perfecting() ne 'Y' ) {
-			if ( $$self{columns} > 1 and $$self{columns} % 2 ) {
-			$width += $$self{Press}->specification('Perfecting Double Gutter Size') - $$self{Press}->specification('Perfecting Single Gutter Size');
-	$openprint::log->debug( "used_width: adding perfecting wheel space: $$self{Press}->specification('Perfecting Double Gutter Size') - $$self{Press}->specification('Perfecting Single Gutter Size');" );
-			} # end if
-		} # end if
-	} # end if
-	} # end if
-$openprint::log->debug("Setting used_width ($width) = using layout:$$self{layout_width} + gutters:$$self{gutters} + cropleft:$$self{cropmark_left} + crop_right:$$self{cropmark_right} + cb: ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 )") if DEBUG;
+  $openprint::log->debug("Setting used_width ($width) = using layout:$$self{layout_width} + gutters:$$self{gutters} + cropleft:$$self{cropmark_left} + crop_right:$$self{cropmark_right} + cb: ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 )") if DEBUG;
 	return $width;
 }
 sub used_height {
-    my $self = shift;
+  my $self = shift;
 	my $height = $$self{layout_height} + $$self{grip} + $$self{cropmark_top} + $$self{cropmark_bottom} + ( $$self{colour_bar_orientation} eq 'Width' ? $$self{colour_bar_size} : 0 );
-#$openprint::log->warn("Height: $height");
-    return $height;
+  return $height;
 } # end sub used_height
 
 sub object_area {
@@ -620,6 +626,7 @@ sub layout_area {
 
 sub sheet_width {
 	my $self = shift;
+
 	$$self{start_columns} = $$self{columns} if ! $$self{start_columns};
 	$$self{start_rows} = $$self{rows} if ! $$self{start_rows};
 
@@ -631,16 +638,16 @@ sub sheet_width {
 	if ( $$self{rotate_sheet} ) {
 		$$self{Paper}->height( @_ ) if @_;
 		if ( $$self{start_columns} and $$self{columns} and $$self{start_columns} != $$self{columns} ) {
-			return Math::Round::nearest( 0.0001, $$self{Paper}{height} / ( $$self{start_columns} / $$self{columns} ) );
+			return $$self{sheet_width} = Math::Round::nearest( 0.0001, $$self{Paper}{height} / ( $$self{start_columns} / $$self{columns} ) );
 		} else {
-			return $$self{Paper}->height();
+			return $$self{sheet_width} = $$self{Paper}->height();
 		} # end if
 	} else {
 		$$self{Paper}->width( @_ ) if @_;
 		if ( $$self{start_columns} and $$self{columns} and $$self{start_columns} != $$self{columns} ) {
-			return Math::Round::nearest( 0.0001, $$self{Paper}{width} / ( $$self{start_columns} / $$self{columns} ) );
+			return $$self{sheet_width} = Math::Round::nearest( 0.0001, $$self{Paper}{width} / ( $$self{start_columns} / $$self{columns} ) );
 		} else {
-			return $$self{Paper}{width};
+			return $$self{sheet_width} = $$self{Paper}{width};
 		} # end if
 	} # end if
 } # end sub sheet_width
@@ -660,23 +667,23 @@ sub sheet_height {
 		$$self{Paper}->width( @_ ) if @_;
 
 		if ( $$self{start_rows} and $$self{rows} and $$self{start_rows} != $$self{rows} ) {
-			return Math::Round::nearest( 0.0001, $$self{Paper}{width} / ( $$self{start_rows} / $$self{rows} ) );
+			return $$self{sheet_height} = Math::Round::nearest( 0.0001, $$self{Paper}{width} / ( $$self{start_rows} / $$self{rows} ) );
 		} else {
-			return $$self{Paper}{width};
+			return $$self{sheet_height} = $$self{Paper}{width};
 		} # end if
 	} else {
 		$$self{Paper}->height( @_ ) if @_;
 		if ( ! $$self{Paper}{height} ) {
 			if ( $$self{start_rows} and $$self{rows} and $$self{start_rows} != $$self{rows} ) {
-			return Math::Round::nearest( 0.0001, $$self{cut_off} / ( $$self{start_rows} / $$self{rows} ) );
+        return $$self{sheet_height} = Math::Round::nearest( 0.0001, $$self{cut_off} / ( $$self{start_rows} / $$self{rows} ) );
 			} else {
-				return $$self{cut_off};
+				return $$self{sheet_height} = $$self{cut_off};
 			} # end if
 		} else {
 			if ( $$self{start_rows} and $$self{rows} and $$self{start_rows} != $$self{rows} ) {
-				return Math::Round::nearest( 0.0001, $$self{Paper}{height} / ( $$self{start_rows} / $$self{rows} ) );
+				return $$self{sheet_height} = Math::Round::nearest( 0.0001, $$self{Paper}{height} / ( $$self{start_rows} / $$self{rows} ) );
 			} else {
-				return $$self{Paper}{height};
+				return $$self{sheet_height} = $$self{Paper}{height};
 			} 
 		} # end if
 	} # end if
@@ -775,10 +782,16 @@ sub bleed_size {
 	$_[0]{bleed_size} = $_[1] if @_ > 1;
 	return $_[0]{bleed_size};
 } # end sub bleed_size
+
 sub runstyle {
 	$_[0]{runstyle} = $_[1] if @_ > 1;
 	return $_[0]{runstyle};
 } # end sub runstyle
+
+sub rs {
+  return $ShortStyles{$_[0]{runstyle}};
+}
+
 sub quantity {
 	$_[0]{quantity} = $_[1] if @_ > 1;
 	return $_[0]{quantity};
@@ -903,78 +916,299 @@ sub to_svg {
 
 	# So let's assume that we might want to print this on an 8.5x11 sheet of paper. The source dimensions might be 28x40"
 
-	my $target_width = 3; # inches
-	my $target_height = 2; # inches;
+	my $target_width = $self->sheet_width()+2; # inches, I think the idea is 40" sheet plus some margin
+	my $target_height = $self->sheet_height()+2; # inches;
 
 	my $margin = 1; #inch
 
-	# So we need to calculate the scale factor... in pixels.
-	#my $width_scale = ( 40/$target_width * 96 ); # 96 dots per inch?
-	#my $height_scale = ( 28/$target_height * 96 );
-	my $width_scale = ( ($target_width/$self->sheet_width()) * 96 ); # 96 dots per inch?
-	my $height_scale = ( ($target_height/$self->sheet_height()) * 96 );
+	my $svg = SVG->new(
+      width      => '100%',
+      height     => '100%',
+      viewBox    => join(q{ } => 0, 0, $target_width, $target_height), # In local units (inches)
+      -nocredits => 1,
+      -standalone => 'no',
+      preserveAspectRation => 'xMidYMid meet',  # Keep relative size.
+      class=>'Imposition',
+      title=>join(' x ',@$self{'columns','rows'} ).($$self{dutch_columns}?' + '.join(' x ', @$self{'dutch_columns','dutch_rows'}):''),
+      );
+  #my $css = ssi::hash_link('/base_css/imposition.css');
+  #my $pi = $svg->style(type=>'text/css', -href=>$css);
 
-	my $svg = '<svg class="Imposition" title="';
-	$svg .= sprintf( '%s x %s', @$self{'columns','rows'} );
-	$svg .= sprintf(' + %s x %s', @$self{'dutch_columns','dutch_rows'}) if $$self{dutch_columns};
-	$svg .= '">';
-	
-	$svg .= '<rect class="background" width="'.int(($self->sheet_width()+(2*$margin))*$width_scale).'" height="'.int(($self->sheet_height()+(2*$margin))*$height_scale).'" />';
-	my $sheet_width = int($self->sheet_width()*$width_scale);
-	my $sheet_height = int($self->sheet_height()*$height_scale);
+  my $defs = $svg->defs();
+  add_drop_shadow_define($defs);
+  add_colour_bar_define($defs);
+  add_diagonal_hatch_define($defs);
+# Draw a white backgound as transparency prints as black on many browsers.
+  $svg->rect(
+      id     => 'background',
+      class  => 'background',
+      x      => 0,     y      => 0,
+      width => $target_width,
+      height => $target_height,
+      );
 
-	my $sheet_x = int($margin*$width_scale);
-	my $sheet_y = int($margin*$height_scale);
+	my $sheet_width = $self->sheet_width();
+	my $sheet_height = $self->sheet_height();
 
-	$svg .= qq`<rect class="sheet" x="$sheet_x" y="$sheet_y" width="$sheet_width" height="$sheet_height" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>`;
+  my $translate = join(q{, }, (($target_width - $sheet_width) / 2), (($target_height - $sheet_height) / 2));
 
-	my $image_width = int( ($sheet_width-4 - $$self{columns} ) / $$self{columns});
-	my $image_height = int( ($sheet_height-4 - $$self{rows} ) / $$self{rows});
+# Translate the canvas so padding doesn't effect our co-ordinate system.
+  my $canvas = $svg->g(transform => "translate($translate)");
+  my $sheet = add_sheet($canvas, $self);
 
+	return $svg->xmlify();
+}
+
+sub add_sheet {
+  my ($canvas, $self) = @_;
+# Draw the sheet dimensions with a drop shadow effect.
+  my $sheet = $canvas->rect(
+      id     => 'sheet',
+      class  => 'sheet',
+      x      => 0,
+      y      => 0,
+      width  => $self->sheet_width(),
+      height => $self->sheet_height(),
+      filter => 'url(#dropShadow)',
+      );
+
+  my $grip = $$self{grip};
+  if ($grip) {
+    $grip /= 2 if ($$self{runstyle} eq 'Work & Tumble' or $$self{runstyle} eq 'Perfecting');
+    $canvas->rect(class=>'grip', id=>'grip', x=>0, y=>0, width=>$$self{sheet_width}, height=>$grip, fill=>'url(#diagonalHatch)');
+  }
+  $canvas = $canvas->g(transform => "translate(0, $grip)");
+
+  if ($$self{colour_bar_size}) {
+    my $colour_bar_height = $$self{colour_bar_size};
+    my $colour_bar = $canvas->rect( class=>'colourbar', x=>0, y=>$grip, width=>$$self{sheet_width}, height=>$colour_bar_height, fill=>'url(#processColours)');
+    if ($$self{runstyle} eq 'Work & Tumble') {
+      $colour_bar->setAttributes({x => 0, y => $$self{sheet_height} - $grip*2});
+    } else {
+      # We've decreased the availible space.
+      $canvas = $canvas->g(transform => "translate(0, $colour_bar_height)");
+    }
+  }
+
+  my $x = ($self->sheet_width() - 2*$$self{gutter} - $self->layout_width()) / 2;
+  $x = 0 if $x < 0;
+  my $y = ($self->sheet_height() - $self->layout_height()) / 2;
+  $y = 0 if $y < 0;
+
+# Centre the imposition on the printable page area.
+  my $group = $canvas->group(transform => "translate($x, $y)");
+  if ($$self{runstyle} eq 'Work & Turn') {
+    my $half = $self->copy();
+    $half->columns($$half{columns}/2);
+    $half->dutch_columns($$half{dutch_columns}/2);
+    add_imposition($group, $half);
+# just grab the first half of the image in a new viewport and mirror.
+    my $dim = $self->layout_width() / 2;
+
+    $group = $group->g(transform=>'translate('.$dim.', 0)');
+        #width  => $dim,
+        #height => $self->layout_height(),
+        #overflow => 'hidden',
+        #x => $self->layout_width(),
+        #y => 0,
+        ##transform => "translate($dim, 0) scale(-1,1)",
+        ##transform => "rotate(180 ".($dim/2).' '.($self->layout_height()/2).')',
+        #);
+    my $impo = add_imposition($group, $half);
+    $impo->setAttributes({transform=>'rotate(180 '.($dim/2).' '.($self->layout_height()/2).')'});
+
+    # Draw a vertical centre line (y-axis).
+    my $centre = $self->sheet_width() / 2 - $$self{gutter};
+    $canvas->line( id => 'centreline', x1 => $centre,   x2 => $centre, y1 => - 2, y2 => $self->sheet_height() + 2);
+
+  } elsif ($$self{runstyle} eq 'Work & Tumble') {
+# just grab the first half of the image in a new viewport and mirror.
+    my $half = $self->copy();
+    $half->rows($$half{rows}/2);
+    $half->dutch_rows($$half{dutch_rows}/2);
+    add_imposition($group, $half);
+
+    my $mirror = $group->g(
+        #width  => $self->layout_width(),
+        #height => $dim,
+        #overflow => 'hidden',
+        #x => 0,
+        #y => $dim,
+  #transform => "translate(0, $dim) scale(1,-1)"
+        #transform=>'translate(0, '.($self->layout_height()/2).')',
+        );
+    my $impo = add_imposition($mirror, $half);
+    $impo->setAttributes({transform=>'rotate(180 '.($self->layout_width()/2).' '.($self->layout_height()/2).')'});
+# Draw a horizontal centre line (x-axis).
+    my $centre = $self->sheet_height() / 2;
+    $canvas->line(
+        id => 'centreline',
+        x1 => - 4, x2 => $self->sheet_width() + 4,
+        y1 => $centre,   y2 => $centre,
+        );
+
+  } else {
+    add_imposition($group, $self);
+  }
+
+  return $sheet;
+} # end sub add_sheet
+
+sub id_string {
+  my $self = shift;
+  my $stock = $self->Paper();
+  return sprintf('%s%dx%dd%dx%don%dx%d', $self->rs(), @$self{'columns','rows','dutch_columns','dutch_rows'}, @$stock{'width','height'});
+}
+sub add_imposition {
+  my ($define, $self) = @_;
+
+  $openprint::log->error($self->to_string());
+  my $canvas = $define->group();
+
+  my $image_width = ($$self{image_orientation} == Vertical ? $$self{image_width} : $$self{image_height});
+  my $image_height = ($$self{image_orientation} == Vertical ? $$self{image_height} : $$self{image_width});
+  my $object_width = ($$self{image_orientation} == Vertical ? $$self{image_width} : $$self{image_height});
+  my $object_height = ($$self{image_orientation} == Vertical ? $$self{image_height} : $$self{image_width});
+  #my $object_width = ($$self{image_orientation} == Vertical ? $$self{object_width} : $$self{object_height});
+  #my $object_height = ($$self{image_orientation} == Vertical ? $$self{object_height} : $$self{object_width});
 	foreach my $column ( 1 .. $$self{columns} ) {
 		foreach my $row ( 1 .. $$self{rows} ) {
-			my $image_x = $sheet_x + int(($column-1)*$image_width) + ($column*2);
-			my $image_y = $sheet_y + int(($row-1)*$image_height) + ($row*2);
-			$svg .= qq`<rect class="image" x="$image_x" y="$image_y" width="$image_width" height="$image_height" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>`;
-
+			my $image_x = (($column-1)*$image_width) + $$self{gutter};# + ($column*2);
+			my $image_y = (($row-1)*$image_height);# + ($row*2);
+			my $object = $canvas->rect(class=>'image', x=>$image_x, y=>$image_y,
+          width=>$object_width, height=>$object_height,
+          fill=>'rgb(255,255,255)');
 			if ( $self->page_columns() > 1 ) {
-$openprint::log->debug("Adding page_columns");
-				my $page_width = int( $image_width / $self->page_columns() );
-				my $page_height = int( $image_height / $self->page_rows() );
-					my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) ? 'red' : 'black';
+				my $page_width = $object_width / $self->page_columns();
+				my $page_height = $object_height / $self->page_rows();
+        my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) ? 'red' : 'black';
 
-				#if ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) {
 				foreach my $page_column ( 2 .. $self->page_columns() ) {
 					my $page_x1 = $image_x + ($page_column-1)*$page_width;
 					my $page_x2 = $image_x + ($page_column-1)*$page_width;
 
 					my $page_y1 = $image_y;
-# + $page_height;
 					my $page_y2 = $image_y + ($page_height * $self->page_rows());
 
 # This is the linees between pages, One of these will be the spine.
-					$svg .= qq`<line x1="$page_x1" y1="$page_y1" x2="$page_x2" y2="$page_y2" stroke="$colour" stroke-dasharray="5,5"/>`;
-				}
-			} 
+					$canvas->line(x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour, class=>'foldline');
+				} # end foreach page column
+			} # draw pages
 
 	  	if ( $self->page_rows() > 1 ) {
 				my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Horizontal ) ? 'red' : 'black';
-				my $page_width = int( $image_width / $self->page_columns() );
-				my $page_height = int( $image_height / $self->page_rows() );
+				my $page_width = $image_width / $self->page_columns();
+				my $page_height = $image_height / $self->page_rows();
 				foreach my $page_row ( 2 .. $self->page_rows() ) {
 					my $page_x1 = $image_x;
 					my $page_x2 = $image_x + ($page_width * $self->page_columns);
 
 					my $page_y1 = $image_y + ($page_row-1)*$page_height;
 					my $page_y2 = $image_y + ($page_row-1)*$page_height;
-					$svg .= qq`<line x1="$page_x1" y1="$page_y1" x2="$page_x2" y2="$page_y2" stroke="$colour" stroke-dasharray="5,5"/>`;
+					$canvas->line(x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour, class=>'foldline');
 				}
 			}
 			
 		} # end foreach row
 	} # end foreach column
-	$svg .= '</svg>';
-	return $svg;
+
+  if ($$self{dutch_columns}) {
+    my $sheet_x = 0;
+    my $sheet_y = 0;
+    if ($$self{sheet_width} - ($$self{columns} * $image_width) > $image_height*$$self{dutch_columns}) {
+      # can fit beside
+      $sheet_x += ($$self{columns} * $image_width);
+    } else {
+      $sheet_y += ($$self{rows} * $image_height);
+    }
+    my $image_width = ($$self{image_orientation} == Vertical ? $$self{image_height} : $$self{image_width});
+    my $image_height = ($$self{image_orientation} == Vertical ? $$self{image_width} : $$self{image_height});
+    my $object_width = ($$self{image_orientation} == Vertical ? $$self{object_height} : $$self{object_width});
+    my $object_height = ($$self{image_orientation} == Vertical ? $$self{object_width} : $$self{object_height});
+    foreach my $column ( 1 .. $$self{dutch_columns} ) {
+      foreach my $row ( 1 .. $$self{dutch_rows} ) {
+        my $image_x = $sheet_x + (($column-1)*$image_width);# + ($column*2);
+        my $image_y = $sheet_y + (($row-1)*$image_height);# + ($row*2);
+        $canvas->rect( class=>'image', x=>$image_x, y=>$image_y,
+            width=>$object_width, height=>$object_height,
+            fill=>'rgb(255,255,255);');
+
+        if ( $self->page_columns() > 1 ) {
+          my $page_width = $object_width / $self->page_columns();
+          my $page_height = $object_height / $self->page_rows();
+          my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) ? 'red' : 'black';
+
+          foreach my $page_column ( 2 .. $self->page_columns() ) {
+            my $page_x1 = $image_x + ($page_column-1)*$page_width;
+            my $page_x2 = $image_x + ($page_column-1)*$page_width;
+
+            my $page_y1 = $image_y;
+  # + $page_height;
+            my $page_y2 = $image_y + ($page_height * $self->page_rows());
+
+  # This is the linees between pages, One of these will be the spine.
+            $canvas->line(class=>'foldline', x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour);
+          }
+        }
+
+        if ( $self->page_rows() > 1 ) {
+          my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Horizontal ) ? 'red' : 'black';
+          my $page_width = $object_width / $self->page_columns();
+          my $page_height = $object_height / $self->page_rows();
+          foreach my $page_row ( 2 .. $self->page_rows() ) {
+            my $page_x1 = $image_x;
+            my $page_x2 = $image_x + ($page_width * $self->page_columns);
+
+            my $page_y1 = $image_y + ($page_row-1)*$page_height;
+            my $page_y2 = $image_y + ($page_row-1)*$page_height;
+            $canvas->line(class=>'foldline', x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour);
+          }
+        }
+
+      } # end foreach row
+    } # end foreach column
+  } # end if has dutch
+  return $canvas;
+} # end add_imposition
+
+# Add a drop shadow filter effect to the document.
+sub add_drop_shadow_define {
+  my ($define) = @_;
+
+  my $filter = $define->filter(id => 'dropShadow', x => 0, y => 0);
+
+# Blur the alpha channel.
+  $filter->fe( -type  => 'GaussianBlur', in     => 'SourceAlpha', result => 'blur', stdDeviation=> 0.5,);
+
+# Offset the blur an 1/8" to the bottom-right.
+  $filter->fe( -type  => 'Offset', in     => 'blur', result => 'shadow', dx     => 0.125, dy     => 0.125,);
+
+# Merge the shadow under the original source graphic.
+  my $merge = $filter->fe(-type  => 'Merge');
+  $merge->fe(-type => 'MergeNode', in => 'shadow',);
+  $merge->fe(-type => 'MergeNode', in => 'SourceGraphic',);
+
+  return $filter;
+}
+sub add_colour_bar_define {
+  my ($defines) = @_;
+  my $processColours = $defines->pattern( id=>'processColours', patternUnits=>'userSpaceOnUse', viewbox=>'0 0 1.5 2', x=>0, y=>0, width=>1.5, height=>2);
+
+# Draw a box for each of the process colours.
+  my $width = 0.25;
+  my $offset = $width;
+  for my $colour (qw(cyan yellow magenta black)) {
+    $processColours->rect(width=>$width, y=>0, height=>'100%', x=>$offset, fill=>$colour);
+    $offset += $width;
+  }
+  return $processColours;
+}
+sub add_diagonal_hatch_define {
+  my ($defines) = @_;
+
+  my $pattern = $defines->pattern( id=>'diagonalHatch', patternUnits=>'userSpaceOnUse', width=>4, height=>4);
+  $pattern->path( d=>"M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2", style=>'stroke:black; stroke-width:1');
+  return $pattern;
 }
 
 sub landscape_portrait_square {

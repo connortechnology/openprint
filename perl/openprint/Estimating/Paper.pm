@@ -449,7 +449,7 @@ sub se_quantity_summary {
 #$openprint::log->warn("Stock " . $Paper->to_string() . " QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
 	if ( $$specs{"qty-$stock_id-$qty_index"} ) {
 		if ( $$Paper{type} eq 'Sheet' ) {
-			$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
+			$html .= $$specs{"sheets-$stock_id-$qty_index"}.' sheets ';
 		} # end if
 		if ( $$specs{"qty-$stock_id-$qty_index"} < 10 ) {
       $html .= Number::Format::format_number( Math::Round::nearest(.1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';

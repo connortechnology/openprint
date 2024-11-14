@@ -80,7 +80,7 @@
 				<label>Service Type</label>
 				<select id="servicetype_id" name="servicetype_id">
 					<option value="">All/Unspecified</option>
-					<? echo ( make_drop_down( openprint::ServiceType->dropdown(order=>'lower(name)'), $$variable{Service}->servicetype_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::ServiceType->dropdown(order=>'lower(description)'), $$variable{Service}->servicetype_id() ); ) ?>
 				</select>
 			</li>
 			<li> 

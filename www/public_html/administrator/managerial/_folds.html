@@ -43,6 +43,7 @@
 			<th class="MinMaxImposition" data-field="MinMaxImposition" data-sortable="true">Min/Max Imposition</th>
 			<th class="MinMaxWidth" data-sortable="true">Min/Max Width</th>
 			<th class="MinMaxHeight" data-sortable="true">Min/Max Height</th>
+			<th class="MinMaxCalliper" data-sortable="true">Min/Max Calliper</th>
 			<th class="MRMinutes" data-sortable="true">MR Minutes</th>
 			<th class="Speed" data-sortable="true">Speed</th>
 		</tr>
@@ -56,22 +57,23 @@
 		$html .= sprintf(q`
 <tr%1$s> 
   <td class="checkbox"><input type="checkbox" name="fold_id" value="%2$d"/></td>
-	<td class="Equipment" onclick="popup_fold(%2$d);">%3$s</td>
-	<td class="Fold" onclick="popup_fold(%2$d);">%4$s</td>
-	<td class="Type" onclick="popup_fold(%2$d);">%5$s</td>
-  <td class="Orientation" onclick="popup_fold(%2$d);">%6$s</td>
+  <td class="Equipment">%3$s</td>
+	<td class="Fold">%4$s</td>
+	<td class="Type">%5$s</td>
+  <td class="Orientation">%6$s</td>
 	<td class="Pages" onclick="popup_fold(%2$d);">%7$s</td>
 	<td class="Folds">%8$s</td>
 	<td class="Angles">%9$s</td>
 	<td class="MinMaxImposition">%10$s / %11$s</td>
 	<td class="MinMaxWidth">%12$s / %13$s</td>
 	<td class="MinMaxHeight">%14$s / %15$s</td>
-	<td class="MRTime">%16$d</td>
-	<td class="Speed">%17$s</td>
+	<td class="MinMaxCalliper">%16$s / %17$s</td>
+	<td class="MRTime">%18$d</td>
+	<td class="Speed">%19$s</td>
 </tr>
-`, $rowclass, $$Fold{id}, $Fold->Equipment()->name(), $$Fold{name}, 
-$Fold->type(), 
-$Fold->orientation(),
+`, $rowclass, $$Fold{id}, $Fold->link_to($Fold->Equipment()->name()), $Fold->link_to($$Fold{name}),
+$Fold->link_to($Fold->type()),
+$Fold->link_to($Fold->orientation()),
 ($Fold->page_columns() ? $Fold->page_columns().'x'.$Fold->page_rows().'='.$Fold->pages() : $Fold->pages()),
 $Fold->folds(), $Fold->angles(),
 join(' ',
@@ -90,6 +92,7 @@ join(' ',
 ),
 $Fold->min_width(), $Fold->max_width(),
 $Fold->min_height(), $Fold->max_height(),
+$Fold->min_calliper(), $Fold->max_calliper(),
 $Fold->makeready_time(),
 join( '<br/>', map { join(' to ',
   ($_->min() ? $_->min() : ()),

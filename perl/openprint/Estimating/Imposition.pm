@@ -105,9 +105,18 @@ sub signature_calc {
 			if ( $ImpositionMakeReady{units} eq 'per form' ) {
 #$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
 				%ImpositionMakeReady = $SigMRService->get_price( $previous_forms, $Press );
-				$ImpositionMakeReady{Total} = $ImpositionMakeReady{Price} * $previous_forms;
+				$ImpositionMakeReady{Total} = $ImpositionMakeReady{Price}; # * $previous_forms;
 			} elsif ( $ImpositionMakeReady{units} eq 'per side' ) {
 				$ImpositionMakeReady{Total} = $ImpositionMakeReady{Price} * $Imposition->sides();
+			} elsif ( $ImpositionMakeReady{units} eq 'per job' ) {
+        my @signatures = $Project->signatures( { sort=>1 } );
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[0] );
+        my $specs = $Imposition->specs();
+        if ($$specs{SignatureIndex} == $$sig_specs{SignatureIndex}) {
+          $ImpositionMakeReady{Total} = $ImpositionMakeReady{Price};
+        } else {
+          $ImpositionMakeReady{Total} = 0;
+        }
 			} else {
 $openprint::log->error('Unknown units on ImpositionMakeready');
 			} # end if
@@ -141,11 +150,11 @@ $openprint::log->error('Unknown units on ImpositionMakeready');
 				$price{Total} += $ImpositionCharge{Price} * $$Imposition{imposition};
 			} # end if
 		} # end if
-$openprint::log->debug("MakeReady is $ImpositionCharge{Price} $ImpositionCharge{units} $ImpositionCharge{Total}") if DEBUG;
-	} elsif ( DEBUG ) {
-$openprint::log->debug('NO MR service');
-	} # end if SErviceService
-	$price{Price} = \%ImpositionCharge;
+    $openprint::log->debug("MakeReady is $ImpositionCharge{Price} $ImpositionCharge{units} $ImpositionCharge{Total}") if DEBUG;
+  } elsif ( DEBUG ) {
+    $openprint::log->debug('NO MR service');
+  } # end if SErviceService
+  $price{Price} = \%ImpositionCharge;
 
 	my %SteppingCharge;
 	if ( $SteppingService ) {

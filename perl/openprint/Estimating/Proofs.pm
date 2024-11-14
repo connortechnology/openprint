@@ -805,7 +805,7 @@ sub breakupsummary {
 						my $desc = sprintf('<td align="left">%s&quot;x%s&quot;</td><td align="left">%s', @$specs{
 								"txtProofWidth-$form-$proof_index-$qty_index",
 								"txtProofHeight-$form-$proof_index-$qty_index"}, $Service->description() );
-						my $qty      = $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
+						my $qty = $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"} // 0;
 						if ( $qty != 0 ) {
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
 							my $Uprice   = $$specs{"txtProofUnitPrice-$form-$proof_index-$qty_index"};
@@ -815,7 +815,7 @@ sub breakupsummary {
 							} # end if
 							$proof_tot{$type}{Quantity} += $qty;
 							my %MkReady  = openprint::service::get_price_object( $type.'MakeReady', $proof_tot{$type}{Quantity}, undef );
-							$Totprice{$desc} += ($Uprice*$qty) + $MkReady{Price};
+							$Totprice{$desc} += ($Uprice*$qty) + ($MkReady{Price}//0);
 						} # end if
 					} # end if
 				} # end if

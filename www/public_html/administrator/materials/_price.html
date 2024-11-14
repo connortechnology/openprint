@@ -13,15 +13,18 @@
 
   my $Configuration;
   if ($Material->servicetype_id()) {
-    my $module = 'openprint::Estimating::'.$Material->ServiceType()->type();
-    eval ( 'require '.$module.';' );
-    $log->error("eval error $@") if $@;
-    $log->debug("Has servicetype for $module");
+    foreach my $service_type ($Material->ServiceTypes()) {
+      my $module = 'openprint::Estimating::'.$service_type->type();
+      eval ( 'require '.$module.';' );
+      $log->error("eval error $@") if $@;
+      $log->debug("Has servicetype for $module");
 
-    if (my $function = $module->can('MaterialPriceConfiguration')) {
-      $log->debug("Has function for $module");
-      $Configuration = $function->($$Material{name});
-  $openprint::log->debug( Data::Dumper::Dumper($Configuration));
+      if (my $function = $module->can('MaterialPriceConfiguration')) {
+        $log->debug("Has function for $module");
+        $Configuration = $function->($$Material{name});
+    $openprint::log->debug( Data::Dumper::Dumper($Configuration));
+        last if $Configuration;
+      }
     }
   }
   $openprint::log->debug( Data::Dumper::Dumper($Configuration));

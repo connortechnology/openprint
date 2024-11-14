@@ -608,12 +608,12 @@ sub button {
 ' : '</a>
 ';
   if ( $$options{onclick} ) {
-    $html .= '<script nonce="'.$config{CSP_NONCE}.qq`">
+    $html .= '<script'.($config{CSP_NONCE}?' nonce="'.$config{CSP_NONCE}.'"':'').">
     document.getElementById('Button$name').onclick = function(){
     $$options{onclick};
     };
     </script>
-    `;
+    ";
     delete $$options{onclick};
   } # end if
 
@@ -735,8 +735,8 @@ sub date_select {
 	$class .= 'C' if $$options{with_clear};
 	$class .= 'T' if $$options{with_today};
 
-	my $html = '<span class="'.$class.'">';
-	$html .= sprintf('<span id="%1$s_date">', $prefix );
+	my $html = '<span class="'.$class.'" id="'.$prefix.'_date">
+';
 	foreach my $o ( split(',', $$options{order}) ) {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{onchange} );
@@ -770,8 +770,8 @@ sub date_select {
 				text=>'T', title=>'Today', class=>'Today',
 				} );
 	} # end if
-	$html .= '<span id="'.$prefix.'_alert"></span>';
-	$html .= '</span></span>';
+	$html .= '<span id="'.$prefix.'_alert"></span>
+</span>';
 	return $html;
 } # end sub date_select
 
@@ -901,7 +901,9 @@ sub boolean_override {
 sub write_override {
 	my ( $for, $value, $locked_js, $unlocked_js ) = @_;
 	if ( 1 ) {
-		return sprintf(q`<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/><img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt="" title="Click to override"/>`, 
+		return sprintf(q`
+      <input type="hidden" id="%1$s" name="%1$s" value="%2$s"/>
+      <img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt="" title="Click to override"/>`, 
 				$for,
 				((defined($value) and sets::isin($value, ['Y', '1' ]) ) ? 'Y' : '' ),
 				((defined($value) and sets::isin($value, ['Y', '1' ])) ? 'locked' : 'unlocked'),
@@ -942,7 +944,8 @@ sub radio {
     delete $$options{default};
 	} # end if
 
-	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+  for (my $i = 0; $i < @{$values}; $i += 2) {
+    my ($value, $label) = ( $$values[$i], $$values[$i+1] );
 		$html .= $$container[0] if $container;
 		$html .= sprintf(q`
       <div class="form-check%7$s">
@@ -1473,8 +1476,14 @@ sub bootstrap_navmenu {
               ),'</ul></li>' );
       }
 		} else {
-			$html .= sprintf( q`<li id="%1$sMenu" class="nav-item %3$s"><a href="%3$s">%2$s</a></li>`, $category_id, $category, $$menu{$category} );
-		}
+      my $url = $$menu{$category};
+      my $Page_Setting = openprint::Page_Setting::get( $url );
+      if ($Page_Setting->can_view()) {
+        $html .= sprintf( q`<li id="%1$sMenu" class="nav-item %3$s"><a href="%3$s">%2$s</a></li>`, $category_id, $category, $url);
+      } else {
+        $log->debug("Not permitted to view $url");
+      }
+    }
 	} # end foreach category
   #$log->error($html);
 	return $html;

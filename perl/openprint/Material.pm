@@ -37,6 +37,7 @@ $serial = 'materials_id_seq';
 %find_fields = (
     category    =>  '(SELECT name FROM Material_Categories WHERE id=category_id)',
     equipment_id  =>  '(SELECT lngequipmentindex FROM tbl_material_prices WHERE lngmaterialindex=materials.id)',
+    servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
 );
 
 %transforms = (
@@ -80,7 +81,9 @@ sub Prices {
   my $self = shift;
   $$self{Prices} = shift if @_;
   if (!$$self{Prices}) {
-    $$self{Prices} = [ openprint::MaterialPrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST', material_id=>$$self{id}) ];
+    $$self{Prices} = [ openprint::MaterialPrice->find(
+#'period_end is null'=>1,
+        order=>'lngmin NULLS FIRST, lngmax NULLS FIRST', material_id=>$$self{id}) ];
   }
   return @{$$self{Prices}} if wantarray;
   return $$self{Prices};
@@ -297,13 +300,23 @@ sub supplier {
   return $_[0]{supplier};
 }
 
-sub ServiceType {
+sub servicetype_id {
   my $self = shift;
-  if ( !exists $$self{ServiceType} ) {
-    $$self{ServiceType} = new openprint::ServiceType($$self{servicetype_id});
+  if (@_) {
+    if (ref($_[0]) eq 'ARRAY') {
+      $$self{servicetype_id} = shift;
+    } else {
+      $$self{servicetype_id} = [shift];
+    }
   }
-  return $$self{ServiceType};
-}
+  return [] if ! $$self{servicetype_id};
+  return $$self{servicetype_id};
+} # end sub servicetype_id
+
+sub ServiceTypes {
+  return () if ! $_[0]{servicetype_id};
+  return map { new openprint::ServiceType( $_ ); } @{$_[0]{servicetype_id}};
+} # end sub ServiceTypes
 
 1;
 __END__

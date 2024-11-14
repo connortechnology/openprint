@@ -10,7 +10,6 @@ require openprint;
 require sql;
 require openprint::Object;
 require openprint::User;
-  require openprint::Quote;
 
 $debug = 0;
 $default_sort = 'lower(name)';
@@ -158,9 +157,12 @@ sub destroy {
 		$Paper->destroy();
 	} # end foreach
 
-	foreach my $Quote ( openprint::Quote->find(company_id=>$$self{id}) ) {
-		$Quote->delete();	
-	} # end foreach
+  eval {
+    require openprint::Quote;
+    foreach my $Quote ( openprint::Quote->find(company_id=>$$self{id}) ) {
+      $Quote->delete();	
+    } # end foreach
+  };
 	foreach my $Order ( openprint::Order->find(company_id=>$$self{id}) ) {
 		$Order->delete();	
 	} # end foreach

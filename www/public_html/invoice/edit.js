@@ -67,6 +67,7 @@ function reload_timetracks() {
 				invoice_id: invoice_id,
 			},
 			onComplete: function(transport) {
+        update_event_bindings();
 				update_totals();
 				TableKit.reload();
 			}

@@ -27,7 +27,7 @@ require openprint::Project;
 my %Services;
 
 my %Specifications = (
-	'Maximum Calliper'	=> {},
+	'Maximum (\w+) Calliper'	=> {},
 	'Units Per Hour( \d out)'	=>	{},
 	'Maximum Pieces'	=>	{},
 	'Maximum Finished Width'	=>	{},
@@ -322,10 +322,10 @@ sub signature_calc {
 				my $Fold = $$FI{Fold};
 $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets was: $pockets") if DEBUG;
 				if ( $$FI{imposition} < $imposition ) {
-					$openprint::log->debug("Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out");
+					$openprint::log->debug("Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out") if DEBUG;
 					$imposition = $$FI{imposition};
 				} elsif ( $$FI{imposition} % 2 ) {
-					$openprint::log->debug("Setting stitching imposition to 1 out because Folding imposition is $$FI{imposition} is odd");
+					$openprint::log->debug("Setting stitching imposition to 1 out because Folding imposition is $$FI{imposition} is odd") if DEBUG;
 					$imposition = 1;
 				}
 				if ( !$$I{Folder} ) {
@@ -970,7 +970,7 @@ sub get_price {
 			cover	=>	$plusCover,
 			);
 
-	my $qty = $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantity'.$qty_index} : $Project->quantity($qty_index);
+	my $qty = ($$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantity'.$qty_index} : $Project->quantity($qty_index)) / $price{Imposition};
   $price{base_quantity} = $qty;
   if ( my $Overs = $Equipment->Specification('Stitching Overs') ) {
     my $overs = 0;
@@ -1182,13 +1182,16 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 			$Services{$service_name} = openprint::Service->find_one(name=>$service_name);
 		}
 		my $Service = $Services{$service_name};
+    $openprint::log->debug("Service? $Service $$Service{name}") if $Service;
 		my $servicePrice = $Service ? $Service->get_Price($qty, $Equipment) : 0;
 		if ( !$servicePrice ) {
 			$Service = $BaseService;
+      $openprint::log->debug("No price, going with $$BaseService{name}");
 			$servicePrice = $Service->get_Price($neededPockets, $Equipment) if $Service;
 		} # end if
 		if ( $servicePrice ) {
 			$pass{ServicePrice} = $servicePrice;
+    $openprint::log->debug("ServicePrice? $$servicePrice{ServiceName} $$servicePrice{units}");
 		} else {
 			$openprint::log->error("No service price for $$Service{name}");
 		}

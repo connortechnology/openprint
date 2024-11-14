@@ -28,22 +28,19 @@
 			input( type=>'float', name=>'txtDieHeight-'.$$variable{SignatureIndex}, value=>$$variable{txtDieHeight}, oninput=>'calc(this.form.name);', placeholder=>'height' ),
 			write_override( 'chkOverrideDimensions-'.$$variable{SignatureIndex}, $$variable{'chkOverrideDimensions-'.$$variable{SignatureIndex}}, '', q`calc('f1');` ),
 		); ) ?>
-	</li>
 		<? echo ( input( type=>'float', name=>'txtSteelRuleLength-'.$$variable{SignatureIndex}, value=>$$variable{'txtSteelRuleLength-'.$$variable{SignatureIndex}}, oninput=>'calc(this.form.name);' ); ) ?>
 		Linear Inches
 	</li>
-<!--
-	<li><label>Quantity of Die Rule Bends</label>
-		<input name="txtDieCutBends" size="9" value="<?txtDieCutBends?>"  onkeyup="calc(this.form.name);" />
-		<label>How many bends are included in your die cut image. (ie. Circles - 4 Bends, Half Moon - 2 Bends, Five Point Star Burst - 10 bends.)</lbael>
+	<li class="DieRuleBends"><label>Die Rule Bends</label>
+		<?echo( input( name=>'txtDieCutBends-'.$$variable{SignatureIndex}, value=>$$variable{'txtDieCutBends-'.$$variable{SignatureIndex}}, oninput=>'calc(this.form.name);'); )?>
+		How many bends are included in your die cut image. (ie. Circles - 4 Bends, Half Moon - 2 Bends, Five Point Star Burst - 10 bends.)
 	</li>
-	<li><label>Quantity of Die Cut Punches</label>
-		<input name="txtDieCutPunches" size="9" value="<?txtDieCutPunches?>"  onkeyup="calc(this.form.name);" />
-		<label>Does your die cut image require any die cut areas smaller 
+	<li class="DieCutPunches"><label>Die Cut Punches</label>
+		<?echo( input( name=>'txtDieCutPunches-'.$$variable{SignatureIndex}, value=>$$variable{'txtDieCutPunches-'.$$variable{SignatureIndex}}, oninput=>'calc(this.form.name);'); )?>
+		Does your die cut image require any die cut areas smaller 
 			than 1&quot; in diameter? If yes, please specify how many areas need to 
-			be die cut punched to a diameter of 1&quot; or less.</label>
+			be die cut punched to a diameter of 1&quot; or less.
 	</li>
--->
 </ul>
 <ul>
 <li><label># of holes to clear</label>

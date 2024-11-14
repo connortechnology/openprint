@@ -57,6 +57,7 @@
 			) ?>
 <? if ( @{$$variable{Contents}} == 1 ) ?>
 			<div id="ShippingInformation">
+        <fieldset><legend>Shipping Information</legend>
 				<? echo (
 					# If there is only 1 thing in the order, then we can condense
 					$$variable{Project} = $$variable{Contents}[0]->Project();
@@ -70,6 +71,7 @@
 					$html .= include( '/main/order/_shipping_type_select.html' );
 					return $html;
 				) ?>
+        </fieldset>
 			</div><!--Shipping-->
 <? endif ( @{$$variable{Contents}} == 1 ) ?>
 		</div><!--Header-->
@@ -83,10 +85,13 @@
 						my $html;
 						foreach my $Project ( @{$$variable{Projects}} ) {
 							$$variable{Project} = $Project;
-							$html .= '<div class="Project"><h3 class="project_id">'.$Project->link_to('Project '.$Project->id() ).'</h3><p class="buttons">';
+							$html .= '<div class="Project">
+<div class="controls">
+<!--<h3 class="project_id">'.$Project->link_to('Project '.$Project->id() ).'</h3>-->
+<p class="buttons">';
 							$html .= button( 'Edit'.$$Project{id}, { href=>$Project->url_to(), text=>'Edit', class=>'EditButton' } );
 							$html .= button( 'Remove'.$$Project{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;project_id=$$Project{id}", text=>'Remove', class=>'RemoveButton' } );
-							$html .= '</p><br class="spacer"/>';
+							$html .= '</p><br class="spacer"/></div>';
 							$html .= include( '/main/order/_project_information.html' );
 							$html .= '</div>';
 						} # end foreach

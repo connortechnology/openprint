@@ -174,7 +174,7 @@ sub Fold {
 	}
 
   if (!($$self{Folds}{$$params{type}} and @{$$self{Folds}{$$params{type}}})) {
-    $openprint::log->debug("No folds for type $$params{type}");
+    $openprint::log->debug("No folds for type $$params{type} on $$self{strid}");
   }
 	foreach my $Fold ( $$params{type} ? @{$$self{Folds}{$$params{type}}} : map { @{$$self{Folds}{$_}} } keys %{$$self{Folds}} ) {
 
@@ -345,7 +345,7 @@ sub Fold {
 #$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
 			} # end if
 		} # end if
-$openprint::log->debug("Got fold" . $Fold->to_string()) if DEBUG_FOLDING;
+$openprint::log->debug('Got fold' . $Fold->to_string()) if DEBUG_FOLDING;
 		return $Fold;
 #$openprint::log->debug("NEVER Got fold" . $Fold->description()) if $debug;
 	} # end foreach Fold
@@ -354,7 +354,7 @@ $openprint::log->debug("Got fold" . $Fold->to_string()) if DEBUG_FOLDING;
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'strname, dblmin NULLS FIRST', @_ );
+	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'sorting NULLS FIRST,strname, dblmin NULLS FIRST', @_ );
 } # end sub Specifications
 
 sub specification {
