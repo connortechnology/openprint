@@ -594,7 +594,6 @@ input.changed:focus {
 input[type="text"].filter, 
 .Service input[type="text"].filter,
 fieldset p input.filter {
-  line-height: 1.7;
 	width: 40px;
 }
 
