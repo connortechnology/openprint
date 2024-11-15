@@ -249,7 +249,7 @@ sub calc_price {
 	my $impressions = ceil( ( $$specs{"txtQuantity$qty_index"} / $$Signature_Imposition{imposition} ) ) * $Imposition->quantity();
 	if (my $Overs = $Equipment->Specification('DieCutting Overs')) {
 		my $overs;
-		if ( $$Overs{units} eq 'percent' ) {
+		if ( lc $$Overs{units} eq 'percent' ) {
 			$overs = int( $impressions * ($$Overs{value}/100) );
 		} elsif ( $$Overs{units} eq 'sheets' ) {
 			$overs = int( $$Overs{value} );
@@ -488,7 +488,8 @@ sub calc {
 					} # end if
           if ($$Price{ServicePrice}{Service}) {
             if ( $$Price{ServicePrice}{units} eq 'per hour' ) {
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d impressions/%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{Runspeed}{value} );
+            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d impressions (includes %6d overs) /%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>',
+              @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{Runspeed}{value}, $$Price{Overs} );
             } else {
               $$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions} );
             } # en dif
@@ -602,7 +603,7 @@ sub signature_calc {
 	my @Sets_of_Impositions;
 
 	if ( (defined $$specs{"OverrideImposition-$form-$qty_index"}) and ( $$specs{"OverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
-		$openprint::log->debug("Overriding impositions");
+		$openprint::log->debug("Overriding impositions") if DEBUG;
 
 		my @override_impos;
 		foreach my $index ( 1 .. 4 ) {
@@ -647,7 +648,7 @@ sub signature_calc {
 				my $width = $imposition->layout_width();
 				my $height = $imposition->layout_height();
 				if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{txtSpecificStockCalliper} ) ) {
-					if ( 1 == @equipment ) {
+					if ( 1 == @equipment and $$specs{"OverrideImposition-$form-$qty_index"}) {
 						$results{breakdown} .= "Doesn't fit. $_<br/>";
 					} # end if
 					if ( ( $$imposition{imposition} > 1 ) and ! $$specs{"OverrideImposition-$form-$qty_index"} ) {
