@@ -488,7 +488,7 @@ sub calc {
 					} # end if
           if ($$Price{ServicePrice}{Service}) {
             if ( $$Price{ServicePrice}{units} eq 'per hour' ) {
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d impressions (includes %6d overs) /%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>',
+            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d impressions (includes %6$d overs) /%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>',
               @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{Runspeed}{value}, $$Price{Overs} );
             } else {
               $$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions} );
