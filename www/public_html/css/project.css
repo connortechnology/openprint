@@ -175,6 +175,14 @@ margin-bottom: 5px;
 	width: 260px;
 	text-align: right;
 }
+@media (max-width: 1024px) {
+  /*
+   * and (orientation:portrait) {
+   * */
+  .Project .View table .price {
+    width: 160px;
+  }
+}
 .Project .View table .price .price {
 }
 .Project table td.description {
