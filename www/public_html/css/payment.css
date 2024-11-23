@@ -9,9 +9,6 @@ table .Method {
 table .TransactionID {
 	width: 95px;
 }
-table .buttons {
-	width: 20px;
-}
 table .From {
 	text-align: left;
 }

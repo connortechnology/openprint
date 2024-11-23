@@ -139,7 +139,7 @@
 		</li>
 		<li class="run_overs">
 			<label>Run Overs</label>
-			<? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-run_overs', name=>'run_overs', value=>$$variable{Fold}->run_overs()); ) ?>
+      <? echo ( input( type=>'number',min=>0, step=>'any', id=>'fold-'.$$variable{Fold}->id().'-run_overs', name=>'run_overs', value=>$$variable{Fold}->run_overs()); ) ?>
 			<select id="fold-<? echo ( $$variable{Fold}->id() ) ?>-run_overs_units" name="run_overs_units">
 				<option value="Sheets" <? echo ( $$variable{Fold}->run_overs_units() eq 'Sheets' ? 'selected="selected"' : '' ) ?>>Sheets</option>
 				<option value="Percent" <? echo ( $$variable{Fold}->run_overs_units() eq 'Percent' ? 'selected="selected"' : '' ) ?>>Percent</option>

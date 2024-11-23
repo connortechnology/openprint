@@ -26,8 +26,10 @@
 			my ( $total_total, $owing_total ) = ( 0, 0 );
 			foreach my $I ( @Invoices ) {
         my $Currency = $I->Currency();
-				my $total = $Currency->convert_from( $I->total(), $$variable{Payment}->Currency() );
-        my $owing = $Currency->convert_from( ($I->is_early() ? $I->owing_early() : $I->owing()), $$variable{Payment}->Currency() );
+				my $total = $I->total();
+				#my $total = $Currency->convert_from( $I->total(), $Currency );
+        my $owing = $Currency->convert_from( ($I->is_early() ? $I->owing_early() : $I->owing()), $Currency );
+        my $owing = ($I->is_early() ? $I->owing_early() : $I->owing());
 				$total_total += $total;
 				$owing_total += $owing;
 		
