@@ -776,10 +776,12 @@ sub summary {
 			my $sig_specs = $Service->specs();
 			my $form = $$sig_specs{SignatureIndex};
 
-			if ( (defined $$specs{'rdbSuppliedDie-'.$form} ) and ( $$specs{'rdbSuppliedDie-'.$form} eq 'Y' ) ) {
-				$summary .= 'Customer supplies die' . ( @signatures > 1 ? ' for form '.$form : '' ).'<br/>';
-			} else {
-				$summary .= $Owner->name() . ' supplies die'.( @signatures > 1 ? ' for form '.$form : '' ).'<br/>';
+      if ($$specs{'Needed-'.$form} eq 'Y') {
+        if ( (defined $$specs{'rdbSuppliedDie-'.$form} ) and ( $$specs{'rdbSuppliedDie-'.$form} eq 'Y' ) ) {
+          $summary .= 'Customer supplies die' . ( @signatures > 1 ? ' for form '.$form : '' ).'<br/>';
+        } else {
+          $summary .= $Owner->name() . ' supplies die'.( @signatures > 1 ? ' for form '.$form : '' ).'<br/>';
+        } # end if
 			} # end if
 		} # end foreach
 		return $summary;
