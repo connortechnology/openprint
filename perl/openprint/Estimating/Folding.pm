@@ -985,7 +985,21 @@ $openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"
 				next;
 			} # end if
 		} elsif ( $capable eq 'For Pocket Folders' ) {
-			next if $Project->Type()->name() ne 'PresentationFolders';
+      my $is_pocket_folder = $Project->Type()->name() eq 'PresentationFolders' ? 1 : 0;
+      if (!$is_pocket_folder) {
+        foreach my $sig_id ($Project->signatures()) {
+          my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+          $openprint::log->debug("Template type for $sig_id ".$$sig_specs{rdbTemplateType});
+          if ($$sig_specs{rdbTemplateType} and sets::isin($$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'])) {
+            $is_pocket_folder = 1;
+            last;
+          }
+        } # end foreach sig
+      }
+			if (!$is_pocket_folder) {
+        $openprint::log->debug("Not doing pocket folders") if DEBUG;
+        next;
+      }
 		} elsif ( $capable eq 'When Binding' ) {
 			if ( ! ( $$calc_hash{HasStitching} or $$calc_hash{HasPerfectBound} ) ) {
 				$Breakdown .= 'Not binding:<br/>';
