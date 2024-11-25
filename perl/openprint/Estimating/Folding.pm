@@ -2011,9 +2011,22 @@ sub load_equipment {
 	my ( $Project ) = @_;
 	my $services = $Project->services();
 
-	my $Service = $Project->Service( $$services{Folding}[0] ) if $$services{Folding};
-my @folding_capable;
-	push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
+  my $Service = $Project->Service( $$services{Folding}[0] ) if $$services{Folding};
+  my @folding_capable;
+  if ($Project->Type()->name() eq 'PresentationFolders') {
+    push @folding_capable, 'For Pocket Folders';
+  } else {
+    foreach my $sig_id ($Project->signatures()) {
+      my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+      $openprint::log->debug("Template type for $sig_id ".$$sig_specs{rdbTemplateType});
+      if ($$sig_specs{rdbTemplateType} and sets::isin($$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'])) {
+        push @folding_capable, 'For Pocket Folders';
+        $openprint::log->error("Have pocket folders");
+        last;
+      }
+    } # end foreach sig
+  }
+
 	push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
 	push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
 	push @folding_capable, 'When Printing';
