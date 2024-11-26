@@ -114,7 +114,7 @@ sub run {
       $openprint::log->debug("No ip on ".$hi->to_string());
       next;
     if (!$hi->online()) {
-      $openprint::log->debug('Interface '.($$hi{ip} ? $$hi{ip} : 'no ip').' on '.($$host{hostname?$$host{hostname}:'no hostname').' is not online');
+      $openprint::log->debug('Interface '.($$hi{ip} ? $$hi{ip} : 'no ip').' on '.($$host{hostname}?$$host{hostname}:'no hostname').' is not online');
           next;
     }
       my ($rc, $res) = $self->try_backup($$hi{ip});
