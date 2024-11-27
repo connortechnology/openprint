@@ -1040,6 +1040,10 @@ function clear_date(btn) {
       document.getElementById(prefix+'_hour'),
       document.getElementById(prefix+'_minute')
       );
+  const on_change_this = btn.getAttribute('on_change_this')
+  if (on_change_this) {
+    window[on_change_this]();
+  }
 }
 
 function date_clear( e_y, e_m, e_d, e_h, e_min ) {
@@ -1847,7 +1851,7 @@ function update_event_bindings() {
     //console.log("Setting up onchangefor " + el.name + " to " + fnName);
     el.onchange = window[fnName].bind(el, el);
   });
-  document.querySelectorAll('select[on_change_this]').forEach(function(el) {
+  document.querySelectorAll('select[on_change_this], button[on_change_this]').forEach(function(el) {
     const fnName = el.getAttribute('on_change_this');
     if ( !window[fnName] ) {
       console.error('Nothing found to bind to ' + fnName);
