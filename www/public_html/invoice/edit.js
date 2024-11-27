@@ -61,10 +61,17 @@ function del_timetrack( button ) {
 			}
 		} );
 } // end function del_timetrack(invoice_id)
+
 function reload_timetracks() {
 	new Ajax.Updater( 'Timetracks', '_timetracks.html', {
 			parameters: {
 				invoice_id: invoice_id,
+        timetrack_start_year: $j('#timetrack_start_year').val(),
+        timetrack_start_month: $j('#timetrack_start_month').val(),
+        timetrack_start_day: $j('#timetrack_start_day').val(),
+        timetrack_end_year: $j('#timetrack_end_year').val(),
+        timetrack_end_month: $j('#timetrack_end_month').val(),
+        timetrack_end_day: $j('#timetrack_end_day').val(),
 			},
 			onComplete: function(transport) {
         update_event_bindings();
@@ -73,6 +80,7 @@ function reload_timetracks() {
 			}
 		} );
 } // end function reload_timetracks
+
 function add_order( order_id ) {
 	new Ajax.Updater( 'Orders', '_invoiced_orders.html', {
 			parameters: {
