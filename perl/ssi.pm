@@ -957,7 +957,7 @@ sub radio {
 		$html .= sprintf(q`
       <div class="form-check%7$s">
 				<label class="form-check-label radio%7$s" for="%1$s%6$s%2$s">
-				<input class="form-check-input" type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
+				<input class="form-check-input" type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s %5$s />
 				%3$s</label></div>
 				`, $name, $value, $label, checked($value eq $selected),
 				join(' ', map { $_.'="'.$$options{$_}.'"' } keys %{$options}),

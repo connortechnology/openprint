@@ -198,6 +198,7 @@ sub outputs {
 	'2Panel2Pocket',
 	'2Panel2PocketGusset',
 	'3Panel2Pocket',
+	'TriFoldDoublePocket',
 	'3Panel2PocketGusset',
 	'MapFold',
   'Package21Fold',
@@ -985,7 +986,21 @@ $openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"
 				next;
 			} # end if
 		} elsif ( $capable eq 'For Pocket Folders' ) {
-			next if $Project->Type()->name() ne 'PresentationFolders';
+      my $is_pocket_folder = $Project->Type()->name() eq 'PresentationFolders' ? 1 : 0;
+      if (!$is_pocket_folder) {
+        foreach my $sig_id ($Project->signatures()) {
+          my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+          $openprint::log->debug("Template type for $sig_id ".$$sig_specs{rdbTemplateType});
+          if ($$sig_specs{rdbTemplateType} and sets::isin($$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','3Panel2Pocket','TriFoldDoublePocket'])) {
+            $is_pocket_folder = 1;
+            last;
+          }
+        } # end foreach sig
+      }
+			if (!$is_pocket_folder) {
+        $openprint::log->debug("Not doing pocket folders") if DEBUG;
+        next;
+      }
 		} elsif ( $capable eq 'When Binding' ) {
 			if ( ! ( $$calc_hash{HasStitching} or $$calc_hash{HasPerfectBound} ) ) {
 				$Breakdown .= 'Not binding:<br/>';
@@ -1618,9 +1633,8 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 
 				$openprint::log->debug("Pricing qindex $qty_index runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out	of fold $$Fold{type} on " . $Equipment->name()) if DEBUG;
 
+        $$Fold{makeready_overs_value} = 0;
         if (!$makereadies{$$Equipment{id}}{$$Fold{type}.$imposition}) {
-          my $overs = 0;
-          $$Fold{makeready_overs_value} = 0;
           if ( $$Fold{makeready_overs} ) {
             my $overs = $$Fold{makeready_overs_value} = $$Fold{makeready_overs_units} eq 'Percent' ? POSIX::ceil($run_qty * ( $$Fold{makeready_overs} /100 )) : $$Fold{makeready_overs};
             $Breakdown .= " MR Overs $$Fold{makeready_overs}$$Fold{makeready_overs_units} = $overs";
@@ -2011,9 +2025,22 @@ sub load_equipment {
 	my ( $Project ) = @_;
 	my $services = $Project->services();
 
-	my $Service = $Project->Service( $$services{Folding}[0] ) if $$services{Folding};
-my @folding_capable;
-	push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
+  my $Service = $Project->Service( $$services{Folding}[0] ) if $$services{Folding};
+  my @folding_capable;
+  if ($Project->Type()->name() eq 'PresentationFolders') {
+    push @folding_capable, 'For Pocket Folders';
+  } else {
+    foreach my $sig_id ($Project->signatures()) {
+      my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+      $openprint::log->debug("Template type for $sig_id ".$$sig_specs{rdbTemplateType});
+      if ($$sig_specs{rdbTemplateType} and sets::isin($$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','3Panel2Pocket','TriFoldDoublePocket'])) {
+        push @folding_capable, 'For Pocket Folders';
+        $openprint::log->error("Have pocket folders");
+        last;
+      }
+    } # end foreach sig
+  }
+
 	push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
 	push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
 	push @folding_capable, 'When Printing';

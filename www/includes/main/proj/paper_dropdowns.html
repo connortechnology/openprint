@@ -1,9 +1,9 @@
 <div class="Stock">
+	<fieldset><legend>Stock</legend>
 <? if ( $session{user_type} eq 'A' ) ?>
 	<?echo( button( 'StockList', { onclick=>qq`popup_window('_stock_popup.html', getValues( 'f1', [ 'ProjectIndex', 'ddmStockQuality','ddmStockGroup','ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight' ] ), { width: 1024 } );`, text=>'List Stocks' } ); ) ?>
 <? endif ( $session{user_type} eq 'A' ) ?>
   <?echo( button('clearstock'.$$variable{Signature}, { on_click=>'clear_stock', text=>'Clear Stock' }); ) ?>
-	<fieldset><legend>Stock</legend>
 		<? if ( $$variable{Mode} ne 'Easy' ) ?>
 		<ul>
 		<li>

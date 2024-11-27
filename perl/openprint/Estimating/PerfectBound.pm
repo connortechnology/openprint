@@ -273,11 +273,13 @@ sub signature_calc {
 			$results{Breakdown} .= 'On ' . $$Equipment{name}.'<br/>';
 			if ( ( $_ = $Equipment->specification('PerfectBind Maximum Quantity') ) and ( $_ < $$specs{"txtQuantity$qty_index"} ) ) {
 				$results{Breakdown} .= $$Equipment{name} . ' has a maximum quantity of ' . $_ . '.<br/>';
+        $$specs{alert} .= $$Equipment{name} . ' has a maximum quantity of ' . $_ . '.<br/>' if @equipment == 1;
 				next;
 			} # end if
 			if ( $$services{NoOfflineBindery} ) {
 				if ( $$Press{id} != $$Equipment{id} ) {
 					$results{Breakdown} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
+          $$specs{alert} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>" if @equipment == 1;
 					next;
 				} # end if
 			} # end if
@@ -285,11 +287,17 @@ sub signature_calc {
 			my $max_spine_length = $Equipment->specification('Maximum Spine Length', $imposition );
 			if ( $max_spine_length and ( $$specs{Height} > $max_spine_length ) ) {
 				$results{Breakdown} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{Height}, $max_spine_length );
+        if (@equipment == 1) {
+          $$specs{alert} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{Height}, $max_spine_length );
+        }
 				next;
 			} # end if
 			my $min_spine_length = $Equipment->specification('Minimum Spine Length', $imposition );
 			if ( $min_spine_length and ( $$specs{Height} < $min_spine_length ) ) {
 				$results{Breakdown} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{Height}, $min_spine_length );
+        if (@equipment == 1) {
+          $results{alert} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{Height}, $min_spine_length );
+        }
 				next;
 			} # end if
 			my $sizes = $Equipment->specification('PerfectBindFinalSizes');
@@ -441,7 +449,6 @@ sub calc {
 	if ( $$printing_specs{txtFinalWidth} == $$printing_specs{txtWidth} ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
 	} # end if
-
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
