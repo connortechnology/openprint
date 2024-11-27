@@ -152,13 +152,15 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 <?echo(
   my $Credit = $$variable{Invoice}->Invoicee()->Credit( $$variable{Invoice}{invoicer_id} );
   if ($$Credit{terms}) {
-  my $html = '<li class="terms"><label>Invoice Terms</label>';
-  $html .= 'Net ' . $$Credit{terms}. ' days';
-  if ( $$variable{Invoice}->monthly_interest() > 0 ) {
-   $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
+    my $html = '<li class="terms"><label>Invoice Terms</label>';
+    $html .= 'Net ' . $$Credit{terms}. ' days';
+    if ( $$variable{Invoice}->monthly_interest() > 0 ) {
+     $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
+    }
+    $html .= '</li>';
+    return $html;
   }
-  $html .= '</li>';
-  return $html;
+  return;
 )?>
         </ul>
       </fieldset>
