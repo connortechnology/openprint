@@ -708,23 +708,25 @@ sub display {
 } # end sub display
 
 sub signature_summary {
-    my ( $Project, $service_index, $specs, $qty_index, $s_id, $sig_specs ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
-    $sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
-    my $form = $$sig_specs{SignatureIndex};
-    if ( $qty_index ) {
-		if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
-			return '';
-		} # end if
-        my @folds;
-        my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
-        foreach my $imp_index ( 1 .. 4 ) {
-            next if ! $$specs{"ImpQty-$form-$qty_index-$imp_index"};
-            push @folds, sprintf('%1$d @ %2$dout', @$specs{"ImpQty-$form-$qty_index-$imp_index","ImpOut-$form-$qty_index-$imp_index"},
-					);
-        } # end foreach
-        return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
+  my ( $Project, $service_index, $specs, $qty_index, $s_id, $sig_specs ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
+  $sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
+  my $form = $$sig_specs{SignatureIndex};
+  if ( $qty_index ) {
+    if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
+      return '';
     } # end if
+    if ($$specs{'Needed-'.$form} eq 'Y') {
+      my @folds;
+      my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
+      foreach my $imp_index ( 1 .. 4 ) {
+        next if ! $$specs{"ImpQty-$form-$qty_index-$imp_index"};
+        push @folds, sprintf('%1$d @ %2$dout', @$specs{"ImpQty-$form-$qty_index-$imp_index","ImpOut-$form-$qty_index-$imp_index"},
+        );
+      } # end foreach
+      return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
+    }
+  } # end if
 } # end sub signature_summary
 
 sub summary {
