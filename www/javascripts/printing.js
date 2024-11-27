@@ -689,5 +689,33 @@ function link_sides(e) {
   calc('f1');
 }
 
+function selectCoverTemplate(el) {
+  console.log(el);
+  const matches = el.name.match(/rdbTemplateType(\d)/);
+  let form = '';
+  if (matches.length > 1) form = matches[1];
+  const div=$('PresentationFolderQuestions'+form);
+  if (div){
+    if (el.value.match(/Panel/)) {
+      div.show();
+    } else {
+      div.hide();
+    };
+  }
+  if (el.value.startsWith('2Panel1Pocket')) {
+    $('rdbPanels2'+form).checked = true;
+    $('chkPocketCenter'+form).checked=false;
+  } else if (el.value.startsWith('2Panel2Pocket')) {
+    $('rdbPanels2'+form).checked=true;
+    $('chkPocketCenter'+form).checked=false;
+    $('chkPocketLeft'+form).checked=true;
+    $('chkPocketRight'+form).checked=true;
+  } else if (el.value.startsWith('3Panel2Pocket')) {
+    $('rdbPanels3'+form).checked=true;
+  }
+
+  selectProjectTemplate(el.form.id);
+}
+
 function clear_stock() {
 }
