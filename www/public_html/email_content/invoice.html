@@ -162,7 +162,9 @@ $html .= '
      $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
     }
     $html .= '</li>';
-  return $html;
+    return $html;
+  }
+  return;
 )?>
       </ul>
     </fieldset>
