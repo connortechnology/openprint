@@ -1199,7 +1199,7 @@ $openprint::log->debug("Type: $fold_type for $form-$qty_index-$fi_index ".$$spec
 						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height() );
 						$openprint::log->debug('Trying to fit ' . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' (' . ($rc ? $rc : '' ).')' ) if DEBUG;
 						if ( $rc ) {
-							if ( $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
+							if ((!$$specs{"chkOverrideLimits-$form-$qty_index"}) or ($$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y')) {
 								if ( @my_equipment == 1 ) {
 									$Breakdown .= $Imposition->to_string() . "Doesn't fit: $rc<br/>";
                   $results{Breakdown} .= $Breakdown;
@@ -1234,7 +1234,6 @@ $openprint::log->debug("Type: $fold_type for $form-$qty_index-$fi_index ".$$spec
 
 						if ( ! $Fold ) {
 							if ( (!$$specs{"chkOverrideLimits-$form-$qty_index"} ) or ($$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y') ) {
-$openprint::log->error("No fold and not overriden");
 # Don't do this, because we may be printing a 2x2 8pg fold, but this will allow us to fold a parallel 8pg
 if ( 0 ) {
 							$Fold = $Equipment->Fold({
