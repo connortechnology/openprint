@@ -156,6 +156,7 @@ require openprint::imposition;
 use openprint::Imposition;
 require openprint::Paper;
 require openprint::Estimating::Paper;
+require openprint::Estimating::DieCutting;
 require openprint::Estimating::Folding;
 require openprint::Estimating::Scoring;
 require openprint::Estimating::Perforating;
@@ -729,9 +730,8 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 	$project{Binding} = $Project->get_book_type();
 	if ( !$$services{NoBindery} ) {
 		$project{NeedFolding} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
-		if ( $$services{DieCutting} ) {
-			require openprint::Estimating::DieCutting;
-			$project{NeedDieCutting} = openprint::Estimating::DieCutting::signature_needs( $Project, $project{DieCuttingSpecs}, $specs );
+    $project{NeedDieCutting} = openprint::Estimating::DieCutting::signature_needs( $Project, $project{DieCuttingSpecs}, $specs );
+		if ($project{NeedDieCutting}) {
 #$log->debug("Need DieCutting: $project{NeedDieCutting}");
 			$project{NeedScoring} = 0;
 		} else {
@@ -745,6 +745,7 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 			} # end if
 		} # end if
 	} else {
+		$project{NeedDieCutting} = 0;
 		$project{NeedScoring} = 0;
 		$project{NeedFolding} = 0;
 	} # end if
@@ -752,7 +753,7 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 	openprint::Estimating::Folding::init($Project, \%project) if $project{NeedFolding};
 	$project{NeedUVCoating} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
 	$project{NeedAqueous} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
-	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
+	@$specs{'NeedFolding','NeedScoring','NeedDieCutting'} = @project{'NeedFolding','NeedScoring','NeedDieCutting'};
 
 	# These aer questionable: Should not modify a project in calculation
 	if ( $project{NeedUVCoating} ) {
@@ -2600,7 +2601,7 @@ sub get_overrides {
           } elsif (
             @$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x\s*([\d\.]+)"?\s*$/ ) {
 				} else {
-					$log->error( "Failure to parse ".$$sig_specs{"ddmStockSheetSize$qty_index"});
+					$log->error( "Failure to parse ddmStockSheetSize$qty_index: ".$$sig_specs{"ddmStockSheetSize$qty_index"});
 					$$sig_specs{'chkOverrideSheetSize'.$qty_index} = '';
 				}
 				} # end if
@@ -5266,7 +5267,7 @@ $imp->display('[warn]');
 										$$Setup{Overrides} = \%Overrides;
 
 										my $new_project = $$Setup{project} = setup_project( $Project, $sigs[0], $Project->services(), @$Setup{'specs','side_one_colours', 'side_two_colours'}, $$Setup{Stocks}[0] );
-										$log->error("PreviousPress from $$subsig_specs{PreviousPress} ");
+                    #$log->error("PreviousPress from $$subsig_specs{PreviousPress} ");
 # This isn't perfect, as we may actually need a stock setup charge for the other group
 										$$new_project{stocksetupcharged} = $$project{stocksetupcharged};
 
