@@ -719,6 +719,7 @@ sub date_select {
 	} # end if
 	if ( ref $options eq 'HASH' ) {
 	} elsif ( $options ) {
+    $openprint::log->error("deprecated use of options in daet_select");
 		$options = {onchange=>$options};
 	} # end if
 #$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
@@ -739,17 +740,23 @@ sub date_select {
 ';
 	foreach my $o ( split(',', $$options{order}) ) {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
-			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{onchange} );
+			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"`, $prefix, $$options{onchange} );
+      $html .= ' on_change_this="'.$$options{on_change_this}.'"' if $$options{on_change_this};
+      $html .= '><option value=""> </option>';
 			$html .= return_years( $start_year, $end_year, $year );
 			$html .= '</select>'."\n";
 #$log->debug($html);
 		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin('month', \@fields) ) ) {
-			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"><option value=""> </option>`, $prefix, $$options{onchange} );
+			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"`, $prefix, $$options{onchange} );
+      $html .= ' on_change_this="'.$$options{on_change_this}.'"' if $$options{on_change_this};
+      $html .= '><option value=""> </option>';
 			$html .= getmonths( $month );
 			$html .= '</select>'."\n";
 #$log->debug($html);
 		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin('day', \@fields) ) ) {
-			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""> </option>', $prefix, $$options{onchange} );
+			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"', $prefix, $$options{onchange} );
+      $html .= ' on_change_this="'.$$options{on_change_this}.'"' if $$options{on_change_this};
+      $html .= '><option value=""> </option>';
 			$html .= getdays( $day, int($year), int($month) );
 			$html .= '</select>'."\n";
 #$log->debug($html);
