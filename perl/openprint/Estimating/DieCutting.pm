@@ -555,10 +555,10 @@ sub signature_needs {
 	my $form = $$sig_specs{SignatureIndex};
 #$log->debug("Diecutting::signatureNeeds: for sig $form : Needed: ($$specs{'Needed-'.$form})" );
 	if ( ! $$specs{"Needed-$form"} ) {
-		if ( sets::isin( $$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+		if ( $$sig_specs{rdbTemplateType} and sets::isin( $$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 			return 1;
 		} # end if
-		my $ServiceType = openprint::ServiceType->find_one('type'=>'DieCutting');
+		my $ServiceType = openprint::ServiceType->find_one(type=>'DieCutting');
 		if ( $ServiceType ) {
 			if ( sets::isin( $ServiceType->id(), [ $Project->Type()->required_services() ] ) ) {
 				return 1;
