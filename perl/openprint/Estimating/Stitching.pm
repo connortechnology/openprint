@@ -1042,7 +1042,7 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 		}
 
 		$service_name = $$ServiceType{name}.$maxPockets.'Pockets';
-		$Services{$service_name} = openprint::Service->find_one(name=>$service_name) if ! $Services{$service_name};
+		$Services{$service_name} = openprint::Service->find_one(name=>$service_name) if ! exists $Services{$service_name};
 
 		my $Service = $Services{$service_name};
 		my $servicePrice = $Service->get_Price($qty, $Equipment) if $Service;
@@ -1178,11 +1178,9 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 		$price{RunTime} += $runtime;
 
 		my $service_name = $$ServiceType{name}.$neededPockets.'Pockets';
-		if ( ! exists $Services{$service_name} ) {
-			$Services{$service_name} = openprint::Service->find_one(name=>$service_name);
-		}
+    $Services{$service_name} = openprint::Service->find_one(name=>$service_name) if ! exists $Services{$service_name};
+
 		my $Service = $Services{$service_name};
-    $openprint::log->debug("Service? $Service $$Service{name}") if $Service;
 		my $servicePrice = $Service ? $Service->get_Price($qty, $Equipment) : 0;
 		if ( !$servicePrice ) {
 			$Service = $BaseService;
@@ -1338,7 +1336,8 @@ $openprint::log->debug('BaseService '.($BaseService ? $BaseService->to_string() 
 	} # end if
 
 	if ( $plusCover ) {
-		my $StitchingCoverService = openprint::Service->find_one(name=>$$ServiceType{name}.'Cover');
+    my $service_name = $$ServiceType{name}.'Cover';
+		my $StitchingCoverService = $Services{$service_name} = openprint::Service->find_one(name=>$$ServiceType{name}.'Cover') if !exists $Services{$service_name};
 		if ( $StitchingCoverService ) {
 			my $StitchingCoverPrice = $StitchingCoverService->get_Price( $qty, $Equipment );
 			if ( $StitchingCoverPrice ) {
