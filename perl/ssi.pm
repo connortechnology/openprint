@@ -735,8 +735,8 @@ sub date_select {
 	$class .= 'C' if $$options{with_clear};
 	$class .= 'T' if $$options{with_today};
 
-	my $html = '<span class="'.$class.'">';
-	$html .= sprintf('<span id="%1$s_date">', $prefix );
+	my $html = '<span class="'.$class.'" id="'.$prefix.'_date">
+';
 	foreach my $o ( split(',', $$options{order}) ) {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{onchange} );
@@ -770,8 +770,8 @@ sub date_select {
 				text=>'T', title=>'Today', class=>'Today',
 				} );
 	} # end if
-	$html .= '<span id="'.$prefix.'_alert"></span>';
-	$html .= '</span></span>';
+	$html .= '<span id="'.$prefix.'_alert"></span>
+</span>';
 	return $html;
 } # end sub date_select
 
@@ -950,7 +950,7 @@ sub radio {
 		$html .= sprintf(q`
       <div class="form-check%7$s">
 				<label class="form-check-label radio%7$s" for="%1$s%6$s%2$s">
-				<input class="form-check-input" type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
+				<input class="form-check-input" type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s %5$s />
 				%3$s</label></div>
 				`, $name, $value, $label, checked($value eq $selected),
 				join(' ', map { $_.'="'.$$options{$_}.'"' } keys %{$options}),

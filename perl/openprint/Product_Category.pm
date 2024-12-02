@@ -14,7 +14,7 @@ $table = 'Product_Categories';
 		id							=>	'id',
 		name						=>	'name',
 		description			=>	'description',
-		#projecttype_id	=>	'projecttype_id',
+    #projecttype_id	=>	'projecttype_id',
 		parent_ids			=>	'parent_ids',
 		sorting					=>	'sorting',
 		deleted					=>	'deleted',
@@ -29,7 +29,7 @@ $table = 'Product_Categories';
 %defaults = (
 		deleted					=>	0,
 		parent_ids			=>	undef,
-		#projecttype_id	=>	undef,
+    #projecttype_id	=>	undef,
 		sorting					=>	undef,
 		album_id				=>	undef,
 );

@@ -426,8 +426,10 @@ while(1) {
   } # end foreach Host
 
   if ( $config{sleep} ) {
-    #$log->debug("Sleeping for $config{sleep} seconds");
+    $log->debug("Sleeping for $config{sleep} seconds");
     sleep $config{sleep};
+  } else {
+    $log->debug("Not Sleeping");
   }
 } # end while
 $p->close();

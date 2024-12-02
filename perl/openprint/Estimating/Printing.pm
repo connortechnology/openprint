@@ -157,6 +157,7 @@ require openprint::imposition;
 use openprint::Imposition;
 require openprint::Paper;
 require openprint::Estimating::Paper;
+require openprint::Estimating::DieCutting;
 require openprint::Estimating::Folding;
 require openprint::Estimating::Scoring;
 require openprint::Estimating::Perforating;
@@ -731,9 +732,8 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 	$project{Binding} = $Project->get_book_type();
 	if ( !$$services{NoBindery} ) {
 		$project{NeedFolding} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
-		if ( $$services{DieCutting} ) {
-			require openprint::Estimating::DieCutting;
-			$project{NeedDieCutting} = openprint::Estimating::DieCutting::signature_needs( $Project, $project{DieCuttingSpecs}, $specs );
+    $project{NeedDieCutting} = openprint::Estimating::DieCutting::signature_needs( $Project, $project{DieCuttingSpecs}, $specs );
+		if ($project{NeedDieCutting}) {
 #$log->debug("Need DieCutting: $project{NeedDieCutting}");
 			$project{NeedScoring} = 0;
 		} else {
@@ -747,6 +747,7 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 			} # end if
 		} # end if
 	} else {
+		$project{NeedDieCutting} = 0;
 		$project{NeedScoring} = 0;
 		$project{NeedFolding} = 0;
 	} # end if
@@ -754,7 +755,7 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 	openprint::Estimating::Folding::init($Project, \%project) if $project{NeedFolding};
 	$project{NeedUVCoating} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
 	$project{NeedAqueous} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
-	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
+	@$specs{'NeedFolding','NeedScoring','NeedDieCutting'} = @project{'NeedFolding','NeedScoring','NeedDieCutting'};
 
 	# These aer questionable: Should not modify a project in calculation
 	if ( $project{NeedUVCoating} ) {
@@ -1367,7 +1368,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
       $log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) IS the overriden type " . $$project{ProjectSpecs}{'PrintingType-'.$$specs{Group}} ) if DEBUG_IMPOSITIONS;
 		} else {
       # FIXME, fix what?
-      $log->error("For press $$Press{strid} $printing_type ".join(',', $$specs{PrintingTypes} ? @{$$specs{PrintingTypes}} : ('none') ));
+      #$log->error("For press $$Press{strid} $printing_type ".join(',', $$specs{PrintingTypes} ? @{$$specs{PrintingTypes}} : ('none') ));
 			if ( $$specs{PrintingTypes} and $printing_type and ! sets::isin( $printing_type, $$specs{PrintingTypes} ) ) {
 				if ( $$specs{'chkOverridePress'.$qty_index} and ( $$specs{'ddmPress'.$qty_index} eq $$Press{strid} ) ) {
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
@@ -1441,7 +1442,6 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
       }
 			$$project{Runstyles} = $$specs{"ddmRunStyle$qty_index"};
 		} 
-    $log->error("Project Runstyles: $$project{Runstyles}");
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
 		my $do_perfecting = 1;
 		if ( $$project{print_sides} == 1 ) {
@@ -2608,7 +2608,7 @@ sub get_overrides {
           } elsif (
             @$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x\s*([\d\.]+)"?\s*$/ ) {
 				} else {
-					$log->error( "Failure to parse ".$$sig_specs{"ddmStockSheetSize$qty_index"});
+					$log->error( "Failure to parse ddmStockSheetSize$qty_index: ".$$sig_specs{"ddmStockSheetSize$qty_index"});
 					$$sig_specs{'chkOverrideSheetSize'.$qty_index} = '';
 				}
 				} # end if
@@ -3319,6 +3319,7 @@ sub save_price( $$$$$ ) {
 		$$specs{'txtPressSheetQty'.$qty_index} = $$price{'Stock Weight'}.'lbs';
 		$$specs{'minimum_stock_size'.$qty_index} = $Imposition->used_width().'&quot;';
 		$$specs{'StockQuantity'.$qty_index} = $$price{'Stock Weight'};
+		$$specs{'hdnNetSheetCount'.$qty_index} = $$price{'Net Sheet Count'};
 	} elsif ( $$Paper{type} eq 'Sheet' ) {
 		$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width}.'x'.$$Paper{height};
     #$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width} . '" x ' . $$Paper{height}.'"';
@@ -3643,11 +3644,11 @@ $log->debug("Using overriden page quantity $needed_pages");
 			my $printing_type = $Press->specification('Printing Type');
 			if ( $printing_type and ! sets::isin( $printing_type, $$sig_specs{PrintingTypes} ) ) {
 				next;
-      } else {
-      $log->error("NO skipping because of PrintingTypes press $$Press{strid} sig:$$sig_specs{PrintingTypes} type: $printing_type");
+        #} else {
+        #$log->error("NO skipping because of PrintingTypes press $$Press{strid} sig:$$sig_specs{PrintingTypes} type: $printing_type");
 			} # end if
-    } else {
-      $log->error("NO skipping because of PrintingTypes press $$Press{strid} sig:$$sig_specs{PrintingTypes}");
+      #} else {
+      #$log->error("NO skipping because of PrintingTypes press $$Press{strid} sig:$$sig_specs{PrintingTypes}");
 		} # end if
 
 		my @press_impositions = @{ $$impositions{$strid} };
@@ -5336,7 +5337,7 @@ $imp->display('[warn]');
 										$$Setup{Overrides} = \%Overrides;
 
 										my $new_project = $$Setup{project} = setup_project( $Project, $sigs[0], $Project->services(), @$Setup{'specs','side_one_colours', 'side_two_colours'}, $$Setup{Stocks}[0] );
-										$log->error("PreviousPress from $$subsig_specs{PreviousPress} ");
+                    #$log->error("PreviousPress from $$subsig_specs{PreviousPress} ");
 # This isn't perfect, as we may actually need a stock setup charge for the other group
 										$$new_project{stocksetupcharged} = $$project{stocksetupcharged};
 

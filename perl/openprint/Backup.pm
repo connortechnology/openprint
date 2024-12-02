@@ -100,15 +100,52 @@ sub dest_path {
 }
 
 sub run {
-  if ( ! $_[0]->Host()->online() ) {
+  my $self = shift;
+
+  if ( ! $self->Host()->online() ) {
     return 'Host is not online.';
   }
   my $results = '';
-  require IPC::Run3;
-  my $type = $_[0]->type();
-  my $dest = $_[0]->dest_path();
+  my $success = undef;
+  my $host = $self->Host();
 
-  my $keep = $_[0]{keep};
+  foreach my $hi ( $host->Interfaces() ) {
+    if (!$hi->ip()) {
+      $openprint::log->debug("No ip on ".$hi->to_string());
+      next;
+    }
+    if (!$hi->online()) {
+      $openprint::log->debug('Interface '.($$hi{ip} ? $$hi{ip} : 'no ip').' on '.($$host{hostname}?$$host{hostname}:'no hostname').' is not online');
+          next;
+    }
+    my ($rc, $res) = $self->try_backup($$hi{ip});
+    $results .= $res;
+    if ($rc) {
+      $success = $rc;
+      last;
+    }
+  } # end foreach interface
+  if (!$success) {
+    my ($rc, $res) = $self->try_backup($host->hostname());
+    $results .= $res;
+    $success = $rc if ($rc);
+  }
+  (new openprint::Log())->save({
+      Object  =>  $self,
+      action  =>  ($success ? 'Successful Backup' : 'Failed Backup'),
+      note    =>  $results,
+    });
+  $self->save({lastran_on=>'NOW()'});
+  return $results;
+} # end sub run
+
+sub try_backup {
+  my ($self, $ip) = @_;
+
+  my $dest = $self->dest_path();
+  my $type = $self->type();
+
+  my $keep = $$self{keep};
   if ( ! $keep ) {
     if ( $type eq 'daily' ) {
       $keep = 7;
@@ -122,47 +159,32 @@ sub run {
       $keep = 5;
     }
   }
+  my $stdout;
+  my $stderr;
+  my $log;
+  my $results;
 
-  foreach my $ip ( ( map { $$_{ip} ? $$_{ip} : () } $_[0]->Host()->Interfaces() ), $_[0]->Host()->hostname() ) {
-    my $stdout;
-    my $stderr;
-    my $log;
+  my $command = qq`/var/www/testing/perl/tools/make_snapshot.sh -T -t $type -n $keep "$$self{username}\@$ip:$$self{path}" "$dest/"`;
 
-    my $command = qq`/var/www/testing/perl/tools/make_snapshot.sh -T -t $type -n $keep "$_[0]{username}\@$ip:$_[0]{path}" "$dest/"`;
-
-    $openprint::log->debug("Command: $command");
-    IPC::Run3::run3( $command, undef, \$stdout, \$stderr );
-    if ( $? ) {
-    #my $log = File::Slurp::read_file("$dest.$type.0.log",err_mode => 'carp' );
+  require IPC::Run3;
+  $openprint::log->debug("Command: $command");
+  IPC::Run3::run3( $command, undef, \$stdout, \$stderr );
+  if ( $? ) {
     $results .= join( "\n", map { $_ ? $_ : () } ( $stdout , $stderr, $log ) );
-      $openprint::log->error("Error running backup. Reason: ($?) stdout($stdout) stderr($stderr)");
-  (new openprint::Log())->save({
-      Object  =>  $_[0],
-      action  =>  'Failed Backup',
-      note    =>  $results,
-    });
-      next;
-    } # end if
-    $openprint::log->error("Ran backup. Reason: ($?) stdout($stdout) stderr($stderr)");
-    #my $log = File::Slurp::read_file("$dest.$type.0.log",err_mode => 'carp' );
-    $results .= join( "\n", map { $_ ? $_ : () } ( $stdout , $stderr, $log ) );
-    $_[0]->save({lastran_on=>'NOW()'});
+    $openprint::log->error("Error running backup. Reason: ($?) stdout($stdout) stderr($stderr)");
     (new openprint::Log())->save({
-        Object  =>  $_[0],
-        action  =>  'Successful Backup',
-        note    =>  $command."\n".$results,
-    });
+        Object  =>  $self,
+        action  =>  'Failed Backup',
+        note    =>  $results,
+      });
+    return (undef, $results);
+  } # end if
+  $openprint::log->debug("Ran backup. Reason: ($?) stdout($stdout) stderr($stderr)");
+  $results .= join( "\n", map { $_ ? $_ : () } ( $stdout , $stderr, $log ) );
 
-    # Stop after the first successful backup, as we are iterating through ips
-    return $results;
-  } # end foreach ip or hostname
-  (new openprint::Log())->save({
-      Object  =>  $_[0],
-      action  =>  'Failed Backup',
-      note    =>  $results,
-    });
-  return $results;
-} # end sub run
+  # Stop after the first successful backup, as we are iterating through ips
+  return (!undef, $results);
+} # end sub try_backup
 
 sub size {
   my $self = shift;

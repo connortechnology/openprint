@@ -2939,6 +2939,12 @@ if ( ! sets::isin( 'product_categories', \@tables ) ) {
   }
 }
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='product_categories'", 'column_name');
+if ($$data{column_default} ne "nextval('categories_id_seq'::regclass)") {
+  $log->debug("Altering product_categories id default");
+  $dbh->do('ALTER sequence categories_id_seq RENAME TO product_categories_id_seq');
+  $dbh->do("ALTER TABLE Product_Categories ALTER id SET default nextval('product_categories_id_seq'::regclass)")  or die $dbh->errstr();
+;
+}
 if ( ! exists $$data{parent_ids} ) {
   $log->debug("Adding parent_ids t product_categories");
   $dbh->do('ALTER TABLE Product_Categories ADD parent_ids INTEGER[]') or die $dbh->errstr();
@@ -3045,7 +3051,7 @@ if ( ! exists $$data{supplier_id} ) {
 
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {
   print "Adding product_specifications\n";
-	$dbh->do( misc::load_file( $log, q{../../sql/Product_Specifications.sql}) );
+	$dbh->do( misc::load_file( $log, q{../../sql/Product_Specifications.sql}) ) or die $dbh->errstr() if $dbh->errstr();
 } # end if
 if ( ! sets::isin( 'product_prices', \@tables ) ) {
   print "Adding product_pricess\n";

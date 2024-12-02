@@ -411,6 +411,7 @@ sub signature_calc {
 	if ( $$sig_specs{Versions} ) {
 		$qty *= $$sig_specs{Versions};
 	} # end if
+	return %Results if ! $qty;
 
 	my @Folds;
 	if ( $$SignatureImposition{Folds} ) {
@@ -426,7 +427,7 @@ sub signature_calc {
 		foreach my $Fold ( @Folds ) {
 			$Fold->display('Fold');
 		} 
-	} # end nif
+	} # end if
 
 	my @equipment;	
 	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} and ($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y') ) {
@@ -819,7 +820,7 @@ sub get_price {
       %setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
     }
   } else {
-    $setupPrice{Total} = 0;
+    $setupPrice{Total} = $setupPrice{Price} = 0;
   }
 
 	$Results{Breakdown} .= sprintf('MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice{Price}) if %setupPrice;
