@@ -1,7 +1,10 @@
+<ul>
 <li>
 	<label>Sheet Size</label>
+	<span class="<?Columns?>Columns">
 		<input type="number" name="StockWidth" value="<?StockWidth?>" min="0" step="any"/> x
 		<input type="number" name="StockHeight" value="<?StockHeight?>" min="0" step="any"/>
+  </span>
 <? eval ( $$variable{QTYIndex} = 1 ) ?>
 <? while ( $$variable{QTYIndex} <= 3 ) ?>
 <? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
@@ -15,16 +18,18 @@
 </li>
 <li>
     <label><? echo ( ssi::writeTip( 'Run style' ); ) ?></label>
+	<span class="<?Columns?>Columns">
 	<select name="ddmRunStyle" size="1" onchange="calc(this.form.name);">
 		<option value="">No runstyle selected</option>
 		<? echo ( ssi::make_drop_down( $$variable{RunStyleOptions}, $$variable{ddmRunStyle} ); ) ?>
 	</select>
+  </span>
 <? eval ( $$variable{QTYIndex} = 1 ) ?>
 <? while ( $$variable{QTYIndex} <= 3 ) ?>
 <? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 <input type="hidden" name="ddmRunStyle<?QTYIndex?>" value="<? echo ( $$variable{'ddmRunStyle'.$$variable{QTYIndex}} ) ?>" />
 <? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
-        <? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? eval ( $$variable{QTYIndex} += 1 ) ?>
 <? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 </li>
 <? if ( $$variable{txtSignatureType} ) ?>
@@ -68,3 +73,4 @@
 <? eval ( $$variable{QTYIndex} += 1 ) ?>
 <? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 </li>
+</ul>
