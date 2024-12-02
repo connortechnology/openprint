@@ -1339,6 +1339,8 @@ sub navmenu {
       shift @{$menu};
     }
     $menu = \%m;
+  } elsif (exists $$menu{options}) {
+    @categories = sort { $a cmp $b } $$menu{options};
   } else {
     @categories = sort { $a cmp $b } keys %{$menu};
   }
@@ -1421,7 +1423,12 @@ sub bootstrap_navmenu {
     $category_id =~ s/\s+//g;
 
 		if ( ref $$menu{$category} eq 'HASH' ) {
-			my %urls = %{$$menu{$category}};
+my %urls;
+      if (exists $$menu{options}) {
+        %urls = %{$$menu{options}};
+} else {
+			 %urls = %{$$menu{$category}};
+}
 			my $submenu_html = '';
 			foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
 				my $text = $urls{$url};
