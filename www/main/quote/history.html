@@ -128,12 +128,13 @@
 				<? echo ( join( "\n",
 					button( 'ShowResults', { onclick=>q`f1.btnFunction.value='';f1.submit();`, text=>'Show Results' } ),
 					button( 'DownloadCSV', { onclick=>q`f1.btnFunction.value='Download in CSV format';f1.submit();`, text=>'Download in CSV Format' } ),
+					button( 'Delete', { onclick=>q`f2.btnFunction.value='Delete';f2.submit();`, text=>'Delete' } ),
 					button( 'Add', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New' } ),
 					button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 				); ) ?>
 			</p>
 		</fieldset>
 	</form>
-	<div id="QuoteList"><?include('_history.html')?></div>
 	</div>
+	<div id="QuoteList"><?include('_history.html')?></div>
 </div>
