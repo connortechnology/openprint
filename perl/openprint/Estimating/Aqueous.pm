@@ -535,6 +535,7 @@ sub signature_calc {
 						( map { ( (($area * 1.10) > $_) and (($area * .90) < $_) ) ? $_ : () } @{$$mrs{$type_name}} )
 					 ) {
 					$openprint::log->debug("In Makereadies: $$Equipment{id} $area") if DEBUG;
+          $SetupPrice{Total} = 0;
 				} else {
 					$openprint::log->debug("Not In Makereadies: $$Equipment{id} $area") if DEBUG;
 					$Services{$type_name.' MakeReady'} = openprint::Service->find_one(name=>$type_name.' MakeReady') if ! exists $Services{$type_name.' MakeReady'};
@@ -608,6 +609,7 @@ sub signature_calc {
           $ServicePrice{Total} = $ServicePrice{Price} * $run_qty;
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} = "Unknown units ( $ServicePrice{units} ) for $$type{name}<br/>";
+          $ServicePrice{Total} = 0;
 				} # end if
 				push @{$Price{ServicePrices}}, \%ServicePrice;
 				$Price{Service} += $ServicePrice{Total};
