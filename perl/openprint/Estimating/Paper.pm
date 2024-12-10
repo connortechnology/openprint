@@ -137,6 +137,7 @@ sub calc {
       delete $$specs{'txtPrice'.$qty_index};
       delete $$specs{'MPrice'.$qty_index};
     }
+    $$specs{"hdnBreakdown$qty_index"} = '';
   } # end foreach qty_index
 
 	# Totals is storing the native qty, ie lbs for rolls, sheets for sheets
@@ -425,7 +426,7 @@ sub summary {
 		my @summaries;
 		foreach my $Stock_Entry ( @Stocks ) {
 			push @summaries, se_quantity_summary( $Stock_Entry, $specs, $qty_index );
-		} # end foreach STock
+		} # end foreach Stock
 		return \@summaries;
 	} # end if
 	return [ map { $$_{Stock}->message() ? $$_{Stock}->to_string() . '<br/><span class="StockMessage">'. 
