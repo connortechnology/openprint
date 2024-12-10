@@ -114,11 +114,11 @@ function calc_weight_from_sheets(e) {
 			$html .= '<span class="'.$$variable{Columns}.'Columns">';
 			$html .= '<span class="quantity">';
 			$html .= qq`<span id="qty-$key">$$variable{"qty-$key"}</span>`;
-			#$html .= input( type=>'float', id=>'qty-'.$key, name=>'qty-'.$key, value=>$$variable{'qty-'.$key}, onkeyup=>'calc(this.form.name);' );
+			$html .= input( type=>'hidden', id=>'qty-'.$key, name=>'qty-'.$key, value=>$$variable{'qty-'.$key}, onkeyup=>'calc(this.form.name);' );
 			$html .= 'lbs';
 			if ( $Stock->type() ne 'Roll' ) {
 			$html .= qq`(<span id="sheets-$key">$$variable{"sheets-$key"}</span>`;
-				#$html .= ' ' . input( type=>'cardinal', id=>'sheets-'.$key, name=>'sheets-'.$key, value=>$$variable{'sheets-'.$key}, onkeyup=>q`calc_weight_from_sheets(this);calc(this.form.name);` );
+				$html .= ' ' . input( type=>'hidden', id=>'sheets-'.$key, name=>'sheets-'.$key, value=>$$variable{'sheets-'.$key}, onkeyup=>q`calc_weight_from_sheets(this);calc(this.form.name);` );
 				$html .= 'sheets)';
 			} # end if
 
