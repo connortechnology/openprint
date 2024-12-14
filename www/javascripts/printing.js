@@ -1,4 +1,5 @@
 var pendingCalc;
+var DieCuttingQuestionFlag = true;
 var ScoringQuestionFlag = true;
 var FoldingQuestionFlag = true;
 var CuttingQuestionFlag = true;
@@ -332,6 +333,7 @@ function cbFillPrintResults( results ) {
 		if (!ddm) continue;
 		if ( ddm.selectedIndex == -1 || ddm.selectedIndex == 0 ) {
 			const width = form.elements['StockWidth'+i].value;
+      if (!width) continue;
 			const height = form.elements['StockHeight'+i].value;
 			const type = get_value( form.elements['StockType'+i] );
 		
@@ -366,6 +368,16 @@ function cbFillPrintResults( results ) {
 				cancelAddFolding = true;
 			} // end if
 			FoldingQuestionFlag = false;
+		} // end if
+	} // end if
+
+	if ( form.NeedDieCutting && (form.NeedDieCutting.value > 0)) {
+		if ( form.HasDieCutting.value == 0 && (form.txtFinalWidth && form.txtFinalHeight)) {
+			if ( DieCuttingQuestionFlag && confirm("Your project requires die cutting.  Click OK to automatically add die cutting to your project.") ) {
+				//   addService( 'f1', 'Scoring' );
+				addServices[addServices.length] = 'DieCutting';
+			} // end if
+			DieCuttingQuestionFlag = false;
 		} // end if
 	} // end if
 
@@ -687,6 +699,34 @@ function link_sides(e) {
     }
   });
   calc('f1');
+}
+
+function selectCoverTemplate(el) {
+  console.log(el);
+  const matches = el.name.match(/rdbTemplateType(\d)/);
+  let form = '';
+  if (matches.length > 1) form = matches[1];
+  const div=$('PresentationFolderQuestions'+form);
+  if (div){
+    if (el.value.match(/Panel/)) {
+      div.show();
+    } else {
+      div.hide();
+    };
+  }
+  if (el.value.startsWith('2Panel1Pocket')) {
+    $('rdbPanels2'+form).checked = true;
+    $('chkPocketCenter'+form).checked=false;
+  } else if (el.value.startsWith('2Panel2Pocket')) {
+    $('rdbPanels2'+form).checked=true;
+    $('chkPocketCenter'+form).checked=false;
+    $('chkPocketLeft'+form).checked=true;
+    $('chkPocketRight'+form).checked=true;
+  } else if (el.value.startsWith('3Panel2Pocket')) {
+    $('rdbPanels3'+form).checked=true;
+  }
+
+  selectProjectTemplate(el.form.id);
 }
 
 function clear_stock() {

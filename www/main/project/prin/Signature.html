@@ -23,6 +23,7 @@
 		<input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
+		<input type="hidden" name="hdnDieCutting" value="<?hdnDieCutting?>"/>
 		<? if ( $$variable{txtSignatureType} eq 'Cover Pages' or $$variable{txtSignatureType} eq 'Gate Folded Pages' ) ?>
 			<?include(/includes/main/proj/templates/signature_template_select.html)?>
 			<?include(/includes/main/proj/templates/_signatures.html)?>

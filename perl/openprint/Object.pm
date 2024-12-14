@@ -1039,8 +1039,9 @@ sub find {
 
 	my $sql = find_sql($object_type, $params);
 
-	my $do_cache = (index($$sql{columns}, '*') != -1) ? 0 : 1;
+	my $do_cache = (index($$sql{columns}, '*') != -1) ? 1 : 0;
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
+
 	if ( ( 1 == scalar keys %{$$sql{used_fields}} ) and $$params{id} ) {
 		if ( $cache{$config{db_name}}{$object_type}{$$params{id}} ) {
 			if ( $cache{$config{db_name}}{$object_type}{$$params{id}}{id} ) {
@@ -1080,8 +1081,8 @@ $log->debug("returning nothing for $object_type $cache_field $$params{$cache_fie
 			} # end if Object::cached
 		} # end if is in cache or not
 	} else {
+		$log->debug("Not doing caching ($do_cache) for $object_type using $cache_field with params ".($cache_field?$$params{$cache_field}:'')) if DEBUG_ALL or DEBUG_CACHE;
 		$do_cache = 0;
-		$log->debug("Not doing caching for $object_type using $cache_field with params ".($cache_field?$$params{$cache_field}:'')) if DEBUG_ALL or DEBUG_CACHE;
 	} # end if
 
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;

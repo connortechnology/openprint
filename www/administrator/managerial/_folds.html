@@ -45,10 +45,12 @@
 			<th class="MinMaxHeight" data-sortable="true">Min/Max Height</th>
 			<th class="MinMaxCalliper" data-sortable="true">Min/Max Calliper</th>
 			<th class="MRMinutes" data-sortable="true">MR Minutes</th>
+			<th class="MROvers" data-sortable="true">MR Overs</th>
+			<th class="RunOvers" data-sortable="true">Run Overs</th>
 			<th class="Speed" data-sortable="true">Speed</th>
 		</tr>
-                     </thead>
-                     <tbody>
+  </thead>
+  <tbody>
 <? echo (
 	my $html;
 	my $rowclass;
@@ -69,7 +71,9 @@
 	<td class="MinMaxHeight">%14$s / %15$s</td>
 	<td class="MinMaxCalliper">%16$s / %17$s</td>
 	<td class="MRTime">%18$d</td>
-	<td class="Speed">%19$s</td>
+	<td class="MROvers">%19$s</td>
+	<td class="RunOvers">%20$s</td>
+	<td class="Speed">%21$s</td>
 </tr>
 `, $rowclass, $$Fold{id}, $Fold->link_to($Fold->Equipment()->name()), $Fold->link_to($$Fold{name}),
 $Fold->link_to($Fold->type()),
@@ -94,6 +98,8 @@ $Fold->min_width(), $Fold->max_width(),
 $Fold->min_height(), $Fold->max_height(),
 $Fold->min_calliper(), $Fold->max_calliper(),
 $Fold->makeready_time(),
+$Fold->makeready_overs().$Fold->makeready_overs_units(),
+$Fold->run_overs().$Fold->run_overs_units(),
 join( '<br/>', map { join(' to ',
   ($_->min() ? $_->min() : ()),
   ($_->max() ? $_->max() : ()),

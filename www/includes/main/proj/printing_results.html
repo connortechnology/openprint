@@ -54,6 +54,7 @@
 				}
 				return $a <=> $b;
 		} sets::union( map { $_->width().( $_->height() ? 'x'.$_->height() : '' ) } @Stocks );
+
 	} # end if specific or not
 
 	my $html = '';
@@ -61,6 +62,11 @@
 		$$variable{'ddmStockSheetSize'.$qty_index} =~ s/["\sRol]//g;
 		$$variable{'OverrideStockWidth'.$qty_index} =~ s/[^\d\.]//g;
 		$$variable{'OverrideStockHeight'.$qty_index} =~ s/[^\d\.]//g;
+    if ($$variable{'chkOverrideSheetSize'.$qty_index} and ($$variable{'chkOverrideSheetSize'.$qty_index} eq 'Y')) {
+      if (!sets::isin($$variable{'ddmStockSheetSize'.$qty_index}, \@sizes)) {
+        push @sizes, $$variable{'ddmStockSheetSize'.$qty_index};
+      }
+    }
 		$html .= sprintf(q`
 			<div class="%1$sColumns">
 				<select name="ddmStockSheetSize%2$d" size="1" onchange="this.form.OverrideStockWidth%2$d.value='';this.form.OverrideStockHeight%2$d.value='';ddmStockSheetSize_onchange();"><option value="">Please select one</option>%3$s</select>

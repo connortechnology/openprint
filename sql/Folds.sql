@@ -27,7 +27,7 @@ CREATE TABLE Folds (
 	makeready_time	integer,
 	makeready_overs	float,
 	makeready_overs_units	TEXT,
-	run_overs	integer,
+	run_overs	float,
 	run_overs_units	TEXT,
 	printing_type	TEXT,
 	comments		TEXT,

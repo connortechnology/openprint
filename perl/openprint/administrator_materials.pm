@@ -187,7 +187,7 @@ sub edit {
 									value			=>	$param{'txtSpecificationValue'.$$Spec{id}},
 									interpolate		=>	$param{'interpolate'.$$Spec{id}},
 									});
-							push @specs_changes, @spec_changes;	
+							push @specs_changes, map { $$Spec{name}.' '.$_ } @spec_changes;	
 						} # end if
 					} elsif ( $Spec->id() ) {
 						$variable{error} .= $Spec->delete();
