@@ -304,13 +304,15 @@ function ddm_select_by_index( ddm, index ) {
 } // end function ddm_select_by_index( ddm, index );
 
 function ddm_select_by_value( ddm, value, defaultValue ) {
+  let found = false;
 	if ( ddm && ddm.options ) {
 		for ( var index = 0; index < ddm.options.length; index += 1 ) {
 			if ( ddm.options[index] && (ddm.options[index].value == value) ) {
 				ddm_select_by_index( ddm, index );
-				return true;
+				found = true;
 			} // end if
 		} // end for
+    if (found) return true;
 		if ( defaultValue ) {
 			ddm_select_by_index( ddm, defaultValue );
 			return true;

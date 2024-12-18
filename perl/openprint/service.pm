@@ -69,18 +69,20 @@ $openprint::log->debug("Module is: $module");
 	# make this fast by doing it in one transaction, locking does the tranasaction for us
 	$Project->lock();
 	my @changes;
+  my @deleted_specs;
 	foreach my $key ( sort { $a cmp $b } @variables) {
 #$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
 #$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		} elsif ( ! exists $openprint::param{$key} ) {
-			delete_service_spec( $project_index, $service_index, $key );
+      push @deleted_specs, $key;
 		} else {
 			s/^\s+//, s/\s+$// for $openprint::param{$key};
 			push @changes, "$key : $$specs{$key} => $openprint::param{$key}" if $$specs{$key} ne $openprint::param{$key};
 			insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $openprint::param{$key}, 0 );
 		} # end if
 	} # end foreach
+	delete_service_spec( $project_index, $service_index, @deleted_specs );
 	if ( my $function = $module->can('save') ) {
 		$function->($project_index, $service_index, \%openprint::param);
 	} # end if
@@ -149,17 +151,18 @@ sub get_specs_ref {
 } # end sub get_specs_ref
 
 sub delete_service_spec {
-	my ( $project_index, $service_index, $name ) = @_;
+	my ( $project_index, $service_index, @keys ) = @_;
 
 	if ( ! exists $specs_cache{$service_index} ) {
 		%{$specs_cache{$service_index}} = sql::execute( undef, undef, 
-				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index );
+				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?',
+        $project_index, $service_index );
 	} # end if
 
-	if ( exists $specs_cache{$service_index}{$name} ) {
-		sql::execute( undef, undef, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName=?}, @_ );
-		delete $specs_cache{$service_index}{$name};
-	} # end if
+  sql::execute( undef, undef,
+    'DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName IN ('.
+    join(',', map { '?' } @keys ).')', $project_index, $service_index, @keys );
+  delete $specs_cache{$service_index}{@keys};
 } # end sub delete_service_spec
 
 sub insert_service_spec {

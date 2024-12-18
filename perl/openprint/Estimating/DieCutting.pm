@@ -555,10 +555,10 @@ sub signature_needs {
 	my $form = $$sig_specs{SignatureIndex};
 #$log->debug("Diecutting::signatureNeeds: for sig $form : Needed: ($$specs{'Needed-'.$form})" );
 	if ( ! $$specs{"Needed-$form"} ) {
-		if ( sets::isin( $$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+		if ( $$sig_specs{rdbTemplateType} and sets::isin( $$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 			return 1;
 		} # end if
-		my $ServiceType = openprint::ServiceType->find_one('type'=>'DieCutting');
+		my $ServiceType = openprint::ServiceType->find_one(type=>'DieCutting');
 		if ( $ServiceType ) {
 			if ( sets::isin( $ServiceType->id(), [ $Project->Type()->required_services() ] ) ) {
 				return 1;
@@ -716,7 +716,7 @@ sub signature_summary {
     if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
       return '';
     } # end if
-    if ($$specs{'Needed-'.$form} eq 'Y') {
+    if ($$specs{'Needed-'.$form} and ($$specs{'Needed-'.$form} eq 'Y')) {
       my @folds;
       my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
       foreach my $imp_index ( 1 .. 4 ) {
@@ -724,7 +724,7 @@ sub signature_summary {
         push @folds, sprintf('%1$d @ %2$dout', @$specs{"ImpQty-$form-$qty_index-$imp_index","ImpOut-$form-$qty_index-$imp_index"},
         );
       } # end foreach
-      return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
+      return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds) if @folds;
     }
   } # end if
 } # end sub signature_summary
@@ -778,7 +778,7 @@ sub summary {
 			my $sig_specs = $Service->specs();
 			my $form = $$sig_specs{SignatureIndex};
 
-      if ($$specs{'Needed-'.$form} eq 'Y') {
+      if ($$specs{'Needed-'.$form} and ($$specs{'Needed-'.$form} eq 'Y')) {
         if ( (defined $$specs{'rdbSuppliedDie-'.$form} ) and ( $$specs{'rdbSuppliedDie-'.$form} eq 'Y' ) ) {
           $summary .= 'Customer supplies die' . ( @signatures > 1 ? ' for form '.$form : '' ).'<br/>';
         } else {
