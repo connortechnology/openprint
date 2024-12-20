@@ -47,6 +47,7 @@ sub calc {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
 	} # end if
 
+  $$specs{alert} = '';
 	if (!$$specs{SealQuantity}) {
 		$$specs{alert} = 'Please enter the # of clips.<br/>';
 		return $$specs{Status} = 'uncalculated';
@@ -74,6 +75,7 @@ sub calc {
     $$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
     $$specs{'Markup'.$qty_index} =~ s/[^\-\d\.]//g;
     $$specs{'txtQuantity'.$qty_index} = $Project->quantity() if ! $$specs{'txtQuantity'.$qty_index};
+    $$specs{'hdnBreakdown'.$qty_index} = '';
 
     my %BestPrice;
 
