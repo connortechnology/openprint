@@ -453,6 +453,12 @@ sub _timetracks {
 	if ( $param{invoicee_id} and $param{invoicee_id} != $Invoice->invoicee_id() ) {
 		$Invoice->invoicee_id( $param{invoicee_id} );
 	} # end if
+  my $uri = '/invoice/edit.html';
+
+  ssi::save_params($uri, ( 
+      ( map { 'timetrack_start_'.$_ } ( 'year','month','day' ) ),
+      ( map { 'timetrack_end_'.$_ } ( 'year','month','day' ) ),
+    ));
 } # end sub _timetracks
 
 sub _invoiced_products {

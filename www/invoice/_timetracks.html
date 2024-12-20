@@ -61,9 +61,9 @@ $desc );
 	</table>
 </fieldset>
 <fieldset><legend>Available Timetracks 
-<? echo ( date_select_session('/invoice/edit.html', 'timetrack_start', { on_change_this=>'load_timetracks', with_today=>1,with_clear=>1 }); ) ?>
+<? echo ( date_select_session('/invoice/edit.html', 'timetrack_start', { on_change_this=>'reload_timetracks', with_today=>1, with_clear=>1 }); ) ?>
 					to 
-<? echo ( date_select_session('/invoice/edit.html', 'timetrack_end', { on_change_this=>'load_timetracks', with_today=>1,with_clear=>1 }); ) ?>
+<? echo ( date_select_session('/invoice/edit.html', 'timetrack_end', { on_change_this=>'reload_timetracks', with_today=>1, with_clear=>1 }); ) ?>
   </legend>
 	<table class="List sortable" id="availabletimetracks_table">
 		<tr>
@@ -92,36 +92,35 @@ $desc );
 				push @Timetracks, $T;
 			} # end foreach $T
 			foreach my $T ( @Timetracks ) {
-$log->debug($T->time_associated());
 				my $desc = $T->description();
 				$desc =~ s/"/&quot;/mg;
 				$html .= sprintf( q`<tr title="%s">`, $desc );
 				$html .= sprintf('<td class="Employee"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%3$d">%2$s</a></td>', $T->id(), ssi::htmlize($T->Employee()->name()), $$variable{Invoice}->id() );
 				$html .= sprintf('<td class="Service"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%3$d">%2$s</a></td>', $T->id(), ssi::htmlize($T->Service()->name()), $$variable{Invoice}->id() );
-if ( $T->date_associated() ) {
-				$html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( $T->time_associated() ? $config{DateTimeFormat} : '%Y-%m-%d', Date::Parse::str2time( $T->starting() ) ) );
-				$html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( $T->time_associated() ? $config{DateTimeFormat} : '%Y-%m-%d', Date::Parse::str2time( $T->ending() ) ) );
-} else {
-  $html .= '<td colspan="2"></td>';
-}
+        if ( $T->date_associated() ) {
+				  $html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( $T->time_associated() ? $config{DateTimeFormat} : '%Y-%m-%d', Date::Parse::str2time( $T->starting() ) ) );
+				  $html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( $T->time_associated() ? $config{DateTimeFormat} : '%Y-%m-%d', Date::Parse::str2time( $T->ending() ) ) );
+        } else {
+          $html .= '<td colspan="2"></td>';
+        }
 				$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $T->elapsed() ) );
 				my $Price = $T->Price();
 				$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{price} ), $$Price{units} );
 				$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{total} ) );
         $html .= sprintf('<td class="buttons">%s</td>', button( 'add'.$T->id(), { 'data-on-click-this'=>'add_timetrack', 'data-id'=>$$T{id}, text=> '+' } ) );
 				$html .= "</tr>\n";
-			$$variable{service_total} += $$Price{Total};
-			$$variable{elapsed_total} += $T->elapsed();
+        $$variable{service_total} += $$Price{Total};
+        $$variable{elapsed_total} += $T->elapsed();
 			} # end foreach $T
 			return $html;
 		) ?>
-<tr class="totals">
-            <td colspan="4">Totals</td>
+    <tr class="totals">
+      <td colspan="4">Totals</td>
 			<td class="Interval"><?echo(misc::seconds_to_pretty_interval($$variable{elapsed_total});)?></td>
-            <td>&nbsp;</td>
-            <td class="Price" id="timetrack_total"><? echo ( openprint::Currency::format( $$variable{service_total} ); ) ?></td>
-            <td>&nbsp;</td>
-        </tr>
+      <td>&nbsp;</td>
+      <td class="Price" id="timetrack_total"><? echo ( openprint::Currency::format( $$variable{service_total} ); ) ?></td>
+      <td>&nbsp;</td>
+    </tr>
 	</table>
 </fieldset>
 <? endif ( openprint::Timetrack->find_one() ) ?>
