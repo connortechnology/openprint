@@ -44,4 +44,4 @@ CREATE	TABLE	Projects	(
 	PRIMARY	KEY	(id)
 );
 
-create index Project_created_on_idx on Projects (dtmcreationdate);
+create index Project_created_on_idx on Projects (dtmcreationdate, company_id);
