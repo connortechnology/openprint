@@ -257,16 +257,20 @@ sub stock {
 
     if ( $param{btnFunction} eq 'Delete' ) {
       if ( ! $Paper ) {
-        $variable{error} .= "No stock selected for delete.<br/>";
+        $variable{error} .= 'No stock selected for delete.<br/>';
         $variable{Stock} = new openprint::Paper();
         return;
       }
       my $new = $Paper->next();
       $new = $Paper->previous() if $new == $Paper;
-      $Paper->delete();
-      $variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
-      $Paper = $new;
-      $param{stock_id} = $Paper->id();
+      $variable{error} = $Paper->delete();
+      if (!$variable{error}) {
+        $variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
+        $Paper = $new;
+        $param{stock_id} = $Paper->id();
+        $variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
+      }
+
     } elsif ( $param{btnFunction} eq 'Copy' ) {
       if ( ! $Paper ) {
         $variable{error} .= "No stock selected for copy.<br/>";
