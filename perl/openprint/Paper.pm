@@ -1166,7 +1166,7 @@ sub get_price {
 
 	if ( $$openprint::Company{discount} or $$openprint::Company{csr_commission} or $$openprint::Company{credit_card_fee} or $$CSR{commission} ) {
 		my $discount = 1 - ($$openprint::Company{discount} / 100);
-		my $csr_commission = 1 + ($$openprint::Company{csr_commission} == undef ? $$CSR{commission} : $$openprint::Company{csr_commission} ) /100;
+		my $csr_commission = 1 + (defined($$openprint::Company{csr_commission}) ? $$openprint::Company{csr_commission} : $$CSR{commission}) /100;
 		my $credit_card_fee = 1 + ($$openprint::Company{credit_card_fee}/100);
 
 		$_ = $$price{price};
@@ -1203,7 +1203,6 @@ sub get_price {
 $openprint::log->debug("Costs: cost($$price{cost}) Price($$price{'100lb Price'})/100lb cost($$price{'100lb Cost'})/cwt Price($$price{Price}) qty($qty) lookup_qty($lookup_qty) Total($$price{'100lb Total'})") if DEBUG_PRICING;
 	return $price;
 } # end sub get_price
-
 
 sub cut {
 	my $self = shift;
