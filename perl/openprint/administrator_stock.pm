@@ -286,6 +286,7 @@ sub stock {
       } # end foreach
       $Paper = $NewPaper;
       $param{stock_id} = $Paper->id();
+      $variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
     } elsif ( $param{btnFunction} eq 'Save' ) {
 
       $Paper = new openprint::Paper() if ! $Paper;
