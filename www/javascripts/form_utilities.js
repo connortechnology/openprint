@@ -724,7 +724,7 @@ function checkLoginData( usernameInput, passwordInput ) {
 		div.hide();
 	}
 
-	div = $j ? $j('missingPasswordMessage') : $('missingPasswordMessage')
+	div = $j ? $j('#missingPasswordMessage') : $('missingPasswordMessage')
 	if( passwordInput && ! passwordInput.value ) {
 		// Display login password error.
 		if ( div ) div.show();
