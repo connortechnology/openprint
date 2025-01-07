@@ -247,7 +247,7 @@ sub try_to_delete_project {
 	my $Project = new openprint::Project( $project_index );
 	my $proj_reference = $Project->reference();
 
-	if ( $Project->company_id() != $session{company_id} ) {
+	if (($$openprint::User{type} ne 'A' ) and ($Project->company_id() != $session{company_id})) {
 		$error .= "Project $proj_reference does not belong to you.	Not deleted.<br/>";
 		$delete = 0;
 	} # end if
