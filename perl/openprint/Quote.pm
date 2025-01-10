@@ -5,6 +5,8 @@ our @ISA=qw(openprint::Object);
 use constant DEBUG => 0;
 
 require MIME::QuotedPrint;
+require HTML::Strip;
+
 use openprint ();
 use vars qw( $debug $r %variable $log $dbh %config %session $table $serial %fields %transforms %defaults %find_fields );
 *variable = \%openprint::variable;
@@ -383,13 +385,15 @@ sub send {
           $Email->add_html_attachment( "Quote$$self{id}.html", $html );
         }
 
+        my $hs = $HTML::Strip->new();
         $results .= $Email->send(
             FROM    => $from,
             BCC		=>	'iconnor@connortechnology.com',
             TO      => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-            SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
+            SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $hs->parse($self->reference())),
             );
         $Email->attachments(undef);
+        $hs->eof;
       } # end if send_to_myself
 
       if ($$self{for_email} ne '') {
