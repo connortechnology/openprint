@@ -40,11 +40,27 @@ my @variables = (
 		'txtRunTime1',
 		'txtRunTime2',
 		'txtRunTime3',
+   'txtSignatureQty2Page-1'=>['save','output'], 'txtSignatureQty2Page-2'=>['save','output'], 'txtSignatureQty2Page-3'=>['save','output'],
+   'txtSignatureQty4Page-1'=>['save','output'], 'txtSignatureQty4Page-2'=>['save','output'], 'txtSignatureQty4Page-3'=>['save','output'],
+    'txtSignatureQty6Page-1'=>['save','output'], 'txtSignatureQty6Page-2'=>['save','output'], 'txtSignatureQty6Page-3'=>['save','output'],
+    'txtSignatureQty8Page-1'=>['save','output'], 'txtSignatureQty8Page-2'=>['save','output'], 'txtSignatureQty8Page-3'=>['save','output'],
+    'txtSignatureQty12Page-1'=>['save','output'], 'txtSignatureQty12Page-2'=>['save','output'], 'txtSignatureQty12Page-3'=>['save','output'],
+    'txtSignatureQty16Page-1'=>['save','output'], 'txtSignatureQty16Page-2'=>['save','output'], 'txtSignatureQty16Page-3'=>['save','output'],
+    'txtSignatureQty20Page-1'=>['save','output'], 'txtSignatureQty20Page-2'=>['save','output'], 'txtSignatureQty20Page-3'=>['save','output'],
+    'txtSignatureQty24Page-1'=>['save','output'], 'txtSignatureQty24Page-2'=>['save','output'], 'txtSignatureQty24Page-3'=>['save','output'],
+    'txtSignatureQty32Page-1'=>['save','output'], 'txtSignatureQty32Page-2'=>['save','output'], 'txtSignatureQty32Page-3'=>['save','output'],
+    'txtSignatureQty36Page-1'=>['save','output'], 'txtSignatureQty36Page-2'=>['save','output'], 'txtSignatureQty36Page-3'=>['save','output'],
+    'txtSignatureQty40Page-1'=>['save','output'], 'txtSignatureQty40Page-2'=>['save','output'], 'txtSignatureQty40Page-3'=>['save','output'],
+    'txtSignatureQty48Page-1'=>['save','output'], 'txtSignatureQty48Page-2'=>['save','output'], 'txtSignatureQty48Page-3'=>['save','output'],
+    'txtSignatureQty64Page-1'=>['save','output'], 'txtSignatureQty64Page-2'=>['save','output'], 'txtSignatureQty64Page-3'=>['save','output'],
+
 		);
 
 sub variables {
     return @variables;
 }
+
+my @possible_pages = ( 2, 4, 6, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 );
 
 # A function that is smart enough to return true if the project needs folding, and false if it doesn't.
 sub neccessary {
@@ -96,6 +112,7 @@ sub calc {
   $$specs{txtCalliper} = $Project->calliper();
 
 
+
 	my $error = '';
 	my @all_equipment = openprint::Equipment->find(
     'servicetype_id any' => $ServiceType->id(),
@@ -145,6 +162,13 @@ sub calc {
 		} else {
 			@equipment = @possible_equipment;
 		} # end if
+
+  if ( (!defined $$specs{'OverridePockets'.$qty_index}) or ($$specs{'OverridePockets'.$qty_index} ne 'Y') ) {
+    foreach my $pages ( @possible_pages ) {
+      $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = 0;
+    } # end foreach
+  } # end if
+  $$specs{"txtPockets$qty_index"} = 0;
 
 		foreach my $Equipment ( @equipment ) {
 
