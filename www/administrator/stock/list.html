@@ -194,7 +194,7 @@ return join("\n",
 	}# end foreach option
 	return $html;
 ) ?>
-		<li> 
+		<li class="type"> 
 			<label>Type</label>
 			<? echo ( checkboxes( 'Types', ['Sheet','Sheet','Roll','Roll'], [ split(',', $session{$r->uri().'?Types'} ) ], { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>

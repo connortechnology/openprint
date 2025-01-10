@@ -33,11 +33,6 @@ sub try_to_delete {
 } # end sub try_to_delete
 
 sub history {
-  ssi::setup_date_select($r->uri(), 'created_on_start', -30);
-  ssi::setup_date_select($r->uri(), 'created_on_end', 0);
-  $session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
-  $session{$r->uri().'?deleted'} = '0' if ! exists $session{$r->uri().'?deleted'};
-  #$session{$r->uri().'?limit'} = '1000' if ! exists $session{$r->uri().'?limit'};
 
   if ($param{btnFunction}) {
     if ( $param{btnFunction} eq 'Delete' ) {
@@ -96,6 +91,12 @@ sub history {
     } else {
       $log->error("Unknown btnFunction in quote history $param{btnFunction}");
     } # end if
+  } else {
+    ssi::setup_date_select($r->uri(), 'created_on_start', -30);
+    ssi::setup_date_select($r->uri(), 'created_on_end', 0);
+    $session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
+    $session{$r->uri().'?deleted'} = '0' if ! exists $session{$r->uri().'?deleted'};
+    #$session{$r->uri().'?limit'} = '1000' if ! exists $session{$r->uri().'?limit'};
   }
 
   _history();
@@ -103,12 +104,14 @@ sub history {
 
 sub _history {
   my $uri = '/main/quote/history.html';
+  if (!$param{btnFunction}) {
   ssi::save_params($uri,
       'created_on_start_year', 'created_on_start_month','created_on_start_day',
       'created_on_end_year', 'created_on_end_month','created_on_end_day',
 			'user_id',
       'QuotedFor', 'company_id','deleted','salesrep_id', 'status', 'total_start','total_end','limit','press_id','ordered',
       );
+  }
   if ( $param{QuoteID} ) {
     $variable{Quotes} = [ openprint::Quote->find(
         ( sets::isin($session{user_type}, ['E','A'] ) ? () : ( company_id   =>  $session{company_id} ) ),
@@ -147,7 +150,7 @@ sub _history {
                } ) : () ),
 					 ] ) : () ),
 				order =>  $openprint::Quote::fields{created_on}.' DESC',
-				#limit =>   $session{$uri.'?limit'},
+				limit =>   $session{$uri.'?limit'} ? $session{$uri.'?limit'} : 1000,
 					 );
 
 		my @quote_ids = map { $$_{id} } @Quotes;

@@ -8,7 +8,7 @@ require openprint::pricing;
 require openprint::Project_Service;
 require openprint::ServiceType;
 
-use constant Debug => 0;
+use constant Debug => 1;
 
 use vars qw( %specs_cache %service_name_cache );
 
@@ -82,7 +82,7 @@ $openprint::log->debug("Module is: $module");
 			insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $openprint::param{$key}, 0 );
 		} # end if
 	} # end foreach
-	delete_service_spec( $project_index, $service_index, @deleted_specs );
+	delete_service_spec( $project_index, $service_index, @deleted_specs ) if @deleted_specs;
 	if ( my $function = $module->can('save') ) {
 		$function->($project_index, $service_index, \%openprint::param);
 	} # end if
