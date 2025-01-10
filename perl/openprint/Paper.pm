@@ -1783,6 +1783,7 @@ sub types {
 
 sub type {
   my $self = shift;
+  $$self{type} = shift if @_;
   return 'Sheet' if !$$self{type};
   return $$self{type};
 }
