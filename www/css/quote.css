@@ -5,12 +5,15 @@ div.Quote {
 div.Quote div.Header {
 	margin-bottom: 5px;
 	width: 100%;
+  display: flex;
+  flex-wrap: wrap;
 }
 div.Quote div.Header fieldset {
   margin-right: .5em;
 }
 div.Quote div.Header fieldset legend {
 }
+/*
 div.Quote div.Header fieldset ul {
 	margin: 0px;
 	padding: 0px;
@@ -23,7 +26,7 @@ div.Quote div.Header fieldset ul li {
 	padding: 0px;
 	margin: 0px;
 }
-div.Quote div.Header fieldset ul li label {
+div.Quote div.Header fieldset ul li label:not(.radio) {
   margin-right: 10px;
 	margin-left: 0px;
   width: auto;
@@ -32,7 +35,8 @@ div.Quote div.Header fieldset ul li label {
 div.Quote div.Information div.Header fieldset li {
 	text-align: right;
 }
-div.Quote div.Information div.Header fieldset li label {
+*/
+div.Quote div.Information div.Header fieldset li label:not(.radio) {
 	text-align: left;
 }
 
@@ -40,6 +44,7 @@ div.Quote div.Information div.Header fieldset li label {
 	width: 100%;
 }
 .PreparedByFor {
+	width: 100%;
   margin: 4px 0;
   display: flex;
   flex-direction: row;
@@ -68,7 +73,7 @@ div#Information fieldset {
 div#Information fieldset legend {
 display: none;
 }
-div#Information fieldset p label {
+div#Information fieldset p label:not(.radio) {
 display: inline;
     font-weight: bold;
     margin-right: 10px;
@@ -81,12 +86,14 @@ div#Information fieldset p#Status {
 display: none;
 }
 
-div.Quote div.Information fieldset ul li {
+div.Quote fieldset ul li {
 	margin: .2em;
 	padding-left: 180px;
+  text-align: left;
 }
-div.Quote div.Information fieldset ul li label:not(.radio) {
-	margin: 0px 15px 0px -180px;
+div.Quote fieldset ul li label:not(.radio) {
+
+	margin: 0px 0px 0px -180px;
 	width: 180px;
 }
 fieldset#SalesRepComments {
@@ -99,9 +106,13 @@ fieldset#SalesRepComments p textarea {
 div.Quote table .description {
 	text-align: left;
 }
-div.reference {
+.reference {
 	font-weight: bold;
 	margin-bottom: 10px;
+}
+.reference p {
+  text-align: left;
+ padding: 0;
 }
 div.Quote table .markup {
 	width: 80px;
@@ -150,11 +161,16 @@ div.Quote table tr.totals td {
 .Project table .description {
 	text-align: left;
 }
-table .thumbnail {
+table td.thumbnail {
   width: 150px;
   display: table-cell;
   padding: 1px;
   border-radius: 0;
+  border: 0px;
+}
+table th.thumbnail {
+  border: 0px;
+  border-bottom: 1px solid #0046A2;
 }
 .thumbnail img {
   width: 150px;

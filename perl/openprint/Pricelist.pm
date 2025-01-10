@@ -7,7 +7,6 @@ require openprint::MaterialPrice;
 require openprint::ServicePrice;
 require openprint::PaperPrice;
 require openprint::Currency;
-require openprint::logs;
 require openprint;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
@@ -46,7 +45,7 @@ sub destroy {
     sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Product_Prices WHERE pricelist_id=?}, $$self{id} );
 	$self->SUPER::destroy();
 	sql::end_transaction( $openprint::dbh, $ac );
-	openprint::logs::insertLogRecord('9', "Price List Index: " . $$self{id},);
+  new eprint::Log()->save({action=>'Destroy', Object=>$self});
 } # end sub delete
 
 sub getPrices {

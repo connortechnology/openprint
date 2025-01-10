@@ -1188,7 +1188,7 @@ $Imposition->display();
 				} else { # Not the press
 					my $max_feed_width = $Equipment->specification('Maximum Feed Width', $$Imposition{imposition} );
           # Figure out the fold.	Because this isn't the press, we have to figure out how it cuts...
-          $openprint::log->debug("Max feed: $max_feed_width") if $max_feed_width;
+          $openprint::log->debug("Max feed: $max_feed_width") if $max_feed_width and DEBUG;
 
           my $fold_type = ($$specs{"chkOverrideFold-$form-$qty_index"} ? $$specs{"FoldType-$form-$qty_index-$fi_index"} : $$sig_specs{rdbTemplateType});
           $fold_type //= '';

@@ -6465,8 +6465,8 @@ if ( 1 ) {
 			'Plate Changes'				=>	$plate_changes,
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;
-	$price{'Gross Sheet Count'} = $sheet_qty{'Gross Sheet Count'};
-	$price{'Net Sheet Count'} = $sheet_qty{'Net Sheet Count'};
+  $$Imposition{gross_sheets} = $price{'Gross Sheet Count'} = $sheet_qty{'Gross Sheet Count'};
+	$$Imposition{net_sheets} = $price{'Net Sheet Count'} = $sheet_qty{'Net Sheet Count'};
 	$price{'Stock Weight'} = $sheet_qty{Weight};
 	$price{'Stock Qty'} = $$Paper{type} eq 'Sheet' ? $sheet_qty{'Gross Sheet Count'} : $sheet_qty{Weight};
 

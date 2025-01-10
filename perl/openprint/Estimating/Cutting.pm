@@ -295,6 +295,7 @@ sub signature_calc_stock_cutting {
       Status	=> 'calculated',
       alert		=>	'',
       Breakdown	=> 	'',
+      Price => 0,
       );
 
   my @my_equipment;
