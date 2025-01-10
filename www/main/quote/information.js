@@ -36,7 +36,9 @@ function add_product(button) {
 
 window.addEventListener('DOMContentLoaded',function(){
   const tinymce_options = {
-  selector : 'textarea',
+      mode : "specific_textareas",
+      editor_selector : "mce",
+    //selector : 'textarea',
     license_key: 'gpl',
   plugins: "paste",
   theme_advanced_toolbar_location : "top",
