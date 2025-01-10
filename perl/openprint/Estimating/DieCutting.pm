@@ -631,8 +631,7 @@ sub signature_calc {
 			my $Set_of_Impositions =  $Sets_of_Impositions[$Set_index];
 			my @Impositions = openprint::imposition::sort( @{$Set_of_Impositions} );
 
-			my %price;
-			$price{Prices} = [];
+			my %price = (Prices => [], Status=>'uncalculated');
 			my $complete = 1;
 			for( my $impo_index = 0; $impo_index < @Impositions; $impo_index += 1 ) {
 				my $imposition = $Impositions[$impo_index];
