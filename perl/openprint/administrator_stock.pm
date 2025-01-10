@@ -231,6 +231,23 @@ $openprint::log->debug("Setting: $param{amount} " );
 	} elsif ( $param{btnFunction} ) {
 		$log->error("Unknown function $param{btnFunction}");
 	} # end if
+
+  if ($param{brand}) {
+    my $brand = openprint::StockBrand->find_one('name lc'=>lc$param{brand});
+    $param{brand_id} = $brand->id() if $brand;
+  }
+  if ($param{finish}) {
+    my $finish = openprint::StockFinish->find_one('name lc'=>lc$param{finish});
+    $param{finish_id} = $finish->id() if $finish;
+  }
+  if ($param{colour}) {
+    my $colour = openprint::StockColour->find_one('name lc'=>lc$param{colour});
+    $param{colour_id} = $colour->id() if $colour;
+  }
+  if ($param{weight}) {
+    my $weight = openprint::StockWeight->find_one('name lc'=>lc$param{weight});
+    $param{weight_id} = $weight->id() if $weight;
+  }
 } # end sub list
 
 sub stock {
@@ -240,16 +257,20 @@ sub stock {
 
     if ( $param{btnFunction} eq 'Delete' ) {
       if ( ! $Paper ) {
-        $variable{error} .= "No stock selected for delete.<br/>";
+        $variable{error} .= 'No stock selected for delete.<br/>';
         $variable{Stock} = new openprint::Paper();
         return;
       }
       my $new = $Paper->next();
       $new = $Paper->previous() if $new == $Paper;
-      $Paper->delete();
-      $variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
-      $Paper = $new;
-      $param{stock_id} = $Paper->id();
+      $variable{error} = $Paper->delete();
+      if (!$variable{error}) {
+        $variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
+        $Paper = $new;
+        $param{stock_id} = $Paper->id();
+        $variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
+      }
+
     } elsif ( $param{btnFunction} eq 'Copy' ) {
       if ( ! $Paper ) {
         $variable{error} .= "No stock selected for copy.<br/>";
@@ -265,6 +286,7 @@ sub stock {
       } # end foreach
       $Paper = $NewPaper;
       $param{stock_id} = $Paper->id();
+      $variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
     } elsif ( $param{btnFunction} eq 'Save' ) {
 
       $Paper = new openprint::Paper() if ! $Paper;

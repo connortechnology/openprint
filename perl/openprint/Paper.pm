@@ -27,6 +27,7 @@ require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 require openprint::PaperAllocation;
 require openprint::PaperInventory;
+require openprint::PaperRecommendation;
 require POSIX;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
@@ -545,13 +546,13 @@ sub Brand {
 
 sub brand {
 	if ( defined $_[1] ) {
-		$_[1] = openprint::StockBrand->transform( 'name', $_[1] );
+		$_[1] = openprint::StockBrand->transform(name=>$_[1]);
 		if ( ! $_[0]{custom} ) {
 			my $Brand = openprint::StockBrand->find_one('name lc'=> lc $_[1] );
 			if ( $Brand ) {
 				@{$_[0]}{'brand_id','brand'} = @$Brand{'id','name'};
 			} else {
-				@{$_[0]}{'brand_id','brand'} = ( undef, $_[1] );;
+				@{$_[0]}{'brand_id','brand'} = ( undef, $_[1] );
 			} # end if
 		} else {
 			$_[0]{brand} = $_[1];
@@ -718,15 +719,22 @@ sub mweight {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{basis_width} * $$self{basis_height} * 1000 );
 $openprint::log->debug("Setting mweight to $$self{mweight} from wpsi $wpsi and basis size");
 				# MWeight is in relation to the basis size
-			} elsif ( $$self{width} and $$self{height} ) {
-				$$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 1000 );
+      } elsif ( $$self{width} and $$self{height} ) {
+        if ($self->is_envelope()) {
+          $$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 500 );
+        } else { 
+          $$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 1000 ); 
+        } # endif
 			} # end if
+    } elsif ($self->basis_mweight()) {
+      $$self{mweight} = Math::Round::round(($$self{basis_mweight}*$$self{width}*$$self{height})/($self->basis_width()*$self->basis_height()));
+
 		} elsif ( ($self->weight() =~ /(\d+)lb/) or ($self->weight() =~ /(\d+)#/) ) {
-			$$self{mweight} = Math::Round::round(($1*$$self{width}*$$self{height})/(25*38));
+			$$self{mweight} = Math::Round::round(($1*$$self{width}*$$self{height})/($self->basis_width()*$self->basis_height()));
 		} elsif ( ! $self->weight() =~ /\D/ ) {
 			# weigiht of 500sheets of 25x38
 #$openprint::log->debug("Auto calcing mweight from " . $self->weight() );
-			$$self{mweight} = Math::Round(($self->weight()*$$self{width}*$$self{height})/(25*38));
+			$$self{mweight} = Math::Round(($self->weight()*$$self{width}*$$self{height})/($self->basis_width()*$self->basis_height()));
 		} # end if
 		$self->wpsi(undef);
 	} # end if
@@ -1041,6 +1049,22 @@ order=>'brand,finish,colour,weight,width,height' );
 	return $self;
 } # end sub next
 
+sub Recommendations {
+  my $self = shift;
+  if ( @_ ) {
+    @{$$self{Recommendations}} = @_;
+  } elsif ( ! exists $$self{Recommendations} ) {
+    $openprint::log->debug('No Recommendations');
+    if ( $$self{id} ) {
+      $$self{Recommendations} = [ openprint::PaperRecommendation->find(paper_id=>$$self{id}) ];
+    } else {
+      $openprint::log->debug('No id in recommendations');
+      $$self{Recommendations} = [];
+    } # end if
+  } # end if
+  return @{$$self{Recommendations}};
+} # end sub Recommendations
+
 sub recommendations {
 	my $self = shift;
 	if ( @_ ) {
@@ -1142,7 +1166,7 @@ sub get_price {
 
 	if ( $$openprint::Company{discount} or $$openprint::Company{csr_commission} or $$openprint::Company{credit_card_fee} or $$CSR{commission} ) {
 		my $discount = 1 - ($$openprint::Company{discount} / 100);
-		my $csr_commission = 1 + ($$openprint::Company{csr_commission} == undef ? $$CSR{commission} : $$openprint::Company{csr_commission} ) /100;
+		my $csr_commission = 1 + (defined($$openprint::Company{csr_commission}) ? $$openprint::Company{csr_commission} : $$CSR{commission}) /100;
 		my $credit_card_fee = 1 + ($$openprint::Company{credit_card_fee}/100);
 
 		$_ = $$price{price};
@@ -1179,7 +1203,6 @@ sub get_price {
 $openprint::log->debug("Costs: cost($$price{cost}) Price($$price{'100lb Price'})/100lb cost($$price{'100lb Cost'})/cwt Price($$price{Price}) qty($qty) lookup_qty($lookup_qty) Total($$price{'100lb Total'})") if DEBUG_PRICING;
 	return $price;
 } # end sub get_price
-
 
 sub cut {
 	my $self = shift;
@@ -1270,16 +1293,23 @@ sub wpsi {
 		$$self{wpsi} = $self->transform(wpsi=>shift);
 #$log->debug("Setting wpsi to $$self{wpsi}") if 1;
 	} # end if
-	if ( ! $$self{wpsi} ) {
-		if ( $$self{gsm} ) {
-			$$self{wpsi} = $$self{gsm} / 703064.5;
-#$log->debug("Setting wpsi to $$self{gsm} / 703064.5 = $$self{wpsi}");
-		} elsif ( $$self{mweight} and ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
+	if (!$$self{wpsi}) {
+    if ( $self->basis_mweight() ) {
+      $$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
+      if ($self->is_envelope()) {
+        $$self{wpsi} *= 2;
+        $log->debug("Setting wpsi to $$self{wpsi} from envelope 2 * basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height}");
+      } else {
+        $log->debug("Setting wpsi to $$self{wpsi} from basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height}");
+      }
+
+		} elsif ( $$self{mweight} and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
+      $$self{wpsi} *= 2 if $self->is_envelope();
 #$log->debug("Setting wpsi to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height})");
-		} elsif ( $$self{basis_mweight} ) {
-			$$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
-#$log->debug("Setting wpsi to basisweight ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height()");
+    } elsif ($$self{gsm} and $$self{gsm} ne 'unknown') {
+			$$self{wpsi} = $$self{gsm} / 703064.5;
+#$log->debug("Setting wpsi from gsm to $$self{gsm} / 703064.5 = $$self{wpsi}");
 		#} else {
 #$log->debug("Nothing to set wpsi from");
 		} # end if
@@ -1646,12 +1676,13 @@ sub gsm_to_mweight {
 	my $wpsi = $gsm/703064.5;
 	return sprintf('%.0f', $wpsi * 25 * 38 * 1000);
 } # end sub gsm_to_mweight
+
 sub gsm_to_weight {
 	my ( $gsm ) = @_;
 
 	my $wpsi = $gsm/703064.5;
 	return sprintf('%.0f', $wpsi * 25 * 38 * 500 );
-} # end sub gsm_to_mweight
+} # end sub gsm_to_weight
 
 
 sub start_area {
@@ -1671,10 +1702,10 @@ sub is_cut {
 sub basis_mweight {
 	my $self = shift;
 	if ( @_ ) {
-		$$self{basis_mweight} = $_[0] ? $self->transform('basis_mweight'=>shift) : $_[0];
+		$$self{basis_mweight} = $_[0] ? $self->transform(basis_mweight=>shift) : $_[0];
 	} # end if
 	if ( ! $$self{basis_mweight} ) {
-		my $wpsi = $self->wpsi(undef);
+		my $wpsi = $$self{wpsi};
 		if ( $wpsi ) {
 			$$self{basis_mweight} = Math::Round::nearest(0.01, $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
 #$openprint::log->debug("calcing basis_mweight from wpsi: $$self{basis_mweight} = $wpsi * $$self{basis_width} * $$self{basis_height} * 1000");
@@ -1698,8 +1729,12 @@ sub basis_width {
 	if ( ! $$self{basis_width} ) {
 		if ( $self->is_cover() ) {
 			$$self{basis_width} = 20;
-		} elsif ( $self->is_bond() ) {
+		} elsif ( $self->is_bond() or $self->is_envelope() ) {
 			$$self{basis_width} = 17;
+    } elsif ($self->is_index()) {
+      $$self{basis_width} = 25.5;
+    } elsif ($self->is_bristol()) {
+      $$self{basis_width} = 22.5;
 		} else {
 			$$self{basis_width} = 25;
 		} # end if
@@ -1716,8 +1751,12 @@ sub basis_height {
 	if ( ! $$self{basis_height} ) {
 		if ( $self->is_cover() ) {
 			$$self{basis_height} = 26;
-		} elsif ( $self->is_bond() ) {
-			$$self{basis_height} = 22;
+		} elsif ( $self->is_bond() or $self->is_envelope() ) {
+      $$self{basis_height} = 22;
+    } elsif ($self->is_index()) {
+      $$self{basis_height} = 30.5;
+    } elsif ($self->is_bristol()) {
+      $$self{basis_height} = 28.5;
 		} else {
 			$$self{basis_height} = 38;
 		} # end if
@@ -1741,6 +1780,12 @@ sub units {
 sub types {
 	return ($_[0]{type} eq 'Roll' ? ' roll' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
 } # end sub types
+
+sub type {
+  my $self = shift;
+  return 'Sheet' if !$$self{type};
+  return $$self{type};
+}
 
 sub Supplied {
 	my ( $self ) = @_;
@@ -1925,12 +1970,12 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
     push @results, 'appears to be C1S, but is marked double sided.';
   }
-	if ( $Paper->weight() =~ /(\d+) *lb/i ) {
+	if ( $Paper->weight() =~ /(\d+) *lb/i or $Paper->weight() =~ /(\d+) *#/) {
 		if ( int($Paper->basis_mweight()) != 2*$1 ) {
-			push @results, 'may have wrong basis mweight.  Should probably be '.2*$1;
+      push @results, 'may have wrong basis weight ('.int($Paper->basis_mweight()).'. Should probably be '.2*$1;
 		}
 	}
-my $old_wpsi = 1*$$Paper{wpsi};
+  my $old_wpsi = 1*$$Paper{wpsi};
 
 	if ( $old_wpsi ne $Paper->wpsi(undef) ) {
 			push @results, "invalid value for wpsi $old_wpsi should maybe be $$Paper{wpsi}";
@@ -1944,13 +1989,15 @@ my $old_wpsi = 1*$$Paper{wpsi};
 
 sub is_cover {
 	my $Paper = shift;
-	return 
-			($Paper->brand() =~ /cover/i
+	return (
+    $Paper->brand() =~ /cover/i
 			 or
-			$Paper->finish() =~ /cover/i
-			or 
-			$Paper->weight() =~ /cover/i);
-}
+     $Paper->brand() =~ /board/i
+       or
+     $Paper->finish() =~ /cover/i
+       or 
+     $Paper->weight() =~ /cover/i);
+ }
 
 sub is_bond {
 	my $Paper = shift;
@@ -1961,14 +2008,37 @@ sub is_bond {
 			or 
 			$Paper->weight() =~ /bond/i);
 }
+
+sub is_index {
+  my $Paper = shift;
+  return
+      ($Paper->brand() =~ /index/i
+       or
+      $Paper->finish() =~ /index/i
+      or
+      $Paper->weight() =~ /index/i);
+}
+
+sub is_bristol {
+  my $Paper = shift;
+  return
+      ($Paper->brand() =~ /bristol/i
+       or
+      $Paper->finish() =~ /bristol/i
+      or
+      $Paper->weight() =~ /bristol/i);
+}
+
 sub is_envelope {
 	my $Paper = shift;
-	return 
-			($Paper->brand() =~ /envelope/i
-			 or
-			$Paper->finish() =~ /envelope/i
-			or 
-			$Paper->weight() =~ /envelope/i);
+	return (
+    $$Paper{type} eq 'Envelope'
+      or
+    $Paper->brand() =~ /envelope/i
+      or
+    $Paper->finish() =~ /envelope/i
+      or 
+    $Paper->weight() =~ /envelope/i);
 }
 
 sub is_fsc {
@@ -1998,6 +2068,42 @@ sub destroy {
   sql::end_transaction( $openprint::dbh, $ac );
   return $error;
 } # end sub destroy
+
+sub grade {
+  my $self = shift;
+  if (!$$self{grade}) {
+    #1        =>      '1 Gloss-coated stock',
+    #2        =>      '2 Matte-coated stock',
+    #3        =>      '3 Gloss-coated, web stock',
+    #4        =>      '4 Uncoated, white stock',
+    #5        =>      '5 Uncoated, yellow stock'
+    if ($self->finish() =~ /gloss/i) {
+      if ($self->type() eq 'Roll') {
+        return $$self{grade} = 3;
+      } else {
+        return $$self{grade} = 1;
+      }
+    } elsif ($self->finish() =~ /matte/i or $self->finish() =~ /silk/i) {
+      return $$self{grade} = 2;
+    } elsif ($self->finish() =~ /uncoated/i) {
+      return $$self{grade} = 4;
+    }
+    if ($self->brand() =~ /gloss/i) {
+      if ($self->type() eq 'Roll') {
+        return $$self{grade} = 3;
+      } else {
+        return $$self{grade} = 1;
+      }
+    } elsif ($self->brand() =~ /matte/i or $self->brand() =~ /silk/i) {
+      return $$self{grade} = 2;
+    } elsif ($self->brand() =~ /uncoated/i) {
+      return $$self{grade} = 4;
+    }
+
+  } # end if !grade
+  return $$self{grade};
+}
+
 
 1;
 __END__

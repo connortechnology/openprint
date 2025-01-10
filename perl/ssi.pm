@@ -46,7 +46,8 @@ sub slurp_content {
 
 #$log->debug("Slurping file $file");
 
-	if ( ! ( $file =~ /^\// ) ) {
+
+	if (substr($file, 0, 1) ne '/') {
 		# Use a path relative to the current page
 		my $path = $variable{uri};
 		$path =~ s/(.*\/).*/$1/;
