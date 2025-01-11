@@ -1050,7 +1050,7 @@ sub date_filter {
 	return ( $sql_field, $parser->format_datetime( $datetime ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this', 'on_input_this' );
 
 sub input {
 	my %options = @_;
@@ -1060,10 +1060,10 @@ sub input {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{pattern} = '[0-9]*' if ! $options{pattern};
-		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
-			$options{type} = 'text';
-			$options{pattern} = '[0-9]*' if ! $options{pattern};
-			delete $options{step};
+		#} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+			#$options{type} = 'text';
+			#$options{pattern} = '[0-9]*' if ! $options{pattern};
+			#delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
@@ -1071,13 +1071,14 @@ sub input {
 		$options{oninput} = $options{filter}.$options{oninput};
 		#$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
 	} elsif ( $options{type} eq 'integer' ) {
+		$options{step} = '1' if ! exists $options{step};
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{pattern} = '^-?\d*' if ! $options{pattern};
-		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
-			$options{type} = 'text';
-			$options{pattern} = '^-?\d*' if ! $options{pattern};
-			delete $options{step};
+		#} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+			#$options{type} = 'text';
+			#$options{pattern} = '^-?\d*' if ! $options{pattern};
+			#delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
@@ -1088,10 +1089,10 @@ sub input {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{pattern} = '[\+\-]?[.0-9eE]*' if ! $options{pattern};
-		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
-			$options{type} = 'text';
-			$options{pattern} = '^[\+\-]?[.0-9eE]*' if ! $options{pattern};
-			delete $options{step};
+		#} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+			#$options{type} = 'text';
+			#$options{pattern} = '^[\+\-]?[.0-9eE]*' if ! $options{pattern};
+			#delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
