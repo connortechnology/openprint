@@ -1,6 +1,9 @@
 <div class="Stock">
 	<fieldset><legend>Stock</legend>
 <? if ( $session{user_type} eq 'A' ) ?>
+      <label for="label" class="checkbox">
+      <button type="button" class="button" on_click_this="addstock">View in admin side</button>
+      </label>
 	<?echo( button( 'StockList', { onclick=>qq`popup_window('_stock_popup.html', getValues( 'f1', [ 'ProjectIndex', 'ddmStockQuality','ddmStockGroup','ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight' ] ), { width: 1024 } );`, text=>'List Stocks' } ); ) ?>
 <? endif ( $session{user_type} eq 'A' ) ?>
   <?echo( button('clearstock'.$$variable{Signature}, { on_click=>'clear_stock', text=>'Clear Stock' }); ) ?>
@@ -15,34 +18,62 @@
       <?echo(radio('rdbSpecificStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ],
       $$variable{'rdbSpecificStock'.$$variable{Signature}}, {
      default=>'N',
-     onclick=>"if(this.value=='Y'){\$('HouseStock$$variable{Signature}').hide();\$('SpecificStock$$variable{Signature}').show();if(this.form.ddmStockSheetSize1){clear_ddm(this.form.ddmStockSheetSize1);};if(this.form.ddmStockSheetSize2){clear_ddm(this.form.ddmStockSheetSize2);};if(this.form.ddmStockSheetSize3){clear_ddm(this.form.ddmStockSheetSize3);};calc(this.form.name);}else{\$('SpecificStock$$variable{Signature}').hide();\$('HouseStock$$variable{Signature}').show();Stock_onchange(this,'$$variable{Signature}');}" } );)?>
+     on_click_this=>'specific_stock_onchange',
+     } );)?>
 		</li>
 		</ul>
 		<? endif ( $$variable{Mode} ne 'Easy' ) ?>
 		<div id="SpecificStock<?Signature?>" style="display: <? echo ( $$variable{'rdbSpecificStock'.$$variable{Signature}} ne 'Y' ? 'none' : 'block' ) ?>;">
 		<ul>
 			<li class="Brand"><label>Brand</label>
-			<input type="text" name="txtSpecificStockBrand<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockBrand'.$$variable{Signature}} ) ?>" />
+			<input type="text" name="txtSpecificStockBrand<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockBrand'.$$variable{Signature}} ) ?>" on_input_this="brand_onchange"/>
 			</li>
 			<li class="Finish"><label>Finish</label>
-			<input type="text" name="txtSpecificStockFinish<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockFinish'.$$variable{Signature}} ) ?>" />
+			<input type="text" name="txtSpecificStockFinish<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockFinish'.$$variable{Signature}} ) ?>" on_input_this="finish_onchange"/>
 			</li>
 			<li class="Colour"><label>Colour</label>
 			<input type="text" name="txtSpecificStockColour<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockColour'.$$variable{Signature}} ? $$variable{'txtSpecificStockColour'.$$variable{Signature}} : 'White' ) ?>" />
 			</li>
 			<li class="Weight"><label>Weight</label>
-        <input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{Signature}} ) ?>" on_input_this="calc_basis_weight_from_weight"/>
+        <input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{Signature}} ) ?>" on_input_this="weight_onchange"/>
 			</li>
 			<li class="calliper"><label>Calliper</label>
-				<? echo ( input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature}, value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ); ) ?>
-				inches
+ <? echo (
+        return join("\n", 
+          input( type=>'float', name=>'txtSpecificStockCalliperPT'.$$variable{Signature},
+          value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}?$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}*1000:'',
+          on_input_this=>'calliper_onchange' ),
+          'PT',
+          input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature},
+          value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}?$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}:'',
+          on_input_this=>'calliper_onchange' ),
+          'inches',
+          input( type=>'float', name=>'calliper_mm'.$$variable{Signature},
+          value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}?Math::Round::nearest(0.001, $$variable{'txtSpecificStockCalliper'.$$variable{Signature}}*25.4):'',
+          on_input_this=>'calliper_onchange' ),
+          'mm'
+          );
+          ) ?>
 			</li>
-			<li class="Type"><label>Format</label>
-				<input type="radio" id="StockType<?Signature?>Sheet" name="StockType<?Signature?>" value="Sheet" <? echo ( checked( $$variable{'StockType'.$$variable{Signature}} eq 'Sheet' ); ) ?> onclick="if ( this.checked ) { $('SpecificStockHeight<?Signature?>').show();$('BasisSize<?Signature?>').hide();$('MWeight<?Signature?>').show();$('PricePerM<?Signature?>').show();gsm_to_mweight(this.form,'<?Signature?>');$('minimum_order_units<?Signature?>').innerHTML='sheets';$('sheets_per_package<?Signature?>').innerHTML='sheets';} calc(this.form.name);" />
-				<label class="radio" for="StockType<?Signature?>Sheet">Sheet</label>
-				<input type="radio" id="StockType<?Signature?>Roll" name="StockType<?Signature?>" value="Roll" <? echo ( checked( $$variable{'StockType'.$$variable{Signature}} eq 'Roll' ); ) ?> onclick="if ( this.checked ) { f1.elements['txtSpecificStockHeight<?Signature?>'].value='';$('SpecificStockHeight<?Signature?>').hide();$('BasisSize<?Signature?>').show();$('MWeight<?Signature?>').hide();$('PricePerM<?Signature?>').hide();gsm_to_mweight(this.form,'<?Signature?>');paper_price_calc(this,'<?Signature?>');$('minimum_order_units<?Signature?>').innerHTML='lbs';$('sheets_per_package<?Signature?>').innerHTML='lbs';}calc(this.form.name);" />
-				<label class="radio" for="StockType<?Signature?>Roll">Roll</label>
-			</li>
+ <?echo( 
+     my @types;
+     if ( $$variable{Project}->Type()->name() eq 'Envelopes' ) {
+     @types = 'Envelope';
+     } else {
+     @types = sql::execute($log, $dbh, q`SELECT distinct type from Papers where type IS NOT NULL AND type != '' AND type != 'Envelope'`);
+     }
+     if (@types > 1) {
+     return join("\n",
+         '<li class="Type"><label>Format</label>',
+         radio('StockType'.$$variable{Signature},
+           [map { $_ => $_ } sort { $a cmp $b } @types ], $$variable{'StockType'.$$variable{Signature}},
+           { default=>'Sheet', on_click_this=>'type_onchange' }
+           ),
+         '</li>',
+         );
+     }
+     return input(name=>'StockType'.$$variable{Signature}, type=>'hidden', value=>$types[0]);
+)?>
 			<li class="Size" id="SpecificStockSize<?Signature?>">
 				<label>Size</label>
 				<? echo ( input( type=>'float', name=>'txtSpecificStockWidth'.$$variable{Signature}, value=>$$variable{'txtSpecificStockWidth'.$$variable{Signature}}, oninput=>"Stock_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
@@ -54,10 +85,10 @@
 				<label>MWeight</label>
 				<? echo ( input( type=>'float', name=>'txtCustomMWeight'.$$variable{Signature}, value=>$$variable{'txtCustomMWeight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
 			</li>
-			<li class="Basis" id="BasisSize<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{Signature}} ne 'Roll' ) ?>>
+			<li class="basis_weight" id="BasisSize<?Signature?>">
 				<label>Basis Weight</label>
-				<? echo ( input( type=>'float', name=>'basis_mweight'.$$variable{Signature}, value=>$$variable{'basis_mweight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?><br/>
-				<label>Basis Size</label>
+				<? echo ( input( type=>'float', name=>'basis_mweight'.$$variable{Signature}, value=>$$variable{'basis_mweight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+        @
 				<? echo ( input( type=>'float', name=>'basis_width'.$$variable{Signature}, value=>$$variable{'basis_width'.$$variable{Signature}} ? $$variable{'basis_width'.$$variable{Signature}} : 25, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
 				x
 				<? echo ( input( type=>'float', name=>'basis_height'.$$variable{Signature}, value=>$$variable{'basis_height'.$$variable{Signature}} ? $$variable{'basis_height'.$$variable{Signature}} : 38, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
