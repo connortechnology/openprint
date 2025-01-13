@@ -172,6 +172,7 @@ function specific_stock_onchange(radio) {
     if(radio.form.ddmStockSheetSize3){
       clear_ddm(radio.form.ddmStockSheetSize3);
     };
+    weight_onchange(radio)
   } else {
     $j('#HouseStock'+signature).show();
     $j('#SpecificStock'+signature).hide();
@@ -195,12 +196,13 @@ function finish_onchange(element) {
 }
 
 function weight_onchange(element) {
-  let re = /^txtSpecificStockWeight(\d*)$/;
-  let matches = re.exec(element.name);
-  const signature = matches[1];
-  re = /([\d\.]+)(lb|#)/i;
-  matches = re.exec(element.value);
   const form = element.form;
+
+  let re = /(\d+)$/;
+  let matches = re.exec(element.name);
+  const signature = matches && matches.length ? matches[1] : '';
+  re = /([\d\.]+)(lb|#)/i;
+  matches = re.exec(form.elements['txtSpecificStockWeight'+signature].value);
   if (matches) {
     const weight = matches[1];
     console.log(signature, weight);
@@ -295,6 +297,10 @@ function select_grade(element) {
 
 function addstock(button) {
   const form = button.form;
+  let re = /(\d*)$/;
+  let matches = re.exec(element.name);
+  const signature = matches.length ? matches[1] : '';
+
   if (get_rdb_value(form, 'rdbSpecificStock') == 'Y') {
     // Go direct to add new stock
     window.open('/administrator/stock/stock.html?brand='+encodeURIComponent(form.elements['txtSpecificStockBrand'].value)
@@ -319,11 +325,13 @@ function addstock(button) {
         );
   } else {
     // Go to stock list with filters already selected
-    window.open('/administrator/stock/list.html?brand='+encodeURIComponent(form.elements['stock_name'].value)
-        +'&'+'finish='+encodeURIComponent(form.elements['stock_finish'].value)
-        +'&'+'colour='+encodeURIComponent(form.elements['stock_colour'].value)
-        +'&'+'weight='+encodeURIComponent(form.elements['stock_weight'].value)
-        );
+    window.open('/administrator/stock/list.html?nothing=nothing'
+      +(form.elements['ddmStockGroup'] ? '&group='+encodeURIComponent(form.elements['ddmStockGroup'].value) : '')
+      +(form.elements['ddmStockBrand'] ? '&brand='+encodeURIComponent(form.elements['ddmStockBrand'].value) : '')
+      +(form.elements['ddmstockFinish'] ? '&finish='+encodeURIComponent(form.elements['ddmstockFinish'].value) : '')
+      +(form.elements['ddmStockColour'] ? '&colour='+encodeURIComponent(form.elements['ddmStockColour'].value) : '')
+      +(form.elements['ddmStockWeight'] ? '&weight='+encodeURIComponent(form.elements['ddmStockWeight'].value) : '')
+    );
   }
 }
 
