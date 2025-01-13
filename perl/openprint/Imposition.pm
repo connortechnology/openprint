@@ -27,7 +27,7 @@ use constant Horizontal => 1;
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
-	'versions','imposition','rows','columns',
+	'version_qty','imposition','rows','columns',
 	'dutch_rows','dutch_columns', 'dutch_orientation',
 	'image_width','image_height', # dimensions + bleed
 	'object_width','object_height', # Flat dimensions
@@ -232,7 +232,7 @@ my ( $caller, undef, $line ) = caller;
 	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{runstyle}, $$self{Paper}->{start_width},$$self{Paper}->{start_height},$self->{Paper}->{width},$self->{Paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{Paper}->minimum_order() ) );
 my ( $caller, undef, $line ) = caller;
 	$openprint::log->debug(sprintf('Imp %s: %d@ %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq rotate: %d layout: %sx%s min: %s %s %s versions: %d from %s:%d', $prefix,
-	@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition'},$self->image_orientation_text(),@$self{'page_columns', 'page_rows', 'pages', 'runstyle'}, @$Paper{'start_width','start_height'}, $self->sheet_width(), $self->sheet_height(), $Paper->area(), $$self{rotate_sheet}, $self->layout_width(), $self->layout_height(), $$Paper{minimum_order}, $$self{Press}->{strid}, ( $$self{Price} ? $$self{Price} : '' ), $$self{versions}, $caller, $line ) );
+	@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition'},$self->image_orientation_text(),@$self{'page_columns', 'page_rows', 'pages', 'runstyle'}, @$Paper{'start_width','start_height'}, $self->sheet_width(), $self->sheet_height(), $Paper->area(), $$self{rotate_sheet}, $self->layout_width(), $self->layout_height(), $$Paper{minimum_order}, $$self{Press}->{strid}, ( $$self{Price} ? $$self{Price} : '' ), $$self{version_qty}, $caller, $line ) );
 } # end sub display
 
 sub get {
@@ -304,7 +304,7 @@ sub load {
   $$self{colour_bar_orientation} = $$self{Press}->specification('Colour Bar Orientation');
 
 	$$self{imposition} = $$specs{'txtImposition'.$qty_index};
-	$$self{versions} = $$specs{'Versions'.$qty_index};
+	$$self{version_qty} = $$specs{'Versions'.$qty_index};
 	$$self{start_columns} = $$self{columns} = $$specs{'hdnImpositionColumns'.$qty_index};
 	$$self{start_rows} = $$self{rows} = $$specs{'hdnImpositionRows'.$qty_index};
 
@@ -572,7 +572,7 @@ sub spread_columns {
 sub save {
 	my ( $self, $specs, $qty_index ) = @_;
 	$$specs{'txtImposition'.$qty_index} = $$self{imposition};
-	$$specs{'Versions'.$qty_index} = $$self{versions};
+	$$specs{'Versions'.$qty_index} = $$self{version_qty};
 	$$specs{'hdnImpositionRows'.$qty_index} = $$self{rows};
 	$$specs{'hdnImpositionColumns'.$qty_index} = $$self{columns};
 	$$specs{'hdnImpositionDutchRows'.$qty_index} = $$self{dutch_rows} ? $$self{dutch_rows} : '';

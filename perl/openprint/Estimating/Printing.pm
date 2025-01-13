@@ -19,7 +19,7 @@
 
 package openprint::Estimating::Printing;
 use strict;
-#use warnings;
+use warnings;
 use Data::Dumper;
 use Storable 'dclone';
 use POSIX qw(ceil);
@@ -35,9 +35,9 @@ require misc;
 
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_PLATES => 0;
-use constant DEBUG_VERSIONS => 0;
+use constant DEBUG_VERSIONS => 1;
 use constant DEBUG_PRESSES => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
@@ -106,6 +106,7 @@ sub ServicePriceConfiguration {
   'Plate Size' => { units => [ 'Inches' ]},
   'Plate Type' => { values => [ 'Convential', 'CTP', 'DI' ]},
   'Press Run Overs' => { range_units => [] },
+  'Runstyles'=> { values=>['Sheet Work', 'Work & Turn', 'Work & Tumble', 'Perfecting', 'Web'] },
 
 );
 sub SpecificationConfiguration {
@@ -293,7 +294,9 @@ my %variables = (
 	ddmStockFinish => ['save'], txtSpecificStockFinish => ['save'], 
 	ddmStockColour => ['save'], txtSpecificStockColour => ['save'],
 	ddmStockWeight => ['save'], txtSpecificStockWeight=>['save'],
-	txtSpecificStockCalliper => ['save','output'], txtSpecificStockWidth => ['save'], txtSpecificStockHeight => ['save'], CustomSheetDoubleSided => ['save'], CustomStockPrice => ['save'],txtCustomMWeight => ['save'],txtStockGSM => ['save','output'],
+	txtSpecificStockCalliper => ['save','output'], txtSpecificStockWidth => ['save'], txtSpecificStockHeight => ['save'], CustomSheetDoubleSided => ['save'],
+  CustomStockPrice => ['save'], StockPricePerM=> ['save'],
+  txtCustomMWeight => ['save'],txtStockGSM => ['save','output'],
 	perfecting=>['save'],
 	basis_width=>['save'],basis_height=>['save'],basis_mweight=>['save'],
 	StockGrade	=> ['save'],	
@@ -394,6 +397,7 @@ my %variables = (
 	Versions => ['save'],Versions1=>['save','output'], Versions2=>['save','output'], Versions3=>['save','output'],
 	OverrideVersions1=>['save'], OverrideVersions2=>['save'], OverrideVersions3=>['save'],
 	versions => ['save'],
+  Version_Descriptions => ['output'],
 	ddmProjectSize => ['save'],
 	ScreenType => ['save'],
 	rdbGrainDirection1 => ['save','output'], rdbGrainDirection2 => ['save','output'], rdbGrainDirection3 => ['save','output'],
@@ -553,8 +557,8 @@ sub get_unspecified_versions {
 		#$log->debug(" $service_index ( $ssid >= $service_index ) Not next pages: ". $$sig_specs{"PageQuantity$qty_index"});
 	} # end foreach ssid
 
-	$log->debug("Unspec: Qty$qty_index Group: $$specs{Group} Versions:$$specs{Versions} - S$specified = U" . ($$specs{Versions} - $specified) ) if DEBUG;
-	return $$specs{Versions} - $specified;
+	$log->debug("Unspec: Qty$qty_index Group: $$specs{Group} versions:$$specs{versions} - S$specified = U" . ($$specs{versions} - $specified) ) if DEBUG;
+	return $$specs{versions} - $specified;
 } # end sub get_unspecified_versions
 
 sub setup_project {
@@ -1428,6 +1432,11 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
       $$project{Runstyles} = 'Sheet Work';
 		}
     %{$$project{RunstylesHash}} = map { $_ => $_ } split(',',$$project{Runstyles});
+    foreach my $style ( keys %{$$project{RunstylesHash}}) {
+      if (!sets::isin($style, $Specifications{Runstyles}{values})) {
+        $$specs{alert} .= 'Invalid runstyle for '.$Press->name().' '.$style.'. Valid values are:'.join(',', @{$Specifications{Runstyles}{values}}).'<br/>';
+      }
+    }
 		if (DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"}) {
       if (!$$project{RunstylesHash}{$$specs{"ddmRunStyle$qty_index"}}) {
         $log->warn("Press $$Press{strid} does not do ".$$specs{"ddmRunStyle$qty_index"});
@@ -1755,7 +1764,7 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
               $log->debug("Not Next cuz Cut off $cut_off != ".$$specs{"CutOff$qty_index"});
 						}
 						$$project{'Cut Off'} = $cut_off;
-						my @temp_imps = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
+						my @temp_imps = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{versions}, $P, $Press );
 if ( DEBUG_IMPOSITIONS ) {
 $log->error("Got " . @temp_imps . " for " . $P->to_string() );
 foreach my$i( @temp_imps ) {
@@ -1816,7 +1825,7 @@ if ( DEBUG_INITIAL_FILTERING ) {
 					} # end foreach cut_off
 					push @i, map { @{$_} } values %paper_impositions;
 				} else {
-					my @temp_imps = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
+					my @temp_imps = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{versions}, $P, $Press );
 					push @i, @temp_imps;
 					if ( DEBUG_IMPOSITIONS ) {
 						$log->error('Got ' . @temp_imps . ' for ' . $P->to_string() );
@@ -1924,7 +1933,7 @@ $log->debug("Cutting to " . $P->to_string() ) if DEBUG_IMPOSITIONS;
 						last;
 					} # end if
 
-					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
+					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{versions}, $P, $Press );
 					if ( DEBUG_IMPOSITIONS ) {
 						$log->debug("Got " . @i . " impositions on $$Press{strid} " . $P->to_string() );
 						foreach my $i ( @i ) {
@@ -2651,6 +2660,7 @@ sub calc {
 	$ImpositionServiceType = openprint::ServiceType->find_one(name=>'Imposition');
 
 # First, clean up all inputs
+  $$specs{Group} //= '';
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		$qty =~ s/\D//g;
@@ -2954,7 +2964,7 @@ $log->debug('after sorting presses: ' . ( sprintf('%.4f', tv_interval( [$master_
 				return $$specs{Status} = 'uncalculated';
 			} # end if
 			$log->debug("Unspecified pages for $qty_index: $$specs{'txtUnspecifiedPageQuantity'.$qty_index}");
-		} elsif ( $$specs{Versions} ) {
+		} elsif ( $$specs{versions} ) {
 			$$specs{'UnspecifiedVersions'.$qty_index} = get_unspecified_versions( $Project, $service_index, $printing_specs, $specs, $qty_index );
 			$$specs{'UnspecifiedVersions'.$qty_index} = 0 if $$specs{'UnspecifiedVersions'.$qty_index} < 0;
 			$log->debug("Unspecified versions for $qty_index: $$specs{'UnspecifiedVersions'.$qty_index}");
@@ -3119,6 +3129,52 @@ $log->debug('after sorting presses: ' . ( sprintf('%.4f', tv_interval( [$master_
       @$project{'washed_colours','mixed_colours',"AqueousMakeReadies$qty_index"},
       \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
 	} # end foreach quantity
+
+  if ($$specs{versions} ) {
+    my $html = '<table> <tr> <th class="Id">#</th><th class="Description">Description</th>';
+    foreach my $qty_index ( $Project->quantity_indexes() ) {
+      $html .= '<th class="Quantity">Quantity ' . $qty_index . '</th>';
+    } # end foreach
+    $html .= '</tr>';
+    my %total_qty = 0;
+    foreach my $qty_index ( $Project->quantity_indexes() ) {
+      foreach my $version ( 1 .. $$specs{versions} ) {
+        $total_qty{$qty_index} += $$specs{"version-$version-quantity$qty_index"};
+      } # end foreach version
+      $openprint::log->debug("Totals: " . $total_qty{$qty_index} );
+    } # end foreach
+
+    foreach my $version ( 1 .. $$specs{versions} ) {
+      $html .= sprintf('
+          <tr>
+          <td class="Id">%1$d</td>
+          <td class="Description"><input type="text" name="version-%1$d-description" id="version-%1$d-description" value="%2$s" /></td>',
+          $version, $$specs{"version-$version-description"} );
+      foreach my $qty_index ( $Project->quantity_indexes() ) {
+        $$specs{"version-$version-quantity$qty_index"} = 0 if $$specs{"version-$version-quantity$qty_index"} < 0;
+        #if ( ! $$specs{"version-$version-quantity$qty_index"} ) {
+          #$$specs{"version-$version-quantity$qty_index"} = $Project->quantity($qty_index) - $total_qty{$qty_index};
+          #$$specs{"version-$version-quantity$qty_index"} = 0 if $$specs{"version-$version-quantity$qty_index"} <0;
+          #$total_qty{$qty_index} += $$specs{"version-$version-quantity$qty_index"};
+        #} # end if
+
+        $html .= sprintf('<td class="Quantity"><input type="text" name="version-%1$d-quantity%2$d" id="version-%1$d-quantity%2$d" value="%3$d" on_input_this="version_qty_change" oninput="calc(\'f1\');"/></td>', $version, $qty_index, $$specs{"version-$version-quantity$qty_index"} );
+      } # end foreach qty_index
+      $html .= '</tr>';
+    } # end foreach version
+    $html .= '<tr class="totals"><td class="Id">&nbsp;</td><td class="Description">Remaining</td>';
+    foreach my $qty_index ( $Project->quantity_indexes() ) {
+      my $remaining = $Project->quantity( $qty_index ) - $total_qty{$qty_index};
+      $html .= '<td class="Quantity'.($remaining?' error':'').'">'.$remaining.'</td>';
+      if ($remaining) {
+        $$specs{alert} .= "Version information is not complete for quantity $qty_index<br/>";
+        $$specs{Status} = 'uncalculated';
+      }
+    } # end foreach qty
+    $html .= '</tr></table>';
+
+    $$specs{Version_Descriptions} = $html;
+  }
 
 	foreach my $qty_index ( @quantity_indexes ) {
 		my $qty = $Project->quantity($qty_index);
@@ -3414,7 +3470,16 @@ sub breakdown {
   }
   if ( $$Imposition{versions} ) {
     my $VersionPrice = $$price{'Version Price'};	
-		$breakdown .= sprintf('Version Charge: $%1$.2f %2$s for %4$d versions = $%3$.2f<br/>', @$VersionPrice{'Price','units','Total'}, $$Imposition{versions} );
+    my $version_qty = 0;
+    foreach my $v (@{$$price{versions}}) {
+      $version_qty += 1 if $$Imposition{versions}{$$v{index}};
+#$breakdown .= $$price{versions};
+      #if ($$price{versions} and $$price{versions}{$v_index}) {
+        $breakdown .= 'Includes '.$$Imposition{versions}{$$v{index}}.'out of '.$$v{description}.'<br/>';
+      #}
+    }
+    $breakdown .= sprintf('Version Charge: $%1$.2f %2$s for %4$d versions = $%3$.2f<br/>', @$VersionPrice{'Price','units','Total'}, $version_qty );
+
 	} # end if
 	$breakdown .= openprint::Estimating::Imposition::signature_summary( $Imposition, $$price{'Imposition Price'} ) if $$price{'Imposition Price'} and ! $ImpositionServiceType;
 
@@ -3543,10 +3608,10 @@ $log->debug("Using overriden page quantity $needed_pages");
 	my $filter_press = '';
 	if ( $$sig_specs{"chkOverridePress$qty_index"} ) {
 		$filter_press = $$sig_specs{"ddmPress$qty_index"};
-		$log->debug("Have Override Press " . $filter_press . ' from chkOverride');
+		$log->debug('Have Override Press ' . $filter_press . ' from chkOverride');
   } elsif ($$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"}) {
 		$filter_press = $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"};
-		$log->debug("Have Override Press " . $filter_press . ' from book specs');
+		$log->debug('Have Override Press ' . $filter_press . ' from book specs');
 	} elsif ( $$sig_specs{PreviousPress} ) {
 		$filter_press = $$sig_specs{PreviousPress};
 		$log->debug("Have PreviousPress $$sig_specs{PreviousPress} from $$sig_specs{SignatureIndex}");
@@ -3640,8 +3705,8 @@ $log->debug("Using overriden page quantity $needed_pages");
 
 	} # end foreach press
 
-	if ( ! @impositions ) {
-		$log->debug("No impsoitions!" );
+	if (!@impositions) {
+		$log->debug('No impsoitions!');
 		return ();
 	} 
 
@@ -3752,7 +3817,7 @@ $log->debug("Using overriden page quantity $needed_pages");
 			} # end if
 		} elsif ( 
 $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs{PreviousGrainDirection} ) ) {
-			if ( ( $$sig_specs{'MatchGrain'.$qty_index} eq 'Y' ) or ( $grain_direction_imps{join(',',$qty_index, @$imp{'imposition','columns','runstyle'})} ) ) {
+			if ( ($$sig_specs{'MatchGrain'.$qty_index} and ($$sig_specs{'MatchGrain'.$qty_index} eq 'Y')) or ( $grain_direction_imps{join(',',$qty_index, @$imp{'imposition','columns','runstyle'})} ) ) {
 				$imp->display("PreviousGrainDirection: $$sig_specs{PreviousGrainDirection} ne " . $imp->grain_direction() ) if DEBUG_FILTERING;
 				next;
 			}
@@ -4520,6 +4585,7 @@ sub get_project_price {
 
     $openprint::log->debug("1 @{$other_impositions} imp $imp $base_imp");
 		my $price = calc_price( $Project, $service_index, $imp, $project, $services, \%sig_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies, \@total_impositions );
+    $$price{versions} = $versions;
 		if (!$$price{complete}) {
 			if ( DEBUG ) {
 				$imp->display( 'Couldnt calculate initial price: ' . $$price{alert} );
@@ -4569,18 +4635,20 @@ sub get_project_price {
 			$$price{upq} = 0;
 		}
 		$$price{Impositions} = [ $imp ];
+    $$price{versions} = $versions;
 		#push @total_impositions, $imp;
 
-		if ( (defined $sig_specs{"UnspecifiedVersions$qty_index"} ) and ( $sig_specs{"UnspecifiedVersions$qty_index"} > $$imp{versions} ) ) {
+		if ( (defined $sig_specs{"UnspecifiedVersions$qty_index"} ) and ( $sig_specs{"UnspecifiedVersions$qty_index"} > $$imp{version_qty} ) ) {
 
-			my $versions = $sig_specs{"UnspecifiedVersions$qty_index"} - $$imp{versions};
-			$imp->display("Need more sigs for $versions versions ");
+			my $remaining_versions = $sig_specs{"UnspecifiedVersions$qty_index"} - $$imp{version_qty};
+			$imp->display("Need more sigs for $remaining_versions versions ");
 			my @signatures = @$signatures;
 			my $newimp = $base_imp->copy();
 
-			while ( $versions >= $$imp{versions} ) {
+			while ( $remaining_versions >= $$imp{version_qty} ) {
+        $imp->display("Need more sigs for $remaining_versions versions ");
 				my $new_specs = get_new_specs( $Project, $service_index, \%sig_specs, \@signatures, $qty_index, undef, \%previous_forms_cache, $hash_key );
-				$$new_specs{"UnspecifiedVersions$qty_index"} = $versions;
+				$$new_specs{"UnspecifiedVersions$qty_index"} = $remaining_versions;
 				$$newimp{specs} = $new_specs;
 
 				my $sig_price = calc_price( $Project, $$new_specs{ServiceIndex}, $newimp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies, \@total_impositions );
@@ -4596,15 +4664,18 @@ sub get_project_price {
 				$$sig_price{Imposition} = $newimp;
 				push @total_impositions, $newimp;
 				push @{$$price{Impositions}}, $newimp;
-				$versions -= $$newimp{versions};
+				$remaining_versions -= $$newimp{version_qty};
 				push @{$$price{prices}}, $sig_price;
-				if ( ! $$imp{versions} ) {
-					$log->error("Should not get no versions. ".$sig_specs{"UnspecifiedVersions$qty_index"}." $$imp{versions}");
-#last;
+				if ( ! $$imp{version_qty} ) {
+$imp->display('no versions');
+					$log->error('Should not get no versions. '.$sig_specs{"UnspecifiedVersions$qty_index"}.' '.$$imp{version_qty});
+          last;
+} else {
+					$log->debug('Get versions. '.$sig_specs{"UnspecifiedVersions$qty_index"}.' '.$$imp{version_qty});
 				} # end if
 			} # end while versions
 
-			if ( $versions ) {
+			if ( $remaining_versions ) {
 				if ( %best_price and ( $best_price{ComparisonCost} <= $$price{ComparisonCost} ) ) {
 					if ( DEBUG_PRICE_DECISIONS or $sig_specs{Group} == 1 ) {
 						$imp->display( "2 Too expensive $best_price{ComparisonCost} <= $$price{ComparisonCost}" );
@@ -4622,10 +4693,10 @@ sub get_project_price {
 					next; # next Impo
 				} # end if
 				my $new_specs = get_new_specs( $Project, $service_index, \%sig_specs, \@signatures, $qty_index, undef, \%previous_forms_cache, $hash_key );
-				$$new_specs{"UnspecifiedVersions$qty_index"} = $versions;
+				$$new_specs{"UnspecifiedVersions$qty_index"} = $remaining_versions;
 
-				$log->warn("Recursing cuz need another $versions");
-				my $price_cache_key = join(',', $qty_index, $$Press{strid}, $$imp{runstyle}, $$imp{versions} );
+				$log->warn("Recursing cuz need another $remaining_versions");
+				my $price_cache_key = join(',', $qty_index, $$Press{strid}, $$imp{runstyle}, $$imp{version_qty} );
 
 				if ( ! $price_cache{$price_cache_key} ) {
 					$$new_specs{PrintingTypes} = [ $Press->specification('Printing Type') ];
@@ -4638,12 +4709,13 @@ sub get_project_price {
 							push @new_possible_presses, $p;
 						} # end if
 					} # end foreach 
+$openprint::log->error("Versions $versions");
 					$price_cache{$price_cache_key} = 
 						get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 				} # end if ! $price_cache
 				my $sig_price = $price_cache{$price_cache_key};
 
-				$log->warn("Back fr Recursing cuz need another $versions");
+				$log->warn("Back fr Recursing cuz need another $remaining_versions");
 				if ( $$sig_price{Imposition} ) {
 					my $newimp = $$sig_price{Imposition};
 
@@ -4655,10 +4727,10 @@ sub get_project_price {
 
 					push @total_impositions, $newimp;
 					push @{$$price{Impositions}}, $newimp;
-					$versions -= $$newimp{versions};
+					$remaining_versions -= $$newimp{version_qty};
 					push @{$$price{prices}}, $sig_price;
-					if ( ! $$newimp{versions} ) {
-						$log->error('Should not get no versions. '.$sig_specs{"UnspecifiedVersions$qty_index"}.' '.$$imp{versions});
+					if ( ! $$newimp{version_qty} ) {
+						$log->error('Should not get no versions. '.$sig_specs{"UnspecifiedVersions$qty_index"}.' '.$$imp{version_qty});
 #last;
 					} # end if
 				} else {
@@ -5600,7 +5672,8 @@ sub calc_price {
 				$price{complete} = 0;
 				return;
 			} # end if
-			$$Imposition{versions} = $$specs{"Versions$qty_index"};
+      #FIXME: Should just kill the imposition
+			#$$Imposition{versions} = $$specs{"Versions$qty_index"};
 		} else {
 # When W&T, each half has to be a multiple of the versions
 			if ( $is_wt ) {
@@ -5625,16 +5698,16 @@ sub calc_price {
 				} # end 
 			} # end 
 			if ( $imposition < $$specs{"UnspecifiedVersions$qty_index"} ) {
-				$$Imposition{versions} = $imposition;
+				#$$Imposition{versions} = $imposition;
 			} else {
-				$$Imposition{versions} = $$specs{"UnspecifiedVersions$qty_index"};
+				#$$Imposition{versions} = $$specs{"UnspecifiedVersions$qty_index"};
 			} # end if
 		} # end if
 		my $VersionService = $Services{'Version Setup'};
-		my %VersionCharge = $VersionService->get_price( $$Imposition{versions} ) if $VersionService;
+		my %VersionCharge = $VersionService->get_price( $$Imposition{version_qty} ) if $VersionService;
 		if ( %VersionCharge ) {
 			if ( $VersionCharge{units} eq 'each' ) {
-				$VersionCharge{Total} = $VersionCharge{Price}*$$Imposition{versions};
+				$VersionCharge{Total} = $VersionCharge{Price}*$$Imposition{version_qty};
 			} elsif ( $VersionCharge{units} eq 'total' ) {
 				$VersionCharge{Total} = $VersionCharge{Price};
 			} else {
@@ -5649,12 +5722,12 @@ sub calc_price {
 
 	my $net_sheets = $qty;
 	$net_sheets = ceil($net_sheets / $imposition);
-	$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted, not sure this is valid anymore
+	#$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted, not sure this is valid anymore
 	$net_sheets *= $$Paper{parts} if $$Paper{parts};
 
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $num_colours = scalar @colours;
-	my $min_overs = $Press->specification('Overs Minimum '.$Paper->material(), $num_colours);
+	my $min_overs = $Press->specification('Overs Minimum '.$Paper->material(), $num_colours) if $Paper->material();
 	$min_overs = $Press->specification('Overs Minimum', $num_colours) if ! $min_overs;
 	$min_overs = 0 if ! defined $min_overs;
 	my $overs = 0;
@@ -5665,7 +5738,7 @@ sub calc_price {
 	} else {
 		$setup_rate = $Press->specification('MakeReady Overs Rate ' . $$Imposition{runstyle}, $num_colours);
 	} # end if
-	$setup_rate = $Press->specification('MakeReady Overs Rate ' . $Paper->material(), $num_colours) if ! $setup_rate;
+	$setup_rate = $Press->specification('MakeReady Overs Rate ' . $Paper->material(), $num_colours) if ! $setup_rate and $Paper->material();
 	$setup_rate = $Press->specification('MakeReady Overs Rate', $num_colours) if ! $setup_rate;
 
 	my $is_Roll2Sheet = $$Imposition{is_roll2sheet} = ( ($$Paper{type} eq 'Roll') and $$Press{Feeds}{Sheet} ) ? 1 : 0;
@@ -5684,7 +5757,7 @@ sub calc_price {
 	} else {
 		$setup_overs = $Press->specification('MakeReady Overs '.$$Imposition{runstyle}, $num_colours);
 		$setup_overs = $Press->specification('MakeReady Overs', $num_colours) if ! $setup_overs;
-    $openprint::log->debug("From MakeReady Overs?! $setup_overs") if ! $setup_overs;
+    $openprint::log->debug('No MakeReady Overs?!') if ! $setup_overs;
 	} # end if
 
 	#$setup_overs *= ( 1 + ( $roll2sheet_setup_overs_rate / 100 ) ) if $roll2sheet_setup_overs_rate;
@@ -6103,7 +6176,7 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 	# Now we know the bindery overs
 	my $bindery_overs;
   if ( $all_overs and ($$all_overs{value} eq 'All') ) {
-    $bindery_overs = ceil($$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}+ $scoring_results{Overs}+ $uv_results{Overs}+ $diecutting_results{Overs}+ $price{'Cutting Overs'});
+    $bindery_overs = ceil($$folding_results{MakeReadyOvers}+$$folding_results{RunOvers}+$scoring_results{Overs}+$uv_results{Overs}+$diecutting_results{Overs}+$price{'Cutting Overs'});
   } else {
     $bindery_overs = ceil(sets::max( $$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}, $scoring_results{Overs}, $uv_results{Overs}, $diecutting_results{Overs}, $price{'Cutting Overs'} ));
   }
@@ -6683,8 +6756,8 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
 		my $ImpositionPrice = openprint::Estimating::Imposition::signature_calc( $Project, $Imposition, $PreviousForms, $qty_index );
-		$price{'Imposition MakeReady'} = $$ImpositionPrice{MakeReady}{Price};
-		$price{'Imposition Total'} = $$ImpositionPrice{Total};
+		$price{'Imposition MakeReady'} = $$ImpositionPrice{MakeReady}{Price} // 0;
+		$price{'Imposition Total'} = $$ImpositionPrice{Total} // 0;
 		$price{'Imposition Price'} = $ImpositionPrice;
 		 if ( ! $ImpositionServiceType ) {
 			$setup_cost += $price{'Imposition Total'};
@@ -7696,7 +7769,7 @@ sub summary {
 		} # end if
 		$html .= '</span>';
 	
-		$html .= ' ' . $$specs{"Versions$qty_index"}.' versions' if $$specs{Versions};
+		$html .= ' ' . $$specs{"Versions$qty_index"}.' versions' if $$specs{versions};
 		$html .= ' on '. $$specs{'ddmPress'.$qty_index} if $$specs{'ddmPress'.$qty_index}; # and $openprint::User->email() =~ /^iconnor/;
 
 		my $plate_changes = 0;

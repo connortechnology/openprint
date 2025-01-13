@@ -4,24 +4,24 @@
 			<ul>
 <? if ( $$variable{Quote}->by_firstname() or $$variable{Quote}->by_lastname() ) ?>
 	<li><label>Contact</label>
-		<? echo ( ssi::htmlize( $$variable{Quote}->by_salutation() ) ) ?>
-		<? echo ( ssi::htmlize( $$variable{Quote}->by_firstname() ) ) ?>
-		<? echo ( ssi::htmlize( $$variable{Quote}->by_lastname() ) ) ?><br/>
+		<? echo ( htmlize( $$variable{Quote}->by_salutation() ) ) ?>
+		<? echo ( htmlize( $$variable{Quote}->by_firstname() ) ) ?>
+		<? echo ( htmlize( $$variable{Quote}->by_lastname() ) ) ?><br/>
 	</li>
 <? endif ( $$variable{Quote}->by_firstname() or $$variable{Quote}->by_lastname() ) ?>
 <? if ( $$variable{Quote}->by_companyname(); ) ?>
 	<li><label>Company</label>
-		<? echo ( ssi::htmlize( $$variable{Quote}->by_companyname() ).'<br/>' ) ?>
+		<? echo ( htmlize( $$variable{Quote}->by_companyname() ).'<br/>' ) ?>
 	</li>
 <? endif ( $$variable{Quote}->by_companyname(); ) ?>
 <? if ( $$variable{Quote}->by_address1() or $$variable{Quote}->by_address2() ) ?>
 	<li><label>Address</label>
-		<? echo ( ssi::htmlize( $$variable{Quote}->by_address1() ).'<br/>' if $$variable{Quote}->by_address1(); ) ?>
-		<? echo ( ssi::htmlize( $$variable{Quote}->by_address2() ).'<br/>' if $$variable{Quote}->by_address2(); ) ?>
+<? echo ( ssi::htmlize( $$variable{Quote}->by_address1() ).'<br/>' if $$variable{Quote}->by_address1(); ) ?>
+<? echo ( ssi::htmlize( $$variable{Quote}->by_address2() ).'<br/>' if $$variable{Quote}->by_address2(); ) ?>
 <? if ( $$variable{Quote}->by_city() or $$variable{Quote}->by_state() or $$variable{Quote}->by_country() ) ?>
-		<? echo ( misc::build_city_prov_country(@$variable{Quote}->by_city(),$$variable{Quote}->by_state(),$$variable{Quote}->by_country() ).'<br/>'; ) ?>
+<? echo ( misc::build_city_prov_country(@$variable{Quote}->by_city(),$$variable{Quote}->by_state(),$$variable{Quote}->by_country() ).'<br/>'; ) ?>
 <? endif ( $$variable{Quote}->by_city() or $$variable{Quote}->by_state() or $$variable{Quote}->by_country() ) ?>
-		<? echo ( ssi::htmlize( $$variable{Quote}->by_postalcode() ).'<br/>' if $$variable{Quote}->by_postalcode(); ) ?>
+<? echo ( ssi::htmlize( $$variable{Quote}->by_postalcode() ).'<br/>' if $$variable{Quote}->by_postalcode(); ) ?>
 	</li>
 <? endif ( $$variable{Quote}->by_address1() or $$variable{Quote}->by_address2() ) ?>
 <? if ( $$variable{Quote}->by_phone() ) ?>

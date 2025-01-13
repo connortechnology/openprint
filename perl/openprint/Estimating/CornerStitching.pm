@@ -48,12 +48,13 @@ my @variables = (
       'txtSignatureQty'.$_.'Page-2'=>['save','output'],
       'txtSignatureQty'.$_.'Page-3'=>['save','output'],
       ) } @possible_pages,
-
 		);
 
 sub variables {
     return @variables;
 }
+
+my @possible_pages = ( 2, 4, 6, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 );
 
 # A function that is smart enough to return true if the project needs folding, and false if it doesn't.
 sub neccessary {
@@ -159,7 +160,6 @@ sub calc {
     } else {
       @equipment = @possible_equipment;
     } # end if
-
 
     my $pockets = $$specs{"txtPockets$qty_index"} = 0;
     $pockets += int($$specs{txtInsertQuantity}) if $$specs{txtInsertQuantity};

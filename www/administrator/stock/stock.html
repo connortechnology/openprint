@@ -203,13 +203,17 @@ return '';
 				</li>
 				<li>
 					<label>Calliper</label>
+					<? echo ( input(type=>'float', id=>'calliper_pt', name=>'calliper_pt', 
+								value=> $$variable{Stock}->calliper() * 1000, 
+								oninput=>q`$('calliper').value=this.value/1000;$('calliper_mm').value=do_decimals(this.value/1000*25.4,3);`,
+								); ) ?> inches
 					<? echo ( input(type=>'float', id=>'calliper', name=>'calliper', 
 								value=> $$variable{Stock}->calliper(), 
-								oninput=>q`$('calliper_mm').value=do_decimals(this.value*25.4,3);`,
+								oninput=>q`$('calliper_pt').value=this.value*1000;$('calliper_mm').value=do_decimals(this.value*25.4,3);`,
 								); ) ?> inches
 					<? echo ( input(type=>'float', id=>'calliper_mm', name=>'calliper_mm', 
 									value => Math::Round::nearest( .001, $$variable{Stock}->calliper()*25.4),
-									oninput =>q`$('calliper').value=do_decimals( this.value*0.0393701, 4 );`,
+									oninput =>q`$('calliper_pt').value=this.value*39.3701;$('calliper').value=do_decimals( this.value*0.0393701, 4 );`,
 								); ) ?> mm
 				</li>
 				<li>
