@@ -7,12 +7,20 @@
 <div class="PageTitle">
 <h1>Products</h1>
 <h2><?echo (
-my @categories = ($$variable{Category}->name());;
-while ( $$variable{Category}->parent_id()) {
+  my @categories = ($$variable{Category}->name());
+  my $category = $$variable{Category};
 
- join(' ', m
+  while ( $category->parent_id()) {
+  $category = $category->Parent();
+    unshift @categories, $category->name();
+  }
+
+  return join(' >> ', @categories);
+) ?>
 </h2>
 </div>
+<div class="Category">
+
 <form name="f1" id="f1" action="/product/category_view.html?category_id=<? echo ( $$variable{Category}->id(); ) ?>" method="post">
 	<fieldset>
 		<legend> <? echo ( $$variable{Category}->name()) ?> </legend>
@@ -28,13 +36,8 @@ while ( $$variable{Category}->parent_id()) {
 			); ) ?>
 		</p>
 		<?endif($$variable{Category}->can_edit())?>
-	<div class="Category">
-		<div class="Information">
-			<ul>
-				<li><label>Name</label><? hecho ( $$variable{Category}->name(); ) ?></li>
-				<li><label>Description</label><? hecho ( $$variable{Category}->description(); ) ?></li>
-				<li><label>Categories</label><?echo( $$variable{Category}->parent_ids() and @{ $$variable{Category}->parent_ids() } ? join('<br/>', map { $_->name() } $$variable{Category}->Parents() ) : 'none'; ) ?></li>
-			</ul>
+	  <div class="description">
+		<? hecho ( $$variable{Category}->description(); ) ?>
 		</div>
 		<?eval( $$variable{Object} = $$variable{Category};)?>
 <?if($$variable{Category}->Specifications())?>
@@ -51,7 +54,12 @@ while ( $$variable{Category}->parent_id()) {
 			if ( @Subs ) {
 				$html .= '<ul class="SubCategories">';
 				foreach my $SubCategory ( @Subs ) {
-					$html .= sprintf('<li><h3>%s</h3>%s</li>',$SubCategory->link_to(),$SubCategory->description() );
+          my $class = $SubCategory->name();
+          $class =~ s/\W+//g;
+					$html .= sprintf('<li class="%s"><h3>%s</h3><div class="description">%s</div>', $class, $SubCategory->link_to(),$SubCategory->description() );
+          $$variable{Album} = $SubCategory;
+          $html .= include('/photo_albums/_album_photos.html');
+          $html .= '</li>';
 				}
 				$html .= '</ul>';
 			} # end if	
@@ -93,3 +101,4 @@ while ( $$variable{Category}->parent_id()) {
 	</fieldset>
 	<input type="hidden" name="btnFunction" />
 </form>
+</div>

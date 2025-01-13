@@ -1,6 +1,7 @@
 use strict;
 package openprint::imposition;
 use Carp;
+use Data::Dumper;
 
 use openprint::Imposition;
 
@@ -1013,21 +1014,27 @@ sub add_imposition {
 
 # A permutation is a hash with an integer value for each version representing the # of times that version appears in the image
 # So it begins as a hash indexed by version id.
+# Set size starts as imposition
 
 sub permutate_versions {
 	my ( $versions, $set_size ) = @_;
 # versions is a point to an array of permutations
 
+$openprint::log->debug("$versions, $set_size");
+$openprint::log->debug(Data::Dumper::Dumper($versions));
 	my @perms;
+
 	if ( $set_size == 1 ) {
 		foreach my $v ( @$versions ) {
 			$$v{imposition} = 1;
 		} # end foreach
-		@perms = ( [ @$versions ] );
+		#@perms = @$versions;
+		@perms = ( [{1=>@$versions}] );
 		return @perms;
 	} # end if
 
 	foreach my $P ( permutate_versions( $versions, $set_size-1 ) ) {
+$openprint::log->debug(Data::Dumper::Dumper($P));
 		foreach my $v ( @$versions ) {
 			my %P2 = %$P;
 			$P2{$$v{index}}{imposition} += 1;
@@ -1084,22 +1091,29 @@ sub partitions {
 } # end sub partitions
 
 
-# $versions is a pointer to an array of Version objects, sorted by descreasing quantity
+# $versions is a pointer to an array of Version objects, sorted by decreasing quantity
 sub do_versions {
 	my ( $versions, $impositions ) = @_;
 	my @good_impositions = ();
 	my %ps;
 
-	foreach my $i ( @$impositions ) {
-		# Use caching so we don't calc the perms more than we have to
-		$ps{$$i{imposition}} = [ permutate_versions( $versions, $$i{imposition} ) ] if ! $ps{$$i{imposition}};
 
-		foreach my $p ( @{$ps{$$i{imposition}}} ) {
+$openprint::log->debug(Data::Dumper::Dumper($versions));
+  my @versions = @$versions;
+  
+	foreach my $i ( @$impositions ) {
+    my @partitions = partitions($$i{imposition});
+$openprint::log->debug(Data::Dumper::Dumper(\@partitions));
+    foreach my $partition (@partitions) {
+      next if @{$partition} > @versions;
+
 			my $i2 = $i->copy();
 
-			foreach my $v ( @$p ) {
-				$$i2{versions}{$$v{index}} += 1;
+      $$i2{version_qty} = @{$partition};
+			foreach my $v ( @versions ) {
+				$$i2{versions}{$$v{index}} = (@{$partition} ? shift @{$partition} : 0);
 			} # end foreach v
+
 			push @good_impositions, $i2;
 		} # end if
 	} # end foreach $i
