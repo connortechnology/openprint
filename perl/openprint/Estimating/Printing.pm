@@ -1710,7 +1710,7 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 
 			if ( %feeds and ! $feeds{$$Paper{type}} ) {
 				if ( DEBUG_IMPOSITIONS ) {
-					$log->debug('Not in feeds: ' . $Paper->to_string() . ' on ' . $$Press{strid} );
+					$log->debug('Not in feeds: ' . $Paper->to_string() . ' on ' . $$Press{strid} .'('.join(',', keys %feeds).')'.$$Paper{type});
 				} # end if
 				next;
 			} # end if
