@@ -60,19 +60,42 @@ function calc_basis_weight_from_weight(weight_element) {
   }
 }
 
-function basis_weight_to_gsm( form, signature ) {
+function mweight_to_gsm( form, signature ) {
+  console.log('mweight_to');
   const width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
   const height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
   const basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
   const basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
   var mweight;
-  var basis_weight = parseFloat(1*form.elements['basis_mweight'+signature].value);
-  if (basis_weight) {
-    mweight = (width*height) * basis_weight / (basis_width*basis_height);
-    form.elements['txtCustomMWeight'+signature].value = Math.round(mweight*10)/10;
+  var basis_weight;
+  mweight = parseFloat(1*form.elements['txtCustomMWeight'+signature].value);
+  if (mweight && width && height) {
+    basis_weight = (basis_width*basis_height) * mweight / (width*height);
+    form.elements['basis_mweight'+signature].value = basis_weight;
     // mweight is the weight of 1000 sheets, so calc the wpsi and multiply by 703064.5 to get gsm
     //console.log( "wpsi: " + (mweight/1000)/(width*height) );
     var gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
+    form.elements['txtStockGSM'+signature].value = gsm;
+  } else {
+    console.log("Not all inputs", mweight, width, height);
+  } // end if
+}
+
+function basis_weight_to_gsm( form, signature ) {
+  const width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
+  const height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
+  const basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
+  const basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
+  const stock_type = get_value( form.elements['StockType'+signature] );
+  const basis_weight = parseFloat(1*form.elements['basis_mweight'+signature].value);
+  if (basis_weight) {
+    if (stock_type=='Sheet') {
+      const mweight = (width*height) * basis_weight / (basis_width*basis_height);
+      form.elements['txtCustomMWeight'+signature].value = Math.round(mweight*10)/10;
+    }
+    // mweight is the weight of 1000 sheets, so calc the wpsi and multiply by 703064.5 to get gsm
+    //console.log( "wpsi: " + (mweight/1000)/(width*height) );
+    const gsm = Math.round((basis_weight/1000)/(basis_width*basis_height)*70306450)/100;
     form.elements['txtStockGSM'+signature].value = gsm;
   } // end if
 }
