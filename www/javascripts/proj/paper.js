@@ -9,9 +9,10 @@ function body_onLoad() {
 } // end function body_onLoad();
 
 function paper_price_calc( element, group ) {
+  console.log(element);
 	var form = element.form;
 	if ( ! form ) 
-		alert( 'no form' );
+		console.log( 'no form' );
 	if ( element.name.match( /^StockPricePerM/ ) ) {
 		var costperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
 		if ( get_value( form.elements['StockType'+group] ) == 'Roll' ) {
@@ -25,12 +26,14 @@ function paper_price_calc( element, group ) {
 		} // end if
 	} else {
 		var costcwt = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
-
-		if ( get_value( form.elements['StockType'+group] ) == 'Roll' ) {
+    
+    const type = get_value( form.elements['StockType'+group] );
+    console.log(type);
+		if (type == 'Roll') {
 			return;
 		} else {
 			if ( ! form.elements['txtCustomMWeight'+group].value ) {
-				$('PaperAlert'+group).innerHTML = 'Please enter MWeight';
+				$j('#PaperAlert'+group).html('Please enter MWeight');
 				return;
 			} // end if
 
