@@ -643,7 +643,6 @@ window.addEventListener('DOMContentLoaded', function() {
   $j('.side_link').each(function(index, link) {
     const signature_index = link.getAttribute('data_signature_index');
     const side = document.getElementById('InksOnBackQuestions'+signature_index);
-      console.log(link,side, 'not found');
     if (! (side && link) ) {
       console.log(link,side, 'not found');
       return;

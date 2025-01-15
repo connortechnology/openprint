@@ -1,16 +1,14 @@
-<? if ( 0 ) ?>
 <fieldset id="Versions"><legend>Versions</legend>
-This feature does not work yet<br class="spacer"/>
+This feature is experimental<br class="spacer"/>
 	<ul>
     <li><label># of versions</label>
-		<input type="number" step="1" min="0" name="versions" id="versions" value="<?versions?>" onkeyup="this.value=this.value.replace(/\D/,'');versions_onkeyup(this);" />
+    <input type="number" step="1" min="1" name="versions" id="versions" value="<?versions?>" oninput="calc('f1');" />
     </li>
 		<li id="Version_Descriptions">
-			<? if ( $$variable{'versions'} > 1 ) ?>
+			<? if ( $$variable{versions} > 1 ) ?>
 			<?include('_version_descriptions.html') ?>
-			<? endif ( $$variable{'versions'} > 1 ) ?>
+			<? endif ( $$variable{versions} > 1 ) ?>
 		</span>
 	</li>
   </ul>
 </fieldset>
-<? endif ( 0 ) ?>

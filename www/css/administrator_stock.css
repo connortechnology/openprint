@@ -88,15 +88,9 @@ width: 70px;
 #message {
 	width: 100%;
 }
-#Prices .Equipment {
-	display: none;
-}
 .dialog table .Range input[type="text"],
 .dialog table .Range input[type="number"] {
 	width: 40%;
-}
-.SetupPrices, .SupplyPrices {
-	display: none;
 }
 #Prices td select {
   width: 100%;

@@ -6,32 +6,6 @@
 			return $param{category_id} ? 'Editing Category '. $$variable{Category}->name() : 'Add New Category';
 		) ?>
 		</legend>
-		<div class="leftColumn">
-		<ul>
-      <li><label>Id</label><?echo( $$variable{Category}->id() . ( $$variable{Category}->deleted() ? ' deleted' : '' )) ?></li>
-			<li>
-				<label>Name</label>
-				<input type="text" id="name" name="name" value="<? hecho ( $$variable{Category}->name(); ) ?>"  />
-			</li>
-			<li>
-				<label>Description</label>
-				<textarea id="description" name="description" rows="4" onkeyup="textarea_resize(this);"><? hecho ( $$variable{Category}->description(); ) ?></textarea>
-			</li>
-			<li><label>Parent Categories</label>
-				<? echo ( ssi::select( 
-							openprint::Product_Category->dropdown( order=>'lower(name)',
-              ( $$variable{Category}->id() ? ( 'id !='=>$$variable{Category}->id()) : () ) ),
-							$$variable{Category}->parent_ids(),
-							{
-								name=>'parent_ids',
-								multiple=>'multiple',
-							} ); ) ?>
-			</li>
-			<li>
-				<label>Sort</label>
-				<? echo ( input( type=>"integer", id=>"sort", name=>"sort", value=>$$variable{Category}->sort() ); ) ?>
-			</li>
-		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
 ( $$variable{Category}->id() ? (
@@ -42,16 +16,32 @@
 			button( 'Reset', { onclick=>'f1.reset();' } ),
 			); ) ?>
 		</p>
-		</div>
-		<div class="rightColumn" style="overflow: hidden;">
-		<?eval($$variable{Object}=$$variable{Category};)?>
-		<?include(/includes/_specifications_container.html)?>
-        </div>
-        <div class="rightColumn">
-		<? eval ( $$variable{Album} = $$variable{Category};) ?>
-		<?include(/photo_albums/_album_upload.html)?>
-        </div>
-		<br/>
+		<div class="leftColumn">
+      <ul>
+        <li><label>Id</label><?echo( $$variable{Category}->id() . ( $$variable{Category}->deleted() ? ' deleted' : '' )) ?></li>
+        <li>
+          <label>Name</label>
+          <input type="text" id="name" name="name" value="<? hecho ( $$variable{Category}->name(); ) ?>"  />
+        </li>
+        <li>
+          <label>Description</label>
+          <textarea id="description" name="description" rows="4" onkeyup="textarea_resize(this);"><? hecho ( $$variable{Category}->description(); ) ?></textarea>
+        </li>
+        <li><label>Parent Categories</label>
+          <? echo ( ssi::select( 
+                openprint::Product_Category->dropdown( order=>'lower(name)',
+                ( $$variable{Category}->id() ? ( 'id !='=>$$variable{Category}->id()) : () ) ),
+                $$variable{Category}->parent_ids(),
+                {
+                  name=>'parent_ids',
+                  multiple=>'multiple',
+                } ); ) ?>
+        </li>
+        <li>
+          <label>Sort</label>
+          <? echo ( input( type=>"integer", id=>"sort", name=>"sort", value=>$$variable{Category}->sort() ); ) ?>
+        </li>
+      </ul>
 		<div id="Products">
 			<ul>
 			<? echo (
@@ -63,6 +53,18 @@
 			) ?>
 			</ul>
 		</div>
+		</div>
+		<div class="rightColumn" style="overflow: hidden;">
+      <div style="overflow: hidden;">
+        <?eval($$variable{Object}=$$variable{Category};)?>
+        <?include(/includes/_specifications_container.html)?>
+      </div>
+      <div>
+      <? eval ( $$variable{Album} = $$variable{Category};) ?>
+      <? eval ( #$$variable{Album} = $$variable{Category}->Album();) ?>
+      <?include(/photo_albums/_album_upload.html)?>
+      </div>
+    </div>
 	</fieldset>
 	<input type="hidden" name="btnFunction" />
 </form>

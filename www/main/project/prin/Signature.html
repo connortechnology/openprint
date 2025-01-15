@@ -155,9 +155,9 @@
 			return join("\n",
 				include('/includes/main/proj/templates/generic.html'),
         '<div class="dims_and_other">',
-				'<p id="NotepadPages"><label>Pages per pad</label>',
+          '<div id="NotepadPages"><fieldset><legend>Pad specifications</legend><label>Sheets per pad</label>',
 				input(type=>'cardinal', name=>'PageQuantity', value=>$$variable{PageQuantity}, oninput=>'calc(this.form.name);' ),
-				'</p>',
+        '</fieldset></div>',
 				include('/includes/main/proj/dimensions.html'),
 			);
 		} else {

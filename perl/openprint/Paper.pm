@@ -776,6 +776,7 @@ sub sheetsize {
 		return sprintf('%s" x %s"', @$self{'width','height'} );
 	} # end if
 } # end sub sheetsize
+
 sub size {
 	my $self = shift;
 
@@ -788,16 +789,19 @@ sub size {
 		return sprintf('%s" x %s"', @$self{'width','height'} );
 	} # end if
 } # end sub size
+
 sub size_id {
 	return $_[0]->size();
 }
+
 sub Owner {
 	my ( $self, $Owner ) = @_;
 	if ( defined $Owner ) {
 		$$self{owner_id} = $Owner->id();
 	} # end if
 	return new openprint::Company( $$self{owner_id} );
-} # endn sub Owner
+} # end sub Owner
+
 sub owner {
 	my $self = shift;
 	my $Company;
@@ -817,6 +821,7 @@ sub owner {
 	} # end if
 	return $Company->name();
 } # end sub owner
+
 sub owner_id {
 	my $self = shift;
 	if ( @_ ) {
@@ -1286,6 +1291,7 @@ sub gsm {
 	return $$self{gsm};
 } # end sub gsm
 
+# According to Brendan 2025-1-15 basis size doesn't always follow the rules, so trust mweight first.
 sub wpsi {
 	my $self = shift;
 	if ( @_ ) {
@@ -1294,7 +1300,11 @@ sub wpsi {
 #$log->debug("Setting wpsi to $$self{wpsi}") if 1;
 	} # end if
 	if (!$$self{wpsi}) {
-    if ( $self->basis_mweight() ) {
+		if ( $$self{mweight} and $$self{width} and $$self{height} ) {
+			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
+      $$self{wpsi} *= 2 if $self->is_envelope();
+#$log->debug("Setting wpsi to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height})");
+    } elsif ( $self->basis_mweight() ) {
       $$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
       if ($self->is_envelope()) {
         $$self{wpsi} *= 2;
@@ -1303,10 +1313,6 @@ sub wpsi {
         $log->debug("Setting wpsi to $$self{wpsi} from basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height}");
       }
 
-		} elsif ( $$self{mweight} and $$self{width} and $$self{height} ) {
-			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
-      $$self{wpsi} *= 2 if $self->is_envelope();
-#$log->debug("Setting wpsi to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height})");
     } elsif ($$self{gsm} and $$self{gsm} ne 'unknown') {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
 #$log->debug("Setting wpsi from gsm to $$self{gsm} / 703064.5 = $$self{wpsi}");

@@ -12,6 +12,7 @@ use vars qw($r $log $dbh %variable %param %session);
 
 require openprint::Product;
 require openprint::Product_Category;
+require openprint::Product_Specification;
 require openprint::logs;
 require sql;
 require openprint::Supplier;

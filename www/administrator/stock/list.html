@@ -52,8 +52,8 @@
 
     stock_filter_ajax = div.load('/administrator/stock/_stocks.html', $j('#f1').serialize(),
         function(){
-        $j('#StocksTable').bootstrapTable({ });
         stock_filter_ajax = null;
+        $j('#StocksTable').bootstrapTable({ });
         });
 
   }
