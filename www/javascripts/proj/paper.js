@@ -319,7 +319,6 @@ function select_grade(element) {
 }
 
 function addstock(button) {
-  console.log(button);
   const form = button.form;
   let re = /(\d*)$/;
   let matches = re.exec(button.name);
