@@ -9,35 +9,43 @@ function body_onLoad() {
 } // end function body_onLoad();
 
 function paper_price_calc( element, group ) {
-console.log(element, group);
 	const form = element.form;
-	if ( ! form ) alert( 'no form' );
+	if ( ! form ) console.log( 'no form' );
+
+  const type = get_value( form.elements['StockType'+group] );
+
 	if ( element.name.match( /^StockPricePerM/ ) ) {
+    // Must be sheet
 		const costperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
-		if ( get_value( form.elements['StockType'+group] ) == 'Roll' ) {
+		if (type == 'Roll') { // impossible
 			const wpsi = form.elements['basis_mweight'+group].value / (form.elements['basis_width'+group]*form.elements['basis_height'+group]);
 			const area = form.elements['txtSpecificStockWidth'+group].value * form.elements['txtSpecificStockHeight'+group].value;
 			form.elements['CustomStockPrice'+group].value = do_decimals( costperm / (wpsi * area * 1000), 2);
 		} else {
-			if ( form.elements['txtCustomMWeight'+group].value ) {
+			if (form.elements['txtCustomMWeight'+group].value) {
 				form.elements['CustomStockPrice'+group].value = do_decimals( costperm / (form.elements['txtCustomMWeight'+group].value / 100), 2 );
+      } else {
+        const wpsi = form.elements['basis_mweight'+group].value / (form.elements['basis_width'+group]*form.elements['basis_height'+group]);
+        const area = form.elements['txtSpecificStockWidth'+group].value * form.elements['txtSpecificStockHeight'+group].value;
+        form.elements['CustomStockPrice'+group].value = do_decimals( costperm / (wpsi * area * 1000), 2);
 			} // end if
 		} // end if
-	} else {
+	} else { // StockPriceCWT or perhaps a size input
     // element could be width, height or anything but we just calculate from cwt
     element = form.elements['CustomStockPrice'+group];
 		const costcwt = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
     if (!costcwt) return;
 
-		if ( get_value( form.elements['StockType'+group] ) == 'Roll' ) {
+		if (type == 'Roll') {
+      // Don't change PerM pricing because it doesn't aply
 			return;
 		} else {
 			if ( ! form.elements['txtCustomMWeight'+group].value ) {
-				$('PaperAlert'+group).innerHTML = 'Please enter MWeight';
+				$j('#PaperAlert'+group).html('Please enter MWeight');
 				return;
 			} // end if
 
-			form.elements['StockPricePerM'+group].value = do_decimals( costcwt * form.elements['txtCustomMWeight'+group].value / 100, 2 );
+			form.elements['StockPricePerM'+group].value = do_decimals(costcwt * form.elements['txtCustomMWeight'+group].value / 100, 2);
 		} // end if
 	} // end if
 } // end function
