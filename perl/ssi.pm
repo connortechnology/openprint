@@ -1067,6 +1067,8 @@ sub input {
 		} else {
 			$options{type} = 'number';
 		} # end if
+    $options{step} = 1;
+    $options{min} = 0;
 		$options{filter} = 'cardinalize(this);' if ! $options{filter};
 		$options{oninput} = $options{filter}.$options{oninput};
 		#$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
@@ -1080,6 +1082,7 @@ sub input {
 			#$options{pattern} = '^-?\d*' if ! $options{pattern};
 			#delete $options{step};
 		} else {
+      $options{step} = 1;
 			$options{type} = 'number';
 		} # end if
 		$options{oninput} = 'integerize(this);'.$options{oninput};
