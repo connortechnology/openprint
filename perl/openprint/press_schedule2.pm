@@ -260,10 +260,10 @@ sub get_ul {
 
 # This is just for caching purposes
 	if ( @schedule ) {
-		my @projects = map { $$_{projectindex'} } @schedule;
+		my @projects = map { $$_{projectindex} } @schedule;
 		if ( @projects ) {
-			my @companies = map { $_->company_id() } openprint::Project::find( 'id'=>\@projects );
-			openprint::Company::find( 'id'=>\@companies );
+			my @companies = map { $_->company_id() } openprint::Project->find( id=>\@projects );
+			openprint::Company->find(id=>\@companies) if @companies;
 		} # end if
 	} # end if
 

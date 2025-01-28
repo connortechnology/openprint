@@ -29,6 +29,7 @@
 						name	=>	$colour.'SpotSideOneCoverage'.$$variable{Signature},
 						value	=>	$$variable{$colour.'SpotSideOneCoverage'.$$variable{Signature}},
 						onkeyup	=>	'calc(this.form.name);',
+            max => 100,
 						),
 					);
 
@@ -52,6 +53,7 @@
 			name	=>	$colour.'SideOneCoverage'.$$variable{Signature},
 			value	=>	$$variable{$colour.'SideOneCoverage'.$$variable{Signature}}, 
 			onkeyup	=>	'calc(this.form.name);',
+      max => 100,
 			class	=>	'Coverage' );
     $html .= '%</span>';
 	} # end foreach colour
@@ -109,6 +111,7 @@
 						name	=>	$colour.'SpotSideTwoCoverage'.$$variable{Signature},
 						value	=>	$$variable{$colour.'SpotSideTwoCoverage'.$$variable{Signature}},
 						oninput	=>	'calc(this.form.name);',
+            max => 100,
 						),
 					);
 				$html .= '</span>';
@@ -131,6 +134,7 @@
 			name	=>	$colour.'SideTwoCoverage'.$$variable{Signature},
 			value	=>	$$variable{$colour.'SideTwoCoverage'.$$variable{Signature}}, 
 			oninput	=>	'calc(this.form.name);',
+      max => 100,
 			class	=>	'Coverage' );
     $html .= '%</span>';
 	} # end foreach colour

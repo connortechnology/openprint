@@ -32,6 +32,6 @@ table .Markup {
 table .Supplier {
 	width: 80px;
 }
-.Service li input[type="text"] {
+.Service fieldset li input[type="text"] {
 width: 100%;
 }

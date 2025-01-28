@@ -9,48 +9,57 @@
 	background: transparent url(alphacube/left-top.gif) no-repeat 0 0;			
   width:10px;
   height:25px;
+  border: none;
 }
 
 .alphacube_n {
   background: transparent url(alphacube/top-middle.gif) repeat-x 0 0;			
   height:25px;
+  border: none;
 }
 
 .alphacube_ne {
   background: transparent url(alphacube/right-top.gif) no-repeat 0 0;			
   width:10px;	  
   height:25px;
+  border: none;
 }
 
 .alphacube_w {
   background: transparent url(alphacube/frame-left.gif) repeat-y top left;			
   width:7px;
+  border: none;
 }
 
 .alphacube_e {
   background: transparent url(alphacube/frame-right.gif) repeat-y top right;			
   width:7px;	  
+  border: none;
 }
 
 .alphacube_sw {
   background: transparent url(alphacube/bottom-left-c.gif) no-repeat 0 0;			
   width:7px;
   height:7px;
+  border: none;
 }
 
 .alphacube_s {
   background: transparent url(alphacube/bottom-middle.gif) repeat-x 0 0;			
   height:7px;
+  border: none;
 }
 
 .alphacube_se, .alphacube_sizer  {
   background: transparent url(alphacube/bottom-right-c.gif) no-repeat 0 0;			
   width:7px;
   height:7px;
+  border: none;
 }
 
 .alphacube_sizer {
 	cursor:se-resize;	
+  border: none;
 }
 
 .alphacube_close {
@@ -62,6 +71,7 @@
 	right:11px;
 	cursor:pointer;
 	z-index:1000;
+  border: none;
 }
 
 .alphacube_minimize {
@@ -73,6 +83,7 @@
 	right:55px;
 	cursor:pointer;
 	z-index:1000;
+  border: none;
 }
 
 .alphacube_maximize {
@@ -84,6 +95,7 @@
 	right:33px;
 	cursor:pointer;
 	z-index:1000;
+  border: none;
 }
 
 .alphacube_title {
@@ -94,6 +106,7 @@
 	margin-top:2px;
 	width:100%;
 	color:#123456;
+  border: none;
 }
 
 .alphacube_content {
@@ -102,6 +115,7 @@
 	font-family: Tahoma, Arial, sans-serif;
   font: 12px arial;
 	background:#FDFDFD;
+  border: none;
 }
 
 /* For alert/confirm dialog */
