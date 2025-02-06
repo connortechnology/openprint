@@ -90,6 +90,10 @@ sub neccessary {
 # type is actually category name, not material type
 
 	if ( $type eq 'BulkSkids' ) {
+    my $services = $Project->services();
+    if ($$services{Gaylords} and @{$$services{Gaylords}} > 0) {
+      return 0;
+    }
 		my $finished_weight = $Project->finished_weight();
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( $finished_weight * $$Project{'quantity'.$qty_index} > 1500 ) {
@@ -99,7 +103,7 @@ sub neccessary {
 	} elsif ( $type eq 'PlainCartons' ) {
 		
 	} # end if
-	return 0;
+	return -1;
 } # end sub neccessary 
 
 # This doesn't use service_index for a reason.  THe idea is that we can call this on some specs and see what would happen, without ever actually adding the service.
