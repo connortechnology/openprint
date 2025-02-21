@@ -9,13 +9,20 @@ require openprint::Paper;
 require openprint::pricelist;
 require openprint::paper_price;
 require openprint::paper_priceset;
+
+require openprint::Equipment_Stock_Setting;
+require openprint::Company;
 require openprint::StockBrand;
 require openprint::StockFinish;
 require openprint::StockColour;
 require openprint::StockWeight;
+require openprint::StockGroup;
+require openprint::StockMaterial;
+require openprint::StockQuality;
 require openprint::Manufacturer;
 require openprint::PaperPrice;
 require openprint::Supplier;
+require openprint::Skid;
 
 use openprint ();
 use vars qw( %variable %session %param %config $log $dbh $r );
@@ -137,7 +144,7 @@ sub list {
 			$NewPaper->save();
 			foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
 				$Setting = $Setting->copy();
-				$Setting->save({'stock_id'=>$NewPaper->id()});
+				$Setting->save({stock_id=>$NewPaper->id()});
 			} # end foreach
 		} # end foreach
 	} elsif ( $param{btnFunction} eq 'ApplyChanges' ) {
@@ -248,13 +255,13 @@ $openprint::log->debug("Setting: $param{amount} " );
     my $weight = openprint::StockWeight->find_one('name lc'=>lc$param{weight});
     $param{weight_id} = $weight->id() if $weight;
   }
+  _stocks();
 } # end sub list
 
 sub stock {
 
   my $Paper = openprint::Paper->find_one( id=>$param{stock_id} ) if $param{stock_id};
   if ( $param{btnFunction} ) {
-
     if ( $param{btnFunction} eq 'Delete' ) {
       if ( ! $Paper ) {
         $variable{error} .= 'No stock selected for delete.<br/>';
