@@ -2,7 +2,7 @@
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 		<ul>
-		<li><label>Pages per pad</label>
+		<li><label>Sheets per pad</label>
 			<? echo ( input( type=>'cardinal', name=>'PageQuantity', value=>$$variable{PageQuantity}, oninput=>'calc(this.form.name);' ); ) ?>
 		</li>
 		<li><label>Backing</label>

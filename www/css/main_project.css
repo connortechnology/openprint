@@ -164,11 +164,6 @@ content: "";
 .Stock {
 	position: relative;
 }
-#ButtonStockList {
-	position: absolute;
-	right: 0;
-	top: 10px;
-}
 @media only screen and (min-device-width: 481px) and (max-device-width: 1024px) {
 li label {
     font-size: medium;

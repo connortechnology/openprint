@@ -1,12 +1,15 @@
 <div class="Stock">
 	<fieldset><legend>Stock</legend>
-<? if ( $session{user_type} eq 'A' ) ?>
-      <label for="label" class="checkbox">
-      <button type="button" class="button" on_click_this="addstock">View in admin side</button>
-      </label>
-	<?echo( button( 'StockList', { onclick=>qq`popup_window('_stock_popup.html', getValues( 'f1', [ 'ProjectIndex', 'ddmStockQuality','ddmStockGroup','ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight' ] ), { width: 1024 } );`, text=>'List Stocks' } ); ) ?>
-<? endif ( $session{user_type} eq 'A' ) ?>
-  <?echo( button('clearstock'.$$variable{Signature}, { on_click=>'clear_stock', text=>'Clear Stock' }); ) ?>
+<?echo(
+  my $html;
+  if ( $session{user_type} eq 'A' ) {
+    $html .= button( 'AdminSide', {type=>"button", on_click_this=>'addstock', text=>'View in admin side'});
+  } elsif ($session{user_type} eq 'E') {
+    $html .= button( 'StockList', { onclick=>qq`popup_window('_stock_popup.html', getValues( 'f1', [ 'ProjectIndex', 'ddmStockQuality','ddmStockGroup','ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight' ] ), { width: 1024 } );`, text=>'List Stocks' } );
+  }
+  $html .= button('clearstock'.$$variable{Signature}, { on_click=>'clear_stock', text=>'Clear Stock' });
+  return $html;
+  ) ?>
 		<? if ( $$variable{Mode} ne 'Easy' ) ?>
 		<ul>
 		<li>
@@ -87,7 +90,7 @@
 			</li>
 			<li class="basis_weight" id="BasisSize<?Signature?>">
 				<label>Basis Weight</label>
-				<? echo ( input( type=>'float', name=>'basis_mweight'.$$variable{Signature}, value=>$$variable{'basis_mweight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+				<? echo ( input( type=>'float', name=>'basis_mweight'.$$variable{Signature}, value=>$$variable{'basis_mweight'.$$variable{Signature}}, onkeyup=>"basis_weight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
         @
 				<? echo ( input( type=>'float', name=>'basis_width'.$$variable{Signature}, value=>$$variable{'basis_width'.$$variable{Signature}} ? $$variable{'basis_width'.$$variable{Signature}} : 25, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
 				x

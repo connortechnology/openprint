@@ -37,6 +37,7 @@
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ProjectTypeName?></legend>
 		<?include('/includes/main/proj/templates/generic.html') ?>
+<div class="dims_and_other">
 		<?include('/includes/main/proj/dimensions.html') ?>
 			<div id="OtherSpecifications">
 			<fieldset><legend>Other Specifications</legend>
@@ -44,7 +45,7 @@
 					<?include('/includes/main/proj/screen_type.html') ?>
 			</fieldset>
 			</div>
-			<br class="spacer"/>
+      <div id="PadSpecifications">
 			<fieldset><legend>Pad Specifications</legend>
 				<ul>
 				<li id="NotepadPages">
@@ -57,6 +58,8 @@
 				</li>
 				</ul>
 			</fieldset>
+      </div>
+</div>
 			<br class="spacer"/>
 			<div id="SignatureGroups">
 			<? echo (
