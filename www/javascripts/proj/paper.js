@@ -329,39 +329,39 @@ function select_grade(element) {
 function addstock(button) {
   const form = button.form;
   let re = /(\d*)$/;
-  let matches = re.exec(element.name);
+  let matches = re.exec(button.name);
   const signature = matches.length ? matches[1] : '';
 
-  if (get_rdb_value(form, 'rdbSpecificStock') == 'Y') {
+  if (get_rdb_value(form, 'rdbSpecificStock'+signature) == 'Y') {
     // Go direct to add new stock
-    window.open('/administrator/stock/stock.html?brand='+encodeURIComponent(form.elements['txtSpecificStockBrand'].value)
-        +'&'+'finish='+encodeURIComponent(form.elements['txtSpecificStockFinish'].value)
-        +'&'+'colour='+encodeURIComponent(form.elements['txtSpecificStockColour'].value)
-        +'&'+'weight='+encodeURIComponent(form.elements['txtSpecificStockWeight'].value)
-        +'&'+'calliper='+encodeURIComponent(form.elements['txtSpecificStockCalliper'].value)
-        +'&'+'type='+encodeURIComponent(get_value(form.elements['StockType']))
-        +'&'+'width='+encodeURIComponent(form.elements['txtSpecificStockWidth'].value)
-        +'&'+'height='+encodeURIComponent(form.elements['txtSpecificStockHeight'].value)
-        +'&'+'mweight='+encodeURIComponent(form.elements['txtCustomMWeight'].value)
-        +'&'+'basis_mweight='+encodeURIComponent(form.elements['basis_mweight'].value)
-        +'&'+'basis_width='+encodeURIComponent(form.elements['basis_width'].value)
-        +'&'+'basis_height='+encodeURIComponent(form.elements['basis_height'].value)
-        +'&'+'gsm='+encodeURIComponent(form.elements['txtStockGSM'].value)
-        +'&'+'grade='+encodeURIComponent(get_value(form.elements['StockGrade']))
-        +'&'+'sheets_per_package='+encodeURIComponent(get_value(form.elements['sheets_per_package']))
-        +'&'+'full_packages='+encodeURIComponent(get_value(form.elements['full_packages']))
-        +'&'+'doublesided='+encodeURIComponent(get_value(form.elements['doublesided']))
-        +'&'+'price='+encodeURIComponent(get_value(form.elements['CustomStockPrice']))
+    window.open('/administrator/stock/stock.html?brand='+encodeURIComponent(form.elements['txtSpecificStockBrand'+signature].value)
+        +'&'+'finish='+encodeURIComponent(form.elements['txtSpecificStockFinish'+signature].value)
+        +'&'+'colour='+encodeURIComponent(form.elements['txtSpecificStockColour'+signature].value)
+        +'&'+'weight='+encodeURIComponent(form.elements['txtSpecificStockWeight'+signature].value)
+        +'&'+'calliper='+encodeURIComponent(form.elements['txtSpecificStockCalliper'+signature].value)
+        +'&'+'type='+encodeURIComponent(get_value(form.elements['StockType'+signature]))
+        +'&'+'width='+encodeURIComponent(form.elements['txtSpecificStockWidth'+signature].value)
+        +'&'+'height='+encodeURIComponent(form.elements['txtSpecificStockHeight'+signature].value)
+        +'&'+'mweight='+encodeURIComponent(form.elements['txtCustomMWeight'+signature].value)
+        +'&'+'basis_mweight='+encodeURIComponent(form.elements['basis_mweight'+signature].value)
+        +'&'+'basis_width='+encodeURIComponent(form.elements['basis_width'+signature].value)
+        +'&'+'basis_height='+encodeURIComponent(form.elements['basis_height'+signature].value)
+        +'&'+'gsm='+encodeURIComponent(form.elements['txtStockGSM'+signature].value)
+        +'&'+'grade='+encodeURIComponent(get_value(form.elements['StockGrade'+signature]))
+        +'&'+'sheets_per_package='+encodeURIComponent(get_value(form.elements['sheets_per_package'+signature]))
+        +'&'+'full_packages='+encodeURIComponent(get_value(form.elements['full_packages'+signature]))
+        +'&'+'doublesided='+encodeURIComponent(get_value(form.elements['doublesided'+signature]))
+        +'&'+'price='+encodeURIComponent(get_value(form.elements['CustomStockPrice'+signature]))
 
         );
   } else {
     // Go to stock list with filters already selected
     window.open('/administrator/stock/list.html?nothing=nothing'
-      +(form.elements['ddmStockGroup'] ? '&group='+encodeURIComponent(form.elements['ddmStockGroup'].value) : '')
-      +(form.elements['ddmStockBrand'] ? '&brand='+encodeURIComponent(form.elements['ddmStockBrand'].value) : '')
-      +(form.elements['ddmstockFinish'] ? '&finish='+encodeURIComponent(form.elements['ddmstockFinish'].value) : '')
-      +(form.elements['ddmStockColour'] ? '&colour='+encodeURIComponent(form.elements['ddmStockColour'].value) : '')
-      +(form.elements['ddmStockWeight'] ? '&weight='+encodeURIComponent(form.elements['ddmStockWeight'].value) : '')
+      +(form.elements['ddmStockGroup'+signature] ? '&group='+encodeURIComponent(form.elements['ddmStockGroup'+signature].value) : '')
+      +(form.elements['ddmStockBrand'+signature] ? '&brand='+encodeURIComponent(form.elements['ddmStockBrand'+signature].value) : '')
+      +(form.elements['ddmStockFinish'+signature] ? '&finish='+encodeURIComponent(form.elements['ddmStockFinish'+signature].value) : '')
+      +(form.elements['ddmStockColour'+signature] ? '&colour='+encodeURIComponent(form.elements['ddmStockColour'+signature].value) : '')
+      +(form.elements['ddmStockWeight'+signature] ? '&weight='+encodeURIComponent(form.elements['ddmStockWeight'+signature].value) : '')
     );
   }
 }

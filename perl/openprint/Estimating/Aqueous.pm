@@ -268,7 +268,7 @@ sub calc {
 			}
 			my %results = signature_calc( $Project, $specs, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
 # if signature_needs($Project, $sig_specs);
-$openprint::log->error(Data::Dumper::Dumper(\%results));
+      #$openprint::log->error(Data::Dumper::Dumper(\%results));
 			if ( $results{Equipment} ) {
 				$MakeReadies{$results{Equipment}{id}} = {} if ! $MakeReadies{$results{Equipment}{id}};
 				foreach my $type ( $results{types} ? @{$results{types}} : () ) {
@@ -503,8 +503,7 @@ sub signature_calc {
 				foreach my $type ( @different_types ) {
           $openprint::log->debug("$type to W&T front: ".($front_aq{$type} ? $front_aq{$type} : 'none').' back: '.($back_aq{$type} ? $back_aq{$type} : 'none')) if DEBUG;
 					if ( ! ( $front_aq{$type} and $back_aq{$type} ) ) {
-						$type =~ s/Overall/W&T/;
-						push @types, { name => $type, coverage=> $front_aq{$type} ? $front_aq{$type}{coverage}/2 : $back_aq{$type}{coverage}/2 };
+						push @types, { name => $type, coverage=> $front_aq{$type} ? $front_aq{$type}{coverage}/2 : $back_aq{$type}{coverage}/2, wt=>1 };
 					} else {
 						push @types, { name => $type, coverage=>($front_aq{$type}{coverage} + $back_aq{$type}{coverage} )/2 };
 					} # end if
@@ -558,14 +557,14 @@ sub signature_calc {
 				} # end if makereadies
 				push @{$Price{SetupPrices}}, \%SetupPrice;
 				my %BlanketCutPrice;
-				if ((-1 != index($type_name, 'Spot')) or ($$type{coverage} < 100)) {
+				if ($$type{wt} and ($$type{coverage} == 50)) {
+					%BlanketCutPrice = $BlanketCutServiceWT->get_price(undef, $Equipment) if $BlanketCutServiceWT;
+        } elsif ((-1 != index($type_name, 'Spot')) or ($$type{coverage} < 100)) {
           if ($BlanketCutService) {
             %BlanketCutPrice = $BlanketCutService->get_price(undef, $Equipment) if $BlanketCutService;
           } else {
             $openprint::log->warn('No blankcut service found');
           }
-				} elsif ( -1 != index($type_name, 'W&T') ) {
-					%BlanketCutPrice = $BlanketCutServiceWT->get_price(undef, $Equipment) if $BlanketCutServiceWT;
 				} # end if type is spot
 				if ( %BlanketCutPrice ) {
           $BlanketCutPrice{Total} = $BlanketCutPrice{Price};
@@ -619,7 +618,7 @@ sub signature_calc {
 				my $material_name = $type_name;
 				$material_name =~ s/ ?Spot ?//;
 				$material_name =~ s/ ?Overall ?//;
-				$material_name =~ s/ ?W&T ?//;
+        #n$material_name =~ s/ ?W&T ?//;
 				if ( ! exists $Materials{$material_name} ) {
 					$Materials{$material_name} = openprint::Material->find_one(name=>$material_name);
 					if ( ! $Materials{$material_name} ) {
@@ -765,7 +764,7 @@ sub signature_calc {
 
 sub breakdown {
 	my $Price = shift;
-	my $breakdown = $$Price{Imposition}{imposition} . 'out on ' . ($$Price{Equipment} ? $$Price{Equipment}->name() : 'unknown').'<br/>' if $$Price{Imposition};
+	my $breakdown = $$Price{Imposition}{imposition} . 'out '.$$Price{Imposition}{runstyle}.' on ' . ($$Price{Equipment} ? $$Price{Equipment}->name() : 'unknown').'<br/>' if $$Price{Imposition};
 	for ( my $i = 0; $i < ( $$Price{types} ? scalar @{$$Price{types}} : 0); $i ++ ) {
 		my $type = $$Price{types}[$i];
 		my $SetupPrice = $$Price{SetupPrices}[$i];

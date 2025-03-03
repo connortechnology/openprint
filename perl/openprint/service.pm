@@ -391,10 +391,11 @@ sub auto_calculate {
 	} # end foreach
 
 	require openprint::Estimating::Skids;
-	if ( ! $$services{BulkSkids} ) {
-		if ( openprint::Estimating::Skids::neccessary( $Project, 'BulkSkids' ) ) {
-			push @{$$services{BulkSkids}}, $Project->add_service( 'BulkSkids' );
-		} # end if
+  my $neccessary = openprint::Estimating::Skids::neccessary( $Project, 'BulkSkids' );
+  if ( ! $$services{BulkSkids}  and ($neccessary==1)) {
+    push @{$$services{BulkSkids}}, $Project->add_service( 'BulkSkids' );
+  } elsif ($$services{BulkSkids} and ($neccessary==-1)) {
+    openprint::print_project::delete_service( $Project, $$services{BulkSkids}[0]);
 	} # end if
 	if ( ! $$services{PlainCartons} ) {
 		if ( openprint::Estimating::Skids::neccessary( $Project, 'PlainCartons' ) ) {

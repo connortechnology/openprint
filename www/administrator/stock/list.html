@@ -184,7 +184,7 @@ return join("\n",
 	foreach my $option ( @options ) {
 		my @sorted = ('openprint::Stock'.$option)->sort( map { $results{$option}{$_} } keys %{$results{$option}} );
 		my $lc_option = $options{$option};
-    next if @sorted <= 1;
+    #next if @sorted <= 1;
 		$html .= sprintf(q`	
 		<li> 
 			<label>%3$s</label>

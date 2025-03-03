@@ -248,6 +248,7 @@ $openprint::log->debug("Setting: $param{amount} " );
     my $weight = openprint::StockWeight->find_one('name lc'=>lc$param{weight});
     $param{weight_id} = $weight->id() if $weight;
   }
+  _stocks();
 } # end sub list
 
 sub stock {
