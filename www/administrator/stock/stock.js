@@ -2,7 +2,7 @@
 
 function check_price( element ) {
 	const form = element.form;
-  const matches = element.name.match( /^\w+\-(\d+)$/ );
+  const matches = element.name.match( /^\w+\-(\d*)$/ );
 	if (matches) {
 		const id = matches[1];
 		if ( 
@@ -14,12 +14,12 @@ function check_price( element ) {
 			element_changed( form.elements['units-'+id] ) ||
 			element_changed( form.elements['equipment_id-'+id] ) 
 		   ) {
-			$('paperprice-'+id).addClassName('changed');
+			$j('#paperprice-'+id).addClass('changed');
 		} else {
-			$('paperprice-'+id).removeClassName('changed');
+			$j('#paperprice-'+id).removeClass('changed');
 		} // end if
 	} else {
-		alert('Not matched' + element.name);
+		console.log('Not matched' + element.name);
 	} // end if
 }
 
@@ -32,6 +32,9 @@ function basis_weight_to_gsm( form ) {
 
 	const gsm = Math.round((basis_weight/1000)/(basis_width*basis_height)*70306450)/100;
 	form.elements['gsm'].value = gsm;
+	if ( get_value( form.elements['type'] ) == 'Envelope' ) {
+    gsm *= 2;
+  }
 	form.elements['mweight'].value = Math.round((gsm/703064.5)*(width*height)*100000)/100;
 	form.elements['wpsi'].value = gsm / 703064.5;
 	recalc_prices( form );
@@ -233,3 +236,35 @@ function calc_price( element ) {
 		} // end if
 	} // end if
 } // end function
+
+function stock_type_change(input) {
+  console.log(input);
+  if (input.value=='Sheet'){
+    $j('#StockHeight').show();
+    $j('#MWeight').show();
+    $j('#QuantityPerPackageUnits').html('sheets');
+    $j('#MinimumOrderUnits').html('sheets');
+    $j('.multipart').show();
+    $j('.doublesided').show();
+    $j('.cuttable').show();
+  } else if (input.value == 'Envelope' ) {
+    $j('#StockHeight').show();
+    $j('#MWeight').show();
+    $j('.multipart').hide();
+    $j('.doublesided').hide();
+    $j('.cuttable').hide();
+    $j('#QuantityPerPackageUnits').html('envelopes');
+    $j('#MinimumOrderUnits').html('envelopes');
+  } else if (input.value == 'Roll' ) {
+    $j('#StockHeight').hide();
+    $j('#BasisSize').show();
+    $j('#MWeight').hide();
+    $j('#QuantityPerPackageUnits').html('lbs');
+    $j('#MinimumOrderUnits').html('lbs');
+    $j('.multipart').hide();
+    $j('.doublesided').show();
+    $j('.cuttable').hide();
+  } else {
+    alert('Unknown stock type');
+  }
+}
