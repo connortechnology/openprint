@@ -100,7 +100,11 @@ sub neccessary {
 				return 1;
 			} # end if
 		} # end freach qty_index
+    return 0;
 	} elsif ( $type eq 'PlainCartons' ) {
+    return 0;
+	} elsif ( $type eq 'Gaylords' ) {
+    return 0;
 		
 	} # end if
 	return -1;
