@@ -336,6 +336,10 @@ sub signature_needs {
 		$openprint::log->debug("Folding::signature_needs: is a banner") if DEBUG_NEEDS;
 		return 0;
 	} # end if
+	if ( $Project->Type()->name() eq 'Labels' ) {
+		$openprint::log->debug("Folding::signature_needs: is a label") if DEBUG_NEEDS;
+		return 0;
+	} # end if
 
 	if ( $$specs{rdbTemplateType} ) {
 		if ( $$specs{rdbTemplateType} eq 'NoFold' ) {

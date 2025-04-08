@@ -1,0 +1,39 @@
+<? if ($openprint::User->is_staff())?>
+ <fieldset> <legend> Employee/Administrator Comments and Assigning: </legend>
+<p><!-- Insert Comments Here -->
+
+
+<?echo(
+  my $html = '';
+  foreach my $comment ($$variable{Project}->Comments()) {
+  $html .= '
+  <p>
+    <label>Modified By</label>'.$comment->User()->name().' <br />
+    <label>Modified On</label>'.format_datetime($comment->created_on()).'<br />
+    <label>Assigned to</label>'.$comment->AssignedTo()->name().'<br />
+    <label>Comments</label>
+    <br />'.$comment->comment().'
+  </p>
+  <hr />
+  ';
+  } # end foreach
+  return $html;
+)?>
+
+<p><label>Comments</label>
+  <form name='add_comment' action="view.html">
+    <textarea name="comment" cols="98" rows="5" id="comment"></textarea><br />
+    <label>Assign Project to: </label>
+    <select id="ddmUser" name="ddmUser" >
+      <option value=""> Select a User </option>
+      <option value=""> ----------------- </option>
+<?echo (
+make_drop_down(openprint::User->dropdown(type=>'E'));
+)?>
+      </select><br /><br />
+    <input class="button" type="submit" value="Save and Send" name="Add Comment" />
+    <input type="hidden" name="pid" value="<?pid?>" />
+  </form>
+</p>
+</fieldset>
+<? endif ($openprint::User->is_staff())?>

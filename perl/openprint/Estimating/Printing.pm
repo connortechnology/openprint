@@ -19,7 +19,7 @@
 
 package openprint::Estimating::Printing;
 use strict;
-use warnings;
+#use warnings;
 use Data::Dumper;
 use Storable 'dclone';
 use POSIX qw(ceil);
@@ -484,6 +484,7 @@ sub variables {
 sub no_outputs {
 	my ( $project_index, $service_index, $specs, $new_specs, $v ) = @_;
 	$v = \%variables if ! $v;
+  my $Project = new openprint::Project($project_index);
 
 	my @v;
 	foreach my $k ( keys %{$v} ) {
@@ -507,6 +508,16 @@ sub no_outputs {
 			} # end if
 		} # end foreach
 	} # end foreach Side
+
+  if ( $$new_specs{versions} and ($$new_specs{versions} > 0) and ($$new_specs{versions} < 10)) {
+    foreach my $version ( 1 .. $$new_specs{versions} ) {
+      $openprint::log->debug("Version: $version");
+      push @v, "version-$version-description";
+      foreach my $qty_index ( $Project->quantity_indexes() ) {
+        push @v, "version-$version-quantity$qty_index";
+      } # end foreach qty_index
+    } # end foreach version
+  } # end if
 
 	return @v;
 } # end sub no_outputs

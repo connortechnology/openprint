@@ -3,12 +3,15 @@
 	background-color: #DEDCB7;
 }
 .Service {
+  /*
 min-width: 1000px;
+*/
 }
 .Service input[type="text"],
 .Service input[type="number"] {
 	width: 75px;
 	text-align: right;
+  float: none;
 }
 .Service .Stock .Brand input,
 .Service .Stock .Finish input,
