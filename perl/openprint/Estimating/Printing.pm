@@ -2959,7 +2959,7 @@ $log->debug('after sorting presses: ' . ( sprintf('%.4f', tv_interval( [$master_
 #$log->debug("Master time before get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $specs, $qty_index );
 #$log->debug("Master time after get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-			if ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} > 1500 ) {
+			if ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} > 2000 ) {
 				$$specs{alert} .= 'There are far too many pages required. We will not be able to calculate this.<br/>';
 				return $$specs{Status} = 'uncalculated';
 			} # end if
