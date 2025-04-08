@@ -1427,14 +1427,18 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		} # end if
 		my $number_of_colours = $Press->specification('Number of Colours');
 		$$project{Runstyles} = $Press->specification('Runstyles');
-		if ( ! $$project{Runstyles} ) {
+		if (! $$project{Runstyles}) {
 			$log->warn("No runstyles set on $$Press{strid}, defaulting to sheet work");
       $$project{Runstyles} = 'Sheet Work';
-		}
-    %{$$project{RunstylesHash}} = map { $_ => $_ } split(',',$$project{Runstyles});
-    foreach my $style ( keys %{$$project{RunstylesHash}}) {
-      if (!sets::isin($style, $Specifications{Runstyles}{values})) {
-        $$specs{alert} .= 'Invalid runstyle for '.$Press->name().' '.$style.'. Valid values are:'.join(',', @{$Specifications{Runstyles}{values}}).'<br/>';
+		} else {
+      %{$$project{RunstylesHash}} = map { $_ =~ s/^\s+//i; $_ =~ s/\s+$//; ($_ => $_) } split(',', $$project{Runstyles});
+      foreach my $style ( keys %{$$project{RunstylesHash}}) {
+        if (!sets::isin($style, $Specifications{Runstyles}{values})) {
+          foreach my $rs ( @{$Specifications{Runstyles}{values}} ) {
+            $$specs{alert} .= "($style) != ($rs)<br/>";
+          }
+          $$specs{alert} .= 'Invalid runstyle for '.$Press->name().' '.$style.'. Valid values are:'.join(',', @{$Specifications{Runstyles}{values}}).'<br/>';
+        }
       }
     }
 		if (DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"}) {
