@@ -887,6 +887,7 @@ sub get_colours {
 			push @colours, { 
 				type	=>	'CMYK',
 				name	=>"$colour Spot Colour",
+        ink => $colour,
 				coverage => $$specs{$colour.'Spot'.$side.'Coverage'},
 				coverage_key	=> $colour.'Spot'.$side.'Coverage',
 			};
@@ -897,6 +898,7 @@ sub get_colours {
 		push @colours, map { { 
 			type	=>	'CMYK',
 			name => $_,
+      ink => $_,
 			coverage=>$$specs{$_.$side.'Coverage'},
 			coverage_key	=> $_.$side.'Coverage',
 		} } ( 'Cyan','Magenta','Yellow','Black' );
@@ -6525,7 +6527,7 @@ if ( 1 ) {
  $price{'Ink breakdown'} .= sprintf( 'Image area: %s x %s x %d spreads x %dout x %s impressions = %s square inches<br/>', 
 		 @$Imposition{'object_width','object_height', 'spreads','imposition'}, 
 		 $colour_impressions, 
-		 $Imposition->object_area() * $colour_impressions  );
+		 $Imposition->object_area() * $colour_impressions);
 
 	foreach my $Colour ( @colours_no_coatings ) {
 		
@@ -6602,11 +6604,11 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 		if ( !$Ink ) {
 			$log->error("Didnt find ink real ($real_colour) ($colour) ($grade) in colours hash, must be a grade problem");
 			foreach my $k ( keys %special_colours ) {
-			foreach my $C ( @{$special_colours{$k}} ) {
-				$log->error($k . ' => ' . $C->to_string() );
-			} # end foreach C
-			} # end foreach C
-			next;
+        foreach my $C ( @{$special_colours{$k}} ) {
+          $log->error($k . ' => ' . $C->to_string() );
+        } # end foreach C
+      } # end foreach C
+      next;
 		} elsif ( DEBUG_INKS ) {
 			$log->debug('Got INK: '.$Ink->to_string());
 		} # end if
