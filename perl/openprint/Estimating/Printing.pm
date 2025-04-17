@@ -5752,7 +5752,7 @@ sub calc_price {
 	if ( $$specs{'OverrideSetup'.$qty_index} and ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) ) {
 		$setup_overs = $$specs{'OverSetup'.$qty_index};
 	} elsif ( $setup_rate ) {
-    $openprint::log->debug("Have setup_rate?! $setup_rate");
+    #$openprint::log->debug("Have setup_rate?! $setup_rate");
 		$setup_overs = int($setup_rate * $num_colours);
 	} else {
 		$setup_overs = $Press->specification('MakeReady Overs '.$$Imposition{runstyle}, $num_colours);
@@ -5874,7 +5874,7 @@ sub calc_price {
   if ($$specs{'RunspeedOverride'.$qty_index} and ($$specs{'RunspeedOverride'.$qty_index} eq 'Y')) {
     $$RunSpeed{value} = $$specs{'Runspeed'.$qty_index}
   }
-  if ($$RunSpeed{range_units} eq 'calliper') {
+  if ($RunSpeed and $$RunSpeed{range_units} and ($$RunSpeed{range_units} eq 'calliper')) {
     $RunSpeed = $price{RunSpeed} = $Press->Specification($$RunSpeed{name}, $$Paper{calliper});
   }
 
