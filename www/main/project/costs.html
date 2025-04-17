@@ -52,10 +52,11 @@ button( 'ReturnToProjectView', { href=>'view.html?ProjectIndex='.$$variable{Proj
   -->
   <fieldset><legend>Costs</legend>
     <table>
+      <!--
       <thead>
         <tr>
           <?echo(
-            my $html='<th class="thing"></th>';
+            my $html='<th class="thing">Ink Costs</th>';
             foreach my $qty_index ($variable{Project}->quantity_indexes()) {
             $html .= '
             <th class="quantity">Quantity</th>
@@ -68,6 +69,7 @@ button( 'ReturnToProjectView', { href=>'view.html?ProjectIndex='.$$variable{Proj
           )?>
         </tr>
       </thead>
+      -->
       <tbody>
 <?echo(
   my $html='';
@@ -76,10 +78,16 @@ button( 'ReturnToProjectView', { href=>'view.html?ProjectIndex='.$$variable{Proj
   my @categories = ( "InkCost" );
   my $services = $project->services();
 
-  $html .= '<tr class="ink_cost"><td>Total Ink Cost</td></tr>';
-  #foreach my $qty_index ($project->quantity_indexes()) {
-    #$html .= '<th class="quantity">Quantity</th><th class="cost">Cost '.$openprint::Currency->symbol().'</th><th class="markup">Markup %</th><th class="sell">Sell '.$openprint::Currency->symbol().'</th><th class="total">Total</th>';
-  #} # end foreach qty
+  $html .= '<tr class="ink_cost"><th>Ink Costs</th>';
+  foreach my $qty_index ($project->quantity_indexes()) {
+    $html .= '
+    <th class="quantity">Quantity</th>
+    <th class="cost">Cost '.$openprint::Currency->symbol().'</th>
+    <th class="markup">Markup %</th>
+    <th class="sell">Sell '.$openprint::Currency->symbol().'</th>
+    <th class="total">Total</th>';
+  } # end foreach qty
+  $html .= '</tr>';
 
   my %inks;
   foreach my $sig_id ( $project->signatures()) {
@@ -95,13 +103,13 @@ button( 'ReturnToProjectView', { href=>'view.html?ProjectIndex='.$$variable{Proj
 
       # Need to index by press
       foreach my $colour (@side_one_colours, @side_two_colours) {
-        my $key = "$$colour{ink} on $press on ".$stock->grade();
+      my $key = "$$colour{ink} on $press on ".$openprint::Paper::grades{$stock->grade()};
         if ($inks{$key}) {
           my $ink = $inks{$key};
           $$ink{coverage} = ($$ink{coverage} + $$colour{coverage}) / 2;
           $$ink{impressions}[$qty_index] += $$sig_specs{"hdnImpressionQuantity$qty_index"};
-          $$ink{area}[$qty_index] += $$sig_specs{"hdnImpressionQuantity$qty_index"} * $imposition->sheet_area() * $$colour{coverage}/100;
-          $openprint::log->debug("Double Ink $key coverage $$ink{coverage} area " . $$ink{area}[$qty_index].' stock area: '.$imposition->sheet_area());
+          $$ink{area}[$qty_index] += $$sig_specs{"hdnImpressionQuantity$qty_index"} * $imposition->object_area() * $$colour{coverage}/100;
+          $openprint::log->debug("Double Ink $key coverage $$ink{coverage} area " . $$ink{area}[$qty_index].' object area: '.$imposition->object_area());
         } else {
           my $ink = $inks{$key} = \%{$colour}; # copy it
           $$ink{press} = $press;
@@ -110,14 +118,14 @@ button( 'ReturnToProjectView', { href=>'view.html?ProjectIndex='.$$variable{Proj
           $$ink{impressions} = []; # qty indexed
           $$ink{impressions}[$qty_index] = $$sig_specs{"hdnImpressionQuantity$qty_index"};
           $$ink{area} = [];
-          $$ink{area}[$qty_index] = $$sig_specs{"hdnImpressionQuantity$qty_index"} * $imposition->sheet_area() * $$ink{coverage}/100;
-          $openprint::log->debug("Ink $key coverage $$ink{coverage} area " . $$ink{area}[$qty_index].' stock area: '.$imposition->sheet_area());
+          $$ink{area}[$qty_index] = $$sig_specs{"hdnImpressionQuantity$qty_index"} * $imposition->object_area() * $$ink{coverage}/100;
+          $openprint::log->debug("Ink $key coverage $$ink{coverage} area " . $$ink{area}[$qty_index].' object area: '.$imposition->object_area());
         }
       } # end foreach colour
     } # end foreach qty_index
   } # end foreach sig
 
-  my $ink_total = 0;
+  my @ink_totals = (0,0,0);
   foreach (keys %inks) {
     my $colour = $inks{$_};
     $html .= '<tr class="ink_cost"><td>'.$_.'</td>';
@@ -126,18 +134,31 @@ button( 'ReturnToProjectView', { href=>'view.html?ProjectIndex='.$$variable{Proj
       my $ink_price = $ink->calc_price($colour, $qty_index);
       my $price = $$ink_price{Material};
       $html .= '<td class="quantity">'.$$price{quantity}.$$price{quantity_units}.'</td>'.
-      '<td class="cost">'.(1*$$price{cost}).$$price{units}.'</td>'.
+      '<td class="cost">'.$openprint::Currency->format($$price{cost}).$$price{units}.'</td>'.
       '<td class="markup">'.$$price{markup}.'</td>'.
-      '<td class="sell">'.$$price{Price}.'</td>'.
+      '<td class="sell">'.$openprint::Currency->format($$price{Price}).'</td>'.
       '<td class="total">'.$openprint::Currency->format($$price{Total}).'</td>';
-      $ink_total += $$price{Total};
+      $ink_totals[$qty_index] += $$price{Total};
     } # end foreach qty
 
     $html .= '</tr>';
   }
-  $html .= '<tr class="totals"><td colspan="5">Total:</td><td class="total">'.$openprint::Currency->format($ink_total).'</td></tr>';
+  $html .= '<tr class="totals"><td>Totals</td>';
+  foreach my $qty_index ($project->quantity_indexes()) {
+    $html .= '<td colspan="4"></td><td class="total">'.$openprint::Currency->format($ink_totals[$qty_index]).'</td>';
+  }
+  $html .= '</tr>';
 
-  $html .= '<tr class="paper_cost"><td>Total Paper Cost</td></tr>';
+  $html .= '<tr class="paper_cost"><th>Paper Cost</th>';
+  foreach my $qty_index ($project->quantity_indexes()) {
+    $html .= '
+    <th class="quantity">Quantity</th>
+    <th class="cost">Cost '.$openprint::Currency->symbol().'</th>
+    <th class="markup">Markup %</th>
+    <th class="sell">Sell '.$openprint::Currency->symbol().'</th>
+    <th class="total">Total</th>';
+  } # end foreach qty
+  $html .= '</tr>';
   my @Stocks = openprint::Estimating::Paper::get_stocks( $project, $$services{Paper}[0] );
   my $stock_specs = openprint::service::get_specs_ref( $project, $$services{Paper}[0] );
 
@@ -162,16 +183,17 @@ button( 'ReturnToProjectView', { href=>'view.html?ProjectIndex='.$$variable{Proj
 
       $html .= '</td>';
       if ( ! $Stock->supplied() ) {
+      my $price = $Stock->get_price(weight=>$$stock_specs{"qty-$key"}, service=>'Material');
         $html .= '<td class="cost">';
-        $html .= $openprint::Currency->symbol(). ' ';
-          $html .= input( type=>'float', id=>"cost-$key", name=>"cost-$key", value=>$currency->convert_from($$stock_specs{"cost-$key"}), onkeyup=>'calc(this.form.name);' );
+          $html .= $openprint::Currency->format($currency->convert_from($$price{cost}));
+          #$html .= input( type=>'float', id=>"cost-$key", name=>"cost-$key", value=>$currency->convert_from($$stock_specs{"cost-$key"}), onkeyup=>'calc(this.form.name);' );
         #$html .= write_override( "overridecost-$key", $$va{"overridecost-$key"}, '', "calc('f1')" );
         $html .= '/100lb';
-        $html .= '</td><td class="markup">'.$$stock_specs{"markup-$key"}.'</td><td class="sell">';
-        $html .= $openprint::Currency->symbol();
-        $html .= input( type=>'float', id=>"price-$key", name=>"price-$key", value=>$currency->convert_from($$stock_specs{"price-$key"}), onkeyup=>'calc(this.form.name);' );
+        $html .= '</td><td class="markup">'.$$price{markup}.'</td><td class="sell">';
+        $html .= $openprint::Currency->symbol() . $currency->convert_from($$price{price});
+        #$html .= input( type=>'float', id=>"price-$key", name=>"price-$key", value=>$currency->convert_from($$stock_specs{"price-$key"}), onkeyup=>'calc(this.form.name);' );
         $html .= '</td>';
-        $html .= '<td class="total">'.$$stock_specs{"total-$key"}.'</td>';
+      $html .= '<td class="total">'.$openprint::Currency->format($currency->convert_from($$stock_specs{"price-$key"})).'</td>';
       } else {
        $html .= '<td colspan="4">Supplied by Customer</td>';
       } # end if
