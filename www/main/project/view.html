@@ -52,26 +52,31 @@
 			<div class="left">
 				<? echo ( my $html;
 
+           my $project = $$variable{Project};
+
 				if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
-					$html .= button( 'Summary', { href=>'/main/project/summary.html?ProjectIndex='.$$variable{Project}{id} } );
+					$html .= button( 'Summary', { href=>'/main/project/summary.html?ProjectIndex='.$$project{id} } );
+          if ($openprint::User->email() =~ /brendan/ or $openprint::User->email() =~ /iconnor) {
+					  $html .= button( 'Costs', { href=>'/main/project/costs.html?project_id='.$$project{id} } );
+          }
 				} # end if
-				if ( $$variable{Project}->can_edit() and ( ( ! $$variable{Project}->order_id() ) or ( sets::isin( $$variable{Project}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) ) {
+				if ( $project->can_edit() and ( ( ! $project->order_id() ) or ( sets::isin( $project->Order->status(), ['Re-Opened','Incomplete'] ) ) ) ) {
 					$html .= join("\n",
-						button( 'Edit', { href=>'/main/project/create_edit.html?ProjectIndex='.$$variable{Project}{id} } ),
-						( $$variable{Project}->deleted() ?
+						button( 'Edit', { href=>'/main/project/create_edit.html?ProjectIndex='.$$project{id} } ),
+						( $project->deleted() ?
 							button( 'UnDelete', { onclick=>"f1.btnFunction.value='Undelete Project';f1.submit();", text=>'Undelete' } )
 							:
 							button( 'Delete', { onclick=>"f1.btnFunction.value='Delete Project';f1.submit();", text=>'Delete' } ),
 						)
 					);
 				} # end if
-				$html .= button( 'Copy', { href=>'/main/project/reuse.html?project_id='.$$variable{Project}{id} } );
+				$html .= button( 'Copy', { href=>'/main/project/reuse.html?project_id='.$$project{id} } );
         if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
           my @QuoteLevels = sql::execute( undef, undef, 'SELECT id, name FROM QuoteLevels ORDER BY sorting ASC,lower(name)' );
           if ( @QuoteLevels > 1 ) {
             $html .= '<label>Style</label><select name="quote_level" onchange="this.form.submit();">';
             
-            $html .= make_drop_down( \@QuoteLevels, $$variable{Project}->style_id() );
+            $html .= make_drop_down( \@QuoteLevels, $project->style_id() );
             $html .= '</select>';
           } # end if
         } # end if
