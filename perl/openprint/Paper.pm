@@ -471,7 +471,7 @@ sub to_string {
 	} # end if
 	if ( ! $$self{to_string} ) {
 		my $string = join(' ', (
-					($$self{supplied} ? 'Customer Supplied' : () ),
+					(($$self{supplied} and ($$self{brand} ne 'Customer Supplied')) ? 'Customer Supplied' : () ),
 					($$self{id} ? () : 'Custom'),
 					$self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight(),
 					) );
