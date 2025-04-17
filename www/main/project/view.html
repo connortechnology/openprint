@@ -56,7 +56,7 @@
 
 				if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
 					$html .= button( 'Summary', { href=>'/main/project/summary.html?ProjectIndex='.$$project{id} } );
-          if ($openprint::User->email() =~ /brendan/ or $openprint::User->email() =~ /iconnor) {
+          if ($openprint::User->email() =~ /brendan/ or $openprint::User->email() =~ /iconnor/) {
 					  $html .= button( 'Costs', { href=>'/main/project/costs.html?project_id='.$$project{id} } );
           }
 				} # end if
