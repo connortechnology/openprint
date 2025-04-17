@@ -1,4 +1,5 @@
 <? if ($openprint::User->is_staff())?>
+<div id="comments">
  <fieldset> <legend> Employee/Administrator Comments and Assigning: </legend>
 <p><!-- Insert Comments Here -->
 
@@ -36,4 +37,5 @@ make_drop_down(openprint::User->dropdown(type=>'E'));
   </form>
 </p>
 </fieldset>
+</div>
 <? endif ($openprint::User->is_staff())?>
