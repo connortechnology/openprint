@@ -19,7 +19,7 @@
 
 package openprint::Estimating::Printing;
 use strict;
-use warnings;
+#use warnings;
 use Data::Dumper;
 use Storable 'dclone';
 use POSIX qw(ceil);
@@ -484,6 +484,7 @@ sub variables {
 sub no_outputs {
 	my ( $project_index, $service_index, $specs, $new_specs, $v ) = @_;
 	$v = \%variables if ! $v;
+  my $Project = new openprint::Project($project_index);
 
 	my @v;
 	foreach my $k ( keys %{$v} ) {
@@ -507,6 +508,16 @@ sub no_outputs {
 			} # end if
 		} # end foreach
 	} # end foreach Side
+
+  if ( $$new_specs{versions} and ($$new_specs{versions} > 0) and ($$new_specs{versions} < 10)) {
+    foreach my $version ( 1 .. $$new_specs{versions} ) {
+      $openprint::log->debug("Version: $version");
+      push @v, "version-$version-description";
+      foreach my $qty_index ( $Project->quantity_indexes() ) {
+        push @v, "version-$version-quantity$qty_index";
+      } # end foreach qty_index
+    } # end foreach version
+  } # end if
 
 	return @v;
 } # end sub no_outputs
@@ -876,6 +887,7 @@ sub get_colours {
 			push @colours, { 
 				type	=>	'CMYK',
 				name	=>"$colour Spot Colour",
+        ink => $colour,
 				coverage => $$specs{$colour.'Spot'.$side.'Coverage'},
 				coverage_key	=> $colour.'Spot'.$side.'Coverage',
 			};
@@ -886,6 +898,7 @@ sub get_colours {
 		push @colours, map { { 
 			type	=>	'CMYK',
 			name => $_,
+      ink => $_,
 			coverage=>$$specs{$_.$side.'Coverage'},
 			coverage_key	=> $_.$side.'Coverage',
 		} } ( 'Cyan','Magenta','Yellow','Black' );
@@ -1427,14 +1440,18 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		} # end if
 		my $number_of_colours = $Press->specification('Number of Colours');
 		$$project{Runstyles} = $Press->specification('Runstyles');
-		if ( ! $$project{Runstyles} ) {
+		if (! $$project{Runstyles}) {
 			$log->warn("No runstyles set on $$Press{strid}, defaulting to sheet work");
       $$project{Runstyles} = 'Sheet Work';
-		}
-    %{$$project{RunstylesHash}} = map { $_ => $_ } split(',',$$project{Runstyles});
-    foreach my $style ( keys %{$$project{RunstylesHash}}) {
-      if (!sets::isin($style, $Specifications{Runstyles}{values})) {
-        $$specs{alert} .= 'Invalid runstyle for '.$Press->name().' '.$style.'. Valid values are:'.join(',', @{$Specifications{Runstyles}{values}}).'<br/>';
+		} else {
+      %{$$project{RunstylesHash}} = map { $_ =~ s/^\s+//i; $_ =~ s/\s+$//; ($_ => $_) } split(',', $$project{Runstyles});
+      foreach my $style ( keys %{$$project{RunstylesHash}}) {
+        if (!sets::isin($style, $Specifications{Runstyles}{values})) {
+          foreach my $rs ( @{$Specifications{Runstyles}{values}} ) {
+            $$specs{alert} .= "($style) != ($rs)<br/>";
+          }
+          $$specs{alert} .= 'Invalid runstyle for '.$Press->name().' '.$style.'. Valid values are:'.join(',', @{$Specifications{Runstyles}{values}}).'<br/>';
+        }
       }
     }
 		if (DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"}) {
@@ -6510,7 +6527,7 @@ if ( 1 ) {
  $price{'Ink breakdown'} .= sprintf( 'Image area: %s x %s x %d spreads x %dout x %s impressions = %s square inches<br/>', 
 		 @$Imposition{'object_width','object_height', 'spreads','imposition'}, 
 		 $colour_impressions, 
-		 $Imposition->object_area() * $colour_impressions  );
+		 $Imposition->object_area() * $colour_impressions);
 
 	foreach my $Colour ( @colours_no_coatings ) {
 		
@@ -6587,11 +6604,11 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 		if ( !$Ink ) {
 			$log->error("Didnt find ink real ($real_colour) ($colour) ($grade) in colours hash, must be a grade problem");
 			foreach my $k ( keys %special_colours ) {
-			foreach my $C ( @{$special_colours{$k}} ) {
-				$log->error($k . ' => ' . $C->to_string() );
-			} # end foreach C
-			} # end foreach C
-			next;
+        foreach my $C ( @{$special_colours{$k}} ) {
+          $log->error($k . ' => ' . $C->to_string() );
+        } # end foreach C
+      } # end foreach C
+      next;
 		} elsif ( DEBUG_INKS ) {
 			$log->debug('Got INK: '.$Ink->to_string());
 		} # end if

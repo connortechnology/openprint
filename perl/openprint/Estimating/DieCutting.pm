@@ -18,7 +18,7 @@ package openprint::Estimating::DieCutting;
 use strict;
 use warnings;
 use POSIX qw( ceil );
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 use vars qw( %ServicePrices %Specifications);
 %ServicePrices = (
@@ -133,7 +133,7 @@ sub no_outputs {
 sub calc_price {
   my ( $specs, $Equipment, $qty_index, $Imposition, $sig_specs, $Signature_Imposition ) = @_;
 
-	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'', Total=>0, MPrice=>0 );
+	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'', Total=>0, MPrice=>0, Overs=>0 );
 	my $form = $$sig_specs{SignatureIndex};
   my $complexity = $$specs{'Complexity-'.$form} || '';
 
