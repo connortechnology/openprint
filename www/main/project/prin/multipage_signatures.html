@@ -1,7 +1,7 @@
 <script src="<?hash_link(/javascripts/printing.js) ?>"></script>
 <script src="<?hash_link(/javascripts/service.js) ?>"></script>
 <script src="<?hash_link(/javascripts/proj/paper.js) ?>"></script>
-<script>
+<script nonce="<?echo($config{CSP_NONCE})?>">
 
 var quantities=new Array();
 <?QUANTITIES?>
@@ -51,7 +51,7 @@ function calc( formName, force ) {
 			<?include('/includes/main/proj/colours_coatings.html') ?>
 			<?include('/includes/main/proj/bleeds_colourbars.html') ?>
 			<?include('/includes/main/proj/paper_dropdowns.html') ?>
-		<br class="spacer"/>
+		  <br class="spacer"/>
 		</fieldset>
 		<!-- End of Input - Start of Results -->
 		<fieldset><legend>Results</legend>
