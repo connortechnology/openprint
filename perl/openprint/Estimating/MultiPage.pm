@@ -91,24 +91,25 @@ sub variables {
 } # end sub variables
 
 sub no_outputs {
-	my ( $project_index, $service_index, $specs ) = @_;
-	my @v;
-	my @outputs;
-	foreach my $k ( keys %variables ) {
-		if ( ! sets::isin( 'output', $variables{$k} ) ) {
-			push @v, $k; 
-		} else {
-			push @outputs, $k;
-		} # end if
-    } # end foreach;
-	my @groups = groups( $project_index, $specs );
-	foreach my $Group ( @groups ) {
-		my @no_outputs = openprint::Estimating::Printing::no_outputs( $project_index, $service_index, $specs, $Group );
-		# Will come with signature appended
-		push @v, sets::exclude( \@outputs, \@no_outputs );
-	} # end foreach Group
-    return @v;
+  my ( $project_index, $service_index, $specs ) = @_;
+  my @v;
+  my @outputs;
+  foreach my $k ( keys %variables ) {
+    if ( ! sets::isin( 'output', $variables{$k} ) ) {
+      push @v, $k; 
+    } else {
+      push @outputs, $k;
+    } # end if
+  } # end foreach;
+  my @groups = groups( $project_index, $specs );
+  foreach my $Group ( @groups ) {
+    my @no_outputs = openprint::Estimating::Printing::no_outputs( $project_index, $service_index, $specs, $Group );
+    # Will come with signature appended
+    push @v, sets::exclude( \@outputs, \@no_outputs );
+  } # end foreach Group
+  return @v;
 }
+
 sub outputs {
   my ( $project_index, $service_index, $specs ) = @_;
   my @v;
