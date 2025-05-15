@@ -29,17 +29,18 @@
 		} # end foreach Article
 	} # end if
 
+  @Articles = map { $_->can_view() ? $_ : () } @Articles;
+
 	if ( @Articles == 0 ) {
 		return 'There are no articles which match your search criteria.';
 	} else {
-		openprint::Article_Asset->find( 'article_id' => [ map { $_->id() } @Articles ] );
+		openprint::Article_Asset->find( article_id => [ map { $_->id() } @Articles ] );
 	} # end if
 
 	my $html;
 
-	my $Extra = pop @Articles if @Articles > $session{'/article/list.html?paging_per_page'};
+	my $Extra = pop @Articles if $session{'/article/list.html?paging_per_page'} and (@Articles > $session{'/article/list.html?paging_per_page'});
 	foreach my $Article ( @Articles ) {
-		next if ! $Article->can_view();
 		$html .= $Article->html();
 	} # end foreach Article
 
