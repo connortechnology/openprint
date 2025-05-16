@@ -472,7 +472,7 @@ sub signature_summary {
       push @folds, sprintf('%1$d @ %2$dout', @$specs{"ImpQty-$form-$qty_index-$imp_index","ImpOut-$form-$qty_index-$imp_index"},
       );
     } # end foreach
-    return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
+    return join('<br/>', ($Equipment->id() ? ' on '.$Equipment->name() : ''), sort { $a cmp $b } @folds);
   } # end if
 
   return '';

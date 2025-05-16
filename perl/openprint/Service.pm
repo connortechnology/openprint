@@ -13,11 +13,6 @@ use openprint ();
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-use openprint ();
-*session = \%openprint::session;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-
 foreach my $Service ( 'UVCoating', 'ThreeKnifeTrim' ) {
 	eval "
 		my \@keys = keys %openprint::Estimating::${Service}::ServicePrices;
@@ -30,7 +25,7 @@ $log->debug("Have a price definition for $service");
 
 
 $debug = 1;
-$cached = 0;
+$cached = 1;
 
 $table = 'services';
 $serial = 'services_id_seq';

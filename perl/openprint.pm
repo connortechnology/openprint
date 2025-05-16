@@ -39,7 +39,7 @@ sub session_init {
 		if ( $dbh ) {
 			# If we have no cookie, then... shouldn't try to load it...
 			if ( (!$cookie) or (! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }`) ) {
-				$log->error("Error fetching Session: $cookie: $@") if $@;
+				$log->debug("Error fetching Session: $cookie: $@") if $@;
 				if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 };` ) {
 					$log->error('Error creating Session'. $@);
 				} # end if
@@ -168,9 +168,9 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
   if ($session{Pricelist_id}) {
     $Pricelist = new openprint::Pricelist( $session{Pricelist_id} );
     if (!$$Pricelist{id}) {
-      $openprint::log->error("openrpint Pricelist $$Pricelist{id} from $session{Pricelist_id}");
+      $openprint::log->error("No Pricelist from $session{Pricelist_id}");
     } elsif (Debug) {
-      $openprint::log->debug("openrpint Pricelist $$Pricelist{id} from $session{Pricelist_id}");
+      $openprint::log->debug("Pricelist $$Pricelist{id} from $session{Pricelist_id}");
     }
   }
 

@@ -1,0 +1,21 @@
+.Service fieldset ul {
+  display: table;
+  width: 100%;
+}
+.Service .OneColumns,
+.Service .TwoColumns,
+.Service .ThreeColumns,
+.Service fieldset li label:not(.radio):not(.radio-inline) {
+  display: table-cell;
+  float: none;
+  width: auto;
+  margin-left: 0;
+}
+.Service fieldset li {
+  display: table-row;
+}
+.Service .OneColumns,
+.Service .TwoColumns,
+.Service .ThreeColumns {
+  text-align: right;
+}

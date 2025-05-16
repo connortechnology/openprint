@@ -19,6 +19,10 @@ CREATE TABLE Folds (
 	max_gsm			float,
 	min_imposition	INTEGER,
 	max_imposition	INTEGER,
+  min_imposition_rows integer
+  max_imposition_rows integer
+  min_imposition_columns integer
+  max_imposition_columns integer
 	cutting			boolean,
 	stitching		boolean,
 	perfectbind		boolean,
@@ -27,7 +31,7 @@ CREATE TABLE Folds (
 	makeready_time	integer,
 	makeready_overs	float,
 	makeready_overs_units	TEXT,
-	run_overs	integer,
+	run_overs	float,
 	run_overs_units	TEXT,
 	printing_type	TEXT,
 	comments		TEXT,

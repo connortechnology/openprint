@@ -46,7 +46,8 @@ sub slurp_content {
 
 #$log->debug("Slurping file $file");
 
-	if ( ! ( $file =~ /^\// ) ) {
+
+	if (substr($file, 0, 1) ne '/') {
 		# Use a path relative to the current page
 		my $path = $variable{uri};
 		$path =~ s/(.*\/).*/$1/;
@@ -719,6 +720,7 @@ sub date_select {
 	} # end if
 	if ( ref $options eq 'HASH' ) {
 	} elsif ( $options ) {
+    $openprint::log->error("deprecated use of options in daet_select");
 		$options = {onchange=>$options};
 	} # end if
 #$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
@@ -739,17 +741,23 @@ sub date_select {
 ';
 	foreach my $o ( split(',', $$options{order}) ) {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
-			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{onchange} );
+			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"`, $prefix, $$options{onchange} );
+      $html .= ' on_change_this="'.$$options{on_change_this}.'"' if $$options{on_change_this};
+      $html .= '><option value=""> </option>';
 			$html .= return_years( $start_year, $end_year, $year );
 			$html .= '</select>'."\n";
 #$log->debug($html);
 		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin('month', \@fields) ) ) {
-			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"><option value=""> </option>`, $prefix, $$options{onchange} );
+			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"`, $prefix, $$options{onchange} );
+      $html .= ' on_change_this="'.$$options{on_change_this}.'"' if $$options{on_change_this};
+      $html .= '><option value=""> </option>';
 			$html .= getmonths( $month );
 			$html .= '</select>'."\n";
 #$log->debug($html);
 		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin('day', \@fields) ) ) {
-			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""> </option>', $prefix, $$options{onchange} );
+			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"', $prefix, $$options{onchange} );
+      $html .= ' on_change_this="'.$$options{on_change_this}.'"' if $$options{on_change_this};
+      $html .= '><option value=""> </option>';
 			$html .= getdays( $day, int($year), int($month) );
 			$html .= '</select>'."\n";
 #$log->debug($html);
@@ -950,7 +958,7 @@ sub radio {
 		$html .= sprintf(q`
       <div class="form-check%7$s">
 				<label class="form-check-label radio%7$s" for="%1$s%6$s%2$s">
-				<input class="form-check-input" type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
+				<input class="form-check-input" type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s %5$s />
 				%3$s</label></div>
 				`, $name, $value, $label, checked($value eq $selected),
 				join(' ', map { $_.'="'.$$options{$_}.'"' } keys %{$options}),
@@ -1042,7 +1050,7 @@ sub date_filter {
 	return ( $sql_field, $parser->format_datetime( $datetime ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this', 'on_input_this' );
 
 sub input {
 	my %options = @_;
@@ -1052,25 +1060,29 @@ sub input {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{pattern} = '[0-9]*' if ! $options{pattern};
-		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
-			$options{type} = 'text';
-			$options{pattern} = '[0-9]*' if ! $options{pattern};
-			delete $options{step};
+		#} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+			#$options{type} = 'text';
+			#$options{pattern} = '[0-9]*' if ! $options{pattern};
+			#delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
+    $options{step} = 1;
+    $options{min} = 0;
 		$options{filter} = 'cardinalize(this);' if ! $options{filter};
 		$options{oninput} = $options{filter}.$options{oninput};
 		#$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
 	} elsif ( $options{type} eq 'integer' ) {
+		$options{step} = '1' if ! exists $options{step};
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{pattern} = '^-?\d*' if ! $options{pattern};
-		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
-			$options{type} = 'text';
-			$options{pattern} = '^-?\d*' if ! $options{pattern};
-			delete $options{step};
+		#} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+			#$options{type} = 'text';
+			#$options{pattern} = '^-?\d*' if ! $options{pattern};
+			#delete $options{step};
 		} else {
+      $options{step} = 1;
 			$options{type} = 'number';
 		} # end if
 		$options{oninput} = 'integerize(this);'.$options{oninput};
@@ -1080,10 +1092,10 @@ sub input {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{pattern} = '[\+\-]?[.0-9eE]*' if ! $options{pattern};
-		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
-			$options{type} = 'text';
-			$options{pattern} = '^[\+\-]?[.0-9eE]*' if ! $options{pattern};
-			delete $options{step};
+		#} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+			#$options{type} = 'text';
+			#$options{pattern} = '^[\+\-]?[.0-9eE]*' if ! $options{pattern};
+			#delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
@@ -1339,6 +1351,8 @@ sub navmenu {
       shift @{$menu};
     }
     $menu = \%m;
+  } elsif (exists $$menu{options}) {
+    @categories = sort { $a cmp $b } $$menu{options};
   } else {
     @categories = sort { $a cmp $b } keys %{$menu};
   }
@@ -1421,7 +1435,12 @@ sub bootstrap_navmenu {
     $category_id =~ s/\s+//g;
 
 		if ( ref $$menu{$category} eq 'HASH' ) {
-			my %urls = %{$$menu{$category}};
+my %urls;
+      if (exists $$menu{options}) {
+        %urls = %{$$menu{options}};
+} else {
+			 %urls = %{$$menu{$category}};
+}
 			my $submenu_html = '';
 			foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
 				my $text = $urls{$url};

@@ -521,5 +521,10 @@ sub _service_dump {
 sub summary {
 	openprint::print_project::summary( $r, $log, $dbh, \%variable );
 }
+
+sub costs {
+  my $project = $variable{Project} = new openprint::Project($param{project_id});
+}
+
 1;
 __END__

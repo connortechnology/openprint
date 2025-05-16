@@ -22,10 +22,10 @@ $table = 'Product_Categories';
 );
 
 %transforms = (
-  id								=>	[ 's/\D//g', '<2147483647' ],
-		name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-		description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-);
+    id								=>	[ 's/\D//g', '<2147483647' ],
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    );
 %defaults = (
 		deleted					=>	0,
 		parent_ids			=>	undef,
@@ -54,12 +54,12 @@ sub destroy {
 } # end sub destroy
 
 sub products {
-	Carp::cluck("Deprecated call openprint::Product_Category::products");
-	return $_[0]->Products();
+  Carp::cluck("Deprecated call openprint::Product_Category::products");
+  return $_[0]->Products();
 } # end sub products
 
 sub Products {
-	my $self = shift;
+  my $self = shift;
   if ( $$self{id} ) {
     my %params = @_;
     $params{category_id} = $$self{id};
@@ -70,25 +70,35 @@ sub Products {
 } # end sub products
 
 sub Photos {
-    if ( ! $_[0]{album_id} ) {
-        return ();
-    } # end if
-    return $_[0]->Album()->Photos( );
+  if ( ! $_[0]{album_id} ) {
+    return ();
+  } # end if
+  return $_[0]->Album()->Photos( );
 } # end sub Photos
 
 sub Album {
-    my $Album = new openprint::Photo_Album( $_[0]{album_id} );
-    if ( ! $Album->id() ) {
-        $Album->name('Photos for product '.$_[0]{name});
-    } # end if
-    return $Album;
+  my $Album = new openprint::Photo_Album( $_[0]{album_id} );
+  if ( ! $Album->id() ) {
+    $Album->name('Photos for product '.$_[0]{name});
+    #$Album->save();
+  } # end if
+  return $Album;
 } # end sub Album
 
 sub url_to {
-	return '/product/category_view.html?category_id='.$_[0]{id};
+  return '/product/category_view.html?category_id='.$_[0]{id};
 }
 sub link_to {
-	return sprintf('<a href="/product/category_view.html?category_id=%d">%s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]{name} );
+  return sprintf('<a href="/product/category_view.html?category_id=%d">%s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]{name} );
+}
+
+sub parent_id {
+  my $self = shift;
+  my $parent_ids = $self->parent_ids();
+  if ($parent_ids and @{$parent_ids}) {
+    return $$parent_ids[0];
+  }
+  return undef;
 }
 
 sub parent_ids {
@@ -100,19 +110,33 @@ sub parent_ids {
       $$self{parent_ids} = [ map { $_ =~ /(\d+)/ } @_ ];
     }
   }
+  return @{$$self{parent_ids}} if wantarray;
   return $$self{parent_ids};
+}
+
+sub Parent {
+  my $self = shift;
+  my $parents = $self->Parents();
+  if (@{$parents}) {
+    return $$parents[0];
+  }
+  return undef;
 }
 
 sub Parents {
 	if ( ! $_[0]{Parents} ) {
-		$_[0]{Parents} = ($_[0]{parent_ids} and @{$_[0]{parent_ids}}) ? [ openprint::Product_Category->find('id <@'=>$_[0]{parent_ids}) ] : [];
+		$_[0]{Parents} = ($_[0]{parent_ids} and @{$_[0]{parent_ids}}) ? [ openprint::Product_Category->find('id in'=>$_[0]{parent_ids})] : [];
 	}
-	return @{$_[0]{Parents}};
+	return @{$_[0]{Parents}} if wantarray;
+	return $_[0]{Parents};
 }
 
+sub children {
+return $_[0]->Categories();
+}
 sub Categories {
 	if ( ! $_[0]{Categories} ) {
-		$_[0]{Categories} = [ openprint::Product_Category->find( 'parent_ids @>'=>$_[0]{id} ) ];
+		$_[0]{Categories} = [ openprint::Product_Category->find( 'parent_ids @>'=>$_[0]{id}, order=>'sorting, lower(name)' ) ];
 	}
 	return @{$_[0]{Categories}};
 } # end sub Categories
@@ -127,6 +151,10 @@ sub upload {
 	}
 	return $Album->upload(@_);
 } # end sub upload
+
+sub thumbnail_id {
+return undef;
+}
 
 1;
 __END__

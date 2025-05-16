@@ -411,6 +411,7 @@ sub signature_calc {
 	if ( $$sig_specs{Versions} ) {
 		$qty *= $$sig_specs{Versions};
 	} # end if
+	return %Results if ! $qty;
 
 	my @Folds;
 	if ( $$SignatureImposition{Folds} ) {
@@ -426,7 +427,7 @@ sub signature_calc {
 		foreach my $Fold ( @Folds ) {
 			$Fold->display('Fold');
 		} 
-	} # end nif
+	} # end if
 
 	my @equipment;	
 	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} and ($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y') ) {
@@ -1121,7 +1122,7 @@ sub summary {
 			next if ! $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}; 
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			if ( signature_needs( $Project, $specs, $sig_specs, $Paper ) ) {
-				$html .= 'Form ' . $$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription} . ' scored ' .signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
+				$html .= 'Form ' . $$sig_specs{SignatureIndex} . ($$sig_specs{txtServiceDescription}?' ' . $$sig_specs{txtServiceDescription}:'') . ' scored ' .signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
 			} # end if
 		} # end foreach
 		return $html;

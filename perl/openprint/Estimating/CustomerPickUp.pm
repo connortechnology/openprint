@@ -79,8 +79,9 @@ sub calc {
   my $services = $Project->services();
   my $carton_service_index = $$services{PlainCartons}[0] if $$services{PlainCartons} and @{$$services{PlainCartons}};
   ( $carton_service_index ) = $$services{BulkSkids}[0] if $$services{BulkSkids} and @{$$services{BulkSkids}};
+  ( $carton_service_index ) = $$services{Gaylords}[0] if ! $carton_service_index and $$services{Gaylords} and @{$$services{Gaylords}};
   if ( ! $carton_service_index ) {
-    $$specs{alert} .= 'Project must be in cartons or on skids.<br/>';
+    $$specs{alert} .= 'Project must be in cartons or on skids or gaylords.<br/>';
     return $$specs{Status} = 'uncalculated';
   } # end if
   my $CartonService = $Project->Service($carton_service_index);

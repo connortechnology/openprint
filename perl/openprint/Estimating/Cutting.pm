@@ -30,7 +30,7 @@ require openprint::service;
 require openprint::Service;
 require openprint::Estimating::DieCutting;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my @equipment;
 my @PreFoldingEquipment;
@@ -295,6 +295,7 @@ sub signature_calc_stock_cutting {
       Status	=> 'calculated',
       alert		=>	'',
       Breakdown	=> 	'',
+      Price => 0,
       );
 
   my @my_equipment;
@@ -819,6 +820,7 @@ $openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
           $results{Breakdown} .= '# of pre-folding cuts: ' . $folding_cuts . ' => ' .($folding_cuts * $sheets) . '<br/>';
 
           if ( $CuttingMakeReady ) {
+            $$CuttingMakeReady{units} //= '';
             my %setup = $CuttingMakeReady->get_price(undef, $Equipment);
             if ( !%setup ) {
               $log->error('No Cutting Makeready for '.$$Equipment{strid});
@@ -1208,7 +1210,7 @@ $openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
                 @setup{'Price','units','Total'}, $cuts );
               $price{total} += $setup{Total};
             } else {
-              $openprint::log->debug("unknown units on $$CuttingMakeReady{name}") if DEBUG;
+              $openprint::log->debug('unknown units on '.$CuttingMakeReady->name()) if DEBUG;
               $results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price} );
               $price{total} += $setup{Price};
             } # end if
