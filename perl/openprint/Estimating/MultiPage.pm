@@ -103,8 +103,7 @@ sub no_outputs {
   } # end foreach;
   my @groups = groups( $project_index, $specs );
   foreach my $Group ( @groups ) {
-    my @no_outputs = openprint::Estimating::Printing::no_outputs( $project_index, $service_index, $specs, $Group );
-    # Will come with signature appended
+    my @no_outputs = map { $_.$Group } openprint::Estimating::Printing::no_outputs( $project_index, $service_index, $specs );
     push @v, sets::exclude( \@outputs, \@no_outputs );
   } # end foreach Group
   return @v;
