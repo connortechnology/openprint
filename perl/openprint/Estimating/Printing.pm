@@ -509,8 +509,8 @@ sub no_outputs {
 		} # end foreach
 	} # end foreach Side
 
-  if ( $$new_specs{versions} and ($$new_specs{versions} > 0) and ($$new_specs{versions} < 10)) {
-    foreach my $version ( 1 .. $$new_specs{versions} ) {
+  if ( $$specs{versions} and ($$specs{versions} > 0) and ($$specs{versions} < 10)) {
+    foreach my $version ( 1 .. $$specs{versions} ) {
       $openprint::log->debug("Version: $version");
       push @v, "version-$version-description";
       foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -7777,7 +7777,7 @@ sub summary {
 		if ( $Project->Type()->name() ne 'PresentationFolders' ) {
 			$html .= $$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pg ' : '';
 		} # end if
-		$html .= $$specs{'txtImposition'.$qty_index}.'out ';
+		$html .= '<span title="'.$$specs{"hdnImpositionColumns$qty_index"}.'x'.$$specs{"hdnImpositionRows$qty_index"}.'">'.$$specs{'txtImposition'.$qty_index}.'out </span>';
 		$html .= '<span class="RunStyle '.$$specs{"PrintingType$qty_index"}.' '.$$specs{'ddmRunStyle'.$qty_index}.'">';
 		if ( $$specs{"PrintingType$qty_index"} eq 'Digital' ) {
 			$html .= 'Digital';
@@ -7911,7 +7911,7 @@ sub get_stock_description {
     ) );
 
   if ( $openprint::config{Show_Stock_Calliper} ne 'N' ) {
-    if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/ ) ) {
+    if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/i ) ) {
       if ( $$specs{txtSpecificStockCalliper} ) {
         $string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
       } # end if
