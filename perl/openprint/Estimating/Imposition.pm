@@ -24,7 +24,10 @@ require openprint::service;
 
 my %ServicePrices = (
   '(.*)Imposition(.*)MakeReady' => { units => [ 'per form', 'per side' ] },
-  'Imposition' => { units=> ['per page', 'per square inch of layout', 'per square inch of object']},
+  'Imposition' => {
+    range_units => ['pages', 'square inches of layout', 'square inches of object'],
+    units=> ['per page', 'per square inch of layout', 'per square inch of object']
+  },
   'Stepping Charge' => { units=> []},
   'Page Charge' => { units=> ['per page']},
 );
