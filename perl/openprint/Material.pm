@@ -315,7 +315,7 @@ sub servicetype_id {
 
 sub ServiceTypes {
   return () if ! $_[0]{servicetype_id};
-  return map { new openprint::ServiceType( $_ ); } @{$_[0]{servicetype_id}};
+  return map { new openprint::ServiceType( $_ ); } ref $_[0]{servicetype_id} eq 'ARRAY' ? @{$_[0]{servicetype_id}} : ($_[0]{servicetype_id});
 } # end sub ServiceTypes
 
 1;

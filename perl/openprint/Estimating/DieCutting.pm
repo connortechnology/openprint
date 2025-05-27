@@ -18,7 +18,7 @@ package openprint::Estimating::DieCutting;
 use strict;
 use warnings;
 use POSIX qw( ceil );
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 use vars qw( %ServicePrices %Specifications);
 %ServicePrices = (
@@ -133,9 +133,9 @@ sub no_outputs {
 sub calc_price {
   my ( $specs, $Equipment, $qty_index, $Imposition, $sig_specs, $Signature_Imposition ) = @_;
 
-	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'', Total=>0, MPrice=>0 );
+	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'', Total=>0, MPrice=>0, Overs=>0 );
 	my $form = $$sig_specs{SignatureIndex};
-  my $complexity = $$specs{'Complexity-'.$form} || '';
+  my $complexity = $$specs{'Complexity-'.$form} // '';
 
 	my $MakeReadyService = openprint::Service->find_one(name => 'DieCutting'.$complexity.'MakeReady');
 	$MakeReadyService = openprint::Service->find_one(name => 'DieCuttingMakeReady') if (!$MakeReadyService) and $complexity;
@@ -511,7 +511,6 @@ sub calc {
 
 				$totalPrice += $results{Total};
 
-
 				if ( $$specs{'Markup'.$qty_index} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr class="totals"><td>Total: $%.2f * %s%% = </td><td class="Price">$%.2f</td></tr>', $results{Total},$$specs{'Markup'.$qty_index}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100));
 				} else {
@@ -575,19 +574,20 @@ sub signature_calc {
 
 	my $form = $$sig_specs{SignatureIndex};
 
+  # FIXME
 	@$specs{"txtWidth-$form", "txtHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
 
-	my %results = ( Status=>'uncalculated' );
+	my %results = ( Total=>0, alert=>'', Status=>'uncalculated' );
 
+  $$specs{"chkOverrideEquipment-$form-$qty_index"} //= '';
 	my @equipment;
-	if ( (defined $$specs{"chkOverrideEquipment-$form-$qty_index"}) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) ) {
+	if ($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y') {
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} ) );
 	} else {
 		@equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'DieCutting Capable'=>'Y'} );
 	} # end if
   if (!@equipment) {
     $results{alert} .= 'No equipment was found for die cutting.<br/>';
-    $results{Status} = 'uncalculated';
     return %results;
   }
 
@@ -611,8 +611,8 @@ sub signature_calc {
 		} # end foreach
 		@Sets_of_Impositions = ( \@override_impos );
 		my $overriden_count = misc::sum( map { $_->quantity() * $_->imposition() } @override_impos );
-		if ( $overriden_count != $Imposition->quantity() * $Imposition->imposition() ) {
-			$results{alert} .= "Overriden imposition count ($overriden_count) does not match printed imposition count (".$Imposition->quantity() * $Imposition->imposition().") for form $form quantity $qty_index (".$$specs{"txtQuantity$qty_index"}.").<br/>";
+		if ( $overriden_count != $Imposition->quantity() * $$Imposition{imposition} ) {
+			$results{alert} .= "Overriden imposition count ($overriden_count) does not match printed imposition count (".$Imposition->quantity() * $$Imposition{imposition}.") for form $form quantity $qty_index (".$$specs{"txtQuantity$qty_index"}.").<br/>";
 		} else {
 			$openprint::log->debug(" override count: $overriden_count $$Imposition{quantity} * $$Imposition{imposition}");
 		} # end if
@@ -636,12 +636,17 @@ sub signature_calc {
 			for( my $impo_index = 0; $impo_index < @Impositions; $impo_index += 1 ) {
 				my $imposition = $Impositions[$impo_index];
 
-				my $width = $imposition->layout_width();
-				my $height = $imposition->layout_height();
-				if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{txtSpecificStockCalliper} ) ) {
+				my $width = $imposition->sheet_width();
+				my $height = $imposition->sheet_height();
+				if (
+          $_ = $Equipment->fits( $width, $height, $$sig_specs{txtSpecificStockCalliper} )
+            and
+          $_ = $Equipment->fits( $height, $width, $$sig_specs{txtSpecificStockCalliper} )
+        ) {
           $openprint::log->debug("Reason $$Equipment{name} $_");
-					if ( 1 == @equipment and $$specs{"OverrideImposition-$form-$qty_index"}) {
-						$results{breakdown} .= "Doesn't fit. $_<br/>";
+					if ( 1 == @equipment and (($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y') or $$specs{"OverrideImposition-$form-$qty_index"})) {
+						$results{breakdown} .= 'On '.$Equipment->name().' '.sprintf('%dx%d %dout %.2fx%.2f', 
+              @$imposition{'columns', 'rows', 'imposition'}, $width, $height).": Doesn't fit. $_<br/>";
 					} # end if
 					if ( ( $$imposition{imposition} > 1 ) and ! $$specs{"OverrideImposition-$form-$qty_index"} ) {
             my @cuts = openprint::imposition::cut( $imposition );

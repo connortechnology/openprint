@@ -471,7 +471,7 @@ sub to_string {
 	} # end if
 	if ( ! $$self{to_string} ) {
 		my $string = join(' ', (
-					($$self{supplied} ? 'Customer Supplied' : () ),
+					(($$self{supplied} and ($$self{brand} ne 'Customer Supplied')) ? 'Customer Supplied' : () ),
 					($$self{id} ? () : 'Custom'),
 					$self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight(),
 					) );
@@ -1716,8 +1716,11 @@ sub basis_mweight {
 			$$self{basis_mweight} = Math::Round::nearest(0.01, $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
 #$openprint::log->debug("calcing basis_mweight from wpsi: $$self{basis_mweight} = $wpsi * $$self{basis_width} * $$self{basis_height} * 1000");
 		} elsif ( ( $$self{weight} =~ /^(\d+)lb/i ) or ( $$self{weight} =~ /^(\d+)#/i ) ) {
-			$$self{basis_mweight} = 2*$1;
-#$openprint::log->debug("calcing basis_mweight from weght: $$self{basis_mweight} = $$self{weight} =~ 2*$1");
+      $$self{basis_mweight} = 2*$1;
+      #$openprint::log->debug("calcing basis_mweight from weght: $$self{basis_mweight} = $$self{weight} =~ 2*$1");
+    } elsif ($$self{mweight} and $self->type() eq 'Sheet' and $$self{width} and $$self{height}) {
+      $$self{basis_mweight} = Math::Round::nearest(1, 1000*($self->basis_width() * $self->basis_height()) * (($$self{mweight} / 1000)/($$self{width}*$$self{height})));
+      $openprint::log->debug("calcing basis_mweight from mweight: $$self{basis_mweight} = ($$self{basis_width} * $$self{basis_height}) * (($$self{mweight} / 1000)/($$self{width}*$$self{height}))"); 
 		} else {
 			#$$self{basis_mweight} = 'Unknown';
 			$openprint::log->error('Unable to calculated basis_mweight'.$$self{id});
@@ -1848,7 +1851,8 @@ sub link_to {
   my $self = shift;
   my $text = @_ ? shift : $self->to_string();
 
-	if ( $openprint::variable{uri} and ( $openprint::variable{uri} =~ /administrator/ ) ) {
+  #if ( $openprint::variable{uri} and ( $openprint::variable{uri} =~ /administrator/ ) ) {
+  if ($openprint::User->type() eq 'A') {
 	  return '<a href="/administrator/stock/stock.html?stock_id='.$$self{id}.'">'.$text.'</a>';
 	} else {
 	  return '<a href="/employee/inventory/paper_details.html?paper_id='.$$self{id}.'">'.$text.'</a>';
