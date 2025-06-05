@@ -22,3 +22,6 @@ INSERT INTO Project_Statuses (name) VALUES ('Waiting For Pickup');
 INSERT INTO Project_Statuses (name) VALUES ('Picked Up');
 INSERT INTO Project_Statuses (name) VALUES ('Shipped');
 INSERT INTO Project_Statuses (name) VALUES ('Deleted');
+INSERT INTO Project_Statuses (name) VALUES ('Cancelled');
+INSERT INTO Project_Statuses (name) VALUES ('In Production');
+INSERT INTO Project_Statuses (name) VALUES ('Waiting For Files');
