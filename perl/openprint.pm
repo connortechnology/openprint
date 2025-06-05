@@ -39,7 +39,7 @@ sub session_init {
 		if ( $dbh ) {
 			# If we have no cookie, then... shouldn't try to load it...
 			if ( (!$cookie) or (! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }`) ) {
-				$log->error("Error fetching Session: $cookie: $@") if $@;
+				$log->debug("Error fetching Session: $cookie: $@") if $@;
 				if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 };` ) {
 					$log->error('Error creating Session'. $@);
 				} # end if

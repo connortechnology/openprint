@@ -67,7 +67,7 @@ function calc_weight_from_sheets(e) {
 			$$variable{stock_index} = $$Stock_Entry{index};
 			$$variable{Stock} = $$Stock_Entry{Stock};
 
-			$html .= '<li><label style="width: auto;">'.$$variable{Stock}->to_string().'</label><br/>';
+			$html .= '<li class="signature_stock"><label>'.$$variable{Stock}->to_string().'</label>';
 			$html .= sprintf('<input type="hidden" id="id-%1$d-%2$d" name="id-%1$d-%2$d" value="%3$s" />', @$variable{'form','stock_index','paper_id'} );;
 
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -122,7 +122,7 @@ function calc_weight_from_sheets(e) {
 				$html .= 'sheets)';
 			} # end if
 
-			$html .= '</span><br/>';
+			$html .= '</span>';
 			if ( ! $Stock->supplied() ) {
 				$html .= '<span class="pricing"> @ '.$$variable{Currency}->symbol();
 				$html .= input( type=>'float', id=>"cost-$key", name=>"cost-$key", value=>$$variable{"cost-$key"}, onkeyup=>'calc(this.form.name);' );

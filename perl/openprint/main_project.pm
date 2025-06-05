@@ -433,7 +433,7 @@ sub calc {
 		$log->debug("no outputs, so using keys @vars") if $debug;
 	} # end if
 	if ( my $function = $module->can( 'no_outputs' ) ) {
-		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs , \%param );
+		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs, \%param );
 		$log->debug("$module ::no_outputs: @no_outputs)") if $debug;
 		@vars = sets::exclude( \@no_outputs, \@vars );
 

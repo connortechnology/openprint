@@ -52,6 +52,8 @@ CREATE TABLE Company (
 	ysnMailingList			CHAR(1) DEFAULT 'N' NOT NULL,
 	quote_project_breakdown	CHAR(1) DEFAULT 'N',
 	notes					TEXT,
+  offers_credit  BOOLEAN NOT NULL DEFAULT FALSE,
+  deleted        BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (Index)
 );
 CREATE UNIQUE INDEX CompanyName_Index on Company (Index);
