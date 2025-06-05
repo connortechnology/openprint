@@ -24,9 +24,11 @@ input[type="tel"] {
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
+    /*
     height: 30px;
     font-size: 15px;
     line-height: 26.5px;
+    */
   /*
 	-moz-appearance: textfield;
 	border-width: 2px;
