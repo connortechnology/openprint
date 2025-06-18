@@ -1851,7 +1851,8 @@ sub link_to {
   my $self = shift;
   my $text = @_ ? shift : $self->to_string();
 
-	if ( $openprint::variable{uri} and ( $openprint::variable{uri} =~ /administrator/ ) ) {
+  #if ( $openprint::variable{uri} and ( $openprint::variable{uri} =~ /administrator/ ) ) {
+  if ($openprint::User->type() eq 'A') {
 	  return '<a href="/administrator/stock/stock.html?stock_id='.$$self{id}.'">'.$text.'</a>';
 	} else {
 	  return '<a href="/employee/inventory/paper_details.html?paper_id='.$$self{id}.'">'.$text.'</a>';

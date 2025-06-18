@@ -535,8 +535,10 @@ sub external_calc {
 		@vars = keys %specs;
 	} # end if
 
-	my @no_outputs = eval( 'return openprint::Estimating::'.$service_type.'::no_outputs( @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
-	push @no_outputs, ( 'ProjectIndex', 'ServiceIndex', 'ServiceType' );
+	my @no_outputs = ( 'ProjectIndex', 'ServiceIndex', 'ServiceType' );
+	if ( my $function = $module->can( 'no_outputs' ) ) {
+    push @no_outputs, $function->(@specs{'ProjectIndex', 'ServiceIndex'}, \%specs, \%specs);
+  }
 
 	@vars = sets::exclude( \@no_outputs, \@vars );
 

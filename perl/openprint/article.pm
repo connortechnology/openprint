@@ -47,14 +47,12 @@ sub save_article {
 	$param{company_id} = $session{company_id} if ! $param{company_id};
 
 	if ( Date::Calc::check_date( @param{'published_on_year','published_on_month','published_on_day'} ) ) {
-        my $published_on_datetime = DateTime->new( time_zone => $openprint::TZ,
-                ( map { $_ => int($param{'published_on_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
-                );
+    my $published_on_datetime = DateTime->new( time_zone => $openprint::TZ,
+      ( map { $_ => int($param{'published_on_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
+    );
 
-        my $parser = 'DateTime::Format::Pg';
-
-        $param{published_on} = $parser->format_datetime( $published_on_datetime );
-
+    my $parser = 'DateTime::Format::Pg';
+    $param{published_on} = $parser->format_datetime( $published_on_datetime );
 	} else {
 		delete $param{published_on};
 		$variable{warning} = 'Invalid date published_on_date.  Published On Date not changed.';
@@ -152,9 +150,9 @@ $log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
 	} # end while
 	$param{body} = $body;
 } 
-$log->debug("before unescape $param{body} ");
+#$log->debug("before unescape $param{body} ");
 	$param{body} = unescape_substitutions( $param{body} );
-  $log->debug("aftere unescape $param{body} ");
+  #$log->debug("aftere unescape $param{body} ");
 
   if (!$Article->id()) {
     $variable{error} .= $Article->save(\%param);
@@ -272,19 +270,22 @@ sub _search {
 } # end sub _search
 
 sub edit {
-	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
+	$param{article_id} = openprint::Article->transform( id=>$param{article_id} );
 
 	my $Article = $variable{Article} = new openprint::Article( $param{article_id} );
 	if ( ! $param{article_id} ) {
 		$variable{error} .= $Article->save({created_by=>$session{user_id}}); # allocate an id.
 	} elsif ( ! $Article->can_edit() ) {
+    $openrpint::log->debug('You do not have rights to edit this article.');
 		$variable{error} .= 'You do not have rights to edit this article.';
 		return;
 	} # end if
+
   if ($param{func}) {
     if ( $param{func} eq 'Save' ) {
       save_article();
       if ( $variable{error} or $variable{warning} ) {
+        $openprint::log->debug($variable{error} or $variable{warning});
       } else {
         %param = ();
         $param{article_id} = $Article->id();
@@ -329,8 +330,8 @@ sub edit {
             @session{map { '/article/history.html?created_on_end_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
           } # end if
         } # end if
-
-        $variable{ExternalRedirect} = $session{'/article/edit.html?referer'} ? $session{'/article/edit.html?referer'} : '/article/history.html';
+$openprint::log->error($session{'/article/edit.html?referer'});
+        $variable{ExternalRedirect} = ($session{'/article/edit.html?referer'} and ($session{'/article/edit.html?referer'} !~ /\/article\/edit\.html$/)) ? $session{'/article/edit.html?referer'} : '/article/history.html';
       } # end if
     } elsif ( sets::isin( $param{func}, [ 'delete','destroy','undelete' ] ) ) {
       my $func = $Article->can($param{func});

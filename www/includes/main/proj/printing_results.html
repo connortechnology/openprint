@@ -380,6 +380,7 @@
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{Columns}.'Columns">';
 			$html .= input( id=>"OverTotal$qty_index", name=>"OverTotal$qty_index", value=>$$variable{'OverTotal'.$qty_index}, type=>'cardinal', oninput=>'calc(this.form.name);' );
+			$html .= write_override( 'OverrideTotalOvers'.$qty_index, $$variable{'OverrideTotalOvers'.$qty_index},'',"calc('f1');" );
 			$html .= '</span>';
 		} # end foreach qty_index
 		return $html;
