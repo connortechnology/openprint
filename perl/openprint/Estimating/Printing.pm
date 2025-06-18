@@ -509,6 +509,7 @@ sub no_outputs {
 		} # end foreach
 	} # end foreach Side
 
+  if (0) {
   if ( $$new_specs{versions} and ($$new_specs{versions} > 0) and ($$new_specs{versions} < 10)) {
     foreach my $version ( 1 .. $$new_specs{versions} ) {
       $openprint::log->debug("Version: $version");
@@ -517,6 +518,7 @@ sub no_outputs {
         push @v, "version-$version-quantity$qty_index";
       } # end foreach qty_index
     } # end foreach version
+  } # end if
   } # end if
 
 	return @v;
