@@ -45,7 +45,14 @@ then
      usage
      exit 1
 fi
+IFS=$'\n'
+funcs=(`psql -qAt -c "SELECT format('%s.%I(%s)', ns.nspname, p.proname, oidvectortypes(p.proargtypes)) FROM pg_proc p INNER JOIN pg_namespace ns ON (p.pronamespace = ns.oid) WHERE ns.nspname = '${DB_SCHEMA}';" ${DB_NAME}`);
 
+for routine in "${funcs[@]}";
+do
+    echo "alter function $routine owner to ${NEW_OWNER} ${DB_NAME}";
+    psql -c "alter function $routine owner to ${NEW_OWNER}" ${DB_NAME};
+done
 for tbl in `psql -qAt -c "select tablename from pg_tables where schemaname = '${DB_SCHEMA}';" ${DB_NAME}` \
            `psql -qAt -c "select sequence_name from information_schema.sequences where sequence_schema = '${DB_SCHEMA}';" ${DB_NAME}` \
            `psql -qAt -c "select table_name from information_schema.views where table_schema = '${DB_SCHEMA}';" ${DB_NAME}` ;
@@ -53,7 +60,8 @@ do
     echo "alter table \"${DB_SCHEMA}\".\"$tbl\" owner to ${NEW_OWNER} ${DB_NAME}";
     psql -c "alter table \"${DB_SCHEMA}\".\"$tbl\" owner to ${NEW_OWNER}" ${DB_NAME};
 done
+
 psql -c "GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA ${DB_SCHEMA} TO ${NEW_OWNER}" ${DB_NAME};
-psql -c "GRANT ALL ON ALL TABLES IN SCHEMA {DB_SCHEMA} TO ${NEW_OWNER}" ${DB_NAME};
-psql -c "GRANT ALL ON ALL SEQUENCES IN SCHEMA {DB_SCHEMA} TO ${NEW_OWNER}" ${DB_NAME};
-psql -c "GRANT USAGE ON SCHEMA {DB_SCHEMA} TO ${NEW_OWNER}" ${DB_NAME};
+psql -c "GRANT ALL ON ALL TABLES IN SCHEMA ${DB_SCHEMA} TO ${NEW_OWNER}" ${DB_NAME};
+psql -c "GRANT ALL ON ALL SEQUENCES IN SCHEMA ${DB_SCHEMA} TO ${NEW_OWNER}" ${DB_NAME};
+psql -c "GRANT USAGE ON SCHEMA ${DB_SCHEMA} TO ${NEW_OWNER}" ${DB_NAME};
