@@ -42,7 +42,7 @@ $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV
 my @tables;
 
 sub get_tables {
-  @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+  @tables = sort { $a cmp $b } sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables`);
   $log->debug("Tables: @tables");
 }
 get_tables();
@@ -58,6 +58,7 @@ sub load_sql {
 }
 
 if ( ! sets::isin( 'database_info', \@tables ) ) {
+  print "database_info not in @tables\n";
 	$dbh->do( misc::load_file( $log, q{../../sql/database_info.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 }
@@ -75,8 +76,13 @@ if ( ! sets::isin( 'configuration', \@tables ) ) {
     $dbh->do('ALTER TABLE tbl_configuration RENAME TO configuration') or die $dbh->errstr();
     rename_column('configuration', 'strconfigtitle', 'name');
     rename_column('configuration', 'strconfigdata', 'value');
-    $dbh->do('ALTER TABLE configuration ADD description TEXT');
-    $dbh->do('ALTER TABLE configuration ADD type TEXT');
+    my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='configuration'", 'column_name');
+    if (!exists $$data{description}) {
+      $dbh->do('ALTER TABLE configuration ADD description TEXT') or die $dbh->errstr();
+    }
+    if (!exists $$data{type}) {
+      $dbh->do('ALTER TABLE configuration ADD type TEXT') or die $dbh->errstr();
+    }
     $dbh->do("UPDATE configuration set type='text' WHERE type IS NULL");
     sql::end_transaction( $dbh, $ac );
   } else {
@@ -157,7 +163,7 @@ if ( ! sets::isin( 'company_categories', \@tables ) ) {
 } # endif
 
 if ( ! sets::isin( 'quotelevels', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../../sql/QuoteLevels.sql}) );
+	$dbh->do( misc::load_file( $log, q{../../sql/QuoteLevels.sql}) ) or die $dbh->errstr;
   get_tables();
 	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
 } else {
@@ -751,6 +757,10 @@ $dbh->do('ALTER TABLE orders RENAME COLUMN stremail to email') or die $dbh->errs
     $dbh->do('ALTER TABLE orders RENAME COLUMN stremail to email') or die $dbh->errstr();
   }
   if (exists $$data{id} and ! $$data{column_default}) {
+    if ( ! sets::isin( 'order_id_seq', \@sequences ) ) {
+      $dbh->do('create sequence order_id_seq') or die $dbh->errstr();
+      $dbh->do('SELECT setval(order_id_seq, (SELECT MAX(id) FROM orders))');
+    }
     $dbh->do("ALTER TABLE orders ALTER id set default nextval('order_id_seq'::regclass)");
   }
 }
@@ -1106,7 +1116,13 @@ if ( !sets::isin('invoices_payments', \@tables) ) {
 	if ( ! exists $$data{id} ) {
 		$dbh->do('ALTER TABLE orders rename column index to id');
 	} # end if
-	$dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)') if ( ! exists $$data{paid} );
+  if ( ! exists $$data{paid} ) {
+    $dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)');
+  } elsif ($$data{paid}{data_type} eq 'boolean') {
+    $dbh->do('ALTER TABLE Orders RENAME column paid to paid_bool');
+    $dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)');
+  }
+
 	$dbh->do('UPDATE Orders SET paid=(SELECT SUM(amount) FROM Payments WHERE order_id=orders.id)');
 	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{owing} );
 	$dbh->do('UPDATE orders SET owing=total-paid');
@@ -1852,6 +1868,7 @@ if ( ! sets::isin( 'stockmaterials', \@tables ) ) {
 
 if ( ! sets::isin( 'papers', \@tables ) ) {
   if (sets::isin( 'tbl_paper', \@tables ) ) {
+    my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_paper'", 'column_name');
 		my $ac = sql::start_transaction( $dbh );
     $dbh->do('ALTER TABLE tbl_paper RENAME TO papers') or die $dbh->errstr();
     rename_column('papers', 'lngindex', 'id');
@@ -1869,25 +1886,36 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
     $dbh->do("UPDATE papers set doublesided=false where ysndoublesided='N'") or die $dbh->errstr();
     $dbh->do('ALTER TABLE papers ADD cuttable boolean NOT NULL default true') or die $dbh->errstr();
     $dbh->do("UPDATE papers set cuttable=false where ysncutpaper='N'") or die $dbh->errstr();
-    $dbh->do('ALTER TABLE papers ADD multipart boolean NOT NULL default false') or die $dbh->errstr();
-    $dbh->do("UPDATE papers set multipart=true where lngmultipart > 1") or die $dbh->errstr();
+
+    if (!exists $$data{multipart}) {
+      $dbh->do('ALTER TABLE papers ADD multipart boolean NOT NULL default false') or die $dbh->errstr();
+      $dbh->do("UPDATE papers set multipart=true where lngmultipart > 1") or die $dbh->errstr();
+    }
     rename_column('papers', 'dblwidth', 'width') or die $dbh->errstr();
     rename_column('papers', 'dblheight', 'height') or die $dbh->errstr();
-    $dbh->do('ALTER TABLE papers ADD brand_id INTEGER') or die $dbh->errstr();
-    $dbh->do('INSERT INTO stockbrands (name) SELECT distinct strname from papers where strname IS NOT NULL AND strname NOT in (SELECT name from stockbrands)') or die $dbh->errstr();
-    $dbh->do('UPDATE papers set brand_id=(SELECT id FROM stockbrands where name=strname)') or die $dbh->errstr();
+    if (!exists $$data{brand_id}) {
+      $dbh->do('ALTER TABLE papers ADD brand_id INTEGER') or die $dbh->errstr();
+      $dbh->do('INSERT INTO stockbrands (name) SELECT distinct strname from papers where strname IS NOT NULL AND strname NOT in (SELECT name from stockbrands)') or die $dbh->errstr();
+      $dbh->do('UPDATE papers set brand_id=(SELECT id FROM stockbrands where name=strname)') or die $dbh->errstr();
+    }
 
-    $dbh->do('ALTER TABLE papers ADD finish_id INTEGER') or die $dbh->errstr();
-    $dbh->do('INSERT INTO stockfinishes (name) SELECT distinct strfinish from papers where strfinish IS NOT NULL AND strfinish NOT in (SELECT name from stockfinishes)') or die $dbh->errstr();
-    $dbh->do('UPDATE papers set finish_id=(SELECT id FROM stockfinishes where name=strfinish)') or die $dbh->errstr();
+    if (!exists $$data{finish_id}) {
+      $dbh->do('ALTER TABLE papers ADD finish_id INTEGER') or die $dbh->errstr();
+      $dbh->do('INSERT INTO stockfinishes (name) SELECT distinct strfinish from papers where strfinish IS NOT NULL AND strfinish NOT in (SELECT name from stockfinishes)') or die $dbh->errstr();
+      $dbh->do('UPDATE papers set finish_id=(SELECT id FROM stockfinishes where name=strfinish)') or die $dbh->errstr();
+    }
 
-    $dbh->do('ALTER TABLE papers ADD colour_id INTEGER') or die $dbh->errstr();
-    $dbh->do('INSERT INTO stockcolours (name) SELECT distinct strcolour from papers where strcolour IS NOT NULL AND strcolour NOT in (SELECT name from stockcolours)') or die $dbh->errstr();
-    $dbh->do('UPDATE papers set colour_id=(SELECT id FROM stockcolours where name=strcolour)') or die $dbh->errstr();
+    if (!exists $$data{colour_id}) {
+      $dbh->do('ALTER TABLE papers ADD colour_id INTEGER') or die $dbh->errstr();
+      $dbh->do('INSERT INTO stockcolours (name) SELECT distinct strcolour from papers where strcolour IS NOT NULL AND strcolour NOT in (SELECT name from stockcolours)') or die $dbh->errstr();
+      $dbh->do('UPDATE papers set colour_id=(SELECT id FROM stockcolours where name=strcolour)') or die $dbh->errstr();
+    }
 
-    $dbh->do('ALTER TABLE papers ADD weight_id INTEGER') or die $dbh->errstr();
-    $dbh->do('INSERT INTO stockweights (name) SELECT distinct strweight from papers where strweight IS NOT NULL AND strweight NOT in (SELECT name from stockweights)');
-    $dbh->do('UPDATE papers set weight_id=(SELECT id FROM stockweights where name=strweight)') or die $dbh->errstr();
+    if (!exists $$data{weight_id}) {
+      $dbh->do('ALTER TABLE papers ADD weight_id INTEGER') or die $dbh->errstr();
+      $dbh->do('INSERT INTO stockweights (name) SELECT distinct strweight from papers where strweight IS NOT NULL AND strweight NOT in (SELECT name from stockweights)');
+      $dbh->do('UPDATE papers set weight_id=(SELECT id FROM stockweights where name=strweight)') or die $dbh->errstr();
+    }
     sql::end_transaction( $dbh, $ac );
     push @tables, 'papers';
   } else {
@@ -3282,6 +3310,7 @@ if ( ! sets::isin( 'logs', \@tables ) ) {
     }
   }
 } # end if
+if (0) {
 my %config_actions = (
 	'Add Currency'			=>	76,
 	'Update Configuration' => 77,
@@ -3349,6 +3378,7 @@ $dbh->do(q`DELETE FROM Log_Actions WHERE name='Update Company Profile'`);
 $dbh->do(q`UPDATE Logs SET action_id=(SELECT id FROM log_actions WHERE name='Edit Company') WHERE action_id=(SELECT id FROM Log_Actions WHERE name='Update Company')`);
 $dbh->do(q`DELETE FROM Log_Actions WHERE name='Update Company'`);
 die $dbh->errstr() if $dbh->errstr();
+}
 
 
 new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>8}) if ! openprint::ServiceType_Category->find('name'=>'Materials');

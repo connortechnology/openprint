@@ -259,7 +259,7 @@ sub login {
 }
 
 sub logout {
-	(new openprint::Log())->save({Object=>$openprint::User, action=>'Logout'});
+	(new openprint::Log())->save({Object=>$openprint::User, action=>'Logout'}) if $openprint::User->id();
 	foreach my $k ( keys %session ) {
 		next if sets::isin( $k, [ 'Currency_id', '_session_id','Country' ] );
 		delete $session{$k};
