@@ -11,7 +11,6 @@ require openprint::pricelist;
 require openprint::material_price;
 require openprint::Material;
 require openprint::MaterialCategory;
-require openprint::MaterialType;
 require openprint::Log;
 use openprint ();
 use vars qw( $r $log $dbh %param %variable );
