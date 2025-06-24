@@ -11,7 +11,7 @@ require openprint::pricelist;
 require openprint::material_price;
 require openprint::Material;
 require openprint::MaterialCategory;
-require openprint::MaterialType;
+#require openprint::MaterialType;
 require openprint::Log;
 use openprint ();
 use vars qw( $r $log $dbh %param %variable );
@@ -142,7 +142,7 @@ sub edit {
         #push @pricing_changes, 'Delete price: ' . $Price->to_string();
         #}
         #} else {
-					my %data = map { $_ => $param{join('-', $_, $$Price{id})} } qw( min					max					units				cost				markup			price				discountable);
+					my %data = map { $_ => $param{join('-', $_, $$Price{id})} } qw( min max range_units cost markup price units discountable);
 					my @price_changes = $Price->changes( \%data );
 					if ( @price_changes ) {
 						if ( $Price->set(\%data) ) {
