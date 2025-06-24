@@ -666,31 +666,35 @@ $openprint::log->debug("Returning from ultiPage::status $Group");
 sub save {
 $openprint::log->debug("Starting Multipage::save");
 	my ( $project_index, $service_index, $param ) = @_;
+
 	my $Project = new openprint::Project( $project_index );	
 	my $Service = $Project->Service($service_index);
 
 	my $specs = $Service->specs();
 	if ( $$specs{rdbCover} eq 'Different' ) {
-# now add a cover spread if we need one.
-# First, see if we have one.
+    # now add a cover spread if we need one.
+    # First, see if we have one.
 		if ( ! $Project->signatures({ type=>'Cover Pages'}) ) {
 			$Project->add_signature( undef, undef, {
 					txtSignatureType		=> 'Cover Pages',
 					txtServiceDescription	=> 'Cover',
+          # What if there already is a Group 1?
 					Group					=>  1,
 					PrintingType			=> $$specs{PrintingType},
 					txtSpreadSize			=>  4,
 					} );
 		} # end if
 	} else {
-# Don't need a cover, so get rid of it
+    # Don't need a cover, so get rid of it
 		foreach ( $Project->signatures({type=>'Cover Pages'}) ) {
 			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
+    #What if cover wasn't Group 1?
 		foreach ( $Project->signatures({Group=>1}) ) {
 			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
 	} # end if Self or Different Cover
+
 	if ( ! $Project->signatures({type=>'Interior Pages'}) ) {
 		$Project->add_signature( undef, undef, {
 				txtSignatureType		=> 'Interior Pages',
@@ -705,17 +709,17 @@ $openprint::log->debug("Starting Multipage::save");
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 		my $group_id = $$sig_specs{Group};
 		foreach my $v ( @signature_variables ) {
-
 			# Special case, should never change the type of cover or interior pages.
 			next if ( $v eq 'txtSignatureType' ) and ( $group_id == 1 or $group_id == 2 );
 			if ( $$specs{$v.$group_id} ne $$sig_specs{$v} ) {
 $openprint::log->debug("Saving $v for group $group_id") if DEBUG;
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $$specs{$v.$group_id} );
 			} else {
-$openprint::log->debug("Not Saving $v for group $group_id") if DEBUG;
+        #$openprint::log->debug("Not Saving $v for group $group_id") if DEBUG;
 			} # end if
 		} # end foreach v
 	} # end foreach signature
+  die;
 } # end sub save
 
 sub check {
