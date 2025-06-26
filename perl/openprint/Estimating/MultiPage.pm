@@ -189,6 +189,7 @@ sub calc {
 	my $remaining_pages = $$specs{txtTotalPageQuantity};
 	my %override_pages;
 	foreach my $group_id ( @Groups ) {
+    next if ($group_id == 3 and ! $$specs{txtGateFoldedSpreadQuantity});
 
 		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} and $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
 			if ( ! $$specs{'GroupPageQuantity'.$group_id} ) {
@@ -307,13 +308,16 @@ sub calc {
 
 	foreach my $group_id ( @Groups ) {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
+    next if ($group_id == 3 and ! $$specs{txtGateFoldedSpreadQuantity});
+
 		my %sig_specs = map { $$specs{$_.$group_id} ? ( $_, $$specs{$_.$group_id } ) : () } @signature_variables;
-		if ( ! exists $override_pages{$group_id} ) {
+		if ( ! exists $override_pages{$group_id} and ($group_id != 3)) {
 			$override_pages{$group_id} = $remaining_pages;
 
 		# The purpose of calling this here, is to do auto-population of coverage, etc.
 			$remaining_pages = 0;
 		} # end if
+
 		$sig_specs{GroupPageQuantity} = $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 		openprint::Estimating::Printing::get_inkcoverage( $Project, \%sig_specs, \%variables );
 		my @side_one_colours = openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideOne', \%variables );
@@ -425,12 +429,15 @@ sub calc {
 				$max_group = $g_id;
 			} # end if
 		} # end foreach g_id
+    $log->error("Max group is $max_group");
 		$max_group += 1;
+    $max_group += 1 if $max_group == 3; # 3 is reserved for GateFold Pages
 		push @Groups, $max_group;
 		$$specs{'GroupPageQuantity'.$max_group} = $remaining_pages;
 		$$specs{'GroupPageQuantity'.$max_group} = '' if $$specs{'GroupPageQuantity'.$max_group} < 0;
 	} # end if
 	$$specs{groups} = join(',', @Groups );
+  $log->error("groups $$specs{groups}");
 
 	return $$specs{Status};
 } # end sub calc
@@ -656,7 +663,7 @@ sub status {
 	foreach my $Group ( @Groups ) {
 $openprint::log->debug("$Group needed: $needed_pages{$Group} >? $specified_pages{$Group}");
 		if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
-$openprint::log->debug("Returning from ultiPage::status $Group");
+$openprint::log->debug("Returning from MultiPage::status $Group");
 			return $Group;
 		} # end if
 	} # end foreach
@@ -719,7 +726,7 @@ $openprint::log->debug("Saving $v for group $group_id") if DEBUG;
 			} # end if
 		} # end foreach v
 	} # end foreach signature
-  die;
+  #die;
 } # end sub save
 
 sub check {
