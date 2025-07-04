@@ -188,6 +188,7 @@ sub calc {
 
 	my $remaining_pages = $$specs{txtTotalPageQuantity};
 	my %override_pages;
+
 	foreach my $group_id ( @Groups ) {
     next if ($group_id == 3 and ! $$specs{txtGateFoldedSpreadQuantity});
 
@@ -239,8 +240,12 @@ sub calc {
           $override_pages{$group_id} = 4;
           $$specs{'txtSpreadSize'.$group_id} = 4;
         }
-        $remaining_pages -= $override_pages{$group_id};
       }
+      if ($$specs{'PageQuantity-'.$group_id} and (2*$$specs{'PageQuantity-'.$group_id} > $$specs{'txtTotalPageQuantity'})) {
+        $$specs{'GroupPageQuantity'.$group_id} = $$specs{'PageQuantity-'.$group_id};
+        $override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id};
+      }
+      $remaining_pages -= $override_pages{$group_id};
 			$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
 		} # end if override
 	} # end foreach group
