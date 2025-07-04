@@ -124,7 +124,7 @@ sub view {
 	my $Project = $variable{Project} = new openprint::Project($project_id);
 	my $save = 0;
 
-  if ( exists($param{quote_level}) and ( (!$Project->style_id()) or ($param{quote_level} != $Project->style_id())) ) {
+  if (exists($param{quote_level}) and ( (!$Project->style_id()) or ($param{quote_level} != $Project->style_id()))) {
     $Project->style_id( $param{quote_level} );
     $save = 1;
   } elsif ( ( ! $Project->style_id() ) and $openprint::User->quote_level() ) {
