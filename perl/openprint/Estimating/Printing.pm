@@ -2472,6 +2472,7 @@ $log->debug("Using spine ehgiht");
 
 				if ( $$printing_specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
           # Perfect bound requires more width on the cover to cover the caliper	of the interior pages
+          # # FIXME: First run through multipage, nothing will exist in db.  Need to make this operate on stuff in ram...
 					my $finished_calliper = 0;
 					my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $Project->id(), 'Group' );
 					foreach my $group_id ( @Groups ) {
