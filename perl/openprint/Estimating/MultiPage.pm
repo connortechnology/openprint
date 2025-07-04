@@ -701,7 +701,7 @@ $openprint::log->debug("Starting Multipage::save");
 		foreach ( $Project->signatures({type=>'Cover Pages'}) ) {
 			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
-    #What if cover wasn't Group 1?
+    #What if cover wasn't Group 1? FIXME
 		foreach ( $Project->signatures({Group=>1}) ) {
 			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
@@ -716,6 +716,19 @@ $openprint::log->debug("Starting Multipage::save");
 				txtSpreadSize			=>  4,
 				} );
 	}
+	my @groups = groups( $$Project{id}, $specs );
+  $openprint::log->debug("Groups @groups");
+  foreach my $group_id (@groups) {
+    if (!$Project->signatures({Group=>$group_id}) ) {
+      $Project->add_signature( undef, undef, {
+          txtSignatureType		=> $$specs{'txtSignatureType'.$group_id},
+          txtServiceDescription	=> $$specs{'txtServiceDescription'.$group_id},
+          Group					=>  $group_id,
+          PrintingType			=> $$specs{'PrintingType-'.$group_id},
+          txtSpreadSize			=>  4,
+        } );
+    }
+  }
 
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
