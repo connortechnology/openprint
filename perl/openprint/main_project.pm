@@ -124,7 +124,7 @@ sub view {
 	my $Project = $variable{Project} = new openprint::Project($project_id);
 	my $save = 0;
 
-  if ( exists($param{quote_level}) and ( $param{quote_level} != $Project->style_id() ) ) {
+  if (exists($param{quote_level}) and (!$Project->style_id() or ($param{quote_level} != $Project->style_id()))) {
     $Project->style_id( $param{quote_level} );
     $save = 1;
   } elsif ( ( ! $Project->style_id() ) and $openprint::User->quote_level() ) {
@@ -433,7 +433,7 @@ sub calc {
 		$log->debug("no outputs, so using keys @vars") if $debug;
 	} # end if
 	if ( my $function = $module->can( 'no_outputs' ) ) {
-		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs , \%param );
+		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs, \%param );
 		$log->debug("$module ::no_outputs: @no_outputs)") if $debug;
 		@vars = sets::exclude( \@no_outputs, \@vars );
 

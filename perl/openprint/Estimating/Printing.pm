@@ -2470,6 +2470,7 @@ $log->debug("Using spine ehgiht");
 
 				if ( $$printing_specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
           # Perfect bound requires more width on the cover to cover the caliper	of the interior pages
+          # # FIXME: First run through multipage, nothing will exist in db.  Need to make this operate on stuff in ram...
 					my $finished_calliper = 0;
 					my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $Project->id(), 'Group' );
 					foreach my $group_id ( @Groups ) {
@@ -2736,6 +2737,12 @@ sub calc {
 		} else {
 			$$specs{'OverrideRun'.$qty_index} = '';	
 			$variables{"OverRun$qty_index"} = [ sets::union( 'output', @{$variables{'OverRun'.$qty_index}} ) ];
+		} # end if
+		if ( $$specs{'OverrideTotalOvers'.$qty_index} ) {
+			$variables{"OverTotal$qty_index"} = [sets::exclude( ['output'], $variables{"OverTotal$qty_index"} ) ];
+		} else {
+			$$specs{'OverrideTotalOvers'.$qty_index} = '';	
+			$variables{"OverTotal$qty_index"} = [ sets::union( 'output', @{$variables{'OverTotal'.$qty_index}} ) ];
 		} # end if
 
 	} # end foreach qty_index
@@ -3460,7 +3467,7 @@ sub breakdown {
 
 	my $breakdown = '';
 	$breakdown .= openprint::Estimating::Imposition::signature_summary( $Imposition, $$price{'Imposition Price'} ) if $$price{'Imposition Price'} and $ImpositionServiceType;
-	$breakdown .= sprintf('%s Colour Bar %f %s, Bleed: %s Orientation: %s<br/>', ( $Press ? $$Press{strid} : '' ), @$Imposition{'colour_bar_size','colour_bar_orientation','bleed_size'},
+	$breakdown .= sprintf('%s Colour Bar %f %s, Bleed: %s Orientation: %s<br/>', ( $Press ? $Press->link_to() : '' ), @$Imposition{'colour_bar_size','colour_bar_orientation','bleed_size'},
 		$Imposition->image_orientation_text() );
 	$breakdown .= '<b>Setups</b><br/>';
 	if ( $$price{GripperSetup} ) {
@@ -5781,6 +5788,7 @@ sub calc_price {
 
 	if ( $$specs{'OverrideRun'.$qty_index} and ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
 		$price{'Run Overs'} = { impressions=>$net_sheets, value=>$$specs{'OverRun'.$qty_index}, units=>'overriden sheets', total=>$$specs{'OverRun'.$qty_index} };
+
 	} else {
 # Should include bindery overs, but not setups, because the setup overs do the same job as the Run Overs
 		my $PressRunOvers = $Press->Specification('Press Run Overs', $net_sheets);
@@ -6432,6 +6440,9 @@ if ( 1 ) {
 	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} ) if ! $min_overs;
 	$min_overs = 0 if ! defined $min_overs;
 	$total_overs = $min_overs if $total_overs < $min_overs;
+  if ( $$specs{'OverrideTotalOvers'.$qty_index} and ( $$specs{'OverrideTotalOvers'.$qty_index} eq 'Y' ) ) {
+    $total_overs = $$specs{'OverTotal'.$qty_index};
+  }
 
 	$gross_sheets = $net_sheets + $total_overs;
 	$impressions = $gross_sheets;
@@ -7777,7 +7788,7 @@ sub summary {
 		if ( $Project->Type()->name() ne 'PresentationFolders' ) {
 			$html .= $$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pg ' : '';
 		} # end if
-		$html .= $$specs{'txtImposition'.$qty_index}.'out ';
+		$html .= '<span title="'.$$specs{"hdnImpositionColumns$qty_index"}.'x'.$$specs{"hdnImpositionRows$qty_index"}.'">'.$$specs{'txtImposition'.$qty_index}.'out </span>';
 		$html .= '<span class="RunStyle '.$$specs{"PrintingType$qty_index"}.' '.$$specs{'ddmRunStyle'.$qty_index}.'">';
 		if ( $$specs{"PrintingType$qty_index"} eq 'Digital' ) {
 			$html .= 'Digital';
@@ -7911,7 +7922,7 @@ sub get_stock_description {
     ) );
 
   if ( $openprint::config{Show_Stock_Calliper} ne 'N' ) {
-    if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/ ) ) {
+    if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/i ) ) {
       if ( $$specs{txtSpecificStockCalliper} ) {
         $string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
       } # end if

@@ -10,8 +10,12 @@ require openprint::pricelist;
 require openprint::paper_price;
 require openprint::paper_priceset;
 
-require openprint::Equipment_Stock_Setting;
 require openprint::Company;
+require openprint::Equipment_Stock_Setting;
+require openprint::Manufacturer;
+require openprint::PaperPrice;
+require openprint::ProjectType;
+require openprint::Skid;
 require openprint::StockBrand;
 require openprint::StockFinish;
 require openprint::StockColour;
@@ -19,10 +23,7 @@ require openprint::StockWeight;
 require openprint::StockGroup;
 require openprint::StockMaterial;
 require openprint::StockQuality;
-require openprint::Manufacturer;
-require openprint::PaperPrice;
 require openprint::Supplier;
-require openprint::Skid;
 
 use openprint ();
 use vars qw( %variable %session %param %config $log $dbh $r );
@@ -139,13 +140,16 @@ sub list {
         misc::export_csv( $r, $log, \%variable, 'PaperPrices.csv', \@header, \@data );
 
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
-		foreach my $Paper ( @Papers ) {
-			my $NewPaper = $Paper->copy();
-			$NewPaper->save();
-			foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
-				$Setting = $Setting->copy();
-				$Setting->save({stock_id=>$NewPaper->id()});
-			} # end foreach
+    foreach my $Paper ( @Papers ) {
+      my $NewPaper = $Paper->copy();
+      $NewPaper->save();
+      if (!$variable{error}) {
+        (new openprint::Log())->save({Object=>$NewPaper, action=>'Copy', note=>'Paper '.$NewPaper->link_to(). ' copied from '.$Paper->link_to()});
+        foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
+          $Setting = $Setting->copy();
+          $Setting->save({stock_id=>$NewPaper->id()});
+        } # end foreach
+      } # end if !error
 		} # end foreach
 	} elsif ( $param{btnFunction} eq 'ApplyChanges' ) {
 		foreach my $Paper ( @Papers ) {

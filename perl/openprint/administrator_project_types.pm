@@ -7,6 +7,7 @@ require openprint::ProjectType;
 require openprint::ProjectTypeCategory;
 require openprint::ProjectType_Default;
 require openprint::ProjectType_Template;
+
 require sql;
 require misc;
 require openprint::logs;
@@ -23,6 +24,8 @@ use vars qw( $r $log $dbh %variable %param %session );
 sub edit {
   require openprint::Paper;
   require openprint::PaperPrice;
+  require openprint::StockQuality;
+  require openprint::PaperRecommendation;
 
 	my $ProjectType = new openprint::ProjectType( $param{ddmProjectType} );
 
