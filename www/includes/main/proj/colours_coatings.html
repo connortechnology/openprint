@@ -2,10 +2,10 @@
   <div class="link-outer" id="cc_link<?Signature?>">
     <div class="link-inner">
       <label for="side_link<?Signature?>" class="radio linkage" title="Link Side One &amp; Side Two">
-<img src="/images/misc/link.png" />
-<input type="checkbox" name="side_link<?Signature?>" class="side_link" id="side_link<?Signature?>" value="1" data_signature_index="<?Signature?>" <?echo(checked($$variable{side_link}))?>/>
-<img src="/images/misc/link.png" />
-</label>
+        <img src="/images/misc/link.png" />
+        <input type="checkbox" name="side_link<?Signature?>" class="side_link" id="side_link<?Signature?>" value="1" data_signature_index="<?Signature?>" <?echo(checked($$variable{side_link}))?>/>
+        <img src="/images/misc/link.png" />
+      </label>
     </div>
   </div>
 <div class="InksFront">
@@ -68,15 +68,16 @@
 				my $fragment = slurp_content( '/includes/main/proj/_additional_colour_coating.html' );
 				$$variable{index} = 0;
 				foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
-					next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
+					#next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
 					$$variable{index} = $index;
 					$html .= variable_substitution( \$fragment, $variable );
 				} # end foreach
+
+        # if no colours, leave 1.
 				if ( ! $html ) {
-					$$variable{index} = 0;
+					$$variable{index} = 1;
+				  $html .= variable_substitution( \$fragment, $variable );
 				}
-				$$variable{index} += 1;
-				$html .= variable_substitution( \$fragment, $variable );
 				return $html;
 			) ?>
 		</div>
@@ -149,15 +150,14 @@
 				$$variable{Side} = 'SideTwo';
 				$$variable{index} = 0;
 				foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
-					next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
+					#next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
 					$$variable{index} = $index;
 					$html .= variable_substitution( \$fragment, $variable );
 				} # end foreach
 				if ( ! $html ) {
-					$$variable{index} = 0;
+					$$variable{index} = 1;
+          $html .= variable_substitution( \$fragment, $variable );
 				}
-				$$variable{index} += 1;
-				$html .= variable_substitution( \$fragment, $variable );
 				return $html;
 			) ?>
 		</div>
