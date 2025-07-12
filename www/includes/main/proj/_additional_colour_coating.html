@@ -19,7 +19,7 @@
 		my @label_options = ('PMS');
 		
 		my @Services;
-    if(!$$variable{Project}->has_service('AqueousOffline')){
+    if (!$$variable{Project}->has_service('AqueousOffline')) {
       if ( $$variable{Coatings} ) {
         @Services = @{$$variable{Coatings}};
       } else {
