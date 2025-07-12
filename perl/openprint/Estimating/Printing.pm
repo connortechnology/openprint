@@ -509,7 +509,7 @@ sub no_outputs {
 		} # end foreach
 	} # end foreach Side
 
-  if ( $$new_specs{versions} and ($$new_specs{versions} > 0) and ($$new_specs{versions} < 10)) {
+  if (0 and  $$new_specs{versions} and ($$new_specs{versions} > 0) and ($$new_specs{versions} < 10)) {
     foreach my $version ( 1 .. $$new_specs{versions} ) {
       $openprint::log->debug("Version: $version");
       push @v, "version-$version-description";
