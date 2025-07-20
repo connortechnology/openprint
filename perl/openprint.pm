@@ -36,23 +36,34 @@ sub session_init {
 
 		if ( $dbh ) {
 			# If we have no cookie, then... shouldn't try to load it...
-			if ( (!$cookie) or (! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }`) ) {
-				$log->debug("Error fetching Session: $cookie: $@") if $@;
-				if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 };` ) {
-					$log->error('Error creating Session'. $@);
-				} # end if
-				if ( $cookie ) {
+      if ( $cookie ) {
+        eval {
+          tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 };
+        };
+        if (!$@) {
+          # No errors, do validation
           # Validate ip on existing session
 					if ( $current_ip and $session{ip} and ($session{ip} ne $current_ip) ) {
 						$log->error('Change of session ip');
 						untie %session;
 						%session = ();
-					} # end if
-				} # end if cookie
+          }
+        } else { 
+          $log->debug("Error fetching Session: $cookie: $@") if $@;
+        }
+      }
+      if (!%session) {
+        eval { tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 }; };
+        if ($@) {
+          $log->error('Error creating Session'. $@. ' Trying a second time');
+          eval {
+            tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 };
+          };
+        }
 			} # end if
 
-			if ( (!$cookie) or ( $cookie ne $session{_session_id} ) ) {
-$log->debug('Generated new cookie '.$session{_session_id}.' because '.($cookie?' != '.$cookie) if Debug;
+			if ( (!$cookie) or ($session{_session_id} and ($cookie ne $session{_session_id}))) {
+$log->debug('Generated new cookie '.$session{_session_id}.' because '.($cookie?' != '.$cookie : ' no cookie') if Debug;
 				my $Cookie = Apache2::Cookie->new($r,
 						-name	=> '_session_id',
 						-value => $session{_session_id},
