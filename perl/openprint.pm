@@ -63,7 +63,7 @@ sub session_init {
 			} # end if
 
 			if ( (!$cookie) or ($session{_session_id} and ($cookie ne $session{_session_id}))) {
-$log->debug('Generated new cookie '.$session{_session_id}.' because '.($cookie?' != '.$cookie : ' no cookie') if Debug;
+        $log->debug('Generated new cookie '.$session{_session_id}.' because '.($cookie?' != '.$cookie : ' no cookie')) if Debug;
 				my $Cookie = Apache2::Cookie->new($r,
 						-name	=> '_session_id',
 						-value => $session{_session_id},
