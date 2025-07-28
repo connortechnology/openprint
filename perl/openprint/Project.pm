@@ -2169,5 +2169,19 @@ sub equipment {
   return join(', ', keys %equipment);
 }
 
+# Returns the given project's 'Print' service.
+sub get_print_container {
+  my $self = shift;
+
+  my @sid = $self->has_service('Book')
+  || $self->has_service('Item')
+  || $self->has_service('InventoryCheckOut')
+  || $self->has_service('Printing')
+  || $self->has_service('')
+  ;
+
+  return $sid[0];
+}
+
 1;
 __END__

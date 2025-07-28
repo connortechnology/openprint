@@ -357,6 +357,11 @@ sub Specifications {
 	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'sorting NULLS FIRST,strname, dblmin NULLS FIRST', @_ );
 } # end sub Specifications
 
+sub specifications {
+  my $self = shift;
+  return map { $self->specification($_) } @_;
+}
+
 sub specification {
 	my $Specification = Specification( @_ );
 	if ( ! $Specification ) {
@@ -368,7 +373,9 @@ sub specification {
 sub Specification {
 	my ( $self, $name, $range, $s_debug ) = @_;
 
-	my $key = join(',', $$self{id}, $name, $range);
+  return if ! $$self{id};
+
+	my $key = join(',', $$self{id}, $name, (defined($range)?$range:()));
 	if ( exists $Specification_cache{$key} ) {
 		return $Specification_cache{$key};
 	} # end if
@@ -561,6 +568,7 @@ sub servicetype_id {
 } # end sub servicetype_id
 
 sub ServiceTypes {
+  require openprint::ServiceType;
 	return () if ! $_[0]{servicetype_id};
 	return map { new openprint::ServiceType( $_ ); } @{$_[0]{servicetype_id}};
 } # end sub ServiceTypes
@@ -600,11 +608,11 @@ sub link_to {
   my $self = shift;
   my $text = @_ ? shift : $$self{strid};
   my $options = @_ ? shift : {};
-	return '<a href="/administrator/equipment/edit.html?ddmEquipment='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>';
+	return '<a href="/administrator/equipment/edit.html?ddmEquipment='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>' if $$self{id};
 }
 sub button_to {
   my $self = shift;
-  return ssi::button('EquipmentButton'.$$self{id}, {href=>'/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ ? shift : $$self{strid})});
+  return ssi::button('EquipmentButton'.$$self{id}, {href=>'/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ ? shift : $$self{strid})}) if $$self{id};
 }
 
 1;

@@ -1,4 +1,6 @@
 use strict;
+use warnings;
+
 package openprint::Bug;
 our @ISA = qw( openprint::Object );
 require openprint::Object;

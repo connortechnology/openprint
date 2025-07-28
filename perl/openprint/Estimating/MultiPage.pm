@@ -188,7 +188,9 @@ sub calc {
 
 	my $remaining_pages = $$specs{txtTotalPageQuantity};
 	my %override_pages;
+
 	foreach my $group_id ( @Groups ) {
+    next if ($group_id == 3 and ! $$specs{txtGateFoldedSpreadQuantity});
 
 		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} and $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
 			if ( ! $$specs{'GroupPageQuantity'.$group_id} ) {
@@ -238,8 +240,12 @@ sub calc {
           $override_pages{$group_id} = 4;
           $$specs{'txtSpreadSize'.$group_id} = 4;
         }
-        $remaining_pages -= $override_pages{$group_id};
       }
+      if ($$specs{'PageQuantity-'.$group_id} and (2*$$specs{'PageQuantity-'.$group_id} > $$specs{'txtTotalPageQuantity'})) {
+        $$specs{'GroupPageQuantity'.$group_id} = $$specs{'PageQuantity-'.$group_id};
+        $override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id};
+      }
+      $remaining_pages -= $override_pages{$group_id};
 			$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
 		} # end if override
 	} # end foreach group
@@ -307,13 +313,16 @@ sub calc {
 
 	foreach my $group_id ( @Groups ) {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
+    next if ($group_id == 3 and ! $$specs{txtGateFoldedSpreadQuantity});
+
 		my %sig_specs = map { $$specs{$_.$group_id} ? ( $_, $$specs{$_.$group_id } ) : () } @signature_variables;
-		if ( ! exists $override_pages{$group_id} ) {
+		if ( ! exists $override_pages{$group_id} and ($group_id != 3)) {
 			$override_pages{$group_id} = $remaining_pages;
 
 		# The purpose of calling this here, is to do auto-population of coverage, etc.
 			$remaining_pages = 0;
 		} # end if
+
 		$sig_specs{GroupPageQuantity} = $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 		openprint::Estimating::Printing::get_inkcoverage( $Project, \%sig_specs, \%variables );
 		my @side_one_colours = openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideOne', \%variables );
@@ -425,12 +434,15 @@ sub calc {
 				$max_group = $g_id;
 			} # end if
 		} # end foreach g_id
+    $log->error("Max group is $max_group");
 		$max_group += 1;
+    $max_group += 1 if $max_group == 3; # 3 is reserved for GateFold Pages
 		push @Groups, $max_group;
 		$$specs{'GroupPageQuantity'.$max_group} = $remaining_pages;
 		$$specs{'GroupPageQuantity'.$max_group} = '' if $$specs{'GroupPageQuantity'.$max_group} < 0;
 	} # end if
 	$$specs{groups} = join(',', @Groups );
+  $log->error("groups $$specs{groups}");
 
 	return $$specs{Status};
 } # end sub calc
@@ -656,7 +668,7 @@ sub status {
 	foreach my $Group ( @Groups ) {
 $openprint::log->debug("$Group needed: $needed_pages{$Group} >? $specified_pages{$Group}");
 		if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
-$openprint::log->debug("Returning from ultiPage::status $Group");
+$openprint::log->debug("Returning from MultiPage::status $Group");
 			return $Group;
 		} # end if
 	} # end foreach
@@ -666,31 +678,35 @@ $openprint::log->debug("Returning from ultiPage::status $Group");
 sub save {
 $openprint::log->debug("Starting Multipage::save");
 	my ( $project_index, $service_index, $param ) = @_;
+
 	my $Project = new openprint::Project( $project_index );	
 	my $Service = $Project->Service($service_index);
 
 	my $specs = $Service->specs();
 	if ( $$specs{rdbCover} eq 'Different' ) {
-# now add a cover spread if we need one.
-# First, see if we have one.
+    # now add a cover spread if we need one.
+    # First, see if we have one.
 		if ( ! $Project->signatures({ type=>'Cover Pages'}) ) {
 			$Project->add_signature( undef, undef, {
 					txtSignatureType		=> 'Cover Pages',
 					txtServiceDescription	=> 'Cover',
+          # What if there already is a Group 1?
 					Group					=>  1,
 					PrintingType			=> $$specs{PrintingType},
 					txtSpreadSize			=>  4,
 					} );
 		} # end if
 	} else {
-# Don't need a cover, so get rid of it
+    # Don't need a cover, so get rid of it
 		foreach ( $Project->signatures({type=>'Cover Pages'}) ) {
 			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
+    #What if cover wasn't Group 1? FIXME
 		foreach ( $Project->signatures({Group=>1}) ) {
 			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
 	} # end if Self or Different Cover
+
 	if ( ! $Project->signatures({type=>'Interior Pages'}) ) {
 		$Project->add_signature( undef, undef, {
 				txtSignatureType		=> 'Interior Pages',
@@ -700,22 +716,35 @@ $openprint::log->debug("Starting Multipage::save");
 				txtSpreadSize			=>  4,
 				} );
 	}
+	my @groups = groups( $$Project{id}, $specs );
+  $openprint::log->debug("Groups @groups");
+  foreach my $group_id (@groups) {
+    if (!$Project->signatures({Group=>$group_id}) ) {
+      $Project->add_signature( undef, undef, {
+          txtSignatureType		=> $$specs{'txtSignatureType'.$group_id},
+          txtServiceDescription	=> $$specs{'txtServiceDescription'.$group_id},
+          Group					=>  $group_id,
+          PrintingType			=> $$specs{'PrintingType-'.$group_id},
+          txtSpreadSize			=>  4,
+        } );
+    }
+  }
 
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 		my $group_id = $$sig_specs{Group};
 		foreach my $v ( @signature_variables ) {
-
 			# Special case, should never change the type of cover or interior pages.
 			next if ( $v eq 'txtSignatureType' ) and ( $group_id == 1 or $group_id == 2 );
 			if ( $$specs{$v.$group_id} ne $$sig_specs{$v} ) {
 $openprint::log->debug("Saving $v for group $group_id") if DEBUG;
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $$specs{$v.$group_id} );
 			} else {
-$openprint::log->debug("Not Saving $v for group $group_id") if DEBUG;
+        #$openprint::log->debug("Not Saving $v for group $group_id") if DEBUG;
 			} # end if
 		} # end foreach v
 	} # end foreach signature
+  #die;
 } # end sub save
 
 sub check {
