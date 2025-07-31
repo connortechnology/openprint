@@ -224,27 +224,34 @@ sub templates {
 
   return if !$param{btnFunction};
 	if ( $param{btnFunction} eq 'Save' ) {
-		my $ac = sql::start_transaction( $dbh );
-		foreach my $Template ( openprint::ProjectType_Template->find( projecttype_id=>$param{ddmProjectType}) ) {
-			$variable{error} .= $Template->save({
-					type				=>	$param{"type$$Template{id}"},
-					name				=>	$param{"name$$Template{id}"},
-					description			=>	$param{"description$$Template{id}"},
-					finished_width		=>	$param{"finishedwidth$$Template{id}"},
-					finished_height		=>	$param{"finishedheight$$Template{id}"},
-					flat_width			=>	$param{"flatwidth$$Template{id}"},
-					flat_height			=>	$param{"flatheight$$Template{id}"},
-					message				=>	$param{"message$$Template{id}"},
-					} );
-			if ( $variable{error} ) {
-				$dbh->rollback();
-				last;
-			} # end if
-			# Add record to audit log - action "Update Project Template".
-			(new openprint::Log())->save({action=>'Update ProjectType Template', note=>"$$Template{type} - $$Template{description}" });
+    my $ac = sql::start_transaction( $dbh );
+    foreach my $Template ( openprint::ProjectType_Template->find( projecttype_id=>$param{ddmProjectType}) ) {
+      my $new = {
+        type        =>  $param{"type$$Template{id}"},
+        name        =>  $param{"name$$Template{id}"},
+        description     =>  $param{"description$$Template{id}"},
+        finished_width    =>  $param{"finishedwidth$$Template{id}"},
+        finished_height   =>  $param{"finishedheight$$Template{id}"},
+        flat_width      =>  $param{"flatwidth$$Template{id}"},
+        flat_height     =>  $param{"flatheight$$Template{id}"},
+        message       =>  $param{"message$$Template{id}"},
+      };
+      my @changes = $Template->changes($new);
+      $variable{error} .= $Template->save($new);
+      if (@changes) {
+
+        if ( $variable{error} ) {
+          $dbh->rollback();
+          last;
+        } # end if
+        # Add record to audit log - action "Update Project Template".
+        (new openprint::Log())->save({action=>'Update ProjectType Template', Object=>$Template, note=>join(',', @changes)});
+      }
 		} # end foreach Template
+
 		if ( (!$variable{error}) and $param{typeNew} ) {
-			$variable{error} .= new openprint::ProjectType_Template()->save({
+      my $Template = new openprint::ProjectType_Template();
+			$variable{error} .= $Template->save({
 					projecttype_id	=>	$param{ddmProjectType},
 					type			=>	$param{typeNew},
 					name			=>	$param{nameNew},
@@ -255,8 +262,9 @@ sub templates {
 					flat_height		=>	$param{flatheightNew},
 					message			=>	$param{messageNew},
 				} );
-			# Add record to audit log - action "New Project Template".
-			(new openprint::Log())->save({action=>'New ProjectType Template', note=>"$param{typeNew} - $param{descriptionNew}" });
+      if (!$variable{error}) {
+        (new openprint::Log())->save({Object=>$Template, action=>'New ProjectType Template', note=>"$param{typeNew} - $param{descriptionNew}" });
+      }
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{btnFunction} eq 'Import Templates' ) {
