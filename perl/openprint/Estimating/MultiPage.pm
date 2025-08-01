@@ -429,7 +429,7 @@ sub calc {
 				$max_group = $g_id;
 			} # end if
 		} # end foreach g_id
-    $log->error("Max group is $max_group");
+    $log->debug("Max group is $max_group");
 		$max_group += 1;
     $max_group += 1 if $max_group == 3; # 3 is reserved for GateFold Pages
 		push @Groups, $max_group;
@@ -437,7 +437,7 @@ sub calc {
 		$$specs{'GroupPageQuantity'.$max_group} = '' if $$specs{'GroupPageQuantity'.$max_group} < 0;
 	} # end if
 	$$specs{groups} = join(',', @Groups );
-  $log->error("groups $$specs{groups}");
+  $log->debug("groups $$specs{groups}");
 
 	return $$specs{Status};
 } # end sub calc
