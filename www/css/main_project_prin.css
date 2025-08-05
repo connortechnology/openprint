@@ -53,13 +53,14 @@ flex: 1;
 }
 
 .BleedsColourBarsStockOverrides {
-display: flex;
-align-items: stretch;
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
 }
 
 .SignatureGroup .leftColumn ,
 .SignatureGroup .rightColumn {
-width: 50%;
+  width: 50%;
 	float: left;
 }
 .BleedsColourBars ,
