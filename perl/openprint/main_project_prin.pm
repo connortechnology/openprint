@@ -42,6 +42,7 @@ $log->debug("Removing group $param{group_id}");
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};
 		( $variable{Group} ) = sql::execute( $log, $dbh, $_, $Project->id() );
 		$variable{Group} += 1;
+    $variable{Group} += 1 if $variable{Group} == 3;
 		$variable{Signature} = $variable{Group};
 		my $sig_service_index = $Project->copy_signature( openprint::service::get_specs_ref( $Project, $src_sigs[0] ), { Group=>$variable{Group} } );;
 		$Project->unlock();
@@ -76,6 +77,7 @@ $log->debug("Removing group $param{group_id}");
         $variable{Group} = 4; # Group 3 is reserved for gate folded pages?
       } else {
         $variable{Group} += 1;
+        $variable{Group} += 1 if $variable{Group} == 3;
       }
     }
 		$variable{Signature} = $variable{Group};

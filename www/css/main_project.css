@@ -272,6 +272,10 @@ pattern { shape-rendering: optimizeSpeed }
 #Versions input {
   max-width: 100%;
 }
+.calliper input {
+  width: 50px;
+}
+/*
 input.calliper_pt {
 width: 35px;
 }
@@ -279,3 +283,4 @@ input.calliper_mm,
 input.calliper {
 width: 55px;
 }
+*/

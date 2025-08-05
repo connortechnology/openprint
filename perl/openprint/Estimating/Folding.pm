@@ -2035,10 +2035,8 @@ sub load_equipment {
   } else {
     foreach my $sig_id ($Project->signatures()) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-      $openprint::log->debug("Template type for $sig_id ".$$sig_specs{rdbTemplateType});
       if ($$sig_specs{rdbTemplateType} and sets::isin($$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','3Panel2Pocket','TriFoldDoublePocket'])) {
         push @folding_capable, 'For Pocket Folders';
-        $openprint::log->error("Have pocket folders");
         last;
       }
     } # end foreach sig

@@ -291,14 +291,15 @@ $log->debug("No Nobindery");
 
 sub publication_pages {
 	my ( $r, $log, $dbh, $variable ) = @_;
-    my $service_index = $param{ServiceIndex};
-    my $project_index = $param{ProjectIndex};
+  my $service_index = $param{ServiceIndex};
+  my $project_index = $param{ProjectIndex};
 	$project_index = $session{project_id} if ! $project_index;
+	my $Project = new openprint::Project( $project_index );
 	$log->debug("********************************** STARTING MULTIPAGE PUBLICATION PAGES *******************************");
+  my $specs = openprint::service::get_specs_ref($Project, $service_index);
 
 	@{$$variable{RunStyleOptions}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	
-	my $Project = new openprint::Project( $project_index );
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $type = $$sig_specs{Group};
@@ -350,6 +351,25 @@ $log->error("No Group!") if ! $type;
 	if ( ! $$variable{rdbTemplateType} ) {
 		$$variable{rdbTemplateType} = $Project->get_book_type();
 	} # end if
+
+  my @Groups = sort { $a <=> $b } openprint::Estimating::MultiPage::groups( $project_index, $specs );
+  my ($remaining_pages, %override_pages) = openprint::Estimating::MultiPage::get_remaining_pages($specs, @Groups);
+
+  $$variable{Groups} = \@Groups;
+  if (0) {
+  if ($remaining_pages) {
+    my $max_group = 0;
+    foreach my $g_id ( @Groups ) {
+      if ( $g_id > $max_group ) {
+        $max_group = $g_id;
+      } # end if
+    } # end foreach g_id
+    $log->debug("Max group is $max_group");
+    $max_group += 1;
+    $max_group += 1 if $max_group == 3; # 3 is reserved for GateFold Pages
+    push @Groups, $max_group;
+  }
+  }
 
 } # end sub publication_pages
 
