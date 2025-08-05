@@ -208,7 +208,7 @@
 			</div><!--ProjectSpecifications-->
 			<div id="SignatureGroups">
 			<? echo (
-				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{ProjectIndex}, 'Group' );
+        my @Groups = @{$$variable{Groups}};
 				my $ServiceType = openprint::ServiceType->find_one( name=>'Signature');
 
 				if ( ! sets::isin( 1, \@Groups ) ) {
