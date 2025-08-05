@@ -338,7 +338,7 @@ sub calc {
 		} # end if
 
 		if ( ! @Stocks ) {
-			$$specs{alert} .= "There was a problem loading the specified paper for $group_id " . $$specs{'txtServiceDescription'.$group_id} . ".<br/>";
+			$$specs{alert} .= "There was a problem loading the specified paper for group $group_id " . $$specs{'txtServiceDescription'.$group_id} . ".<br/>";
 			$$specs{Status} = 'uncalculated';
 		} # end if
 
