@@ -186,89 +186,6 @@ sub calc {
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
-	my $remaining_pages = $$specs{txtTotalPageQuantity};
-	my %override_pages;
-	foreach my $group_id ( @Groups ) {
-    next if ($group_id == 3 and ! $$specs{txtGateFoldedSpreadQuantity});
-
-		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} and $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
-			if ( ! $$specs{'GroupPageQuantity'.$group_id} ) {
-# We still set override so that it doesn't auto-fill	
-				$$specs{alert} .= 'You have override the # of pages in group ' . $$specs{"txtSignatureType$group_id"} . ' but not entered the # of pages.<br/>';
-				$$specs{Status} = 'uncalculated';
-				$$specs{'GroupPageQuantity'.$group_id.'_container'} = { addClassName=>'error' };
-			} else {
-				$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
-			}
-			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id};
-			$log->debug("Setting override pages for group $group_id to " . $$specs{'GroupPageQuantity'.$group_id} );
-			if ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
-				$override_pages{$group_id} = 2;
-				if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
-					$$specs{'txtServiceDescription'.$group_id} = 'Perforated Reply Card';
-				} # end if
-			} else {
-				if ( ! $group_id ) {
-					$log->warn("NO GROUP ID $group_id");
-				}
-				my @g_signatures = $Project->signatures({Group=>$group_id});
-				if ( ! @g_signatures ) {
-          # calc shouldn't really alter the project.
-					$Project->add_signature( undef, undef, {
-							Group=>$group_id,
-							( $group_id == 1 ? ( txtSignatureType=>'Cover Pages', txtServiceDescription=>'Cover' ) : () ),
-							( $group_id == 2 ? ( txtSignatureType=>'Interior Pages', txtServiceDescription=>'Interior Pages' ) : () ),
-							( $group_id == 3 ? ( txtSignatureType=>'Gate Folded Pages', txtServiceDescription=>'Gate Folded Pages' ) : () ),
-							} );
-				} # end if
-			} # end if type
-			$remaining_pages -= $override_pages{$group_id} if $override_pages{$group_id};
-			if ( $$specs{"PageQuantity-$group_id"} and ( $$specs{"PageQuantity-$group_id"} > $$specs{'GroupPageQuantity'.$group_id} ) ) {
-				$$specs{alert} .= "You have specified to print more pages per signature than are required for group $group_id.<br/>";
-			} # end if
-    } else {
-      # Not overriden
-      if ( $$specs{'txtSignatureType'.$group_id} eq 'Gate Folded Pages' ) {
-        if ($$specs{'rdbTemplateType'.$group_id} eq 'SingleGateFold') {
-          $override_pages{$group_id} = 6;
-          $$specs{'txtSpreadSize'.$group_id} = 6;
-        } elsif ($$specs{'rdbTemplateType'.$group_id} eq 'DoubleGateFold') {
-          $override_pages{$group_id} = 8;
-          $$specs{'txtSpreadSize'.$group_id} = 8;
-        } else {
-          $override_pages{$group_id} = 4;
-          $$specs{'txtSpreadSize'.$group_id} = 4;
-        }
-        $remaining_pages -= $override_pages{$group_id};
-      }
-			$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
-		} # end if override
-	} # end foreach group
-
-	# if there is a cover, then force it to be non-zero
-	if ( (! $override_pages{1}) and ($$specs{OverrideGroupPageQuantity1} ne 'Y') and ($$specs{rdbCover} eq 'Different') ) {
-    my $pages = 4;
-    if ($$specs{rdbTemplateType1} eq 'SingleGateFold') {
-      $pages = $$specs{GroupPageQuantity1} = 6;
-      $$specs{txtSpreadSize1} = 6;
-    } elsif ($$specs{rdbTemplateType1} eq 'DoubleGateFold') {
-      $pages = $$specs{GroupPageQuantity1} = 8;
-      $$specs{txtSpreadSize1} = 8;
-    }
-		my $new_remaining = int(($remaining_pages-$pages) / $$specs{txtSpreadSize1} ) * $$specs{txtSpreadSize1} if $$specs{txtSpreadSize1};
-		if ( 0 ) {
-# I think the idea here is to give the cover either 4 or 6 pages... depending on the total # of pages.
-			$override_pages{1} = $remaining_pages - $new_remaining;
-			$remaining_pages = $new_remaining;
-		} else {
-# Not sure what else we can do. I suppose we could try to figure out if it a 6pg or 8pg.. but really how often is that going to happen?
-			$override_pages{1} = $pages;
-			$remaining_pages -= $override_pages{1};
-			#$openprint::log->warn("FIXM E using coverages = 4 instead of " . ( $remaining_pages - $new_remaining ) );
-		} # end if
-	} # end if
-	$remaining_pages = 0 if $remaining_pages < 0;
-
 	if ( ! $$specs{txtTotalPageQuantity} ) {
 		$$specs{alert} .= 'Please enter the # of pages<br/>';
 		$$specs{Status} = 'uncalculated';
@@ -277,6 +194,7 @@ sub calc {
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
+  my ($remaining_pages, %override_pages) =  get_remaining_pages($specs, @Groups);
 	my @overrides = keys %override_pages;
 #$openprint::log->debug("Overrides: @overrides . " . @overrides . ' Groups: ' . @Groups );
 	if ( $remaining_pages and ( @overrides >= @Groups ) ) {
@@ -442,6 +360,80 @@ sub calc {
 	return $$specs{Status};
 } # end sub calc
 
+sub get_remaining_pages {
+  my ($specs, @Groups) = @_;
+
+	my $remaining_pages = $$specs{txtTotalPageQuantity};
+	my %override_pages;
+	foreach my $group_id ( @Groups ) {
+    next if ($group_id == 3 and ! $$specs{txtGateFoldedSpreadQuantity});
+
+		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} and $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
+			if ( ! $$specs{'GroupPageQuantity'.$group_id} ) {
+# We still set override so that it doesn't auto-fill	
+				$$specs{alert} .= 'You have override the # of pages in group ' . $$specs{"txtSignatureType$group_id"} . ' but not entered the # of pages.<br/>';
+				$$specs{Status} = 'uncalculated';
+				$$specs{'GroupPageQuantity'.$group_id.'_container'} = { addClassName=>'error' };
+			} else {
+				$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
+			}
+			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id};
+			$openprint::log->debug("Setting override pages for group $group_id to " . $$specs{'GroupPageQuantity'.$group_id} );
+			if ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
+				$override_pages{$group_id} = 2;
+				if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
+					$$specs{'txtServiceDescription'.$group_id} = 'Perforated Reply Card';
+				} # end if
+			} # end if type
+			$remaining_pages -= $override_pages{$group_id} if $override_pages{$group_id};
+			if ( $$specs{"PageQuantity-$group_id"} and ( $$specs{"PageQuantity-$group_id"} > $$specs{'GroupPageQuantity'.$group_id} ) ) {
+				$$specs{alert} .= "You have specified to print more pages per signature than are required for group $group_id.<br/>";
+			} # end if
+    } else {
+      # Not overriden
+      if ( $$specs{'txtSignatureType'.$group_id} eq 'Gate Folded Pages' ) {
+        if ($$specs{'rdbTemplateType'.$group_id} eq 'SingleGateFold') {
+          $override_pages{$group_id} = 6;
+          $$specs{'txtSpreadSize'.$group_id} = 6;
+        } elsif ($$specs{'rdbTemplateType'.$group_id} eq 'DoubleGateFold') {
+          $override_pages{$group_id} = 8;
+          $$specs{'txtSpreadSize'.$group_id} = 8;
+        } else {
+          $override_pages{$group_id} = 4;
+          $$specs{'txtSpreadSize'.$group_id} = 4;
+        }
+        $remaining_pages -= $override_pages{$group_id};
+      }
+			$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
+		} # end if override
+	} # end foreach group
+
+	# if there is a cover, then force it to be non-zero
+	if ( (! $override_pages{1}) and ($$specs{OverrideGroupPageQuantity1} ne 'Y') and ($$specs{rdbCover} eq 'Different') ) {
+    my $pages = 4;
+    if ($$specs{rdbTemplateType1} eq 'SingleGateFold') {
+      $pages = $$specs{GroupPageQuantity1} = 6;
+      $$specs{txtSpreadSize1} = 6;
+    } elsif ($$specs{rdbTemplateType1} eq 'DoubleGateFold') {
+      $pages = $$specs{GroupPageQuantity1} = 8;
+      $$specs{txtSpreadSize1} = 8;
+    }
+		my $new_remaining = int(($remaining_pages-$pages) / $$specs{txtSpreadSize1} ) * $$specs{txtSpreadSize1} if $$specs{txtSpreadSize1};
+		if ( 0 ) {
+# I think the idea here is to give the cover either 4 or 6 pages... depending on the total # of pages.
+			$override_pages{1} = $remaining_pages - $new_remaining;
+			$remaining_pages = $new_remaining;
+		} else {
+# Not sure what else we can do. I suppose we could try to figure out if it a 6pg or 8pg.. but really how often is that going to happen?
+			$override_pages{1} = $pages;
+			$remaining_pages -= $override_pages{1};
+			#$openprint::log->warn("FIXM E using coverages = 4 instead of " . ( $remaining_pages - $new_remaining ) );
+		} # end if
+	} # end if
+	$remaining_pages = 0 if $remaining_pages < 0;
+  return ($remaining_pages, %override_pages);
+} # end sub get_remaining_pages
+
 sub calculate_signatures {
 	shift @_ if $_[0] eq 'openprint::Estimating::MultiPage::calculate_signatures';
 	my $Project = $_[0];
@@ -468,13 +460,6 @@ $openprint::log->debug("********************************************************
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$i] );
     
-    if (0 and !$$sig_specs{txtSignatureType}) {
-      $openprint::log->warn('Deleting due to lack of signature type');
-      openprint::print_project::delete_service( $Project, $signatures[$i] );
-      splice @signatures, $i, 1;
-      $i-=1;
-    }
-
 		# This has been deprecated
 		if ( $$printing_specs{PrintingType} ) {
 			if ( 
