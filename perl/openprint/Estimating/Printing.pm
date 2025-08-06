@@ -5748,6 +5748,7 @@ sub calc_price {
 	$net_sheets = ceil($net_sheets / $imposition);
 	#$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted, not sure this is valid anymore
 	$net_sheets *= $$Paper{parts} if $$Paper{parts};
+  $$Imposition{net_sheets} = $net_sheets;
 
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $num_colours = scalar @colours;
