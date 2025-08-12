@@ -462,16 +462,16 @@ $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}
 		$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	} # end if
 	$self->spine_direction();
-$$self{impressions} = $$specs{"hdnImpressionQuantity$qty_index"};
-$$self{net_sheets} = $$specs{"hdnNetSheetCount$qty_index"};
-$$self{gross_sheets} = $$specs{"StockQuantity$qty_index"};
-if (!$$self{net_sheets}) {
-  $openprint::log->error("No net sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
-}
-if (!$$self{gross_sheets}) {
-  $openprint::log->error("No gross sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
-}
-$self->display('After load') if DEBUG;
+  $$self{impressions} = $$specs{"hdnImpressionQuantity$qty_index"};
+  $$self{net_sheets} = $$specs{"hdnNetSheetCount$qty_index"};
+  $$self{gross_sheets} = $$specs{"StockQuantity$qty_index"};
+  if (!$$self{net_sheets}) {
+    $openprint::log->error("No net sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
+  }
+  if (!$$self{gross_sheets}) {
+    $openprint::log->error("No gross sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
+  }
+  $self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
 

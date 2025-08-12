@@ -498,7 +498,6 @@ sub calc {
 } # end sub calc
 
 sub reuse {
-
 	my $Project = $variable{Project} = new openprint::Project($param{project_id});
 	$variable{ProjectIndex} = $Project->id();
 	if ( $Project->reference() ) {
@@ -506,7 +505,6 @@ sub reuse {
 	} else {
 		$Project->reference('Copy of project # ' . $param{project_id});
 	} # end if
-
 } # end sub
 
 sub docket_sheet {
