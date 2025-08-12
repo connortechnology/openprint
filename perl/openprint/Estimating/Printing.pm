@@ -1172,7 +1172,7 @@ sub get_Stocks {
 			$$specs{alert} .= 'Unable to find any stocks matching your specifications.<br/>';
 			return @Papers;
 		} elsif ( DEBUG ) {
-			$log->debug('Got for papers: ' . @Papers);
+			$log->debug('Got papers: ' . @Papers);
 		} # end if
 
 		# Load this here, so that later cloning will copy the prices as well.
@@ -2472,17 +2472,12 @@ $log->debug("Using spine ehgiht");
           # Perfect bound requires more width on the cover to cover the caliper	of the interior pages
           # # FIXME: First run through multipage, nothing will exist in db.  Need to make this operate on stuff in ram...
 					my $finished_calliper = 0;
-					my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $Project->id(), 'Group' );
+					my @Groups = openprint::Estimating::MultiPage::groups($Project->id(), $printing_specs);
+
 					foreach my $group_id ( @Groups ) {
 						# Don't include the cover
 						next if $group_id == 1;
-						foreach my $ss_id ( $Project->signatures({ Group=>$group_id}) ) {
-							# Each group has at least 1 sig in it
-							my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-
-							$finished_calliper += $$sig_specs{GroupPageQuantity} * $$sig_specs{txtSpecificStockCalliper} /2;
-							last;
-						} # end foreach signature in the group
+            $finished_calliper += $$printing_specs{'GroupPageQuantity'.$group_id} * $$printing_specs{'txtSpecificStockCalliper'.$group_id} /2;
 					} # end foreach group
 					if ( ! $finished_calliper ) {
 						$$specs{alert} .= 'No calliper found for interior pages.  Spread Width will be incorrect';
