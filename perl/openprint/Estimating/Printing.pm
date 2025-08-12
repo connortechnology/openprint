@@ -7898,7 +7898,7 @@ if ( 0 ) {
 				( $$specs{OverrideAddGrip} ? ' no image in grip or sides' : () ),
 				( ($$specs{rdbColourBar} and ( $$specs{rdbColourBar} eq 'N' ) ) ? ' no colour bar' : () ),
 				( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
-				( (exists $$specs{txtCropMarkSpace} ) ? () : 'no crop marks' ),
+				( (exists $$specs{txtCropMarkSpace} ) ? () : '<span class="warning">no crop marks</span>' ),
 		);
     $string .= '<br/>' . $special_string if $special_string;
 		if ( $$specs{PressApproval} and ( $$specs{PressApproval} eq 'Y' ) ) {
