@@ -102,8 +102,9 @@ sub no_outputs {
     } # end if
   } # end foreach;
   my @groups = groups( $project_index, $specs );
-  foreach my $Group ( @groups ) {
-    my @no_outputs = map { $_.$Group } openprint::Estimating::Printing::no_outputs( $project_index, $service_index, $specs );
+  foreach my $group_id ( @groups ) {
+		my %sig_specs = map { $$specs{$_.$group_id} ? ( $_, $$specs{$_.$group_id } ) : () } @signature_variables;
+    my @no_outputs = map { $_.$group_id } openprint::Estimating::Printing::no_outputs( $project_index, $service_index, \%sig_specs );
     push @v, sets::exclude( \@outputs, \@no_outputs );
   } # end foreach Group
   return @v;
@@ -228,14 +229,14 @@ sub calc {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
     next if ($group_id == 3 and ! $$specs{txtGateFoldedSpreadQuantity});
 
-		my %sig_specs = map { $$specs{$_.$group_id} ? ( $_, $$specs{$_.$group_id } ) : () } @signature_variables;
 		if ( ! exists $override_pages{$group_id} and ($group_id != 3)) {
 			$override_pages{$group_id} = $remaining_pages;
 
-		# The purpose of calling this here, is to do auto-population of coverage, etc.
+      # The purpose of calling this here, is to do auto-population of coverage, etc.
 			$remaining_pages = 0;
 		} # end if
 
+		my %sig_specs = map { $$specs{$_.$group_id} ? ( $_, $$specs{$_.$group_id } ) : () } @signature_variables;
 		$sig_specs{GroupPageQuantity} = $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 		openprint::Estimating::Printing::get_inkcoverage( $Project, \%sig_specs, \%variables );
 		my @side_one_colours = openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideOne', \%variables );
@@ -271,9 +272,9 @@ sub calc {
 		}
 		$$specs{alert} .= $sig_specs{alert} .' for group ' . $group_id . ' ' . $$specs{'txtServiceDescription'.$group_id}. '<br/>' if $sig_specs{alert};
     @$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
-    #foreach (@signature_variables) {
-    #$openprint::log->error("Group $group_id $_ => $sig_specs{$_}");
-    #}
+    foreach (@signature_variables) {
+    $openprint::log->error("Group $group_id $_ => $sig_specs{$_}");
+    }
 		if ( ! ( $variables{'GroupPageQuantity'.$group_id} and @{$variables{'GroupPageQuantity'.$group_id}} ) ) {
 			$openprint::log->debug("Setting output on GroupPageQuantity$group_id") if DEBUG;
 			$variables{'GroupPageQuantity'.$group_id} = [sets::union('output', @{$variables{'GroupPageQuantity'.$group_id}})];
@@ -355,7 +356,7 @@ sub calc {
 		$$specs{'GroupPageQuantity'.$max_group} = '' if $$specs{'GroupPageQuantity'.$max_group} < 0;
 	} # end if
 	$$specs{groups} = join(',', @Groups );
-  $log->debug("groups $$specs{groups}");
+  $log->debug("groups $$specs{groups}". Data::Dumper::Dumper($specs));
 
 	return $$specs{Status};
 } # end sub calc
