@@ -217,6 +217,57 @@ sub insert {
 	return;
 } # end sub insert
 
+sub upsert {
+	my ( $l, $d, $table, $insert_values, $upsert_condition, $upsert_values ) = @_;
+
+	$d = $dbh if ! $d;
+	$l = $log if ! $l;
+
+  my %commands;
+  my $starttime = [gettimeofday];
+  if ( ref $insert_values eq 'HASH' ) {
+    %commands = %$insert_values;
+  } elsif ( ref $insert_values eq 'ARRAY' ) {
+    %commands = @$insert_values;
+  } # end if
+
+	my @values = values %{$insert_values};
+
+	# we can use push and pop in here, because we actually don't care about order, only pairing
+	my $command = "INSERT INTO $table (".join( ',', keys %commands ).') VALUES (';
+	my $print_command = $command;
+
+	my @command_places = ();
+	my @command_values = ();
+	foreach my $v ( @values ) {
+		if ( ref $v eq 'ARRAY' ) {
+			push @command_places, '?';
+			push @command_values, '{'.join(',', map { $_ } @{$v} ).'}';
+		} else {
+			push @command_places, '?';
+			push @command_values, $v;
+		} # end if
+	} # end foreach
+	$command .= join(',', @command_places) .')';
+	$print_command .= join(',', map { if( ref $_ eq 'ARRAY' ) { "{$_}"; } elsif( defined $_ ) { $_; } else {'undef';} } @command_values ) if @command_values;
+	$print_command .= ')';
+  $command .= ' ON CONFLICT ('.join(',', @{$upsert_condition}).') DO UPDATE SET ';
+  $command .= join(', ', map { $_.'=?' } keys %{$upsert_values});
+  push @command_values, values %{$upsert_values};
+
+	my $sth;
+	if ( ! ( $sth = $d->prepare($command) ) ) {
+		$l->error( "Error Preparing SQL Statement: ($command):" . $d->errstr ) if $l;
+		return $d->errstr;
+	} # end if
+	if ( ! $sth->execute(@command_values) ) {
+		$l->error("SQL statement execution failed: ($print_command):" . $d->errstr) if $l;
+		return $d->errstr;
+	} # end if
+	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval($starttime)*1000, $print_command ) ) if DEBUG and $l;
+	return;
+} # end sub upsert
+
 sub update {
 	my ( $l, $d, $table, $condition ) = splice @_,0,4;
 

@@ -173,7 +173,7 @@ sub load {
 	$debug = DEBUG_ALL if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 	if ( ! $data ) {
-$log->debug("Object::load Loading from db $type $$self{id}");
+    #$log->debug("Object::load Loading from db $type $$self{id}");
 		my $table = ${$type.'::table'};
 		if ( ! $table ) {
 			$log->error( 'NO table for type ' . $type );

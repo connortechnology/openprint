@@ -168,29 +168,33 @@ sub delete_service_spec {
 sub insert_service_spec {
 	my ( $log, $dbh, $project_index, $service_index, $name, $value, $noDelete ) = @_;
 
-	if ( ! exists $specs_cache{$service_index} ) {
+	if (!exists $specs_cache{$service_index}) {
 		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
 				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index );
 	} # end if
-	if ( defined $specs_cache{$service_index}{$name} and defined $value and $specs_cache{$service_index}{$name} eq $value ) {
+
+	if (defined $specs_cache{$service_index}{$name} and defined $value and $specs_cache{$service_index}{$name} eq $value) {
 		$log->debug("insert_service_spec: return because no change in value: ($name)($value)") if Debug;
 		return;
 	} # end if
 
-	#if ( exists $specs_cache{$service_index}{$name} ) {
-		#sql::update( $log, $dbh, 'tbl_Service_Specifications', ['lngProjectIndex=? AND lngServiceIndex=? AND strName=?',$project_index, $service_index, $name],
-				#'strValue',			$value );
-	#} else {
-		if ( ! $noDelete ) {
-			$_ = q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName=?};
-			sql::execute( $log, $dbh, $_, $project_index, $service_index, $name );
-		} # end if
-		sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-					'lngProjectIndex',	$project_index,
-					'lngServiceIndex',	$service_index,
-					'strName',			$name,
-					'strValue',			$value] ) if $value;
-	#} # end if
+  if ( ! $noDelete ) {
+    $_ = q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName=?};
+    sql::execute( $log, $dbh, $_, $project_index, $service_index, $name );
+  } # end if
+  sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
+      'lngProjectIndex',	$project_index,
+      'lngServiceIndex',	$service_index,
+      'strName',			$name,
+      'strValue',			$value] ) if $value;
+  if (0) {
+    sql::upsert( $log, $dbh, 'tbl_Service_Specifications', {
+        'lngProjectIndex',  $project_index,
+        'lngServiceIndex',  $service_index,
+        'strName',      $name,
+        'strValue',     $value}, ['lngProjectIndex','lngServiceIndex','strName'], {strValue=>$value} ) if $value;
+  }
+
 	$specs_cache{$service_index}{$name} = $value;
 } # end sub
 

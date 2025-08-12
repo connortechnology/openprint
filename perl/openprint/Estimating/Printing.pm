@@ -509,16 +509,14 @@ sub no_outputs {
 		} # end foreach
 	} # end foreach Side
 
-  if (0) {
-  if ( $$specs{versions} and ($$specs{versions} > 0) and ($$specs{versions} < 10)) {
-    foreach my $version ( 1 .. $$specs{versions} ) {
+  if (0 and  $$new_specs{versions} and ($$new_specs{versions} > 0) and ($$new_specs{versions} < 10)) {
+    foreach my $version ( 1 .. $$new_specs{versions} ) {
       $openprint::log->debug("Version: $version");
       push @v, "version-$version-description";
       foreach my $qty_index ( $Project->quantity_indexes() ) {
         push @v, "version-$version-quantity$qty_index";
       } # end foreach qty_index
     } # end foreach version
-  } # end if
   } # end if
 
 	return @v;
@@ -1174,7 +1172,7 @@ sub get_Stocks {
 			$$specs{alert} .= 'Unable to find any stocks matching your specifications.<br/>';
 			return @Papers;
 		} elsif ( DEBUG ) {
-			$log->debug('Got for papers: ' . @Papers);
+			$log->debug('Got papers: ' . @Papers);
 		} # end if
 
 		# Load this here, so that later cloning will copy the prices as well.
@@ -2472,18 +2470,14 @@ $log->debug("Using spine ehgiht");
 
 				if ( $$printing_specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
           # Perfect bound requires more width on the cover to cover the caliper	of the interior pages
+          # # FIXME: First run through multipage, nothing will exist in db.  Need to make this operate on stuff in ram...
 					my $finished_calliper = 0;
-					my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $Project->id(), 'Group' );
+					my @Groups = openprint::Estimating::MultiPage::groups($Project->id(), $printing_specs);
+
 					foreach my $group_id ( @Groups ) {
 						# Don't include the cover
 						next if $group_id == 1;
-						foreach my $ss_id ( $Project->signatures({ Group=>$group_id}) ) {
-							# Each group has at least 1 sig in it
-							my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-
-							$finished_calliper += $$sig_specs{GroupPageQuantity} * $$sig_specs{txtSpecificStockCalliper} /2;
-							last;
-						} # end foreach signature in the group
+            $finished_calliper += $$printing_specs{'GroupPageQuantity'.$group_id} * $$printing_specs{'txtSpecificStockCalliper'.$group_id} /2;
 					} # end foreach group
 					if ( ! $finished_calliper ) {
 						$$specs{alert} .= 'No calliper found for interior pages.  Spread Width will be incorrect';
@@ -5749,6 +5743,7 @@ sub calc_price {
 	$net_sheets = ceil($net_sheets / $imposition);
 	#$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted, not sure this is valid anymore
 	$net_sheets *= $$Paper{parts} if $$Paper{parts};
+  $$Imposition{net_sheets} = $net_sheets;
 
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $num_colours = scalar @colours;
@@ -7903,7 +7898,7 @@ if ( 0 ) {
 				( $$specs{OverrideAddGrip} ? ' no image in grip or sides' : () ),
 				( ($$specs{rdbColourBar} and ( $$specs{rdbColourBar} eq 'N' ) ) ? ' no colour bar' : () ),
 				( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
-				( (exists $$specs{txtCropMarkSpace} ) ? () : 'no crop marks' ),
+				( (exists $$specs{txtCropMarkSpace} ) ? () : '<span class="warning">no crop marks</span>' ),
 		);
     $string .= '<br/>' . $special_string if $special_string;
 		if ( $$specs{PressApproval} and ( $$specs{PressApproval} eq 'Y' ) ) {

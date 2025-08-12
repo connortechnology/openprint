@@ -453,18 +453,20 @@ sub summary {
 						(($$specs{item_type} and ($$specs{item_type} eq 'FlatSheets')) ? ' flat sheets' : ' product').
 						' per '.$package.'<br/>';
 				}
-				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $package . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
-				my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
-				if ( $g > 1000 ) {
-					$summary .= sprintf( ', Total Weight: %slbs (%skg)', 
-							Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
-							Number::Format::format_number( Math::Round::nearest( 1, $g/1000 ) ),
-							);
-				} else {
-					$summary .= sprintf( ', Total Weight: %slbs (%sg)', 
-							Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
-							Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
-					);
+        if ($$specs{"txtPackageQuantity$qty_index"}) {
+          $summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $package . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
+          my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
+          if ( $g > 1000 ) {
+            $summary .= sprintf( ', Total Weight: %slbs (%skg)', 
+              Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
+              Number::Format::format_number( Math::Round::nearest( 1, $g/1000 ) ),
+            );
+          } else {
+            $summary .= sprintf( ', Total Weight: %slbs (%sg)', 
+              Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
+              Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
+            );
+          } # end if
 				} # end if
 			} else {
 				if ( $$Material{name} ) {

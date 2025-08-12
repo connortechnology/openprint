@@ -420,7 +420,6 @@ sub display {
 
 sub neccessary {
   my ( $Project, $Service ) = @_;
-$openprint::log->error($Project->Type()->type());
   if ($Project->Type()->type() eq 'ScratchPads') {
     return 1;
   }
