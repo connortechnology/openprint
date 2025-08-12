@@ -300,17 +300,39 @@ sub publication_pages {
 
 	@{$$variable{RunStyleOptions}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	
-	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $type = $$sig_specs{Group};
-$log->error("No Group!") if ! $type;
-		foreach my $spec ( 
-				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','ddmStockGroup','ddmStockQuality',
-				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
-				'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
-				'rdbSuppliedStock','rdbSpecificStock','StockType',
-				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits','StockPricePerM',
-				'basis_width','basis_height','basis_mweight','StockGrade',
+  my $ServiceType = openprint::ServiceType->find_one( name=>'Signature');
+  my @defaults = $ServiceType ?
+  (
+    openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>undef ),
+    openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>$$variable{Project}->type_id() ),
+  ) : ();
+  my @Groups = sort { $a <=> $b } openprint::Estimating::MultiPage::groups( $project_index, $specs );
+  foreach my $group_id ( @Groups ) {
+    my @sigs = $Project->signatures({Group=>$group_id});
+    if (!@sigs) {
+      foreach my $Default ( @defaults ) { $$variable{$Default->name().$group_id} = $Default->value(); }
+      if ($group_id == 1) {
+        $$variable{txtServiceDescription1} = 'Cover Pages';
+        $$variable{txtSignatureType1} = 'Cover Pages';
+      } elsif ($group_id == 2) {
+        $$variable{txtServiceDescription2} = 'Interior Pages';
+        $$variable{txtSignatureType2} = 'Interior Pages';
+      } elsif ($group_id == 3) {
+        $$variable{txtServiceDescription3} = 'Gate Folded Pages';
+        $$variable{txtSignatureType3} = 'Gate Folded Pages';
+      } # end if
+    } else {
+      my $ss_id = shift @sigs;
+      my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+      my $type = $$sig_specs{Group};
+      $log->error("No Group!") if ! $type;
+      foreach my $spec ( 
+        'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','ddmStockGroup','ddmStockQuality',
+        'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
+        'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
+        'rdbSuppliedStock','rdbSpecificStock','StockType',
+        'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits','StockPricePerM',
+        'basis_width','basis_height','basis_mweight','StockGrade',
 				'minimum_order', 'sheets_per_package', 'full_packages',
 				'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
 				'chkColourCoating1SideOne', 'ColourCoatingType1SideOne', 'ColourCoatingColour1SideOne','ColourCoatingCoverage1SideOne',
@@ -323,36 +345,36 @@ $log->error("No Group!") if ! $type;
 				'chkColourCoating8SideOne', 'ColourCoatingType8SideOne', 'ColourCoatingColour8SideOne','ColourCoatingCoverage8SideOne',
 				'chkColourCoating9SideOne', 'ColourCoatingType9SideOne', 'ColourCoatingColour9SideOne','ColourCoatingCoverage9SideOne',
 				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
-				'chkColourCoating1SideTwo', 'ColourCoatingType1SideTwo', 'ColourCoatingColour1SideTwo','ColourCoatingCoverage1SideTwo',
-				'chkColourCoating2SideTwo', 'ColourCoatingType2SideTwo', 'ColourCoatingColour2SideTwo','ColourCoatingCoverage2SideTwo',
-				'chkColourCoating3SideTwo', 'ColourCoatingType3SideTwo', 'ColourCoatingColour3SideTwo','ColourCoatingCoverage3SideTwo',
-				'chkColourCoating4SideTwo', 'ColourCoatingType4SideTwo', 'ColourCoatingColour4SideTwo','ColourCoatingCoverage4SideTwo',
-				'chkColourCoating5SideTwo', 'ColourCoatingType5SideTwo', 'ColourCoatingColour5SideTwo','ColourCoatingCoverage5SideTwo',
-				'chkColourCoating6SideTwo', 'ColourCoatingType6SideTwo', 'ColourCoatingColour6SideTwo','ColourCoatingCoverage6SideTwo',
-				'chkColourCoating7SideTwo', 'ColourCoatingType7SideTwo', 'ColourCoatingColour7SideTwo','ColourCoatingCoverage7SideTwo',
-				'chkColourCoating8SideTwo', 'ColourCoatingType8SideTwo', 'ColourCoatingColour8SideTwo','ColourCoatingCoverage8SideTwo',
-				'chkColourCoating9SideTwo', 'ColourCoatingType9SideTwo', 'ColourCoatingColour9SideTwo','ColourCoatingCoverage9SideTwo',
-				'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
-				'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
-				'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
-				'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
-				'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace',
-				'GroupPageQuantity','txtServiceDescription',
-				'txtSignatureType','rdbTemplateType','pages_supplied','supplied_format','rdbPressProof','PressApproval',
-				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
-				'txtWidth','txtHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
-	'sides_the_same',
-				) {
-			$$variable{$spec.$type} = $$sig_specs{$spec} if $$sig_specs{$spec} and ! $$variable{$spec.$type};
-#$openprint::log->debug("$spec . $type = $$variable{$spec.$type}");
-		} # end foreach spec
-	} # end foreach ss_id
+        'chkColourCoating1SideTwo', 'ColourCoatingType1SideTwo', 'ColourCoatingColour1SideTwo','ColourCoatingCoverage1SideTwo',
+        'chkColourCoating2SideTwo', 'ColourCoatingType2SideTwo', 'ColourCoatingColour2SideTwo','ColourCoatingCoverage2SideTwo',
+        'chkColourCoating3SideTwo', 'ColourCoatingType3SideTwo', 'ColourCoatingColour3SideTwo','ColourCoatingCoverage3SideTwo',
+        'chkColourCoating4SideTwo', 'ColourCoatingType4SideTwo', 'ColourCoatingColour4SideTwo','ColourCoatingCoverage4SideTwo',
+        'chkColourCoating5SideTwo', 'ColourCoatingType5SideTwo', 'ColourCoatingColour5SideTwo','ColourCoatingCoverage5SideTwo',
+        'chkColourCoating6SideTwo', 'ColourCoatingType6SideTwo', 'ColourCoatingColour6SideTwo','ColourCoatingCoverage6SideTwo',
+        'chkColourCoating7SideTwo', 'ColourCoatingType7SideTwo', 'ColourCoatingColour7SideTwo','ColourCoatingCoverage7SideTwo',
+        'chkColourCoating8SideTwo', 'ColourCoatingType8SideTwo', 'ColourCoatingColour8SideTwo','ColourCoatingCoverage8SideTwo',
+        'chkColourCoating9SideTwo', 'ColourCoatingType9SideTwo', 'ColourCoatingColour9SideTwo','ColourCoatingCoverage9SideTwo',
+        'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
+        'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
+        'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
+        'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
+        'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace',
+        'GroupPageQuantity','txtServiceDescription',
+        'txtSignatureType','rdbTemplateType','pages_supplied','supplied_format','rdbPressProof','PressApproval',
+        'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
+        'txtWidth','txtHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
+        'sides_the_same',
+      ) {
+        $$variable{$spec.$type} = $$sig_specs{$spec} if $$sig_specs{$spec} and ! $$variable{$spec.$type};
+        #$openprint::log->debug("$spec . $type = $$variable{$spec.$type}");
+      } # end foreach spec
+    } # end if have sigs
+	} # end foreach group
 
 	if ( ! $$variable{rdbTemplateType} ) {
 		$$variable{rdbTemplateType} = $Project->get_book_type();
 	} # end if
 
-  my @Groups = sort { $a <=> $b } openprint::Estimating::MultiPage::groups( $project_index, $specs );
   my ($remaining_pages, %override_pages) = openprint::Estimating::MultiPage::get_remaining_pages($specs, @Groups);
 
   $$variable{Groups} = \@Groups;
