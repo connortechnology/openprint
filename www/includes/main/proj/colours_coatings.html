@@ -66,18 +66,16 @@
 				my $html;
 				$$variable{Side} = 'SideOne';
 				my $fragment = slurp_content( '/includes/main/proj/_additional_colour_coating.html' );
-				$$variable{index} = 0;
+        my $max_index = 0;
 				foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
-					#next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
+					$max_index = $index if $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
+        }
+        $max_index += 1;
+        foreach my $index ( 1 .. $max_index ) {
 					$$variable{index} = $index;
 					$html .= variable_substitution( \$fragment, $variable );
 				} # end foreach
 
-        # if no colours, leave 1.
-				if ( ! $html ) {
-					$$variable{index} = 1;
-				  $html .= variable_substitution( \$fragment, $variable );
-				}
 				return $html;
 			) ?>
 		</div>
@@ -148,16 +146,15 @@
 				my $html;
 				my $fragment = slurp_content( '/includes/main/proj/_additional_colour_coating.html' );
 				$$variable{Side} = 'SideTwo';
-				$$variable{index} = 0;
+        my $max_index = 0;
 				foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
-					#next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
+					$max_index = $index if $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
+        }
+        $max_index += 1;
+        foreach my $index ( 1 .. $max_index ) {
 					$$variable{index} = $index;
 					$html .= variable_substitution( \$fragment, $variable );
 				} # end foreach
-				if ( ! $html ) {
-					$$variable{index} = 1;
-          $html .= variable_substitution( \$fragment, $variable );
-				}
 				return $html;
 			) ?>
 		</div>

@@ -124,7 +124,7 @@ sub view {
 	my $Project = $variable{Project} = new openprint::Project($project_id);
 	my $save = 0;
 
-  if (exists($param{quote_level}) and (!$Project->style_id() or ($param{quote_level} != $Project->style_id()))) {
+  if (exists($param{quote_level}) and ( (!$Project->style_id()) or ($param{quote_level} != $Project->style_id()))) {
     $Project->style_id( $param{quote_level} );
     $save = 1;
   } elsif ( ( ! $Project->style_id() ) and $openprint::User->quote_level() ) {
@@ -498,7 +498,6 @@ sub calc {
 } # end sub calc
 
 sub reuse {
-
 	my $Project = $variable{Project} = new openprint::Project($param{project_id});
 	$variable{ProjectIndex} = $Project->id();
 	if ( $Project->reference() ) {
@@ -506,7 +505,6 @@ sub reuse {
 	} else {
 		$Project->reference('Copy of project # ' . $param{project_id});
 	} # end if
-
 } # end sub
 
 sub docket_sheet {
