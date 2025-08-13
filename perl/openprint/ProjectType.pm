@@ -8,10 +8,11 @@ require openprint::ProjectType_Template;
 require openprint;
 require openprint::ProjectTypeCategory;
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults $default_sort);
 $debug = 0;
 $table = 'project_types';
 $serial = 'project_types_id_seq';
+$default_sort = 'lower(name)';
 
 %fields = (
 	id		    	=>	'id',
