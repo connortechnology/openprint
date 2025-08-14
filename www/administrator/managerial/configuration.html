@@ -1,5 +1,5 @@
 <div class="Configuration">
-<form id="f1" name="f1" method="post" action="/administrator/managerial/configuration.html">
+<form id="f1" name="f1" method="post" action="?">
 	<p class="buttons">
 		<? echo ( join("\n",
 					button( 'SaveTop', { onclick=>"f1.btnFunction.value='Save';f1.submit();",text=>'Save' } ),
@@ -7,10 +7,10 @@
 					button( 'New', { onclick=>q`popup_window('_configuration_popup.html');` } )
 		); ) ?>
   </p>
-<fieldset class="filters"><legend>Filter</legend>
+<fieldset class="filters"><legend>Filters</legend>
   <ul>
     <li><label>Category</label>
-      <?echo(ssi::select([sql::execute(undef,undef,'SELECT DISTINCT category,category FROM Configuration ORDER BY category')],
+      <?echo( ssi::select([map { $_, $_ } Configuration::categories()],
           $param{category_filter}, 
           { name=>'category_filter', prepend=>['','All'], onchange=>'this.form.submit();' }
           );
@@ -22,9 +22,9 @@
 <div id="Configuration">
 <? echo (
 	my $html;
-	my @Suppliers = openprint::Company->find( supplier =>'Y', order =>'lower(name)');
-  my @Owners = openprint::Company->find( offers_credit=>1, order =>'lower(name)');
-	my $Pricelists = openprint::Pricelist->dropdown(order=>'lower(name)');
+	my @Suppliers = openprint::Company->find(supplier =>'Y');
+  my @Owners = openprint::Company->find( offers_credit=>1);
+	my $Pricelists = openprint::Pricelist->dropdown();
 
 	my $cat;
 	foreach my $C ( Configuration->find(
