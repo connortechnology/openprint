@@ -5,12 +5,13 @@ require openprint::Object;
 require openprint::ServiceType_Category;
 require openprint::ServiceType_Default;
 
-use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field $dropdown_field);
+use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field $dropdown_field $default_sort);
 
 $debug = 0;
 $table = 'service_types';
 $serial = 'service_types_id_seq';
 $dropdown_field = 'description';
+$default_sort = 'lower(strname)';
 
 %fields = (
 	id			    	=>	'id',
