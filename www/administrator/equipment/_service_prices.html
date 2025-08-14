@@ -9,7 +9,7 @@ foreach my $Pricelist ( openprint::Pricelist->find() ) {
   my @prices = openprint::ServicePrice->find(
     equipment_id=>$$variable{Equipment}->id(),
     pricelist_id=>$Pricelist->id(),
-    order=>'min NULLS FIRST, max NULLS LAST');
+    );
   my %prices = misc::make_hash_from_array('service_id', @prices);
 
   my @services = openprint::Service->find(id=>[map { $_->service_id() } @prices]) if @prices;
