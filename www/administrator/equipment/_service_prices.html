@@ -3,8 +3,8 @@ return '' if !$session{'/administrator/equipment/edit.html?show_service_prices'}
 my $html = '';
 my $Equipment = $$variable{Equipment};
 
-$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
-foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
+$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y' ) ];
+foreach my $Pricelist ( openprint::Pricelist->find() ) {
   $$variable{Pricelist} = $Pricelist;
   my @prices = openprint::ServicePrice->find(
     equipment_id=>$$variable{Equipment}->id(),
@@ -12,7 +12,7 @@ foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
     order=>'min NULLS FIRST, max NULLS LAST');
   my %prices = misc::make_hash_from_array('service_id', @prices);
 
-  my @services = openprint::Service->find(id=>[map { $_->service_id() } @prices], order=>'lngsortorder ASC,lower(name)') if @prices;
+  my @services = openprint::Service->find(id=>[map { $_->service_id() } @prices]) if @prices;
 
   $html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->link_to() . "</legend><div id=\"pricelist-$$Pricelist{id}\">";
   foreach my $service (@services) {
