@@ -3,7 +3,7 @@ use warnings;
 package openprint;
 use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser $Host);
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 sub session_init {
 	require Apache2::Cookie;
