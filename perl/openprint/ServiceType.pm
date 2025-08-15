@@ -11,7 +11,7 @@ $debug = 0;
 $table = 'service_types';
 $serial = 'service_types_id_seq';
 $dropdown_field = 'description';
-$default_sort = 'lower(strname)';
+$default_sort = 'lower(name)';
 
 %fields = (
 	id			    	=>	'id',
