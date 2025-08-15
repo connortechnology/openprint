@@ -66,8 +66,10 @@ function delete_folds() {
           <option value="">All Equipment</option>
   <? echo (
 my $servicetype = openprint::ServiceType->find_one(name=>'Folding');
+if ($servicetype) {
                   make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)', 'servicetype_id any'=>$servicetype->id() ) ],
                   [split(',',$session{$r->uri().'?equipment_id'})] );
+                  }
   ) ?>
         </select>
       </li>

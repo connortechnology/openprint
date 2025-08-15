@@ -3,7 +3,7 @@
 	<fieldset class="filters"><legend>Search Information</legend>
 		<div class="content">
 			<ul>
-<? if ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown(order=>'lower(name)') and @{$$variable{Categories}} ) ?>
+<? if ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown() and @{$$variable{Categories}} ) ?>
 				<li>
 					<label>Category</label>
 					<select name="search_category_id" id="search_category_id" onchange="this.form.btnFunction.value='';this.form.submit();">
@@ -11,13 +11,13 @@
 						<? echo ( make_drop_down( $$variable{Categories}, $param{search_category_id} ) ) ?>
 					</select>
 				</li>
-<? endif ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown(order=>'lower(name)') and @{$$variable{Categories}} ) ?>
+<? endif ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown() and @{$$variable{Categories}} ) ?>
 				<li>
 					<label>Project Type</label>
 					<select id="ddmProjectType" name="ddmProjectType" onchange="this.form.btnFunction.value='';f1.submit();">
 						<option value="">select one</option>
 						<? echo ( 
-								make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)',
+								make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find(
 								( $param{search_category_id} ? ( category_id => $param{search_category_id} ) : () ),
 								) ], $$variable{ProjectType}->id() );
 								) ?>
@@ -104,7 +104,7 @@
 		<ul> 
 <? echo (
 		return checkboxes('required_services', 
-			[ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ],
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find() ],
 			[ $$variable{ProjectType}->required_services() ],
 			{ container=>['<li>','</li>'] }
 			);
@@ -117,7 +117,7 @@
 		<ul> 
 <? echo (
 		return checkboxes('blocked_services', 
-			[ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ],
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find() ],
 			[ $$variable{ProjectType}->blocked_services() ],
 			{ container=>['<li>','</li>'] }
 			);
@@ -196,5 +196,3 @@
 <? endif ( $$variable{ProjectType}->id() ) ?>
 <script src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script src="<?hash_link(/administrator/project_types/edit.js)?>"></script>
-<script>
-</script>

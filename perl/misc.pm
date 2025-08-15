@@ -531,6 +531,30 @@ sub smart_time {
 	}
 } # end sub smart_time
 
+sub get_files {
+  if ( ! -d $_[0] ) {
+    $openprint::log->error("Supplied path $_[0] was not a directory");
+    return;
+  }
+  my @results;
+  my @filenames;
+  if ( opendir DIRHANDLE, $_[0] ) {
+    @filenames = readdir DIRHANDLE;
+    closedir DIRHANDLE;
+  } # end if
+$openprint::log->debug("Have @filenames from $_[0]");
+  foreach ( @filenames ) {
+    next if $_ =~ /^\./;
+    my $path = $_[0].'/'.$_ ;
+    if ( -f $path ) {
+      push @results, $path;
+    } else {
+      $openprint::log->debug("What was $path");
+    }
+  }
+  return @results;
+}
+
 sub get_files_recursive {
 	if ( ! -d $_[0] ) {
 		$openprint::log->error("Supplied path $_[0] was not a directory");
