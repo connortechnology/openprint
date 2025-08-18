@@ -75,6 +75,7 @@
     );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
   } # end foreach
+  $html .= '<tr class="totals"><td class="checkbox"></td><td colspan="7">'.scalar @{$$variable{Companies}} .' companies listed</td></tr>';
   $html .= '</table>
 <p class="button">
 '. join("\n",
