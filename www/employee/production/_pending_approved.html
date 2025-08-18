@@ -2,7 +2,7 @@
 	my $html;
 	@{$$variable{pending_approved_drops}} = ();
 	if ( $session{$$variable{referer}.'?pending_approved'} ) {
-  	$html .= q`<h3 onclick="LoadContent('PendingApproved', '/employee/production/_pending_approved.html', $('f1'));">Pending Approved (click to hide):</h3>`;
+  	$html .= q`<h3 onclick="LoadContent('PendingApproved', '/employee/production/_pending_approved.html', $j('#f1').serialize());">Pending Approved (click to hide):</h3>`;
 		my $Shift = new openprint::Shift();
 		$Shift->name('Approved');
 
@@ -18,7 +18,7 @@
 
 		sql::end_transaction( $dbh, $ac );
 	} else {
-		$html .= q`<h3 onclick="LoadContent('PendingApproved', '/employee/production/_pending_approved.html', $('f1'));">Pending Approved (click to show):</h3>`;
+		$html .= q`<h3 onclick="LoadContent('PendingApproved', '/employee/production/_pending_approved.html', $j('#f1').serialize());">Pending Approved (click to show):</h3>`;
 	} # end if
 	return $html;
 ) ?>
