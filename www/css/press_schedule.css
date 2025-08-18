@@ -329,6 +329,7 @@ right: 0;
 }
 
 .container {
+  max-width: none;
   display: flex;
   width: 100%;
   justify-content: space-between;
@@ -376,8 +377,10 @@ right: 0;
 .filters .presses {
 	width: 275px;
 	float: left;
+  box-sizing:unset;
 }
 .filters .presses li {
+  box-sizing:unset;
 	width: 180px;
 	padding-left: 90px;
 }
