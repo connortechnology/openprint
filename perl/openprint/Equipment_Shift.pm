@@ -24,13 +24,13 @@ $table = 'equipment_shifts';
 $serial = 'equipment_shifts_id_seq';
 
 %fields = (
-	id					=>	'id',
+	id					      =>	'id',
 	starttime_seconds	=>	'starttime_seconds',
 	duration_seconds	=>	'duration_seconds',
-	duration			=>	undef,
+	duration			    =>	undef,
 	endtime_seconds		=>	undef,
-	name				=>	'name',
-	equipment_id		=>	'equipment_id',
+	name				      =>	'name',
+	equipment_id		  =>	'equipment_id',
 	operator_ids  		=>  'operator_ids',
 );
 
@@ -51,7 +51,7 @@ $serial = 'equipment_shifts_id_seq';
 
 sub to_string {
 	return sprintf(
-			"EquipmentShift: %s %s %s from %s to %s",
+			'EquipmentShift: %s %s %s from %s to %s',
 			$_[0]->Equipment()->name(),
 			$_[0]->name(),
 			$_[0]->duration() ? $_[0]->duration() : $_[0]{duration_seconds},,
@@ -64,6 +64,7 @@ sub starttime {
 		#return Date::Format::time2str('%H:%M:%S', $_[0]->starttime_seconds());
 		return $_[0]{starttime} = misc::seconds2hms($_[0]->starttime_seconds());
 }
+
 sub starttime_seconds {
 	if ( @_ > 1 ) {
 		if ( ref $_[1] eq 'ARRAY' ) {
@@ -477,8 +478,7 @@ sub distance {
 			return $$self{duration_seconds} + $$Next{starttime_seconds} - $endtime;
 		#} else {
 	} # end if
-} # end sub
-
+} # end sub distance
 
 1;
 __END__
