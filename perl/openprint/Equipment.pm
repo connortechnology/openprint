@@ -615,5 +615,9 @@ sub button_to {
   return ssi::button('EquipmentButton'.$$self{id}, {href=>'/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ ? shift : $$self{strid})}) if $$self{id};
 }
 
+sub init_cache {
+  %Specification_cache = ();
+}
+
 1;
 __END__
