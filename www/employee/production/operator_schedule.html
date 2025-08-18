@@ -18,7 +18,7 @@
 		<div class="leftColumn">
 			<ul>
 				<li>
-					<label>Equipment Category</label>
+					<label for="category_id">Equipment Category</label>
 					<select name="category_id" id="category_id" onchange="f1.submit();">
 						<option value="">All</option>
 					<? echo (
@@ -32,7 +32,7 @@
 		<? echo ( 
 			@{$$variable{Equipment}} = ();
 			my @presses = openprint::Equipment->find(
-				( $session{$r->uri().'?category_id'} ? ( category_id=>$session{$r->uri().'?category_id'} ) : () ),
+      ( $session{$r->uri().'?category_id'} ?  ( 'category_id @>' => [ split(',', $session{$r->uri().'?category_id'} ) ] ) : ()),
 				useinscheduling=>1,
 				order=>'lower(strname)'
 				);
@@ -94,7 +94,7 @@
 	) ?>
 	</tr></tbody></table>
 </form>
-<script type="text/javascript">
+<script>
 $j('#equipment_id').chosen();
 $j('#operator_ids').chosen();
 $j('#category_id').chosen();
