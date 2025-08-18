@@ -8,15 +8,15 @@
 	<fieldset class="filters"><legend>Search Information</legend>
 		<ul>
       <li>
-        <label>Category</label>
-        <select name="search_category_id" on_change_this="search_change" class="chosen">
+        <label for="search_category_id">Category</label>
+        <select id="search_category_id" name="search_category_id" on_change_this="search_change" class="chosen">
           <option value="">All</option>
   <? echo ( make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $param{search_category_id} );) ?>
         </select>
       </li>
       <li>
-        <label>Equipment ID</label>
-        <select name="ddmEquipment" on_change_this="search_change" class="chosen">
+        <label for="ddmEquipment">Equipment ID</label>
+        <select id="ddmEquipment" name="ddmEquipment" on_change_this="search_change" class="chosen">
           <option value="">Select Equipment</option>
   <? echo (
     my @Equipment = openprint::Equipment->find(
