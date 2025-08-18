@@ -2148,7 +2148,8 @@ sub operator_schedule {
 		my $Shift = new openprint::Equipment_Shift( $param{shift_id} );
 		$variable{error} .= $Shift->delete() if $Shift->id();
 	} elsif ( $param{func} eq 'Add Shift' ) {
-		my @Equipment = map { new openprint::Equipment($_) } ( ref $param{equipment_id} eq 'ARRAY' ? @{$param{equipment_id}} : $param{equipment_id} );
+		my @Equipment = openprint::Equipment->find(id=>$param{equipment_id});
+    #$_) } ( ref $param{equipment_id} eq 'ARRAY' ? @{$param{equipment_id}} : $param{equipment_id} );
 		foreach my $Equipment ( @Equipment ) {
 			next if ! $Equipment->id();
 			my $LastShift = openprint::Equipment_Shift->find_one(equipment_id=>$$Equipment{id}, order=>'starttime_seconds DESC');
@@ -2164,13 +2165,13 @@ sub operator_schedule {
 			$NewShift->operator_ids( $NewShift->Equipment()->operator_ids() );
 			$variable{error} .= $NewShift->save();
 		} # end foreach Equipment
+    $variable{ExternalRedirect} = 'operator_schedule.html';
 	} else {
 		ssi::save_params( $r->uri(), ( 'category_id', 'equipment_id', 'operator_ids' ) );
 		if ( exists($param{func}) and ! exists $param{equipment_id} ) {
 			delete $session{$r->uri().'?equipment_id'};
 		}
 	} # end if
-
 } # end sub operator_schedule
 
 sub _job_popup {
