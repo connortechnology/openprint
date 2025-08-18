@@ -32,7 +32,8 @@
 <script>
 var drops = new Array();
 </script>
-<link rel="stylesheet" href="/base_css/press_schedule.css">
+<link rel="stylesheet" href="<?hash_link(/base_css/press_schedule.css)?>">
+<link rel="stylesheet" href="<?hash_link(/css/press_schedule.css)?>">
 <form id="f1" name="f1" method="get" action="/employee/production/print_overview.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="ProjectIndex" />
@@ -43,15 +44,15 @@ var drops = new Array();
 		<div class="presses">
 		<ul>
 			<li>
-				<label>Category</label>
+				<label for="category_id">Category</label>
 				<select name="category_id" id="category_id" onchange="f1.submit();">
 					<option value="">All</option>
 				<? echo (
-	make_drop_down( openprint::Equipment_Category->dropdown( order=>'lower(name)'), $session{$r->uri().'?category_id'} );
+	make_drop_down( openprint::Equipment_Category->dropdown(), $session{$r->uri().'?category_id'} );
 	) ?>
 				</select>
 			</li>
-<li><label>Equipment</label>
+<li><label for="Equipment">Equipment</label>
 <? echo ( 
 	@{$$variable{Equipment}} = ();
 	my @presses = openprint::Equipment->find(
@@ -70,7 +71,7 @@ var drops = new Array();
 		push @{$$variable{Equipment}}, $_ if sets::isin( $_->id(), \@selected_equipment );
 	} # end foreach press
 
-	my $html = '<select name="Equipment" multiple="multiple" size="'. @presses.'">';
+	my $html = '<select id="Equipment" name="Equipment" multiple="multiple" size="'. @presses.'">';
 	$html .= make_drop_down( [ map { $_->id(), $_->name() } @presses ], \@selected_equipment );
 	return $html;
 ) ?>
