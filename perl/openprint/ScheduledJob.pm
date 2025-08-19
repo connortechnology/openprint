@@ -407,7 +407,7 @@ sub get_li {
 		$html .= '<span class="Buttons">';
 		if ( $$self{project_id} ) {
 			$html .= ssi::button( 'Approve'.$$self{id}, {onclick=>"approve_job('$ul_id',$$self{id});", text=>'A', title=>'Approve' } ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
-			if ( ! $$self{locked} ) {
+			if ( $$self{starttime} and ! $$self{locked} ) {
 				$html .= ssi::button( 'Up'.$$self{id}, { onclick=>"up_job($$self{id});", text=>'&uarr;', title=>'Move Up' } );
 				$html .= ssi::button( 'Down'.$$self{id}, { onclick=>"down_job($$self{id});", text=>'&darr;', title=>'Move Down' } );
 			} # end if
