@@ -19,6 +19,9 @@ sub session_init {
 		$openprint::config{Timezone} = 'America/Toronto';
 	} # end if
 	$TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+  if ($dbh) {
+    $dbh->do('SET timezone = ?', {}, $openprint::config{Timezone}) or die $dbh->errstr();
+  }
 
 	my $cookies;
 	my $cookie;
