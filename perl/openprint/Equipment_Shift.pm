@@ -205,10 +205,11 @@ sub test_emanantise {
 
 
 #Pass back a shift for the next time slot >= the passed in $date_seconds
-# We presume that normally date_seconds is teh starttie + 1 of the previous shift -> why? why not endtime?  I don't kn ow.
+# We presume that normally date_seconds is the starttie + 1 of the previous shift -> why? why not endtime?  I don't know.
+ 
 sub emanantise {
 	my ( $self, $requested_dt ) = @_;
-	$log->debug("Emanantise: " . $self->to_string() ) if $debug;
+	$log->debug("Emanantise: for " . $requested_dt. " " .  $self->to_string() ) if $debug;
 
 	if ( ref $requested_dt ne 'DateTime' ) {
 		$requested_dt = DateTime->from_epoch( epoch=>$requested_dt, time_zone=>$openprint::TZ );
@@ -220,10 +221,10 @@ sub emanantise {
 
 	my $date_part_dt = $requested_dt->clone()->truncate(to=>'day');
 	if ( $requested_dt->is_dst() and ! $date_part_dt->is_dst() ) {
-#$log->debug("subtracting an hour for DST");
+$log->debug("subtracting an hour for DST");
 		$date_part_dt -= DateTime::Duration->new( hours=>1 );
 	} elsif ( $date_part_dt->is_dst() and ! $requested_dt->is_dst() ) {
-#$log->debug("adding an hour for DST");
+$log->debug("adding an hour for DST");
 		$date_part_dt += DateTime::Duration->new( hours=>1 );
 	} # end if
 	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) ) if $debug;
@@ -237,10 +238,11 @@ sub emanantise {
 		#$log->error("Dt > $st does not fit on this shift");
 	#} els
 	if ( $st > $requested_dt ) {
-		$log->debug("Dt $requested_dt < $st does not fit on this shift, adding 1 hour");
+		$log->debug("Dt $requested_dt < $st does not fit on this shift, adding an hour until it does");
 		while ( $st > $requested_dt ) {
 			$requested_dt += DateTime::Duration->new( hours=>1 );
 		}
+		$log->debug("Dt $requested_dt < $st now fits on this shift");
 	
 		# If this shift was on the second day of the rotation
 		#return;
@@ -271,9 +273,9 @@ $log->debug("Now + duration?" . $es_duration->in_units('seconds') );
 
 	my $Shift;
 	# FIXME: This does not handle cases where the times have been overriden.
-	# It should be looking for a shift that starts great than date_seconds, which we assume is the previous shift starttime+1
+	# It should be looking for a shift that starts greater than date_seconds, which we assume is the previous shift starttime+1
 	# With an endtime before the end of the ES AFTER this one!
-	# THe current iteration handles all that, except that the end is shorted than normal.
+	# The current iteration handles all that, except that the end is shorted than normal.
 	if ( $Shift = openprint::Shift->find_one(
 				equipment_id	=>	$$self{equipment_id},
 				shift_id		=>	$$self{id},
@@ -470,9 +472,11 @@ sub distance {
 		$distance = 0 if $distance < 0;
 		return $distance;
 		#return (DAY - $$self{duration_seconds})+1;
-	} else {
+	} else { # $$Next{starttime_seconds} < $$self{starttime_seconds}
 		# Wrap around
-		my $endtime = $self->endtime_seconds() % DAY;
+		my $endtime = $Next->starttime_seconds() % DAY;
+    my $time_remaining_in_day = DAY - ($self->endtime_seconds()% DAY);
+    return $endtime + $time_remaining_in_day;
 		#if ( $endtime <= $$Next{starttime_seconds} ) {
 			# No overlap
 			return $$self{duration_seconds} + $$Next{starttime_seconds} - $endtime;
