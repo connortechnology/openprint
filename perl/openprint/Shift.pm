@@ -419,7 +419,7 @@ sub get_Shifts {
 			$log->error("Unable to find ES $$LastShift{shift_id} in Equipment_Shifts");
 			$ES_index = 0;
 		} else {
-$log->debug("Found ES for last shift: " . $Equipment_Shifts[$ES_index]->to_string() . " at index $ES_index" );
+      $log->debug("Found ES for last shift: " . $Equipment_Shifts[$ES_index]->to_string() . " at index $ES_index" );
 			$ES_index += 1;
 			$ES_index = 0 if $ES_index == @Equipment_Shifts;
 		}
@@ -479,7 +479,7 @@ $openprint::log->error("Unable to emanantise for $previous_seconds " . Date::For
 	# Just add them all in the specified range
 		my $ES = $Equipment_Shifts[0];
 		while ( $start_dt < $end_dt ) {
-$openprint::log->debug("Eman for " . $start_dt->epoch());
+$openprint::log->error("Eman for ".$start_dt." " . $start_dt->epoch());
 			my $Shift = $ES->emanantise( $start_dt->epoch() );
 			if ( ! $Shift ) {
 				$log->error("failed to emanantise");
@@ -493,14 +493,19 @@ $openprint::log->debug("Eman for " . $start_dt->epoch());
 				last;
 			} else {
 				push @Shifts, $Shift;
-				$log->debug("Starttime : " . $parser->format_datetime($start_dt). ' ' . $parser->format_datetime( DateTime->from_epoch( 'epoch'=>$Shift->starttime_seconds(), 'time_zone'=>$start_dt->time_zone() ) ));
+				$log->debug("Starttime : " . $parser->format_datetime($start_dt). ' ' . $parser->format_datetime( DateTime->from_epoch( epoch=>$Shift->starttime_seconds(), time_zone=>$start_dt->time_zone() ) ));
 			} # end fi
-			$start_dt = DateTime->from_epoch( 'epoch'=>$Shift->starttime_seconds() + 1, 'time_zone'=>$start_dt->time_zone() );
+      my $new_dt = DateTime->from_epoch( epoch=>$Shift->endtime_seconds() + 1, time_zone=>$start_dt->time_zone() );
+      if ($new_dt->epoch() <= $start_dt->epoch()) {
+        $log->error("Non increasing dt.");
+        return @Shifts;
+      }
+			$start_dt = $new_dt;
 			$ES = $ES->Next();
 		} # end while
 	} # end if
 	return @Shifts;
-} # end sbu get_Shifts
+} # end sub get_Shifts
 
 sub docket {
 	if ( ! $_[0]{docket} ) {
