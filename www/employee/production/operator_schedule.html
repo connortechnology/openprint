@@ -10,6 +10,10 @@
 					} // end if
 			} // end foreach id in drops
 	} // end function setup_drops
+  function deleteShift(button) {
+      button.form.elements['func'].value = 'delete';
+      button.form.submit();
+    }
 </script>
 <?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" method="get" action="operator_schedule.html">
