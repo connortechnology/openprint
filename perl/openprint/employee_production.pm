@@ -278,6 +278,7 @@ sub print_overview {
 		$log->debug('Not add lost jobs due to Smart Scheduling being turned off.');
 		return;
 	} # end if
+  return;
 
 	# This looks expensive, but isn't due to the index on status... 
 	my @missing_jobs = sql::execute( $log, $dbh, q{SELECT id FROM projects WHERE strStatus='Approved' AND id NOT IN (SELECT ProjectIndex FROM Schedule)} );
@@ -1578,8 +1579,9 @@ $log->debug(" splicing $order[$i]{starttime} $i " . $order[$i]->Project()->docke
 
 		$log->debug("Job: " . $row->to_string() );
 # Time to move on to next shift
-		while ( ( ! @{$Shift->operator_ids()} ) or ( $start_time > $Shift->endtime_seconds() ) ) {
-$log->debug("Moving on to next shift:i becase no operator or $start_time " . Date::Format::time2str($config{DateTimeFormat}, $start_time). " > end: $$Shift{endtime_seconds} " . $Shift->to_string() );
+		while ( $start_time > $Shift->endtime_seconds()) {
+      #while ( ( ! @{$Shift->operator_ids()} ) or ( $start_time > $Shift->endtime_seconds() ) ) {
+$log->debug("Moving on to next shift: because no operator or $start_time " . Date::Format::time2str($config{DateTimeFormat}, $start_time). " > end: $$Shift{endtime_seconds} " . $Shift->to_string() );
 			if ( ! @Shifts ) {
 #$log->debug("Loading next Equipment_shift: " . $Shift->Equipment_Shift()->endtime() );
 				my $NextES = $Shift->Equipment_Shift()->Next();
