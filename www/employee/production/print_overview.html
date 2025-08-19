@@ -91,7 +91,7 @@ var drops = new Array();
 					) ?>
 			</li>
 			<li>
-				<label>Scale</label>
+				<label for="scale">Scale</label>
 				<select id="scale" name="scale" onchange="this.form.submit();">
 					<? echo ( 
 						my @options = ( 
@@ -205,8 +205,8 @@ $html .= '<style type="text/css">
 		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} ? $$_{company_id} : () } @Projects ) ] ) if @Projects;
 
 		# Why does this need to be ACCESS exclusive?  Something that changes it should be.... 
-		# perhaps the idea is that if any canges are in progress, we want to wait for them to finish,
- 		# but if changes are happening, then any lock we try to get will hol... so this just prevent concurrent views
+		# perhaps the idea is that if any changes are in progress, we want to wait for them to finish,
+ 		# but if changes are happening, then any lock we try to get will hold... so this just prevent concurrent views
 		# However, the problem is that this can implement shifts.. perhaps we should wait until we need to implement shifts...
 		# Ok, but we actually only create shifts, not adjust jobs... so only need to lock the shifts	
 		$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
@@ -214,7 +214,7 @@ $html .= '<style type="text/css">
 		foreach my $E ( @{$$variable{Equipment}} ) {
 			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ). '">';
 
-			$html .= '<a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'('.$E->strid().')</a>';
+        $html .= '<a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().($E->name() ne $E->strid() ? '('.$E->strid().')':'').'</a>';
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
 				$html .= button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`', { width: 500, height: 400 } );`, text=>'E', title=>'Edit' } );
 			} # end if
@@ -249,7 +249,7 @@ $log->debug( "Available ES: " . $ES->to_string() );
 }
 
 			# Showing over 100 days makes the browser crawl forever. So limit it.
-			$end = 100 if $end > 100;
+			$end = 30 if $end > 30;
 			# Get the shifts on this day.
 			my $st = $start_dt;
 			my $et = $st + DateTime::Duration->new( days=>$end );
@@ -315,11 +315,11 @@ $log->debug("Nextt: " . $Next_Shift->to_string());
 							die $_ if $_;	
 							$starttime += 1;
 						}
-#openprint::employee_production::reorder_jobs( @Lost_Jobs, $Next_Shift->Jobs() );
+            #openprint::employee_production::reorder_jobs( @Lost_Jobs, $Next_Shift->Jobs() );
 					}
 				}
 
-	# If there is only 1 shift, then we don't need to do this.
+        # If there is only 1 shift, then we don't need to do this.
 if ( 0 ) {
 				while( $_ = $Next_ES->compare( $next_shift_start_time ) ) {
 					if ( $_ > 0 ) {
@@ -336,7 +336,7 @@ $log->error("Went past, going back an hour $next_shift_start_time $_, adding an 
 					last if $next_shift_start_time > $Shifts[$shift_index]->starttime_seconds();
 				}
 }
-				$log->debug("Calling emanananteise with next start time: $next_shift_start_time " . Date::Format::time2str($config{DateTimeFormat}, $next_shift_start_time));
+				$log->debug("Calling emananantise with next start time: $next_shift_start_time " . Date::Format::time2str($config{DateTimeFormat}, $next_shift_start_time));
 				my $New_Next_Shift = $Next_ES->emanantise( $next_shift_start_time );
 				if ( $New_Next_Shift ) {
 					# emanantise returned a shift
@@ -375,17 +375,18 @@ $log->error("Went past, going back an hour $next_shift_start_time $_, adding an 
 $log->debug("LastShift $$LastShift{endtime} < $et");
 				my $ES = $LastShift->Equipment_Shift()->Next();
 				my $distance = $LastShift->Equipment_Shift()->distance();
-				$distance = 1 if ! $distance;
+        $log->debug("Distance $distance");
+				$distance = 1 if $distance < 1;
 
 				my $last_time = $LastShift->endtime_seconds() + $distance;
+        $log->debug("Last time $last_time");
 				my $NewShift = $ES->emanantise( $last_time );
 				if ( !$NewShift ) {
 					$log->error("Error getting shift for $last_time ");
 					last;
-}elsif ( $NewShift->id() == $LastShift->id() ) {
+        } elsif ( $NewShift->id() == $LastShift->id() ) {
 					$log->error("Error shift for $last_time same shift");
 					last;
-
 				}
 				
 				push @Shifts, $NewShift;
