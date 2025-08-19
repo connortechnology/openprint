@@ -22,7 +22,7 @@ require openprint::ProductionFeedback;
 
 my $parser = 'DateTime::Format::Pg';
 
-$debug = 0;
+$debug = 1;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 
@@ -91,6 +91,12 @@ sub starttime {
 	return $_[0]{starttime};
 } # end sub starttime
 
+sub starttime_dt {
+  my $self = shift;
+  $$self{starttime_dt} = $parser->parse_datetime( $$self{starttime} );
+  return $$self{starttime_dt};
+}
+
 sub starttime_seconds {
 	my $starttime_dt;
 
@@ -100,12 +106,11 @@ sub starttime_seconds {
 			$log->error( 'ScheduledJob: startime_seconds < NOW() ' . $parser->format_datetime( $starttime_dt ) );
 		} # end if
 		$starttime_dt = DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ );
-$openprint::log->debug("Setting starttime_seconds to $_[1] => $starttime_dt");
+$openprint::log->debug("Setting starttime_seconds to $_[1] => $starttime_dt $openprint::TZ");
 		$_[0]->starttime( $parser->format_datetime( $starttime_dt ) );
 $openprint::log->debug("Got $starttime_dt = $_[0]{starttime}");
 		
 	} elsif ( $_[0]{starttime} ) {
-		
 		$starttime_dt = $parser->parse_datetime( $_[0]{starttime} );
 	} # end if
 	return $starttime_dt->epoch() if $starttime_dt;
@@ -386,7 +391,7 @@ sub get_li {
 		} # end if
 		if ( $Equipment->smartscheduling() or $$self{locked} ) {
 			$html .= sprintf( q`<span class="StartTime" onclick="job_popup('%1$d');">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{id},
-					Date::Format::time2str('%H:%M', Date::Parse::str2time($$self{starttime})),
+        $self->starttime_dt()->strftime('%H:%M'),
 					$$self{locked} ? 'locked' : 'unlocked',
 					);
 		} # end if
@@ -445,9 +450,7 @@ sub get_li {
 			$html .= sprintf( '<span class="Forms">%d %s</span>', $self->forms(), $self->forms() > 1 ? ' forms' : ' form' );
 			$html .= sprintf( '<span class="Impressions">%d imps</span>', $self->impressions() );
 		} # en dif
-		$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$self{id},
-				Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{starttime} ) ),
-				);
+		$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$self{id}, $self->starttime_dt()->strftime('%H:%M'));
 		$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{id}, split(':',$self->runtime()) );
 		$html .= '<span class="Buttons">';
 		if ( $$self{project_id} ) {
@@ -700,7 +703,7 @@ if ( 0 ) {
 
 sub start {
 	my ( $self ) = @_;
-	my $e = $self->save({starttime_seconds=>time,locked=>1});
+	my $e = $self->save({starttime_seconds=>time, locked=>1});
 	if ( ! $e ) {
 		if ( $$self{project_id} ) {
 			foreach my $sig_id ( @{$$self{service_id}} ) {
@@ -766,6 +769,7 @@ sub bump {
 
 	my $error;
 	if ( $Equipment->smartscheduling() ) {
+    $openprint::log->debug("Doing smart scheduling");
 # When SmartScheduling, all jobs can move. so determine the appropriate shift, sort the jobs
 		if ( ! $NewShift ) {
 			if ( $$self{starttime} ) {
