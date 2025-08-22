@@ -478,6 +478,8 @@ sub signature_calc {
     overs => 0,
     Status		=>	'calculated',
     Breakdown	=>	'<b>Post press:</b><br/>',
+    Price => 0,
+    FoldingPrice => 0,
   );
   if ( !$$Paper{cuttable} ) {
     $results{alert} = $Paper->to_string() . ': Stock is not cuttable.';
