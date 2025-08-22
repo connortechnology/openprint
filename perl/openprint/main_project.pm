@@ -120,7 +120,7 @@ sub view {
 
 
   $session{ShowAllSignatures} = $param{ShowAllSignatures} if exists $param{ShowAllSignatures};
-	$variable{ProjectIndex} = $project_id;
+	$variable{project_id} = $variable{ProjectIndex} = $project_id;
 	my $Project = $variable{Project} = new openprint::Project($project_id);
 	my $save = 0;
 
