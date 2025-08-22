@@ -120,7 +120,7 @@ sub save {
 # Notify someone
 		my %info;
 		$info{User} = $self;
-		@info{'UserFirstName','UserLastName','UserType'} = @$params{'firstname','lastname','type'};
+		@info{'UserFirstName','UserLastName','UserType'} = @$self{'firstname','lastname','type'};
 
 		$info{ReplacementText} = ssi::include( '/email_content/usertype_system_notification.html', \%info );
 		my $email_template = ssi::include( '/email_template.html', \%info );
@@ -139,7 +139,7 @@ sub save {
 	return $error if $error;
 	(new openprint::Log())->save({action=>'Save User', Object=>$self, note=>join('<br/>', @changes ) } );
 
-	if ( $$old{web_active} ne $$self{web_active} ) and ( $$self{web_active} eq 'Y' ) ) {
+	if (($$old{web_active} ne $$self{web_active}) and ($$self{web_active} eq 'Y')) {
     $self->notify_activation_change();
 	} # end if
 
@@ -162,7 +162,7 @@ sub notify_activation_change {
 
   new openprint::Email()->send(
     FROM    => $openprint::config{AdministratorEmail},
-    TO      => sprintf( '"%s %s" <%s>', @$params{'firstame','lastname','email'} ),
+    TO      => sprintf( '"%s %s" <%s>', @$self{'firstame','lastname','email'} ),
     SUBJECT => 'User account status has changed!',
     ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
   );
