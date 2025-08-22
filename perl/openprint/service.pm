@@ -8,7 +8,7 @@ require openprint::pricing;
 require openprint::Project_Service;
 require openprint::ServiceType;
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 use vars qw( %specs_cache %service_name_cache );
 
