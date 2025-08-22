@@ -22,23 +22,6 @@
 }
 */
 
-@media print {
-	.PressScheduleHeader {
-		width: 100%;
-		position:fixed;
-		top: 0;
-		border-top: solid 1px;
-		border-bottom: solid 1px;
-		text-align: center;
-		margin-left: auto;
-		margin-right: auto;
-		background-color: #E3E4F0;
-		font-weight: bold;
-		font-size: 16px;
-	}
-	.PressColumn li {
-	}
-}
 @media screen {
 	.PressScheduleHeader {
 		display:none;
@@ -185,23 +168,6 @@ margin: 2px 0;
 	border: none;
 	vertical-align: middle;
 }
-@media print {
-	.StartTime img {
-		height: 10px;
-	}
-	.Feedback {
-		display: none;
-	}
-	.Comment,
-	.Stock {
-	min-height: 40px;
-	}
-
-	/* Empty last shifts don't show */
-	.last  {
-		display: none;
-	}
-}
 .Buttons {
 	float: right;
 	margin: 2px;
@@ -250,50 +216,6 @@ margin: 2px 0;
 .Operator, .assign {
 	float: right;
 }
-@media print {
-	.PressColumn {
-	border: 1px solid white;
-	color: black;
-	}
- a.docket {
-		color: black;
-	}
-	.Company { 
-		font-size: large;
-	}
-	.When {
-		font-size: small;
-	}
-	.assign {
-		display: none;
-	}
-	.TotalImpressions {
-			display: none;	
-		}
-		.Comment {
-			border: none;
-		}
-		ul {
-			border: 1px solid black;
-			margin: 2px;
-		}
-		li { 
-			margin:0;
-			padding: 1px;
-		}
-		td { 
-			padding:0;
-			margin:0;
-		}
-		span {
-			margin:0;
-			padding:0;
-			width: auto;
-		}
-		#Header {
-			display: none;
-		}
-	}
 
 .CSR {
 	font-size: 14px;
@@ -329,6 +251,7 @@ right: 0;
 }
 
 .container {
+  max-width: none;
   display: flex;
   width: 100%;
   justify-content: space-between;
@@ -376,8 +299,10 @@ right: 0;
 .filters .presses {
 	width: 275px;
 	float: left;
+  box-sizing:unset;
 }
 .filters .presses li {
+  box-sizing:unset;
 	width: 180px;
 	padding-left: 90px;
 }
@@ -454,57 +379,127 @@ background-color: #eeeeee;
 .dialog table .runtime input[type="text"]:not(.filter) {
 	width: 80px;
 }
-@media print {
-	#Content {
-		padding: 0;
-		margin:0;
-	}
-	.StockVerified,
-	.Forms,
-	.Impressions,
-	.RunTime,
-	.StartTime {
-		width: auto;
-		padding: 0 5px;
-		min-width: 0;
-	}
-	.RunTime {
-		display:none;
-	}
-	.PressColumn li {
-		font-size: small;
-	}
 
-	.OperatorSignature {
-	float:right;
-/*
-		position: absolute;
-		bottom: -1px;
-		right:0px;
-*/
-		width: 120px;
-		height: 50px;
-		border-top: 1px solid black;
-		border-left: 1px solid black;
-color: grey;
+@media print {
+	.StartTime img {
+		height: 10px;
 	}
-	.PressColumn li {
-	}
-	.top_row {
-		margin-right: 60px;
-	}
-	.bottom_row {
-		position: relative;
-		right: 0px;
-	}
-	.middle_row {
-		margin-right: 0px;
-	}
-}
-@media screen {
-	.OperatorSignature {
+	.Feedback {
 		display: none;
 	}
+	.Comment,
+	.Stock {
+	min-height: 40px;
+	}
+
+	/* Empty last shifts don't show */
+	.last  {
+		display: none;
+	}
+	.PressScheduleHeader {
+		width: 100%;
+		position:fixed;
+		top: 0;
+		border-top: solid 1px;
+		border-bottom: solid 1px;
+		text-align: center;
+		margin-left: auto;
+		margin-right: auto;
+		background-color: #E3E4F0;
+		font-weight: bold;
+		font-size: 16px;
+	}
+  .Buttons, button, .btn {
+    display: none;
+  }
+  .PressColumn {
+    border: 1px solid white;
+    color: black;
+  }
+  .PressColumn li {
+    font-size: small;
+  }
+  a.docket {
+    color: black;
+  }
+  .Company { 
+    font-size: large;
+  }
+  .When {
+    font-size: small;
+  }
+  .assign {
+    display: none;
+  }
+  .TotalImpressions {
+    display: none;	
+  }
+  .Comment {
+    border: none;
+  }
+  ul {
+    border: 1px solid black;
+    margin: 2px;
+  }
+  li { 
+    margin:0;
+    padding: 1px;
+  }
+  td { 
+    padding:0;
+    margin:0;
+  }
+  span {
+    margin:0;
+    padding:0;
+    width: auto;
+  }
+  #Header {
+    display: none;
+  }
+  #Content {
+    padding: 0;
+    margin:0;
+  }
+  .StockVerified,
+  .Forms,
+  .Impressions,
+  .RunTime,
+  .StartTime {
+    width: auto;
+    padding: 0 5px;
+    min-width: 0;
+  }
+  .RunTime {
+    display:none;
+  }
+
+  .OperatorSignature {
+    float:right;
+    width: 120px;
+    height: 50px;
+    border-top: 1px solid black;
+    border-left: 1px solid black;
+    color: grey;
+  }
+  .PressColumn li {
+  }
+  .top_row {
+    margin-right: 60px;
+  }
+  .bottom_row {
+    position: relative;
+    right: 0px;
+  }
+  .middle_row {
+    margin-right: 0px;
+  }
+}
+
+@media screen {
+  .OperatorSignature {
+    display: none;
+  }
 	.top_row {
 		margin-right: 130px;
 		right: 0;

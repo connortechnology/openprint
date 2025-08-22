@@ -308,7 +308,7 @@ sub confirmation {
 	if ( $param{btnFunction} eq 'Complete' ) {
 	
 		if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
-			if ( ( $Order->company_id() == $session{company_id} ) and ( $session{company_id} == $openprint::User->company_id() ) ) {
+			if ( $config{require_terms} and ( $Order->company_id() == $session{company_id} ) and ( $session{company_id} == $openprint::User->company_id() ) ) {
 				if ( ! $param{accept_terms} ) {
 					$variable{error} = 'Terms not accepted';
 					$variable{information} = 'You must check the box to indicate your acceptance of the terms and conditions.';
@@ -499,7 +499,7 @@ sub history_details {
 		$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
   } elsif ( $param{btnFunction} ) {
 		if ( $param{btnFunction} eq 'AcceptTerms' ) {
-			if ( ( $Order->company_id() != $session{company_id} ) or ( $openprint::User->company_id() != $session{company_id} ) ) {
+			if ( $config{require_terms} and ( $Order->company_id() != $session{company_id} ) or ( $openprint::User->company_id() != $session{company_id} ) ) {
 				$variable{error} = 'Terms not accepted';
 				$variable{information} = 'You are not authorised to accept the terms and conditions.';
 			} elsif ( ! $param{accept_terms} ) {

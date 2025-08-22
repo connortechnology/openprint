@@ -37,7 +37,7 @@
 
 					$html .= sprintf('<tr id="log_%d">
 							<td class="Action">%s</td>
-							<td class="DateTime" title="%s">%s</td>
+							<td class="DateTime">%s</td>
 							<td class="ip" title="%s">%s</td>
 							<td class="Note">%s</td>
 							<td class="User">%s</td>
@@ -47,7 +47,7 @@
 						</tr>',
 						$Log->id(),
 						$Log->Action()->name(),
-            $Log->date_time(), format_datetime( $Log->date_time() ),
+						format_datetime( $Log->date_time() ),
 						$Log->ip_address(), ($Log->Host()->can_view() ? $Log->Host()->link_to() : $Log->Host()->name() ),
 						$Log->note_html(),
 						$Log->User()->link_to(),

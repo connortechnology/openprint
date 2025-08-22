@@ -66,10 +66,15 @@
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n", 
+            ($$variable{Shift}->id()?button('DeleteES', {on_click_this=>'deleteShift', text=>'Delete'}) : ()),
 						button( 'SaveEquipmentShift', { onclick=>"\$('ShiftForm').submit();", text=>'Save' } ),
 						button( 'CancelStartTime', { onclick=>"popupWin.destroy();", text=>'Cancel' } ), 
 				); ) ?>
 		</p>
 	</fieldset>
 </form>
-<script type="text/javascript">$j('#operator_ids').chosen();</script>
+<script>$j('#operator_ids').chosen();
+  const DeleteESButton = document.getElementById('ButtonDeleteES');
+  DeleteESButton.onclick = window['deleteShift'].bind(DeleteESButton, DeleteESButton);
+
+</script>

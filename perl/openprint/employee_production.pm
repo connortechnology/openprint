@@ -278,6 +278,7 @@ sub print_overview {
 		$log->debug('Not add lost jobs due to Smart Scheduling being turned off.');
 		return;
 	} # end if
+  return;
 
 	# This looks expensive, but isn't due to the index on status... 
 	my @missing_jobs = sql::execute( $log, $dbh, q{SELECT id FROM projects WHERE strStatus='Approved' AND id NOT IN (SELECT ProjectIndex FROM Schedule)} );
@@ -1475,25 +1476,27 @@ sub reorder_jobs {
 		} # end if
 	} # end foreach Job
 
-	my $start_time = time;
+	my $start_dt = DateTime->now;
+  $start_dt->set_time_zone($openprint::TZ);
 	my $row = $order[0];
-	$log->debug("Grabbing first shift");
 	if ( my $Shift = $row->Shift() ) {
+    # I'm not sure this is necessray
+    $log->debug('Grabbing first shift'.$Shift->to_string());
 		push @{$variable{changed}}, $Shift->ul_id();
 	}
 
 	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
-	if ( $row->locked() and ( $row->endtime_seconds() < $start_time ) ) {
-		$row->runtime_seconds( $start_time - $row->starttime_seconds() );
-		$start_time = $row->endtime_seconds()+1;
-$log->debug("Running job,moving up starttime to $start_time = " . Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $start_time));
+	if ( $row->locked() and ( $row->endtime_dt() < $start_dt ) ) {
+		$row->runtime_seconds( $start_dt->subtract($row->starttime_dt())->seconds );
+		$start_dt = $row->endtime_dt()->add(seconds=>1);
+    $log->debug("Running job,moving up starttime to " . $start_dt);
 		$row->save();
 	} # end if
-$log->debug("Grab all start time is $start_time = " . Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $start_time));
+$log->debug("Grab all start time is " . $start_dt);
 	# Grab all shifts.  We will only add a shift at the end
 	my @Shifts = openprint::Shift->find(
 			equipment_id	=>	$$row{equipment_id},
-			'endtime >='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $start_time ),
+			'endtime >='	=>	DateTime::Format::Pg->format_datetime($start_dt),
 			order			=>	'starttime',
 			);
 #foreach my $S ( @Shifts ) {
@@ -1522,7 +1525,7 @@ $log->debug("NES: " . $NextES->name() );
 			$variable{alert} .= 'There are no shifts to schedule on.';
 			return;
 		} # end if ! NextES
-		push @Shifts, $NextES->emanantise( $start_time );
+		push @Shifts, $NextES->emanantise( $start_dt );
 	} # end if ! @Shifts
 	if ( ! @Shifts ) {
 		$log->error("NO more shifts in reorder_jobs");
@@ -1567,19 +1570,20 @@ $log->debug(" splicing $order[$i]{starttime} $i " . $order[$i]->Project()->docke
 			$run_time = 1;
 		}
 
-		my $old_start_time = $start_time - $run_time;
+		my $old_start_dt = $start_dt->subtract(seconds=>$run_time);
 
-		while ( @fixed_jobs and ( $fixed_jobs[0]->starttime_seconds() < ($start_time+$run_time) ) ) {
+		while ( @fixed_jobs and ( $fixed_jobs[0]->starttime_dt() < $start_dt->add(seconds=>$run_time) ) ) {
 			# Have fixed_jobs.  They do not move.
-			$start_time = $fixed_jobs[0]->endtime_seconds() + 1;
+			$start_dt = $fixed_jobs[0]->endtime_dt()->add(seconds=>1);
 			my $Job = shift @fixed_jobs;
 			push @jobs_in_shift, $$Job{id};
 		} # end while
 
 		$log->debug("Job: " . $row->to_string() );
 # Time to move on to next shift
-		while ( ( ! @{$Shift->operator_ids()} ) or ( $start_time > $Shift->endtime_seconds() ) ) {
-$log->debug("Moving on to next shift:i becase no operator or $start_time " . Date::Format::time2str($config{DateTimeFormat}, $start_time). " > end: $$Shift{endtime_seconds} " . $Shift->to_string() );
+		while ( $start_dt > $Shift->endtime_dt()) {
+      #while ( ( ! @{$Shift->operator_ids()} ) or ( $start_time > $Shift->endtime_seconds() ) ) {
+$log->debug("Moving on to next shift: because no operator or " . $start_dt. " > end: $$Shift{endtime_seconds} " . $Shift->to_string() );
 			if ( ! @Shifts ) {
 #$log->debug("Loading next Equipment_shift: " . $Shift->Equipment_Shift()->endtime() );
 				my $NextES = $Shift->Equipment_Shift()->Next();
@@ -1592,15 +1596,15 @@ $log->debug(" NO NEXT ES: "  );
 							order				=>	'starttime_seconds',
 							);
 				} # end if ! NextES
-				$Shift = $NextES->emanantise( $start_time );
+				$Shift = $NextES->emanantise( $start_dt );
 					
 				if ( ( ! $Shift ) or ! @{$Shift->operator_ids()} ) {
-					$variable{error} .= 'Unable to add more shifts. This is probably because not enough shifts have operators assigned. Need shifts for ' . Date::Format::time2str($config{DateTimeFormat}, $start_time) . ' onwards.';
+					$variable{error} .= 'Unable to add more shifts. This is probably because not enough shifts have operators assigned. Need shifts for ' . $start_dt . ' onwards.';
 					$dbh->rollback();
 					sql::end_transaction( $dbh, $ac );
 					return;
 				}
-				$start_time = $Shift->starttime_seconds();
+				$start_dt = $Shift->starttime_dt();
 				push @{$variable{changed}}, $Shift->ul_id();
 			} else {
 				my @old_jobs = map { $$_{id} } ( $Shift->Schedule() );
@@ -1613,26 +1617,24 @@ $openprint::log->debug("Shift " . $Shift->ul_id() . " has not changed");
 				} # end if
 
 				$Shift = shift @Shifts;
-				$start_time = $Shift->starttime_seconds() if $start_time < $Shift->starttime_seconds();
+				$start_dt = $Shift->starttime_dt() if $start_dt < $Shift->starttime_dt();
 			} # end if
 			@jobs_in_shift = ();
-		} # end while
+		} # end while start_dt > $shift->endtime_dt
 
 		push @jobs_in_shift, $$row{id};
 
 		$row->operator_ids( $Shift->operator_ids() );
-		last if $row->save({
-				starttime		=> $start_time ? Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $start_time ) : undef,
-				equipment_id	=> $$Shift{equipment_id},
-				} );
-		if ( ! $start_time ) {
-			last;
-        } elsif ( ! $$row{starttime} ) {
-            $row->Project()->add_to_log( @session{'company_id','user_id'}, 'Scheduled on ' . $row->Equipment()->strid() . ' at ' . Date::Format::time2str( $config{DateTimeFormat}, $start_time) );
-        } # end if
+    last if $row->save({
+        starttime		=> DateTime::Format::Pg->format_datetime($start_dt),
+        equipment_id	=> $$Shift{equipment_id},
+      } );
+    if ( ! $$row{starttime} ) {
+      $row->Project()->add_to_log( @session{'company_id','user_id'}, 'Scheduled on ' . $row->Equipment()->strid() . ' at ' . $start_dt->strftime($config{DateTimeFormat}) );
+    } # end if
 
-        $start_time += $run_time;
-    } # end while @order
+    $start_dt = $start_dt->add(seconds=> $run_time);
+  } # end while @order
 
 	# THis might be here to deal with the last round of jobs...
 	my @old_jobs = $Shift->Schedule();
@@ -1778,11 +1780,12 @@ $log->debug("Adjusting forms from $$Job{forms} to $param{forms}");
 			} # end if
 			$sql{runtime} = $param{runtime};
 		} # end if
-		if ( exists $param{'starttime_year'} ) {
+		if ( exists $param{starttime_year} ) {
 			if ( Date::Calc::check_date( map { $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
 				my $old_starttime_dt = $parser->parse_datetime( $Job->starttime() );
 				my $new_starttime_dt = DateTime->new(
-						time_zone=>$openprint::TZ, 
+          # What is in the db currently is UTC...
+          #time_zone=>$openprint::TZ, 
 						( map { $_ => $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ),
 						( map { $_ => ($param{'starttime_'.$_} ? $param{'starttime_'.$_} : 0) } ( 'hour', 'minute', 'second' ) ),
 						);
@@ -1801,19 +1804,23 @@ $log->debug("Adjusting forms from $$Job{forms} to $param{forms}");
 		$sql{stock} = $param{stock} if exists $param{stock} and $param{stock} ne $$Job{stock};
 		$sql{tentative} = $param{tentative} if ( exists $param{tentative} ) and ( $param{tentative} != $$Job{tentative} );
 		if ( keys %sql ) {
-			push @{$variable{changed}}, $Job->Shift()->ul_id();
+      my $old_ul_id = $Job->Shift()->ul_id();
+			push @{$variable{changed}}, $old_ul_id;
 			$variable{error} .= $Job->save(\%sql);
-			push @{$variable{changed}}, $Job->Shift()->ul_id();
+			push @{$variable{changed}}, $Job->Shift()->ul_id() if $old_ul_id ne $Job->Shift()->ul_id();
 		} # end if
 
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
-					openprint::ScheduledJob->find( 'starttime is null'=>0, equipment_id=>$$Job{equipment_id},order=>'starttime' ) );
+					openprint::ScheduledJob->find(
+            'starttime is null'=>0,
+            equipment_id=>$$Job{equipment_id},
+            order=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{btnFunction} eq 'BumpJob' ) {
 		my $NewShift;
 		if ( Date::Calc::check_date( map { $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
-# We assume that there is a shift, otherwise how can we be scheduling?
+      # We assume that there is a shift, otherwise how can we be scheduling?
 			my $starttime_dt = DateTime->new(
 					( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
 					hour=>0, minute=>0, second=>0, time_zone=>$openprint::TZ );
@@ -1826,6 +1833,7 @@ $log->debug("Adjusting forms from $$Job{forms} to $param{forms}");
 					( $param{shift_id} ? ( shift_id				=>	$param{shift_id}) : () ),
 					equipment_id		=>	$$Equipment{id},
 					);
+      $log->debug("New shift for bump: ".$NewShift->to_string());
 		} else {
 			$log->debug("No valid startdate specified");
 		}
@@ -2148,7 +2156,8 @@ sub operator_schedule {
 		my $Shift = new openprint::Equipment_Shift( $param{shift_id} );
 		$variable{error} .= $Shift->delete() if $Shift->id();
 	} elsif ( $param{func} eq 'Add Shift' ) {
-		my @Equipment = map { new openprint::Equipment($_) } ( ref $param{equipment_id} eq 'ARRAY' ? @{$param{equipment_id}} : $param{equipment_id} );
+		my @Equipment = openprint::Equipment->find(id=>$param{equipment_id});
+    #$_) } ( ref $param{equipment_id} eq 'ARRAY' ? @{$param{equipment_id}} : $param{equipment_id} );
 		foreach my $Equipment ( @Equipment ) {
 			next if ! $Equipment->id();
 			my $LastShift = openprint::Equipment_Shift->find_one(equipment_id=>$$Equipment{id}, order=>'starttime_seconds DESC');
@@ -2164,13 +2173,13 @@ sub operator_schedule {
 			$NewShift->operator_ids( $NewShift->Equipment()->operator_ids() );
 			$variable{error} .= $NewShift->save();
 		} # end foreach Equipment
+    $variable{ExternalRedirect} = 'operator_schedule.html';
 	} else {
 		ssi::save_params( $r->uri(), ( 'category_id', 'equipment_id', 'operator_ids' ) );
 		if ( exists($param{func}) and ! exists $param{equipment_id} ) {
 			delete $session{$r->uri().'?equipment_id'};
 		}
 	} # end if
-
 } # end sub operator_schedule
 
 sub _job_popup {

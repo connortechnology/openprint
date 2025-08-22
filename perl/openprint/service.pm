@@ -667,13 +667,13 @@ sub get_runtime {
 sub summary {
 	my ( $Project, $service_id, $qty_index ) = @_;
 
-	my @service_ids = split(',', $service_id );
+	my @service_ids = split(',', $service_id);
 	$service_id = $service_ids[0];
 
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 	my $services = $Project->services();
-	my $ServiceType = $Project->ServiceType( $service_id );
-	return '' if ! $ServiceType->summary_visible();
+	my $ServiceType = $Project->ServiceType( $service_id ) if $service_id;
+	return '' if ! $ServiceType and $ServiceType->summary_visible();
 
 	my $specs = get_specs_ref( $Project, $service_id );
   my $ServiceTypeType = $ServiceType->type();

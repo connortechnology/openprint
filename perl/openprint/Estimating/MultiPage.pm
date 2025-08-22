@@ -23,7 +23,7 @@ require openprint::Estimating::Printing;
 require openprint::service;
 require sets;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 use vars qw{ @signature_variables };
 
@@ -272,9 +272,9 @@ sub calc {
 		}
 		$$specs{alert} .= $sig_specs{alert} .' for group ' . $group_id . ' ' . $$specs{'txtServiceDescription'.$group_id}. '<br/>' if $sig_specs{alert};
     @$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
-    foreach (@signature_variables) {
-    $openprint::log->error("Group $group_id $_ => $sig_specs{$_}");
-    }
+    #foreach (@signature_variables) {
+      #$openprint::log->error("Group $group_id $_ => $sig_specs{$_}");
+      #}
 		if ( ! ( $variables{'GroupPageQuantity'.$group_id} and @{$variables{'GroupPageQuantity'.$group_id}} ) ) {
 			$openprint::log->debug("Setting output on GroupPageQuantity$group_id") if DEBUG;
 			$variables{'GroupPageQuantity'.$group_id} = [sets::union('output', @{$variables{'GroupPageQuantity'.$group_id}})];

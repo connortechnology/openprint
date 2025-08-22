@@ -11,10 +11,10 @@
 </script>
 <?include(/main/project/prin/_templates.html)?>
 <div class="Service">
-<div class="PageTitle">
-<h1>Project <?echo($$variable{Project}->link_to())?></h1>
-<h2>Printing</h2>
-</div>
+  <div class="PageTitle">
+  <h1>Project <?echo($$variable{Project}->link_to())?></h1>
+  <h2>Printing</h2>
+  </div>
 <? if ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
     <div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>
 <? endif ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
@@ -30,7 +30,7 @@
 		<? endif ( $$variable{txtSignatureType} eq 'Cover Pages' or $$variable{txtSignatureType} eq 'Gate Folded Pages' ) ?>
 		<fieldset><legend><? echo ( $$variable{Project}->Type()->description() ) ?> <?txtSignatureType?></legend>
 			<? if ( $$variable{txtSignatureType} ) ?>
-<div class="PagesAndSizes">
+      <div class="PagesAndSizes">
       <div class="<? echo ( my $type = $$variable{txtSignatureType}; $type =~ s/\s//g; return $type; ) ?>">
 				<ul>
 					<li class="Description">
@@ -75,11 +75,13 @@
 <? else ( $$variable{txtSignatureType} ) ?>
 	<? echo ( 
 		if ( $$variable{ProjectType}->name() eq 'Envelopes' ) {
-        '<div class="dims_and_other">',
-			return include('/includes/main/proj/templates/generic.html');
+      return join("\n", '<div class="dims_and_other">',
+			include('/includes/main/proj/templates/generic.html'),
+);
 		} elsif ( $$variable{ProjectType}->name() eq 'Custom' ) {
-        '<div class="dims_and_other">',
-			return include('/includes/main/proj/dimensions_boxes_only.html');
+      return join("\n", '<div class="dims_and_other">',
+        include('/includes/main/proj/dimensions_boxes_only.html'),
+        );
 		} elsif ( $$variable{ProjectType}->name() eq 'Cards' ) {
 			return join("\n",
 				include('/includes/main/proj/templates/project_template_select.html'),

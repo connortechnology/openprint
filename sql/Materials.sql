@@ -13,3 +13,4 @@ CREATE TABLE materials (
 );
  
 CREATE INDEX materials_name_idx ON materials (name);
+create index materials_servicetype_id_idx on Materials(servicetype_id);
