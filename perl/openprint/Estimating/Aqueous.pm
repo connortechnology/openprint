@@ -757,7 +757,7 @@ sub signature_calc {
 	if ( defined $bestPrice{Total} ) {
 		$bestPrice{Status} = 'calculated';
 	} # end if
-	$bestPrice{breakdown} = breakdown(\%bestPrice);
+	$bestPrice{breakdown} = %bestPrice ? breakdown(\%bestPrice) : '';
 
 	return %bestPrice;
 } # end sub signature_calc
