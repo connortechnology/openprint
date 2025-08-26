@@ -1596,7 +1596,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			$$project{dutch} = 0;
 		} elsif ( $_ = $Press->Specification('Dutch') and $$_{value} eq 'N' ) {
 			$$project{dutch} = 0;
-		} elsif ($$specs{txtSignatureType} or $$project{HasDieCutting} or $$project{HasPerforating} or $$project{HasScoring}) {
+		} elsif ($$specs{txtSignatureType}) {
 			$$project{dutch} = 0;
 		} # end if
 		$$project{PerfectingDutchByDefault} = $Press->specification('PerfectingDutchByDefault');
