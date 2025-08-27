@@ -144,6 +144,11 @@ sub undelete {
 sub destroy {
 	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
+  my @quote_ids = sql::execute( undef, undef, q{SELECT quote_id FROM tbl_Quote_Details WHERE project_id=?}, $$self{id} );
+  if (@quote_ids) {
+    $log->error("Can't destroy a quoted project, destroy the quote first");
+    return;
+  }
 	foreach my $Product ( openprint::OrderedProduct->find( project_id=>$$self{id} ) ) {
 		$Product->save({project_id=>undef});
 	} # end foreach Product
@@ -162,10 +167,6 @@ sub destroy {
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM paper_allocations WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_files WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Order_Contents WHERE lngprojectindex=?}, $$self{id} );
-	foreach my $quote_id ( sql::execute( undef, undef, q{SELECT quote_id FROM tbl_Quote_Details WHERE project_id=?}, $$self{id} ) ) {
-		my $Quote = new openprint::Quote( $quote_id );
-		$Quote->add_log('Deleted Project ' . $$self{id} );
-	} # end foreach
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM PressActivities WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM productionfeedback WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM signaturecapture WHERE project_id=?}, $$self{id} );
