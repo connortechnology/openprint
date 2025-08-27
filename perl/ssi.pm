@@ -617,8 +617,7 @@ sub button {
     ";
     delete $$options{onclick};
   } # end if
-
-	return $html;
+  return $html;
 } # end sub button
 
 sub writeButton {
