@@ -271,6 +271,14 @@ sub Paper {
 	return $_[0]{Paper};
 } # end sub Paper
 
+sub load_from_specs {
+  #my ( $specs, $qty_index, $Project ) = @_;
+
+  my $i = new openprint::Imposition();
+  $i->load(@_);
+  return $i;
+}
+
 # Passing in the Project helps us load the Paper by recommendation
 sub load {
 	my ( $self, $specs, $qty_index, $Project ) = @_;
