@@ -101,6 +101,9 @@ function Fold_onchange( element, signature, qty_index, index ) {
             'chkOverrideEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index,
             $$variable{'chkOverrideEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index},
             '', 'calc(\'f1\')');
+					} else {
+            $html .= '&nbsp;';
+          }
 
 					$html .= '</span>';
 				} # end foreach qty_index
@@ -136,7 +139,8 @@ function Fold_onchange( element, signature, qty_index, index ) {
 							$html .= variable_substitution( \$fragment, $variable );
 						} # end foreach
 						$html .= '</table>';
-					} else { $html .= '&nbsp;';
+					} else {
+            $html .= '&nbsp;';
 					} # end if imposition
 
 					$html .= '</div>';
