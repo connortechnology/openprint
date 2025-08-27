@@ -23,6 +23,12 @@
 	function load_quotes( ) {
 		LoadContent('QuoteList', '/main/quote/_history.html', $j('#f1').serialize() );
 	} // end function load_quotes
+
+  function delete_quotes() {
+      const f2 = document.getElementById('f2');
+      f2.btnFunction.value='Delete';
+      delete_confirm(f2);
+    }
 </script>	 
 <?include('/includes/error_reporting.html')?>
 <div class="Quote"><div class="History">
@@ -128,7 +134,7 @@
 				<? echo ( join( "\n",
 					button( 'ShowResults', { onclick=>q`f1.btnFunction.value='';f1.submit();`, text=>'Show Results' } ),
 					button( 'DownloadCSV', { onclick=>q`f1.btnFunction.value='Download in CSV format';f1.submit();`, text=>'Download in CSV Format' } ),
-					button( 'Delete', { onclick=>q`f2.btnFunction.value='Delete';f2.submit();`, text=>'Delete' } ),
+					button( 'TopDelete', { on_click=>'delete_quotes', text=>'Delete' } ),
 					button( 'Add', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New' } ),
 					button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 				); ) ?>
