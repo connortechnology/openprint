@@ -12,6 +12,7 @@ CREATE TABLE Material_Specifications (
 	units			TEXT,
 	name			TEXT,
 	value			TEXT,
+  interpolate boolean not null default false,
 	PRIMARY KEY (id)
 );
 
