@@ -390,8 +390,8 @@ sub get_li {
 			} # end if
 		} # end if
 		if ( $Equipment->smartscheduling() or $$self{locked} ) {
-			$html .= sprintf( q`<span class="StartTime" onclick="job_popup('%1$d');">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{id},
-        ($self->starttime() ? $self->starttime_dt()->strftime('%H:%M') :''),
+			$html .= sprintf( q`<span class="StartTime" onclick="job_popup('%1$d');">Start: %2$s <img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{id},
+        ($self->starttime() ? $self->starttime_dt()->strftime('%H:%M') : ''),
 					$$self{locked} ? 'locked' : 'unlocked',
 					);
 		} # end if
@@ -720,7 +720,7 @@ sub stop {
 	my $new_runtime = $self->runtime_seconds() - ( time - $self->starttime_seconds() );
 	$new_runtime = 300 if $new_runtime < 0; # default to 5minutes
 $log->debug("Stopping job: new runtime: $new_runtime starttime $$self{starttime} seconds: " . $self->starttime_seconds() . " now: " . time . " elapsed: " . ( time - $self->starttime_seconds() ) );
-	my $e = $self->save({runtime_seconds=>$new_runtime,locked=>0});
+	my $e = $self->save({runtime_seconds=>$new_runtime, locked=>0});
 	if ( ! $e ) {
 		if ( $$self{project_id} ) {
 			foreach my $sig_id ( @{$$self{service_id}} ) {
