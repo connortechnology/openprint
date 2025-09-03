@@ -391,15 +391,16 @@ sub get_li {
 		} # end if
 		if ( $Equipment->smartscheduling() or $$self{locked} ) {
 			$html .= sprintf( q`<span class="StartTime" onclick="job_popup('%1$d');">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{id},
-        $self->starttime_dt()->strftime('%H:%M'),
+        ($self->starttime() ? $self->starttime_dt()->strftime('%H:%M') :''),
 					$$self{locked} ? 'locked' : 'unlocked',
 					);
 		} # end if
 
 		$html .= sprintf( q`<span class="RunTime" onclick="job_popup('%1$d');">Total Hr: %2$.2d:%3$.2d</span>`, $$self{id}, split(':',$self->runtime()) );
-			if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
-				$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
-			} # end if
+
+    if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
+      $html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
+    } # end if
 
 		if ( $$self{project_id} ) {
 			$html .= '<span class="Services">';
