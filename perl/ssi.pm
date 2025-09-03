@@ -736,7 +736,7 @@ sub date_select {
 	$class .= 'C' if $$options{with_clear};
 	$class .= 'T' if $$options{with_today};
 
-	my $html = '<span class="'.$class.'" id="'.$prefix.'_date">
+	my $html = '<div class="'.$class.'" id="'.$prefix.'_date">
 ';
 	foreach my $o ( split(',', $$options{order}) ) {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
@@ -778,7 +778,7 @@ sub date_select {
 				} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>
-</span>';
+</div>';
 	return $html;
 } # end sub date_select
 
