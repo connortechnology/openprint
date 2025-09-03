@@ -244,7 +244,7 @@ sub ul_id {
 sub get_from_ul_id {
 	my ( $id ) = @_;
 
-	$id =~ /^ul(\d*)-(\d\d\d\d-\d\d-\d\d)?-?(\w*)?$/;
+	$id =~ /^ul(\d*)\-(\d\d\d\d\-\d\d\-\d\d)?\-?(.*)?$/;
 	my ( $equipment_id, $date, $shift_name ) = ( $1, $2, $3 );
 
 	my $Shift;
