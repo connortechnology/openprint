@@ -2274,9 +2274,12 @@ sub _equipment_message {
 	if ( $param{action} eq 'Save' ) {
 		if ( $param{message} ) {
 			$Equipment->save({
-				message=>$param{message}. ' ...'.(
-					new openprint::User($session{user_id})->firstname()
-					)});
+				message=>$param{message}
+        #. ' ...'.(
+				
+        #  new openprint::User($session{user_id})->firstname()
+        #)
+        });
 		} else {
 			$Equipment->save({message=>''});
 		} # end if
