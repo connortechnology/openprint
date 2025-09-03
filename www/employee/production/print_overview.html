@@ -393,7 +393,8 @@ $log->debug("LastShift $$LastShift{endtime} < $et");
 				$LastShift = $NewShift;
 			} # end while
 			foreach my $Shift ( @Shifts ) {	
-				push @{$$variable{drops}}, $Shift->ul_id() if ($Shift->operator_ids() and @{$Shift->operator_ids()}) or ! $E->smartscheduling();
+				push @{$$variable{drops}}, $Shift->ul_id();
+        #if ($Shift->operator_ids() and @{$Shift->operator_ids()}) or ! $E->smartscheduling();
 				$html .= $Shift->get_ul( );
 			} # end foreach Shift
 
