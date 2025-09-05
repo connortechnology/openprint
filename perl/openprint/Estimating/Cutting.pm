@@ -479,7 +479,7 @@ sub signature_calc {
     Status		=>	'calculated',
     Breakdown	=>	'<b>Post press:</b><br/>',
     Price => 0,
-    FoldingPrice => 0,
+    FoldingPrice => undef,
   );
   if ( !$$Paper{cuttable} ) {
     $results{alert} = $Paper->to_string() . ': Stock is not cuttable.';
@@ -503,12 +503,12 @@ sub signature_calc {
 
   my $form = $$sig_specs{SignatureIndex};
 
+  $$specs{"OverrideFoldingEquipment-$form-$qty_index"} //= '';
+  $$specs{"chkOverrideEquipment-$form-$qty_index"} //= '';
+  $$specs{"OverrideFoldingCuts-$form-$qty_index"} //= '';
+
   my @my_equipment;
-  if (
-			(defined $$specs{"chkOverrideEquipment-$form-$qty_index"})
-			and
-			($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y')
-		 ) {
+  if ($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y') {
     @my_equipment = ( new openprint::Equipment($$specs{"ddmEquipment-$form-$qty_index"}) );
   } else {
     load_equipment($Project) if ! @equipment;
@@ -572,7 +572,7 @@ sub signature_calc {
     my $diecutting_specs = openprint::service::get_specs_ref($Project, $$services{DieCutting}[0]);
     my @diecutting_impositions = openprint::Estimating::DieCutting::load_Impositions( $Imposition, $diecutting_specs, $form, $qty_index);
     my $diecutting_cuts = 0;
-    if ( (defined $$specs{"OverrideFoldingCuts-$form-$qty_index"}) and ($$specs{"OverrideFoldingCuts-$form-$qty_index"} eq 'Y')) {
+    if ($$specs{"OverrideFoldingCuts-$form-$qty_index"} eq 'Y') {
       $diecutting_cuts = $$specs{"FoldingCuts-$form-$qty_index"};
     } elsif (@diecutting_impositions) {
       $diecutting_cuts += @diecutting_impositions - 1;
@@ -749,7 +749,7 @@ sub signature_calc {
            ) {
           $trim_before_folding = 1;
         } else {
-          my $folder_type = $Folder->specification('Type') || '';
+          my $folder_type = $Folder->specification('Type') // '';
           if ( (@folding_impositions > 1) or ($folding_impositions[0]{quantity} > 1) ) {
             $openprint::log->debug('Folds: '.@folding_impositions) if DEBUG;
             # If we are stitching, final trim is done on stitcher, otherwise we might final trim before folding	
@@ -887,7 +887,7 @@ $openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
             $openprint::log->debug('No PileHandling');
           } # end PileHandling
 
-          $results{Breakdown} .= sprintf( 'Pre-folding cutting total: $%.2f<br/>', $price{Total});
+          $results{Breakdown} .= sprintf( 'Pre-folding cutting on %s total: $%.2f<br/>', $$Equipment{name}, $price{Total});
 
           if ( ( ! defined $results{FoldingPrice} ) or ( $price{Total} < $results{FoldingPrice} ) ) {
             $results{overs} += $price{overs};
@@ -933,7 +933,7 @@ $openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
         $results{Breakdown} .= "Unknown folding equipment for form $form qty $qty_index<br/>";
         next;
       } elsif( $$folding_specs{"ddmEquipment-$form-$qty_index"} ne $$Equipment{id} ) {
-        $results{Breakdown} .= 'Not folding on ' . $$Equipment{strid}. ' Folder is ' . ( $Folder ? $$Folder{strid} : '' ). '<br/>';
+        $results{Breakdown} .= 'Not folding on ' . $$Equipment{strid}. ' Folder is ' . ( $Folder ? $$Folder{strid} : '' ). '<br/>'; # if $$specs{"OverrideFoldingEquipment-$form-$qty_index"} eq 'Y';
         next;
       } # end if
     } elsif ( ( $cutting_capable eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) ) {
@@ -1525,7 +1525,7 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= $results{Breakdown};
 				$$specs{"txtRegularCutPrice-$form-$qty_index"} = sprintf('%.2f', Math::Round::nearest(0.01, $results{Price}));
 
-				$$specs{"FoldingCutPrice-$form-$qty_index"} = sprintf('%.2f', Math::Round::nearest(0.01, $results{FoldingPrice}));
+				$$specs{"FoldingCutPrice-$form-$qty_index"} = sprintf('%.2f', Math::Round::nearest(0.01, $results{FoldingPrice} // 0));
 				$$specs{"FoldingEquipment-$form-$qty_index"} = $results{FoldingEquipment} ? $results{FoldingEquipment}{id} : '';
 				$$specs{"FoldingCuts-$form-$qty_index"} = $results{FoldingCuts};
 
