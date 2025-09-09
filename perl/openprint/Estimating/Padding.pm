@@ -186,15 +186,19 @@ sub calc {
       push @dimensions, $1;
     }
   }
-  $$specs{dimensions_override} //= '';
-  if ($$specs{dimensions_override} ne 'Y') {
-    #$$specs{dimensions} = join('x', @$printing_specs{qw(txtFinalWidth txtFinalHeight)});
+  if (@dimensions) {
+    $$specs{dimensions_override} //= '';
+    if ($$specs{dimensions_override} ne 'Y') {
+      #$$specs{dimensions} = join('x', @$printing_specs{qw(txtFinalWidth txtFinalHeight)});
+    }
+    if (!sets::isin($$specs{dimensions}, \@dimensions)) {
+      $$specs{alert} .= 'Please select the pad dimensions.<br/>';
+      return $$specs{Status} = 'uncalculated';
+    }
+    @$specs{qw(width height)} = split('x', $$specs{dimensions});
+  } else {
+    @$specs{qw(width height)} = @$printing_specs{qw(txtFinalWidth txtFinalHeight)};
   }
-  if (@dimensions and !sets::isin($$specs{dimensions}, \@dimensions)) {
-    $$specs{alert} .= 'Please select the pad dimensions.<br/>';
-		return $$specs{Status} = 'uncalculated';
-  }
-  @$specs{qw(width height)} = split('x', $$specs{dimensions});
 
 	my @Materials = openprint::Material->find(category=>'Padding Glue');
 	if ( $$specs{override_glue_id} eq 'Y' ) {
@@ -395,17 +399,18 @@ sub calc {
 } # end sub calc
 
 sub summary {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
-    my $text = '';
-    if ( $qty_index ) {
-		return '';		
-	} # end if
-	$text .= $$specs{PageQuantity} . ' pages per pad';
-	my $Material = new openprint::Material( $$specs{glue_id} );
-	$text .= ' using ' . $Material->description();
-	if ( $$specs{Backing} ne 'None' ) {
-		$text .= ' +' . $$specs{Backing};
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+  my $text = '';
+  if ( $qty_index ) {
+    return '';		
+  } # end if
+  $text .= $$specs{dimensions} .' ' if $$specs{dimensions};
+  $text .= $$specs{PageQuantity} . ' pages per pad';
+  my $material = openprint::Material->find_one(id=>$$specs{glue_id}) if $$specs{glue_id};
+  $text .= ' using ' . $material->description() if $material;;
+  if ( $$specs{Backing} ne 'None' ) {
+    $text .= ' +' . $$specs{Backing};
 	} else {
 		$text .= ' no backing';
 	} # end if
