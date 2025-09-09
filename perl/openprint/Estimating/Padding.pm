@@ -188,7 +188,7 @@ sub calc {
   }
   $$specs{dimensions_override} //= '';
   if ($$specs{dimensions_override} ne 'Y') {
-    $$specs{dimensions} = join('x', @$printing_specs{qw(txtFinalWidth txtFinalHeight)});
+    #$$specs{dimensions} = join('x', @$printing_specs{qw(txtFinalWidth txtFinalHeight)});
   }
   if (@dimensions and !sets::isin($$specs{dimensions}, \@dimensions)) {
     $$specs{alert} .= 'Please select the pad dimensions.<br/>';
