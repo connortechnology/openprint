@@ -21,8 +21,8 @@
         if (@dimensions) {
           return join("\n",
           '<li><label>Pad Dimensions</label>',
-            ssi::select(\@dimensions, $$variable{dimensions}, {name=>'dimensions', onchange=>'calc(this.form.name)'}),
-            write_override('dimensions_override', $$variable{dimensions_override}, '', 'calc(\'f1\');'),
+            ssi::select(\@dimensions, $$variable{dimensions}, {name=>'dimensions', onchange=>'calc(this.form.name)', prepend=>[''=>'select']}),
+            #write_override('dimensions_override', $$variable{dimensions_override}, '', 'calc(\'f1\');'),
           '</li>',
             );
         }
