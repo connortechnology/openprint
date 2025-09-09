@@ -161,6 +161,22 @@ sub calc {
 		} # end if
 	} # end if
 
+  my $calliper = 0;
+  my @signatures = $Project->signatures();
+# Single page item, if there are multiple signatures, it is due to multiple versions
+  my $signature_service_index = $signatures[0];
+  my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+  if ( $$sig_specs{txtSpecificStockCalliper} ) {
+    $calliper = $$sig_specs{txtSpecificStockCalliper};
+  } else {
+    my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
+    $calliper = $Paper->calliper();
+  } # end if
+  $calliper *= $$specs{PageQuantity} * $calliper;
+  if (!($$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight})) {
+    @$printing_specs{qw(txtFinalWidth txtFinalHeight)} = @$sig_specs{qw(txtFinalWidth txtFinalHeight)};
+  }
+
 	my @Materials = openprint::Material->find(category=>'Padding Glue');
 	if ( $$specs{override_glue_id} eq 'Y' ) {
 	} else {
@@ -177,28 +193,16 @@ sub calc {
 	} # end if
 
 	my $ProjectType = $Project->Type();
-	my $Service = openprint::Service->find_one(name=>'Padding'.$ProjectType->name());
-	$Service = openprint::Service->find_one(name=>'Padding') if ! $Service;
+	my $Service = openprint::Service->find_one(name=>'Padding'.$ProjectType->name()) ||
+    openprint::Service->find_one(name=>'Padding'.join('x', @$printing_specs{qw(txtFinalWidth txtFinalHeight)})) ||
+    openprint::Service->find_one(name=>'Padding');
 	my $Material = openprint::Material->find_one( name=>'CardboardBacking') if $$specs{Backing} eq 'Cardboard';
-
 
   my $minimumCharge;
 	if ( ! ( $minimumCharge = openprint::service::get_price( 'Padding'.$ProjectType->name().'ChargeMinimum' ) ) ) {
 		$minimumCharge = openprint::service::get_price( 'PaddingChargeMinimum' );
 	} # end if
 
-  my $calliper = 0;
-  my @signatures = $Project->signatures();
-# Single page item, if there are multiple signatures, it is due to multiple versions
-  my $signature_service_index = $signatures[0];
-  my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-  if ( $$sig_specs{txtSpecificStockCalliper} ) {
-    $calliper = $$sig_specs{txtSpecificStockCalliper};
-  } else {
-    my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
-    $calliper = $Paper->calliper();
-  } # end if
-  $calliper *= $$specs{PageQuantity} * $calliper;
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtPrice'.$qty_index} = '' if (!$$specs{'OverridePrice'.$qty_index}) or ($$specs{'OverridePrice'.$qty_index} ne 'Y');
@@ -276,10 +280,12 @@ sub calc {
         next;
       } elsif ( sets::isin( $ServicePrice{units}, [ 'per pad', 'each' ] ) ) {
         $ServicePrice{Total} = $ServicePrice{Price} * $qty;
-        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
+        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %1$s $%2$.2f%3$s * %5$d = $%4$.2f<br/>',
+          @ServicePrice{'ServiceName','Price','units','Total'}, $qty );
       } elsif ( $ServicePrice{units} eq 'per m' ) {
         $ServicePrice{Total} = $ServicePrice{Price} * $qty / 1000;
-        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
+        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %1$s $%2$.2f%3$s * %5$d = $%4$.2f<br/>',
+          @ServicePrice{'Price','units','Total'}, $qty );
       } else {
         $$specs{'hdnBreakdown'.$qty_index} .= 'Unknown units for padding service.<br/>';
       } # end if
@@ -350,10 +356,8 @@ sub calc {
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $best_price/$base_qty );
 
 		if ( (!$$specs{"OverridePrice$qty_index"}) or ($$specs{"OverridePrice$qty_index"} ne 'Y')) {
-$openprint::log->error("Not overriding");
 			$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $best_price);
 		} else {
-$openprint::log->error("overriding to ".$$specs{"txtPrice$qty_index"});
 			$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"});
 		} # end if
 	} # end foreach
