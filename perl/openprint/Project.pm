@@ -1999,23 +1999,24 @@ sub can_edit {
 		$openprint::log->debug("can_view 1 cuz no id") if $debug;
 		return 1;
 	}
-
-  if ( $_[0]{user_id} == $openprint::session{user_id} ) {
-		$openprint::log->debug("can_view 1 cuz i am the creator") if $debug;
-		return 1;
-	}
-  #if ( $openprint::session{company_id} == $_[0]{company_id} ) {
-  #$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
-  #return 1;
-  #}
-	if ( $openprint::session{user_type} eq 'A' ) {
-		$openprint::log->debug("can_edit 1 cuz admin") if $debug;
-		return 1 
-	}
-	if ( sets::isin( $_[0]{user_id}, [ $openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
-		$log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
-		return 1;
-	} # end if
+  if ($openprint::session{user_id}) {
+    if ($_[0]{user_id} == $openprint::session{user_id}) {
+      $openprint::log->debug("can_view 1 cuz i am the creator") if $debug;
+      return 1;
+    }
+    #if ( $openprint::session{company_id} == $_[0]{company_id} ) {
+    #$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
+    #return 1;
+    #}
+    if ($openprint::session{user_type} eq 'A') {
+      $openprint::log->debug("can_edit 1 cuz admin") if $debug;
+      return 1 
+    }
+    if ( sets::isin( $_[0]{user_id}, [ $openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
+      $log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
+      return 1;
+    } # end if
+	} # end if user_id
   
   return 0;
 } # end sub can_edit
