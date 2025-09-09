@@ -179,9 +179,7 @@ sub view {
 
 	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_id( $$Project{id} ) *** $session{company_id}");
 
-	# FIXME SHOULD USE can_edit
-	if ( ( $Project->company_id() == $session{company_id} ) or sets::isin( $session{user_type}, ['E','A'] ) ) {
-
+	if ($Project->can_edit()) {
 		if ( defined $param{btnFunction} ) {
 			if ( $param{btnFunction} eq 'Export JDF' ) {
 				misc::export( $r, $log, \%variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf()->toString()] );
