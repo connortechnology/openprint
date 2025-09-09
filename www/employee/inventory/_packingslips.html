@@ -34,17 +34,17 @@
 			my $rowclass;
 
 			foreach my $Label ( @{$$variable{Labels}} ) {
-				$html .= sprintf( q`<tr%1$s>
+				$html .= sprintf( q`<tr class="%1$s">
 					<td class="checkbox"><input type="checkbox" name="packingslips" value="%2$d"/></td>
 				<td class="Docket"><a href="/employee/production/labels/label.html?id=%2$d">%3$s</a></td>
 				<td class="Company"><a href="/employee/production/labels/label.html?id=%2$d">%4$s</a></td>
 				<td class="Reference"><a href="/employee/production/labels/label.html?id=%2$d">%5$s</a></td>
 				<td class="Type"><a href="/employee/production/labels/label.html?id=%2$d">%6$s</a></td>
 				<td class="DateTime"><a href="/employee/production/labels/label.html?id=%2$d">%7$s</a></td>
-				</tr>`, $rowclass, $$Label{id}, $Label->docket(), $Label->Project()->Company()->name(),  $Label->reference(), $Label->Type()->name(), 
+        </tr>`, $rowclass.($Label->deleted()?' deleted':''), $$Label{id}, $Label->docket(), $Label->Project()->Company()->name(),  $Label->reference(), $Label->Type()->name(), 
 				format_datetime( $Label->created_on() ),
  );
-				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$rowclass = $rowclass ? '' : 'colRow';
 			} # end foreach Label
 			return $html;
 		) ?>
@@ -56,7 +56,7 @@
     </tfoot>
 	</table>
 	<input type="hidden" name="btnFunction"/>
-  <script> TableKit.reloadTable('ResultsTable'); </script>
+  <script> if (window.TableKit) TableKit.reloadTable('ResultsTable'); </script>
   <p class="buttons">
     <? echo (
       my $uri = '/employee/inventory/packingslips.html';
