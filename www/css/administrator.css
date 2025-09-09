@@ -26,10 +26,7 @@ th.Range,
 select.equipment, select.service {
 width: auto;
 }
-.Mode {
-/*
-, .Period {
-*/
+.Mode, .Period {
 	display: none;
 }
 	
@@ -44,33 +41,10 @@ max-width: 100%;
 .Name {
   text-align: left;
 }
-th.Units,
-.Units {
-	width: 160px;
-	text-align: center;
-}
-th.Cost,
-.Cost {
-	width: 90px;
-	text-align: center;
-}
-th.Markup,
-.Markup {
-	width: 80px;
-	text-align: center;
-}
-th.Price,
-.Price {
-	width: 90px;
-	text-align: center;
-}
 th.Discount,
 .Discount {
 	width: 150px;
 	text-align: center;
-}
-.Price input, .Cost input, .Markup input {
-	text-align: right;
 }
 table .interpolate {
   text-align:center;
@@ -90,6 +64,33 @@ fieldset.Fold p input {
   max-width: 100%;
 }
 
+table .PeriodStart, table .PeriodEnd, table .Period {
+	width: 255px;
+	text-align: left;
+}
+table .Range {
+	width: 185px;
+}
+table .Range_Units {
+	width: 200px;
+}
+
+table .Units {
+	text-align: center;
+	width: 200px;
+}
+table .Cost,
+table .Price,
+table .Markup {
+	width: 100px;
+	text-align: center;
+}
+.Price input,
+.Cost input,
+.Markup input {
+	text-align: right;
+}
+#ServicePrices table .buttons ,
 #Prices table .buttons {
 	width: 80px;
 }
