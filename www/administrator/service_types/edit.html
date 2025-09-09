@@ -75,9 +75,8 @@ VariableData
 			<input type="url" name="url" value="<? echo ( $$variable{ServiceType}->url() ) ?>" /> 
 		</li>
 <? endif ( $openprint::User->email() =~ /iconnor/ ) ?>
- </ul>
->     <ul class="column">
-
+      </ul>
+      <ul class="column">
         <li>
           <label>Visible in Project Create</label>
           <? echo ( radio( 'create_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->create_visible() ); ) ?>
@@ -109,7 +108,7 @@ VariableData
 		</div>
 	</fieldset>
 <fieldset><legend>Service Prices</legend>
-  <div class="ServicePrices">
+  <div id="ServicePrices">
 		<?include('_service_prices.html')?>
   </div>
 </fieldset>
