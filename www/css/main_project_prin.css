@@ -53,13 +53,14 @@ flex: 1;
 }
 
 .BleedsColourBarsStockOverrides {
-display: flex;
-align-items: stretch;
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
 }
 
 .SignatureGroup .leftColumn ,
 .SignatureGroup .rightColumn {
-width: 50%;
+  width: 50%;
 	float: left;
 }
 .BleedsColourBars ,
@@ -129,6 +130,9 @@ width: 49%;
 	float: left;
 	width: 104px;
 }
+.SpecialColour select {
+  width: auto; /* Override bootstrap which sets it to 220px; */
+}
 
 .imposition input[name="txtLayoutWidth1"] ,
 .imposition input[name="txtLayoutWidth2"] ,
@@ -159,9 +163,9 @@ width: 49%;
 }
 .calliper input[type="text"],
 .calliper input[type="number"] {
-    width: 45px;
+    width: 50px;
 }
 .basis_weight input[type="text"],
 .basis_weight input[type="number"] {
-    width: 35px;
+    width: 40px;
 }

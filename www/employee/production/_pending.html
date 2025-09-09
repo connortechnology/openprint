@@ -2,7 +2,7 @@
 	my $html;
 	@{$$variable{pending_drops}} = ();
 	if ( $session{$$variable{referer}.'?pending'} ) {
-		$html .= q`<h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $('f1'));">Pending (click to hide):</h3>`;
+		$html .= q`<h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $j('#f1').serialize());">Pending (click to hide):</h3>`;
 		my $Shift = new openprint::Shift();
 		$Shift->name('Pending');
 
@@ -19,7 +19,7 @@
 
 		sql::end_transaction($dbh, $ac);
 	} else {
-	$html .= q`<h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $('f1'));">Pending (click to show):</h3>`;
+	$html .= q`<h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $j('#f1').serialize());">Pending (click to show):</h3>`;
 	} # end if 
 	return $html;
 ) ?>

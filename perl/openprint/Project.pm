@@ -144,6 +144,11 @@ sub undelete {
 sub destroy {
 	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
+  my @quote_ids = sql::execute( undef, undef, q{SELECT quote_id FROM tbl_Quote_Details WHERE project_id=?}, $$self{id} );
+  if (@quote_ids) {
+    $log->error("Can't destroy a quoted project, destroy the quote first");
+    return;
+  }
 	foreach my $Product ( openprint::OrderedProduct->find( project_id=>$$self{id} ) ) {
 		$Product->save({project_id=>undef});
 	} # end foreach Product
@@ -154,6 +159,7 @@ sub destroy {
 		$B->destroy();
 	} # end foreach bug
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=?}, $$self{id} );
+	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM project_service_operators WHERE service_id IN (SELECT lngServiceIndex from tbl_Project_Contents WHERE lngProjectIndex=?)}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_Log WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Barcode_Log WHERE project_id=?}, $$self{id} );
@@ -161,10 +167,6 @@ sub destroy {
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM paper_allocations WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_files WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Order_Contents WHERE lngprojectindex=?}, $$self{id} );
-	foreach my $quote_id ( sql::execute( undef, undef, q{SELECT quote_id FROM tbl_Quote_Details WHERE project_id=?}, $$self{id} ) ) {
-		my $Quote = new openprint::Quote( $quote_id );
-		$Quote->add_log('Deleted Project ' . $$self{id} );
-	} # end foreach
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM PressActivities WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM productionfeedback WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM signaturecapture WHERE project_id=?}, $$self{id} );
@@ -2167,6 +2169,20 @@ sub equipment {
     $equipment{$$sig_specs{'ddmPress'.$self->ordered_quantity_index()}} = 1;
 	}
   return join(', ', keys %equipment);
+}
+
+# Returns the given project's 'Print' service.
+sub get_print_container {
+  my $self = shift;
+
+  my @sid = $self->has_service('Book')
+  || $self->has_service('Item')
+  || $self->has_service('InventoryCheckOut')
+  || $self->has_service('Printing')
+  || $self->has_service('')
+  ;
+
+  return $sid[0];
 }
 
 1;

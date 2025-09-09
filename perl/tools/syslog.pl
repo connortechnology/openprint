@@ -88,7 +88,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for (illegal user root|[\._a-zA-Z0-9\-]+) from (?<IP>[:\._a-zA-Z0-9\-:]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (error: )?PAM: [[:digit:]]+ more authentication failures?; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[:\._a-zA-Z0-9\-:]+)(\s+user=\w+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting: Too many authentication failures for (invalid user )?[^[:space:]]* from (?<IP>[.:[:xdigit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (Connection (closed|reset) by|Disconnected from) ((authenticating|invalid) user [.@ [:alnum:]]+? )?(?<IP>[.:[:xdigit:]]+)( port [[:digit:]]+)?( \[preauth\])?$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (Connection (closed|reset) by|Disconnected from) ((authenticating|invalid) user [.@[:alnum:]]* )?(?<IP>[.:[:xdigit:]]+)( port [[:digit:]]+)?( \[preauth\])?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting ((authenticating|invalid) )? user [[:alnum:]]* (?<IP>[.:[:xdigit:]]+) port [[:digit:]]+: Change of username or service not allowed:',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: maximum authentication attempts exceeded for (invalid user )?[[:alnum:]]+ from (?<IP>[.:[:xdigit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \S* from (?<IP>[.:[:xdigit:]]+)',
@@ -280,8 +280,10 @@ while(1) {
 				if ( ! $host_counts{$ip} ) {
 					$log->debug("$ip not in host_counts, adding it");
 					my $Host;
+          # Lookup by equals first because subnet inclusion doesn't use indexes
+					my $HI = openprint::Host_Interface->find_one(ip=>$ip);
           # May return a subnet
-					my $HI = openprint::Host_Interface->find_one('ip >>='=>$ip);
+					$HI = openprint::Host_Interface->find_one('ip >>='=>$ip) if !$HI;
 					if ( !$HI ) {
 						$HI = new openprint::Host_Interface();
 						$Host = new openprint::Host();

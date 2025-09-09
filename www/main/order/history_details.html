@@ -154,7 +154,7 @@ function confirm_cancel(form) {
 		<div class="Disclaimer">
     <? echo (
 		my $html = $config{OrderViewDisclaimer};
-		if ( $html ) {
+    if ($html and $config{require_terms}) {
 			$html .= '<div class="AcceptTerms">';
 			if ( $$variable{Order}->terms_accepted() ) {
 				$html .= '<br/>Terms have been accepted.';

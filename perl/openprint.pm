@@ -3,7 +3,7 @@ use warnings;
 package openprint;
 use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser $Host);
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 sub session_init {
 	require Apache2::Cookie;
@@ -19,6 +19,9 @@ sub session_init {
 		$openprint::config{Timezone} = 'America/Toronto';
 	} # end if
 	$TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+  if ($dbh) {
+    $dbh->do('SET timezone = ?', {}, $openprint::config{Timezone}) or die $dbh->errstr();
+  }
 
 	my $cookies;
 	my $cookie;
@@ -39,7 +42,7 @@ sub session_init {
 		if ( $dbh ) {
 			# If we have no cookie, then... shouldn't try to load it...
 			if ( (!$cookie) or (! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }`) ) {
-				$log->error("Error fetching Session: $cookie: $@") if $@;
+				$log->debug("Error fetching Session: $cookie: $@") if $@;
 				if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 };` ) {
 					$log->error('Error creating Session'. $@);
 				} # end if

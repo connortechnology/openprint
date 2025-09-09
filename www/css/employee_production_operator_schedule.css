@@ -1,3 +1,8 @@
+
+table {
+  table-layout: fixed;
+}
+
 .Popup {
 	position:absolute;
 	visibility: hidden;
@@ -52,7 +57,6 @@
 	font-size:medium;
 	font-weight:bold;
 	vertical-align: top;
-	float: left;
 	box-sizing: border-box;
 }
 .PressColumn ul {

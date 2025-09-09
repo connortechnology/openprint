@@ -271,6 +271,14 @@ sub Paper {
 	return $_[0]{Paper};
 } # end sub Paper
 
+sub load_from_specs {
+  #my ( $specs, $qty_index, $Project ) = @_;
+
+  my $i = new openprint::Imposition();
+  $i->load(@_);
+  return $i;
+}
+
 # Passing in the Project helps us load the Paper by recommendation
 sub load {
 	my ( $self, $specs, $qty_index, $Project ) = @_;
@@ -462,16 +470,16 @@ $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}
 		$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	} # end if
 	$self->spine_direction();
-$$self{impressions} = $$specs{"hdnImpressionQuantity$qty_index"};
-$$self{net_sheets} = $$specs{"hdnNetSheetCount$qty_index"};
-$$self{gross_sheets} = $$specs{"StockQuantity$qty_index"};
-if (!$$self{net_sheets}) {
-  $openprint::log->error("No net sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
-}
-if (!$$self{gross_sheets}) {
-  $openprint::log->error("No gross sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
-}
-$self->display('After load') if DEBUG;
+  $$self{impressions} = $$specs{"hdnImpressionQuantity$qty_index"};
+  $$self{net_sheets} = $$specs{"hdnNetSheetCount$qty_index"};
+  $$self{gross_sheets} = $$specs{"StockQuantity$qty_index"};
+  if (!$$self{net_sheets}) {
+    $openprint::log->error("No net sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
+  }
+  if (!$$self{gross_sheets}) {
+    $openprint::log->error("No gross sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
+  }
+  $self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
 
@@ -1134,33 +1142,34 @@ sub add_imposition {
             fill=>'rgb(255,255,255);');
 
         if ( $self->page_columns() > 1 ) {
-          my $page_width = $object_width / $self->page_columns();
-          my $page_height = $object_height / $self->page_rows();
+          my $page_width = $object_height / $self->page_columns();
+          my $page_height = $object_width / $self->page_rows();
           my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) ? 'red' : 'black';
 
           foreach my $page_column ( 2 .. $self->page_columns() ) {
-            my $page_x1 = $image_x + ($page_column-1)*$page_width;
-            my $page_x2 = $image_x + ($page_column-1)*$page_width;
+            my $page_x1 = $image_x;
+            my $page_x2 = $image_x + ($page_width * $self->page_columns);
 
-            my $page_y1 = $image_y;
-  # + $page_height;
-            my $page_y2 = $image_y + ($page_height * $self->page_rows());
+            my $page_y1 = $image_y + ($page_column-1)*$page_height;
+            my $page_y2 = $image_y + ($page_column-1)*$page_height;
 
   # This is the linees between pages, One of these will be the spine.
             $canvas->line(class=>'foldline', x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour);
           }
         }
 
+        # pages xy are rotated based on orientation so a 3panel fold horizontal is 1x3.
         if ( $self->page_rows() > 1 ) {
           my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Horizontal ) ? 'red' : 'black';
-          my $page_width = $object_width / $self->page_columns();
-          my $page_height = $object_height / $self->page_rows();
+          # object width has been rotated for dutch
+          my $page_width = $object_width / $self->page_rows();
+          my $page_height = $object_height / $self->page_columns();
           foreach my $page_row ( 2 .. $self->page_rows() ) {
-            my $page_x1 = $image_x;
-            my $page_x2 = $image_x + ($page_width * $self->page_columns);
+            my $page_x1 = $image_x + ($page_row-1)*$page_width;
+            my $page_x2 = $image_x + ($page_row-1)*$page_width;
 
-            my $page_y1 = $image_y + ($page_row-1)*$page_height;
-            my $page_y2 = $image_y + ($page_row-1)*$page_height;
+            my $page_y1 = $image_y;
+            my $page_y2 = $image_y + ($page_height * $self->page_columns());
             $canvas->line(class=>'foldline', x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour);
           }
         }

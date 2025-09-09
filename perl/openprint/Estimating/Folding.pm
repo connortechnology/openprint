@@ -336,6 +336,10 @@ sub signature_needs {
 		$openprint::log->debug("Folding::signature_needs: is a banner") if DEBUG_NEEDS;
 		return 0;
 	} # end if
+	if ( $Project->Type()->name() eq 'Labels' ) {
+		$openprint::log->debug("Folding::signature_needs: is a label") if DEBUG_NEEDS;
+		return 0;
+	} # end if
 
 	if ( $$specs{rdbTemplateType} ) {
 		if ( $$specs{rdbTemplateType} eq 'NoFold' ) {
@@ -734,6 +738,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	my @Set_Of_Impositions;
 	my @All_Impositions;
 	$$SignatureImposition{page_quantity} = 1;
+
 # IF it's a W&T, we have to cut in half first, so just do it.
 	if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
 		my $i = $SignatureImposition->copy();
@@ -771,7 +776,6 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					my $i = $I->copy();
 					$i->dutch_columns(0);
 					$i->dutch_rows(0);
-					#$i->quantity(1);
 					push @Impositions, $i;
 				}
 				{
@@ -780,8 +784,8 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					$i->rows( $$i{dutch_rows} );
 					$i->dutch_columns(0);
 					$i->dutch_rows(0);
-					#$i->quantity(1);
-					$i->image_orientation($$I{image_orientation} == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical);
+					$$i{image_orientation} = ($$I{image_orientation} == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical);
+					$$i{spine_direction} = ($$I{spine_direction} == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical);
 					push @Impositions, $i;
 				}
 			} else {
@@ -1332,7 +1336,7 @@ $openprint::log->debug('Has a fold, doing extra checks') if DEBUG;
 							} # end if has max_feed_width
 
 							if ( $failure_reason ) {
-								if ( $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
+								if ( (!$$specs{"chkOverrideLimits-$form-$qty_index"}) or ($$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y') ) {
 									$Fold = undef;
 								} else {
 									$$specs{alert} .= "Warning: $failure_reason<br/>";
@@ -1971,7 +1975,7 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
 			$Breakdown .= '</table><br/>';
 
 			if ( ( ! defined $bestComparison ) or ( $comparison_cost < $bestComparison ) ) {
-$openprint::log->debug("Got better price for qty $qty_index sig $form ".(defined $totalPrice ? $totalPrice : 'undef').' < '.(defined($bestPrice) ? $bestPrice : 'undef')." comparison $comparison_cost < ".(defined($bestComparison) ? $bestComparison : undef).' '.$Equipment->name() ) if DEBUG;
+        $openprint::log->debug("Got better price for qty $qty_index sig $form ".(defined $totalPrice ? $totalPrice : 'undef').' < '.(defined($bestPrice) ? $bestPrice : 'undef')." comparison $comparison_cost < ".(defined($bestComparison) ? $bestComparison : 'undef').' '.$Equipment->name() ) if DEBUG;
 				$bestM = $mprice;
 				$bestComparison = $comparison_cost;
 				$bestPrice = $totalPrice;
@@ -2031,10 +2035,8 @@ sub load_equipment {
   } else {
     foreach my $sig_id ($Project->signatures()) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-      $openprint::log->debug("Template type for $sig_id ".$$sig_specs{rdbTemplateType});
       if ($$sig_specs{rdbTemplateType} and sets::isin($$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','3Panel2Pocket','TriFoldDoublePocket'])) {
         push @folding_capable, 'For Pocket Folders';
-        $openprint::log->error("Have pocket folders");
         last;
       }
     } # end foreach sig
@@ -2988,7 +2990,10 @@ sub compact_impositions {
 		push @results, $Imposition;
 
 		for ( my $index = 0; $index < @_; $index += 1 ) {
-			if ( $$Imposition{imposition} == $_[$index]{imposition} and $$Imposition{spreads} == $_[$index]{spreads} ) {
+			if ( $$Imposition{imposition} == $_[$index]{imposition}
+          and $$Imposition{columns} == $_[$index]{columns}
+          and $$Imposition{image_orientation} == $_[$index]{image_orientation}
+          and $$Imposition{spreads} == $_[$index]{spreads} ) {
 				$$Imposition{quantity} += $_[$index]->quantity();
 				splice @_, $index, 1;
 				$index -= 1;

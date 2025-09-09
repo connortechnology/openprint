@@ -3,12 +3,15 @@
 	background-color: #DEDCB7;
 }
 .Service {
+  /*
 min-width: 1000px;
+*/
 }
 .Service input[type="text"],
 .Service input[type="number"] {
 	width: 75px;
 	text-align: right;
+  float: none;
 }
 .Service .Stock .Brand input,
 .Service .Stock .Finish input,
@@ -164,11 +167,6 @@ content: "";
 .Stock {
 	position: relative;
 }
-#ButtonStockList {
-	position: absolute;
-	right: 0;
-	top: 10px;
-}
 @media only screen and (min-device-width: 481px) and (max-device-width: 1024px) {
 li label {
     font-size: medium;
@@ -274,3 +272,15 @@ pattern { shape-rendering: optimizeSpeed }
 #Versions input {
   max-width: 100%;
 }
+.calliper input {
+  width: 50px;
+}
+/*
+input.calliper_pt {
+width: 35px;
+}
+input.calliper_mm,
+input.calliper {
+width: 55px;
+}
+*/

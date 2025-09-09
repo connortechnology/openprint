@@ -21,6 +21,7 @@ $serial = 'tbl_equipment_specifications_id_seq';
 	value			=>	'strvalue',
 	units			=>	'strunits',
 	interpolate		=>	'interpolate',
+  sorting   => 'sorting',
 );
 %transforms = (
 	min		=> [ 's/[^\d\.]//g' ],

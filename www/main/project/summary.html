@@ -49,6 +49,7 @@ There is no current project.
 			} # end foreach
 			openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
 			$$variable{ProjectService} = $$variable{Project}->Service( $$variable{ServiceIndex} );
+			$$variable{ServiceType} = $$variable{ProjectService}->ServiceType();
 			$$variable{ServiceSpecifications} = $$variable{ProjectService}->specs();
 		) ?>
 		

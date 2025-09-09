@@ -80,6 +80,7 @@
 	</div>
 	<table class="List">
 		<tr> 
+			<th class="checkbox"><input type="checkbox" name="quote_id" data-on-click-this="select_all_this" value="0"/></th>
 			<th class="quote_id">Quote ID</th>
 <? if ( ! $session{$$variable{uri}.'?company_id'} ) ?>
       <th class="CompanyName">Company</th>
@@ -92,7 +93,6 @@
 			<th class="Price">Total1</th>
 			<th class="Price">Total2</th>
 			<th class="Price">Total3</th>
-			<th class="checkbox"><input type="checkbox" name="quote_id" data-on-click-this="select_all_this" value="0"/></th>
 		</tr>
 <? echo (
 	my $html;
@@ -104,6 +104,7 @@
 			if ( ! $session{$$variable{uri}.'?company_id'} ) {
 				$html .= sprintf(q`
 				<tr%1$s>
+					<td class="checkbox"><input type="checkbox" name="quote_id" value="%2$d" /></td>
 					<td class="quote_id"><a href="history_details.html?quote_id=%2$d">%2$d</a></td>
 					<td class="CompanyName"%4%s><a href="history_details.html?quote_id=%2$d">%3$s</a></td>
           <td class="User CSR">%13$s</td>
@@ -114,12 +115,11 @@
 					<td class="Price"><a href="history_details.html?quote_id=%2$d">%9$s</a></td>
 					<td class="Price"><a href="history_details.html?quote_id=%2$d">%10$s</a></td>
 					<td class="Price"><a href="history_details.html?quote_id=%2$d">%11$s</a></td>
-					<td class="checkbox"><input type="checkbox" name="quote_id" value="%2$d" /></td>
 				</tr>
 				<tr%1$s>
+          <td class="checkbox"></td>
 					<td>&nbsp;</td>
 					<td colspan="9">%12$s</td>
-          <td class="checkbox"></td>
 				</tr>`, $rowclass, $Quote->id(),
 					html_escape( $Quote->Company->name() ), ($session{$$variable{uri}.'?company_id'} ? ' style="display: none"' : ''),
 					html_escape( $Quote->for_name() ),
@@ -135,6 +135,7 @@
 			} else {
 				$html .= sprintf(q`
 				<tr%1$s> 
+					<td class="checkbox"><input type="checkbox" name="quote_id" value="%2$d" /></td>
 					<td class="quote_id"><a href="history_details.html?quote_id=%2$d">%2$d</a></td>
 					<td class="User QuotedBy"><a href="history_details.html?quote_id=%2$d">%3$s</a></td>
 					<td class="User QuotedFor"><a href="history_details.html?quote_id=%2$d">%4$s</a></td>
@@ -143,12 +144,11 @@
 					<td class="Price"><a href="history_details.html?quote_id=%2$d">%7$s</a></td>
 					<td class="Price"><a href="history_details.html?quote_id=%2$d">%8$s</a></td>
 					<td class="Price"><a href="history_details.html?quote_id=%2$d">%9$s</a></td>
-					<td class="checkbox"><input type="checkbox" name="quote_id" value="%2$d" /></td>
 				</tr>
 				<tr%1$s>
+          <td class="checkbox"></td>
 					<td>&nbsp;</td>
 					<td colspan="7">%10$s</td>
-          <td class="checkbox"></td>
 				</tr>`, $rowclass, $Quote->id(), 
           html_escape( $Quote->by_name() ),
 					html_escape( $Quote->for_name() ),
@@ -163,17 +163,17 @@
 		} else {
 			$html .= sprintf(q`
 <tr%1$s>
+    <td class="checkbox"></td>
     <td class="quote_id">%2$d</td>
     <td class="QuotedFor">%3$s</td>
     <td class="User">%4$s</td>
     <td class="Date">%5$s</td>
     <td class="warning" colspan="3">You may not view this quote</td>
-    <td class="checkbox"></td>
 </tr>
 <tr%1$s>
+    <td></td>
     <td>&nbsp;</td>
     <td colspan="6">%6$s</td>
-    <td></td>
 </tr>`, $rowclass, $Quote->id(),
     html_escape( $Quote->for_name() ),
     $Quote->User()->name(),
@@ -184,9 +184,13 @@
 		} # end if can_view
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 	} # end foreach Quote
+  $html .= '
+  <tr class="totals">
+  	<td class="checkbox"><input type="checkbox" name="quote_id" data-on-click-this="select_all_this" value="0"/></td>
+    <td colspan="7">'.($total . ' quote' . ($total==1 ? '' : 's')).'</td>
+  </tr>';
   $html .= '</table>
   ';
-  $html .= $total .= ' quote' . ($total==1 ? '' : 's').'<br/>';
 	return $html;
 ) ?>
 	<p class="buttons">
@@ -197,7 +201,7 @@
         ) : () ),
   button( 'Undelete', { onclick=>q`f2.btnFunction.value='undelete';f2.submit();`, text=>'Undelete Checked' } ),
   ) : (
-  button( 'Delete', { onclick=>q`f2.btnFunction.value='Delete';delete_confirm(f2);`, text=>'Delete Checked' } ),
+  button( 'Delete', { on_click=>'delete_quotes', text=>'Delete Checked' } ),
   )
   ); ) ?>
   </p>

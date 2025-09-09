@@ -1,4 +1,5 @@
-<script type="text/javascript">
+<link href="<?hash_link('/css/press_schedule.css')?>" rel="stylesheet" type="text/css"/>
+<script>
 	var dropfunction = function(el){
 		new Ajax.Request( '_drop.json', { parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}

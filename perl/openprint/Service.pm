@@ -1,7 +1,7 @@
 use strict;
 package openprint::Service;
 our @ISA = qw( openprint::Object );
-use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached %ServicePrices %Configuration );
+use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached %ServicePrices %Configuration $default_sort);
 
 require sql;
 require openprint::Object;
@@ -29,6 +29,7 @@ $cached = 1;
 
 $table = 'services';
 $serial = 'services_id_seq';
+$default_sort = 'lower(name)';
 
 %fields = (
 		id				=>	'id',

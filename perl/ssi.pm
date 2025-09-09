@@ -617,8 +617,7 @@ sub button {
     ";
     delete $$options{onclick};
   } # end if
-
-	return $html;
+  return $html;
 } # end sub button
 
 sub writeButton {
@@ -737,7 +736,7 @@ sub date_select {
 	$class .= 'C' if $$options{with_clear};
 	$class .= 'T' if $$options{with_today};
 
-	my $html = '<span class="'.$class.'" id="'.$prefix.'_date">
+	my $html = '<div class="'.$class.'" id="'.$prefix.'_date">
 ';
 	foreach my $o ( split(',', $$options{order}) ) {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
@@ -779,7 +778,7 @@ sub date_select {
 				} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>
-</span>';
+</div>';
 	return $html;
 } # end sub date_select
 
@@ -1067,6 +1066,8 @@ sub input {
 		} else {
 			$options{type} = 'number';
 		} # end if
+    $options{step} = 1;
+    $options{min} = 0;
 		$options{filter} = 'cardinalize(this);' if ! $options{filter};
 		$options{oninput} = $options{filter}.$options{oninput};
 		#$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
@@ -1080,6 +1081,7 @@ sub input {
 			#$options{pattern} = '^-?\d*' if ! $options{pattern};
 			#delete $options{step};
 		} else {
+      $options{step} = 1;
 			$options{type} = 'number';
 		} # end if
 		$options{oninput} = 'integerize(this);'.$options{oninput};

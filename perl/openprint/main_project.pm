@@ -120,11 +120,11 @@ sub view {
 
 
   $session{ShowAllSignatures} = $param{ShowAllSignatures} if exists $param{ShowAllSignatures};
-	$variable{ProjectIndex} = $project_id;
+	$variable{project_id} = $variable{ProjectIndex} = $project_id;
 	my $Project = $variable{Project} = new openprint::Project($project_id);
 	my $save = 0;
 
-  if ( exists($param{quote_level}) and ( $param{quote_level} != $Project->style_id() ) ) {
+  if (exists($param{quote_level}) and ( (!$Project->style_id()) or ($param{quote_level} != $Project->style_id()))) {
     $Project->style_id( $param{quote_level} );
     $save = 1;
   } elsif ( ( ! $Project->style_id() ) and $openprint::User->quote_level() ) {
@@ -433,7 +433,7 @@ sub calc {
 		$log->debug("no outputs, so using keys @vars") if $debug;
 	} # end if
 	if ( my $function = $module->can( 'no_outputs' ) ) {
-		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs , \%param );
+		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs, \%param );
 		$log->debug("$module ::no_outputs: @no_outputs)") if $debug;
 		@vars = sets::exclude( \@no_outputs, \@vars );
 
@@ -498,7 +498,6 @@ sub calc {
 } # end sub calc
 
 sub reuse {
-
 	my $Project = $variable{Project} = new openprint::Project($param{project_id});
 	$variable{ProjectIndex} = $Project->id();
 	if ( $Project->reference() ) {
@@ -506,7 +505,6 @@ sub reuse {
 	} else {
 		$Project->reference('Copy of project # ' . $param{project_id});
 	} # end if
-
 } # end sub
 
 sub docket_sheet {
@@ -521,5 +519,10 @@ sub _service_dump {
 sub summary {
 	openprint::print_project::summary( $r, $log, $dbh, \%variable );
 }
+
+sub costs {
+  my $project = $variable{Project} = new openprint::Project($param{project_id});
+}
+
 1;
 __END__

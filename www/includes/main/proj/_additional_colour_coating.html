@@ -19,7 +19,7 @@
 		my @label_options = ('PMS');
 		
 		my @Services;
-    if(!$$variable{Project}->has_service('AqueousOffline')){
+    if (!$$variable{Project}->has_service('AqueousOffline')) {
       if ( $$variable{Coatings} ) {
         @Services = @{$$variable{Coatings}};
       } else {
@@ -61,11 +61,13 @@
 					name	=>	'ColourCoatingCoverage'.join('',@$variable{'index','Side','Signature'}),
           value =>$$variable{'ColourCoatingCoverage'.join('',@$variable{'index','Side','Signature'})},
           onkeyup=>"SpecialColour_onchange(this, '$$variable{Side}', '$$variable{index}', '$$variable{Signature}' );",
+          min => 0,
+          max => 100,
           ); ) ?>
 %</span>
 	<span id="ColourCoatingPrice<?index?><?Side?><?Signature?>" class="Price" <? echo ( $$variable{"ColourCoatingType$$variable{index}$$variable{Side}$$variable{Signature}"} =~ /PMS/ ? '' : 'style="display:none;"' ) ?>>
 		Price: ($/Kg)
-		<? echo ( input( type=>'float', name=>'ColourCoatingPrice'.join('',@$variable{'index','Side','Signature'}), value=>$$variable{'ColourCoatingPrice'.join('',@$variable{'index','Side','Signature'})}, onkeyup=>"SpecialColour_onchange(this, '$$variable{Side}', '$$variable{index}', '$$variable{Signature}' );" ); ) ?>
+    <? echo ( input( type=>'float', name=>'ColourCoatingPrice'.join('',@$variable{'index','Side','Signature'}), value=>$$variable{'ColourCoatingPrice'.join('',@$variable{'index','Side','Signature'})}, onkeyup=>"SpecialColour_onchange(this, '$$variable{Side}', '$$variable{index}', '$$variable{Signature}' );", min=>0 ); ) ?>
 	</span>
 	<span id="ColourCoatingMileage<?index?><?Side?><?Signature?>" class="Mileage" <? echo ( $$variable{"ColourCoatingType$$variable{index}$$variable{Side}$$variable{Signature}"} =~ /PMS/ ? '' : 'style="display:none;"' ) ?>>
 		Mileage: (in/Kg)

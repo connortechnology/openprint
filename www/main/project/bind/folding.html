@@ -77,6 +77,8 @@ function Fold_onchange( element, signature, qty_index, index ) {
 					$html .= '<div class="'.$$variable{Columns}.'Columns">';
 					if ( $$sig_specs{"txtImposition$qty_index"} ) {
 						$html .= openprint::service::summary( $Project, $ss_id, $qty_index );
+            my $imposition = openprint::Imposition::load_from_specs($sig_specs, $qty_index, $Project);
+            $html .= $imposition->to_svg();
 					} else {
             $html .= '&nbsp;';
 					} # end if
@@ -95,17 +97,14 @@ function Fold_onchange( element, signature, qty_index, index ) {
               prepend=>['','No Folding'],
               onchange=>'calc(this.form.name);',
             } );
+          $html .= ssi::write_override(
+            'chkOverrideEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index,
+            $$variable{'chkOverrideEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index},
+            '', 'calc(\'f1\')');
+					} else {
+            $html .= '&nbsp;';
+          }
 
-						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-							$html .= sprintf('
-<label class="radio-inline" for="chkOverrideEquipment-%1$d-%2$d">
-<input type="checkbox" id="chkOverrideEquipment-%1$d-%2$d" name="chkOverrideEquipment-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" />
-Override</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{'chkOverrideEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} eq 'Y' ? 'checked="checked"' : '' );
-						} elsif ( $$variable{'chkOverrideEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} eq 'Y' ) {
-							$html .= sprintf('<input type="hidden" name="chkOverrideEquipment-%1$d-%2$d" value="Y" />Overriden', $$sig_specs{SignatureIndex}, $qty_index );
-						} # end if
-					} else { $html .= '&nbsp;';
-					} # end if imposition
 					$html .= '</span>';
 				} # end foreach qty_index
 				$html .= '</li>';
@@ -140,7 +139,8 @@ Override</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{'chkOverr
 							$html .= variable_substitution( \$fragment, $variable );
 						} # end foreach
 						$html .= '</table>';
-					} else { $html .= '&nbsp;';
+					} else {
+            $html .= '&nbsp;';
 					} # end if imposition
 
 					$html .= '</div>';

@@ -8,7 +8,7 @@ require openprint::pricing;
 require openprint::Project_Service;
 require openprint::ServiceType;
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 use vars qw( %specs_cache %service_name_cache );
 
@@ -168,29 +168,33 @@ sub delete_service_spec {
 sub insert_service_spec {
 	my ( $log, $dbh, $project_index, $service_index, $name, $value, $noDelete ) = @_;
 
-	if ( ! exists $specs_cache{$service_index} ) {
+	if (!exists $specs_cache{$service_index}) {
 		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
 				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index );
 	} # end if
-	if ( defined $specs_cache{$service_index}{$name} and defined $value and $specs_cache{$service_index}{$name} eq $value ) {
+
+	if (defined $specs_cache{$service_index}{$name} and defined $value and $specs_cache{$service_index}{$name} eq $value) {
 		$log->debug("insert_service_spec: return because no change in value: ($name)($value)") if Debug;
 		return;
 	} # end if
 
-	#if ( exists $specs_cache{$service_index}{$name} ) {
-		#sql::update( $log, $dbh, 'tbl_Service_Specifications', ['lngProjectIndex=? AND lngServiceIndex=? AND strName=?',$project_index, $service_index, $name],
-				#'strValue',			$value );
-	#} else {
-		if ( ! $noDelete ) {
-			$_ = q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName=?};
-			sql::execute( $log, $dbh, $_, $project_index, $service_index, $name );
-		} # end if
-		sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-					'lngProjectIndex',	$project_index,
-					'lngServiceIndex',	$service_index,
-					'strName',			$name,
-					'strValue',			$value] ) if $value;
-	#} # end if
+  if ( ! $noDelete ) {
+    $_ = q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName=?};
+    sql::execute( $log, $dbh, $_, $project_index, $service_index, $name );
+  } # end if
+  sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
+      'lngProjectIndex',	$project_index,
+      'lngServiceIndex',	$service_index,
+      'strName',			$name,
+      'strValue',			$value] ) if $value;
+  if (0) {
+    sql::upsert( $log, $dbh, 'tbl_Service_Specifications', {
+        'lngProjectIndex',  $project_index,
+        'lngServiceIndex',  $service_index,
+        'strName',      $name,
+        'strValue',     $value}, ['lngProjectIndex','lngServiceIndex','strName'], {strValue=>$value} ) if $value;
+  }
+
 	$specs_cache{$service_index}{$name} = $value;
 } # end sub
 
@@ -391,10 +395,11 @@ sub auto_calculate {
 	} # end foreach
 
 	require openprint::Estimating::Skids;
-	if ( ! $$services{BulkSkids} ) {
-		if ( openprint::Estimating::Skids::neccessary( $Project, 'BulkSkids' ) ) {
-			push @{$$services{BulkSkids}}, $Project->add_service( 'BulkSkids' );
-		} # end if
+  my $neccessary = openprint::Estimating::Skids::neccessary( $Project, 'BulkSkids' );
+  if ( ! $$services{BulkSkids}  and ($neccessary==1)) {
+    push @{$$services{BulkSkids}}, $Project->add_service( 'BulkSkids' );
+  } elsif ($$services{BulkSkids} and ($neccessary==-1)) {
+    openprint::print_project::delete_service( $Project, $$services{BulkSkids}[0]);
 	} # end if
 	if ( ! $$services{PlainCartons} ) {
 		if ( openprint::Estimating::Skids::neccessary( $Project, 'PlainCartons' ) ) {
@@ -534,8 +539,10 @@ sub external_calc {
 		@vars = keys %specs;
 	} # end if
 
-	my @no_outputs = eval( 'return openprint::Estimating::'.$service_type.'::no_outputs( @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
-	push @no_outputs, ( 'ProjectIndex', 'ServiceIndex', 'ServiceType' );
+	my @no_outputs = ( 'ProjectIndex', 'ServiceIndex', 'ServiceType' );
+	if ( my $function = $module->can( 'no_outputs' ) ) {
+    push @no_outputs, $function->(@specs{'ProjectIndex', 'ServiceIndex'}, \%specs, \%specs);
+  }
 
 	@vars = sets::exclude( \@no_outputs, \@vars );
 
@@ -660,13 +667,13 @@ sub get_runtime {
 sub summary {
 	my ( $Project, $service_id, $qty_index ) = @_;
 
-	my @service_ids = split(',', $service_id );
+	my @service_ids = split(',', $service_id);
 	$service_id = $service_ids[0];
 
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 	my $services = $Project->services();
-	my $ServiceType = $Project->ServiceType( $service_id );
-	return '' if ! $ServiceType->summary_visible();
+	my $ServiceType = $Project->ServiceType( $service_id ) if $service_id;
+	return '' if ! $ServiceType and $ServiceType->summary_visible();
 
 	my $specs = get_specs_ref( $Project, $service_id );
   my $ServiceTypeType = $ServiceType->type();
