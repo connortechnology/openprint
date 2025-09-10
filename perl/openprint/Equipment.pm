@@ -175,7 +175,9 @@ sub Fold {
 
   if (!($$self{Folds}{$$params{type}} and @{$$self{Folds}{$$params{type}}})) {
     $openprint::log->debug("No folds for type $$params{type} on $$self{strid}");
+    return undef;
   }
+
 	foreach my $Fold ( $$params{type} ? @{$$self{Folds}{$$params{type}}} : map { @{$$self{Folds}{$_}} } keys %{$$self{Folds}} ) {
 
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
