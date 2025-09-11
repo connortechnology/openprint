@@ -918,6 +918,12 @@ sub spine_direction {
 	return $_[0]{spine_direction};
 }
 
+sub id_string {
+  my $self = shift;
+  my $stock = $self->Paper();
+  return sprintf('%s%dx%dd%dx%don%dx%d', $self->rs(), @$self{'columns','rows','dutch_columns','dutch_rows'}, @$stock{'width','height'});
+}
+
 sub to_svg {
 	my ( $self ) = @_;
 	return if ! $$self{imposition};
@@ -958,6 +964,7 @@ sub to_svg {
 	my $sheet_width = $self->sheet_width();
 	my $sheet_height = $self->sheet_height();
 
+  # center it.
   my $translate = join(q{, }, (($target_width - $sheet_width) / 2), (($target_height - $sheet_height) / 2));
 
 # Translate the canvas so padding doesn't effect our co-ordinate system.
@@ -983,28 +990,35 @@ sub add_sheet {
   my $grip = $$self{grip};
   if ($grip) {
     $grip /= 2 if ($$self{runstyle} eq 'Work & Tumble' or $$self{runstyle} eq 'Perfecting');
-    $canvas->rect(class=>'grip', id=>'grip', x=>0, y=>0, width=>$$self{sheet_width}, height=>$grip, fill=>'url(#diagonalHatch)');
+    $canvas->rect(class=>'grip', id=>'grip', x=>0, y=>0, width=>$$self{sheet_width}, height=>$grip,
+      fill=>'url(#diagonalHatch)', title=>'group');
   }
   $canvas = $canvas->g(transform => "translate(0, $grip)");
 
   if ($$self{colour_bar_size}) {
     my $colour_bar_height = $$self{colour_bar_size};
-    my $colour_bar = $canvas->rect( class=>'colourbar', x=>0, y=>$grip, width=>$$self{sheet_width}, height=>$colour_bar_height, fill=>'url(#processColours)');
+    my $colour_bar = $canvas->rect( class=>'colourbar', x=>0, y=>$grip,
+      width=>$$self{sheet_width}, height=>$colour_bar_height,
+      fill=>'url(#processColours)', '-title'=>'colour bar');
+    #$colour_bar->title(text=>'colour bar');
     if ($$self{runstyle} eq 'Work & Tumble') {
       $colour_bar->setAttributes({x => 0, y => $$self{sheet_height} - $grip*2});
     } else {
       # We've decreased the availible space.
-      $canvas = $canvas->g(transform => "translate(0, $colour_bar_height)");
+      $canvas = $canvas->g(transform => "translate(0, $colour_bar_height)", '-title'=>'after colour bar');
     }
   }
 
-  my $x = ($self->sheet_width() - 2*$$self{gutter} - $self->layout_width()) / 2;
+  my $space_height = $self->sheet_height() - $$self{colour_bar_size} - $grip;
+
+  $openprint::log->debug("Sheet width: $$self{sheet_width} - 2*$$self{gutters} gutter - layout_width $$self{layout_width}");
+  my $x = ($self->sheet_width() - 2*$$self{gutters} - $self->layout_width()) / 2;
   $x = 0 if $x < 0;
-  my $y = ($self->sheet_height() - $self->layout_height()) / 2;
+  my $y = ($space_height - $self->layout_height()) / 2;
   $y = 0 if $y < 0;
 
 # Centre the imposition on the printable page area.
-  my $group = $canvas->group(transform => "translate($x, $y)");
+  my $group = $canvas->g(transform => "translate($x, $y)", title=>'center');
   if ($$self{runstyle} eq 'Work & Turn') {
     my $half = $self->copy();
     $half->columns($$half{columns}/2);
@@ -1026,7 +1040,7 @@ sub add_sheet {
     $impo->setAttributes({transform=>'rotate(180 '.($dim/2).' '.($self->layout_height()/2).')'});
 
     # Draw a vertical centre line (y-axis).
-    my $centre = $self->sheet_width() / 2 - $$self{gutter};
+    my $centre = $self->sheet_width() / 2 - $$self{gutters};
     $canvas->line( id => 'centreline', x1 => $centre,   x2 => $centre, y1 => - 2, y2 => $self->sheet_height() + 2);
 
   } elsif ($$self{runstyle} eq 'Work & Tumble') {
@@ -1062,11 +1076,6 @@ sub add_sheet {
   return $sheet;
 } # end sub add_sheet
 
-sub id_string {
-  my $self = shift;
-  my $stock = $self->Paper();
-  return sprintf('%s%dx%dd%dx%don%dx%d', $self->rs(), @$self{'columns','rows','dutch_columns','dutch_rows'}, @$stock{'width','height'});
-}
 sub add_imposition {
   my ($define, $self) = @_;
 
@@ -1081,7 +1090,7 @@ sub add_imposition {
   #my $object_height = ($$self{image_orientation} == Vertical ? $$self{object_height} : $$self{object_width});
 	foreach my $column ( 1 .. $$self{columns} ) {
 		foreach my $row ( 1 .. $$self{rows} ) {
-			my $image_x = (($column-1)*$image_width) + $$self{gutter};# + ($column*2);
+			my $image_x = (($column-1)*$image_width) + $$self{gutters};# + ($column*2);
 			my $image_y = (($row-1)*$image_height);# + ($row*2);
 			my $object = $canvas->rect(class=>'image', x=>$image_x, y=>$image_y,
           width=>$object_width, height=>$object_height,
@@ -1089,7 +1098,6 @@ sub add_imposition {
 			if ( $self->page_columns() > 1 ) {
 				my $page_width = $object_width / $self->page_columns();
 				my $page_height = $object_height / $self->page_rows();
-        my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) ? 'red' : 'black';
 
 				foreach my $page_column ( 2 .. $self->page_columns() ) {
 					my $page_x1 = $image_x + ($page_column-1)*$page_width;
@@ -1099,12 +1107,14 @@ sub add_imposition {
 					my $page_y2 = $image_y + ($page_height * $self->page_rows());
 
 # This is the linees between pages, One of these will be the spine.
-					$canvas->line(x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour, class=>'foldline');
+					$canvas->line(x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2,
+            ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) ?
+            (stroke=>'red', title=>'spine') : (stroke=> 'black'),
+            class=>'foldline');
 				} # end foreach page column
 			} # draw pages
 
 	  	if ( $self->page_rows() > 1 ) {
-				my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Horizontal ) ? 'red' : 'black';
 				my $page_width = $image_width / $self->page_columns();
 				my $page_height = $image_height / $self->page_rows();
 				foreach my $page_row ( 2 .. $self->page_rows() ) {
@@ -1113,7 +1123,11 @@ sub add_imposition {
 
 					my $page_y1 = $image_y + ($page_row-1)*$page_height;
 					my $page_y2 = $image_y + ($page_row-1)*$page_height;
-					$canvas->line(x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2, stroke=>$colour, class=>'foldline');
+					$canvas->line(x1=>$page_x1, y1=>$page_y1, x2=>$page_x2, y2=>$page_y2,
+            ( $$self{spine} eq 'height' and $$self{image_orientation} == Horizontal ) ?
+            (stroke=>'red', -title=>'spine') : (stroke=> 'black'),
+            class=>'foldline'
+          );
 				}
 			}
 			
