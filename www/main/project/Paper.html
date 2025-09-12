@@ -82,11 +82,11 @@ function calc_weight_from_sheets(e) {
 					if ( $Stock->type() ne 'Roll' ) {
 						$html .= input( type=>'float', id=>'qty-'.$key, name=>"qty-$key", value=>$$variable{"qty-$key"}, oninput=>'calc_sheets_from_weight(this);calc(this.form.name);' );
 						$html .= 'lbs ';
-						$html .= input( type=>'cardinal', id=>"sheets-$key", name=>"sheets-$key", value=> $$variable{"sheets-$key"}, onkeyup=>'calc_weight_from_sheets(this);calc(this.form.name);' );
+						$html .= input( type=>'cardinal', id=>"sheets-$key", name=>"sheets-$key", value=> $$variable{"sheets-$key"}, oninput=>'calc_weight_from_sheets(this);calc(this.form.name);' );
             $html .= $$variable{Stock}->units(2).' ';
 						$html .= input( type=>'hidden', id=>'sheet_weight-'.$key, name=>'sheet_weight'.$key, value=>$$variable{Stock}->sheet_weight() );
 					} else {
-						$html .= input( type=>'float', id=>'qty-'.$key, name=>"qty-$key", value=>$$variable{"qty-$key"}, onkeyup=>'calc(this.form.name);' );
+						$html .= input( type=>'float', id=>'qty-'.$key, name=>"qty-$key", value=>$$variable{"qty-$key"}, oninput=>'calc(this.form.name);' );
 						$html .= 'lbs ';
 					} # end if
 					$html .= write_override( "overrideqty-$key", $$variable{"overrideqty-$key"}, '', "calc('f1')" );
@@ -114,22 +114,23 @@ function calc_weight_from_sheets(e) {
 			$html .= '<span class="'.$$variable{Columns}.'Columns">';
 			$html .= '<span class="quantity">';
 			$html .= qq`<span id="qty-$key">$$variable{"qty-$key"}</span>`;
-			$html .= input( type=>'hidden', id=>'qty-'.$key, name=>'qty-'.$key, value=>$$variable{'qty-'.$key}, onkeyup=>'calc(this.form.name);' );
+			$html .= input( type=>'hidden', name=>'qty-'.$key, value=>$$variable{'qty-'.$key}, oninput=>'calc(this.form.name);' );
 			$html .= 'lbs';
 			if ( $Stock->type() ne 'Roll' ) {
-			$html .= qq`(<span id="sheets-$key">$$variable{"sheets-$key"}</span>`;
-				$html .= ' ' . input( type=>'hidden', id=>'sheets-'.$key, name=>'sheets-'.$key, value=>$$variable{'sheets-'.$key}, onkeyup=>q`calc_weight_from_sheets(this);calc(this.form.name);` );
-				$html .= 'sheets)';
+			  $html .= qq`(<span id="sheets-$key">$$variable{"sheets-$key"}</span>`;
+				$html .= ' ' . input( type=>'hidden', name=>'sheets-'.$key,
+              value=>$$variable{'sheets-'.$key}, oninput=>q`calc_weight_from_sheets(this);calc(this.form.name);` );
+        $html .= $Stock->units(2).')';
 			} # end if
 
 			$html .= '</span>';
 			if ( ! $Stock->supplied() ) {
 				$html .= '<span class="pricing"> @ '.$$variable{Currency}->symbol();
-				$html .= input( type=>'float', id=>"cost-$key", name=>"cost-$key", value=>$$variable{"cost-$key"}, onkeyup=>'calc(this.form.name);' );
+				$html .= input( type=>'float', id=>"cost-$key", name=>"cost-$key", value=>$$variable{"cost-$key"}, oninput=>'calc(this.form.name);' );
 				$html .= write_override( "overridecost-$key", $$variable{"overridecost-$key"}, '', "calc('f1')" );
 				$html .= '/100lb';
 				$html .= ' = '. $$variable{Currency}->symbol();
-				$html .= input( type=>'float', id=>"price-$key", name=>"price-$key", value=>$$variable{"price-$key"}, onkeyup=>'calc(this.form.name);' );
+				$html .= input( type=>'float', id=>"price-$key", name=>"price-$key", value=>$$variable{"price-$key"}, oninput=>'calc(this.form.name);' );
 				$html .= '</span>';
 			} else {
 			 $html .= '<b>Supplied by Customer</b>';
