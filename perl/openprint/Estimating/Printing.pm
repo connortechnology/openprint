@@ -7818,35 +7818,36 @@ sub summary {
 			$html .= sprintf(' = %d plates', $$specs{'txtPlateQuantity'.$qty_index} );
 		}
 
-#if ( 1 ) {
-# Have Stock summary line now
-		if ( $$services{NoPrinting} ) {
-			$html .= sprintf(' %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
-		} else {
-			#$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
-			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
-				if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
-					$html .= sprintf( ' on %s" Roll.	Cut Off: %s"',	1*$$specs{'StockWidth'.$qty_index},1*$$specs{'StockHeight'.$qty_index});
-				} # end if
-			} else {
-				$html .= sprintf(' on %s" x %s"', 1*$$specs{'StockWidth'.$qty_index}, 1*$$specs{'StockHeight'.$qty_index});
-			} # end if
-		} # end if
-		if ( 0 and sets::isin( $openprint::session{user_type}, [ 'E', 'A' ] ) ) {
-			if ( $$services{Folding} and @{$$services{Folding}} ) {
-				$html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{Folding}[0], undef, $qty_index, $service_index, undef );
-			} # end if
-			if ( $$services{Scoring} and @{$$services{Scoring}} ) {
-				my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] );
-				my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
-				if ( openprint::Estimating::Scoring::signature_needs( $Project, $scoring_specs, $specs, $Paper ) ) {
-					$html .= "\nscored " . openprint::Estimating::Scoring::signature_summary( $Project, $$services{Scoring}[0], undef, $qty_index, $service_index, undef );
-				} # end if
-			} # end if
-		} # end if
-		if ( (!$$specs{'MatchGrain'.$qty_index}) or ( $$specs{'MatchGrain'.$qty_index} ne 'Y') ) {
-			$html .= '<br/>Do not match grain<br/>';
-		} # end if
+    if ( $Project->Type()->name() ne 'Envelopes') {
+      # Have Stock summary line now
+      if ( $$services{NoPrinting} ) {
+        $html .= sprintf(' %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+      } else {
+        #$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
+        if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
+          if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
+            $html .= sprintf( ' on %s" Roll.	Cut Off: %s"',	1*$$specs{'StockWidth'.$qty_index},1*$$specs{'StockHeight'.$qty_index});
+          } # end if
+        } else {
+          $html .= sprintf(' on %s" x %s"', 1*$$specs{'StockWidth'.$qty_index}, 1*$$specs{'StockHeight'.$qty_index});
+        } # end if
+      } # end if
+      if ( 0 and sets::isin( $openprint::session{user_type}, [ 'E', 'A' ] ) ) {
+        if ( $$services{Folding} and @{$$services{Folding}} ) {
+          $html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{Folding}[0], undef, $qty_index, $service_index, undef );
+        } # end if
+        if ( $$services{Scoring} and @{$$services{Scoring}} ) {
+          my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] );
+          my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
+          if ( openprint::Estimating::Scoring::signature_needs( $Project, $scoring_specs, $specs, $Paper ) ) {
+            $html .= "\nscored " . openprint::Estimating::Scoring::signature_summary( $Project, $$services{Scoring}[0], undef, $qty_index, $service_index, undef );
+          } # end if
+        } # end if
+      } # end if
+      if ( (!$$specs{'MatchGrain'.$qty_index}) or ( $$specs{'MatchGrain'.$qty_index} ne 'Y') ) {
+        $html .= '<br/>Do not match grain<br/>';
+      } # end if
+    } # end if not nevloeps
 		if ( ! $$specs{"Runspeed$qty_index"} ) {
 			$html .= '<span class="error"><br/>No runspeed!</span>';
 		}
@@ -7898,7 +7899,7 @@ if ( 0 ) {
 			$string .= '<br/>' . $$specs{rdbPanels} . ' panels ' . ( $$specs{PocketSize} ? $$specs{PocketSize} . '&quot; ' : '' ) . ' pocket'.(@pockets == 1 ? '' : 's').' on ' . join( ',', @pockets );
 		} # end if
     if ( $Project->Type()->name() ne 'Envelopes') {
-      my $special_string = $Project->Type()->name().join(', ',
+      my $special_string = join(', ',
         ( $$specs{OverrideAddGrip} ? ' no image in grip or sides' : () ),
         ( ($$specs{rdbColourBar} and ( $$specs{rdbColourBar} eq 'N' ) ) ? ' no colour bar' : () ),
         ( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
