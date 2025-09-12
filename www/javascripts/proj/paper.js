@@ -72,8 +72,17 @@ function mweight_to_gsm( form, signature ) {
   console.log('mweight_to');
   const width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
   const height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
-  const basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
-  const basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
+  let basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
+  let basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
+  if (!(basis_width && basis_height)) {
+    update_basis_size(form.elements['StockType'+signature]);
+    basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
+    basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
+  }
+  if (!(basis_width && basis_height)) {
+    console.log('Cant calculate because we need basis size');
+    return;
+  }
   var mweight;
   var basis_weight;
   mweight = parseFloat(1*form.elements['txtCustomMWeight'+signature].value);
@@ -92,8 +101,13 @@ function mweight_to_gsm( form, signature ) {
 function basis_weight_to_gsm( form, signature ) {
   const width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
   const height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
-  const basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
-  const basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
+  let basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
+  let basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
+  if (!(basis_width && basis_height)) {
+    update_basis_size(form.elements['StockType'+signature]);
+    basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
+    basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
+  }
   const stock_type = get_value( form.elements['StockType'+signature] );
   const basis_weight = parseFloat(1*form.elements['basis_mweight'+signature].value);
   if (basis_weight) {
@@ -110,17 +124,22 @@ function basis_weight_to_gsm( form, signature ) {
 
 function gsm_to_mweight( form, signature ) {
 	var gsm = parseFloat(1*form.elements['txtStockGSM'+signature].value);
-	var width;
-	var height;
 	var mweight;
 
-	width = parseFloat(1*form.elements['basis_width'+signature].value);
-	height = parseFloat(1*form.elements['basis_height'+signature].value);
-	mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
+	let basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
+	let basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
+
+  if (!(basis_width && basis_height)) {
+    update_basis_size(form.elements['StockType'+signature]);
+    basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
+    basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
+  }
+
+	mweight = Math.round((gsm/703064.5)*(basis_width*basis_height)*100000)/100;
 	form.elements['basis_mweight'+signature].value = mweight;
 
-	width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
-	height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
+	const width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
+	const height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
 	mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
 	form.elements['txtCustomMWeight'+signature].value = mweight;
 }
@@ -170,20 +189,19 @@ function update_basis_size(element) {
   ) {
     form.elements['basis_width'+signature].value = 17;
     form.elements['basis_height'+signature].value = 22;
+  } else if (form.elements['txtSpecificStockBrand'+signature].value.match(/cover/i)
+    || form.elements['txtSpecificStockBrand'+signature].value.match(/board/i)
+    || form.elements['txtSpecificStockFinish'+signature].value.match(/cover/i)
+    || form.elements['txtSpecificStockFinish'+signature].value.match(/board/i)
+    || form.elements['txtSpecificStockWeight'+signature].value.match(/cover/i)
+    || form.elements['txtSpecificStockWeight'+signature].value.match(/board/i)
+  ) {
+    form.elements['basis_width'+signature].value = 20;
+    form.elements['basis_height'+signature].value = 26;
   } else {
-    if (form.elements['txtSpecificStockBrand'+signature].value.match(/cover/i)
-      || form.elements['txtSpecificStockBrand'+signature].value.match(/board/i)
-      || form.elements['txtSpecificStockFinish'+signature].value.match(/cover/i)
-      || form.elements['txtSpecificStockFinish'+signature].value.match(/board/i)
-      || form.elements['txtSpecificStockWeight'+signature].value.match(/cover/i)
-      || form.elements['txtSpecificStockWeight'+signature].value.match(/board/i)
-    ) {
-      form.elements['basis_width'+signature].value = 20;
-      form.elements['basis_height'+signature].value = 26;
-    } else {
-      form.elements['basis_width'+signature].value = 25;
-      form.elements['basis_height'+signature].value = 38;
-    }
+    console.log("type", get_value(form.elements['StockType'+signature]));
+    form.elements['basis_width'+signature].value = 25;
+    form.elements['basis_height'+signature].value = 38;
   }
 } // end function update_basis_size
 
@@ -236,7 +254,7 @@ function weight_onchange(element) {
   matches = re.exec(form.elements['txtSpecificStockWeight'+signature].value);
   if (matches) {
     const weight = matches[1];
-    console.log(signature, weight);
+    console.log('signature:', signature, 'weight:', weight);
     form.elements['basis_mweight'+signature].value = weight * 2;
     basis_weight_to_gsm(form, signature);
   } else {
