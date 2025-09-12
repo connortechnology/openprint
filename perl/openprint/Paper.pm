@@ -1280,7 +1280,11 @@ sub gsm {
 		}
 	} 
 	if ( ! $$self{gsm} ) {
-		if ( $self->wpsi(undef) ) {
+    if ($$self{mweight} and $self->type() ne 'Roll') {
+      my $wpsi = $$self{mweight} / ($$self{width}*$$self{height}*1000);
+      $$self{gsm} = Math::Round::nearest( 0.01, $wpsi * 703064.5 );
+      $openprint::log->warn('calculate gsm for ' . $$self{id} . ' ' . $self->to_string() ) if $$self{brand};
+    } elsif ( $self->wpsi(undef) ) {
 			$$self{gsm} = Math::Round::nearest( 0.01, $$self{wpsi} * 703064.5 );
 			$openprint::log->warn('calculate gsm for ' . $$self{id} . ' ' . $self->to_string() ) if $$self{brand};
 		} else { 
