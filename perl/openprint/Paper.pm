@@ -1307,19 +1307,19 @@ sub wpsi {
 		if ( $$self{mweight} and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
       $$self{wpsi} *= 2 if $self->is_envelope();
-#$log->debug("Setting wpsi to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height})");
+$log->debug("Setting wpsi $$self{wpsi} to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height}) = item weight ".$self->sheet_weight());
     } elsif ( $self->basis_mweight() ) {
       $$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
       if ($self->is_envelope()) {
         $$self{wpsi} *= 2;
-        $log->debug("Setting wpsi to $$self{wpsi} from envelope 2 * basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height}");
+        $log->debug("Setting wpsi to $$self{wpsi} from envelope 2 * basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height} = envelope weight ".$self->sheet_weight());
       } else {
-        $log->debug("Setting wpsi to $$self{wpsi} from basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height}");
+        $log->debug("Setting wpsi to $$self{wpsi} from basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height} = sheet weight ".$self->sheet_weight());
       }
 
     } elsif ($$self{gsm} and $$self{gsm} ne 'unknown') {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
-#$log->debug("Setting wpsi from gsm to $$self{gsm} / 703064.5 = $$self{wpsi}");
+$log->debug("Setting wpsi from gsm to $$self{gsm} / 703064.5 = $$self{wpsi}");
 		#} else {
 #$log->debug("Nothing to set wpsi from");
 		} # end if
@@ -1787,7 +1787,13 @@ sub start_sheet_weight {
 } # end sub start_sheet_weight
 
 sub units {
-	return ($_[0]{type} eq 'Roll' ? 'lb' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
+  if ($_[0]{type} eq 'Roll') {
+    return 'lb'.($_[1] == 1 ? '' : 's');
+  }
+  if ($_[0]{type} eq 'Envelope') {
+    return 'envelope'.( $_[1] == 1 ? '' : 's');
+  }
+  return 'sheet'.( $_[1] == 1 ? '' : 's');
 } # end sub units
 
 sub types {
