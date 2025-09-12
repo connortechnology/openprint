@@ -56,7 +56,7 @@
 			my @rows = split "\n", $$C{value};
             $html .= sprintf('<textarea name="%s" cols="80" rows="%d" onkeyup="textarea_resize(this);" />%s</textarea>', $name, scalar @rows, htmlize($$C{value}) );
 		} elsif ( $$C{type} eq 'number' ) {
-			$html .= input( type=>'number', name=>$name, value=>$$C{value} );
+    $html .= input( type=>'number', name=>$name, value=>$$C{value}, step=>'any' );
         } else {
 			$html .= input( type=>'text', name=>$name, value=>$$C{value} );
         } # end if
