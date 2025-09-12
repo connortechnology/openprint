@@ -1131,8 +1131,8 @@ sub get_Stocks {
 		} # end if
     my $gsm = $Paper->gsm();
 		if ( int($gsm) != int($Paper->gsm(undef)) ) {
-      $Paper->gsm($gsm);
 			$$specs{alert} .= "GSM ($$specs{txtStockGSM}) and calculated gsm ($$Paper{gsm}) are different.  Please double check that everything is ok.";
+      $Paper->gsm($gsm);
 			#return ();
 		}
 	} else {
@@ -7897,13 +7897,15 @@ if ( 0 ) {
 			my @pockets = map { $$specs{"chkPocket$_"} ? lc $_ : () } ( 'Left', 'Center', 'Right' );
 			$string .= '<br/>' . $$specs{rdbPanels} . ' panels ' . ( $$specs{PocketSize} ? $$specs{PocketSize} . '&quot; ' : '' ) . ' pocket'.(@pockets == 1 ? '' : 's').' on ' . join( ',', @pockets );
 		} # end if
-		my $special_string = join(', ',
-				( $$specs{OverrideAddGrip} ? ' no image in grip or sides' : () ),
-				( ($$specs{rdbColourBar} and ( $$specs{rdbColourBar} eq 'N' ) ) ? ' no colour bar' : () ),
-				( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
-				( (exists $$specs{txtCropMarkSpace} ) ? () : '<span class="warning">no crop marks</span>' ),
-		);
-    $string .= '<br/>' . $special_string if $special_string;
+    if ( $Project->Type()->name() ne 'Envelopes') {
+      my $special_string = $Project->Type()->name().join(', ',
+        ( $$specs{OverrideAddGrip} ? ' no image in grip or sides' : () ),
+        ( ($$specs{rdbColourBar} and ( $$specs{rdbColourBar} eq 'N' ) ) ? ' no colour bar' : () ),
+        ( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
+        ( (exists $$specs{txtCropMarkSpace} ) ? () : '<span class="warning">no crop marks</span>' ),
+      );
+      $string .= '<br/>' . $special_string if $special_string;
+    } # end if not Envelopes
 		if ( $$specs{PressApproval} and ( $$specs{PressApproval} eq 'Y' ) ) {
 			$string .= '<br/>Customer wants press approval';
 		}
