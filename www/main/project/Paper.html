@@ -79,12 +79,12 @@ function calc_weight_from_sheets(e) {
 					my $key = 'form'.join('-',$$variable{form},$qty_index );
 					$html .= '<span class="quantity">';
 
-					if ( $$variable{Stock}->type() ne 'Roll' ) {
+					if ( $Stock->type() ne 'Roll' ) {
 						$html .= input( type=>'float', id=>'qty-'.$key, name=>"qty-$key", value=>$$variable{"qty-$key"}, oninput=>'calc_sheets_from_weight(this);calc(this.form.name);' );
 						$html .= 'lbs ';
 						$html .= input( type=>'cardinal', id=>"sheets-$key", name=>"sheets-$key", value=> $$variable{"sheets-$key"}, onkeyup=>'calc_weight_from_sheets(this);calc(this.form.name);' );
-						$html .= 'sheets ';
-						$html .= input( type=>'hidden', id=>'sheet_weight-'.$key, name=>'sheet_weight'.$key, value=>$$variable{Stock}->wpsi() * $$variable{Stock}->area() );
+            $html .= $$variable{Stock}->units(2).' ';
+						$html .= input( type=>'hidden', id=>'sheet_weight-'.$key, name=>'sheet_weight'.$key, value=>$$variable{Stock}->sheet_weight() );
 					} else {
 						$html .= input( type=>'float', id=>'qty-'.$key, name=>"qty-$key", value=>$$variable{"qty-$key"}, onkeyup=>'calc(this.form.name);' );
 						$html .= 'lbs ';
