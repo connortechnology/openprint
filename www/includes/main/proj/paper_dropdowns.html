@@ -12,18 +12,18 @@
   ) ?>
 		<? if ( $$variable{Mode} ne 'Easy' ) ?>
 		<ul>
-		<li>
-			<label>Customer supplied</label>
-      <?echo(radio('rdbSuppliedStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ], $$variable{'rdbSuppliedStock'.$$variable{Signature}}, { onclick=>"Stock_onchange(this,'$$variable{Signature}');", default=>'N' } ); )?>
-		</li>
-		<li>
-			<label>Unlisted stock</label>
-      <?echo(radio('rdbSpecificStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ],
-      $$variable{'rdbSpecificStock'.$$variable{Signature}}, {
-     default=>'N',
-     on_click_this=>'specific_stock_onchange',
-     } );)?>
-		</li>
+      <li>
+        <label>Customer supplied</label>
+        <?echo(radio('rdbSuppliedStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ], $$variable{'rdbSuppliedStock'.$$variable{Signature}}, { onclick=>"Stock_onchange(this,'$$variable{Signature}');", default=>'N' } ); )?>
+      </li>
+      <li>
+        <label>Unlisted stock</label>
+        <?echo(radio('rdbSpecificStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ],
+        $$variable{'rdbSpecificStock'.$$variable{Signature}}, {
+       default=>'N',
+       on_click_this=>'specific_stock_onchange',
+       } );)?>
+      </li>
 		</ul>
 		<? endif ( $$variable{Mode} ne 'Easy' ) ?>
 		<div id="SpecificStock<?Signature?>" style="display: <? echo ( $$variable{'rdbSpecificStock'.$$variable{Signature}} ne 'Y' ? 'none' : 'block' ) ?>;">
