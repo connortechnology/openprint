@@ -35,7 +35,7 @@ require misc;
 
 my $threading = 0;
 #use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 1;
 use constant DEBUG_PRESSES => 0;
@@ -851,10 +851,11 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 	}
 
 	%{$project{SpinePasteSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{SpinePaste}[0] )} if $$services{SpinePaste};
-	if ( $$services{PerfectBound} ) {
+
+	if ($$services{PerfectBound}) {
 		$project{HasPerfectBound} = $$services{PerfectBound}[0];
 		%{$project{PerfectBoundSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{PerfectBound}[0] )};
-		$project{PerfectBindCoverGutter} = $config{PerfectBindCoverGutter} if $$specs{Group} == 1;
+		$project{PerfectBindCoverGutter} = $config{PerfectBindCoverGutter};# if $$specs{Group} == 1;
 	} # end if
 
 	$project{ProjectSpecs} = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -1128,7 +1129,9 @@ sub get_Stocks {
 			$$specs{alert} .= 'GSM is too low.';
 			return ();
 		} # end if
-		if ( int($Paper->gsm()) != int($Paper->gsm(undef)) ) {
+    my $gsm = $Paper->gsm();
+		if ( int($gsm) != int($Paper->gsm(undef)) ) {
+      $Paper->gsm($gsm);
 			$$specs{alert} .= "GSM ($$specs{txtStockGSM}) and calculated gsm ($$Paper{gsm}) are different.  Please double check that everything is ok.";
 			#return ();
 		}
@@ -2648,31 +2651,31 @@ sub calc {
 	# Must clear these
 	%filtered_imposition_cache = ();
 	$master_time = gettimeofday();
-#$log->debug("Starting Printing::calc");
 
-	if ( ! $project_index or ! $service_index ) {
-		$log->debug("No Project Index ($project_index) or Service_index ($service_index)" );
+	if (!$project_index or !$service_index) {
+		$log->error("No Project Index ($project_index) or Service_index ($service_index)");
 		return $$specs{Status} = 'uncalculated';
 	} # end if
+
 	$$specs{Status} = 'calculated';
 	$$specs{alert} = '';
 	$$specs{information} = '';
   delete $$specs{Impositions};
 
-	if ( ( defined $$specs{PageQuantity} ) and $$specs{PageQuantity} =~ /[^\d\.]/ ) {
-		$variables{PageQuantity} = [ sets::exclude( ['output'], $variables{PageQuantity} ) ];
-		$$specs{PageQuantity} =~ s/[^\d\.]//g;
-	} # end if
 
 	my $Project = new openprint::Project( $project_index );
 	my $ProjectType = $Project->Type();
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-	$PaperServiceType = openprint::ServiceType->find_one(name=>'Paper');
-	$ImpositionServiceType = openprint::ServiceType->find_one(name=>'Imposition');
+	$PaperServiceType = openprint::ServiceType->find_one(name=>'Paper') if !$PaperServiceType;
+	$ImpositionServiceType = openprint::ServiceType->find_one(name=>'Imposition') if !$ImpositionServiceType;
 
 # First, clean up all inputs
+	if ( ( defined $$specs{PageQuantity} ) and $$specs{PageQuantity} =~ /[^\d\.]/ ) {
+		$variables{PageQuantity} = [ sets::exclude( ['output'], $variables{PageQuantity} ) ];
+		$$specs{PageQuantity} =~ s/[^\d\.]//g;
+	} # end if
   $$specs{Group} //= '';
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my $qty = $$specs{"txtQuantity$qty_index"};
