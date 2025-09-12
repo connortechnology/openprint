@@ -2620,16 +2620,16 @@ sub get_overrides {
 # Technically, the dropdown and txtinputs should have values
 				if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
 #$log->error("NO ddm Stock SheetSize for $qty_index sig $index !");
-				} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
+        } elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
 
           if ( @$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?x?\s*$/ ) {
           } elsif (
             @$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x\s*([\d\.]+)"?\s*$/ ) {
-				} else {
-					$log->error( "Failure to parse ddmStockSheetSize$qty_index: ".$$sig_specs{"ddmStockSheetSize$qty_index"});
-					$$sig_specs{'chkOverrideSheetSize'.$qty_index} = '';
-				}
-				} # end if
+          } else {
+            $log->error( "Failure to parse ddmStockSheetSize$qty_index: ".$$sig_specs{"ddmStockSheetSize$qty_index"});
+            $$sig_specs{'chkOverrideSheetSize'.$qty_index} = '';
+          }
+        } # end if
 				push @{$Overrides{"OverrideStockWidth$qty_index"}}, $$sig_specs{"OverrideStockWidth$qty_index"};
 				push @{$Overrides{"OverrideStockHeight$qty_index"}}, $$sig_specs{"OverrideStockHeight$qty_index"};
 			} # end if
@@ -3351,6 +3351,12 @@ sub save_price( $$$$$ ) {
 		$$specs{'hdnNetSheetCount'.$qty_index} = $$price{'Net Sheet Count'};
 		$$specs{'StockQuantity'.$qty_index} = $$price{'Gross Sheet Count'};
 		$$specs{'minimum_stock_size'.$qty_index} = sprintf('%s&quot; x %s&quot;', $Imposition->used_width(), $Imposition->used_height() );
+	} elsif ( $$Paper{type} eq 'Envelope' ) {
+		$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width}.'x'.$$Paper{height};
+		$$specs{'txtPressSheetQty'.$qty_index} = $$price{'Gross Sheet Count'} .' envelopes';
+		$$specs{'hdnNetSheetCount'.$qty_index} = $$price{'Net Sheet Count'};
+		$$specs{'StockQuantity'.$qty_index} = $$price{'Gross Sheet Count'};
+    #$$specs{'minimum_stock_size'.$qty_index} = sprintf('%s&quot; x %s&quot;', $Imposition->used_width(), $Imposition->used_height() );
 	} else {
 		$$specs{'ddmStockSheetSize'.$qty_index} = '';
 		$$specs{'txtPressSheetQty'.$qty_index} = 0;
