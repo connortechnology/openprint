@@ -284,6 +284,6 @@ input.calliper {
 width: 55px;
 }
 */
-.breakdown label:after {
+fieldset .breakdown label:not(.radio):not(.radio-inline):after {
   content: '';
 }
