@@ -182,3 +182,13 @@ width: 49%;
   column-rule: 1px solid #ccc;
 
 }
+@media screen and (max-width: 1280px) {
+  #SpecificStock ul {
+    column-count: 2;
+  }
+}
+@media screen and (max-width: 800px) {
+  #SpecificStock ul {
+    column-count: 1;
+  }
+}
