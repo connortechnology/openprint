@@ -5,9 +5,9 @@ use Data::Dumper;
 
 use openprint::Imposition;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_DUTCH => 0;
-use constant DEBUG_CONVERT => 0;
+use constant DEBUG_CONVERT => 1;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -403,18 +403,18 @@ sub calc_setup_object {
 	my $bindery_head = 0;
 
 	if ( $$specs{Binding} ) {
-		if ( sets::isin( $$specs{Binding}, ['SaddleStitching','LoopStitching'] ) ) {
-			$bindery_gutters = $Press->specification('StitchingGutter');
-			$bindery_bleed = $Press->specification('StitchingBleed');
+		if ($$specs{Binding} eq 'SaddleStitching' or $$specs{Binding} eq 'LoopStitching') {
+			$bindery_gutters = $Press->specification('StitchingGutter') // 0;
+			$bindery_bleed = $Press->specification('StitchingBleed') // 0;
 			if ( $bindery_bleed ) {
 				$setup1->bleed_size( $bindery_bleed );
 				$setup2->bleed_size( $bindery_bleed );
 			} # end if
 			$setup1->folio_lip( $bindery_gutters );
 			$setup2->folio_lip( $bindery_gutters );
-		} elsif ( sets::isin( $$specs{Binding}, ['PerfectBound','SpinePaste'] ) ) {
-			$bindery_gutters = $Press->specification('PerfectBindGutter');
-			$bindery_bleed = $Press->specification('PerfectBindBleed');
+		} elsif ($$specs{Binding} eq 'PerfectBound' or $$specs{Binding} eq 'SpinePaste') {
+			$bindery_gutters = $Press->specification('PerfectBindGutter') // 0;
+			$bindery_bleed = $Press->specification('PerfectBindBleed') // 0;
 			if ( $bindery_bleed ) {
 				$setup1->bleed_size( $bindery_bleed );
 				$setup2->bleed_size( $bindery_bleed );
@@ -424,17 +424,17 @@ sub calc_setup_object {
 			$bindery_head = $$specs{PerfectBindCoverGutter};
 		} # end if
 	} # end if
-#$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
+$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
 	my %bleed_locations = map { $_, $_ } split(',', $$specs{BleedLocations} );
-	my $bleed_width  = 2*$bindery_bleed; # .25
-	my $bleed_height  = 2*$bindery_bleed;#.25
+	my $bleed_width = 2*$bindery_bleed;
+	my $bleed_height = 2*$bindery_bleed;
 	if ( $bleed_locations{Right} ) {
-		$image_width += $bleed_size; # 17.0625
-		$bleed_width -= $bleed_size; # .1875
+		$image_width += $bleed_size;
+		$bleed_width -= $bleed_size;
 	} # end if
 	if ( $bleed_locations{Left} ) {
-		$image_width += $bleed_size; # 17.125
-		$bleed_width -= $bleed_size; #0.125
+		$image_width += $bleed_size;
+		$bleed_width -= $bleed_size;
 	} # end if
 	if ( $bleed_locations{Top} ) {
 		$bindery_head -= $bleed_size;
@@ -447,9 +447,8 @@ sub calc_setup_object {
 	} # end if
 	$bleed_width = 0 if $bleed_width < 0;
 	$bleed_height = 0 if $bleed_height < 0;
-#$openprint::log->debug("BleedSize: $bleed_size bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
+  $openprint::log->debug("BleedSize: $bleed_size bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
 
-	#$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
 	if ( $bindery_head < 0 ) {
 		$bindery_head = 0;
 	} else {
@@ -591,6 +590,7 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 		my $wheel_space;
 		if ( $$setup1{columns} % 2 ) {
 			$wheel_space = $$specs{'Perfecting Double Gutter Size'};
+      $$setup1{perfecting_double_wheel_space} = $wheel_space;
 			$setup1->perfecting_wheel_space( $wheel_space );
 			if ( $bleed_locations{Right} ) {
 				$wheel_space -= 2*$bleed_size;
@@ -601,6 +601,7 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 $openprint::log->debug("Using Double wheel space $$specs{'Perfecting Double Gutter Size'} -> $wheel_space") if DEBUG;
 		} else {
 			$wheel_space = $$specs{'Perfecting Single Gutter Size'};
+      $$setup1{perfecting_single_wheel_space} = $wheel_space;
 			$setup1->perfecting_wheel_space( $wheel_space );
 			if ( $bleed_locations{Right} ) {
 				$wheel_space -= $bleed_size;
@@ -656,7 +657,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 	$openprint::log->debug("add dutches");
 					push @results, calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height, $specs );
 				} else {
-	$openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style or $$Paper{perfecting}") if DEBUG;
+	$openprint::log->debug("Not doing dutch because do_dutch:($$specs{dutch}) or $run_style or perfecting:$$Paper{perfecting}") if DEBUG;
 				} # end if
 			} # end if check_setup
 		} # end if imposition
@@ -820,6 +821,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		my $wheel_space;
 		if ( $$setup2{columns} % 2 ) {
 			$wheel_space = $$specs{'Perfecting Double Gutter Size'};
+      $$setup2{perfecting_double_wheel_space} = $wheel_space;
 			$setup2->perfecting_wheel_space( $wheel_space );
 			if ( $bleed_locations{Top} ) {
 				$wheel_space -= 2*$bleed_size;
@@ -830,6 +832,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 			$openprint::log->debug("Using Single wheel space $$specs{'Perfecting Double Gutter Size'} -> $wheel_space") if DEBUG;
 		} else {
 			$wheel_space = $$specs{'Perfecting Single Gutter Size'};
+      $$setup2{perfecting_single_wheel_space} = $wheel_space;
 			$setup2->perfecting_wheel_space( $wheel_space );
 			if ( $bleed_locations{Top} ) {
 				$wheel_space -= $bleed_size;
