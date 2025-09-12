@@ -64,12 +64,13 @@ flex: 1;
 	float: left;
 }
 .BleedsColourBars ,
-.Service .Overrides ,
-.Stock 
- {
+.Service .Overrides {
 	float: left;
 	width: 50%;
 	min-width: 425px;
+}
+.Stock {
+  width: 100%;
 }
 .SpotColour {
 	width: 25%;
@@ -167,5 +168,17 @@ width: 49%;
 }
 .basis_weight input[type="text"],
 .basis_weight input[type="number"] {
-    width: 40px;
+    width: 60px;
+}
+#SpecificStock {
+  display: flex;
+}
+#SpecificStock ul {
+  width: 100%;
+   column-count: 3;
+  /* Optional: Add a gap between columns */
+  column-gap: 20px;
+  /* Optional: Add a rule between columns */
+  column-rule: 1px solid #ccc;
+
 }
