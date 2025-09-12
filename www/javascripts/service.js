@@ -267,25 +267,26 @@ function cbFillResults( results ) {
 				} // end for
 
 			} // end if
-		} else {
-      const div = $(key);
-      if (div) {
-        if ( typeof(value)== "object" ) {
-          if ( value.addClassName ) {
-            div.addClassName( value.addClassName );
-          }
-          if (value.removeClassName ) {
-            div.removeClassName( value.removeClassName );
-          }
-        } else {
-          //console.log('filling: ' + key + ' with: ' + value );
-          //div.hide();
-          div.innerHTML = value;
-          //d//iv.show();
+		}
+
+    // Even if a form element has been updated, there may be an element with id that needs updating as well.
+    const div = $(key);
+    if (div) {
+      if ( typeof(value)== "object" ) {
+        if ( value.addClassName ) {
+          div.addClassName( value.addClassName );
+        }
+        if (value.removeClassName ) {
+          div.removeClassName( value.removeClassName );
         }
       } else {
-        //console.log("didnt find " + key );
-      } // end if
+        //console.log('filling: ' + key + ' with: ' + value );
+        //div.hide();
+        div.innerHTML = value;
+        //d//iv.show();
+      }
+    } else {
+      //console.log("didnt find " + key );
     } // end if
 	} // end for each 
 	gettingNewPrice = false;
