@@ -15,6 +15,7 @@
           input(
             type=>'cardinal', id=>'project_id', name=>'project_id',
             onkeydown=>'if(event.keyCode==13){load_projects();};',
+            oninput=>'if(this.value.length >= 5) load_projects();',
             value=>$session{$r->uri().'?project_id'},
             with_clear=>1,
             ),
