@@ -472,7 +472,9 @@ $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}
 	$self->spine_direction();
   $$self{impressions} = $$specs{"hdnImpressionQuantity$qty_index"};
   $$self{net_sheets} = $$specs{"hdnNetSheetCount$qty_index"};
-  $$self{gross_sheets} = $$specs{"StockQuantity$qty_index"};
+  $$self{gross_stock_weight} = $$specs{"StockQuantity$qty_index"};
+  $$self{gross_sheets} = $$specs{"hdnImpressionQuantity$qty_index"};
+
   if (!$$self{net_sheets}) {
     $openprint::log->error("No net sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
   }
