@@ -1332,7 +1332,6 @@ $log->debug('Sigs are the not same, ');
 
 $log->debug('Order after coalesce: ' . join(',', map { $_ . ' => ' .($jobs{$_} ? $jobs{$_}->docket() : 'undef') } @order));
 	if (!$Equipment->smartscheduling()) {
-
 		my ($start_time, $end_time, $operator_ids) = ($Shift->starttime(), $Shift->endtime(), $Shift->operator_ids());
 		$operator_ids = [] if ! $operator_ids;
 
@@ -1388,7 +1387,11 @@ $log->debug('Order after coalesce: ' . join(',', map { $_ . ' => ' .($jobs{$_} ?
 $log->debug("Jobs before: ".join(',',map { $$_{id} . ' ' . $_->Project()->docket() } @final_order ) );
 
 # Get the rest of the jobs on this equipment
-			my @jobs = openprint::ScheduledJob->find( equipment_id=>$Shift->equipment_id(),'starttime >='=>$Shift->starttime(),servicetype_id=>$Equipment->servicetype_id(), order=>'starttime' );
+			my @jobs = openprint::ScheduledJob->find(
+        equipment_id=>$Shift->equipment_id(),
+        'starttime >='=>$Shift->starttime(),
+        servicetype_id=>$Equipment->servicetype_id(),
+        order=>'starttime' );
 $log->debug("Jobs: ".join(',',map { $$_{id} . ' ' . $_->Project()->docket() } @final_order ) );
 
 # Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
@@ -1404,6 +1407,7 @@ $log->debug("Jobs: ".join(',',map { $$_{id} . ' ' . $_->Project()->docket() } @f
 					} # end if
 				} # end foreach job
 				if ( ! $found ) {
+          $log->debug("$row_id not found in order, might be on another press");
 # Must be on another press.
 					my $Job = new openprint::ScheduledJob( $row_id );
 					$Job->equipment_id( $Shift->equipment_id() );
@@ -1476,7 +1480,7 @@ sub reorder_jobs {
 		} # end if
 	} # end foreach Job
 
-	my $start_dt = DateTime->now;
+	my $start_dt = DateTime->now; # Can't start in the past
   $start_dt->set_time_zone($openprint::TZ);
 	my $row = $order[0];
 	if ( my $Shift = $row->Shift() ) {
@@ -1489,7 +1493,7 @@ sub reorder_jobs {
 	if ( $row->locked() and ( $row->endtime_dt() < $start_dt ) ) {
 		$row->runtime_seconds( $start_dt->subtract($row->starttime_dt())->seconds );
 		$start_dt = $row->endtime_dt()->add(seconds=>1);
-    $log->debug("Running job,moving up starttime to " . $start_dt);
+    $log->debug("Running job, moving up starttime to " . $start_dt);
 		$row->save();
 	} # end if
 $log->debug("Grab all start time is " . $start_dt);
@@ -1527,7 +1531,8 @@ $log->debug("NES: " . $NextES->name() );
 		} # end if ! NextES
 		push @Shifts, $NextES->emanantise( $start_dt );
 	} # end if ! @Shifts
-	if ( ! @Shifts ) {
+
+	if (!@Shifts) {
 		$log->error("NO more shifts in reorder_jobs");
 		return;
 	}
@@ -1536,7 +1541,7 @@ $log->debug("NES: " . $NextES->name() );
 $log->debug("Starting Shift: " . $Shift->to_string());
 	
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Schedule IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do('LOCK TABLE Schedule IN SHARE ROW EXCLUSIVE MODE') or $log->error($dbh->errstr);
 
 	my @fixed_jobs = ();
 	for ( my $i = 0; $i < @order; $i += 1 ) {
@@ -1565,21 +1570,22 @@ $log->debug(" splicing $order[$i]{starttime} $i " . $order[$i]->Project()->docke
 
 		my $run_time = $$row{tentative} ? 1 : $row->runtime_seconds();
 		$log->debug("run time for $$row{id} docket " . $row->docket() . ' is ' . $run_time . ' ' . misc::seconds2hms($run_time));
-		if ( ! $run_time ) {
-			$log->error("JOb $$row{id} " . $row->docket() . ' is 0, making it 1' );
+		if (!$run_time) {
+			$log->error("Job $$row{id} " . $row->docket() . ' is 0, making it 1' );
 			$run_time = 1;
 		}
 
-		my $old_start_dt = $start_dt->subtract(seconds=>$run_time);
-
-		while ( @fixed_jobs and ( $fixed_jobs[0]->starttime_dt() < $start_dt->add(seconds=>$run_time) ) ) {
+		while ( @fixed_jobs) {
+      my $next_dt = $start_dt;
+      $next_dt->add(seconds=>$run_time);
+      last if $fixed_jobs[0]->starttime_dt() > $next_dt;
 			# Have fixed_jobs.  They do not move.
 			$start_dt = $fixed_jobs[0]->endtime_dt()->add(seconds=>1);
 			my $Job = shift @fixed_jobs;
 			push @jobs_in_shift, $$Job{id};
 		} # end while
 
-		$log->debug("Job: " . $row->to_string() );
+		$log->debug("Job: " . $row->to_string() ." starttime $start_dt");
 # Time to move on to next shift
 		while ( $start_dt > $Shift->endtime_dt()) {
       #while ( ( ! @{$Shift->operator_ids()} ) or ( $start_time > $Shift->endtime_seconds() ) ) {
@@ -1633,7 +1639,9 @@ $openprint::log->debug("Shift " . $Shift->ul_id() . " has not changed");
       $row->Project()->add_to_log( @session{'company_id','user_id'}, 'Scheduled on ' . $row->Equipment()->strid() . ' at ' . $start_dt->strftime($config{DateTimeFormat}) );
     } # end if
 
+    $log->debug("STart dt $start_dt adding $run_time");
     $start_dt = $start_dt->add(seconds=> $run_time);
+    $log->debug("STart dt $start_dt adding $run_time");
   } # end while @order
 
 	# THis might be here to deal with the last round of jobs...
