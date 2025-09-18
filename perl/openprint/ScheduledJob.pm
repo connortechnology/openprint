@@ -96,6 +96,13 @@ sub starttime_dt {
   $$self{starttime_dt} = $parser->parse_datetime( $$self{starttime} );
   return $$self{starttime_dt};
 }
+sub endtime_dt {
+  my $self = shift;
+
+  my $endtime_dt = $parser->parse_datetime( $$self{starttime} );
+  $endtime_dt->add(seconds=> $self->runtime_seconds());
+  return $endtime_dt;
+}
 
 sub starttime_seconds {
 	my $starttime_dt;
