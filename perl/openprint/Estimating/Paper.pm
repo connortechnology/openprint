@@ -320,9 +320,9 @@ $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 			if ($$Stock{type} eq 'Sheet' or $$Stock{type} eq 'Envelope') {
 				$$specs{"qty-$stock_index-$qty_index"} = Math::Round::nearest(0.1, ( $$total{"qty_$qty_index"} * $Stock->sheet_weight() ));
 				$$specs{"sheets-$stock_index-$qty_index"} = $$total{"qty_$qty_index"};
-        $openprint::log->error("!ROLL? " . $$Stock{type} . "qty-$stock_index-$qty_index");
+        $openprint::log->debug("ROLL? " . $$Stock{type} . " qty-$stock_index-$qty_index");
 			} else {
-        $openprint::log->error("ROLL? " . $$Stock{type});
+        $openprint::log->debug("ROLL? " . $$Stock{type});
 				$$specs{"qty-$stock_index-$qty_index"} = $$total{"qty_$qty_index"};
 				$$specs{"sheets-$stock_index-$qty_index"} = ceil( $$total{"qty_$qty_index"} / $Stock->start_sheet_weight() ) if $Stock->start_sheet_weight();
 			} # end if
