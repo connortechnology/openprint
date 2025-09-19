@@ -64,13 +64,11 @@ flex: 1;
 	float: left;
 }
 .BleedsColourBars ,
+.Stock,
 .Service .Overrides {
 	float: left;
 	width: 50%;
 	min-width: 425px;
-}
-.Stock {
-  width: 100%;
 }
 .SpotColour {
 	width: 25%;
