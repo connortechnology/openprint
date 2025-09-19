@@ -203,7 +203,9 @@ sub calc {
 		local *calc_signature = sub {
 			my ($sig_specs, $item_qty, $item_width, $item_height, $item_calliper, $item_weight, $imposition, $item_name) = @_;
 			my $results = {
+        package_qty => 0,
 				breakdown => '',
+        alert => '',
 				material_price => 0,
 			};
 			my $best_price = undef;
