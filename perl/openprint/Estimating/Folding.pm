@@ -584,6 +584,8 @@ sub signature_calc {
 		return \%results;
 	} # end if
 
+  $$sig_specs{rdbTemplateType} //= '';
+
 	my $Paper = $$SignatureImposition{Paper};
 	my $Press = $$SignatureImposition{Press};
 	my $ppt = $Press->specification('Printing Type');
