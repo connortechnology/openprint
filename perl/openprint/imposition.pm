@@ -5,9 +5,9 @@ use Data::Dumper;
 
 use openprint::Imposition;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_DUTCH => 0;
-use constant DEBUG_CONVERT => 1;
+use constant DEBUG_CONVERT => 0;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -424,7 +424,7 @@ sub calc_setup_object {
 			$bindery_head = $$specs{PerfectBindCoverGutter};
 		} # end if
 	} # end if
-$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
+$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed") if DEBUG;
 	my %bleed_locations = map { $_, $_ } split(',', $$specs{BleedLocations} );
 	my $bleed_width = 2*$bindery_bleed;
 	my $bleed_height = 2*$bindery_bleed;
@@ -447,7 +447,7 @@ $openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bl
 	} # end if
 	$bleed_width = 0 if $bleed_width < 0;
 	$bleed_height = 0 if $bleed_height < 0;
-  $openprint::log->debug("BleedSize: $bleed_size bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
+  $openprint::log->debug("BleedSize: $bleed_size bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width") if DEBUG;
 
 	if ( $bindery_head < 0 ) {
 		$bindery_head = 0;
