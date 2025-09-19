@@ -43,15 +43,15 @@
 			<li class="calliper"><label>Calliper</label>
  <? echo (
         return join("\n", 
-          input( type=>'float', name=>'txtSpecificStockCalliperPT'.$$variable{Signature},
+          input( type=>'float', name=>'txtSpecificStockCalliperPT'.$$variable{Signature}, class=>'calliper_pt',
           value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}?$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}*1000:'',
           on_input_this=>'calliper_onchange' ),
           'PT',
-          input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature},
+          input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature}, class=>'calliper',
           value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}?$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}:'',
           on_input_this=>'calliper_onchange' ),
           'inches',
-          input( type=>'float', name=>'calliper_mm'.$$variable{Signature},
+          input( type=>'float', name=>'calliper_mm'.$$variable{Signature}, class=>'calliper_mm',
           value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}?Math::Round::nearest(0.001, $$variable{'txtSpecificStockCalliper'.$$variable{Signature}}*25.4):'',
           on_input_this=>'calliper_onchange' ),
           'mm'
