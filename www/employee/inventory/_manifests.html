@@ -296,7 +296,7 @@ $log->debug("$value_total");
 			return $html;
 		) ?>
 	</table>
-<script> TableKit.reloadTable('ResultsTable'); </script>
+<script> if (window.TableKit) TableKit.reloadTable('ResultsTable'); </script>
 	<input type="hidden" name="btnFunction"/>
 	<p class="buttons">
 		<? echo (
