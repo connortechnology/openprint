@@ -1,13 +1,14 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use lib '/var/www/testing/perl';
+use lib '/var/www/openprint/perl';
 
 my $limit = 10;
 
 require sql;
 require misc;
 require logger;
+require states;
 
 use Text::CSV_XS;
 
@@ -68,15 +69,32 @@ my $csv = Text::CSV_XS->new();
 open ( FH, "$$opts{file}" ) or die "Can't open $$opts{file} : $!";
 my @Companies = openprint::Company->find();
 my %Companies = map { $_->name()=> $_ } @Companies;
-my %Companies2 = map { $_->business_name(), $_ } @Companies;
+my %Companies2 = map { $_->business_name() ? ($_->business_name(), $_) : () } @Companies;
+
+
 while ( <FH> ) {
 	my $status = $csv->parse($_);
   #Customer,Contact First Name,Contact Last Name,Add. Line 1,City,State,Zip,Country
-	my ($name, $firstname, $lastname, $address, $city, $state, $zip, $country ) = misc::trim($csv->fields());
+	my ($accountno, $name, 
+    $address, $city, $state, $zip, $phone,
+    $firstname, $lastname,
+  ) = misc::trim($csv->fields());
+  #my ($name, $firstname, $lastname, $address, $city, $state, $zip, $country ) = misc::trim($csv->fields());
 	next if ! $name;
   next if $name eq 'Customer';
   my $business_name = $name;
   $name = openprint::Company->transform(name=>$name);
+
+  my %changes = (name=>$name,
+          accountnumber => $accountno,
+          business_name => $name,
+          address1=>$address,
+          city=>$city,
+          state=>$state,
+          postalcode=>$zip,
+          country=>$states::states{$state} ? 'US' : 'CA',
+          phone=>$phone
+        );
 
 	my $Company = $Companies{$name};
 
@@ -84,19 +102,29 @@ while ( <FH> ) {
     print "Company? $name $Companies{$name}\n";
     if (confirm("Create ($name) $address ?", 'Y')){
       $Company = new openprint::Company();
-      $Company->save({name=>$name,
-          business_name => $name,
-          address1=>$address,
-          city=>$city,
-          state=>$state,
-          postalcode=>$zip,
-          country=>$country
-        });
+      $Company->save(\%changes);
+    }
+  } else {
+    print "Company $name already exists\n";
+    $Company->deleted(0) if $Company->deleted();
+    my @changes = $Company->changes(\%changes);
+    if (@changes and confirm("Update $name : @changes")) {
+      $Company->save(\%changes);
     }
 	} # end if
 
-  #my $User = new openprint::User( );
-  #$User->save({ firstname=>$first, lastname=>$last, email=>$email, company_id=>$Company->id() });
+  my $user = openprint::User->find_one(
+    company_id=>$Company->id(),
+    'firstname lc'=>lc openprint::User->transform(firstname=>$firstname),
+    'lastname lc'=>lc openprint::User->transform(lastname=>$lastname)
+  );
+  if (!$user and confirm("Add $firstname $lastname to $name")) {
+
+    $user = new openprint::User( );
+    $user->save({ firstname=>$firstname, lastname=>$lastname,
+        #email=>$email,
+        company_id=>$Company->id() });
+  }
 } # end while
 close (FH);
 
