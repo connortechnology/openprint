@@ -280,7 +280,7 @@ sub dropdown {
 
 	my %sql = @_;
 
-	if ( $openprint::session{user_id} and ( $openprint::session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ) {
+	if ( $openprint::session{user_id} and ( $openprint::session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory','Sales'], $openprint::session{user_id} ) ) {
 
 		my %new_sql = ( and => [
 			or => {
