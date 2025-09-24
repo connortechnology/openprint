@@ -4004,12 +4004,12 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 							last;
 						} # end if
 					} else {
-						$log->error("1 No Value set for $$BPress{strid}");
+						$log->debug("1 No Value set for $$BPress{strid}") if DEBUG;
 					} # end if	
 					
 				} # end for B
 			} else {
-				$log->error("2 No Value set for $$Press{strid}");
+				$log->debug("2 No Value set for $$Press{strid}") if DEBUG;
 			} # en dif
 			if ( $add ) {
 				push @{$imps{$key}}, $I;
