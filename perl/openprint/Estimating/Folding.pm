@@ -1462,11 +1462,11 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
                   }
 
                   if ( $width_folds < 0 ) {
-                    $openprint::log->debug("Got negative width_folds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
+                    $openprint::log->debug("Got negative width_folds $width_folds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
                     $width_folds = 0;
                   } # end if
                   if ( $height_folds < 0 ) {
-                    $openprint::log->debug("Got negative width_folds from $$Imposition{layout_height}/ $$Imposition{object_height}-1");
+                    $openprint::log->debug("Got negative height_folds $height_folds from ($$Imposition{layout_height}/ $$Imposition{object_height})-1");
                     $height_folds = 0;
                   } # end if
                 }

@@ -1098,7 +1098,7 @@ $openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
                 } # end foreach
               } # end if
             } else {
-              $vertical_cuts += int ( ($I->page_columns()-1)* (($I->columns()-1)*2) ) + 2;
+              $vertical_cuts += int ( ($I->page_columns()-1)* (($$I{columns}-1)*2) ) + 2;
             } # end if
           } else {
             $vertical_cuts += $$I{columns}-1;
@@ -1202,11 +1202,18 @@ $openprint::log->debug("Folding cuts: $folding_cuts") if DEBUG;
       if ( $cuts ) {
         if ( $CuttingMakeReady ) {
           my %setup = $CuttingMakeReady->get_price(undef, $Equipment);
+          if ($setup{units} and ($setup{units} eq 'per cut')) {
+            %setup = $CuttingMakeReady->get_price( $cuts, $Equipment );
+          }
           if ( !%setup ) {
-            $log->error("No Cutting Makeready for $$Equipment{strid}");
+            $log->error("No Cutting Makeready for $cuts cuts on $$Equipment{strid}");
           } else {
+            $setup{Price} //= 0;
             if ($setup{units} and ($setup{units} eq 'per cut')) {
               %setup = $CuttingMakeReady->get_price( $cuts, $Equipment );
+              if (!$setup{units}) {
+                $openprint::log->error("Bad price for $cuts on $$Equipment{name}");
+              }
               $setup{Total} = $setup{Price} * $cuts;
               $results{Breakdown} .= sprintf('Make Ready: $%1$.2f%2$s * %4$d cuts = $%3$.2f<br/>',
                 @setup{'Price','units','Total'}, $cuts );

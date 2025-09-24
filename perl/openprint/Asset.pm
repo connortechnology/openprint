@@ -19,7 +19,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %transforms %defaults $table $serial );
 
-$debug = 1;
+$debug = 0;
 
 %fields = (
 	id			=>	'id',

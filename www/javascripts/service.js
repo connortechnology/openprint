@@ -279,8 +279,8 @@ function cbFillResults( results ) {
         if (value.removeClassName ) {
           div.removeClassName( value.removeClassName );
         }
-      } else {
-        //console.log('filling: ' + key + ' with: ' + value );
+      } else if (div.type == 'undefined') {
+        //console.log('filling: ' + key + ' with: ' + value, 'type', div.type );
         //div.hide();
         div.innerHTML = value;
         //d//iv.show();
