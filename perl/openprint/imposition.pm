@@ -676,8 +676,8 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 					push @results, $imp;
 				} # end foreach
 			} # end if grain_direction
-			$setup1->columns( $$setup1{columns} * 2 );
-			$setup1->start_columns( $$setup1{columns} );
+      $$setup1{columns} = $$setup1{columns} * 2;
+			$$setup1{start_columns} = $$setup1{columns};
 			if ( ! $setup1->Paper()->width() ) {
 				$setup1->Paper()->width( $setup1->used_width()*2 );
 			} # end if
