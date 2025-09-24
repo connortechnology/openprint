@@ -279,11 +279,11 @@ function cbFillResults( results ) {
         if (value.removeClassName ) {
           div.removeClassName( value.removeClassName );
         }
-      } else if (div.type == 'undefined') {
+      } else if (div.type === undefined ) {
         //console.log('filling: ' + key + ' with: ' + value, 'type', div.type );
-        //div.hide();
         div.innerHTML = value;
-        //d//iv.show();
+      //} else {
+        //console.log('not filling: ' + key + ' with: ' + value, 'type', div.type );
       }
     } else {
       //console.log("didnt find " + key );
