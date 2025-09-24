@@ -403,7 +403,6 @@ sub summary {
 
 		$text .= $$specs{rdbCardboardBacking} eq 'Y' ? ' with cardboard backing.' : '';
 	} # end if
-$openprint::log->debug("Bundling:: summary");
 	return $text;
 } # end sub summary
 
