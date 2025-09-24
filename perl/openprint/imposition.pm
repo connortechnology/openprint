@@ -663,7 +663,9 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		} # end if imposition
 	} elsif ( $run_style eq 'Work & Turn' ) {
 		calc_setup( $setup1, @$setup1{'image_width','image_height'}, $adjusted_paper_width/2, $adjusted_paper_height );
-		$openprint::log->debug( sprintf('CHECK 1 Work&Turn Using Paper %sx%s -> %s x %s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $setup1->image_width(), $setup1->image_height(), $setup1->imposition(), $setup1->columns(), $setup1->rows() ) ) if DEBUG;
+		$openprint::log->debug( sprintf('CHECK 1 Work&Turn Using Paper %sx%s -> %s x %s Image: %s x %s Imposition: %dout:%dx%d ',
+        $paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height,
+        @$setup1{qw(image_width image_height imposition columns rows)} ) ) if DEBUG;
 
 		if ( $$setup1{imposition} ) {
 			if ( $$specs{dutch} ) {
@@ -676,7 +678,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 					push @results, $imp;
 				} # end foreach
 			} # end if grain_direction
-      $$setup1{columns} = $$setup1{columns} * 2;
+      $setup1->columns($$setup1{columns} * 2);
 			$$setup1{start_columns} = $$setup1{columns};
 			if ( ! $setup1->Paper()->width() ) {
 				$setup1->Paper()->width( $setup1->used_width()*2 );
