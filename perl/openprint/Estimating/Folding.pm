@@ -402,7 +402,7 @@ sub signature_needs {
 		} else {
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				my $page_quantity = $$specs{'PageQuantity'.$qty_index};
-				if ( $page_quantity == 2 ) {
+				if ($page_quantity and ($page_quantity == 2)) {
 					$openprint::log->warn("Folding not needed: PageQuantity: $page_quantity") if DEBUG_NEEDS;
 					return 0;
 				} # end if
