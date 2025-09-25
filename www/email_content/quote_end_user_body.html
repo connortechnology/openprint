@@ -12,6 +12,6 @@ Please save it for future reference<? echo (
     my $CSR = $Company->CSR();
 		return sprintf('and do not hesitate to contact me if you have any questions.<br/><br/>Yours Sincerely,<br/>%s %s<br/>%s<br/><a href="mailto:%s">%s</a><br/>%s%s<br/>', $CSR->firstname(), $CSR->lastname(),  $CSR->Company()->name(), $CSR->email(), $CSR->email(), $CSR->phone(), $CSR->extension() ? 'x'.$CSR->extension() : '' );
 	} else {
-  return qq`.</br></br>  Please contact our <a href="$config{ExternalSiteURL}/support/help_desk.html">helpdesk</a> if you have any questions.`;
+    return qq`.</br></br>Please contact our <a href="$config{ExternalSiteURL}/support/help_desk.html">helpdesk</a> if you have any questions.`;
 	} # end if
 ) ?>
