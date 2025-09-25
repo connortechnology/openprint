@@ -5356,7 +5356,7 @@ $imp->display('[warn]');
 									$$Setup{side_two_colours} = [ get_colours($$Setup{specs}, $$Setup{specs}{side_link} ? 'SideOne' : 'SideTwo') ];
 									foreach my $q_index ( $Project->quantity_indexes() ) {
 										$$subsig_specs{'txtUnspecifiedPageQuantity'.$q_index} = get_unspecified_pages($Project, $sigs[0], $subsig_specs, $q_index);
-										$log->error("Subsig upq " . $$subsig_specs{'txtUnspecifiedPageQuantity'.$q_index});
+                    #$log->error("Subsig upq " . $$subsig_specs{'txtUnspecifiedPageQuantity'.$q_index});
 									}
 									$$Setup{Stocks} = [ get_Stocks( $Project, $$Setup{specs} ) ];
 									if ( @{$$Setup{Stocks}} ) {
