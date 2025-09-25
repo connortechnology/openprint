@@ -392,7 +392,7 @@ sub signature_calc {
 
 	if ( ! ( @front_aq or @back_aq ) ) {
 		my ( $caller, undef, $line ) = caller;
-		$openprint::log->warn("Doing AQ when not needed @front_aq @back_aq from $caller:$line");
+		$openprint::log->debug("Doing AQ when not needed @front_aq @back_aq from $caller:$line") if DEBUG;
 		$bestPrice{Status} = 'calculated';	
     $bestPrice{not_needed} = 1;
 		return %bestPrice;
