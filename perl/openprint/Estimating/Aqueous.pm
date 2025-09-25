@@ -162,7 +162,7 @@ sub get_colours {
   foreach my $k ( keys %$specs ) {
 #$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
     if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
-      next if ! $$specs{"chkColourCoating$index$side"};
+      next if ! ($$specs{"chkColourCoating$index$side"} and $$specs{"ColourCoatingType$index$side"});
       if ( $$specs{"ColourCoatingType$index$side"} =~ /Aqueous/i ) {
         push @colours, $$specs{"ColourCoatingType$index$side"};
       } # end if
