@@ -7,7 +7,7 @@ require openprint::Equipment;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'tbl_Equipment_Specifications';
 $serial = 'tbl_equipment_specifications_id_seq';
 
@@ -21,6 +21,7 @@ $serial = 'tbl_equipment_specifications_id_seq';
 	value			=>	'strvalue',
 	units			=>	'strunits',
 	interpolate		=>	'interpolate',
+  sorting   => 'sorting',
 );
 %transforms = (
 	min		=> [ 's/[^\d\.]//g' ],

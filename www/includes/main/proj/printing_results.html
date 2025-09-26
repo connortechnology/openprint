@@ -73,7 +73,7 @@
 				`, $$variable{Columns}, $qty_index, make_drop_down( [ 
 					map { $_, join(' x ', map { $_.'"' } split('x', $_) ) } @sizes ], $$variable{'ddmStockSheetSize'.$qty_index}, { encode=>1 } ),
 			);
-		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+		if ( ($$variable{Project}->Type()->name() ne 'Envelopes') and sets::isin( $session{user_type}, ['A','E'] ) ) {
 			$html .= write_override( 'chkOverrideSheetSize'.$qty_index, 
 					$$variable{'chkOverrideSheetSize'.$qty_index},
 					"\$('OverrideStockSize$qty_index').show();", 
@@ -98,14 +98,15 @@
 	} # end if A or E
 	$html .= sprintf('
 	</div>
-<input type="hidden" name="hdnSuppliedStockWidth%1$d"/>
-<input type="hidden" name="hdnSuppliedStockHeight%1$d"/>
-<input type="hidden" name="StockWidth%1$d"/>
-<input type="hidden" name="StockHeight%1$d"/>', $qty_index);
+  <input type="hidden" name="hdnSuppliedStockWidth%1$d"/>
+  <input type="hidden" name="hdnSuppliedStockHeight%1$d"/>
+  <input type="hidden" name="StockWidth%1$d"/>
+  <input type="hidden" name="StockHeight%1$d"/>', $qty_index);
 	} # end foreach qty_index
 	return $html;
 ) ?>
 </li>
+<?if( $$variable{Project}->Type()->name() ne 'Envelopes')?>
 <li><label>Minimum Stock Size</label>
 <? eval ( $$variable{QTYIndex} = 1 ) ?>
 <? while ( $$variable{QTYIndex} <= 3 ) ?>
@@ -130,6 +131,7 @@
 		return $html;
 	) ?>
 </li>
+<?endif( $$variable{Project}->Type()->name() ne 'Envelopes')?>
 <li>
 <? eval ( $$variable{QTYIndex} = 1 ) ?>
 <? while ( $$variable{QTYIndex} <= 3 ) ?>
@@ -380,6 +382,7 @@
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{Columns}.'Columns">';
 			$html .= input( id=>"OverTotal$qty_index", name=>"OverTotal$qty_index", value=>$$variable{'OverTotal'.$qty_index}, type=>'cardinal', oninput=>'calc(this.form.name);' );
+			$html .= write_override( 'OverrideTotalOvers'.$qty_index, $$variable{'OverrideTotalOvers'.$qty_index},'',"calc('f1');" );
 			$html .= '</span>';
 		} # end foreach qty_index
 		return $html;

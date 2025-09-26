@@ -344,7 +344,7 @@ sub _index {
 			ssi::save_params( '/administrator/service_types/index.html', (
 					 #'starting_on_start_year','starting_on_start_month','starting_on_start_day',
 					 #'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-					'category_id',
+					'category_id', 'search',
 					) );
 	 } # end if
 }

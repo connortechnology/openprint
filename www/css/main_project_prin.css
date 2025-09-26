@@ -53,19 +53,19 @@ flex: 1;
 }
 
 .BleedsColourBarsStockOverrides {
-display: flex;
-align-items: stretch;
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
 }
 
 .SignatureGroup .leftColumn ,
 .SignatureGroup .rightColumn {
-width: 50%;
+  width: 50%;
 	float: left;
 }
 .BleedsColourBars ,
-.Service .Overrides ,
-.Stock 
- {
+.Stock,
+.Service .Overrides {
 	float: left;
 	width: 50%;
 	min-width: 425px;
@@ -129,6 +129,9 @@ width: 49%;
 	float: left;
 	width: 104px;
 }
+.SpecialColour select {
+  width: auto; /* Override bootstrap which sets it to 220px; */
+}
 
 .imposition input[name="txtLayoutWidth1"] ,
 .imposition input[name="txtLayoutWidth2"] ,
@@ -157,11 +160,29 @@ width: 49%;
 #Version_Descriptions .Quantity {
   text-align: right;
 }
-.calliper input[type="text"],
-.calliper input[type="number"] {
-    width: 45px;
-}
 .basis_weight input[type="text"],
 .basis_weight input[type="number"] {
-    width: 40px;
+    width: 60px;
 }
+/*
+#SpecificStock {
+  display: flex;
+}
+#SpecificStock ul {
+  width: 100%;
+   column-count: 2;
+  column-gap: 20px;
+  column-rule: 1px solid #ccc;
+
+}
+@media screen and (max-width: 1280px) {
+  #SpecificStock ul {
+    column-count: 2;
+  }
+}
+@media screen and (max-width: 800px) {
+  #SpecificStock ul {
+    column-count: 1;
+  }
+}
+*/

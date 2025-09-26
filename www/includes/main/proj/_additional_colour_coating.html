@@ -19,7 +19,7 @@
 		my @label_options = ('PMS');
 		
 		my @Services;
-    if(!$$variable{Project}->has_service('AqueousOffline')){
+    if (!$$variable{Project}->has_service('AqueousOffline')) {
       if ( $$variable{Coatings} ) {
         @Services = @{$$variable{Coatings}};
       } else {
@@ -60,7 +60,7 @@
 					class	=>	'Coverage', 
 					name	=>	'ColourCoatingCoverage'.join('',@$variable{'index','Side','Signature'}),
           value =>$$variable{'ColourCoatingCoverage'.join('',@$variable{'index','Side','Signature'})},
-          onkeyup=>"SpecialColour_onchange(this, '$$variable{Side}', '$$variable{index}', '$$variable{Signature}' );",
+          oninput=>"SpecialColour_onchange(this, '$$variable{Side}', '$$variable{index}', '$$variable{Signature}' );",
           min => 0,
           max => 100,
           ); ) ?>

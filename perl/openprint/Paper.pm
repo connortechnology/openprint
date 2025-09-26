@@ -35,8 +35,9 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
 use constant DEBUG_PRICING => 0;
+use constant DEBUG => 0;
 
-$debug = 1;
+$debug = 0;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -1280,7 +1281,11 @@ sub gsm {
 		}
 	} 
 	if ( ! $$self{gsm} ) {
-		if ( $self->wpsi(undef) ) {
+    if ($$self{mweight} and $self->type() ne 'Roll') {
+      my $wpsi = $$self{mweight} / ($$self{width}*$$self{height}*1000);
+      $$self{gsm} = Math::Round::nearest( 0.01, $wpsi * 703064.5 );
+      $openprint::log->warn('calculate gsm for ' . $$self{id} . ' ' . $self->to_string() ) if $$self{brand};
+    } elsif ( $self->wpsi(undef) ) {
 			$$self{gsm} = Math::Round::nearest( 0.01, $$self{wpsi} * 703064.5 );
 			$openprint::log->warn('calculate gsm for ' . $$self{id} . ' ' . $self->to_string() ) if $$self{brand};
 		} else { 
@@ -1303,19 +1308,19 @@ sub wpsi {
 		if ( $$self{mweight} and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
       $$self{wpsi} *= 2 if $self->is_envelope();
-#$log->debug("Setting wpsi to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height})");
+$log->debug("Setting wpsi $$self{wpsi} to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height}) = item weight ".$self->sheet_weight()) if DEBUG;
     } elsif ( $self->basis_mweight() ) {
       $$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
       if ($self->is_envelope()) {
         $$self{wpsi} *= 2;
-        $log->debug("Setting wpsi to $$self{wpsi} from envelope 2 * basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height}");
+        $log->debug("Setting wpsi to $$self{wpsi} from envelope 2 * basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height} = envelope weight ".$self->sheet_weight()) if DEBUG;
       } else {
-        $log->debug("Setting wpsi to $$self{wpsi} from basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height}");
+        $log->debug("Setting wpsi to $$self{wpsi} from basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height} = sheet weight ".$self->sheet_weight()) if DEBUG;
       }
 
     } elsif ($$self{gsm} and $$self{gsm} ne 'unknown') {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
-#$log->debug("Setting wpsi from gsm to $$self{gsm} / 703064.5 = $$self{wpsi}");
+$log->debug("Setting wpsi from gsm to $$self{gsm} / 703064.5 = $$self{wpsi}") if DEBUG;
 		#} else {
 #$log->debug("Nothing to set wpsi from");
 		} # end if
@@ -1783,7 +1788,13 @@ sub start_sheet_weight {
 } # end sub start_sheet_weight
 
 sub units {
-	return ($_[0]{type} eq 'Roll' ? 'lb' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
+  if ($_[0]{type} eq 'Roll') {
+    return 'lb'.($_[1] == 1 ? '' : 's');
+  }
+  if ($_[0]{type} eq 'Envelope') {
+    return 'envelope'.( $_[1] == 1 ? '' : 's');
+  }
+  return 'sheet'.( $_[1] == 1 ? '' : 's');
 } # end sub units
 
 sub types {
@@ -1851,7 +1862,8 @@ sub link_to {
   my $self = shift;
   my $text = @_ ? shift : $self->to_string();
 
-	if ( $openprint::variable{uri} and ( $openprint::variable{uri} =~ /administrator/ ) ) {
+  #if ( $openprint::variable{uri} and ( $openprint::variable{uri} =~ /administrator/ ) ) {
+  if ($openprint::User->type() eq 'A') {
 	  return '<a href="/administrator/stock/stock.html?stock_id='.$$self{id}.'">'.$text.'</a>';
 	} else {
 	  return '<a href="/employee/inventory/paper_details.html?paper_id='.$$self{id}.'">'.$text.'</a>';
@@ -2081,6 +2093,7 @@ sub destroy {
 
 sub grade {
   my $self = shift;
+  $$self{grade} = shift if @_;
   if (!$$self{grade}) {
     #1        =>      '1 Gloss-coated stock',
     #2        =>      '2 Matte-coated stock',

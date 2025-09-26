@@ -35,7 +35,7 @@ require misc;
 
 my $threading = 0;
 #use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 1;
 use constant DEBUG_PRESSES => 0;
@@ -509,7 +509,7 @@ sub no_outputs {
 		} # end foreach
 	} # end foreach Side
 
-  if ( $$new_specs{versions} and ($$new_specs{versions} > 0) and ($$new_specs{versions} < 10)) {
+  if (0 and  $$new_specs{versions} and ($$new_specs{versions} > 0) and ($$new_specs{versions} < 10)) {
     foreach my $version ( 1 .. $$new_specs{versions} ) {
       $openprint::log->debug("Version: $version");
       push @v, "version-$version-description";
@@ -851,10 +851,11 @@ $log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if
 	}
 
 	%{$project{SpinePasteSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{SpinePaste}[0] )} if $$services{SpinePaste};
-	if ( $$services{PerfectBound} ) {
+
+	if ($$services{PerfectBound}) {
 		$project{HasPerfectBound} = $$services{PerfectBound}[0];
 		%{$project{PerfectBoundSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{PerfectBound}[0] )};
-		$project{PerfectBindCoverGutter} = $config{PerfectBindCoverGutter} if $$specs{Group} == 1;
+		$project{PerfectBindCoverGutter} = $config{PerfectBindCoverGutter};# if $$specs{Group} == 1;
 	} # end if
 
 	$project{ProjectSpecs} = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -1128,8 +1129,10 @@ sub get_Stocks {
 			$$specs{alert} .= 'GSM is too low.';
 			return ();
 		} # end if
-		if ( int($Paper->gsm()) != int($Paper->gsm(undef)) ) {
+    my $gsm = $Paper->gsm();
+		if ( int($gsm) != int($Paper->gsm(undef)) ) {
 			$$specs{alert} .= "GSM ($$specs{txtStockGSM}) and calculated gsm ($$Paper{gsm}) are different.  Please double check that everything is ok.";
+      $Paper->gsm($gsm);
 			#return ();
 		}
 	} else {
@@ -1172,7 +1175,7 @@ sub get_Stocks {
 			$$specs{alert} .= 'Unable to find any stocks matching your specifications.<br/>';
 			return @Papers;
 		} elsif ( DEBUG ) {
-			$log->debug('Got for papers: ' . @Papers);
+			$log->debug('Got papers: ' . @Papers);
 		} # end if
 
 		# Load this here, so that later cloning will copy the prices as well.
@@ -1508,7 +1511,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		} # end if
 
 		my $do_work_turn = $$project{print_sides} == 2 ? 1 : 0;
-    $openprint::log->debug("Do W&T $do_work_turn because sides: $$project{print_sides}");
+    $openprint::log->debug("Do W&T $do_work_turn because sides: $$project{print_sides}") if DEBUG;
 		if ( $do_work_turn ) {
 # Coatings like AQ are done in a separate pass.	So we don't count them in this check
 			if ( ! $$Papers[0]->doublesided() ) {
@@ -1596,7 +1599,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			$$project{dutch} = 0;
 		} elsif ( $_ = $Press->Specification('Dutch') and $$_{value} eq 'N' ) {
 			$$project{dutch} = 0;
-		} elsif ($$specs{txtSignatureType} or $$project{HasDieCutting} or $$project{HasPerforating} or $$project{HasScoring}) {
+		} elsif ($$specs{txtSignatureType}) {
 			$$project{dutch} = 0;
 		} # end if
 		$$project{PerfectingDutchByDefault} = $Press->specification('PerfectingDutchByDefault');
@@ -1621,7 +1624,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				$cut_off = $cut_off - $increment;
 			} # end while cutoff > min
 		} # end if
-$log->debug("Cut Offs for Press $$Press{strid} @cut_offs");
+$log->debug("Cut Offs for Press $$Press{strid} @cut_offs") if DEBUG;
 		my %feeds = map { $_, 1 } split(',',$_ ) if $_ = $Press->specification('Feed');
 		$$Press{Feeds} = \%feeds;
 		my $maximum_sheet_width = $Press->specification('Maximum Sheet Width') or 0;
@@ -1777,8 +1780,6 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
                 and (0+$$specs{"CutOff$qty_index"} != 0+$cut_off)) {
               $log->debug("Next cuz Cut off $cut_off != ".$$specs{"CutOff$qty_index"} . ' '.(0+$$specs{"CutOff$qty_index"}).'!='.(0+$cut_off) . ' ' . ((0+$$specs{"CutOff$qty_index"} != 0+$cut_off)));
               next;
-            } else {
-              $log->debug("Not Next cuz Cut off $cut_off != ".$$specs{"CutOff$qty_index"});
 						}
 						$$project{'Cut Off'} = $cut_off;
 						my @temp_imps = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{versions}, $P, $Press );
@@ -2470,18 +2471,14 @@ $log->debug("Using spine ehgiht");
 
 				if ( $$printing_specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
           # Perfect bound requires more width on the cover to cover the caliper	of the interior pages
+          # # FIXME: First run through multipage, nothing will exist in db.  Need to make this operate on stuff in ram...
 					my $finished_calliper = 0;
-					my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $Project->id(), 'Group' );
+					my @Groups = openprint::Estimating::MultiPage::groups($Project->id(), $printing_specs);
+
 					foreach my $group_id ( @Groups ) {
 						# Don't include the cover
 						next if $group_id == 1;
-						foreach my $ss_id ( $Project->signatures({ Group=>$group_id}) ) {
-							# Each group has at least 1 sig in it
-							my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-
-							$finished_calliper += $$sig_specs{GroupPageQuantity} * $$sig_specs{txtSpecificStockCalliper} /2;
-							last;
-						} # end foreach signature in the group
+            $finished_calliper += $$printing_specs{'GroupPageQuantity'.$group_id} * $$printing_specs{'txtSpecificStockCalliper'.$group_id} /2;
 					} # end foreach group
 					if ( ! $finished_calliper ) {
 						$$specs{alert} .= 'No calliper found for interior pages.  Spread Width will be incorrect';
@@ -2621,16 +2618,16 @@ sub get_overrides {
 # Technically, the dropdown and txtinputs should have values
 				if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
 #$log->error("NO ddm Stock SheetSize for $qty_index sig $index !");
-				} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
+        } elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
 
           if ( @$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?x?\s*$/ ) {
           } elsif (
             @$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x\s*([\d\.]+)"?\s*$/ ) {
-				} else {
-					$log->error( "Failure to parse ddmStockSheetSize$qty_index: ".$$sig_specs{"ddmStockSheetSize$qty_index"});
-					$$sig_specs{'chkOverrideSheetSize'.$qty_index} = '';
-				}
-				} # end if
+          } else {
+            $log->error( "Failure to parse ddmStockSheetSize$qty_index: ".$$sig_specs{"ddmStockSheetSize$qty_index"});
+            $$sig_specs{'chkOverrideSheetSize'.$qty_index} = '';
+          }
+        } # end if
 				push @{$Overrides{"OverrideStockWidth$qty_index"}}, $$sig_specs{"OverrideStockWidth$qty_index"};
 				push @{$Overrides{"OverrideStockHeight$qty_index"}}, $$sig_specs{"OverrideStockHeight$qty_index"};
 			} # end if
@@ -2652,31 +2649,31 @@ sub calc {
 	# Must clear these
 	%filtered_imposition_cache = ();
 	$master_time = gettimeofday();
-#$log->debug("Starting Printing::calc");
 
-	if ( ! $project_index or ! $service_index ) {
-		$log->debug("No Project Index ($project_index) or Service_index ($service_index)" );
+	if (!$project_index or !$service_index) {
+		$log->error("No Project Index ($project_index) or Service_index ($service_index)");
 		return $$specs{Status} = 'uncalculated';
 	} # end if
+
 	$$specs{Status} = 'calculated';
 	$$specs{alert} = '';
 	$$specs{information} = '';
   delete $$specs{Impositions};
 
-	if ( ( defined $$specs{PageQuantity} ) and $$specs{PageQuantity} =~ /[^\d\.]/ ) {
-		$variables{PageQuantity} = [ sets::exclude( ['output'], $variables{PageQuantity} ) ];
-		$$specs{PageQuantity} =~ s/[^\d\.]//g;
-	} # end if
 
 	my $Project = new openprint::Project( $project_index );
 	my $ProjectType = $Project->Type();
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-	$PaperServiceType = openprint::ServiceType->find_one(name=>'Paper');
-	$ImpositionServiceType = openprint::ServiceType->find_one(name=>'Imposition');
+	$PaperServiceType = openprint::ServiceType->find_one(name=>'Paper') if !$PaperServiceType;
+	$ImpositionServiceType = openprint::ServiceType->find_one(name=>'Imposition') if !$ImpositionServiceType;
 
 # First, clean up all inputs
+	if ( ( defined $$specs{PageQuantity} ) and $$specs{PageQuantity} =~ /[^\d\.]/ ) {
+		$variables{PageQuantity} = [ sets::exclude( ['output'], $variables{PageQuantity} ) ];
+		$$specs{PageQuantity} =~ s/[^\d\.]//g;
+	} # end if
   $$specs{Group} //= '';
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my $qty = $$specs{"txtQuantity$qty_index"};
@@ -2736,6 +2733,12 @@ sub calc {
 		} else {
 			$$specs{'OverrideRun'.$qty_index} = '';	
 			$variables{"OverRun$qty_index"} = [ sets::union( 'output', @{$variables{'OverRun'.$qty_index}} ) ];
+		} # end if
+		if ( $$specs{'OverrideTotalOvers'.$qty_index} ) {
+			$variables{"OverTotal$qty_index"} = [sets::exclude( ['output'], $variables{"OverTotal$qty_index"} ) ];
+		} else {
+			$$specs{'OverrideTotalOvers'.$qty_index} = '';	
+			$variables{"OverTotal$qty_index"} = [ sets::union( 'output', @{$variables{'OverTotal'.$qty_index}} ) ];
 		} # end if
 
 	} # end foreach qty_index
@@ -3346,6 +3349,12 @@ sub save_price( $$$$$ ) {
 		$$specs{'hdnNetSheetCount'.$qty_index} = $$price{'Net Sheet Count'};
 		$$specs{'StockQuantity'.$qty_index} = $$price{'Gross Sheet Count'};
 		$$specs{'minimum_stock_size'.$qty_index} = sprintf('%s&quot; x %s&quot;', $Imposition->used_width(), $Imposition->used_height() );
+	} elsif ( $$Paper{type} eq 'Envelope' ) {
+		$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width}.'x'.$$Paper{height};
+		$$specs{'txtPressSheetQty'.$qty_index} = $$price{'Gross Sheet Count'} .' envelopes';
+		$$specs{'hdnNetSheetCount'.$qty_index} = $$price{'Net Sheet Count'};
+		$$specs{'StockQuantity'.$qty_index} = $$price{'Gross Sheet Count'};
+    #$$specs{'minimum_stock_size'.$qty_index} = sprintf('%s&quot; x %s&quot;', $Imposition->used_width(), $Imposition->used_height() );
 	} else {
 		$$specs{'ddmStockSheetSize'.$qty_index} = '';
 		$$specs{'txtPressSheetQty'.$qty_index} = 0;
@@ -3460,7 +3469,7 @@ sub breakdown {
 
 	my $breakdown = '';
 	$breakdown .= openprint::Estimating::Imposition::signature_summary( $Imposition, $$price{'Imposition Price'} ) if $$price{'Imposition Price'} and $ImpositionServiceType;
-	$breakdown .= sprintf('%s Colour Bar %f %s, Bleed: %s Orientation: %s<br/>', ( $Press ? $$Press{strid} : '' ), @$Imposition{'colour_bar_size','colour_bar_orientation','bleed_size'},
+	$breakdown .= sprintf('%s Colour Bar %f %s, Bleed: %s Orientation: %s<br/>', ( $Press ? $Press->link_to() : '' ), @$Imposition{'colour_bar_size','colour_bar_orientation','bleed_size'},
 		$Imposition->image_orientation_text() );
 	$breakdown .= '<b>Setups</b><br/>';
 	if ( $$price{GripperSetup} ) {
@@ -3995,12 +4004,12 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 							last;
 						} # end if
 					} else {
-						$log->error("1 No Value set for $$BPress{strid}");
+						$log->debug("1 No Value set for $$BPress{strid}") if DEBUG;
 					} # end if	
 					
 				} # end for B
 			} else {
-				$log->error("2 No Value set for $$Press{strid}");
+				$log->debug("2 No Value set for $$Press{strid}") if DEBUG;
 			} # en dif
 			if ( $add ) {
 				push @{$imps{$key}}, $I;
@@ -5347,7 +5356,7 @@ $imp->display('[warn]');
 									$$Setup{side_two_colours} = [ get_colours($$Setup{specs}, $$Setup{specs}{side_link} ? 'SideOne' : 'SideTwo') ];
 									foreach my $q_index ( $Project->quantity_indexes() ) {
 										$$subsig_specs{'txtUnspecifiedPageQuantity'.$q_index} = get_unspecified_pages($Project, $sigs[0], $subsig_specs, $q_index);
-										$log->error("Subsig upq " . $$subsig_specs{'txtUnspecifiedPageQuantity'.$q_index});
+                    #$log->error("Subsig upq " . $$subsig_specs{'txtUnspecifiedPageQuantity'.$q_index});
 									}
 									$$Setup{Stocks} = [ get_Stocks( $Project, $$Setup{specs} ) ];
 									if ( @{$$Setup{Stocks}} ) {
@@ -5741,6 +5750,7 @@ sub calc_price {
 	$net_sheets = ceil($net_sheets / $imposition);
 	#$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted, not sure this is valid anymore
 	$net_sheets *= $$Paper{parts} if $$Paper{parts};
+  $$Imposition{net_sheets} = $net_sheets;
 
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $num_colours = scalar @colours;
@@ -5781,6 +5791,7 @@ sub calc_price {
 
 	if ( $$specs{'OverrideRun'.$qty_index} and ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
 		$price{'Run Overs'} = { impressions=>$net_sheets, value=>$$specs{'OverRun'.$qty_index}, units=>'overriden sheets', total=>$$specs{'OverRun'.$qty_index} };
+
 	} else {
 # Should include bindery overs, but not setups, because the setup overs do the same job as the Run Overs
 		my $PressRunOvers = $Press->Specification('Press Run Overs', $net_sheets);
@@ -6432,6 +6443,9 @@ if ( 1 ) {
 	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} ) if ! $min_overs;
 	$min_overs = 0 if ! defined $min_overs;
 	$total_overs = $min_overs if $total_overs < $min_overs;
+  if ( $$specs{'OverrideTotalOvers'.$qty_index} and ( $$specs{'OverrideTotalOvers'.$qty_index} eq 'Y' ) ) {
+    $total_overs = $$specs{'OverTotal'.$qty_index};
+  }
 
 	$gross_sheets = $net_sheets + $total_overs;
 	$impressions = $gross_sheets;
@@ -7777,7 +7791,7 @@ sub summary {
 		if ( $Project->Type()->name() ne 'PresentationFolders' ) {
 			$html .= $$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pg ' : '';
 		} # end if
-		$html .= $$specs{'txtImposition'.$qty_index}.'out ';
+		$html .= '<span title="'.$$specs{"hdnImpositionColumns$qty_index"}.'x'.$$specs{"hdnImpositionRows$qty_index"}.'">'.$$specs{'txtImposition'.$qty_index}.'out </span>';
 		$html .= '<span class="RunStyle '.$$specs{"PrintingType$qty_index"}.' '.$$specs{'ddmRunStyle'.$qty_index}.'">';
 		if ( $$specs{"PrintingType$qty_index"} eq 'Digital' ) {
 			$html .= 'Digital';
@@ -7808,35 +7822,36 @@ sub summary {
 			$html .= sprintf(' = %d plates', $$specs{'txtPlateQuantity'.$qty_index} );
 		}
 
-#if ( 1 ) {
-# Have Stock summary line now
-		if ( $$services{NoPrinting} ) {
-			$html .= sprintf(' %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
-		} else {
-			#$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
-			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
-				if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
-					$html .= sprintf( ' on %s" Roll.	Cut Off: %s"',	1*$$specs{'StockWidth'.$qty_index},1*$$specs{'StockHeight'.$qty_index});
-				} # end if
-			} else {
-				$html .= sprintf(' on %s" x %s"', 1*$$specs{'StockWidth'.$qty_index}, 1*$$specs{'StockHeight'.$qty_index});
-			} # end if
-		} # end if
-		if ( 0 and sets::isin( $openprint::session{user_type}, [ 'E', 'A' ] ) ) {
-			if ( $$services{Folding} and @{$$services{Folding}} ) {
-				$html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{Folding}[0], undef, $qty_index, $service_index, undef );
-			} # end if
-			if ( $$services{Scoring} and @{$$services{Scoring}} ) {
-				my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] );
-				my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
-				if ( openprint::Estimating::Scoring::signature_needs( $Project, $scoring_specs, $specs, $Paper ) ) {
-					$html .= "\nscored " . openprint::Estimating::Scoring::signature_summary( $Project, $$services{Scoring}[0], undef, $qty_index, $service_index, undef );
-				} # end if
-			} # end if
-		} # end if
-		if ( (!$$specs{'MatchGrain'.$qty_index}) or ( $$specs{'MatchGrain'.$qty_index} ne 'Y') ) {
-			$html .= '<br/>Do not match grain<br/>';
-		} # end if
+    if ( $Project->Type()->name() ne 'Envelopes') {
+      # Have Stock summary line now
+      if ( $$services{NoPrinting} ) {
+        $html .= sprintf(' %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+      } else {
+        #$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
+        if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
+          if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
+            $html .= sprintf( ' on %s" Roll.	Cut Off: %s"',	1*$$specs{'StockWidth'.$qty_index},1*$$specs{'StockHeight'.$qty_index});
+          } # end if
+        } else {
+          $html .= sprintf(' on %s" x %s"', 1*$$specs{'StockWidth'.$qty_index}, 1*$$specs{'StockHeight'.$qty_index});
+        } # end if
+      } # end if
+      if ( 0 and sets::isin( $openprint::session{user_type}, [ 'E', 'A' ] ) ) {
+        if ( $$services{Folding} and @{$$services{Folding}} ) {
+          $html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{Folding}[0], undef, $qty_index, $service_index, undef );
+        } # end if
+        if ( $$services{Scoring} and @{$$services{Scoring}} ) {
+          my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] );
+          my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
+          if ( openprint::Estimating::Scoring::signature_needs( $Project, $scoring_specs, $specs, $Paper ) ) {
+            $html .= "\nscored " . openprint::Estimating::Scoring::signature_summary( $Project, $$services{Scoring}[0], undef, $qty_index, $service_index, undef );
+          } # end if
+        } # end if
+      } # end if
+      if ( (!$$specs{'MatchGrain'.$qty_index}) or ( $$specs{'MatchGrain'.$qty_index} ne 'Y') ) {
+        $html .= '<br/>Do not match grain<br/>';
+      } # end if
+    } # end if not nevloeps
 		if ( ! $$specs{"Runspeed$qty_index"} ) {
 			$html .= '<span class="error"><br/>No runspeed!</span>';
 		}
@@ -7887,13 +7902,15 @@ if ( 0 ) {
 			my @pockets = map { $$specs{"chkPocket$_"} ? lc $_ : () } ( 'Left', 'Center', 'Right' );
 			$string .= '<br/>' . $$specs{rdbPanels} . ' panels ' . ( $$specs{PocketSize} ? $$specs{PocketSize} . '&quot; ' : '' ) . ' pocket'.(@pockets == 1 ? '' : 's').' on ' . join( ',', @pockets );
 		} # end if
-		my $special_string = join(', ',
-				( $$specs{OverrideAddGrip} ? ' no image in grip or sides' : () ),
-				( ($$specs{rdbColourBar} and ( $$specs{rdbColourBar} eq 'N' ) ) ? ' no colour bar' : () ),
-				( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
-				( (exists $$specs{txtCropMarkSpace} ) ? () : 'no crop marks' ),
-		);
-    $string .= '<br/>' . $special_string if $special_string;
+    if ( $Project->Type()->name() ne 'Envelopes') {
+      my $special_string = join(', ',
+        ( $$specs{OverrideAddGrip} ? ' no image in grip or sides' : () ),
+        ( ($$specs{rdbColourBar} and ( $$specs{rdbColourBar} eq 'N' ) ) ? ' no colour bar' : () ),
+        ( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
+        ( (exists $$specs{txtCropMarkSpace} ) ? () : '<span class="warning">no crop marks</span>' ),
+      );
+      $string .= '<br/>' . $special_string if $special_string;
+    } # end if not Envelopes
 		if ( $$specs{PressApproval} and ( $$specs{PressApproval} eq 'Y' ) ) {
 			$string .= '<br/>Customer wants press approval';
 		}
@@ -7911,7 +7928,7 @@ sub get_stock_description {
     ) );
 
   if ( $openprint::config{Show_Stock_Calliper} ne 'N' ) {
-    if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/ ) ) {
+    if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/i ) ) {
       if ( $$specs{txtSpecificStockCalliper} ) {
         $string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
       } # end if

@@ -24,9 +24,11 @@ input[type="tel"] {
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
+    /*
     height: 30px;
     font-size: 15px;
     line-height: 26.5px;
+    */
   /*
 	-moz-appearance: textfield;
 	border-width: 2px;
@@ -422,7 +424,7 @@ td.Elapsed, th.Elapsed {
 	text-align: left;
 }
 table .Docket {
-	width: 50px;
+	width: 65px;
 	text-align: center;
 }
 table .Stock {
@@ -796,7 +798,9 @@ margin-right: .2rem;
 }
 select,
 textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"], .uneditable-input, .control-group .input-prepend span, .control-group .input-append span {
+  /*
   border-width: 1px;
+  */
 }
 .pagination ul {
   display: flex;

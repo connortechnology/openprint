@@ -272,3 +272,13 @@ pattern { shape-rendering: optimizeSpeed }
 #Versions input {
   max-width: 100%;
 }
+input[type="number"].calliper_pt {
+  width: 45px;
+}
+input[type="number"].calliper_mm,
+input[type="number"].calliper {
+  width: 65px;
+}
+fieldset .breakdown label:not(.radio):not(.radio-inline):after {
+  content: '';
+}

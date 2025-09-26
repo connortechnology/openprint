@@ -12,7 +12,7 @@ function destroy_clicked() {
     alert('Please select a company to destroy');
   } else {
     $j('#Results').html('Destroying...');
-    jQuery('#Results').load('/administrator/managerial/_companies.html?action=destroy', { company_id: selected } );
+    jQuery('#Results').load('/administrator/managerial/_companies.html?action=destroy', { company_id: selected },  update_event_bindings );
   }
 }
 function undelete_clicked() {
@@ -21,7 +21,7 @@ function undelete_clicked() {
     alert('Please select a company to undelete');
   } else {
     $j('#Results').html('Undeleting...');
-    jQuery('#Results').load('/administrator/managerial/_companies.html?action=undelete', { company_id: selected } );
+    jQuery('#Results').load('/administrator/managerial/_companies.html?action=undelete', { company_id: selected }, update_event_bindings );
   }
 }
 function delete_clicked() {
@@ -30,7 +30,7 @@ function delete_clicked() {
     alert('Please select a company to delete');
   } else {
     $j('#Results').html('Deleting...');
-    jQuery('#Results').load('/administrator/managerial/_companies.html?action=delete', { company_id: selected } );
+    jQuery('#Results').load('/administrator/managerial/_companies.html?action=delete', { company_id: selected }, update_event_bindings );
   }
 }
 

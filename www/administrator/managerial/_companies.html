@@ -3,7 +3,7 @@
   my %filters = (
     columns => "*, $openprint::Company::find_fields{last_project_on} AS last_project_on, $openprint::Company::find_fields{last_quoted_on} AS last_quoted_on",
 		order	=>	'lower(name)',
-		( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
+		( $session{$uri.'?company_name'} ? ( 'name ilike' => (index($session{$uri.'?company_name'}, '%') != -1 ? $session{$uri.'?company_name'} : '%'.$session{$uri.'?company_name'}.'%') ) : () ),
 		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
 		( $session{$uri.'?supplier'} ne '' ? ( supplier => $session{$uri.'?supplier'} ) : () ),
 		( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
@@ -75,6 +75,7 @@
     );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
   } # end foreach
+  $html .= '<tr class="totals"><td class="checkbox"></td><td colspan="7">'.scalar @{$$variable{Companies}} .' companies listed</td></tr>';
   $html .= '</table>
 <p class="button">
 '. join("\n",

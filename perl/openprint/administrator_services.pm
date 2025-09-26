@@ -165,8 +165,8 @@ sub edit {
       $$NewService{name} = 'Copy of '.$$Service{name};
 
       $variable{error} = $NewService->save();
-      (new openprint::Log())->save({Object=>$NewService, action=>'Copy Service', note=>'From ' . $Service->name()} ) if ! $variable{error};
-      if ( ! $variable{error} ) {
+      if (!$variable{error}) {
+        (new openprint::Log())->save({Object=>$NewService, action=>'Copy Service', note=>'From ' . $Service->name()} );
         foreach my $price ( $Service->prices() ) {
           $$price{service_id} = $$NewService{id};
           delete $$price{id};
@@ -201,14 +201,14 @@ sub _prices_table_body {
 			(new openprint::Log())->save({Object=>$Service, action=>'Delete Service Price', note=>$Price->id_string() }) if ! $variable{error};
 		} # end if
 	} # end if
-	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y') ];
 } # end sub _prices_table_body
 
 sub _price {
 	$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
 	$variable{Pricelist} = new openprint::Pricelist( $param{pricelist_id} );
 	$variable{Service} = new openprint::Service( $param{service_id} );
-	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y') ];
 	if ( $param{action} eq 'add' ) {
 		my $Price = $variable{Price} = new openprint::ServicePrice();
 		$variable{error} .= $Price->save({ equipment_id=>$param{equipment_id}, pricelist_id=>$param{pricelist_id}, service_id=>$param{service_id} });
@@ -219,7 +219,7 @@ sub _prices_per_equipment {
 	$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
 	$variable{Pricelist} = new openprint::Pricelist( $param{pricelist_id} );
 	$variable{Service} = new openprint::Service( $param{service_id} );
-	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y' ) ];
 	if ( $param{action} eq 'add' ) {
 		my $Price = new openprint::ServicePrice();
 		$variable{error} .= $Price->save({ equipment_id=>$param{equipment_id}, pricelist_id=>$param{pricelist_id}, service_id=>$param{service_id} });

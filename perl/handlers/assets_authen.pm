@@ -37,13 +37,14 @@ sub cleanup {
 sub access_handler {
 	my $request = $_[0];
 
+	$r = Apache2::Request->new( $request );
+	$log = $r->log;
 	unless ($request->some_auth_required) {
+    $log->error("No auth requried");
 		$request->log_reason("No authentication has been configured");
 		return Apache2::Const::FORBIDDEN;
 	}
 
-	$r = Apache2::Request->new( $request );
-	$log = $r->log;
 	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 
 	$dbh = sql::open_sql( $log,

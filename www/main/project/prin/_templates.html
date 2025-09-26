@@ -4,10 +4,6 @@
 	my $html = '';
 	my $ProjectType = $$variable{Project}->Type();
 	my @Templates = $ProjectType->Templates();
-  if (!@Templates) {
-      $log->error("No templates for ".$ProjectType->name());
-    }
-
 	my %types = map { $_->type(), 1 } @Templates;
 	foreach my $type ( keys %types ) {
 		$html .= "options['$type'] = new Array();\n";

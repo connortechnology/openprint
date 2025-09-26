@@ -119,6 +119,13 @@ if ( 0 and openprint::Order->find_one() ) {
   openprint::Object::init_cache();
 } # end if
 
+if ( 1 and openprint::Project->find_one() ) {
+  # Clean out Delete and uncalcluated projects
+  my @projects = openprint::Project->find(status=>['Deleted','uncalculated'],'updated_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365*2 ) ) );
+  $log->debug('Cleaning out '.@projects.' incomplete projects');
+  foreach ( @projects ) { $_->destroy(); }
+  openprint::Object::init_cache();
+} # end if
 
 if ( openprint::Order->find_one() ) {
 # Clean out unfinished Orders
@@ -223,9 +230,9 @@ foreach my $Paper ( openprint::Paper->find( 'project_type_id exists' => 1 ) ) {
 
 if ( 1 ) {
   my $log_count = 0;
+  my $log_retention = $config{log_retention} // -2*365;
   # Delete all logs more than 2 years
-  foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d 00:00:00',
-        Date::Calc::Add_Delta_Days( Date::Calc::Today(), -2*365 ) ) )
+  foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), $log_retention ) ) )
   ) {
     $Log->delete();
     $log_count += 1;

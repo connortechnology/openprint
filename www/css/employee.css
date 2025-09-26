@@ -46,7 +46,7 @@ div.PopupWindow fieldset p label:not(.radio):not(.radio-inline) {
 	padding: 2px 0 2px 95px;
 	text-align: left;
 }
-#JobForm label {
+#JobForm label:not(.radio):not(.radio-inline) {
 	width: 90px;
 	margin-left: -95px;
 }

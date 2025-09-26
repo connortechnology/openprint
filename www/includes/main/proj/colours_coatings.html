@@ -2,10 +2,10 @@
   <div class="link-outer" id="cc_link<?Signature?>">
     <div class="link-inner">
       <label for="side_link<?Signature?>" class="radio linkage" title="Link Side One &amp; Side Two">
-<img src="/images/misc/link.png" />
-<input type="checkbox" name="side_link<?Signature?>" class="side_link" id="side_link<?Signature?>" value="1" data_signature_index="<?Signature?>" <?echo(checked($$variable{side_link}))?>/>
-<img src="/images/misc/link.png" />
-</label>
+        <img src="/images/misc/link.png" />
+        <input type="checkbox" name="side_link<?Signature?>" class="side_link" id="side_link<?Signature?>" value="1" data_signature_index="<?Signature?>" <?echo(checked($$variable{side_link}))?>/>
+        <img src="/images/misc/link.png" />
+      </label>
     </div>
   </div>
 <div class="InksFront">
@@ -66,17 +66,16 @@
 				my $html;
 				$$variable{Side} = 'SideOne';
 				my $fragment = slurp_content( '/includes/main/proj/_additional_colour_coating.html' );
-				$$variable{index} = 0;
+        my $max_index = 0;
 				foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
-					next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
+					$max_index = $index if $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
+        }
+        $max_index += 1;
+        foreach my $index ( 1 .. $max_index ) {
 					$$variable{index} = $index;
 					$html .= variable_substitution( \$fragment, $variable );
 				} # end foreach
-				if ( ! $html ) {
-					$$variable{index} = 0;
-				}
-				$$variable{index} += 1;
-				$html .= variable_substitution( \$fragment, $variable );
+
 				return $html;
 			) ?>
 		</div>
@@ -147,17 +146,15 @@
 				my $html;
 				my $fragment = slurp_content( '/includes/main/proj/_additional_colour_coating.html' );
 				$$variable{Side} = 'SideTwo';
-				$$variable{index} = 0;
+        my $max_index = 0;
 				foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
-					next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
+					$max_index = $index if $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
+        }
+        $max_index += 1;
+        foreach my $index ( 1 .. $max_index ) {
 					$$variable{index} = $index;
 					$html .= variable_substitution( \$fragment, $variable );
 				} # end foreach
-				if ( ! $html ) {
-					$$variable{index} = 0;
-				}
-				$$variable{index} += 1;
-				$html .= variable_substitution( \$fragment, $variable );
 				return $html;
 			) ?>
 		</div>

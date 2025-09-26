@@ -3,7 +3,7 @@ use warnings;
 package openprint;
 use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser $Host);
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 sub session_init {
 	require Apache2::Cookie;
@@ -19,44 +19,51 @@ sub session_init {
 		$openprint::config{Timezone} = 'America/Toronto';
 	} # end if
 	$TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+  if ($dbh) {
+    $dbh->do('SET timezone = ?', {}, $openprint::config{Timezone}) or die $dbh->errstr();
+  }
+  my $current_ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
 
 	my $cookies;
 	my $cookie;
 	if ( $r ) {
 		$cookies = Apache2::Cookie->fetch($r);
 		if ( $$cookies{_session_id} ) {
-			$cookie = $$cookies{_session_id};
-			$cookie = $cookie->value if $cookie;
-      $log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
-		} else {
-			if ( $r->param('_session_id') ) {
-				$log->error('Since when is session_id in the params');
-				$cookie = $r->param('_session_id');
-			} # end if
+			$cookie = $$cookies{_session_id}->value;
+      $log->debug("Have session $cookie from cookies") if Debug;
+      $cookie =~ s/[^A-Za-z0-9]//g; # sanitize
 		} # end if
-    $cookie =~ s/[^A-Za-z0-9]//g if $cookie; # sanitize
 
 		if ( $dbh ) {
 			# If we have no cookie, then... shouldn't try to load it...
-			if ( (!$cookie) or (! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }`) ) {
-				$log->debug("Error fetching Session: $cookie: $@") if $@;
-				if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 };` ) {
-					$log->error('Error creating Session'. $@);
-				} # end if
-				if ( $r->param('_session_id') ) {
-          my $current_ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
-					if ( $current_ip and ($session{ip} ne $current_ip) ) {
+      if ( $cookie ) {
+        eval {
+          tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 };
+        };
+        if (!$@) {
+          # No errors, do validation
+          # Validate ip on existing session
+					if ( $current_ip and $session{ip} and ($session{ip} ne $current_ip) ) {
 						$log->error('Change of session ip');
 						untie %session;
 						%session = ();
-					} # end if
-				} # end if
-				# Store this, will be useful
+          }
+        } else { 
+          $log->debug("Error fetching Session: $cookie: $@") if $@;
+        }
+      }
+      if (!%session) {
+        eval { tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 }; };
+        if ($@) {
+          $log->error('Error creating Session'. $@. ' Trying a second time');
+          eval {
+            tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 };
+          };
+        }
 			} # end if
 
-
-			if ( (!$cookie) or ( $cookie ne $session{_session_id} ) ) {
-$log->debug('Generating new cookie '.$session{_session_id}) if Debug;
+			if ( (!$cookie) or ($session{_session_id} and ($cookie ne $session{_session_id}))) {
+        $log->debug('Generated new cookie '.$session{_session_id}.' because '.($cookie?' != '.$cookie : ' no cookie')) if Debug;
 				my $Cookie = Apache2::Cookie->new($r,
 						-name	=> '_session_id',
 						-value => $session{_session_id},
@@ -74,7 +81,7 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 		} # end if
 	} # end if $r
 
-  $session{ip} = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
+  $session{ip} = $current_ip;
   $session{lastupdated} = time;
   $session{HTTP_USER_AGENT} = $ENV{HTTP_USER_AGENT};
 

@@ -369,7 +369,7 @@ sub send {
 		$results .= $Email->send(
 				FROM    => $from,
 				TO      => @_,
-				SUBJECT => "$openprint::config{SiteTitle}:Quote $$self{id}",
+				SUBJECT => "$openprint::config{SiteTitle} Quote $$self{id}",
 				);
 		$Email->attachments(undef);
   } else {
@@ -388,7 +388,6 @@ sub send {
         my $hs = $HTML::Strip->new();
         $results .= $Email->send(
             FROM    => $from,
-            BCC		=>	'iconnor@connortechnology.com',
             TO      => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
             SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $hs->parse($self->reference())),
             );

@@ -45,7 +45,6 @@
       const re = /txtSignatureType(\d+)/;
       const matches = ddm.name.match(re);
       if (matches) {
-        console.log(matches);
         const description = ddm.form.elements['txtServiceDescription'+matches[1]];
 
         if ( description && (
@@ -70,7 +69,6 @@
   function add_group(params = {}) {
     const form = $('f1');
     Object.assign(params, { project_id : form.ProjectIndex.value, action: 'add_group' });
-    console.log('add_group', params);
 
     new Ajax.Request( '/main/project/prin/_signature.html', {
       parameters: params,
@@ -116,7 +114,7 @@
 <h2>Printing</h2>
 </div>
 <? if ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
-    <div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>
+  <div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>
 <? endif ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
     <fieldset><legend>Project <?echo($$variable{Project}->link_to(). ' - '. $$variable{ProjectType}->name() )?></legend>
@@ -208,21 +206,20 @@
 			</div><!--ProjectSpecifications-->
 			<div id="SignatureGroups">
 			<? echo (
-				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{ProjectIndex}, 'Group' );
+        my @Groups = @{$$variable{Groups}};
 				my $ServiceType = openprint::ServiceType->find_one( name=>'Signature');
+        my @defaults = $ServiceType ?
+        (
+          openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>undef ),
+          openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>$$variable{Project}->type_id() ),
+        ) : ();
+
 
 				if ( ! sets::isin( 1, \@Groups ) ) {
 					# Unshift so that cover is always first
 					unshift @Groups, 1;
-					# Load Defaults
-					if ( $ServiceType ) {
-						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>undef ) ) {
-							$$variable{$Default->name().'1'} = $Default->value();
-						} # end while
-						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>$$variable{Project}->type_id() ) ) {
-							$$variable{$Default->name().'1'} = $Default->value();
-						} # end while
-					} # end if
+
+          foreach my $Default ( @defaults ) { $$variable{$Default->name().'1'} = $Default->value(); }
 					$$variable{txtServiceDescription1} = 'Cover Pages';
 					$$variable{txtSignatureType1} = 'Cover Pages';
 				} # end if
@@ -230,29 +227,13 @@
 				if ( ! sets::isin( 2, \@Groups ) ) {
 					# Ensure 1 interior pages
 					push @Groups, 2;
-					# Load Defaults
-					if ( $ServiceType ) {
-						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>undef ) ) {
-							$$variable{$Default->name().'2'} = $Default->value();
-						} # end while
-						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>$$variable{Project}->type_id() ) ) {
-							$$variable{$Default->name().'2'} = $Default->value();
-						} # end while
-					} # end if
+          foreach my $Default ( @defaults ) { $$variable{$Default->name().'2'} = $Default->value(); }
 					$$variable{txtServiceDescription2} = 'Interior Pages';
 					$$variable{txtSignatureType2} = 'Interior Pages';
 				} # end if
         if ( $$variable{txtGateFoldedSpreadQuantity} and ! sets::isin( 3, \@Groups ) ) {
           push @Groups, 3;
-          # Load Defaults
-          if ( $ServiceType ) {
-            foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>undef ) ) {
-              $$variable{$Default->name().'3'} = $Default->value();
-            } # end while
-            foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>$$variable{Project}->type_id() ) ) {
-              $$variable{$Default->name().'3'} = $Default->value();
-            } # end while
-          } # end if
+          foreach my $Default ( @defaults ) { $$variable{$Default->name().'3'} = $Default->value(); }
           $$variable{txtServiceDescription3} = 'Gate Folded Pages';
           $$variable{txtSignatureType3} = 'Gate Folded Pages';
         } # end if

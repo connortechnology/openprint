@@ -144,6 +144,11 @@ sub undelete {
 sub destroy {
 	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
+  my @quote_ids = sql::execute( undef, undef, q{SELECT quote_id FROM tbl_Quote_Details WHERE project_id=?}, $$self{id} );
+  if (@quote_ids) {
+    $log->error("Can't destroy a quoted project, destroy the quote first");
+    return;
+  }
 	foreach my $Product ( openprint::OrderedProduct->find( project_id=>$$self{id} ) ) {
 		$Product->save({project_id=>undef});
 	} # end foreach Product
@@ -154,6 +159,7 @@ sub destroy {
 		$B->destroy();
 	} # end foreach bug
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=?}, $$self{id} );
+	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM project_service_operators WHERE service_id IN (SELECT lngServiceIndex from tbl_Project_Contents WHERE lngProjectIndex=?)}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_Log WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Barcode_Log WHERE project_id=?}, $$self{id} );
@@ -161,10 +167,6 @@ sub destroy {
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM paper_allocations WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_files WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Order_Contents WHERE lngprojectindex=?}, $$self{id} );
-	foreach my $quote_id ( sql::execute( undef, undef, q{SELECT quote_id FROM tbl_Quote_Details WHERE project_id=?}, $$self{id} ) ) {
-		my $Quote = new openprint::Quote( $quote_id );
-		$Quote->add_log('Deleted Project ' . $$self{id} );
-	} # end foreach
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM PressActivities WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM productionfeedback WHERE project_id=?}, $$self{id} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM signaturecapture WHERE project_id=?}, $$self{id} );
@@ -599,7 +601,7 @@ $openprint::log->debug("Service : " . $Service->service_type() . ' ' . $Service-
 			%statuses = map { $_ => $_ } values %service_statuses;
 		} # end if
 		if ( $self->Type()->type() eq 'MultiPage' ) {
-require openprint::Estimating::MultiPage;
+      require openprint::Estimating::MultiPage;
 			foreach my $qty_index ( $self->quantity_indexes() ) {
 				if ( openprint::Estimating::MultiPage::status( $$self{id}, undef, $qty_index ) ) {
 					$new_status = 'uncalculated';
@@ -1997,23 +1999,27 @@ sub can_edit {
 		$openprint::log->debug("can_view 1 cuz no id") if $debug;
 		return 1;
 	}
-
-  if ( $_[0]{user_id} == $openprint::session{user_id} ) {
-		$openprint::log->debug("can_view 1 cuz i am the creator") if $debug;
-		return 1;
-	}
-  #if ( $openprint::session{company_id} == $_[0]{company_id} ) {
-  #$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
-  #return 1;
-  #}
-	if ( $openprint::session{user_type} eq 'A' ) {
-		$openprint::log->debug("can_edit 1 cuz admin") if $debug;
-		return 1 
-	}
-	if ( sets::isin( $_[0]{user_id}, [ $openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
-		$log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
-		return 1;
-	} # end if
+  if ($openprint::session{user_id}) {
+    if ($_[0]{user_id} == $openprint::session{user_id}) {
+      $openprint::log->debug("can_view 1 cuz i am the creator") if $debug;
+      return 1;
+    }
+    #if ( $openprint::session{company_id} == $_[0]{company_id} ) {
+    #$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
+    #return 1;
+    #}
+    if ($openprint::session{user_type} eq 'A') {
+      $openprint::log->debug("can_edit 1 cuz admin") if $debug;
+      return 1 
+    }
+    if ( sets::isin( $_[0]{user_id}, [ $openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
+      $log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
+      return 1;
+    } # end if
+    if ( openprint::usergroup::is_user_in( ['Accounting', 'Estimating'], $openprint::session{user_id} ) ) {
+      return 1;
+    }
+	} # end if user_id
   
   return 0;
 } # end sub can_edit
@@ -2167,6 +2173,20 @@ sub equipment {
     $equipment{$$sig_specs{'ddmPress'.$self->ordered_quantity_index()}} = 1;
 	}
   return join(', ', keys %equipment);
+}
+
+# Returns the given project's 'Print' service.
+sub get_print_container {
+  my $self = shift;
+
+  my @sid = $self->has_service('Book')
+  || $self->has_service('Item')
+  || $self->has_service('InventoryCheckOut')
+  || $self->has_service('Printing')
+  || $self->has_service('')
+  ;
+
+  return $sid[0];
 }
 
 1;

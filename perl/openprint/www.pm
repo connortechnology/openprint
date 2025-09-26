@@ -60,6 +60,7 @@ sub cleanup {
 		untie %session;
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
+		openprint::Equipment::init_cache();
 		$openprint::Service::cached = 0;
 		$openprint::Material::cached = 0;
 		openprint::Object::init_cache();
@@ -463,13 +464,10 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 					my @service_ids = split(',', $param{ServiceIndex} );
 					$variable{ServiceIndex} = $service_ids[0];
 				} # end if
-				$variable{ProjectIndex} = $openprint::param{ProjectIndex} if ! $variable{ProjectIndex};
-				$variable{ProjectIndex} = $openprint::param{project_id} if ! $variable{ProjectIndex};
-				$variable{ProjectIndex} = $openprint::session{project_id} if ! $variable{ProjectIndex};
+				my $project_index = $variable{ProjectIndex} = $openprint::param{ProjectIndex} || $openprint::param{project_id} || $openprint::session{project_id};
 				$variable{Project} = new openprint::Project( $variable{ProjectIndex} );
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-				my $project_index = $variable{ProjectIndex};
 				my $service_index = $variable{ServiceIndex};
 
 				# Things like UPS Shipping might not actually have a service

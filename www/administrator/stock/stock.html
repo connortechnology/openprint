@@ -218,7 +218,7 @@ return '';
 				</li>
 				<li>
 					<label>Type</label>
-          <?echo(radio('type', [ map { $_, $_ } ( 'Sheet', 'Roll' ) ], $$variable{Stock}->type(), { onclick=>q`if(this.value=='Sheet'){$('StockHeight').show();$('BasisSize').hide();$('MWeight').show();$('QuantityPerPackageUnits').innerHTML='sheets';$('MinimumOrderUnits').innerHTML='sheets';}else{$('StockHeight').hide();$('BasisSize').show();$('MWeight').hide();$('QuantityPerPackageUnits').innerHTML='lbs';$('MinimumOrderUnits').innerHTML='lbs';};` });)?>
+          <?echo(radio('type', [ map { $_, $_ } ( 'Sheet', 'Roll', 'Envelope' ) ], $$variable{Stock}->type(), { onclick=>q`if(this.value!='Roll'){$('StockHeight').show();$('BasisSize').hide();$('MWeight').show();$('QuantityPerPackageUnits').innerHTML='sheets';$('MinimumOrderUnits').innerHTML='sheets';}else{$('StockHeight').hide();$('BasisSize').show();$('MWeight').hide();$('QuantityPerPackageUnits').innerHTML='lbs';$('MinimumOrderUnits').innerHTML='lbs';};` });)?>
 				</li>
 				<li>
 					<label>Size</label>

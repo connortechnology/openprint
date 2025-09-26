@@ -11,6 +11,9 @@ require openprint::Equipment;
 require openprint::EquipmentSpecification;
 require openprint::Fold;
 require openprint::FoldSpecification;
+require openprint::Location;
+require openprint::ServiceType;
+
 require openprint::logs;
 require openprint;
 

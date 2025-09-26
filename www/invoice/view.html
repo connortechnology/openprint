@@ -96,7 +96,8 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 			</tr>
 			<? echo (
 				my $html = '';
-				$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
+        my $currency = $$variable{Invoice}->Currency();
+
 				$$variable{elapsed_total} = $$variable{service_total} = 0;
 				my $rowclass = '';
 				foreach my $Timetrack ( @{$$variable{Timetracks}} ) {
@@ -109,8 +110,8 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 					$html .= '<td class="PO">'.html_escape($Timetrack->po()) . '</td>';
 					$html .= '<td class="Interval">'.$Timetrack->elapsed_formatted().'</td>';
 					my $price = $Timetrack->Price();
-					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$price{price} ), $$price{units} );
-					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$price{total} ) );
+          $html .= sprintf('<td class="Rate">%s%s</td>', $currency->format( $$price{price} ), $$price{units} );
+          $html .= sprintf('<td class="Price">%s</td>', $currency->format( $$price{total} ) );
 					$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
           if ( $Timetrack->date_associated() ) {
             $html .= '<td>'. $formatted_start . ( ( $formatted_start ne $formatted_end ) ? ( '<br/>through<br/>' .  $formatted_end ) : '' ) .  '</td>';
@@ -131,7 +132,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 				<td colspan="3">Service subtotal</td>
 				<td class="Interval"><?echo(misc::seconds2hms($$variable{elapsed_total});)?></td>
 				<td class="Rate">&nbsp;</td>
-				<td class="Price"><? echo ( openprint::Currency::format( $$variable{service_total} ); ) ?></td>
+        <td class="Price"><? echo ( $$variable{Invoice}->Currency()->format( $$variable{service_total} ); ) ?></td>
 			</tr>
 <?endif(!$$variable{Invoice}{subtotal_override})?>
 		</table>

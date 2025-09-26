@@ -51,6 +51,7 @@
 <? eval ( $$variable{InsertIndex} += 1; ) ?>
 <? endwhile ( $$variable{InsertIndex} <= $$variable{txtInsertQuantity} ) ?>
 <? endif ( $$variable{txtInsertQuantity} ) ?>
+
 <?if($$variable{ServiceType}->name() eq 'SaddleStitching')?>
 <p><label># of stitches</label><?stitches?></p>
 <?endif($$variable{ServiceType}->name() eq 'SaddleStitching')?>

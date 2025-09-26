@@ -85,7 +85,9 @@ require Net::Ping;
 # udp has less network traffic overhead
 my $p = Net::Ping->new('icmp', 10);
 
-my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find(type=>[ 'WG602v3', 'WPN802', 'TP-Link Archer C7', 'OpenWRT' ], monitored=>1);
+my @type_ids = map { $$_{id} } openprint::Host_Type->find(name=>[ 'WG602v3', 'WPN802', 'TP-Link Archer C7', 'OpenWRT' ]);
+
+my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find(type_id=>\@type_ids, monitored=>1);
 $log->debug('WAP polling ' . @Hosts . ' hosts.');
 foreach my $Host ( @Hosts ) {
 	foreach my $HI ( $Host->Interfaces() ) {
