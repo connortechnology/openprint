@@ -2509,12 +2509,14 @@ $openprint::log->debug("Doing Perfect bound ifinished calliper is $finished_call
 						} else {
 							$$specs{txtSpreadSize} = 2;
 						} # end if
-					} elsif ( $$printing_specs{rdbTemplateType} eq 'CornerStitching' or $$printing_specs{rdbTemplateType} eq 'SpinePaste' ) {
-						$$specs{txtSpreadSize} = 2;
-					} elsif ( $$specs{GroupPageQuantity} % 4 ) {
-						$$specs{txtSpreadSize} = 2;
-					} else {
-						$$specs{txtSpreadSize} = 4;
+          } elsif ( $$printing_specs{rdbTemplateType} eq 'CornerStitching' ) {
+            $$specs{txtSpreadSize} = 2;
+          } elsif ($$printing_specs{rdbTemplateType} eq 'SpinePaste' ) {
+            $$specs{txtSpreadSize} = $$specs{GroupPageQuantity} % 4 ? 2 : 4;
+          } elsif ( $$specs{GroupPageQuantity} % 4 ) {
+            $$specs{txtSpreadSize} = 2;
+          } else {
+            $$specs{txtSpreadSize} = 4;
 					} # end if
 				} # end if
 				$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
