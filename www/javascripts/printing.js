@@ -92,7 +92,7 @@ function SpecialColour_onchange( element, side, index, signature ) {
 		} // end for each option in type_element
 	} // end if
 
-	if (  -1 != type.indexOf('Overall') ) {
+	if ( -1 != type.indexOf('Overall') ) {
 		$('ColourCoatingCoverage'+index+side+signature).hide();
 	} else {
 		$('ColourCoatingCoverage'+index+side+signature).show();

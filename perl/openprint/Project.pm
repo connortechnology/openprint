@@ -601,7 +601,7 @@ $openprint::log->debug("Service : " . $Service->service_type() . ' ' . $Service-
 			%statuses = map { $_ => $_ } values %service_statuses;
 		} # end if
 		if ( $self->Type()->type() eq 'MultiPage' ) {
-require openprint::Estimating::MultiPage;
+      require openprint::Estimating::MultiPage;
 			foreach my $qty_index ( $self->quantity_indexes() ) {
 				if ( openprint::Estimating::MultiPage::status( $$self{id}, undef, $qty_index ) ) {
 					$new_status = 'uncalculated';
@@ -2016,6 +2016,9 @@ sub can_edit {
       $log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
       return 1;
     } # end if
+    if ( openprint::usergroup::is_user_in( ['Accounting', 'Estimating'], $openprint::session{user_id} ) ) {
+      return 1;
+    }
 	} # end if user_id
   
   return 0;

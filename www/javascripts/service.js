@@ -267,27 +267,28 @@ function cbFillResults( results ) {
 				} // end for
 
 			} // end if
-		}
-
-    // Even if a form element has been updated, there may be an element with id that needs updating as well.
-    const div = $(key);
-    if (div) {
-      if ( typeof(value)== "object" ) {
-        if ( value.addClassName ) {
-          div.addClassName( value.addClassName );
+		} else {
+      // Even if a form element has been updated, there may be an element with id that needs updating as well.
+      // Doesn't work. Has to be either/or
+      const div = $(key);
+      if (div) {
+        if ( typeof(value)== "object" ) {
+          if ( value.addClassName ) {
+            div.addClassName( value.addClassName );
+          }
+          if (value.removeClassName ) {
+            div.removeClassName( value.removeClassName );
+          }
+        } else if (div.type === undefined ) {
+          console.log('filling: ' + key + ' with: ' + value, 'type', div.type );
+          div.innerHTML = value;
+        } else {
+          console.log('not filling: ' + key + ' with: ' + value, 'type', div.type );
         }
-        if (value.removeClassName ) {
-          div.removeClassName( value.removeClassName );
-        }
-      } else if (div.type === undefined ) {
-        //console.log('filling: ' + key + ' with: ' + value, 'type', div.type );
-        div.innerHTML = value;
-      //} else {
-        //console.log('not filling: ' + key + ' with: ' + value, 'type', div.type );
-      }
-    } else {
-      //console.log("didnt find " + key );
-    } // end if
+      } else {
+        //console.log("didnt find " + key );
+      } // end if
+    }
 	} // end for each 
 	gettingNewPrice = false;
 	block_calc = false;

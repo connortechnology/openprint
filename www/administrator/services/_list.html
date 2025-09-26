@@ -8,7 +8,7 @@
 		);
 	if (  $session{$uri.'?service_name'} ) {
 		if ( ! ( $session{$uri.'?service_name'}  =~ /%/ ) ) {
-			$filters{'name ilike'} = $session{$uri.'?service_name'}.'%';
+			$filters{'name ilike'} = '%'.$session{$uri.'?service_name'}.'%';
 		} else {
 			$filters{'name ilike'} = $session{$uri.'?service_name'};
 		}

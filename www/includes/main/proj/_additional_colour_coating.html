@@ -60,7 +60,7 @@
 					class	=>	'Coverage', 
 					name	=>	'ColourCoatingCoverage'.join('',@$variable{'index','Side','Signature'}),
           value =>$$variable{'ColourCoatingCoverage'.join('',@$variable{'index','Side','Signature'})},
-          onkeyup=>"SpecialColour_onchange(this, '$$variable{Side}', '$$variable{index}', '$$variable{Signature}' );",
+          oninput=>"SpecialColour_onchange(this, '$$variable{Side}', '$$variable{index}', '$$variable{Signature}' );",
           min => 0,
           max => 100,
           ); ) ?>
