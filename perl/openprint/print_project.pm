@@ -638,7 +638,9 @@ sub reuse_project {
 	my ( $project_index ) = @_;
 
 	my $Project = new openprint::Project($project_index);
-	if ( ! $Project->id() ) {
+	if (!$Project->id()) {
+    $openprint::log->error("Source project $project_index could not be found.");
+
 		$variable{error} .= "Source project $project_index could not be found.";
 		return;
 	} # end if
