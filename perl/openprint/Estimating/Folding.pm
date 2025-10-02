@@ -1757,9 +1757,9 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 					$$runspeed{runspeed} = 1;
 				} # end if
         if ($$runspeed{units} eq 'inches per hour') {
-          $runTime = Math::Round::nearest( 0.0001, $run_qty * $Imposition->object_height()/ $$runspeed{runspeed} );
+          $runTime = Math::Round::nearest( 0.0001, $run_qty * $$Imposition{object_height}/ $$runspeed{runspeed} );
           $Breakdown .= sprintf('<tr><td>Runspeed: %d * %.2f" @ %d/inches per hour = %d:%d:%d</td></tr>',
-            $run_qty, $Imposition->object_height(), $$runspeed{runspeed}, misc::seconds_to_interval( int( 3600*$runTime ) ) );
+            $run_qty, $$Imposition{object_height}, $$runspeed{runspeed}, misc::seconds_to_interval( int( 3600*$runTime ) ) );
         } else {
           $runTime = Math::Round::nearest( 0.0001, $run_qty / $$runspeed{runspeed} );
           $Breakdown .= sprintf('<tr><td>Runspeed: %d @ %d/HR = %d:%d:%d</td></tr>',
