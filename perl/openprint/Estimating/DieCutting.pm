@@ -152,7 +152,7 @@ sub calc_price {
 				$$MakeReady{Total} = Math::Round::nearest( 0.01, $$MakeReady{Price} * $$MRHours{value} );
 			} else {
 				$Total{alert} .= 'No MakeReadyTime set for ' . $$specs{ServiceType} . ' on ' . $Equipment->name() . '<br/>';
-				$openprint::log->error( $Total{alert} );
+        #$openprint::log->error( $Total{alert} );
 				$$MakeReady{Total} = $$MakeReady{Price};
 			} # end if
 		} else {
@@ -643,7 +643,7 @@ sub signature_calc {
             and
           $_ = $Equipment->fits( $height, $width, $$sig_specs{txtSpecificStockCalliper} )
         ) {
-          $openprint::log->debug("Reason $$Equipment{name} $_");
+          #$openprint::log->debug("Reason $$Equipment{name} $_");
 					if ( 1 == @equipment and (($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y') or $$specs{"OverrideImposition-$form-$qty_index"})) {
 						$results{breakdown} .= 'On '.$Equipment->name().' '.sprintf('%dx%d %dout %.2fx%.2f', 
               @$imposition{'columns', 'rows', 'imposition'}, $width, $height).": Doesn't fit. $_<br/>";
