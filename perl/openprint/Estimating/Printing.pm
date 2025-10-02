@@ -2376,6 +2376,7 @@ sub set_size {
 			$variables{txtHeight} = [ sets::exclude( ['output'], $variables{txtHeight} ) ];
 			$variables{rdbTemplateType} = [ sets::exclude( ['output'], $variables{rdbTemplateType} ) ];
 		} # end if
+		$$specs{txtSpreadSize} = 2*$$specs{rdbPanels};
 	} elsif ( $$specs{txtSignatureType} ) {
 		if ( $$specs{txtSignatureType} eq 'Gate Folded Pages' ) {
 			if ( $$specs{rdbTemplateType} eq 'SingleGateFold' ) {
@@ -5884,6 +5885,7 @@ sub calc_price {
 
 	my $impressions = $net_sheets + $overs;
 	$impressions *= 2 if $$project{print_sides} == 2 and $is_wt;
+  $$Imposition{impressions} = $impressions;
 # or ( $$Imposition{runstyle} eq 'Sheet Work' ) );
 
 	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper});
