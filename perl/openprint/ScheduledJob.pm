@@ -22,7 +22,7 @@ require openprint::ProductionFeedback;
 
 my $parser = 'DateTime::Format::Pg';
 
-$debug = 1;
+$debug = 0;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 
@@ -102,6 +102,12 @@ sub endtime_dt {
   my $endtime_dt = $parser->parse_datetime( $$self{starttime} );
   $endtime_dt->add(seconds=> $self->runtime_seconds());
   return $endtime_dt;
+}
+
+sub duedate_dt {
+  my $self = shift;
+  my $duedate_dt = $parser->parse_datetime($self->Project()->due_date());
+  return $duedate_dt;
 }
 
 sub starttime_seconds {
@@ -357,7 +363,7 @@ sub get_li {
 		if ( $printing_service_type_ids{$$self{servicetype_id}} ) {
 			$html .= '<span class="Presses">'.join(' + ', sort( map { new openprint::Equipment($_)->strid() } @equipment ) ).'</span>' if @equipment > 1;
 		} # end if
-		$html .= qq`<span class="DueDate" id="JumpToDate$$self{id}">`;
+		$html .= '<span class="DueDate'.($self->duedate_dt() > $self->endtime_dt() ? ' late').'" id="JumpToDate$$self{id}" title="due date">';
 		if ( ! $Project->due_date() ) {
 			$html .= 'no duedate</span>';
 		} else {
