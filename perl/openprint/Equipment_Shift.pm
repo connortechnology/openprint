@@ -18,7 +18,7 @@ use vars qw( $log $dbh $debug $table $serial %fields %find_fields %transforms %d
 # Note: duration_seconds is 1 seconds less than duration
 my $parser = 'DateTime::Format::Pg';
 
-$debug = 1;
+$debug = 0;
 
 $table = 'equipment_shifts';
 $serial = 'equipment_shifts_id_seq';
@@ -252,13 +252,13 @@ $log->debug("adding an hour for DST");
 	# WTH is this for? now + duration - now()
 	my $now = DateTime->now( time_zone => 'UTC' );
 	my $es_duration = DateTime::Duration->new( seconds => $self->duration_seconds() );
-$log->debug("Now + duration?" . $es_duration->in_units('seconds') );
+$log->debug("Now + duration?" . $es_duration->in_units('seconds') ) if $debug;
 	$_ = $now->clone->add_duration( $es_duration );
 	$es_duration = $_->subtract_datetime_absolute( $now );
-$log->debug("Now + duration?" . $es_duration->in_units('seconds') );
+$log->debug("Now + duration?" . $es_duration->in_units('seconds') ) if $debug;
 
 	my $et = $st->clone()->add_duration( $es_duration );
-	$log->debug("et: $et (".$es_duration->in_units('seconds').") (".$self->duration_seconds().") is_dst() ? " . $et->is_dst() . " st_dst? " . $st->is_dst() );
+	$log->debug("et: $et (".$es_duration->in_units('seconds').") (".$self->duration_seconds().") is_dst() ? " . $et->is_dst() . " st_dst? " . $st->is_dst() ) if $debug;
 	if ( (!$st->is_dst()) and $et->is_dst() ) {
 		$et -= DateTime::Duration->new( hours=>1 );
 #$log->debug("subtracting an hour for DST new et:" . $parser->format_datetime( $et ));
@@ -284,7 +284,7 @@ $log->debug("Now + duration?" . $es_duration->in_units('seconds') );
 				'starttime <'	=>	$parser->format_datetime( $et ),
 				) ) {
 
-		$log->debug("Emanantise found " . $Shift->to_string());
+		$log->debug("Emanantise found " . $Shift->to_string()) if $debug;
 		# Looks for a shift of the right type that starts within the expected shift time. so start time can be moved up
 	} else {
 		$Shift = new openprint::Shift();
