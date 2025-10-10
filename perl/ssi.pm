@@ -287,7 +287,7 @@ sub make_drop_down {
 					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])) : $$options{prepend}[$n] ),
 					( $selected{ $$options{prepend}[$n] } ? ' selected="selected"' : '' ),
 					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) : $$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ),
-					);
+					)."\n";
 		} # end for
 	} # end if
 
@@ -312,7 +312,7 @@ sub make_drop_down {
       $label = HTML::Entities::encode_entities(Encode::encode('utf-8', $label));
     }
 		
-		$html .= join('','<option value="', $value, '"', ( $selected{ $value } ? ' selected="selected"' : '' ), '>', $label, '</option>');
+		$html .= join('','<option value="', $value, '"', ( $selected{ $value } ? ' selected="selected"' : '' ), '>', $label, '</option>', "\n");
 	} # end for
 
 	if ( $$options{append} ) {
