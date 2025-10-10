@@ -44,6 +44,8 @@ $serial = 'schedule_id_seq';
 	operator_id		=>	undef,
 	stock_verified	=>	'stock_verified',
 	stock			=>	'stock',
+  stock_ordered   => 'stock_ordered',
+  stock_arrived   =>  'stock_arrived',
 	servicetype_id	=>	'servicetype_id',
 	tentative		=>	'tentative',
 );
@@ -63,6 +65,8 @@ $serial = 'schedule_id_seq';
 	speed			=>	undef,
 	created_on		=>	q`'NOW()'`,
 	stock_verified	=>	0,
+  stock_ordered   =>  0,
+  stock_arrived   =>  0,
 	tentative		=>	0,
 );
 
@@ -239,37 +243,37 @@ sub stock {
 		$$self{stock} = $stock;
 	} # end if
 	if ( ( ! $$self{stock} ) and $$self{project_id} and ( $self->ServiceType()->name() eq 'Signature' ) ) {
-		$$self{stock} = '<p>Stock: ';
+		$$self{stock} = '<span class="stock">Stock: ';
 		my $Equipment = $self->Equipment();
-		my $Project = new openprint::Project( $$self{project_id} );
+		my $Project = $self->Project();
 		my $Stock;
-		my $PA = openprint::PaperAllocation->find_one( docket=>$Project->docket() );
+		my $PA = openprint::PaperAllocation->find_one( docket=>$Project->docket() ) if $Project->docket();
 		if ( $PA ) {
 			$Stock = $PA->Paper();
 		} elsif ( $$self{service_id}[0] ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{service_id}[0] );
 			$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() ) if ! $Stock;
 		} # end if
-		if ( $Equipment->smartscheduling() ) {
-			if ( $Stock ) {
-				$$self{stock} .= join(' ', ( $Stock->brand(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->type() eq 'Roll' ? $Stock->width.'&quot; Roll' : $Stock->width().'x'.$Stock->height() ) );
-				$$self{stock} .= ' FSC:' . $$Stock{fsc_code} if $$Stock{fsc_code};
-			} else {
-				$$self{stock} .= ' not allocated.';
-			} # end if
-			if ( ( ! $PA ) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content->find(docket=>$Project->docket()) ) ) {
-				$$self{stock} .= ' Ordered on PO: ' . join(',', map { sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
-			} else {
-				$$self{stock} .= ' not ordered.';
-			} # end if
-		} elsif ( $Stock ) {
-			if ( $Stock->type() eq 'Roll' ) {
-				$$self{stock} .= $Stock->width().'&quot; Roll';
-			} else {
-				$$self{stock} .= $Stock->width() . 'x' . $Stock->height();
-			} # end if
-		} # end if
-		$$self{stock} .= '</p>';
+
+    if ( $Stock ) {
+      $$self{stock} .= join(' ', ( $Stock->brand(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->type() eq 'Roll' ? $Stock->width.'&quot; Roll' : $Stock->width().'x'.$Stock->height() ) );
+      $$self{stock} .= ' FSC:' . $$Stock{fsc_code} if $$Stock{fsc_code};
+    }
+    if (!$PA) {
+      $$self{stock} .= ' not allocated.';
+    } # end if
+
+    if ((!$PA) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content->find(docket=>$Project->docket()) ) ) {
+      $$self{stock} .= ' ordered on PO: ' . join(',', map { sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
+    } elsif ($$self{stock_ordered}) {
+      $$self{stock} .= ' ordered';
+    } else {
+      $$self{stock} .= ' not ordered.';
+    } # end if
+
+    $$self{stock_arrived} .= ' has arrived';
+
+		$$self{stock} .= '</span>';
 	} # end if
 	return $$self{stock};
 } # end sub stock
@@ -363,7 +367,10 @@ sub get_li {
 		if ( $printing_service_type_ids{$$self{servicetype_id}} ) {
 			$html .= '<span class="Presses">'.join(' + ', sort( map { new openprint::Equipment($_)->strid() } @equipment ) ).'</span>' if @equipment > 1;
 		} # end if
-		$html .= '<span class="DueDate'.($self->duedate_dt() > $self->endtime_dt() ? ' late').'" id="JumpToDate$$self{id}" title="due date">';
+    my $late = DateTime->compare($self->duedate_dt(), $self->endtime_dt());
+
+    $openprint::log->debug("Due Date ".$self->duedate_dt()." >? ". $self->endtime_dt(). " ? ".$late);
+		$html .= '<span class="DueDate'.(($late == -1) ? ' late':'').'" id="JumpToDate'.$$self{id}.'" title="due date">';
 		if ( ! $Project->due_date() ) {
 			$html .= 'no duedate</span>';
 		} else {
