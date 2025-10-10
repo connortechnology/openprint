@@ -18,6 +18,8 @@ CREATE TABLE Schedule (
 	pertains_id			INTEGER[],
 	tentative			BOOLEAN,
 	stock_verified		BOOLEAN NOT NULL default false,
+	stock_ordered		BOOLEAN NOT NULL default false,
+	stock_arrived		BOOLEAN NOT NULL default false,
 	stock				TEXT,
 	created_on			TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	PRIMARY KEY (id)
