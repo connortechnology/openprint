@@ -133,20 +133,21 @@ function Fold_onchange( element, signature, qty_index, index ) {
 						$$variable{SignatureIndex} = $$sig_specs{SignatureIndex};
 						$$variable{QTYIndex} = $qty_index;
 
-						$html .= '<table><tr><th class="Qty">Qty</th><th class="Imp">Imp</th><th class="Type">Type</th><th class="Folds">Folds</th><th class="Angles">Angles</th><th class="Speed">Speed</th></tr>';
+						$html .= '<table><tr><th class="Qty">Qty</th><th class="Imp">Imp</th><th class="Type">Type</th><th class="Folds">Folds</th><th class="Angles">Angles</th><th class="Speed">Speed</th></tr>'."\n";
 						foreach my $index ( 1 .. 4 ) {
 							$$variable{index} = $index;
 							$html .= variable_substitution( \$fragment, $variable );
 						} # end foreach
-						$html .= '</table>';
+						$html .= '</table>'."\n";
 					} else {
             $html .= '&nbsp;';
 					} # end if imposition
 
 					$html .= '</div>';
 				} # end foreach qty_index
-				$html .= '</li>';
-				$html .= '</ul></fieldset>';
+				$html .= '</li>
+				</ul></fieldset>
+        ';
 			} # end foreach signature
 			return $html;
 			) ?>

@@ -5,6 +5,7 @@ use MIME::QuotedPrint;
 use URI::Escape;
 use Time::Local;
 use DateTime;
+
 #use DateTime::Format::Strptime;
 use DateTime::Format::Pg;
 use constant DAY => 60*60*24;
@@ -119,159 +120,169 @@ sub _jobs_by_csr_ul {
 
 sub _jobs_by_csr_popup {
 	$variable{Project} = new openprint::Project($param{project_id});
-} # end sub _stock_popup
+} # end sub _jobs_by_csr_popup
 
 sub print_overview {
 	if ( %param ) {
 		if ( $param{btnFunction} eq 'Reset' ) {
 			ssi::reset_session{$r->uri()};
-		} else {
-			ssi::save_params( '/employee/production/print_overview.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale', 'category_id', 'show_feedback' ) );
+		} elsif(!$param{btnFunction} and !$param{action}) {
+			ssi::save_params( $r->uri(), (
+          'Equipment',
+          'schedule_start_year','schedule_start_month','schedule_start_day',
+          'schedule_end_year','schedule_end_month','schedule_end_day', 
+          'scale', 'category_id', 'show_feedback', 'flow_by'
+        ) );
 		} # end if
-		if ( $param{action} eq 'Today' ) {
-			@session{'/employee/production/print_overview.html?schedule_start_year',
-'/employee/production/print_overview.html?schedule_start_month',
-'/employee/production/print_overview.html?schedule_start_day'} = Date::Calc::Today();
-			@session{'/employee/production/print_overview.html?schedule_end_year',
-'/employee/production/print_overview.html?schedule_end_month',
-'/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Today();
-		} elsif ( $param{action} eq '2day' ) {
-			@session{'/employee/production/print_overview.html?schedule_start_year',
-'/employee/production/print_overview.html?schedule_start_month',
-'/employee/production/print_overview.html?schedule_start_day'} = Date::Calc::Today();
-			@session{'/employee/production/print_overview.html?schedule_end_year',
-'/employee/production/print_overview.html?schedule_end_month',
-'/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
-		} elsif ( $param{action} eq '3day' ) {
-			@session{'/employee/production/print_overview.html?schedule_start_year',
-'/employee/production/print_overview.html?schedule_start_month',
-'/employee/production/print_overview.html?schedule_start_day'} = Date::Calc::Today();
-			@session{'/employee/production/print_overview.html?schedule_end_year',
-'/employee/production/print_overview.html?schedule_end_month',
-'/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),2);
-		} elsif ( $param{action} eq '1week' ) {
-			@session{'/employee/production/print_overview.html?schedule_start_year',
-'/employee/production/print_overview.html?schedule_start_month',
-'/employee/production/print_overview.html?schedule_start_day'} = Date::Calc::Today();
-			@session{'/employee/production/print_overview.html?schedule_end_year',
-'/employee/production/print_overview.html?schedule_end_month',
-'/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),6);
-		} # end if
-	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > DAY ) {
-		ssi::reset_session{$r->uri()};
+
+    if ($param{action}) {
+      if ( $param{action} eq 'Today' ) {
+        @session{'/employee/production/print_overview.html?schedule_start_year',
+        '/employee/production/print_overview.html?schedule_start_month',
+        '/employee/production/print_overview.html?schedule_start_day'} = Date::Calc::Today();
+        @session{'/employee/production/print_overview.html?schedule_end_year',
+        '/employee/production/print_overview.html?schedule_end_month',
+        '/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Today();
+      } elsif ( $param{action} eq '2day' ) {
+        @session{'/employee/production/print_overview.html?schedule_start_year',
+        '/employee/production/print_overview.html?schedule_start_month',
+        '/employee/production/print_overview.html?schedule_start_day'} = Date::Calc::Today();
+        @session{'/employee/production/print_overview.html?schedule_end_year',
+        '/employee/production/print_overview.html?schedule_end_month',
+        '/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
+      } elsif ( $param{action} eq '3day' ) {
+        @session{'/employee/production/print_overview.html?schedule_start_year',
+        '/employee/production/print_overview.html?schedule_start_month',
+        '/employee/production/print_overview.html?schedule_start_day'} = Date::Calc::Today();
+        @session{'/employee/production/print_overview.html?schedule_end_year',
+        '/employee/production/print_overview.html?schedule_end_month',
+        '/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),2);
+      } elsif ( $param{action} eq '1week' ) {
+        @session{'/employee/production/print_overview.html?schedule_start_year',
+        '/employee/production/print_overview.html?schedule_start_month',
+        '/employee/production/print_overview.html?schedule_start_day'} = Date::Calc::Today();
+        @session{'/employee/production/print_overview.html?schedule_end_year',
+        '/employee/production/print_overview.html?schedule_end_month',
+        '/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),6);
+      } elsif ($param{action} eq 'stock_ordered') {
+        my $job = new openprint::ScheduledJob($param{schedule_id});
+        $variable{error} .= $job->save({stock_ordered=>1});
+      } elsif ($param{action} eq 'stock_arrived') {
+        my $job = new openprint::ScheduledJob($param{schedule_id});
+        $variable{error} .= $job->save({stock_arrived=>1});
+      } else {
+        $variable{error} .= 'Invalid command '.$param{action}.'<br/>';
+        $log->error("Invalid command ".$param{action});
+      } # end if
+    } # end if action
 	} # end if
-	$session{'/employee/production/print_overview.html?lastupdated'} = time;
-	$session{'/employee/production/print_overview.html?show_feedback'} = 0 if ! exists $session{'/employee/production/print_overview.html?show_feedback'};
-	$variable{referer} = '/employee/production/print_overview.html';
+	$session{$r->uri().'?lastupdated'} = time;
+	$session{$r->uri().'?show_feedback'} = 0 if ! exists $session{$r->uri().'?show_feedback'};
+	$variable{referer} = $r->uri();
 
+  if ($param{btnFunction} ) {
+    if ( $param{btnFunction} eq 'Reflow' ) {
+      foreach my $Equipment (openprint::Equipment->find(id=>$param{Equipment})) { 
+        my @jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, equipment_id=>$param{Equipment}, order=>'starttime' );
+        my %options = map { $_=>$_ } ref $param{flow_by} eq 'ARRAY' ? @{$param{flow_by}} : ($param{flow_by});
 
-	if ( $param{btnFunction} eq 'Reflow' ) {
-		my $Equipment = new openprint::Equipment( $param{Equipment} );
-		if ( $Equipment->smartscheduling() ) {
-			my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, equipment_id=>$param{Equipment}, order=>'starttime' );
-			if ( @Jobs ) {
-				reorder_jobs( @Jobs );
-			} else {
-				$variable{error} .= 'There are no jobs scheduled to reflow.';
-			} # end if
-		} else {
-			# Logic is ... take all jobs keep the order, 
-			my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, equipment_id=>$param{Equipment}, order=>'starttime' );
-			if ( @Jobs ) {
-				reorder_jobs( @Jobs );
-			} else {
-				$variable{error} .= 'There are no jobs scheduled to reflow.';
-			} # end if
-		} # end if
-	} elsif ( $param{btnFunction} eq 'Add Docket' ) {
-		my $Job = new openprint::ScheduledJob();
-		my $Equipment = new openprint::Equipment( $param{press_id} );
+        @jobs = sort_jobs($Equipment, \%options, @jobs) if $Equipment->smartscheduling();
+        if (@jobs) {
+          reorder_jobs(@jobs);
+        } else {
+          $variable{error} .= 'There are no jobs scheduled to reflow for '.$$Equipment{name}.'.<br/>';
+        } # end if
+      } # end foreach Equipment
+    } elsif ( $param{btnFunction} eq 'Add Docket' ) {
+      my $Job = new openprint::ScheduledJob();
+      my $Equipment = new openprint::Equipment( $param{press_id} );
 
-		if ( $param{company_id} ) {
-			my $Project = new openprint::Project();
-			$Project->company_id( $param{company_id} );
-			$Project->reference( 'Dummy Docket' );
-			$Project->status( 'Approved' );
-			$Project->design( 'ElectronicFile' );
-			$Project->save();
-			openprint::print_project::insert_project_type( $r, $log, $dbh, $Project->id(), 'Custom' );
-			my $project_id = $Project->id();
-			my @services;
-			foreach my $signature_count ( 1 .. $param{forms} ) {
-				my $service_id = $Project->add_service( 'Signature', { 
-						txtSignatureType => 'Signature',
-						txtServiceDescription => 'Additional Signature',
-						SignatureIndex => $signature_count,
-						ImpressionQuantity => $param{impressions},
-						UsePress  => $Equipment->strid(),
-						});
-				push @services, $service_id;
-				$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'Signature' ) );
-			} # end foreach
-			$Job->project_id( $Project->id() );
-			$Job->service_id( \@services );
-			$Job->pertains_id( \@services );
-		} # end if
+      if ( $param{company_id} ) {
+        my $Project = new openprint::Project();
+        $Project->company_id( $param{company_id} );
+        $Project->reference( 'Dummy Docket' );
+        $Project->status( 'Approved' );
+        $Project->design( 'ElectronicFile' );
+        $Project->save();
+        openprint::print_project::insert_project_type( $r, $log, $dbh, $Project->id(), 'Custom' );
+        my $project_id = $Project->id();
+        my @services;
+        foreach my $signature_count ( 1 .. $param{forms} ) {
+          my $service_id = $Project->add_service( 'Signature', { 
+              txtSignatureType => 'Signature',
+              txtServiceDescription => 'Additional Signature',
+              SignatureIndex => $signature_count,
+              ImpressionQuantity => $param{impressions},
+              UsePress  => $Equipment->strid(),
+            });
+          push @services, $service_id;
+          $Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'Signature' ) );
+        } # end foreach
+        $Job->project_id( $Project->id() );
+        $Job->service_id( \@services );
+        $Job->pertains_id( \@services );
+      } # end if
 
-		my ( $h, $m, $s ) = split ':', $param{runtime};
-		$h =~ s/\D//g;
-		$m =~ s/\D//g;
-		$s =~ s/\D//g;
-		$s = 59 if ( $s > 59 );
-		$m = 59 if ( $m > 59 );
+      my ( $h, $m, $s ) = split ':', $param{runtime};
+      $h =~ s/\D//g;
+      $m =~ s/\D//g;
+      $s =~ s/\D//g;
+      $s = 59 if ( $s > 59 );
+      $m = 59 if ( $m > 59 );
 
-		$variable{error} .= $Job->set({
-				equipment_id	=> $param{press_id},
-				comment		=> $param{comment},
-				locked		=> $param{locked},
-				runtime		=> $param{runtime} ? join(':', $h, $m, $s ) : undef,
-				});
+      $variable{error} .= $Job->set({
+          equipment_id	=> $param{press_id},
+          comment		=> $param{comment},
+          locked		=> $param{locked},
+          runtime		=> $param{runtime} ? join(':', $h, $m, $s ) : undef,
+        });
 
-		if ( $param{starttime_hour} ) {
-			my $starttime_dt = DateTime->new(
-					( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day','hour','minute','second' ) ),
-					time_zone=>$openprint::TZ );
-			$Job->starttime( $parser->format_datetime($starttime_dt) );
-		} elsif ( $param{starttime_year} and $param{shift_id} ) {
-			my $NewShift;
-			if ( Date::Calc::check_date( map { $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
-				# We assume that there is a shift, otherwise how can we be scheduling?
-				my $starttime_dt = DateTime->new(
-						( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
-						hour=>0, minute=>0, second=>0, time_zone=>$openprint::TZ );
-				my $endtime_dt = DateTime->new(
-						( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
-						hour=>23, minute=>59, second=>59, time_zone=>$openprint::TZ );
-				$NewShift = openprint::Shift->find_one(
-						'starttime >='  =>  $parser->format_datetime($starttime_dt),
-						'starttime <='  =>  $parser->format_datetime($endtime_dt),
-						( $param{shift_id} ? ( shift_id       =>  $param{shift_id}) : () ),
-						equipment_id    =>  $$Equipment{id},
-						);
-				if ( $NewShift ) {
-					$NewShift->add_job( $Job );
-				}
-			} else {
-				$variable{error} .= 'Invalid startdate specified';
-			}
-		} # end if
-		$variable{error} .= $Job->save();
+      if ( $param{starttime_hour} ) {
+        my $starttime_dt = DateTime->new(
+          ( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day','hour','minute','second' ) ),
+          time_zone=>$openprint::TZ );
+        $Job->starttime( $parser->format_datetime($starttime_dt) );
+      } elsif ( $param{starttime_year} and $param{shift_id} ) {
+        my $NewShift;
+        if ( Date::Calc::check_date( map { $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
+          # We assume that there is a shift, otherwise how can we be scheduling?
+          my $starttime_dt = DateTime->new(
+            ( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
+            hour=>0, minute=>0, second=>0, time_zone=>$openprint::TZ );
+          my $endtime_dt = DateTime->new(
+            ( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
+            hour=>23, minute=>59, second=>59, time_zone=>$openprint::TZ );
+          $NewShift = openprint::Shift->find_one(
+            'starttime >='  =>  $parser->format_datetime($starttime_dt),
+            'starttime <='  =>  $parser->format_datetime($endtime_dt),
+            ( $param{shift_id} ? ( shift_id       =>  $param{shift_id}) : () ),
+            equipment_id    =>  $$Equipment{id},
+          );
+          if ( $NewShift ) {
+            $NewShift->add_job( $Job );
+          }
+        } else {
+          $variable{error} .= 'Invalid startdate specified';
+        }
+      } # end if
+      $variable{error} .= $Job->save();
 
-		%param = ();
-	} elsif ( $param{btnFunction} eq 'ApproveJob' ) {
-		my $Job = new openprint::ScheduledJob( $param{schedule_id} );
-		$variable{error} .= $Job->approve();
-	} elsif ( $param{btnFunction} eq 'RemoveJob' ) {
-		if ( $param{schedule_id} ) {
-			my $Job = new openprint::ScheduledJob( $param{schedule_id} );
-			my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); $$sig_specs{SignatureIndex}; } @{$Job->pertains_id()};
-			if ( ( ! $Job->delete() ) and $$Job{project_id} ) {
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, $Job->ServiceType()->name() . ' for form'. (@forms != 1 ? 's' : '') . join(',',@forms). ' removed from schedule.' );
-			} # end if
-		} else {
-			$variable{error} .= 'No job given to delete...';
-		} # end if
-	} # end if
+      %param = ();
+    } elsif ( $param{btnFunction} eq 'ApproveJob' ) {
+      my $Job = new openprint::ScheduledJob( $param{schedule_id} );
+      $variable{error} .= $Job->approve();
+    } elsif ( $param{btnFunction} eq 'RemoveJob' ) {
+      if ( $param{schedule_id} ) {
+        my $Job = new openprint::ScheduledJob( $param{schedule_id} );
+        my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); $$sig_specs{SignatureIndex}; } @{$Job->pertains_id()};
+        if ( ( ! $Job->delete() ) and $$Job{project_id} ) {
+          $Job->Project()->add_to_log( @session{'company_id','user_id'}, $Job->ServiceType()->name() . ' for form'. (@forms != 1 ? 's' : '') . join(',',@forms). ' removed from schedule.' );
+        } # end if
+      } else {
+        $variable{error} .= 'No job given to delete...';
+      } # end if
+    } # end if
+  } # end if btnFunction
 
 	# Add missing Jobs to Schedule
 	if ( $config{'Smart Schedule'} ne 'Y') {
@@ -2503,6 +2514,139 @@ sub _equipment_shifts {
 sub _job_service_dropdown {
 	$variable{Equipment} = new openprint::Equipment($param{equipment_id});
 }
+
+sub get_value {
+  my $equipment = shift;
+  my $options = shift;
+  #$openprint::log->debug("get_value: Options: ".Data::Dumper::Dumper($options));
+  my @jobs = @_;
+
+  my $cost;
+  for ( my $i = 0; $i < @jobs; $i += 1 ) {
+    my $prev = $i ? $jobs[$i-1] : undef;
+    my $next = $i+1 < @jobs ? $jobs[$i+1] : undef;
+
+    $cost += cost( $equipment, $prev, $jobs[$i], $next, $options);
+  } # end for each jobs
+$openprint::log->debug("get_value: ".join(',', map { $_->docket() } @jobs)." $cost" );
+  return $cost;
+} # end sub get_value
+
+# The cost function calculates a value based on the previous and next jobs.  It takes into account due dates, colours, stock, etc.
+sub cost {
+  my ( $equipment, $previous, $current, $next, $options ) = @_;
+
+  my $value;
+
+  #$openprint::log->debug("Options: ".Data::Dumper::Dumper($options));
+
+  my $cp = $current->Project();
+  my @current_service_ids = @{$$current{service_id}};
+  my $c_qty_index = $cp->ordered_quantity_index();
+
+  my $c_specs = openprint::service::get_specs_ref($cp, $current_service_ids[0]);
+  if ($$options{due_date}) {
+    $openprint::log->debug("Considering due_date");
+    if (Date::Parse::str2time($cp->due_date()) >= $current->end()) {
+      $openprint::log->debug("due date check fails for ".$current->docket()." ".$cp->due_date() .' < '.$current->end_dt().", sub 10");
+      $value += 10;
+    } # end if
+  }
+  my @c_colours = (
+    openprint::Estimating::Printing::get_colours( $c_specs, 'SideOne' ),
+    openprint::Estimating::Printing::get_colours( $c_specs, 'SideTwo' ));
+
+  if (0) {
+    $$c_specs{'UsePress'} = $$c_specs{'ddmPress'.$c_qty_index} if ! $$c_specs{'UsePress'};
+    if ( $$c_specs{'UsePress'} eq $equipment->strid() ) {
+      $value += 5;
+    } # end if
+    if ( $equipment->id() == $$current{equipment_id} ) {
+      $value += 1;
+    } # end if
+
+    if ( $equipment->specification('Maximum Impression Quantity') > $$c_specs{'hdnImpressionQuantity'.$c_qty_index} ) {
+      $value -= 1;
+    } elsif ( $equipment->specification('Minimum Impression Quantity') < $$c_specs{'hdnImpressionQuantity'.$c_qty_index} ) {
+      $value -= 1;
+    } else {
+      $value += 1;
+    } # end if
+  } # end if
+
+  if ( $previous ) {
+    my $pp = $previous->Project();
+    my @previous_service_ids = @{$$previous{service_id}};
+    my $p_qty_index = $pp->ordered_quantity_index();
+    my $p_specs = openprint::service::get_specs_ref($pp, $previous_service_ids[0]);
+
+    if ($$options{inks_required}) {
+      my @p_colours = (
+        openprint::Estimating::Printing::get_colours( $p_specs, 'SideOne' ),
+        openprint::Estimating::Printing::get_colours( $p_specs, 'SideTwo' )
+      );
+      my @colours_diff = sets::xor( map { $$_{name} } (@p_colours, @c_colours) );
+      $value += @colours_diff;
+      #$openprint::log->debug("Add value for colours: @colours_diff ".@colours_diff);
+    }  #end if consider inks_required
+    if ($$options{sheet_width}) {
+      $openprint::log->debug("Considering Sheet width ".$$p_specs{'StockWidth'.$p_qty_index} .'>='. $$c_specs{'StockWidth'.$c_qty_index} );
+      if ( $$p_specs{'StockWidth'.$p_qty_index} < $$c_specs{'StockWidth'.$c_qty_index} ) {
+        $value += 1;
+      } # end if
+    } # end if consider sheet_width
+  } # end if have previous
+
+  if ( $next ) {
+    my $np = $next->Project();
+    my @next_service_ids = @{$$next{service_id}};
+    my $n_specs = openprint::service::get_specs_ref($np, $next_service_ids[0]);
+    my $n_qty_index = $np->ordered_quantity_index();
+
+    if ($$options{inks_required}) {
+      my @n_colours = (
+        openprint::Estimating::Printing::get_colours( $n_specs, 'SideOne' ),
+        openprint::Estimating::Printing::get_colours( $n_specs, 'SideTwo' ));
+      $value += sets::intersection( @n_colours, @c_colours );
+    }
+    if ($$options{sheet_width}) {
+      $openprint::log->debug("Considering Sheet width ".$$n_specs{'StockWidth'.$n_qty_index} .'>='. $$c_specs{'StockWidth'.$c_qty_index} );
+      if ( $$n_specs{'StockWidth'.$n_qty_index} > $$c_specs{'StockWidth'.$c_qty_index} ) {
+        $value += 1;
+      } # end if
+    } # end if
+  } # end if
+
+  return $value;
+} # end sub cost
+
+sub sort_jobs {
+  require Algorithm::Permute;
+
+  my $equipment = shift;
+  my $options = shift;
+  #$openprint::log->debug("sort_jobs: Options: ".Data::Dumper::Dumper($options));
+  my @jobs = @_;
+
+  my $elapsed = time;
+  my $best_value = get_value($equipment, $options, @jobs);
+;
+  my @best_permutation = @jobs;
+  $log->debug("Current: ".join(',', map { $_->docket() } @jobs));
+
+  my $p_iterator = Algorithm::Permute->new(\@jobs);
+  while (my @permutation = $p_iterator->next()) {
+    #$log->debug("Permutation: ".join(',', map { $_->docket() } @permutation));
+    # All changes will have more cost than the current unless they are in fact better.
+    my $value = get_value($equipment, $options, @permutation) + 1;
+    if (!defined($best_value) or ($best_value > $value)) {
+      $best_value = $value;
+      @best_permutation = @permutation;
+    }
+  } # end foreach permutation
+  $log->debug("Best Permutation: $best_value ".join(',', map { $_->docket() } @best_permutation));
+  return @best_permutation;
+} # end sub sort_jobs
 
 1;
 __END__

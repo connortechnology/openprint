@@ -73,7 +73,7 @@ my %variables = (
 		'CustomStockPrice', 'StockPricePerM', 'txtStockGSM','CustomSheetDoubleSided',
 		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package','full_packages',
 		'sides_the_same','rdbPressProof','PressApproval',
-		'pages_supplied','supplied_format','rdbTemplateType','txtSpreadSize',
+		'pages_supplied','supplied_format','rdbTemplateType','txtSpreadSize','OverrideSpreadSize',
     'txtServiceDescription',
     'rdbPanels','rdbPocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 		);

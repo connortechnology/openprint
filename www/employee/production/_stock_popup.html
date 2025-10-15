@@ -1,14 +1,14 @@
-<h3>Stock information for Docket <? echo ( $$variable{'Project'}->docket() ) ?></h3>
+<h3>Stock information for Docket <? echo ( $$variable{Project}->docket() ) ?></h3>
 <? eval (
-	@{$$variable{'PurchaseOrders'}} = $$variable{'Project'}->docket() ? openprint::PurchaseOrder_Content->find( 'docket'=>$$variable{'Project'}->docket() ) : ();
+	@{$$variable{PurchaseOrders}} = $$variable{Project}->docket() ? openprint::PurchaseOrder_Content->find( 'docket'=>$$variable{Project}->docket() ) : ();
 ) ?>
 <fieldset><legend>Ordered Stock</legend>
-<? if ( @{$$variable{'PurchaseOrders'}} ) ?>
+<? if ( @{$$variable{PurchaseOrders}} ) ?>
 	<table class="List">
 		<tr><th width="50" align="left">PO</th><th align="left">Description</th><th width="75" align="left">Quantity</th></tr>
 <? echo (
 	my $html = '';
-	foreach my $PO_Content ( @{$$variable{'PurchaseOrders'}} ) {
+	foreach my $PO_Content ( @{$$variable{PurchaseOrders}} ) {
 		next if ! sets::isin( $PO_Content->Type()->name(), [ 'Sheet Stock', 'Roll Stock' ] );
 		$html .= sprintf('<tr><td><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$d%4$s</td></tr>', 
 			$PO_Content->po_id(),
@@ -20,16 +20,20 @@
 	return $html;
 ) ?>
 	</table>
-<? else ( @{$$variable{'PurchaseOrders'}} ) ?>
+<? else ( @{$$variable{PurchaseOrders}} ) ?>
+<?if($$variable{Job}->stock_ordered())?>
+Stock has been ordered.
+<?else($$variable{Job}->stock_ordered())?>
 No stock has been ordered.
-<? endif ( @{$$variable{'PurchaseOrders'}} ) ?>
+<?endif($$variable{Job}->stock_ordered())?>
+<? endif ( @{$$variable{PurchaseOrders}} ) ?>
 </fieldset>
 <fieldset><legend>Allocated Stock</legend>
 <? echo ( 
 	require openprint::PaperAllocation;
 
 	my %paper;
-	my @Allocations = openprint::PaperAllocation->find( docket=>$$variable{'Project'}->docket() );
+	my @Allocations = openprint::PaperAllocation->find( docket=>$$variable{Project}->docket() );
 	foreach my $Allocation ( @Allocations ) {
 		push @{$paper{$Allocation->paper_id()}}, $Allocation;
 	} # end foreach Allocation
@@ -55,8 +59,8 @@ No stock has been ordered.
 				if ( $Location->id() ) {
 					$html .= '<span style="float:right;width:200px;">';
 					$html .= sprintf('<img id="MAP%d" src="/images/maps/map.gif?location_id=%d&width=200&level=1" alt="" /><br/>', $Skid->id(), $Location->id() );
-					$html .= ssi::writeButton( $log, $dbh, 'Plus'.$Skid->id(), '', q{level_up( $('MAP}.$Skid->id().q{') );}, '', '+' );
-					$html .= ssi::writeButton( $log, $dbh, 'Minus'.$Skid->id(), '', q{level_down( $('MAP}.$Skid->id().q{') );}, '', '-' );
+          $html .= button('Plus'.$Skid->id(), onclick=>q{level_up( $('MAP}.$Skid->id().q{') );}, text=>'+' );
+          $html .= button('Minus'.$Skid->id(), onclick=>q{level_down( $('MAP}.$Skid->id().q{') );}, text=>'-' );
 					$html .= '</span>';
 					$html .= 'Location:' . $Location->name().'<br/>';
 				} # end if
@@ -69,4 +73,15 @@ No stock has been ordered.
 	} # end foreach paper
 	return $html;
 ) ?>
+<form action="print_overview.html" method="post">
+  <input type="hidden" name="schedule_id" value="<?echo($$variable{Job}->id())?>"/>
+  <p class="buttons">
+  <?echo(
+     join("\n",
+     button('StockOrdered', {name=>'action', value=>'stock_ordered', text=>'Ordered', type=>'submit'}), 
+     button('StockArrived', {name=>'action', value=>'stock_arrived', text=>'Arrived', type=>'submit'}), 
+     );
+   )?>
+  </p>
+</form>
 </fieldset>

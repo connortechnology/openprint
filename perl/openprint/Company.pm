@@ -585,11 +585,14 @@ sub Country {
 sub can_become {
 	my $C = shift;
 	my $User = shift;
+  return 0 if $$User{type} eq 'C';
 	$User = $openprint::User if ! $User;
 	if ( 
 			( $$User{type} eq 'A' )
 			or
 			( $$User{id} == $$C{salesrep_id} )
+        or
+      (!$$C{salesrep_id})
 			or
 			sets::isin( $$User{id}, $C->CSR()->assistant_ids() )
 			or

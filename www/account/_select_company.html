@@ -50,14 +50,16 @@ return $html;
 					$$variable{company_dropdown} = openprint::Company->dropdown(
 						or	=> { 
             id => [ sets::union( 
+            ( $openprint::config{owner_id} ? $openprint::config{owner_id} : () ),
             ( $openprint::User->company_id() ? $openprint::User->company_id() : () ),
             ( $session{company_id} ? $session{company_id} : () ),
             ) ],
-							salesrep_id=>$session{'/account/select_company.html?csr_ids'} ? $session{'/account/select_company.html?csr_ids'} : [ undef, $session{user_id}, $openprint::User->csr_ids() ],
+							'salesrep_id is null or in'=>$session{'/account/select_company.html?csr_ids'} ? $session{'/account/select_company.html?csr_ids'} : [ $session{user_id}, $openprint::User->csr_ids() ],
 							}
 						);
+            $log->debug("# of companies in dropdown" . @{$$variable{company_dropdown} });
 					#$$variable{company_dropdown} = openprint::Company->dropdown( ) if @{$$variable{company_dropdown}} <= 2;
-					if ( @{$$variable{company_dropdown}} > 2000 ) {
+					if ( @{$$variable{company_dropdown}} > 6000 ) {
 						return make_drop_down( [ map { $_->id(), $_->name() } ( $openprint::Company ) ], $session{company_id} );
 					} else {
 						make_drop_down( $$variable{company_dropdown}, $session{company_id} );

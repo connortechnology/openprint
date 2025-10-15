@@ -2376,6 +2376,7 @@ sub set_size {
 			$variables{txtHeight} = [ sets::exclude( ['output'], $variables{txtHeight} ) ];
 			$variables{rdbTemplateType} = [ sets::exclude( ['output'], $variables{rdbTemplateType} ) ];
 		} # end if
+		$$specs{txtSpreadSize} = 2*$$specs{rdbPanels};
 	} elsif ( $$specs{txtSignatureType} ) {
 		if ( $$specs{txtSignatureType} eq 'Gate Folded Pages' ) {
 			if ( $$specs{rdbTemplateType} eq 'SingleGateFold' ) {
@@ -2509,12 +2510,14 @@ $openprint::log->debug("Doing Perfect bound ifinished calliper is $finished_call
 						} else {
 							$$specs{txtSpreadSize} = 2;
 						} # end if
-					} elsif ( $$printing_specs{rdbTemplateType} eq 'CornerStitching' or $$printing_specs{rdbTemplateType} eq 'SpinePaste' ) {
-						$$specs{txtSpreadSize} = 2;
-					} elsif ( $$specs{GroupPageQuantity} % 4 ) {
-						$$specs{txtSpreadSize} = 2;
-					} else {
-						$$specs{txtSpreadSize} = 4;
+          } elsif ( $$printing_specs{rdbTemplateType} eq 'CornerStitching' ) {
+            $$specs{txtSpreadSize} = 2;
+          } elsif ($$printing_specs{rdbTemplateType} eq 'SpinePaste' ) {
+            $$specs{txtSpreadSize} = $$specs{GroupPageQuantity} % 4 ? 2 : 4;
+          } elsif ( $$specs{GroupPageQuantity} % 4 ) {
+            $$specs{txtSpreadSize} = 2;
+          } else {
+            $$specs{txtSpreadSize} = 4;
 					} # end if
 				} # end if
 				$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
@@ -5882,6 +5885,7 @@ sub calc_price {
 
 	my $impressions = $net_sheets + $overs;
 	$impressions *= 2 if $$project{print_sides} == 2 and $is_wt;
+  $$Imposition{impressions} = $impressions;
 # or ( $$Imposition{runstyle} eq 'Sheet Work' ) );
 
 	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper});
