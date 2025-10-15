@@ -12,6 +12,7 @@ require sets;
 require sql;
 require openprint;
 require File::Slurp;
+require URI;
 require URI::Encode;
 require URI::Escape;
 require Number::Format;
@@ -1182,20 +1183,35 @@ sub reset_session($) {
 	#$variable{ExternalRedirect} = $_[0];
 } # end sub reset_session
 
+sub exists_path {
+  my $path = shift;
+  $log->debug("Trying $path");
+  if ( -e $path ) {
+    return $path;
+	} elsif ( -e $config{SkinPath}.$path ) {
+		return $config{SkinPath}.$path;
+	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
+		return $ENV{DOCUMENT_ROOT}.$path;
+	}
+  return undef;
+}
 
 # If there is any problem, return the original path, so that the original file can be sent.
 sub hash_link {
 	my ( $path ) = @_;
 
 	my $src;
-  if ( -e $path ) {
-    $src = $path;
-	} elsif ( -e $config{SkinPath}.$path ) {
-		$src = $config{SkinPath}.$path;
-	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
-		$src = $ENV{DOCUMENT_ROOT}.$path;
-	} else {
-		return $path;
+
+  if (!($src = exists_path($path))) {
+    if (-1 == index('/', $path)) {
+      my $uri = URI->new($r->uri());
+      my @parts = $uri->path_segments;
+      $log->debug("parts: @parts");
+      pop @parts; # we always have a filename
+      if (!($src = exists_path(join('/', @parts, $path)))) {
+		    return $path;
+      }
+    }
 	} # end if
 
 	require JSON;
