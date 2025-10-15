@@ -83,13 +83,21 @@ return $html.'<option value="">Use the filter to populate this dropdown</option>
 '</li>',
 );
 ) ?>
-		<li><label>Notifications</label>
-			<? echo ( ssi::select( openprint::User_Notification_Type->dropdown(), $session{$r->uri().'?notification_type_id'}, {
+<?echo(
+  my $notification_dropdown = openprint::User_Notification_Type->dropdown();
+  if (@{$notification_dropdown} > 1) {
+  return join("\n",
+		'<li><label>Notifications</label>',
+		ssi::select( openprint::User_Notification_Type->dropdown(), $session{$r->uri().'?notification_type_id'}, {
 						name=>'notification_type_id',
 						prepend=>['','All'],
 						onchange=>'load_page();',
-						} ); ) ?>
-		</li>
+						} );
+		'</li>',
+  );
+  }
+  return;
+  )?>
 		<li> 
 			<label>Created Date</label>
 			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
