@@ -24,15 +24,14 @@
 <p><label>Comments</label>
   <form name='add_comment' action="view.html">
     <textarea name="comment" cols="98" rows="5" id="comment"></textarea><br />
-    <label>Assign Project to: </label>
+    <label>Assign Project to</label>
     <select id="ddmUser" name="ddmUser" >
       <option value=""> Select a User </option>
-      <option value=""> ----------------- </option>
 <?echo (
-make_drop_down(openprint::User->dropdown(type=>'E'));
+make_drop_down(openprint::User->dropdown(type=>['E','A']));
 )?>
-      </select><br /><br />
-    <input class="button" type="submit" value="Save and Send" name="Add Comment" />
+      </select>
+      <?echo(button( 'AddComment', {type=>'submit', value=>'Save and Send'}); ) ?>
     <input type="hidden" name="project_id" value="<?project_id?>" />
   </form>
 </p>
