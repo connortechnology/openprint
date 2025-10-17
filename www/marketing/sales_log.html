@@ -83,7 +83,7 @@ return;
 	</form>
 	<div id="Results"><?include(_sales_log.html)?></div>
 </div>
-<script src="sales_log.js"></script>>
+<script src="<?hash_link(sales_log.js)?>"></script>
 <script>
 	$j('#f1 [name="company_id"]').load('/includes/_company_ddm.html', { selected_id: '<?echo($session{'/marketing/sales_log.html?company_id'})?>' } );
 	$j('#add [name="company_id"]').load('/includes/_company_ddm.html', { selected_id: '<?echo($session{'/marketing/sales_log.html?company_id'})?>' } );
