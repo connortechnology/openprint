@@ -14,7 +14,7 @@ use vars qw( $log $dbh %config $debug %fields %find_fields %transforms %defaults
 $table = 'users';
 $serial = 'users_id_seq';
 
-$debug = 0;
+$debug = 1;
 
 $default_sort	=	'lower(firstname),lower(lastname),id';
 
@@ -73,6 +73,8 @@ $default_sort	=	'lower(firstname),lower(lastname),id';
 	wage				=>	[ 's/[^\d\.]//g' ],
 	email				=>	[ 'tr/[A-Z]/[a-z]/', 's/^\s+//', 's/\s+$//' ],
 	password			=>	[ 's/^\s+//', 's/\s+$//' ],
+	firstname			=>	[ 's/^\s+//', 's/\s+$//' ],
+	lastname			=>	[ 's/^\s+//', 's/\s+$//' ],
 	purchasing_limit	=>	[ 's/[^\d\.\-]//g' ],
 	purchasing_total_limit	=>	[ 's/[^\d\.\-]//g' ],
 	created_on		=>	[ 's/.*//g' ],
