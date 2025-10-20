@@ -25,15 +25,17 @@
 		</table>
 	</form>
 </div>
-<script src="<?hash_link(/administrator/managerial/profile.js)?>"></script>
+<script src="<?hash_link(profile.js)?>"></script>
 <script>
 window.addEventListener('DOMContentLoaded', function() {
-	Sortable.create('fields', {
-		tag: 'tr',
-		constraint: 'vertical',
-		onUpdate: function( container ) {
-				new Ajax.Updater( 'fields', '_company_fields_tbody.html', { parameters: { update: Sortable.serialize(container) }, evalScripts: true } );
-			}
-	} );
+  if (typeof Sortable !== 'undefined') {
+    Sortable.create('fields', {
+      tag: 'tr',
+      constraint: 'vertical',
+      onUpdate: function( container ) {
+        new Ajax.Updater( 'fields', '_company_fields_tbody.html', { parameters: { update: Sortable.serialize(container) }, evalScripts: true } );
+      }
+    } );
+  }
 } );
 </script>
