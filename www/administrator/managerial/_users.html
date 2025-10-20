@@ -53,10 +53,10 @@
 <?echo(
 return join("\n",
    $session{'/administrator/managerial/users.html?deleted'} eq '1' ? (
-      button( 'destroy', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_users.html?btnFunction=destroy', { user_id: get_value( document.getElementById('f2').user_id ) } );`, text=>'Destroy Checked' } ),
-      button( 'undelete', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_users.html?btnFunction=undelete', { user_id: get_value( document.getElementById('f2').user_id ) } );`, text=>'Undelete Checked' } ),
+      button( 'destroy', { onclick=>q`jQuery('#Results').load('_users.html?btnFunction=destroy', { user_id: get_value( document.getElementById('f2').user_id ) } );`, text=>'Destroy Checked' } ),
+      button( 'undelete', { onclick=>q`jQuery('#Results').load('_users.html?btnFunction=undelete', { user_id: get_value( document.getElementById('f2').user_id ) } );`, text=>'Undelete Checked' } ),
       ) : (
-      button( 'delete', { onclick=>q`jQuery('#Results').load('/administrator/managerial/_users.html?btnFunction=delete', { user_id: get_value( document.getElementById('f2').user_id ) } );`, text=>'Delete Checked' } ),
+      button( 'delete', { onclick=>q`jQuery('#Results').load('_users.html?btnFunction=delete', { user_id: get_value( document.getElementById('f2').user_id ) } );`, text=>'Delete Checked' } ),
       )
 );
 ) ?>
