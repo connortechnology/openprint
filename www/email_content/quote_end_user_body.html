@@ -1,4 +1,4 @@
-Dear <?echo($$variable{Quote}->for_name())?>,<br/>
+Dear <?echo($$variable{Quote}->for_name() ? $$variable{Quote}->for_name() : $$variable{Quote}->for_companyname() )?>,<br/>
 <br/>
 Your quote is attached.<br/>
 <?if($$variable{Quote}->reference())?>
