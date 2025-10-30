@@ -155,15 +155,17 @@ while ( <FH> ) {
     'firstname lc'=>lc openprint::User->transform(firstname=>$firstname),
     ($lastname ? ('lastname lc'=>lc openprint::User->transform(lastname=>$lastname)) : ()),
   );
-  if (!$user and confirm("Add $firstname $lastname to $name")) {
+  if (!$user)  {
+    if (confirm("Add $firstname $lastname to $name")) {
 
-    $user = new openprint::User( );
-    $user->save({ firstname=>$firstname, lastname=>$lastname,
-        email=>$email,
-        company_id=>$Company->id(),
-        phone => $phone,
-        extension => $extension,
-      });
+      $user = new openprint::User( );
+      $user->save({ firstname=>$firstname, lastname=>$lastname,
+          email=>$email,
+          company_id=>$Company->id(),
+          phone => $phone,
+          extension => $extension,
+        });
+    }
   } else {
     my @changes = $user->changes({ firstname=>$firstname, lastname=>$lastname,
         email=>$email,
