@@ -153,7 +153,7 @@ sub session_init {
 	$Company = new openprint::Company( $session{company_id} );
 	$Owner = new openprint::Company( $config{owner_id} );
 	$Currency = new openprint::Currency( $session{Currency_id} );
-	$log->debug("Company: $$Company{name} $$User{email} $session{user_type}") if $$User{id};
+	$log->debug("Company: $$Company{name} $$User{email} $session{user_type} session: $cookie") if $$User{id};
 
 	if ( $config{Pricelist} ) {
 		if ( ! $session{Pricelist_id} ) {
