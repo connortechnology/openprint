@@ -441,6 +441,7 @@ sub find_filtered {
 sub can_view {
 	my $self = shift;
 	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $openprint::session{user_type} eq 'E' and !$$self{salesrep_id};
 	return 1 if $$self{salesrep_id} == $openprint::session{user_id};
 	return 1 if $$self{id} == $$openprint::User{company_id};
 	return 1 if $$self{salesrep_id} and sets::isin( $$self{salesrep_id}, $openprint::User->csr_ids() );
