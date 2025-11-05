@@ -262,6 +262,12 @@ update projecttemplate set type='Portrait', name='Portrait' where type='PadsPort
 update projecttemplate set type='Square', name='Square' where type='PadsSquare';
 update projecttemplate set Type='Landscape', Name='Landscape' where type='PostersLandscape';
 update projecttemplate set Type='Portrait', Name='Portrait' where type='PostersPortrait';
+/* Labels */
+update projecttemplate set type='KissCut', name='Kiss Cut' WHERE name='LabelKissCut';
+update projecttemplate set type='DieCut', name='Die Cut' WHERE name='LabelDieCut';
+update projecttemplate set type='Sheets', name='Sheets' WHERE name='LabelSheets';
+update projecttemplate set type='StraightCut', name='Straight Cut' WHERE name='LabelStraightCut';
+
 
 insert into material_categories (name) values ('Bundling');
 
@@ -318,6 +324,7 @@ insert into tbl_service_Defaults (lngservicetypeindex, strfieldname, strdefaultv
 
 alter table papers alter column height type float;
 alter table papers alter column width type float;
+update papers set digital=true;
 
 update projects set order_id=(SELECT min(orderindex) from order_contents where lngprojectindex=projects.id);
 
@@ -469,7 +476,6 @@ update tbl_equipment_specifications set strname='DieCutting Capable' where strna
 update service_prices set units='per 1000' where units='per 1000 spreads';
 update projecttemplate set type='PerfectBound' where type='PerfectBinding';
 update projecttemplate set type='Cerlox' where type='PlasticComb';
-delete from projecttemplate where type='KnotchBound';
 
 update tbl_equipment set servicetype_id = ARRAY(SELECT id from service_types where name='PerfectBound') where id=135;
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT id from tbl_equipment where strname='Perfect Binder_Sulby_10x14'), 'PerfectBound Capable', 'Y','');
@@ -588,7 +594,6 @@ insert into material_specifications (material_id, name, value,min,max, units) va
 insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='CyanInk'), 'Coverage', 715555, 4,5, 'square inches per kg');
 insert into material_specifications (material_id, name, value,min,max, units) values ((SELECT id from materials where name='BlackInk'), 'Coverage', 920000, 1,1, 'square inches per kg');
 
-delete from projecttemplate where type='KnotchBound';
 UPDATE tbl_equipment set deleted=true where strid='DigiFold Pro01-136';
 update paper_prices set strunits='per 100lbs' where strunits='100 lbs';
 
