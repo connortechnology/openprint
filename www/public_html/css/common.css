@@ -680,7 +680,7 @@ text-align: left;
 }
 
 select#ddmCustomer, select#company_id {
-  width: calc(100% - 46px);
+  max-width: calc(100% - 46px);
 }
 a.Today, a.Clear {
 	margin-right: 2px;
