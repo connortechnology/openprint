@@ -96,6 +96,7 @@ $SIG{HUP} = \&sig_handler;
 # Turn off Object caching
 # If we do this, we incur a lot more db load which might be trivial, but.... our use of locking should mean that we don't need to do this anymore
 $openprint::Object::no_cache = 0;
+$openprint::Object::no_cache = 0;
 
 $openprint::dbh = sql::open_sql( $log,
 		port		=> $config{db_port},
@@ -117,6 +118,7 @@ if ( $config{user_id} ) {
 	$openprint::session{user_id} = $config{user_id};
 	$openprint::User = new openprint::User($openprint::session{user_id});
 	$openprint::session{company_id} = $openprint::User->company_id();
+	$openprint::Company = $openprint::User->Company();
 	$openprint::Company = $openprint::User->Company();
 }
 
@@ -194,6 +196,7 @@ while(1) {
     # First find out current status, then lock & load to find out previous 
     # status because we don't want to hold this lock for however long it takes to ping.
     my @HIs = $Host->Interfaces(undef);
+    my %hi_status;
     foreach my $HI ( @HIs ) {
       $HI->load(); # Refresh in case something has changed
       next if ! $HI->monitor();
@@ -248,7 +251,7 @@ while(1) {
             }
           }
           next;
-        }
+        } # end if is_subnet
 
         if ( $ping and ( $duration > ($$Host{max_ping_time} ? $$Host{max_ping_time} : 1 ) ) ) {
           (new openprint::Log())->save({
@@ -262,6 +265,7 @@ while(1) {
 
         # The idea is if any ip is pingable... then the host is up
         $online = $ping if ! $online;
+        $hi_status{$HI->ip()} = $ping;
 
         if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) or !defined($$HI{online})) {
           $HI->load(); # Get any updates that aren't in cache
@@ -298,7 +302,7 @@ while(1) {
           Object=>$Host,
           action_id=>( $online ? 100 : 101 ),
           host_id=>$$Host{id},
-          note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}),
+          note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) . join(', ', 'interface status:' , map { $_.': '.($hi_status{$_}?'online':'offline') } keys %hi_status)
         });
       if ( $online and $notified ) {
         # We are now online and an offline notification went out. So send an online notification
@@ -422,8 +426,10 @@ while(1) {
   } # end foreach Host
 
   if ( $config{sleep} ) {
-    #$log->debug("Sleeping for $config{sleep} seconds");
+    $log->debug("Sleeping for $config{sleep} seconds");
     sleep $config{sleep};
+  } else {
+    $log->debug("Not Sleeping");
   }
 } # end while
 $p->close();

@@ -344,7 +344,7 @@ sub _index {
 			ssi::save_params( '/administrator/service_types/index.html', (
 					 #'starting_on_start_year','starting_on_start_month','starting_on_start_day',
 					 #'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-					'category_id',
+					'category_id', 'search',
 					) );
 	 } # end if
 }
@@ -354,7 +354,10 @@ sub categories {
   return if ! $param{btnFunction};
 	if ( $param{btnFunction} eq 'Save' ) {
 		$variable{error} .= $ServiceType_Category->save(\%param);
-		foreach my $st_id ( ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : $param{servicetype_id} ) {
+    my @service_types = ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : ($param{servicetype_id});
+      
+		foreach my $st_id (@service_types) {
+      next if !$st_id;
 			my $ServiceType = new openprint::ServiceType( $st_id );
 			$variable{error} .= $ServiceType->save({ category_id=>$ServiceType_Category->id()});
 		} # end foreach st_id
@@ -373,7 +376,9 @@ sub category {
 			next if sets::isin( $$Type{id}, $param{servicetype_id} );
 			$variable{error} .= $Type->save({category_id=>undef});
 		} # end if
-		foreach my $st_id ( ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : $param{servicetype_id} ) {
+    my @service_types = ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : ($param{servicetype_id});
+		foreach my $st_id ( @service_types ) {
+      next if !$st_id;
 			my $ServiceType = new openprint::ServiceType( $st_id );
 			$variable{error} .= $ServiceType->save({ category_id=>$ServiceType_Category->id()});
 		} # end foreach st_id

@@ -115,15 +115,22 @@ sub _update {
 } # end sub _update
 
 sub view {
-	my $project_id = $param{ProjectIndex};
-	$project_id = $param{project_id} if $param{project_id} and ! $param{ProjectIndex};
+	my $project_id = $param{ProjectIndex} || $param{project_id};
 
-	if ( exists $param{ShowAllSignatures} ) {
-		$session{ShowAllSignatures} = $param{ShowAllSignatures};
-	} # end if
-	$variable{ProjectIndex} = $project_id;
+  $session{ShowAllSignatures} = $param{ShowAllSignatures} if exists $param{ShowAllSignatures};
+	$variable{project_id} = $variable{ProjectIndex} = $project_id;
 	my $Project = $variable{Project} = new openprint::Project($project_id);
 	my $save = 0;
+
+  if (exists($param{quote_level}) and ( (!$Project->style_id()) or ($param{quote_level} != $Project->style_id()))) {
+    $Project->style_id( $param{quote_level} );
+    $save = 1;
+  } elsif ( ( ! $Project->style_id() ) and $openprint::User->quote_level() ) {
+    # Set default
+    $Project->style_id( $openprint::User->quote_level() );
+    $save = 1;
+  } # end if
+
   # A new project will have no quantities, so no quantity_indexes, so this is an error check
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $$Project{'price'.$qty_index} != $Project->price($qty_index,undef) ) {
@@ -132,10 +139,224 @@ sub view {
 			last;
 		} # end if
 	} # end foreach
-	if ( $save ) {
-		$Project->save();
+	$Project->save() if $save;
+
+	# I put these here because the don't need a project index
+	if ( defined $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Save Project' ) {
+			$log->debug("*** Time to Save Project - View Services Function ***");
+			$project_id = openprint::print_project::create_edit_process( $r, $log, $dbh, \%variable );
+			return if $variable{Redirect}; # Redirects on error
+			$Project = new openprint::Project( $project_id );
+			#my $services = $Project->services();
+      # We already did recalc in create_edit_process... aug 6 2019
+			# Display any resulting uncalculated services
+			openprint::print_project::continue_project($Project);
+			return if $variable{ExternalRedirect};
+		} elsif ( $param{btnFunction} eq 'Delete Project' ) {
+			$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $project_id );
+			if ( ! $variable{error} ) {
+				$variable{ExternalRedirect} = '/main/project/history.html';
+				return;
+			} # end if
+		} elsif ( $param{btnFunction} eq 'Undelete Project' ) {
+			my $Project = new openprint::Project( $project_id );
+			$variable{error} .= $Project->undelete();
+		} # end if
+	} # end if defined btnFunction
+
+	$project_id = $session{project_id} if ! $project_id;
+	if ( ! $project_id ) {
+		$variable{Project} = new openprint::Project();
+		return;
 	} # end if
-	openprint::print::view_services();
+
+	$Project = $variable{Project} = new openprint::Project( $project_id );
+  return if !$$Project{id};
+	my $services = $Project->services();
+	my $Service = $Project->Service( $param{ServiceIndex} ) if $param{ServiceIndex};
+
+	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_id( $$Project{id} ) *** $session{company_id}");
+
+  if ( defined $param{btnFunction} ) {
+    if ( $param{btnFunction} eq 'Export JDF' ) {
+      misc::export( $r, $log, \%variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf()->toString()] );
+    } elsif ( $param{btnFunction} eq 'Make Predefined' ) {
+      $Project->predefined( 1 );
+      $variable{error} .= $Project->save();
+    } elsif ( $param{btnFunction} eq 'Save Service' ) {
+      if (!$Project->can_edit()) {
+        $variable{error} .= 'You do not have permission to change this project.<br/>';
+      } else {
+        # Update the 'current project'
+        $session{project_id} = $project_id;
+        $log->debug("** Save Service in View Services Function **");
+
+        my $service_index = $param{ServiceIndex};
+        if ( ! $Service ) {
+          $variable{error} .= $param{ServiceType} . ' service ' . $service_index . ' is no longer in project. It may have been removed while you were editing it.  Your changes may not have been saved.<br/>';
+          $variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_id;
+          return;
+        } # end if
+
+        openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
+        my $new_status = $param{Status} ? $param{Status} : 'calculated';
+        $Service->save({ status=>$new_status }) if (!$Service->status()) or ( ( $Service->status() ne $new_status ) and ( $Service->status() ne 'Completed' ) );
+
+        if ( $Project->currency_id() != $openprint::Currency->id() ) {
+          $Project->add_to_log( @session{'company_id','user_id'}, 'Currency changed from '.$Project->Currency()->name() . ' to '. $openprint::Currency->name() );
+          $Project->currency_id( $openprint::Currency->id() );
+        } # end if
+
+        $Project->lock();
+        my $project_type = $Project->Type()->type();
+
+        my $calc = ('openprint::Estimating::'.$project_type)->can('calc');
+        if ($calc) {
+          my $s = openprint::service::internal_calc( $log, $dbh, \%variable, $project_id, $$services{''}[0], $project_type);
+          if ( $$s{Status} ne 'calculated' ) {
+            $log->error("Error calculating Project service");
+            # Don't want to redirect because it would be annoying.  Just go to view.
+          } else {
+            $calc = ('openprint::Estimating::'.$project_type)->can('calculate_signatures');
+            $calc->($Project) if $calc;
+          }
+        } else {
+          $log->error("No calc for $project_type");
+        }
+        openprint::service::auto_calculate($Project, $service_index);
+        $Project->update_status();
+        $Project->unlock();
+
+        $Project->summary(undef);
+        $openprint::log->debug('saving');
+        $Project->save( { calculated_on => 'NOW()' } );
+        openprint::print_project::continue_project($Project);
+        return if $variable{ExternalRedirect};
+      } # end if can_edit
+    } elsif ( $param{btnFunction} eq 'Modify Project' ) {
+      if (!$Project->can_edit()) {
+        $variable{error} .= 'You do not have permission to change this project.<br/>';
+      } else {
+        my $service_name = $param{txtServiceName} ? $param{txtServiceName} : 'Adjustment';
+        my $CurrentCurrency = openprint::Currency::get_current();
+        my $ProjectCurrency = $Project->Currency();
+        my $conversion_rate = $CurrentCurrency->conversions( $ProjectCurrency->id() );
+
+        if ( my $ServiceType = openprint::ServiceType->find_one( name=>'CustomService' ) ) {
+          my $service_id = $Project->add_service( $ServiceType, {
+              ( $param{txtPrice1} ? ( txtPrice1 => $conversion_rate * misc::moneyfilter($param{txtPrice1} ) ) : () ),
+              ( $param{txtPrice2} ? ( txtPrice2 => $conversion_rate * misc::moneyfilter($param{txtPrice2} ) ) : () ),
+              ( $param{txtPrice3} ? ( txtPrice3 => $conversion_rate * misc::moneyfilter($param{txtPrice3} ) ) : () ),
+              ServiceName => $service_name }, { status=>'calculated' } );
+
+          $Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Adding Custom Line: %s, (%s)', $service_name, join(',', map { $param{$_} ? $param{$_} : () } ('txtPrice1','txtPrice2','txtPrice3') ) ) );
+        } else {
+          $variable{error} .= "THere is no custom service in the system!<br/>";
+
+        } # end if has Customer Service type
+      }
+    } elsif ( $param{btnFunction} eq 'Delete Services' ) {
+      if (!$Project->can_edit()) {
+        $variable{error} .= 'You do not have permission to change this project.<br/>';
+      } else {
+        foreach my $service_id ( ref $param{service_id} eq 'ARRAY' ? $param{service_id} : ( $param{service_id} ) ) {
+          my $Service = $Project->Service( $service_id );
+          $variable{error} .= $Service->delete();
+          if ( $Service->Type()->name() eq 'Cutting' ) {
+            if ( $$services{UVCoating} ) {
+              openprint::service::internal_calc( $log, $dbh, \%variable, $project_id, $$services{UVCoating}[0], 'UVCoating' );
+            } # end if
+            if ( $$services{BulkSkids} ) {
+              openprint::service::internal_calc( $log, $dbh, \%variable, $project_id, $$services{BulkSkids}[0], 'Skids' );
+            } # end if
+          } # end if
+        } # end if
+      } # end if can_edit
+			} elsif ( $param{btnFunction} eq 'Recalculate Project' ) {
+      if (!$Project->can_edit()) {
+        $variable{error} .= 'You do not have permission to change this project.<br/>';
+      } else {
+				if ( exists $param{markup} ) {
+					$param{markup} =~ s/[^\d\.\-]//mg;
+					$Project->markup( $param{markup} );
+					$Project->save();
+				} # end if
+				$session{project_id} = $project_id;
+				$Project->currency_id( $session{Currency_id} );
+				$Project->recalculate();
+				openprint::print_project::continue_project($Project);
+				return if $variable{ExternalRedirect};
+      }
+			} elsif ( $param{btnFunction} eq 'Continue Project' ) {
+      if (!$Project->can_edit()) {
+        $variable{error} .= 'You do not have permission to change this project.<br/>';
+      } else {
+				$session{project_id} = $project_id;
+				$Project->currency_id( $session{Currency_id} );
+				$Project->recalculate();
+				openprint::print_project::continue_project($Project);
+				return if $variable{ExternalRedirect};
+      }
+			} elsif ( $param{btnFunction} eq 'Reuse Project' ) {
+				$project_id = openprint::print_project::reuse_project( $project_id );
+				$Project = new openprint::Project( $project_id );
+			} # end if
+			if ( ! $variable{Redirect} ) {
+				$Project->update_status();
+				$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_id;
+				return;
+			} # end if
+		} # end if btnFunction defined
+
+    if ( defined $param{remove} and ( $param{remove} ne '' ) ) {
+      if (!$Project->can_edit()) {
+        $variable{error} .= 'You do not have permission to change this project.<br/>';
+      } else {
+        foreach my $s_id ( split(',', $param{remove} ) ) {
+          my $PS = $Project->Service( $s_id );
+          next if ! $PS->service_id();
+          my $ServiceType = $PS->ServiceType();
+          if ( sets::isin( $ServiceType->name(), ['Proofs'] ) and ( @{$$services{$ServiceType->name()}} == 1 ) ) {
+            $variable{error} .= 'Proofs cannot be removed from the project.<br/>';
+            next;
+          } elsif ( ! $ServiceType->allow_delete() ) {
+            $variable{error} .= $ServiceType->name() . ' cannot be removed from the project.<br/>';
+            next;
+          } # end if
+          my $specs = $PS->specs();
+          $variable{error} .= $PS->delete();
+          if ( $ServiceType->name() eq 'Signature' ) {
+            openprint::service::internal_calc( $log, $dbh, \%variable, $project_id, $$services{''}[0], $Project->Type()->type() );
+          } elsif ( $ServiceType->name() eq 'Cutting' ) {
+            if ( $$services{UVCoating} ) {
+              openprint::service::internal_calc( $log, $dbh, \%variable, $project_id, $$services{UVCoating}[0], 'UVCoating' );
+            } # end if
+            if ( $$services{BulkSkids} ) {
+              openprint::service::internal_calc( $log, $dbh, \%variable, $project_id, $$services{BulkSkids}[0], 'Skids' );
+            } # end if
+          } # end if
+        } # end foreach s_id
+        $session{project_id} = $project_id;
+        $Project->summary(undef);
+        $Project->save();
+        $Project->update_status();
+        $variable{ExternalRedirect} = '/main/project/view.html?project_id='.$Project->id();
+      } # end if can_edit
+		} elsif ( ( defined $param{calc} ) and $param{calc} ) {
+			$log->debug("Recalculating $param{calc}");
+			openprint::service::internal_calc( $log, $dbh, \%variable, $project_id, $r->param('calc') );
+			$Project->summary(undef);
+			$Project->save();
+			$Project->update_status();
+			$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_id;
+			return;
+		} # end if
+
+		if ( $param{ContinueProject} and $param{ContinueProject} ne 'Incomplete Form' ) {
+			$log->debug('*** Continue Project called From View Services ( view.html ) Function ***');
+			openprint::print_project::continue_project($Project);
+		} # end if 
 } # end sub view
 
 sub _copy_popup {
@@ -232,7 +453,7 @@ sub calc {
 		$log->debug("no outputs, so using keys @vars") if $debug;
 	} # end if
 	if ( my $function = $module->can( 'no_outputs' ) ) {
-		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs , \%param );
+		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs, \%param );
 		$log->debug("$module ::no_outputs: @no_outputs)") if $debug;
 		@vars = sets::exclude( \@no_outputs, \@vars );
 
@@ -273,6 +494,7 @@ sub calc {
 	} else {
 		foreach my $key ( keys %specs ) {
 			next if ref $specs{$key};
+      next if $key eq 'alert';
 
 			if ( (exists $param{$key}) and (exists $specs{$key}) and ( 
 						( (!$specs{$key}) and (!$param{$key}) ) # both not defined or ''
@@ -296,7 +518,6 @@ sub calc {
 } # end sub calc
 
 sub reuse {
-
 	my $Project = $variable{Project} = new openprint::Project($param{project_id});
 	$variable{ProjectIndex} = $Project->id();
 	if ( $Project->reference() ) {
@@ -304,7 +525,6 @@ sub reuse {
 	} else {
 		$Project->reference('Copy of project # ' . $param{project_id});
 	} # end if
-
 } # end sub
 
 sub docket_sheet {
@@ -319,5 +539,10 @@ sub _service_dump {
 sub summary {
 	openprint::print_project::summary( $r, $log, $dbh, \%variable );
 }
+
+sub costs {
+  my $project = $variable{Project} = new openprint::Project($param{project_id});
+}
+
 1;
 __END__

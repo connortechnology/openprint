@@ -1,0 +1,118 @@
+fieldset p {
+	text-align: left;
+}
+fieldset p label {
+}
+.Add {
+	width: 20px;
+	text-align: center;
+}
+th.Range,
+.Range  {
+	width: 250px;
+	text-align: center;
+}
+.Range input[type="text"], .Range input[type="number"] {
+	width: 40%;
+}
+
+.Supplier {
+	text-align: left;
+	width: 200px;
+}
+.Supplier select {
+	max-width: 100%;
+}
+select.equipment, select.service {
+width: auto;
+}
+.Mode, .Period {
+	display: none;
+}
+	
+.Equipment select {
+max-width: 100%;
+}
+
+.Equipment,
+.Min,
+.Max,
+.Value,
+.Name {
+  text-align: left;
+}
+th.Discount,
+.Discount {
+	width: 150px;
+	text-align: center;
+}
+table .interpolate {
+  text-align:center;
+}
+
+fieldset.Fold p {
+	padding-left: 100px;
+}
+fieldset.Fold p label {
+	width: 95px;
+	margin-left: -100px;
+}
+fieldset.Fold p input {
+	width: auto;
+}
+.units select {
+  max-width: 100%;
+}
+
+table .PeriodStart, table .PeriodEnd, table .Period {
+	width: 255px;
+	text-align: left;
+}
+table .Range {
+	width: 185px;
+}
+table .Range_Units {
+	width: 200px;
+}
+
+table .Units {
+	text-align: center;
+	width: 200px;
+}
+table .Cost,
+table .Price,
+table .Markup {
+	width: 100px;
+	text-align: center;
+}
+.Price input,
+.Cost input,
+.Markup input {
+	text-align: right;
+}
+#ServicePrices table .buttons ,
+#Prices table .buttons {
+	width: 80px;
+}
+input[type="numeric"] {
+	max-width: 96%;
+}
+.ServiceTypes table .buttons {
+	width: 75px;
+}
+.UserID {
+	width: 75px;
+	text-align: left;
+}
+.UserType {
+	width: 100px;
+	text-align: left;
+}
+
+li input[type="text"] {
+  width: 100%;
+}
+#ServicePrices tr th button.btn {
+  font-size: 1.5rem;
+  padding: 0.25rem 0.6rem;
+}

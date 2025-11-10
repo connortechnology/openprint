@@ -10,9 +10,8 @@ require openprint;
 require sql;
 require openprint::Object;
 require openprint::User;
-  require openprint::Quote;
 
-$debug = 0;
+$debug = 1;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -141,16 +140,19 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM tbl_Addresses WHERE company_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Locations WHERE company_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Uploads WHERE company_id=?', $$self{id} );
+	sql::execute(undef, undef, 'DELETE FROM Company_Profiles WHERE company_id=?',$$self{id} );
   foreach (openprint::Asset->find(company_id=>$$self{id})) { $_->destroy(); }
 
 	sql::execute( undef, undef, 'DELETE FROM Assets WHERE company_id=?', $$self{id} );
-	foreach my $Payment ( openprint::Payment->find(recipient_id=>$$self{id}) ) {
-		$Payment->delete();
+	foreach ( openprint::Invoice->find(invoicee_id=>$$self{id}) ) {
+		$_->destroy();
+	} # end foreach Payment
+	foreach my $Payment ( openprint::Payment->find(payor_id=>$$self{id}) ) {
+		$Payment->destroy();
 	} # end foreach Payment
 	sql::execute( undef, undef, 'DELETE FROM Complaints WHERE company_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE company_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM logs WHERE company_id=?', $$self{id} );
-  $openprint::log->error("Deleting purchaseorder_items");
   sql::update(undef, undef, 'purchaseorder_items', ['vendor_id=?', $$self{id}], vendor_id=>undef);
   sql::update(undef, undef, 'manifests', ['supplier_id=?', $$self{id}], supplier_id=>undef);
 
@@ -158,22 +160,34 @@ sub destroy {
 		$Paper->destroy();
 	} # end foreach
 
-	foreach my $Quote ( openprint::Quote->find(company_id=>$$self{id}) ) {
-		$Quote->delete();	
-	} # end foreach
-	foreach my $Order ( openprint::Order->find(company_id=>$$self{id}) ) {
-		$Order->delete();	
-	} # end foreach
-	sql::execute( undef, undef, 'DELETE FROM Order_log WHERE company_id=?', $$self{id} );
+  # company_id is a not null field.
+  #sql::update(undef, undef, 'quotes', ['company_id=?', $$self{id}], company_id=>undef);
+  #sql::update(undef, undef, 'quotes', ['for_company_id=?', $$self{id}], for_company_id=>undef);
+  eval {
+    require openprint::Quote;
+    foreach my $Quote ( openprint::Quote->find(company_id=>$$self{id}) ) {
+      $Quote->delete();	
+    } # end foreach
+  };
+  sql::execute(undef, undef, 'DELETE FROM quote_log WHERE Company_Id=?', $$self{id} );
+  #sql::update(undef, undef, 'orders', ['company_id=?', $$self{id}], company_id=>undef);
+  foreach my $Order ( openprint::Order->find(company_id=>$$self{id}) ) {
+    $Order->destroy();	
+  } # end foreach
+  sql::execute( undef, undef, 'DELETE FROM Order_log WHERE company_id=?', $$self{id} );
 	foreach my $Project ( openprint::Project->find(company_id=>$$self{id} ) ) {
 		$Project->destroy();	
 		last if $dbh->errstr();
 	} # end foreach
-	sql::execute(undef, undef, 'DELETE FROM Project_log WHERE Company_Id=?', $$self{id} );
+  # Should be handled by project destroy, but it isn't
+  sql::execute(undef, undef, 'DELETE FROM Project_log WHERE Company_Id=?', $$self{id} );
 	foreach my $User ( openprint::User->find(company_id=>$$self{id}, deleted=>[0,1] ) ) {
 		$User->destroy();
 	} # end foreach
-	sql::execute(undef, undef, 'DELETE FROM Company_Profiles WHERE company_id=?',$$self{id} );
+	foreach ( openprint::Bug->find(company_id=>$$self{id}) ) {
+		$_->destroy();
+	} # end foreach
+  #sql::execute(undef, undef, 'DELETE FROM Payments WHERE company_id=?',$$self{id} );
 	sql::execute(undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{id} );
 
 	sql::end_transaction( $dbh, $ac );
@@ -266,11 +280,11 @@ sub dropdown {
 
 	my %sql = @_;
 
-	if ( $openprint::session{user_id} and ( $openprint::session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ) {
+	if ( $openprint::session{user_id} and ( $openprint::session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory','Sales'], $openprint::session{user_id} ) ) {
 
 		my %new_sql = ( and => [
 			or => {
-			salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
+			'salesrep_id is null or in'=> [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
 			id => $$openprint::User{company_id},
 			},
 			%sql,	
@@ -427,6 +441,7 @@ sub find_filtered {
 sub can_view {
 	my $self = shift;
 	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $openprint::session{user_type} eq 'E' and !$$self{salesrep_id};
 	return 1 if $$self{salesrep_id} == $openprint::session{user_id};
 	return 1 if $$self{id} == $$openprint::User{company_id};
 	return 1 if $$self{salesrep_id} and sets::isin( $$self{salesrep_id}, $openprint::User->csr_ids() );
@@ -571,11 +586,14 @@ sub Country {
 sub can_become {
 	my $C = shift;
 	my $User = shift;
+  return 0 if $$User{type} eq 'C';
 	$User = $openprint::User if ! $User;
 	if ( 
 			( $$User{type} eq 'A' )
 			or
 			( $$User{id} == $$C{salesrep_id} )
+        or
+      (!$$C{salesrep_id})
 			or
 			sets::isin( $$User{id}, $C->CSR()->assistant_ids() )
 			or

@@ -85,7 +85,9 @@ require Net::Ping;
 # udp has less network traffic overhead
 my $p = Net::Ping->new('icmp', 10);
 
-my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find(type=>[ 'WG602v3', 'WPN802', 'TP-Link Archer C7' ], monitored=>1);
+my @type_ids = map { $$_{id} } openprint::Host_Type->find(name=>[ 'WG602v3', 'WPN802', 'TP-Link Archer C7', 'OpenWRT' ]);
+
+my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find(type_id=>\@type_ids, monitored=>1);
 $log->debug('WAP polling ' . @Hosts . ' hosts.');
 foreach my $Host ( @Hosts ) {
 	foreach my $HI ( $Host->Interfaces() ) {
@@ -112,7 +114,7 @@ foreach my $Host ( @Hosts ) {
 			my $method = 'get';
 			my $protocol = 'http';
 
-			if ( $Host->type() eq 'TP-Link Archer C7' ) {
+			if ( $Host->type() eq 'TP-Link Archer C7' or $Host->type() eq 'OpenWRT') {
         my $auth_key = '';
 
         my $rpc_auth_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/auth';
@@ -121,7 +123,7 @@ foreach my $Host ( @Hosts ) {
         );
         if (!$response->is_success) {
           $log->debug($response->status_line());
-          if ($response->status_line() eq '307 Temporary Redirect') {
+          if (($response->status_line() eq '307 Temporary Redirect') and ($protocol eq 'http')) {
             $protocol = 'https';
             $rpc_auth_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/auth';
             $response = $browser->post( $rpc_auth_url, 
@@ -136,20 +138,20 @@ foreach my $Host ( @Hosts ) {
             next;
           }
 				}
-        my $rpc_sys_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/sys';
-        my $rpc_admin_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/admin';
         $response = get_from_json($response->content());
-        if (! $response) {
+        if (!$response) {
           $log->warn("No response from login");
           next;
         }
 
+        my $rpc_sys_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/sys';
+        my $rpc_admin_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/admin';
         if ( $$response{result} ) {
           $auth_key = $$response{result};
           $rpc_sys_url .= '?auth='.$auth_key;
         }
         $response = $browser->post($rpc_sys_url, Content => encode_json( { method=>'net.devices' } ));
-          $log->debug($response->status_line());
+        $log->debug($response->status_line());
         my @wlans;
         my $response_json = get_from_json($response->content());
         if (! $response_json) {

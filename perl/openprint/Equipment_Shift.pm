@@ -18,19 +18,19 @@ use vars qw( $log $dbh $debug $table $serial %fields %find_fields %transforms %d
 # Note: duration_seconds is 1 seconds less than duration
 my $parser = 'DateTime::Format::Pg';
 
-$debug = 1;
+$debug = 0;
 
 $table = 'equipment_shifts';
 $serial = 'equipment_shifts_id_seq';
 
 %fields = (
-	id					=>	'id',
+	id					      =>	'id',
 	starttime_seconds	=>	'starttime_seconds',
 	duration_seconds	=>	'duration_seconds',
-	duration			=>	undef,
+	duration			    =>	undef,
 	endtime_seconds		=>	undef,
-	name				=>	'name',
-	equipment_id		=>	'equipment_id',
+	name				      =>	'name',
+	equipment_id		  =>	'equipment_id',
 	operator_ids  		=>  'operator_ids',
 );
 
@@ -51,7 +51,7 @@ $serial = 'equipment_shifts_id_seq';
 
 sub to_string {
 	return sprintf(
-			"EquipmentShift: %s %s %s from %s to %s",
+			'EquipmentShift: %s %s %s from %s to %s',
 			$_[0]->Equipment()->name(),
 			$_[0]->name(),
 			$_[0]->duration() ? $_[0]->duration() : $_[0]{duration_seconds},,
@@ -64,6 +64,7 @@ sub starttime {
 		#return Date::Format::time2str('%H:%M:%S', $_[0]->starttime_seconds());
 		return $_[0]{starttime} = misc::seconds2hms($_[0]->starttime_seconds());
 }
+
 sub starttime_seconds {
 	if ( @_ > 1 ) {
 		if ( ref $_[1] eq 'ARRAY' ) {
@@ -204,10 +205,11 @@ sub test_emanantise {
 
 
 #Pass back a shift for the next time slot >= the passed in $date_seconds
-# We presume that normally date_seconds is teh starttie + 1 of the previous shift -> why? why not endtime?  I don't kn ow.
+# We presume that normally date_seconds is the starttie + 1 of the previous shift -> why? why not endtime?  I don't know.
+ 
 sub emanantise {
 	my ( $self, $requested_dt ) = @_;
-	$log->debug("Emanantise: " . $self->to_string() ) if $debug;
+	$log->debug("Emanantise: for " . $requested_dt. " " .  $self->to_string() ) if $debug;
 
 	if ( ref $requested_dt ne 'DateTime' ) {
 		$requested_dt = DateTime->from_epoch( epoch=>$requested_dt, time_zone=>$openprint::TZ );
@@ -219,10 +221,10 @@ sub emanantise {
 
 	my $date_part_dt = $requested_dt->clone()->truncate(to=>'day');
 	if ( $requested_dt->is_dst() and ! $date_part_dt->is_dst() ) {
-#$log->debug("subtracting an hour for DST");
+$log->debug("subtracting an hour for DST");
 		$date_part_dt -= DateTime::Duration->new( hours=>1 );
 	} elsif ( $date_part_dt->is_dst() and ! $requested_dt->is_dst() ) {
-#$log->debug("adding an hour for DST");
+$log->debug("adding an hour for DST");
 		$date_part_dt += DateTime::Duration->new( hours=>1 );
 	} # end if
 	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) ) if $debug;
@@ -236,10 +238,11 @@ sub emanantise {
 		#$log->error("Dt > $st does not fit on this shift");
 	#} els
 	if ( $st > $requested_dt ) {
-		$log->debug("Dt $requested_dt < $st does not fit on this shift, adding 1 hour");
+		$log->debug("Dt $requested_dt < $st does not fit on this shift, adding an hour until it does");
 		while ( $st > $requested_dt ) {
 			$requested_dt += DateTime::Duration->new( hours=>1 );
 		}
+		$log->debug("Dt $requested_dt < $st now fits on this shift");
 	
 		# If this shift was on the second day of the rotation
 		#return;
@@ -249,13 +252,13 @@ sub emanantise {
 	# WTH is this for? now + duration - now()
 	my $now = DateTime->now( time_zone => 'UTC' );
 	my $es_duration = DateTime::Duration->new( seconds => $self->duration_seconds() );
-$log->debug("Now + duration?" . $es_duration->in_units('seconds') );
+$log->debug("Now + duration?" . $es_duration->in_units('seconds') ) if $debug;
 	$_ = $now->clone->add_duration( $es_duration );
 	$es_duration = $_->subtract_datetime_absolute( $now );
-$log->debug("Now + duration?" . $es_duration->in_units('seconds') );
+$log->debug("Now + duration?" . $es_duration->in_units('seconds') ) if $debug;
 
 	my $et = $st->clone()->add_duration( $es_duration );
-	$log->debug("et: $et (".$es_duration->in_units('seconds').") (".$self->duration_seconds().") is_dst() ? " . $et->is_dst() . " st_dst? " . $st->is_dst() );
+	$log->debug("et: $et (".$es_duration->in_units('seconds').") (".$self->duration_seconds().") is_dst() ? " . $et->is_dst() . " st_dst? " . $st->is_dst() ) if $debug;
 	if ( (!$st->is_dst()) and $et->is_dst() ) {
 		$et -= DateTime::Duration->new( hours=>1 );
 #$log->debug("subtracting an hour for DST new et:" . $parser->format_datetime( $et ));
@@ -270,9 +273,9 @@ $log->debug("Now + duration?" . $es_duration->in_units('seconds') );
 
 	my $Shift;
 	# FIXME: This does not handle cases where the times have been overriden.
-	# It should be looking for a shift that starts great than date_seconds, which we assume is the previous shift starttime+1
+	# It should be looking for a shift that starts greater than date_seconds, which we assume is the previous shift starttime+1
 	# With an endtime before the end of the ES AFTER this one!
-	# THe current iteration handles all that, except that the end is shorted than normal.
+	# The current iteration handles all that, except that the end is shorted than normal.
 	if ( $Shift = openprint::Shift->find_one(
 				equipment_id	=>	$$self{equipment_id},
 				shift_id		=>	$$self{id},
@@ -281,7 +284,7 @@ $log->debug("Now + duration?" . $es_duration->in_units('seconds') );
 				'starttime <'	=>	$parser->format_datetime( $et ),
 				) ) {
 
-		$log->debug("Emanantise found " . $Shift->to_string());
+		$log->debug("Emanantise found " . $Shift->to_string()) if $debug;
 		# Looks for a shift of the right type that starts within the expected shift time. so start time can be moved up
 	} else {
 		$Shift = new openprint::Shift();
@@ -469,16 +472,17 @@ sub distance {
 		$distance = 0 if $distance < 0;
 		return $distance;
 		#return (DAY - $$self{duration_seconds})+1;
-	} else {
+	} else { # $$Next{starttime_seconds} < $$self{starttime_seconds}
 		# Wrap around
-		my $endtime = $self->endtime_seconds() % DAY;
+		my $endtime = $Next->starttime_seconds() % DAY;
+    my $time_remaining_in_day = DAY - ($self->endtime_seconds()% DAY);
+    return $endtime + $time_remaining_in_day;
 		#if ( $endtime <= $$Next{starttime_seconds} ) {
 			# No overlap
 			return $$self{duration_seconds} + $$Next{starttime_seconds} - $endtime;
 		#} else {
 	} # end if
-} # end sub
-
+} # end sub distance
 
 1;
 __END__

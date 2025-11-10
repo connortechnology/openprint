@@ -90,12 +90,13 @@ sub new {
 	my $sub_cache = $cache{$config{db_name}}{$parent};
 #$log->debug("New parent:$parent id:$id data:$data ref:$ref");
 
-	if ( ! $ref ) {
-		if ( $id and (!$dont_cache) and $$sub_cache{$id} ) {
+	if (!$ref) {
+		if ($id and (!$dont_cache) and $$sub_cache{$id}) {
 			if ( $data ) {
 				my $self = $$sub_cache{$id};
 				# The reason to use load is if we have overriden it in the object, like in Paper
         # 2022-04-21 had commented it out for some reason. Probably performance, but we need it if we are using find()
+        #$openprint::log->debug("New:loading for $id $$data{id} ($data)");
         $self->load($data);
         #$log->debug("Loading object $parent $id from cache and populating with data new objcet is $self old cache is " . $$sub_cache{$id}) if DEBUG_CACHE;
 				return $self;
@@ -112,13 +113,14 @@ sub new {
 #$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
 				#$self->load( $data );
 			#} # end if
-			$log->debug("not cached from $caller:$line no ref, $parent id: $id, dont_cache: ".(defined($dont_cache)?$dont_cache:'undef').' sub '.$sub_cache.' '.$$sub_cache{$id}) if $id;
+			$log->debug("not cached from $caller:$line no ref, $parent id: $id, dont_cache: ".(defined($dont_cache)?$dont_cache:'undef').' sub '.$sub_cache.' '.$$sub_cache{$id} . ' data '.$data) if $id;
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
 		bless $self, $parent;
 
 if ( 1 ) {
+  # Refresh contents from data or db
 	if ( ( $$self{id} = $id ) or $data ) {
 		#if ( $debug or DEBUG_ALL ) {
 			#my ( $caller, undef, $line ) = caller;
@@ -171,7 +173,7 @@ sub load {
 	$debug = DEBUG_ALL if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 	if ( ! $data ) {
-#$log->debug("Object::load Loading from db $type");
+    #$log->debug("Object::load Loading from db $type $$self{id}");
 		my $table = ${$type.'::table'};
 		if ( ! $table ) {
 			$log->error( 'NO table for type ' . $type );
@@ -431,16 +433,19 @@ $log->warn('Object::changes called on an object with no fields');
       } elsif ( $debug ) {
         $log->debug( "$field not changed from ".join(',',@{$$self{$field}}).' to '.join(',', @new_value).' intersection:'.join(',',sets::intersection(@{$$self{$field}}, @new_value)));
 			}
-		} elsif ( $$self{$field} ne $$params{$field} ) {
-			if ( $field eq 'password' ) {
-				push @results, "$field changed";
-			} else {
-				push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$$params{$field}.'\'';
-			}
 		} else {
-			if ( $debug ) {
-				$log->debug("$field eq $$self{$field} to $$params{$field}");
-			}
+      my $newvalue = $self->transform($field=>$$params{$field});
+      if ( $$self{$field} ne $newvalue ) {
+        if ( $field eq 'password' ) {
+          push @results, "$field changed";
+        } else {
+          push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$newvalue.'\'';
+        }
+      } else {
+        if ( $debug ) {
+          $log->debug("$field eq $$self{$field} to $newvalue");
+        }
+      } # end if
 		} # end if
 	} # end foreach field
 	return @results;
@@ -1034,8 +1039,9 @@ sub find {
 
 	my $sql = find_sql($object_type, $params);
 
-	my $do_cache = (index($$sql{columns}, '*') != -1) ? 0 : 1;
+	my $do_cache = (index($$sql{columns}, '*') != -1) ? 1 : 0;
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
+
 	if ( ( 1 == scalar keys %{$$sql{used_fields}} ) and $$params{id} ) {
 		if ( $cache{$config{db_name}}{$object_type}{$$params{id}} ) {
 			if ( $cache{$config{db_name}}{$object_type}{$$params{id}}{id} ) {
@@ -1075,8 +1081,8 @@ $log->debug("returning nothing for $object_type $cache_field $$params{$cache_fie
 			} # end if Object::cached
 		} # end if is in cache or not
 	} else {
+		$log->debug("Not doing caching ($do_cache) for $object_type using $cache_field with params ".($cache_field?$$params{$cache_field}:'')) if DEBUG_ALL or DEBUG_CACHE;
 		$do_cache = 0;
-		$log->debug("Not doing caching for $object_type using $cache_field with params ".($cache_field?$$params{$cache_field}:'')) if DEBUG_ALL or DEBUG_CACHE;
 	} # end if
 
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;

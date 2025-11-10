@@ -740,11 +740,11 @@ sub has_overrides {
 
   my @v;
   if ( $qty_index ) {
-    push @v, map { $$specs{$_.$qty_index} and ($$specs{$_.$qty_index} eq 'Y') ? $_.$qty_index : () } ( 'OverridePrice' );
+    push @v, map { ($$specs{$_.$qty_index} and ($$specs{$_.$qty_index} eq 'Y')) ? $_.$qty_index : () } ( 'OverridePrice' );
     foreach my $s_s_id ( $Project->signatures() ) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
       my $form = $$sig_specs{SignatureIndex};
-      push @v, map { $$specs{$_} and ($$specs{$_} eq 'Y') ? $_ : () } (
+      push @v, map { ($$specs{$_} and ($$specs{$_} eq 'Y')) ? $_ : () } (
         "chkOverrideEquipment-$form-$qty_index",
         "chkOverrideImposition-$form-$qty_index",
         "OverrideMakeReadyPrice-$form-$qty_index",

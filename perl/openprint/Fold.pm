@@ -13,7 +13,7 @@ use vars qw( $debug $table $serial $log $dbh %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 0;
+$debug = 1;
 $table = 'folds';
 $serial= 'folds_id_seq';
 
@@ -112,10 +112,13 @@ $serial= 'folds_id_seq';
 
 sub to_string {
 	if ( ! $_[0]{to_string} ) {
-		$_[0]{to_string} = sprintf('%s %dx%d=%d pages min:%d max:%d impo on %s spine: %s', 
+		$_[0]{to_string} = sprintf('%s %dx%d=%d pages min:%d max:%d impo on %s spine: %s mr_overs:%s%s run_overs%s%s', 
 				@{$_[0]}{'name','page_columns','page_rows','pages', 'min_imposition','max_imposition'},
 				$_[0]->Equipment()->name(),
-				$_[0]{spine_direction} );
+				$_[0]{spine_direction},
+        $_[0]{makeready_overs},$_[0]{makeready_overs_units},
+        $_[0]{run_overs},$_[0]{run_overs_units},
+      );
 	} # end if
 	return $_[0]{to_string};
 } # end sub to_string
@@ -151,7 +154,7 @@ sub Equipment {
 sub Specifications {
 	if ( ! $_[0]{Specifications} ) {
 		$_[0]{Specifications} = $_[0]{id} ? [openprint::FoldSpecification->find(
-      fold_id=>$_[0]{id},order=>'min_weight NULLS FIRST,max_weight NULLS FIRST' )] : [];
+      fold_id=>$_[0]{id},order=>'min NULLS FIRST,max NULLS FIRST' )] : [];
 	} # end if
 	return @{$_[0]{Specifications}};
 } # end sub Equipment
@@ -160,14 +163,14 @@ sub Specification {
 	my ( $self, $range ) = @_;
 
     if ( ! $$self{Specifications} ) {
-		@{$$self{Specifications}} = openprint::FoldSpecification->find( fold_id=>$$self{id},order=>'min_weight NULLS FIRST,max_weight NULLS FIRST' );
+		@{$$self{Specifications}} = openprint::FoldSpecification->find( fold_id=>$$self{id},order=>'min NULLS FIRST,max NULLS FIRST' );
     } # end if
 
     if ( ! @{$$self{Specifications}} ) {
 		return;
 	} # end if
 
-	if ( $$self{Specifications}[0]{weight_units} eq 'lbs' )  {
+	if ( $$self{Specifications}[0]{units} eq 'lbs' )  {
 $log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $range ) ) if $debug;
 		$range = openprint::Paper::gsm_to_weight( $range );
 	} # end if
@@ -178,27 +181,27 @@ $log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $rang
 	my $y;
 	for ( ; $i < @{$$self{Specifications}}; $i += 1 ) {
 		my $Spec = $$self{Specifications}[$i];
-$log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold()->name() . " MIN(" . $Spec->min_weight() .     ') MAX(' . $Spec->max_weight() . $Spec->weight_units(). ') RUNSPEED(' . $Spec->runspeed() .') INTERPOLATE('.$Spec->interpolate() .') for range: ' . $range ) if $debug;
-		#return $Spec if ( 1*$$Spec{min_weight} == $range ) or ( 1*$$Spec{max_weight} == $range );
+$log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold()->name() . " MIN(" . $Spec->min() .     ') MAX(' . $Spec->max() . $Spec->units(). ') RUNSPEED(' . $Spec->runspeed() .') INTERPOLATE('.$Spec->interpolate() .') for range: ' . $range ) if $debug;
+		#return $Spec if ( 1*$$Spec{min} == $range ) or ( 1*$$Spec{max} == $range );
 
-		return $Spec if ( ( $$Spec{min_weight} <= $range ) and ( $$Spec{max_weight} >= $range ) );
+		return $Spec if ( ( $$Spec{min} <= $range ) and ( $$Spec{max} >= $range ) );
 		return $Spec if (
 				( ! $$Spec{interpolate} ) and 
-				(( ! $$Spec{min_weight} ) or ($$Spec{min_weight} <= $range)) and
-				(( ! $$Spec{max_weight} ) or ($$Spec{max_weight} >= $range))
+				(( ! $$Spec{min} ) or ($$Spec{min} <= $range)) and
+				(( ! $$Spec{max} ) or ($$Spec{max} >= $range))
 				);
 
 # first step, find one less than the min
-		last if $$Spec{min_weight} > $range;
-		last if ( $Spec->max_weight() eq '' and ! $Spec->interpolate() );
+		last if $$Spec{min} > $range;
+		last if ( $Spec->max() eq '' and ! $Spec->interpolate() );
 	} # end if
 
    if ( $i and $i <= @{$$self{Specifications}} ) {
         $i -= 1;
         # back up
 		$x = $$self{Specifications}[$i];
-$log->debug("Found spec for $range:" . $x->min_weight() . ' ' . $x->max_weight() . ' : ' . $x->runspeed() ) if $debug;
-		return if ( $$x{max_weight} and ( $$x{max_weight} < $range ) and ! $$x{interpolate} );
+$log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->runspeed() ) if $debug;
+		return if ( $$x{max} and ( $$x{max} < $range ) and ! $$x{interpolate} );
    } else {
 	   $log->debug("Couldn't find monimum for $range ") if $debug;
 	   return;
@@ -207,11 +210,11 @@ $log->debug("Found spec for $range:" . $x->min_weight() . ' ' . $x->max_weight()
    for ( ; $i < @{$$self{Specifications}}; $i += 1 ) {
 	   my $Spec = $$self{Specifications}[$i];
 		# Don't need to check for equality, as we do that above
-	   return $Spec if ( !(1*$$Spec{max_weight}) and ! $$Spec{interpolate} );
+	   return $Spec if ( !(1*$$Spec{max}) and ! $$Spec{interpolate} );
 
-$log->debug("Examining MAX spec for $range:" . $Spec->min_weight() . ' ' . $Spec->max_weight() . ' : ' . $Spec->runspeed() ) if $debug;
+$log->debug("Examining MAX spec for $range:" . $Spec->min() . ' ' . $Spec->max() . ' : ' . $Spec->runspeed() ) if $debug;
 # first step, find one less than the min
-		if ( ( 1*$$Spec{max_weight} > 1*$range ) or ( $$Spec{max_weight} eq '' ) ) {
+		if ( ( 1*$$Spec{max} > 1*$range ) or ( $$Spec{max} eq '' ) ) {
 			#$log->debug("Foudn Max at $i " . @{$$self{Specifications}} );
 			last;
 		} # end if
@@ -219,7 +222,7 @@ $log->debug("Examining MAX spec for $range:" . $Spec->min_weight() . ' ' . $Spec
    if ( $i and $i < @{$$self{Specifications}} ) {
 # back up
 	   $y = $$self{Specifications}[$i];
-$log->debug("Found spec max " . $y->min_weight() . ' ' . $y->max_weight() . ' : ' . $y->runspeed() ) if $debug;
+$log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->runspeed() ) if $debug;
    } else {
 $log->debug("Couldn't find maximum") if $debug;
 	   return;
@@ -229,8 +232,8 @@ $log->debug("Couldn't find maximum") if $debug;
         return $x;
     } elsif ( $$x{interpolate} ) {
         my $S = $x->copy();
-        $$S{min_weight} = $$S{max_weight} = $range;
-        $$S{runspeed} = int( $$x{runspeed} + ($range - $$x{min_weight})*($$y{runspeed}-$$x{runspeed})/($$y{min_weight}-$$x{min_weight}) );
+        $$S{min} = $$S{max} = $range;
+        $$S{runspeed} = int( $$x{runspeed} + ($range - $$x{min})*($$y{runspeed}-$$x{runspeed})/($$y{min}-$$x{min}) );
         return $S;
     } # end if
 
@@ -244,6 +247,7 @@ sub RunSpeed {
 	if ( ! defined $gsm ) {
 		my ( $caller, undef, $line ) = caller;
 		$openprint::log->warn("No gsm in Fold->RunSpeed from $caller line $line");
+    return;
 	} # end if
 	if ( ! exists $$self{runspeed_cache}{$gsm} ) {
 		$$self{runspeed_cache}{$gsm} = $self->Specification( $gsm );
@@ -277,5 +281,15 @@ sub imposition {
 	} # end if
 	return $_[0]{imposition};
 } # end sub imposition
+
+sub link_to {
+  my $self = shift;
+  my $text = @_ ? shift : $$self{name};
+  my $options = @_ ? shift : {};
+  if ($$openprint::User{type} eq 'A') {
+    return '<a href="/administrator/managerial/fold.html?fold_id='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>';
+  }
+  return $text;
+}
 1;
 __END__

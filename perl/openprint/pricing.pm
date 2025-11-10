@@ -3,6 +3,7 @@ package openprint::pricing;
 use Memoize;
 use Carp qw( cluck );
 
+require openprint;
 require openprint::pricelist;
 require openprint::priceset;
 require openprint::price;
@@ -27,28 +28,36 @@ sub init_cache {
 	$price_cache{$config{db_name}} = {};
 	my @Services = openprint::Service->find();
 	my @Materials = openprint::Material->find();
-	my @Pricelists = openprint::Pricelist->find();
-	foreach my $Pricelist ( @Pricelists ) {
-		foreach my $S ( openprint::ServicePrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST') ) {
+  my @Pricelists = openprint::Pricelist->find();
+  foreach my $Pricelist ( @Pricelists ) {
+    #my $Pricelist = $openprint::Pricelist;
+		foreach my $S ( openprint::ServicePrice->find( 'period_end is null'=>1, 
+        #(($openprint::Pricelist and $openprint::Pricelist->id()) ? (pricelist_id=>$openprint::Pricelist->id()):()),
+        pricelist_id=>$Pricelist->id(),
+        order=>'min NULLS FIRST, max NULLS FIRST') ) {
 			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()} ) {
 				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()} = [];
 			} # end if
 			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()}}, $S;
 		} # end foreach ServicePrice
-		foreach my $S ( openprint::MaterialPrice->find( order=>'lngmin NULLS FIRST, lngmax NULLS FIRST') ) {
+		foreach my $S ( openprint::MaterialPrice->find(
+        pricelist_id=>$Pricelist->id(),
+        #(($openprint::Pricelist and $openprint::Pricelist->id()) ? (pricelist_id=>$openprint::Pricelist->id()):()),
+        order=>'lngmin NULLS FIRST, lngmax NULLS FIRST') ) {
 #'period_end is null'=>0, 
 			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->id()} ) {
 				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->id()} = [];
 			} # end if
 			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->id()}}, $S;
 		} # end foreach ServicePrice
-	} # end foreach Pricelist
+  } # end foreach Pricelist
 	foreach my $Service ( @Services ) {
 		$Service->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} : () } @Pricelists ] );
 	} # end foreach Service
 	foreach my $Material ( @Materials ) {
 		$Material->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} : () } @Pricelists ] );
-	} # end foreach Service
+	} # end foreach Material
+  $openprint::log->debug("Done picing::init_cahce");
 }
 
 sub get_pricelist_id {
@@ -179,7 +188,7 @@ sub split_by_equipment {
 
 #Memoize::memoize('get_best_prices');
 sub get_best_prices {
-	my ( $cust_id, $prod_index, $list_id, $Object, $equipment, $qty, $period ) = @_;
+	my ( $cust_id, $prod_index, $list_id, $Object, $equipment_id, $qty, $period ) = @_;
 
 	if ( ! $list_id ) {
 		my ( $caller, undef, $line ) = caller;
@@ -192,22 +201,42 @@ sub get_best_prices {
 
 	my @pricing = ();
 	my $price_type = ref $Object;
-	if ( $price_type and $price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}} ) {
-#$log->debug("Using new style price caching" );
-		@pricing = @{$price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}};
+	if ($price_type) {
+    $log->debug('Using new style price caching' ) if DEBUG;
+    if ($price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}) {
+      @pricing = @{$price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}};
+      if (DEBUG) {
+        $log->debug("Have prices in cache for $price_type $$Object{id} #".@pricing);
+        foreach my $p ( @pricing ) {
+          $log->debug($p->to_string());
+        }
+      }
+    } else {
+      @pricing = $Object->Prices();
+    }
+    if ($equipment_id) {
+      my $e = new openprint::Equipment($equipment_id);
+      @pricing = map { ((!$$_{equipment_id}) or ($$_{equipment_id} == $equipment_id)) ? $_ : () } @pricing;
+      $openprint::log->debug("Filtering by equipment id $equipment_id $$e{name} got ".@pricing) if DEBUG;
+    } else {
+      $openprint::log->debug("Not Filtering by equipment id $equipment_id") if DEBUG;
+    }
+    foreach my $p ( @pricing ) {
+      $$p{Price} = $$p{price};
+    }
 	} else {
-#$log->warn("Request for old style price for $Object");
+$log->warn("Request for old style price for $Object");
 #if ( $Object eq 'openprint::service_priceset' ) {
 #my $Service = new openprint::Service( $prod_index );
 #$log->warn("Loading price for $Object $prod_index $equipment $qty " . $Service->to_string() );
 #}
-		my $priceGroup = $Object->new( $log, $dbh, $list_id, $prod_index, $equipment, $qty, $period );
+		my $priceGroup = $Object->new( $log, $dbh, $list_id, $prod_index, $equipment_id, $qty, $period );
 		$priceGroup->load();	
 		push @pricing, @{$priceGroup->{prices}};
 	}
 if ( DEBUG ) {
 foreach my $p ( @pricing ) {
-$log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
+$log->debug("Price $$p{id} service_id:$$p{service_id} price $$p{price}/$$p{Price} interpolate:$$p{interpolate}; $$p{equipment_id}=?$equipment_id");
 }
 }
 
@@ -237,7 +266,6 @@ $log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
 			my $credit_card_fee = 1+$$Company{credit_card_fee}/100;
 
 			for ( my $index = 0; $index < @pricing; $index += 1 ) {
-
 # the if here is to preserve empty pricing.	if price is empty, we display call, instead of 0.00.
 				if ( $pricing[$index]->{Price} ne '' ) {
 					if ( $pricing[$index]->{Discountable} ne 'N' ) {
@@ -251,7 +279,7 @@ $log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
 	} # end if
 
 	my @prices;
-	if ( $equipment ) {
+	if ( $equipment_id ) {
 		@prices = build_lowest_price_list( @pricing );
 	} else {
 		my %lists = split_by_equipment( @pricing );
@@ -364,7 +392,7 @@ sub get_best_price_object {
 	if ( DEBUG ) {
 		$openprint::log->debug("Prices in get_best_price_object for qty $qty : " . @$prices);
 		foreach my $price ( @$prices ) {
-			$openprint::log->debug("service: $$price{service_id} min: $$price{min} max: $$price{max} price:$$price{Price} interpolate: $$price{interpolate}");
+			$openprint::log->debug("service: $$price{service_id} min: $$price{min} max: $$price{max} price:$$price{Price} units: $$price{units} interpolate: $$price{interpolate}");
 		} # end foreach
 	}
 

@@ -81,7 +81,7 @@ sub save {
 
 sub destroy {
 	my $self = shift;
-    sql::execute( undef, undef, q{DELETE FROM ledgers WHERE payment_id=?}, $$self{id} );
+  #sql::execute( undef, undef, q{DELETE FROM ledgers WHERE payment_id=?}, $$self{id} );
     return $self->SUPER::destroy();
 } # end sub destroy
 

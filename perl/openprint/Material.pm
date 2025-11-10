@@ -32,10 +32,12 @@ $serial = 'materials_id_seq';
     taxexempt2    =>  'taxexempt2',
     activity_code  =>  'activity_code',
     manufacturer_id  =>  'manufacturer_id',
+		servicetype_id	=>	'servicetype_id',
     );  
 %find_fields = (
     category    =>  '(SELECT name FROM Material_Categories WHERE id=category_id)',
     equipment_id  =>  '(SELECT lngequipmentindex FROM tbl_material_prices WHERE lngmaterialindex=materials.id)',
+    servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
 );
 
 %transforms = (
@@ -49,6 +51,7 @@ $serial = 'materials_id_seq';
     taxexempt1  =>  q`'N'`,
     taxexempt2  =>  q`'N'`,
     manufacturer_id  =>  undef,
+    servicetype_id  => undef,
     );
 
 $cache_field = 'name';
@@ -71,10 +74,20 @@ sub delete {
 } # end sub delete
 
 sub prices {
-  my $self = shift;
-
-  return openprint::MaterialPrice->find(material_id=>$$self{id});
+  return Prices(@_);
 } # end sub prices
+
+sub Prices {
+  my $self = shift;
+  $$self{Prices} = shift if @_;
+  if (!$$self{Prices}) {
+    $$self{Prices} = [ openprint::MaterialPrice->find(
+#'period_end is null'=>1,
+        order=>'lngmin NULLS FIRST, lngmax NULLS FIRST', material_id=>$$self{id}) ];
+  }
+  return @{$$self{Prices}} if wantarray;
+  return $$self{Prices};
+}
 
 sub New_Specification {
   my ( $self, $name, $options ) = @_;
@@ -109,28 +122,28 @@ sub New_Specification {
 } # end sub New_Specification
 
 sub Specification {
-  my ( $self, $name, $range ) = @_;
+  my ( $self, $name, $range, $find_debug ) = @_;
 
-  if ( ! $_[0]{Specifications} ) {
-    foreach my $Spec ( openprint::MaterialSpecification->find( material_id=>$_[0]{id}, order=>'min NULLS FIRST' ) ) {
-      push @{$_[0]{Specifications}{$$Spec{name}}}, $Spec;
+  if (!$$self{Specifications}) {
+    foreach my $Spec ( openprint::MaterialSpecification->find( material_id=>$$self{id}, order=>'min NULLS FIRST' ) ) {
+      push @{$$self{Specifications}{$$Spec{name}}}, $Spec;
     } # end foreach
-    if ( ! $_[0]{Specifications} ) {
+    if ( ! $$self{Specifications} ) {
 #$openprint::log->warn("No specfications for " . $self->name() );
-      $_[0]{Specifications} = {};
+      $$self{Specifications} = {};
       return;
     }
   } # end if
 
-  if ( ! $_[0]{Specifications}{$_[1]} ) {
-    $openprint::log->warn("No specfications for ($name) " . $self->name() );
+  if ( ! $$self{Specifications}{$name} ) {
+    $openprint::log->debug("No specfications for ($name) " . $self->name() ) if $debug;
     return;
   }
 
-  return $_[0]{Specifications}{$_[1]}[0] if ! defined $_[2];
+  return $$self{Specifications}{$name}[0] if ! defined $range;
 #$openprint::log->debug("Looking for $name : $range") if $debug;
 
-  return misc::find_entry( $_[2], $_[0]{Specifications}{$_[1]}, $_[3] );
+  return misc::find_entry( $range, $$self{Specifications}{$name}, $find_debug );
 } # end sub Specification
 
 sub specification {
@@ -147,7 +160,7 @@ sub get_price {
   my ( $self, $quantity, $Equipment ) = @_;
 
   my $Pricelist = $openprint::Pricelist ? $openprint::Pricelist : openprint::Pricelist::get_current();
-  my %price = openprint::pricing::get_best_price_object( $session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{id} );
+  my %price = openprint::pricing::get_best_price_object( $session{company_id}, $$self{id}, $$Pricelist{id}, $self, $quantity, $$Equipment{id} );
   return if ! %price;
 
   $price{currency_id} = $Pricelist->currency_id();
@@ -162,14 +175,16 @@ sub get_Price {
   my ( $self, $quantity, $Equipment ) = @_;
 
   my $Pricelist = $openprint::Pricelist ? $openprint::Pricelist : openprint::Pricelist::get_current();
-  my %price = openprint::pricing::get_best_price_object( $session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{id} );
+  my %price = openprint::pricing::get_best_price_object( $session{company_id}, $$self{id}, $$Pricelist{id}, $self, $quantity, $$Equipment{id} );
   return if ! %price;
+  my $price = \%price;
+  bless $price, 'openprint::MaterialPrice';
 
-  $price{Material} = $_[0];
-  $price{currency_id} = $Pricelist->currency_id();
-  openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
+  $$price{Material} = $_[0];
+  $$price{currency_id} = $Pricelist->currency_id();
+  openprint::Currency::convert( $price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
 
-  return \%price;
+  return $price;
 }
 
 sub next {
@@ -284,6 +299,24 @@ sub supplier {
   }
   return $_[0]{supplier};
 }
+
+sub servicetype_id {
+  my $self = shift;
+  if (@_) {
+    if (ref($_[0]) eq 'ARRAY') {
+      $$self{servicetype_id} = shift;
+    } else {
+      $$self{servicetype_id} = [shift];
+    }
+  }
+  return [] if ! $$self{servicetype_id};
+  return $$self{servicetype_id};
+} # end sub servicetype_id
+
+sub ServiceTypes {
+  return () if ! $_[0]{servicetype_id};
+  return map { new openprint::ServiceType( $_ ); } ref $_[0]{servicetype_id} eq 'ARRAY' ? @{$_[0]{servicetype_id}} : ($_[0]{servicetype_id});
+} # end sub ServiceTypes
 
 1;
 __END__

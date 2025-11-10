@@ -29,9 +29,10 @@ my %ServicePrices = (
 );
 my %Specifications = (
   'Gluing Capable' => { values=>['Y','N'] },
+  'Gluing Overs' => {range_units => [ 'impressions' ], units=>['percent']},
   'Gluing MakeReadyTime' => { units => 'minutes' },
-  'Gluing Runspeed' => { units => 'inches per hour'},
-  'Runspeed' => { units => 'inches per hour'},
+  'Gluing RunSpeed' => { units => 'inches per hour'},
+  'RunSpeed' => { units => 'inches per hour'},
 );
 
 sub ServicePriceConfiguration {
@@ -55,10 +56,12 @@ my @variables = (
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'Markup1', 'Markup2', 'Markup3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
+	'MPrice1', 'MPrice2', 'MPrice3',
 	'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
   'hdnBreakdown1','hdnBreakdown2','hdnBreakdown3',
   'ddmEquipment1','ddmEquipment2','ddmEquipment3',
+'complexity',
 );
 
 sub variables {
@@ -146,6 +149,7 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
     my $form = $$sig_specs{SignatureIndex};
+    my @complexityoptions = map { openprint::Service->find_one(name=>'Gluing'.$_) ? $_ : () } ( 'Simple','Average', 'Complex' );
 
 		if ( (!$$specs{"chkOverrideArea-$form"}) or ($$specs{"chkOverrideArea-$form"} ne 'Y')) {
 			$$specs{"txtArea-$form"} = 0;
@@ -166,6 +170,10 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 			$$specs{help} = 'Please enter the area in square inches to be covered in glue.';
 			return 'uncalculated';
 		} # end if
+    if (@complexityoptions and !$$specs{complexity}) {
+      $$specs{help} .= 'Please select the complexity of the gluing.<br/>';
+			return 'uncalculated';
+    }
   }
 
   foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -179,19 +187,24 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 
     my $total = 0;
     my $unitPrice = 0;
+    my $mprice = 0;
 
     foreach my $ss_id ( $Project->signatures() ) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 
       my $price = get_price($Project, $Service, $specs, $sig_specs, $qty_index);
       $total += $$price{Total};
+      $mprice += $$price{MPrice};
       $$specs{"hdnBreakdown$qty_index"} .= $$price{Breakdown};
-      $$specs{"ddmEquipment$qty_index"} .= $$price{Equipment}->id();
+      $$specs{"ddmEquipment$qty_index"} .= $$price{Equipment}->id() if $$price{Equipment};
     } # end foreach signature
 
     if ( (!$$specs{"OverridePrice$qty_index"}) or ($$specs{"OverridePrice$qty_index"} ne 'Y')) {
       $total *= (1+$$specs{"Markup$qty_index"}/100) if $$specs{"Markup$qty_index"};
       $total *= (1+$Project->markup()/100) if $Project->markup();
+      $mprice *= (1+$$specs{"Markup$qty_index"}/100) if $$specs{"Markup$qty_index"};
+      $mprice *= (1+$Project->markup()/100) if $Project->markup();
+
       $unitPrice = $total / $qty;
     } else {
       $unitPrice = $$specs{"txtPrice$qty_index"} / $qty;
@@ -199,6 +212,7 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
     } # end if
     $$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $unitPrice);
     $$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $total);
+    $$specs{"MPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $mprice);
   } # end foreach qty_index
 
 	return $status;
@@ -214,8 +228,9 @@ sub get_price {
     Equipment => undef,
     Breakdown => '',
     Total => 0,
+    MPrice => 0,
   );
-  my $qty = $$specs{"txtQuantity$qty_index"};
+
 
   my @Equipment;
   if ( (defined $$specs{"chkOverrideEquipment-$form-$qty_index"}) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) ) {
@@ -227,40 +242,66 @@ sub get_price {
     my %price = (
       MakeReady => undef,
       Total => 0,
+      MPrice => 0,
       Minimum => 0,
       ServicePrice => undef,
       MaterialPrice => undef,
       Equipment => $Equipment,
       Breakdown => '',
     );
+
+    $price{Breakdown} .= '<b>'.$Equipment->name().'</b><br/>';
+    my $qty = $$specs{"txtQuantity$qty_index"};
+    if ( my $Overs = $Equipment->Specification('Gluing Overs') ) {
+      my $overs;
+      if ( $$Overs{units} eq 'percent' ) {
+        $overs = int( $qty * ($$Overs{value}/100) );
+      } elsif ( $$Overs{units} eq 'sheets' ) {
+        $overs = int( $$Overs{value} );
+      } else {
+        $price{Breakdown} .= "Unknown units $$Overs{units} in Gluing Overs<br/>";
+        $openprint::log->error("Unknown units $$Overs{units} in Gluing Overs");
+      } # end if
+      $price{Overs} = $overs;
+      $qty += $overs;
+      $price{Breakdown} .= 'Overs '.$$Overs{value}.$$Overs{units}. ' = '.$overs.'<br/>';
+    } # end if
+
     my $makeReadyPrice = openprint::service::get_price('GluingMakeReady', undef, $Equipment) || 0;
     my $minimumCharge = openprint::service::get_price('GluingMinimumCharge', undef, $Equipment) || 0;
-    $price{Breakdown} .= '<b>'.$Equipment->name().'</b><br/>';
     $price{Breakdown} .= 'MakeReady: $' . sprintf( '%.2f', $makeReadyPrice ? $makeReadyPrice : 0) . '<br/>';
     $price{Breakdown} .= 'MinimumCharge: $' . sprintf( '%.2f', $minimumCharge ? $minimumCharge : 0 ) . '<br/>';
 
-    my %servicePrice = openprint::service::get_price_object( 'Gluing', $qty, $Equipment );
+    my %servicePrice = openprint::service::get_price_object( 'Gluing'.$$specs{complexity}, $qty, $Equipment );
     $price{ServicePrice} = \%servicePrice;
-    if ( sets::isin( $servicePrice{units}, ['', 'per m', 'per 1000'] ) ) {
-      $servicePrice{Total} = $qty * $servicePrice{Price} / 1000;
-      $price{Breakdown} .= sprintf( 'Service: $%.2f %s = $%.2f<br/>', @servicePrice{'Price','units','Total'} );
-    } elsif ( $servicePrice{units} eq 'per hour') {
-      my $runspeed = $Equipment->Specification('Gluing Runspeed');
-      $runspeed = $Equipment->Specification('Runspeed') if ! $runspeed;
+    if ($servicePrice{units}) {
+      if ($servicePrice{units} eq 'per m' or $servicePrice{units} eq 'per 1000') {
+        $servicePrice{Total} = $qty * $servicePrice{Price} / 1000;
+        $price{MPrice} = $servicePrice{Price};
+        $price{Breakdown} .= sprintf( 'Service: $%.2f %s = $%.2f<br/>', @servicePrice{'Price','units','Total'} );
+      } elsif ( $servicePrice{units} eq 'per hour') {
+        my $runspeed = $Equipment->Specification('Gluing RunSpeed');
+        $runspeed = $Equipment->Specification('RunSpeed') if ! $runspeed;
 
-      my $height = $$sig_specs{txtWidth} > $$sig_specs{txtHeight} ? $$sig_specs{txtHeight} : $$sig_specs{txtWidth};
-      if (!$runspeed) {
-        $openprint::log->error("No runspeed set for Gluing on $$Equipment{name}");
-        $price{Breakdown} .= "No runspeed set for gluing. Can't support per hour pricing.<br/>";
-      } elsif ($$runspeed{units} eq 'inches per hour') {
-        $servicePrice{Total} = $qty * $height * $servicePrice{Price} / $$runspeed{value};
-        $price{Breakdown} .= sprintf( 'Service: $%1$.2f %2$s * %4$.2finches @ %5$d/hour= $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $height, $$runspeed{value} );
+        my $height = $$sig_specs{txtWidth} > $$sig_specs{txtHeight} ? $$sig_specs{txtHeight} : $$sig_specs{txtWidth};
+        if (!$runspeed) {
+          $openprint::log->error("No runspeed set for Gluing on $$Equipment{name}");
+          $price{Breakdown} .= "No runspeed set for gluing. Can't support per hour pricing.<br/>";
+        } elsif ($$runspeed{units} eq 'inches per hour') {
+          $servicePrice{Total} = $qty * $height * $servicePrice{Price} / $$runspeed{value};
+          $price{Breakdown} .= sprintf( 'Service: $%1$.2f %2$s * %6$d * %4$.2finches @ %5$d/hour= $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $height, $$runspeed{value}, $qty );
+          $price{MPrice} = 1000 * $height * $servicePrice{Price} / $$runspeed{value};
+        } else {
+          $openprint::log->error("Unsupported units in $$runspeed{name} $$runspeed{units}");
+          $price{Breakdown} .= "Unsupported units in $$runspeed{name} $$runspeed{units}<br/>";
+        }
       } else {
-        $openprint::log->error("Unsupported units in $$runspeed{name} $$runspeed{units}");
-        $price{Breakdown} .= "Unsupported units in $$runspeed{name} $$runspeed{units}<br/>";
-      }
+        $openprint::log->error("Unsupported units in Gluing ($servicePrice{units})");
+        $$specs{alert} .= "Unsupported units in Gluing ($servicePrice{units})<br/>";
+      } # end if
     } else {
-      $openprint::log->error("Unsupported units in Gluing ($servicePrice{units})");
+      $openprint::log->error("No units in Gluing ($servicePrice{units})");
+      $$specs{alert} .= "No units in Gluing ($servicePrice{units})<br/>";
     } # end if
     $price{Total} = $makeReadyPrice + $servicePrice{Total};
     if ( my $Material = openprint::Material->find_one(name=>'Glue') ) {

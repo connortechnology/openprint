@@ -5,11 +5,12 @@ require Math::Round;
 package openprint::ServicePrice;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults $default_sort);
 
 $debug = 0;
 $table = 'Service_Prices';
 $serial = 'service_prices_id_seq';
+$default_sort = 'min NULLS FIRST, max NULLS LAST';
 
 %fields = (
 	id							=>	'id',
@@ -54,6 +55,8 @@ $serial = 'service_prices_id_seq';
 	cost	=>	[ 's/[^\d\.\-]//g' ],
 	markup	=>	[ 's/[^\d\.\-]//g' ],
 	price	=>	[ 's/[^\d\.\-]//g' ],
+	units					=>	[ 's/^\s+//', 's/\s+$//' ],
+	range_units					=>	[ 's/^\s+//', 's/\s+$//' ],
 );
 
 sub next {

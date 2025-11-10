@@ -3,6 +3,8 @@ package openprint::Sales_Log;
 our @ISA = qw( openprint::Object );
 use openprint ();
 require openprint::Object;
+require openprint::User;
+require openprint::Company;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 0;
@@ -13,18 +15,17 @@ $serial = 'sales_logs_id_seq';
 	salesrep_id	=>	'salesrep_id',
 	user_id		=>	'user_id',
 	company_id	=>	'company_id',
-	date_time	=>	'date_time',	
+	called_on	=>	'date_time',	
 	notes		=>	'notes',
 );
 %defaults = (
 	user_id		=>	undef,
 	company_id	=>	undef,
-	date_time	=>	"'NOW()'",
+	called_on	=>	"'NOW()'",
 	salesrep_id	=>	q`$openprint::session{user_id}`,
 );
 
 sub User {
-	require openprint::User;
 	return new openprint::User( $_[0]{user_id} );
 } # end sub User
 

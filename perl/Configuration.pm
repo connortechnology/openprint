@@ -1,6 +1,7 @@
 use strict;
 package Configuration;
 our @ISA = qw(openprint::Object);
+require sql;
 
 use vars qw( $debug $table @identified_by %fields %transforms %defaults @types );
 $debug = 0;
@@ -22,6 +23,12 @@ $table = 'configuration';
 );
 %defaults = ();
 
-@types = ( 'Supplier', 'pricelist', 'currency', 'yes/no', 'textarea', 'text','number', 'list','boolean' );
+@types = ( 'Owner', 'Supplier', 'pricelist', 'currency', 'yes/no', 'textarea', 'text','number', 'list','boolean' );
+
+sub categories {
+  my $sql = 'SELECT DISTINCT '.$fields{category}.' FROM '.$table.' ORDER BY '.$fields{category};
+  return sql::execute(undef,undef, $sql);
+}
+
 1;
 __END__

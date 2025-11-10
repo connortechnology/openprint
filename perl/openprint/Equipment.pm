@@ -28,7 +28,7 @@ sub cache_field {
 my %Specification_cache;
 
 $debug = 0;
-use constant DEBUG_FOLDING => 1;
+use constant DEBUG_FOLDING => 0;
 
 %fields = (
 	id					=>	'id',
@@ -129,12 +129,16 @@ sub fits {
 	} # end if
 
 	if ( $calliper ) {
-		if ( $self->specification("Minimum$service Calliper") and ( 1*$calliper < 1*$self->specification("Minimum$service Calliper") ) ) {
-			return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: " . $self->specification("Minimum$service Calliper") .' Inches.';
+    my $min_calliper = $self->specification("Minimum$service Calliper");
+
+		if ($min_calliper and ($calliper < $min_calliper)) {
+			return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: $min_calliper Inches.";
 		} # end if
-		if ( $self->specification("Maximum$service Calliper") and ( 1*$calliper > 1*$self->specification("Maximum$service Calliper") ) ) {
-			return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specification("Maximum$service Calliper") .' Inches.';
+    my $max_calliper = $self->specification("Maximum$service Calliper");
+		if ($max_calliper and ($calliper > $max_calliper)) {
+			return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: $max_calliper Inches.";
 		} # end if
+    #$openprint::log->debug("Calliper is ok $min_calliper < $calliper < $max_calliper");
 	} # end if
 	return '';
 
@@ -166,9 +170,16 @@ sub Fold {
 
 	if ( ( ! $$params{type} ) and $$params{pages} ) {
 		$$params{type} = $$params{pages}.'PageFold';
+    $openprint::log->debug("Form type auto set to $$params{type}") if DEBUG_FOLDING;
 	}
 
+  if (!($$self{Folds}{$$params{type}} and @{$$self{Folds}{$$params{type}}})) {
+    $openprint::log->debug("No folds for type $$params{type} on $$self{strid}") if DEBUG_FOLDING;
+    return undef;
+  }
+
 	foreach my $Fold ( $$params{type} ? @{$$self{Folds}{$$params{type}}} : map { @{$$self{Folds}{$_}} } keys %{$$self{Folds}} ) {
+
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
 			$openprint::log->debug("Wrong type at fold: " . $Fold->name() ) if DEBUG_FOLDING;
 			next;
@@ -327,7 +338,7 @@ sub Fold {
 			next;
 		} # end if
 		if ( exists $$params{gsm} ) {
-			#$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
+			$openprint::log->debug("Wanted gsm: $$params{gsm}") if DEBUG_FOLDING;
 			my $RunSpeed = $Fold->RunSpeed( $$params{gsm} );
 			if ( ! $RunSpeed ) {
 				$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{gsm})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() ) if DEBUG_FOLDING;
@@ -336,7 +347,7 @@ sub Fold {
 #$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
 			} # end if
 		} # end if
-$openprint::log->debug("Got fold" . $Fold->to_string()) if DEBUG_FOLDING;
+$openprint::log->debug('Got fold' . $Fold->to_string()) if DEBUG_FOLDING;
 		return $Fold;
 #$openprint::log->debug("NEVER Got fold" . $Fold->description()) if $debug;
 	} # end foreach Fold
@@ -345,8 +356,13 @@ $openprint::log->debug("Got fold" . $Fold->to_string()) if DEBUG_FOLDING;
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'strname, dblmin NULLS FIRST', @_ );
+	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'sorting NULLS FIRST,strname, dblmin NULLS FIRST', @_ );
 } # end sub Specifications
+
+sub specifications {
+  my $self = shift;
+  return map { $self->specification($_) } @_;
+}
 
 sub specification {
 	my $Specification = Specification( @_ );
@@ -359,7 +375,9 @@ sub specification {
 sub Specification {
 	my ( $self, $name, $range, $s_debug ) = @_;
 
-	my $key = join(',', $$self{id}, $name, $range);
+  return if ! $$self{id};
+
+	my $key = join(',', $$self{id}, $name, (defined($range)?$range:()));
 	if ( exists $Specification_cache{$key} ) {
 		return $Specification_cache{$key};
 	} # end if
@@ -552,6 +570,7 @@ sub servicetype_id {
 } # end sub servicetype_id
 
 sub ServiceTypes {
+  require openprint::ServiceType;
 	return () if ! $_[0]{servicetype_id};
 	return map { new openprint::ServiceType( $_ ); } @{$_[0]{servicetype_id}};
 } # end sub ServiceTypes
@@ -582,13 +601,29 @@ sub categories {
 sub Operators {
 	if ( ! $_[0]{Operators} ) {
 		my @user_ids = map { $$_{user_id} } openprint::Equipment_Operator->find( equipment_id=>$_[0]{id} );
-		@{$_[0]{Operators}} = @user_ids ? openprint::User->find( id=>\@user_ids, order=>'lower(firstname),lower(lastname)' ) : ();
+		@{$_[0]{Operators}} = @user_ids ? openprint::User->find( id=>\@user_ids ) : ();
 	} # end if
 	return @{$_[0]{Operators}};
 } # end sub Operators
 
+sub operator_ids {
+  my $self = shift;
+  return map { $_->id() } $self->Operators();
+}
+
 sub link_to {
-	return '<a href="/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ > 1 ? $_[1] : $_[0]{strid}).'</a>';
+  my $self = shift;
+  my $text = @_ ? shift : $$self{strid};
+  my $options = @_ ? shift : {};
+	return '<a href="/administrator/equipment/edit.html?ddmEquipment='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>' if $$self{id};
+}
+sub button_to {
+  my $self = shift;
+  return ssi::button('EquipmentButton'.$$self{id}, {href=>'/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ ? shift : $$self{strid})}) if $$self{id};
+}
+
+sub init_cache {
+  %Specification_cache = ();
 }
 
 1;

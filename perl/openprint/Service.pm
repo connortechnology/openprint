@@ -1,18 +1,13 @@
 use strict;
 package openprint::Service;
 our @ISA = qw( openprint::Object );
-use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached %ServicePrices %Configuration );
+use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached %ServicePrices %Configuration $default_sort);
 
 require sql;
 require openprint::Object;
 require openprint::pricing;
 require openprint::ServiceCategory;
 require openprint::ServiceType;
-use openprint ();
-*session = \%openprint::session;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-
 use openprint ();
 *session = \%openprint::session;
 *log = \$openprint::log;
@@ -29,11 +24,12 @@ $log->debug("Have a price definition for $service");
 }
 
 
-$debug = 1;
-$cached = 0;
+$debug = 0;
+$cached = 1;
 
 $table = 'services';
 $serial = 'services_id_seq';
+$default_sort = 'lower(name)';
 
 %fields = (
 		id				=>	'id',
@@ -138,7 +134,8 @@ sub destroy {
 	sql::execute(undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id});
 	$self->SUPER::destroy();
 	sql::end_transaction($dbh, $ac);
-	return $dbh->errstr();
+	return $dbh->errstr() if $dbh->errstr();
+  return '';
 } # end sub delete
 
 sub prices {
@@ -157,6 +154,16 @@ sub get_Price {
   return undef;
 } # end sub get_Price
 
+sub Prices {
+  my $self = shift;
+  $$self{Prices} = shift if @_;
+  if (!$$self{Prices}) {
+    $$self{Prices} = [ openprint::ServicePrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST', service_id=>$$self{id}) ];
+  }
+  return @{$$self{Prices}} if wantarray;
+  return $$self{Prices};
+}
+
 sub get_price {
   my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
   if (! $$self{id}) {
@@ -165,18 +172,21 @@ sub get_price {
     return ;
   }
 
-	if ( ! $period ) {
+	if (!$period) {
 		$period = 'NOW()';
-		if ( $debug ) {
-			$log->debug("No period specified defaulting to $period");
-		} # end if
+    #if ( $debug ) {
+    #$log->debug("No period specified defaulting to $period");
+    #} # end if
 	} # end if
 
 	$Pricelist = $openprint::Pricelist if ! $Pricelist;
   my %price = openprint::pricing::get_best_price_object(
-			$openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
+			$openprint::session{company_id}, $$self{id}, $$Pricelist{id}, $self, $quantity, $$Equipment{id}, $period );
 
-	if ( ! %price ) {
+	if (!%price) {
+# Populating these breaks tests for if a price was returned
+    #$price{ServiceName} = $$self{name};
+    #$price{Service} = $self;
 		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
 		return;
 	} # end if
@@ -184,6 +194,8 @@ sub get_price {
 	$price{currency_id} = $Pricelist->currency_id();
 	$price{ServiceName} = $$self{name};
 	$price{Service} = $self;
+  $price{range_units} //= '';
+  $price{units} //= '';
 	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
 	return %price;
 } # end sub get_price
@@ -249,7 +261,7 @@ sub Category {
 
 sub ServiceType {
   my $self = shift;
-  if ( !exists $$self{ServicType} ) {
+  if ( !exists $$self{ServiceType} ) {
     $$self{ServiceType} = new openprint::ServiceType($$self{servicetype_id});
   }
   return $$self{ServiceType};

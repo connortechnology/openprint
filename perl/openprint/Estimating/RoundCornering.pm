@@ -7,6 +7,7 @@ use POSIX           qw(ceil);
 use constant DEBUG => 1;
 
 my %variables = (
+    alert=>['save', 'output'],
 	'RoundedCorners' => ['save'],
 	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],
 	'Markup1'	=> ['save'], 'Markup2'	=> ['save'], 'Markup3'	=> ['save'],
@@ -35,19 +36,24 @@ sub calc {
     my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
 
 	my $Project = new openprint::Project( $pid );
+  my $ServiceType = $Project->ServiceType($sid);
 
-	$$specs{'RoundedCorners'} =~ s/\D//g;
-	if ( ! $$specs{'RoundedCorners'} ) {
-		$$specs{'alert'} = 'Please enter the number of corners to round.<br/>';
-		return $$specs{'Status'} = 'uncalculated';
+	$$specs{RoundedCorners} =~ s/\D//g;
+  $$specs{alert} = '';
+	if ( ! $$specs{RoundedCorners} ) {
+		$$specs{alert} = 'Please enter the number of corners to round.<br/>';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $calliper = $Project->calliper();
 
-	my @Equipment = openprint::Equipment->find('Specifications'=>{'RoundCornering Capable'=>'Y'},'useinestimating'=>1);
-	if ( ! @Equipment ) {
-		$$specs{'alert'} = 'We have no round cornering equipment.';
-		return $$specs{'Status'} = 'uncalculated';
+	my @Equipment = openprint::Equipment->find(
+      'servicetype_id any'=>$ServiceType->id(),
+#'Specifications'=>{'RoundCornering Capable'=>'Y'}
+      useinestimating=>1);
+  if ( ! @Equipment ) {
+    $$specs{alert} = 'We have no round cornering equipment.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $status = 'calculated';
@@ -83,10 +89,10 @@ sub calc {
 
 				my $items_per_lift = int($lift/$calliper);
 				my $runs = ceil( $qty / $items_per_lift );
-				$runs *= ceil( $$specs{'RoundedCorners'} / $corners );
+				$runs *= ceil( $$specs{RoundedCorners} / $corners );
 
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Corners Per Lift %d: lift height: %.2f / %.4f (calliper) = %d * (%d/%d) corners = %d lifts<br/>', 
-					$corners, $lift, $calliper, $items_per_lift, $$specs{'RoundedCorners'}, $corners, $runs );
+					$corners, $lift, $calliper, $items_per_lift, $$specs{RoundedCorners}, $corners, $runs );
 
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Lift Depth: %.2f&quot;<br/>',$lift);
 
@@ -97,15 +103,15 @@ sub calc {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady price.<br/>';
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady Price: $%1$.2f%2$s<br/>', @MakeReady{'Price','units'} );
-					$total += $MakeReady{'Price'};
+					$total += $MakeReady{Price};
 				} # end if
 
 				my %ServicePrice = openprint::service::get_price_object('RoundCornering', undef, $Equipment ); 
 				if ( ! %ServicePrice ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
 				} else {
-					$ServicePrice{'Total'} += $ServicePrice{'Price'} * $runs;
-					$total += $ServicePrice{'Total'};
+					$ServicePrice{Total} += $ServicePrice{Price} * $runs;
+					$total += $ServicePrice{Total};
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$.2f%2$s * %4$d lifts = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $runs );
 				} # end if
 
@@ -114,28 +120,28 @@ sub calc {
 				} # end if
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $total );
 				
-				if ( ( ! defined $BestPrice{'Total'} ) or $total < $BestPrice{'Total'} ) {
-					$BestPrice{'Total'} = $total;
-					$BestPrice{'Equipment'} = $Equipment;
-					$BestPrice{'ServicePrice'} = \%ServicePrice;
+				if ( ( ! defined $BestPrice{Total} ) or $total < $BestPrice{Total} ) {
+					$BestPrice{Total} = $total;
+					$BestPrice{Equipment} = $Equipment;
+					$BestPrice{ServicePrice} = \%ServicePrice;
 				} # end if
 				$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
 			} # end foreach Equipment
 
-			if ( ! defined $BestPrice{'Total'} ) {
+			if ( ! defined $BestPrice{Total} ) {
 				$status = 'uncalculated';
 			} else {
-				$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
+				$$specs{'ddmEquipment'.$qty_index} = $BestPrice{Equipment}->id();
 			} # end if
 
-        $$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, 
-				( $BestPrice{'ServicePrice'}{'Total'} / $qty ) * (1+$Project->markup()/100) );
-        $$specs{'MPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, (1+$Project->markup()/100) *
-				(1+$$specs{"Markup$qty_index"}/100) * (($BestPrice{'ServicePrice'}{'Total'} / $qty) * 1000) );
+        $$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, 
+				( $BestPrice{ServicePrice}{Total} / $qty ) * (1+$Project->markup()/100) );
+        $$specs{'MPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, (1+$Project->markup()/100) *
+				(1+$$specs{"Markup$qty_index"}/100) * (($BestPrice{ServicePrice}{Total} / $qty) * 1000) );
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'}*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $BestPrice{Total}*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} else {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
 		} # end foreach signature
 
@@ -155,7 +161,7 @@ sub summary {
 		return '';
 	} # end if
 
-	return sprintf( '%d rounded corners', $$specs{'RoundedCorners'} );;
+	return sprintf( '%d rounded corners', $$specs{RoundedCorners} );;
 } # end sub summary
 
 sub display {
@@ -163,7 +169,7 @@ sub display {
 
 	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'RoundCornering Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
 	#my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
-	@{$$variable{'Equipment'}} = @possible_equipment;
+	@{$$variable{Equipment}} = @possible_equipment;
 } # end sub display
 
 sub save {

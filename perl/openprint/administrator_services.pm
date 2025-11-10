@@ -30,6 +30,8 @@ sub edit {
     } elsif ( $param{btnFunction} eq 'Delete' ) {
       $variable{error} .= $Service->delete() if ! $variable{error};
       $Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
+    } elsif ( $param{btnFunction} eq 'Undelete' ) {
+      $variable{error} .= $Service->undelete() if ! $variable{error};
     } elsif ( $param{btnFunction} eq 'Destroy' ) {
       foreach my $T ( openprint::Timetrack->find(service_id=>$Service->id() ) ) {
         $variable{error} .= sprintf('Service is used in <a href="/timetrack/edit.html?timetrack_id=%1$d">Timetrack %1$d</a><br/>', $T->id() );
@@ -163,8 +165,8 @@ sub edit {
       $$NewService{name} = 'Copy of '.$$Service{name};
 
       $variable{error} = $NewService->save();
-      (new openprint::Log())->save({Object=>$NewService, action=>'Copy Service', note=>'From ' . $Service->name()} ) if ! $variable{error};
-      if ( ! $variable{error} ) {
+      if (!$variable{error}) {
+        (new openprint::Log())->save({Object=>$NewService, action=>'Copy Service', note=>'From ' . $Service->name()} );
         foreach my $price ( $Service->prices() ) {
           $$price{service_id} = $$NewService{id};
           delete $$price{id};
@@ -199,14 +201,14 @@ sub _prices_table_body {
 			(new openprint::Log())->save({Object=>$Service, action=>'Delete Service Price', note=>$Price->id_string() }) if ! $variable{error};
 		} # end if
 	} # end if
-	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y') ];
 } # end sub _prices_table_body
 
 sub _price {
 	$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
 	$variable{Pricelist} = new openprint::Pricelist( $param{pricelist_id} );
 	$variable{Service} = new openprint::Service( $param{service_id} );
-	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y') ];
 	if ( $param{action} eq 'add' ) {
 		my $Price = $variable{Price} = new openprint::ServicePrice();
 		$variable{error} .= $Price->save({ equipment_id=>$param{equipment_id}, pricelist_id=>$param{pricelist_id}, service_id=>$param{service_id} });
@@ -217,7 +219,7 @@ sub _prices_per_equipment {
 	$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
 	$variable{Pricelist} = new openprint::Pricelist( $param{pricelist_id} );
 	$variable{Service} = new openprint::Service( $param{service_id} );
-	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y' ) ];
 	if ( $param{action} eq 'add' ) {
 		my $Price = new openprint::ServicePrice();
 		$variable{error} .= $Price->save({ equipment_id=>$param{equipment_id}, pricelist_id=>$param{pricelist_id}, service_id=>$param{service_id} });
@@ -232,6 +234,18 @@ sub _list {
   ssi::save_params( '/administrator/services/list.html', (
       'deleted', 'service_name', 'equipment_id', 'category_id','servicetype_id'
     ) );
+  return if ! $param{btnFunction};
+
+  if ($param{btnFunction} eq 'delete') {
+    my @ids = ref $param{service_id} eq 'ARRAY' ? @{$param{service_id}} : ($param{service_id});
+    foreach my $service ( openprint::Service->find(id=>\@ids, deleted=>[0,1]) ) {
+      if ($service->deleted()) {
+        $variable{error} .= $service->destroy();
+      } else {
+        $variable{error} .= $service->delete();
+      }
+    }
+  }
 }
 
 1;

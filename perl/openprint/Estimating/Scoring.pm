@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA	02110-1301, USA
 use strict;
-#use warnings;
+use warnings;
 
 package openprint::Estimating::Scoring;
 
@@ -28,8 +28,33 @@ require openprint::Equipment;
 
 use constant DEBUG => 0;
 
+use vars qw( %ServicePrices %Specifications);
+%ServicePrices = (
+  ScoringMinimumCharge => { range_units=>[''], units=>['']},
+  'ScoringMakeReady' => { range_units=>[''], units=>['']},
+  'Scoring' => { range_units=>['impressions'], units=> ['per hour', 'per m']},
+);
+%Specifications = (
+  'PerfScoreRunSpeed' => {range_units => [ 'calliper'], units=>'per hour'},
+  'Perf Score Run Speed' => {range_units => [ 'calliper'], units=>'per hour'},
+  'RunSpeed' => {range_units => [ 'calliper'], units=>'per hour'},
+  'Scoring Overs' => {range_units => [ 'impressions' ], units=>['percent']},
+  'Scoring Capable' => { value=>['Y','N', 'For Pocket Folders', 'When PerfectBound', 'When Stitching' ] },
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
+
 my @variables = (
-		'txtQuantity',
 		'txtQuantity1','txtQuantity2','txtQuantity3',
 		'txtPrice1','txtPrice2','txtPrice3',
 		'MPrice1','MPrice2','MPrice3',
@@ -41,6 +66,7 @@ my @variables = (
 my @all_equipment;
 my $Rule;
 my $Wheel;
+my $Die;
 my $ScoringService;
 my $ScoringWithoutFoldingService;
 my $ScoringMakeReadyService;
@@ -69,7 +95,6 @@ sub variables {
 				push @v, map { join('-', $_, $form, $qty_index, $imp_index ) } ( 'ImpOut','ImpColumns','ImpRows','ImpQty' );
 			} # end foreach imp_index
 		} # end foreach
-
 	} # end foreach
 	return @v;
 } # end sub variables
@@ -99,15 +124,17 @@ sub has_overrides {
 
 sub init {
 	my ( $Project, $calc_hash ) = @_;
+
 	my @capabilities = ('Y','When Printing');
 	push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 	push @capabilities, 'When Folding' if $$calc_hash{FoldingSpecs};
-	push @capabilities, 'When PerfectBinding' if $$calc_hash{PerfectBoundSpecs};
+	push @capabilities, 'When PerfectBound' if $$calc_hash{PerfectBoundSpecs};
 	push @capabilities, 'When Stitching' if $$calc_hash{StitchingSpecs};
 
 	@all_equipment = openprint::Equipment->find( Specifications => {'Scoring Capable'=>\@capabilities}, useinestimating=>1, order=>'strName');
 	$Rule = openprint::Material->find_one( name=>'ScoringRule');
 	$Wheel = openprint::Material->find_one( name=>'ScoringWheel');
+	$Die = openprint::Material->find_one( name=>'Score');
 
 	$ScoringService = openprint::Service->find_one(name=>'Scoring');
 	$ScoringWithoutFoldingService = openprint::Service->find_one(name=>'ScoringWithoutFolding');
@@ -119,33 +146,36 @@ sub init {
 sub signature_needs {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
-	my $form = $$sig_specs{SignatureIndex} * 1;
-	if ( $specs ) {
-
-# This is because for non-books, the specs hash doesn't have the SignatureIndex filledin.
-# WHAT?S!  ARE YOU SMOKING?
-#$openprint::log->debug("Scoring::need $form : " .$$specs{"chkOverrideQty-$form"}) if DEBUG;
-#if ( ( (defined $$specs{"chkOverrideQty-$form"} ) and ( $$specs{"chkOverrideQty-$form"} eq 'Y' ) ) and
-		if ( ( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
-			return 1;
-		} # end if
+	my $form = $$sig_specs{SignatureIndex};
+  if ( $specs ) {
+    if ( (defined $$specs{"chkOverrideQty-$form"}) and ( $$specs{"chkOverrideQty-$form"} eq 'Y' ) ) {
+      if ( ( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
+        return 1;
+      } # end if
+    } # end if
 	} # end if
 
-# If it's not needing folding, then it doesn't need to be scored!!
+  # If it's not needing folding, then it doesn't need to be scored
 	if ( ! openprint::Estimating::Folding::signature_needs( $Project, $sig_specs ) ) {
-#$openprint::log->debug("NeedFolding is not true $$specs{txtWidth}x$$specs{txtHeight} : $$specs{txtFinalWidth}x$$specs{txtFinalHeight}");
+    $openprint::log->debug("NeedFolding is not true form $form $$sig_specs{txtWidth}x$$sig_specs{txtHeight} : $$sig_specs{txtFinalWidth}x$$sig_specs{txtFinalHeight}") if DEBUG;
 		return 0;
 	} # end if
-	if ( 
-			( $$sig_specs{txtSignatureType} eq '' ) 
+  my $book_type = $Project->get_book_type();
+  if ($book_type and sets::isin($book_type, ['Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound'])) {
+		return 0;
+  }
+	if ( !$$sig_specs{txtSignatureType}
+			or ( $$sig_specs{txtSignatureType} eq '' ) 
 			or ( $$sig_specs{txtSignatureType} eq 'Cover Pages' ) 
-			or ( $$sig_specs{txtSignatureType} and ( ! $Project->signatures({type=>'Cover Pages'}) ) and ( $form == 1 ) ) 
+			or ( $$sig_specs{txtSignatureType} eq 'Gate Folded Pages' ) 
+      or ($$sig_specs{txtSignatureType} and $$sig_specs{GroupPageQuantity} and ($$sig_specs{GroupPageQuantity} == 6))
+			or ( $$sig_specs{txtSignatureType} and ( ! $Project->signatures({type=>'Cover Pages'}) ) and ( $form == 1 ) )
 			) {
 		if ( ! $Paper ) {
-			$openprint::log->error("Loading paper in Scoring::signature_needs");
+			$openprint::log->error('Loading paper in Scoring::signature_needs');
 			$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
 		}
-	#$openprint::log->debug( "Score Required!: " . $Paper->score_required() );
+    $openprint::log->debug( "Score Required for form $form!: ".($$Paper{id} ? $$Paper{id} : 'Custom').' '.$Paper->score_required() ) if DEBUG;
 		if ( $Paper->score_required() ) {
 			return 1;
 		} # end if
@@ -167,6 +197,10 @@ sub neccessary {
 #$log->debug(" ** Project hash DueCutting bindery, Scoring not needed ! ** ");
 		return 0;
 	} # end if
+  my $book_type = $Project->get_book_type();
+  if ($book_type and sets::isin($book_type, ['Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound'])) {
+		return 0;
+  }
 
   # Only need scoring if it's being folded.
 	if ( $$services{Folding} and @{$$services{Folding}} ) {
@@ -225,19 +259,20 @@ sub calc {
 		} # end if
 		my $qty = $$specs{"txtQuantity$qty_index"};
 
-		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty:";
+		$$specs{'hdnBreakdown'.$qty_index} = '';
 
 		my $qtyTotal = 0;
 		my $price = 0;
 
-		foreach my $signature_service_index ( $Project->signatures() ) {
+		foreach my $signature_service_index ( $Project->signatures( { sort=> 1 }) ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $form = $$sig_specs{SignatureIndex};
 			$qty = $$specs{"txtQuantity$qty_index"};
 			if ( $$sig_specs{Versions} ) {
 				$qty *= $$sig_specs{Versions};
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{txtServiceDescription}, " if $$sig_specs{txtServiceDescription};
+			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature $form: ".
+      ($$sig_specs{txtServiceDescription} ? $$sig_specs{txtServiceDescription}:'').'</legend>';
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No imposition for signature $$sig_specs{SignatureIndex}";
 				next;
@@ -249,6 +284,16 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string() . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->Paper()->to_string() . '<br/>';
 
+      if (!$$specs{"chkOverrideImposition-$form-$qty_index"}) {
+        foreach my $imp_index (1 .. 4) {
+          @$specs{
+          "ImpQty-$form-$qty_index-$imp_index",
+          "ImpOut-$form-$qty_index-$imp_index",
+          "ImpColumns-$form-$qty_index-$imp_index",
+          "ImpRows-$form-$qty_index-$imp_index"} = ('','','','');
+        } # end foreach 
+      } # end if
+
 			if ( (!defined $$specs{"chkOverrideQty-$form"}) or ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
 				get_scores( $Project, $specs, $sig_specs, $Imposition->Paper() );
 			} # end if
@@ -259,19 +304,26 @@ sub calc {
 #$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->imposition();
 #$$specs{"txtLayoutWidth-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->layout_width();
 #$$specs{"txtLayoutHeight-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->layout_height();
-				if ( ! $$specs{"chkOverrideImposition-$form-$qty_index"} ) {
 					my $imp_index = 1;
 					foreach my $I ( @{$Price{Impositions}} ) {
 						$I->Equipment( $Price{Equipment} );
 						@$specs{
-							"ImpQty-$form-$qty_index-$imp_index",
-								"ImpOut-$form-$qty_index-$imp_index",
-								"ImpColumns-$form-$qty_index-$imp_index",
-								"ImpRows-$form-$qty_index-$imp_index"} =
-									@$I{'quantity','imposition','columns','rows'};
-						$imp_index += 1;
-					} # end foreach 
-				} # end if
+            "ImpQty-$form-$qty_index-$imp_index",
+            "ImpOut-$form-$qty_index-$imp_index",
+            "ImpColumns-$form-$qty_index-$imp_index",
+            "ImpRows-$form-$qty_index-$imp_index"} =
+            @$I{'quantity','imposition','columns','rows'};
+            $imp_index += 1;
+          } # end foreach 
+          if ( ! $$specs{"chkOverrideImposition-$form-$qty_index"} ) {
+            foreach my $imp_index ($imp_index .. 4) {
+              @$specs{
+              "ImpQty-$form-$qty_index-$imp_index",
+              "ImpOut-$form-$qty_index-$imp_index",
+              "ImpColumns-$form-$qty_index-$imp_index",
+              "ImpRows-$form-$qty_index-$imp_index"} =('','','','');
+            }
+          } # end if
 			} else {
 				$$specs{"ddmEquipment-$form-$qty_index"} = '' if (!$$specs{"chkOverrideEquipment-$form-$qty_index"}) or ($$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y');
 #$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
@@ -279,16 +331,20 @@ sub calc {
 #$$specs{"txtLayoutHeight-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
 				if ( $Price{Status} eq 'uncalculated' ) {
 					if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
-						$$specs{alert} .= "QTY $qty_index: The selected equipment can not handle your project.	This may be because the stock is too heavy, or too large.";
+						$$specs{alert} .= "QTY $qty_index: The selected equipment ".$$specs{"ddmEquipment-$form-$qty_index"}." can not handle your project.	This may be because the stock is too heavy, or too large.";
 					} else {
 						$$specs{alert} .= "QTY $qty_index: No suitable equipment could be found for your project.	This may be because the stock is too heavy, or too large.";
 					} # end if
 				} # end if
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= $Price{Breakdown};
+			$$specs{'hdnBreakdown'.$qty_index} .= $Price{Breakdown}.'</fieldset>';
 			$$specs{alert} .= $Price{alert} if $Price{alert};
 
-			if ( (!defined$$specs{"txtVerticalQty-$form"}) and (!defined$$specs{"txtHorizontalQty-$form"}) ) {
+			if (
+          (!defined($$specs{"txtVerticalQty-$form"}) or $$specs{"txtVerticalQty-$form"} eq '')
+          and
+          (!defined($$specs{"txtHorizontalQty-$form"}) or $$specs{"txtHorizontalQty-$form"} eq '')
+         ) {
 				$$specs{alert} .= 'Please specify # of scores for form ' . $form;
 				$status = 'uncalculated';
 			} else {
@@ -297,12 +353,16 @@ sub calc {
 			} # end if
 			$price += $Price{Price} if $Price{Price};
 			$status = 'uncalculated' if $Price{Status} eq 'uncalculated';
-		} # end foreach qty_index
+		} # end foreach signature
+
 
 		my $unitPrice = 0;
 
 		if ( $qtyTotal ) {
 			$unitPrice = $price / $qty if $qty;
+    } else {
+      $$specs{alert} .= 'Please specify # of scores or remove scoring from project.<br/>' if ! $$specs{alert};
+      $status = 'uncalculated';
 		} # end if
 
 		if ( $Project->markup() ) {
@@ -324,9 +384,8 @@ sub calc {
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
-	} # end foreach
+  } # end foreach qty_index
 
-	$log->debug("END SCORING!!!!!!!!!!!!!!!!!!");
 	return $$specs{Status} = $status;
 } # end sub calc
 
@@ -338,12 +397,6 @@ sub signature_calc {
 			alert			=>	'',
 			);
 	my $form = $$sig_specs{SignatureIndex};
-
-	if ( 0 ) {
-		if ( (!defined $$specs{"chkOverrideQty-$form"}) or ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
-			get_scores( $Project, $specs, $sig_specs, $SignatureImposition->Paper() );
-		} # end if
-	} # end if
 
 	my $score_qty = ($$specs{"txtVerticalQty-$form"}?$$specs{"txtVerticalQty-$form"}:0) + ($$specs{"txtHorizontalQty-$form"}?$$specs{"txtHorizontalQty-$form"}:0);
 	$Results{Breakdown} .= "# of Scores: $score_qty<br/>";
@@ -358,6 +411,7 @@ sub signature_calc {
 	if ( $$sig_specs{Versions} ) {
 		$qty *= $$sig_specs{Versions};
 	} # end if
+	return %Results if ! $qty;
 
 	my @Folds;
 	if ( $$SignatureImposition{Folds} ) {
@@ -373,25 +427,19 @@ sub signature_calc {
 		foreach my $Fold ( @Folds ) {
 			$Fold->display('Fold');
 		} 
-	} # end nif
+	} # end if
 
 	my @equipment;	
 	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} and ($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y') ) {
 		@equipment = openprint::Equipment->find( id=>$$specs{"ddmEquipment-$form-$qty_index"} );
-		$openprint::log->debug('Overriding Equipment to: ' . $$specs{"ddmEquipment-$form-$qty_index"} );
+		$openprint::log->debug('Overriding Equipment to: ' . $$specs{"ddmEquipment-$form-$qty_index"} ) if DEBUG;
 	} else {
-
-		if ( ! @all_equipment ) {
+		if (!@all_equipment) {
 			$openprint::log->warn('This should have been already done');
 			init( $Project, $calc_hash );
 		}
 		@equipment = @all_equipment;
 	} # endif
-	if ( DEBUG ) {
-		foreach my $E ( @equipment ) {
-#$openprint::log->debug( "Equipment: " . $E->strid() );
-		}
-	}
 
 # Get the impositions to consider
 	if ( ! $$SignatureImposition{imposition} ) {
@@ -410,30 +458,7 @@ sub signature_calc {
 	my @Sets_of_Impositions;
 	my @All_Impositions;
 
-	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
-		$openprint::log->debug('Overriding impositions');
-
-		my @override_impos;
-		foreach my $index ( 1 .. 4 ) {
-			my $imp_qty =$$specs{join('-','ImpQty',$form,$qty_index,$index)};
-			next if ! $imp_qty;
-			my $I = $SignatureImposition->copy();
-			$I->quantity( $imp_qty );
-			$I->imposition( $$specs{"ImpOut-$form-$qty_index-$index"} );
-			$I->columns( $$specs{"ImpColumns-$form-$qty_index-$index"} );
-			$I->rows( $$specs{"ImpRows-$form-$qty_index-$index"} );
-
-			push @override_impos, $I;
-			$I->display('Override');
-		} # end foreach
-		@All_Impositions = ( \@override_impos );
-		my $overriden_count = misc::sum( map { $_->quantity() * $_->imposition() } @override_impos );
-		if ( $overriden_count != $SignatureImposition->quantity() * $SignatureImposition->imposition() ) {
-			$Results{alert} .= "Overriden imposition count ($overriden_count) does not match printed imposition count (".$SignatureImposition->quantity() * $SignatureImposition->imposition().") for form $form quantity $qty_index (".$$specs{"txtQuantity$qty_index"}.").<br/>";
-		} else {
-			$openprint::log->debug(" override count: $overriden_count $$SignatureImposition{quantity} * $$SignatureImposition{imposition}");
-		} # end if
-	} elsif ( ! $$SignatureImposition{cut_impositions} ) {
+  if ( ! $$SignatureImposition{cut_impositions} ) {
 
 # IF it's a W&T, we have to cut in half first, so just do it.
 		if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
@@ -455,6 +480,7 @@ sub signature_calc {
 			$$i{quantity} = 1;
 			push @Sets_of_Impositions, $i;
 		} # end if
+
 
 # Get rid of dutches
 		if ( $$SignatureImposition{dutch_columns} ) {
@@ -492,7 +518,12 @@ sub signature_calc {
 				} # end foreach
 			} # end if
 		} # end if dutch
+
+
 		@All_Impositions = openprint::Estimating::Folding::reduce_impositions( \@Sets_of_Impositions );
+    if (@Folds and (@Folds > 1 or $Folds[0]{quantity} > 1)) {
+      push @All_Impositions, [@Folds];
+    }
 		@All_Impositions = openprint::Estimating::Folding::remove_duplicates( @All_Impositions );
 		if ( DEBUG ) {
 			$openprint::log->debug('Sets of Maximum Impositions: ' . @All_Impositions);
@@ -511,12 +542,58 @@ sub signature_calc {
 		@All_Impositions = @{$$SignatureImposition{cut_impositions}};
 	} # end if overrideImpositions
 
+	if ((defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
+		$openprint::log->debug('Overriding impositions') if DEBUG;
+    # Look in sets of impositions for a cut that matches
+    my $matched = 0;
+    foreach my $set (@All_Impositions) {
+      my @matched;
+      foreach my $index ( 1 .. 4 ) {
+        my $imp_qty = $$specs{join('-','ImpQty',$form,$qty_index,$index)};
+        next if ! $imp_qty;
+        foreach my $imp (@{$set}) {
+          if ($$imp{quantity} == $imp_qty and $$imp{imposition} == $$specs{"ImpOut-$form-$qty_index-$index"}) {
+            push @matched, $imp;
+          }
+        }
+      }
+      if (@matched == @{$set}) {
+        @All_Impositions = ( \@matched );
+        $matched = 1;
+        last;
+      }
+    }
+    if (!$matched) {
+      my @override_impos;
+      foreach my $index ( 1 .. 4 ) {
+        my $imp_qty = $$specs{join('-','ImpQty',$form,$qty_index,$index)};
+        next if ! $imp_qty;
+        my $I = $SignatureImposition->copy();
+        $I->quantity( $imp_qty );
+        $I->imposition( $$specs{"ImpOut-$form-$qty_index-$index"} );
+        $I->columns( $$specs{"ImpColumns-$form-$qty_index-$index"} ) if $$specs{"ImpColumns-$form-$qty_index-$index"} < $I->columns();
+        $I->rows( $$specs{"ImpRows-$form-$qty_index-$index"} ) if $$specs{"ImpRows-$form-$qty_index-$index"} < $I->rows();
+
+        push @override_impos, $I;
+        $I->display('Override');
+      } # end foreach
+      @All_Impositions = ( \@override_impos );
+      my $overriden_count = misc::sum( map { $_->quantity() * $_->imposition() } @override_impos );
+      if ( $overriden_count != $SignatureImposition->quantity() * $SignatureImposition->imposition() ) {
+        $Results{alert} .= "Overriden imposition count ($overriden_count) does not match printed imposition count (".$SignatureImposition->quantity() * $SignatureImposition->imposition().") for form $form quantity $qty_index (".$$specs{"txtQuantity$qty_index"}.").<br/>";
+      } else {
+        $openprint::log->debug(" override count: $overriden_count $$SignatureImposition{quantity} * $$SignatureImposition{imposition}") if DEBUG;
+      } # end if
+    }
+  } # end if overriden Imposition
+
 EQUIPMENT: foreach my $Equipment ( @equipment ) {
 		 $Results{Breakdown} .= "<br/>Equipment: $$Equipment{name}, ";
 		 my $type = $Equipment->specification('Type');
 		 if ( ! $type ) {
 			 $Results{Breakdown} .= "No type for $$Equipment{name}. Please set it in equipment specifications.<br/>";
-			 next;
+       $type = 'Folder';
+			 #next;
 		 }
 		 my $capable = $Equipment->specification('Scoring Capable');
 
@@ -555,10 +632,26 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 $Results{Breakdown} .= 'Stitcher can only score cover.<br/>';
 				 next;
 			 }
+       if ($$sig_specs{GroupPageQuantity} and ($$sig_specs{GroupPageQuantity} != 4)) {
+         $Results{Breakdown} .= 'Stitcher can only score 4pg.<br/>';
+         next;
+       }
 		 } elsif ( $type eq 'PerfectBinder' ) {
 			 if ( ! $$calc_hash{PerfectBoundSpecs} ) {
 				 next ;
 			 } 
+       if ( $$calc_hash{PerfectBoundSpecs}{"ddmEquipment$qty_index"} and $$calc_hash{PerfectBoundSpecs}{"ddmEquipment$qty_index"} != $Equipment->id() ) {
+         $Results{Breakdown} .= 'Not binding on this.<br/>';
+         next;
+       } # end if
+       if ( $$sig_specs{txtSignatureType} ne 'Cover Pages' ) {
+         $Results{Breakdown} .= 'PerfectBinder can only score cover.<br/>';
+         next;
+       }
+       if ($$sig_specs{GroupPageQuantity} and ($$sig_specs{GroupPageQuantity} != 4)) {
+         $Results{Breakdown} .= 'PerfectBinder can only score 4pg.<br/>';
+         next;
+       }
 		 } elsif ( $type eq 'Press' ) {
 			 if ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Work & Turn' or $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Work & Tumble' ) {
 				 $Results{Breakdown} .= 'Cant do an inline score when W&T.<br/>';
@@ -573,6 +666,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 
 		 my $totalPrice;
 		 my @impositions = ();
+     my $minimumCharge = openprint::service::get_price('ScoringMinimumCharge', undef, $Equipment) || 0;
 
 # FIXME, needs to be same folder
 		 if ( ( $type eq 'Folder' ) and @Folds ) {
@@ -586,15 +680,20 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 			 } # end if
 
 			 foreach my $Fold ( @Folds ) {
-
-# $qty / imposition gives us the # of sheets, so * qty gives us the # of impressions
-				 $$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $Fold->quantity() ) if ! $$Fold{impressions};
+         # $qty / imposition gives us the # of sheets, so * qty gives us the # of impressions
+         $$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $Fold->quantity() );
 #$$Fold{impressions} /= $Fold->imposition();
 				 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $$Fold{impressions}, $Fold );
-				 $totalPrice += $$Price{setup}{Price} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
+         $totalPrice += $$Price{setup}{Price} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
+         if ($$Price{Die}) {
+           $openprint::log->error("Die price $$Price{Die} " . $$Price{Die}{Price});
+           $totalPrice += $$Price{Die}{Total} if $$Price{Die};
+         } else {
+           $openprint::log->error("No Die price $$Price{Die} $form" );
+         }
 				 $Results{Breakdown} .= $$Price{Breakdown};
 			 } # end foreach my $Fold
-#$Results{Imposition} = $Fold;
+
 			 $Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice);
 
 			 if ( $totalPrice < $Results{Price} or ! exists $Results{Price} ) {
@@ -606,6 +705,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 			 foreach my $Set_Of_Impositions ( @All_Impositions ) {
 				 my @impositions = @{$Set_Of_Impositions};
 				 if ( $type eq 'Press' ) {
+           $openprint::log->debug("Next because $type and @impositions > 1") if DEBUG;
 					 next if @impositions > 1;
 				 } # end if
 
@@ -613,8 +713,12 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 my $complete = 1;
 
 				 foreach my $I ( @impositions ) {
-					 $I->Press( $Equipment );
-					 $Results{Breakdown} .= '<br/>Imp: '.$I->to_string().'<br/>';
+					 $I->Press( $Equipment ); # WHY? To make to_string list the right equipent
+					 $Results{Breakdown} .= '<br/>Fold: '.$I->to_string(undef).'<br/>';
+           if (!$$I{imposition}) {
+             $Results{Breakdown} .= 'No imposition in Imposition!<br/>';
+             next;
+           }
 
 					 if ( $_ = is_desirable($Equipment, $I, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}) ) {
 						 $Results{Breakdown} .= "Not good. $_<br/>";
@@ -630,13 +734,20 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 
 					 $Results{Breakdown} .= '<br/>';
 
-					 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $qty/$$I{imposition}, $I );
+           $$I{impressions} = ( $qty / $$SignatureImposition{imposition} ) * ( $I->quantity() );
+           #$openprint::log->error("Impressions from $$I{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $$I{quantity} );");
+					 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $$I{impressions}, $I );
 
 					 $totalPrice += $$Price{setup}{Price} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
+           $totalPrice += $$Price{Die}{Total} if $$Price{Die};
 					 $Results{Breakdown} .= $$Price{Breakdown};
 				 } # end foreach imposition I
 				 next if ! $complete;
 				 $Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice);
+         if ($minimumCharge and ($minimumCharge > $totalPrice)) {
+           $Results{Breakdown} .= sprintf('Minimum Charge: $%.2f<br/>', $minimumCharge);
+           $totalPrice = $minimumCharge;
+         }
 
 				 if ( (! exists $Results{Price}) or ($totalPrice < $Results{Price}) ) {
 					 $Results{Price} = $totalPrice;
@@ -688,7 +799,6 @@ sub get_price {
 		} # end if
 	} # end if
 	my $score_qty = $horizontal_rule + $vertical_rule;
-	my %setupPrice;
 	my $UseScoringMakeReadyService;
 	my $UseScoringService;
 	my %servicePrice;
@@ -701,13 +811,17 @@ sub get_price {
 		$UseScoringMakeReadyService = $ScoringMakeReadyService;
 	} 
 
-	%setupPrice = $UseScoringMakeReadyService->get_price(undef, $Equipment);
-	if ( $setupPrice{range_units} eq 'scores' ) {
-		$score_qty = $vertical + $horizontal;
-		%setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
-	} else {
-		%setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
-	}
+  my %setupPrice = $UseScoringMakeReadyService->get_price(undef, $Equipment);
+  if (%setupPrice) {
+    if ( $setupPrice{range_units} eq 'scores' ) {
+      $score_qty = $vertical + $horizontal;
+      %setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
+    } else {
+      %setupPrice = $UseScoringMakeReadyService->get_price($score_qty, $Equipment);
+    }
+  } else {
+    $setupPrice{Total} = $setupPrice{Price} = 0;
+  }
 
 	$Results{Breakdown} .= sprintf('MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice{Price}) if %setupPrice;
 	$Results{Breakdown} .= "Imposition: $$I{columns}x$$I{rows}=$$I{imposition}: ";
@@ -716,6 +830,11 @@ sub get_price {
 	if ( $$Overs{units} ) {
 		if ( $$Overs{units} eq 'Sheets' ) {
 			my $overs = $$Overs{value};
+			$qty += $overs;
+			$Results{Overs} = $overs;
+			$Results{Breakdown} .= 'Overs: ' . $overs . '<br/>';
+    } elsif ( $$Overs{units} eq 'Percent' ) {
+			my $overs = int($qty * $$Overs{value} / 100);
 			$qty += $overs;
 			$Results{Overs} = $overs;
 			$Results{Breakdown} .= 'Overs: ' . $overs . '<br/>';
@@ -736,31 +855,50 @@ sub get_price {
 	} # end if
 	$servicePrice{Total} = 0;
 
-	my $runspeed = $Equipment->specification('PerfScoreRunSpeed');
-	if ( ! $runspeed ) {
-		if ( $$I{Fold} and $$I{Fold}{equipment_id} == $$Equipment{id} ) {
-			$runspeed = $$I{Fold}->runspeed($I->Paper()->gsm());
-		} # end if
-	} # end if
+  my $runspeed;
+
+  if ($$I{Fold} and $$I{Fold}{equipment_id} == $$Equipment{id}) {
+    if ($$I{Fold}{runspeed_units} eq 'gsm') {
+      $runspeed = $$I{Fold}->RunSpeed($I->Paper()->gsm());
+    } else {
+      $runspeed = $$I{Fold}->RunSpeed($qty);
+    }
+  } else {
+    $runspeed = $Equipment->Specification('PerfScoreRunSpeed');
+    $runspeed = $Equipment->Specification('Perf Score Run Speed') if !$runspeed;
+    $runspeed = $Equipment->Specification('RunSpeed', undef, 1) if !$runspeed;
+    if ($runspeed) {
+      if ($$runspeed{range_units} and ($$runspeed{range_units} eq 'impressions')) {
+        $runspeed = $Equipment->Specification($$runspeed{name}, $qty);
+      } else {
+        $runspeed = $Equipment->Specification($$runspeed{name}, $I->Paper()->gsm());
+      }
+    }
+  }
+
 	$Results{Runspeed} = $runspeed;
 
-	if ( $servicePrice{units} eq 'per m' ) {
+	if ($servicePrice{units} eq 'per m') {
 		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $qty / 1000 );
 		$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>',
 				@servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice{Total} );
-	} elsif ( $servicePrice{units} eq 'per hour' ) {
-		if ( $runspeed ) {
-			if ( int($runspeed) ) {
-				my $hours = $qty / $runspeed;
+	} elsif ($servicePrice{units} eq 'per hour') {
+		if ($runspeed) {
+      if ($$runspeed{value} and int($$runspeed{value})) {
+				my $hours = $qty / $$runspeed{value};
 				$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $hours );
 				$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d @ %d%s = $%.2f<br/>',
-						@servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
+						@servicePrice{'Price','units'}, $qty, $$runspeed{value}, 'Per Hour', $servicePrice{Total} );
 			} else {
-				$openprint::log->error("Bogus runspeed ($runspeed) on $$Equipment{strid}");
+        $Results{Breakdown} .= "Bad runspeed ($$runspeed{value}) on $$Equipment{strid}<br/>";
+				$openprint::log->error("Bogus runspeed ($$runspeed{value}) on $$Equipment{strid}");
 			} # end if
-		} # end if
-	} elsif ( $servicePrice{Price} ) {
-		$Results{Breakdown} .= "Unknown units set on service price ($score_qty) ($servicePrice{units}) <br/>";
+    } else {
+      $Results{Breakdown} .= "per hour price set but no runspeed set on $$Equipment{strid}<br/>";
+      $openprint::log->error("Bogus runspeed set on $$Equipment{strid}");
+    } # end if
+  } elsif ( $servicePrice{Price} ) {
+    $Results{Breakdown} .= "Unknown units set on service price ($score_qty) ($servicePrice{units}) <br/>";
 	} # end if
 
 #$openprint::log->debug("Horizontal: $horizontal_rule");
@@ -780,6 +918,7 @@ sub get_price {
 				$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>',
 						@horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
 			} else {
+        $horizontal_price{Total} = $horizontal_price{Price};
 				$openprint::log->error("Unknown units set on horizontal material price ($horizontal_price{units}) on $$Equipment{strid}");
 
 				$Results{Breakdown} .= "Unknown units set on horizontal material price ($horizontal_price{units})<br/>";
@@ -788,6 +927,17 @@ sub get_price {
 	} else {
 		$horizontal_price{Total} = 0;
 	} # end if
+
+  if ( $Die ) {
+    my %die_price = $Die->get_price(undef, $Equipment);
+    if (%die_price) {
+      if ($die_price{units} eq 'per square inch') {
+        $die_price{Total} = $die_price{Price} * $$I{sheet_width} * $$I{sheet_height};
+        $Results{Breakdown} .= sprintf('Die: $%1$.2f%2$s * %4$sx%5$s=$%3$.2f<br/>', @die_price{'Price','units','Total'}, $$I{sheet_width}, $$I{sheet_height} );
+        $Results{Die} = \%die_price;
+      }
+    }
+  }
 
 	if ( $vertical_rule ) {
 		if ( $Wheel ) {
@@ -803,6 +953,7 @@ sub get_price {
 					$vertical_price{Total} = $vertical_price{Price} * $vertical_length/12;
 					$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
 				} else {
+          $vertical_price{Total} = $vertical_price{Price};
 					$openprint::log->error("Unknown units set on vertical material price ($vertical_price{units}) on $$Equipment{name}");
 					$Results{Breakdown} .= "Unknown units set on vertical material price ($vertical_price{units})<br/>";
 				} # end if
@@ -819,21 +970,20 @@ sub get_price {
 	$Results{Vertical} = \%vertical_price;
 	$Results{Horizontal} = \%horizontal_price;
 	return \%Results;
-
 } # end sub get_price
 
-# figures ou the number of scores needed. May return 0 if signature doesn't need it.
+# figures out the number of scores needed. May return 0 if signature doesn't need it.
 sub get_scores {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
 	my $form = $$sig_specs{SignatureIndex};
-	if ( ! signature_needs( $Project, $specs, $sig_specs, $Paper ) ) {
-# Default to 1 score, because we assume that if we have scoring, then we must want at least 1
+	if (!signature_needs($Project, $specs, $sig_specs, $Paper)) {
 		$$specs{"txtVerticalQty-$form"} = 0;
 		$$specs{"txtHorizontalQty-$form"} = 0;
-		$openprint::log->debug("SIgnature $form doesn't need scoring in get_scores") if DEBUG;
+		$openprint::log->error("Signature $form doesn't need scoring in get_scores") if DEBUG;
 		return;
 	} # end if
+
 	if ( $$sig_specs{txtSignatureType} eq 'Cover Pages' ) {
 		if ( $Project->get_book_type() eq 'PerfectBound' ) {
 			$$specs{"txtVerticalQty-$form"} = 4;
@@ -851,10 +1001,17 @@ sub get_scores {
 			$$specs{"txtHorizontalQty-$form"} = 0;
 		} # end if
 	} elsif ( $$sig_specs{txtSignatureType} eq 'Gate Folded Pages' ) {
+    if ( $$sig_specs{rdbTemplateType} eq 'SingleGateFold') {
+      $$specs{"txtVerticalQty-$form"} = 1;
+    } elsif ( $$sig_specs{rdbTemplateType} eq 'DoubleGateFold') {
+      $$specs{"txtVerticalQty-$form"} = 2;
+    } else {
+      $openprint::log->error("No template folded in $$sig_specs{txtSignatureType} Gate Folded Pages form $form $$sig_specs{rdbTemplateType}");
+    }
 	} else { # normal printing
 		my $width_folds = Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1 if $$sig_specs{txtFinalWidth};
 		my $height_folds = Math::Round::nearest( 1, $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight})-1 if $$sig_specs{txtFinalHeight};
-		$openprint::log->debug("Width folds: $width_folds height folds: $height_folds template $$sig_specs{rdbTemplateType} $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
+		$openprint::log->error("Width folds: $width_folds height folds: $height_folds template $$sig_specs{rdbTemplateType} $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
 		if ( !$$sig_specs{rdbTemplateType} or
       ($$sig_specs{rdbTemplateType} eq 'Portrait') or
       ($$sig_specs{rdbTemplateType} eq 'Landscape')
@@ -911,15 +1068,13 @@ sub get_scores {
 					} # end if
 				} # end if
 			} elsif ( ! $$specs{"chkOverrideQty-$form"} ) {
-				$openprint::log->debug("Not setting scores");
+				$openprint::log->debug("Not setting scores") if DEBUG;
 				$$specs{"txtVerticalQty-$form"} = 0;
 				$$specs{"txtHorizontalQty-$form"} = 0;
 			} # end if
 
 		} # end if
-
 	} # end if
-
 } # end sub get_scores
 
 sub get_specs {
@@ -932,7 +1087,7 @@ sub get_specs {
 	my @capabilities = ( 'Y', 'When Printing' );
 	push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 	push @capabilities, 'When Folding' if $$services{Folding};
-	push @capabilities, 'When PerfectBinding' if $$services{PerfectBound};
+	push @capabilities, 'When PerfectBound' if $$services{PerfectBound};
 	push @capabilities, 'When Stitching' if $$services{SaddleStitching} or $$services{LoopStitching};
 
 	@{$$variable{Equipment}} = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'strName');
@@ -967,7 +1122,7 @@ sub summary {
 			next if ! $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}; 
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			if ( signature_needs( $Project, $specs, $sig_specs, $Paper ) ) {
-				$html .= 'Form ' . $$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription} . ' scored ' .signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
+				$html .= 'Form ' . $$sig_specs{SignatureIndex} . ($$sig_specs{txtServiceDescription}?' ' . $$sig_specs{txtServiceDescription}:'') . ' scored ' .signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
 			} # end if
 		} # end foreach
 		return $html;

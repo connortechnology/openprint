@@ -60,6 +60,7 @@ sub cleanup {
 		untie %session;
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
+		openprint::Equipment::init_cache();
 		$openprint::Service::cached = 0;
 		$openprint::Material::cached = 0;
 		openprint::Object::init_cache();
@@ -148,16 +149,16 @@ sub handler {
 			$PageSetting = new openprint::Page_Setting() if ! $PageSetting;
 			$variable{PageSetting} = $PageSetting;
 
-# if not logged in, determine if they are allowed to see this page or not.
-			if ( ! $PageSetting->can_view() ) {
+      # determine if they are allowed to see this page or not.
+			if (!$PageSetting->can_view()) {
         openprint::login::save_destination();
-				$log->debug("No good, need login");
-				if ( $page =~ /^.*\/_/ ) {
+				$log->debug('No good, need login');
+				if ($page =~ /^.*\/_/) {
 					$r->content_type(q{text/javascript; charset=utf-8});
 					$r->print( q`window.location='/error/error_login.html';` );
 					return Apache2::Const::OK;
 				} else {
-					if ( $page =~ /employee/ ) {
+					if ($page =~ /employee/) {
 						$page = '/employee/account/login.html';
 					} else {
 						$page = '/error/error_login.html';
@@ -169,8 +170,10 @@ sub handler {
 			} # end if
 		} # end if
 
-		foreach my $o ( split(',',$config{Cached_Objects} ) ) {
-			('openprint::'.$o)->init_cache();
+		foreach my $o ( split(',', $config{Cached_Objects} ) ) {
+      eval {
+        ('openprint::'.$o)->init_cache();
+      };
 		} # end foreach
 
 		# Just does timeout
@@ -453,6 +456,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 		} # end if
 	} elsif ( $first eq 'main' ) { # main
 		if ( $second eq 'project' ) {
+      openprint::pricing::init_cache();
 			require openprint::print;
 			require openprint::print_project;
 			if ( ( defined $third ) or sets::isin($filename, ['Paper.html','Bundling.html','HStands.html']) ) {
@@ -460,13 +464,10 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 					my @service_ids = split(',', $param{ServiceIndex} );
 					$variable{ServiceIndex} = $service_ids[0];
 				} # end if
-				$variable{ProjectIndex} = $openprint::param{ProjectIndex} if ! $variable{ProjectIndex};
-				$variable{ProjectIndex} = $openprint::param{project_id} if ! $variable{ProjectIndex};
-				$variable{ProjectIndex} = $openprint::session{project_id} if ! $variable{ProjectIndex};
+				my $project_index = $variable{ProjectIndex} = $openprint::param{ProjectIndex} || $openprint::param{project_id} || $openprint::session{project_id};
 				$variable{Project} = new openprint::Project( $variable{ProjectIndex} );
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-				my $project_index = $variable{ProjectIndex};
 				my $service_index = $variable{ServiceIndex};
 
 				# Things like UPS Shipping might not actually have a service
@@ -543,22 +544,31 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename =~ /^(\w*).html$/ ) {
 						my $module = $1;
-						require "openprint/Estimating/$module.pm";
-						if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
-							$function->($log, $dbh, \%variable, $project_index, $service_index );
-						} else {
-							$log->error( "Eval error of require(bind) openprint::Estimating::$module display() :: Reason: $?" );
-						}
+						$module = $variable{ServiceType}->type() if $variable{ServiceType} and $variable{ServiceType}->type();
+              
+            eval {
+              require "openprint/Estimating/$module.pm";
+              if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
+                $function->($log, $dbh, \%variable, $project_index, $service_index );
+              } else {
+                $log->error( "Eval error of require(bind) openprint::Estimating::$module display() :: Reason: $?" );
+              }
+            };
+						$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
+
 					} # end if
 				} elsif ($third eq 'spec') {
 					if ( $filename =~ /^(\w*).html$/ ) {
-						my $module = $1;
-						require "openprint/Estimating/$module.pm";
-						if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
-							$function->($log, $dbh, \%variable, $project_index, $service_index );
-						} else {
-							$log->error( "Eval error of require $module :: display, Reason: " );
-						}
+            my $module = $1;
+            eval {
+              require "openprint/Estimating/$module.pm";
+              if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
+                $function->($log, $dbh, \%variable, $project_index, $service_index );
+              } else {
+                $log->error( "Eval error of require $module :: display, Reason: " );
+              }
+						};
+						$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
 					} # end if
 				} elsif ($third eq 'pack') {
 					if ( $filename eq 'pack_by_weight.html' ) {

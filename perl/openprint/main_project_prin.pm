@@ -23,11 +23,6 @@ sub _signature {
 $log->debug("Removing group $param{group_id}");
 		$Project->lock();
 		my @src_sigs = $Project->signatures( { Group => $param{group_id} } );
-		if ( ! @src_sigs ) {
-			$variable{PageContent} .= qq`alert('No signatures found for group $param{group_id}');`;
-      $Project->unlock();
-			return;
-		} # end if
 		foreach my $sig_id ( @src_sigs ) {
 			my $Service = $Project->Service( $sig_id );
 			$Service->delete();
@@ -40,13 +35,14 @@ $log->debug("Removing group $param{group_id}");
 		$Project->lock();
 		my @src_sigs = $Project->signatures( { Group => $param{group_id} } );
 		if ( ! @src_sigs ) {
-			my $print_service_index = $Project->add_service( 'Signature' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'Group', $param{group_id} );
-			push @src_sigs, $print_service_index;
+			my $sig_service_index = $Project->add_service( 'Signature' );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_service_index, 'Group', $param{group_id} );
+			push @src_sigs, $sig_service_index;
 		} # end if
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};
 		( $variable{Group} ) = sql::execute( $log, $dbh, $_, $Project->id() );
 		$variable{Group} += 1;
+    $variable{Group} += 1 if $variable{Group} == 3;
 		$variable{Signature} = $variable{Group};
 		my $sig_service_index = $Project->copy_signature( openprint::service::get_specs_ref( $Project, $src_sigs[0] ), { Group=>$variable{Group} } );;
 		$Project->unlock();
@@ -58,27 +54,50 @@ $log->debug("Removing group $param{group_id}");
 
 	} elsif ( $param{action} eq 'add_group' ) {
 		$Project->lock();
-		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};
-		( $variable{Group} ) = sql::execute( $log, $dbh, $_, $Project->id() );
-		if ( ! $variable{Group} ) {
-			$variable{Group} = 3;
-		} else {
-			$variable{Group} += 1;
-		}
+    if ($param{Group}) {
+      $_ = q{SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group' AND strValue=?};
+      my ( $sig_service_index ) = sql::execute( $log, $dbh, $_, $Project->id(), $param{Group} );
+      if ($sig_service_index) {
+        # Group already exists....
+        $log->error("Group $param{Group} already exists");
+        $Project->unlock();
+        $variable{ServiceIndex} = $sig_service_index;
+
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_service_index );
+        foreach my $k ( keys %$sig_specs ) {
+          $variable{$k.$variable{Group}} = $$sig_specs{$k};
+        } # end foreach k
+        return;
+      }
+      $variable{Group} = $param{Group};
+    } else {
+      $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};
+      ( $variable{Group} ) = sql::execute( $log, $dbh, $_, $Project->id() );
+      if ( ! $variable{Group} ) {
+        $variable{Group} = 4; # Group 3 is reserved for gate folded pages?
+      } else {
+        $variable{Group} += 1;
+        $variable{Group} += 1 if $variable{Group} == 3;
+      }
+    }
 		$variable{Signature} = $variable{Group};
 
-		my $print_service_index = $Project->add_service( 'Signature' );
-		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Pages' );
-		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Pages' );
-		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'Group', $variable{Group} );
+    # What about defaults?
+
+		my $sig_service_index = $Project->add_service( 'Signature' );
+		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_service_index, 'txtSignatureType', 
+      $param{txtSignatureType} ? $param{txtSignatureType} : 'Interior Pages' );
+		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_service_index, 'txtServiceDescription', 
+      $param{txtServiceDescription} ? $param{txtServiceDescription} : 'Interior Pages' );
+		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_service_index, 'Group', $variable{Group} );
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $Project->id() );
 		$signature_count += 1;
-		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $signature_count );
+		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_service_index, 'SignatureIndex', $signature_count );
 		$Project->unlock();
-		$variable{ServiceIndex} = $print_service_index;
+		$variable{ServiceIndex} = $sig_service_index;
 
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $print_service_index );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_service_index );
 		foreach my $k ( keys %$sig_specs ) {
 			$variable{$k.$variable{Group}} = $$sig_specs{$k};
 		} # end foreach k
@@ -88,16 +107,16 @@ $log->debug("Removing group $param{group_id}");
     $variable{Signature} = $param{group_id};
 		if ( ! $Project->signatures({'Group'=>$param{group_id}}) ) {
 			$Project->lock();
-			my $print_service_index = $Project->add_service( 'Signature' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Pages' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Pages' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'Group', $param{group_id} );
+			my $sig_service_index = $Project->add_service( 'Signature' );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_service_index, 'txtSignatureType', 'Interior Pages' );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_service_index, 'txtServiceDescription', 'Interior Pages' );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_service_index, 'Group', $param{group_id} );
 			$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 			my ( $signature_count ) = sql::execute( $log, $dbh, $_, $Project->id() );
 			$signature_count += 1;
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $signature_count );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_service_index, 'SignatureIndex', $signature_count );
 			$Project->unlock();
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $print_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_service_index );
 			foreach my $k ( keys %$sig_specs ) {
 				$variable{$k.$variable{Group}} = $$sig_specs{$k};
 			} # end foreach k

@@ -42,7 +42,7 @@ my %variables = (
 	'OverrideItemsPerPackage1'=>['save'], 'OverrideItemsPerPackage2'=>['save'], 'OverrideItemsPerPackage3'=>['save'],
 	'txtPackageWeight1' => ['save','output'], 'txtPackageWeight2' => ['save','output'], 'txtPackageWeight3' => ['save','output'],
 	'totalWeight1' => ['save','output'],'totalWeight2' => ['save','output'],'totalWeight3' => ['save','output'],
-	'alert'=>['output'], 
+	'alert'=>['save','output'], 
 	'hdnBreakdown1'=>['output'], 'hdnBreakdown2'=>['output'], 'hdnBreakdown3'=>['output'],
 
 );
@@ -90,16 +90,24 @@ sub neccessary {
 # type is actually category name, not material type
 
 	if ( $type eq 'BulkSkids' ) {
+    my $services = $Project->services();
+    if ($$services{Gaylords} and @{$$services{Gaylords}} > 0) {
+      return 0;
+    }
 		my $finished_weight = $Project->finished_weight();
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( $finished_weight * $$Project{'quantity'.$qty_index} > 1500 ) {
 				return 1;
 			} # end if
 		} # end freach qty_index
+    return 0;
 	} elsif ( $type eq 'PlainCartons' ) {
+    return 0;
+	} elsif ( $type eq 'Gaylords' ) {
+    return 0;
 		
 	} # end if
-	return 0;
+	return -1;
 } # end sub neccessary 
 
 # This doesn't use service_index for a reason.  THe idea is that we can call this on some specs and see what would happen, without ever actually adding the service.
@@ -107,6 +115,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	$$specs{Status} = 'calculated';
+  $$specs{alert} = '';
 
 	$log->debug("********************** START OF CALC SKIDS type:($$specs{ServiceType})**********************") if DEBUG;
 	my $Project = new openprint::Project($project_index);
@@ -194,7 +203,9 @@ sub calc {
 		local *calc_signature = sub {
 			my ($sig_specs, $item_qty, $item_width, $item_height, $item_calliper, $item_weight, $imposition, $item_name) = @_;
 			my $results = {
+        package_qty => 0,
 				breakdown => '',
+        alert => '',
 				material_price => 0,
 			};
 			my $best_price = undef;
@@ -335,11 +346,6 @@ sub calc {
 
 				my $Stock = openprint::Paper::load_from_signature($Project, $sig_specs, $qty_index);
 				my $item_name;
-				my $item_qty = $$sig_specs{"hdnImpressionQuantity$qty_index"};
-        if (!$item_qty) {
-					$$specs{alert} .= 'Unable to load impression count!<br/>';
-          next;
-        }
 				my $imposition = new openprint::Imposition();
 				$imposition->load($sig_specs, $qty_index, $Project);
 				my ($item_width, $item_height, $item_calliper, $item_weight ) = (
@@ -350,7 +356,12 @@ sub calc {
 				if (!$item_weight) {
 					$$specs{alert} .= 'Unable to load sheet weight<br/>';
 				}
-        $item_qty /= 2 if $imposition->sides() == 2 and $$imposition{runstyle} ne 'Web';
+				my $item_qty = $$imposition{net_sheets} || $$sig_specs{"hdnImpressionQuantity$qty_index"};
+        if (!$item_qty) {
+					$$specs{alert} .= 'Unable to load impression count!<br/>';
+          next;
+        }
+        #$item_qty /= 2 if $imposition->sides() == 2 and $$imposition{runstyle} ne 'Web';
 				$item_name = 'Flat Sheet';
 				my $results = calc_signature($sig_specs, $item_qty, $item_width, $item_height, $item_calliper, $item_weight, $imposition, $item_name);
 				$package_qty += $$results{package_qty};
@@ -359,7 +370,7 @@ sub calc {
 				$package_weight = $$results{package_weight};
 				$total_weight += $$results{total_weight} if $$results{total_weight};
 				$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>Form '.$$sig_specs{SignatureIndex}.'</legend>'.
-					sprintf('%d sheets size %dx%d @ %.3flbs<br/>', $item_qty, $item_width, $item_height, $item_weight).
+					sprintf('%d sheets size %sx%s @ %.3flbs<br/>', $item_qty, $item_width, $item_height, $item_weight).
 					$$results{breakdown}.'</fieldset>';
 				$status = 'uncalculated' if !$$results{package_qty};
 				$$specs{'txtItemsPerPackage'.$qty_index} = $$results{items_per_package};#if $$specs{'txtItemsPerPackage'.$qty_index} > $$results{items_per_package};
@@ -432,29 +443,32 @@ sub summary {
 	if ($qty_index) {
 		my $services = $Project->services();
 		my $Material = new openprint::Material( $$specs{'ddmPackageType'.$qty_index} );
+    $package = $Material->name() if $Material->name();
 
     $$specs{'totalWeight'.$qty_index} = 0 if ! defined $$specs{'totalWeight'.$qty_index};
 
 		if ( $$services{BulkSkids} ) {
 			# The purpose of this is to put all the breakdown in the skids line and leave the other packaging summaries empty
 			if ( $$services{BulkSkids}[0] == $service_id ) {
-				if ( !$$specs{items_per_package} ) {
-					$summary .= 'around '.$$specs{"txtItemsPerPackage$qty_index"}.
-						(($$specs{item_type} and ($$specs{item_type} eq 'FloatSheets')) ? ' flat sheets' : ' product').
+				if ($$specs{items_per_package}) {
+					$summary .= 'around '.$$specs{items_per_package}.
+						(($$specs{item_type} and ($$specs{item_type} eq 'FlatSheets')) ? ' flat sheets' : ' product').
 						' per '.$package.'<br/>';
 				}
-				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $package . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
-				my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
-				if ( $g > 1000 ) {
-					$summary .= sprintf( ', Total Weight: %slbs (%skg)', 
-							Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
-							Number::Format::format_number( Math::Round::nearest( 1, $g/1000 ) ),
-							);
-				} else {
-					$summary .= sprintf( ', Total Weight: %slbs (%sg)', 
-							Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
-							Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
-					);
+        if ($$specs{"txtPackageQuantity$qty_index"}) {
+          $summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $package . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
+          my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
+          if ( $g > 1000 ) {
+            $summary .= sprintf( ', Total Weight: %slbs (%skg)', 
+              Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
+              Number::Format::format_number( Math::Round::nearest( 1, $g/1000 ) ),
+            );
+          } else {
+            $summary .= sprintf( ', Total Weight: %slbs (%sg)', 
+              Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
+              Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
+            );
+          } # end if
 				} # end if
 			} else {
 				if ( $$Material{name} ) {
@@ -477,7 +491,7 @@ sub summary {
 							Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
 					);
 				} # end if
-			} else {
+			} elsif ($$specs{"txtPackageQuantity$qty_index"}) {
 				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $Material->name() . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
 				my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
 				if ( $g > 1000 ) {

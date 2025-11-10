@@ -8,6 +8,7 @@ our @EXPORT = qw( load_file send_email_with_attached_files send_email_with_attac
 use Text::CSV_XS ();
 use Date::Calc qw(Add_Delta_Days);
 use Date::Format qw( time2str );
+use File::Basename qw(fileparse);
 
 #use Mail::Sendmail ();
 
@@ -531,6 +532,30 @@ sub smart_time {
 	}
 } # end sub smart_time
 
+sub get_files {
+  if ( ! -d $_[0] ) {
+    $openprint::log->error("Supplied path $_[0] was not a directory");
+    return;
+  }
+  my @results;
+  my @filenames;
+  if ( opendir DIRHANDLE, $_[0] ) {
+    @filenames = readdir DIRHANDLE;
+    closedir DIRHANDLE;
+  } # end if
+$openprint::log->debug("Have @filenames from $_[0]");
+  foreach ( @filenames ) {
+    next if $_ =~ /^\./;
+    my $path = $_[0].'/'.$_ ;
+    if ( -f $path ) {
+      push @results, $path;
+    } else {
+      $openprint::log->debug("What was $path");
+    }
+  }
+  return @results;
+}
+
 sub get_files_recursive {
 	if ( ! -d $_[0] ) {
 		$openprint::log->error("Supplied path $_[0] was not a directory");
@@ -604,6 +629,19 @@ sub json_to_html {
 		$html .= '<span>'.$input.'</span>';
 	}
 	return $html;
+}
+
+sub get_session_uri {
+  my $uri = shift;
+
+  my ($filename, $path, $suffix) = File::Basename::fileparse($uri);
+  my @path = map { $_ eq 'openprint' ? () : $_ } split('/', $path);
+  if (substr($filename,0,1) eq '_') {
+    $filename = substr($filename,1);
+  }
+  $uri = join('/',@path, $filename.$suffix);
+  $openprint::log->debug("get_session_uri $uri");
+  return $uri;
 }
 
 1;

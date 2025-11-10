@@ -23,6 +23,29 @@ require openprint::print;
 require openprint::service;
 
 my @variables = (
+  'txtFinalWidth',
+'txtFinalHeight',
+  'txtWidth',
+'txtHeight',
+ 'ProjectIndex', 'ServiceIndex', 'ServiceType',
+ 'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
+    ( map { ( "chkColourCoating${_}SideOne", "ColourCoatingType${_}SideOne", "ColourCoatingColour${_}SideOne", "ColourCoatingCoverage${_}SideOne" ) } ( 1 .. 20 ) ),
+    ( map { ( "chkColourCoating${_}SideTwo", "ColourCoatingType${_}SideTwo", "ColourCoatingColour${_}SideTwo", "ColourCoatingCoverage${_}SideTwo" ) } ( 1 .. 20 ) ),
+    'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
+    'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
+    'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
+    'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
+    'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
+'rdbSpecificStock', 'rdbSuppliedStock',
+    'ddmStockBrand', 'txtSpecificStockBrand',
+    'ddmStockGroup', 'ddmStockQuality',
+    'ddmStockFinish', 'txtSpecificStockFinish',
+    'ddmStockColour', 'txtSpecificStockColour',
+    'ddmStockWeight', 'txtSpecificStockWeight',
+    'txtSpecificStockCalliper', 'StockType',
+    'txtSpecificStockWidth', 'txtSpecificStockHeight',
+'sides_the_same',
+
 );
 
 sub variables {
@@ -39,19 +62,20 @@ sub no_outputs {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
+  $$specs{Status} = 'calculated';
+  $$specs{alert} = '';
+
 	return 'calculated';
 } # end sub calc
 
 
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
-
 } # end sub display
+
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
-
 	return '';
-
 } # end sub summary
 
 1;

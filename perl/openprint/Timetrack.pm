@@ -173,7 +173,7 @@ sub Price {
   $$price{price} = $$price{Price};
 
 	if ( $$self{rate} ) {
-    $openprint::log->debug("Overriding rate to $$self{rate}");
+    $openprint::log->debug("Overriding rate to $$self{rate}") if $debug;
 		$$price{cost} = $$price{price} = $$self{rate};
 	} # end if
 
@@ -187,15 +187,15 @@ sub Price {
 		$$price{total} = $$price{price} * $years;
 	} elsif ( $units eq '/month' ) {
 		$elapsed = Math::Round::nearest(1, $elapsed/(60*60*24*30));
-		#$openprint::log->debug('Month pricing ' . $elapsed );
 		$$price{total} = $$price{price} * $elapsed;
+		$openprint::log->debug('Month pricing ' . $elapsed .'month * '.$$price{price}.'='.$$price{total}) if $debug;
 	} elsif ( $units eq '/week' ) {
 		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*7));
 		#$openprint::log->debug('Month pricing ' . $elapsed );
 		$$price{total} = $$price{price} * $elapsed;
-	} elsif ( $units =~ /^\/hr\.?/ ) {
+	} elsif ( $units =~ /^\/hr\.?/i ) {
 		$$price{total} = $$price{price} * $elapsed / 3600;
-    $openprint::log->debug("Total is $$price{total} from $$price{price} * $elapsed /3600");
+    $openprint::log->debug("Total is $$price{total} from $$price{price} * $elapsed /3600") if $debug;
 	} elsif ( $units eq 'once' ) {
 		$$price{total} = $$price{price};
 	} else {
@@ -305,6 +305,11 @@ sub can_edit {
   return 1 if $$user{type} eq 'A';
   return 1 if $user->in_Group('Accounting');
   return 0;
+}
+
+sub Currency {
+  my $self = shift;
+  return new openprint::Currency($$self{currency_id});
 }
 
 1;

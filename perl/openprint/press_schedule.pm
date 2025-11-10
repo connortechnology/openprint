@@ -127,14 +127,14 @@ sub add_project_to_press_schedule {
 	while ( my $s_s_id = shift @sigs_not_on_schedule ) {
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-		$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
-		if ( ! $$sig_specs{'UsePress'} ) {
-			$error .= "No press for signature $$sig_specs{'SignatureIndex'}<br/>";
+		$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{UsePress};
+		if ( ! $$sig_specs{UsePress} ) {
+			$error .= "No press for signature $$sig_specs{SignatureIndex}<br/>";
 			next;
 		} # end if
 
 		my @service_ids = ( $s_s_id );
-		my @forms = ( $$sig_specs{'SignatureIndex'} );
+		my @forms = ( $$sig_specs{SignatureIndex} );
 
 		# Merge identical sigs
 		for( my $i = 0; $i < @sigs_not_on_schedule; $i += 1 ) {

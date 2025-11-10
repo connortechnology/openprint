@@ -8,7 +8,7 @@ package openprint::Expense_Category;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'expense_categories';
 $serial = 'expense_categories_id_seq';
 %fields = (
@@ -212,18 +212,22 @@ sub Taxes {
     $$self{Taxes} = [];
   } # end if
 
-  if ( (!@{$$self{Taxes}}) and $self->Recipient()->country() and $self->Recipient()->state() and ($$self{invoiced_on} or $$self{paid_on}) ) {
+  if ( (!@{$$self{Taxes}}) and ($$self{invoiced_on} or $$self{paid_on}) ) {
+    my $country = $self->Recipient()->country() ? $self->Recipient()->country()  : $self->Company()->country();
+    return @{$$self{Taxes}} if ! $country;
+    my $state = $self->Recipient()->state() ? $self->Recipient()->state()  : $self->Company()->state();
+
     foreach my $Tax ( openprint::Tax->find(
         'period_start null_or_<='   =>  ( $$self{invoiced_on} ? $$self{invoiced_on} : $$self{paid_on} ),
         'period_end null_or_>='     =>  ( $$self{invoiced_on} ? $$self{invoiced_on} : $$self{paid_on} ),
-        country   =>  $self->Recipient()->country(),
-        state     =>  $self->Recipient()->state()),
-    ) {
-      my $T = new openprint::Expense_Tax();
-      $T->set({
-          Expense     =>  $self,
-          expense_id	=>	$$self{id},
-          tax_id      =>  $$Tax{id},
+        country   =>  $country,
+        ( $state ? (state => $state) : ()),
+      ) ) {
+        my $T = new openprint::Expense_Tax();
+        $T->set({
+            Expense     =>  $self,
+            expense_id	=>	$$self{id},
+            tax_id      =>  $$Tax{id},
           rate        =>  $$Tax{rate},
         });
       $openprint::log->debug("New aTax: " . $T->to_string()) if $debug;
@@ -231,8 +235,8 @@ sub Taxes {
       #$T->save({ 'expense_id'=>  $$self{id}}) if $$self{id};
       push @{$$self{Taxes}}, $T;
     } # end foreach Tax
-  } else {
-    $openprint::log->debug('Not loading taxes: ' . (scalar @{$$self{Taxes}}) . ' country: ' . $self->Company()->country() . ' state: ' . $self->Company()->state() . ' invoiced_on: ' . ($$self{invoiced_on}?$$self{invoiced_on}:'never'));
+    #} else {
+    #$openprint::log->debug('Not loading taxes: ' . (scalar @{$$self{Taxes}}) . ' country: ' . $self->Company()->country() . ' state: ' . $self->Company()->state() . ' invoiced_on: ' . ($$self{invoiced_on}?$$self{invoiced_on}:'never'));
   } # end if
   return @{$$self{Taxes}};
 } # end sub Taxes

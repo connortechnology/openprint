@@ -1,0 +1,55 @@
+<li><label>Full Package Weight</label>
+<? echo (
+	my $html = '';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= input(
+			name	=>	'txtPackageWeight'.$qty_index,
+			value	=>	$$variable{"txtPackageWeight$qty_index"},
+			type	=>	'float',
+			oninput	=>	'calc(this.form.name);' );
+		$html .= ' lbs ';
+
+		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+    $html .= write_override('chkOverridePackageWeight'.$qty_index, $$variable{'chkOverridePackageWeight'.$qty_index}, '', q`calc('f1');`);
+		} # end if
+		$html .= '</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+</li>
+<li><label>Package Quantity</label>
+<? echo (
+	my $html = '';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= input(
+			name	=>	'txtPackageQuantity'.$qty_index,
+			value	=>	$$variable{"txtPackageQuantity$qty_index"},
+			type	=>	'cardinal',
+			oninput	=>	'calc(this.form.name);' );
+		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+    $html .= write_override('chkOverridePackageQuantity'.$qty_index, $$variable{'chkOverridePackageQuantity'.$qty_index}, '', q`calc('f1');`);
+    }
+		$html .= '</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+</li>
+<li><label>Total Weight</label>
+<? echo (
+	my $html = '';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= input(
+			name	=>	'txtTotalWeight'.$qty_index,
+			value	=>	$$variable{"txtTotalWeight$qty_index"},
+			type	=>	'float',
+			oninput	=>	'calc(this.form.name);',
+			readonly	=>	1,
+ );
+		$html .= ' lbs</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+</li>

@@ -39,6 +39,7 @@ my @variables = (
 	'txtPackageQuantity1', 'txtPackageQuantity2', 'txtPackageQuantity3',
 	'rdbCardboardBacking',
 	'type_id', 'cross_type_id',
+  'alert',
 );
 sub variables {
   return @variables;
@@ -53,7 +54,10 @@ my @no_outputs = (
 );
 
 sub no_outputs {
-	return @no_outputs;
+  my ($pid, $sid, $old_specs, $new_specs) = @_;
+  my @no = @no_outputs;
+  push @no, map { $$new_specs{'OverridePrice'.$_} and $$new_specs{'OverridePrice'.$_} eq 'Y' ? 'txtPrice'.$_ : () } (1..3);
+	return @no;
 }
 
 sub calc {
@@ -61,6 +65,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+  $$specs{alert} = '';
 	if ( ! $$services{''} ) {
 		$$specs{alert} .= 'Unable to find project service.<br/>';
 		return $$specs{Status} = 'uncalculated';
@@ -394,14 +399,13 @@ sub summary {
 			my $Material = new openprint::Material($$specs{type_id});
 			$text .= ' ' . $Material->description() . ' ';
 		} 
-		if ( $$specs{cross_type_id} ) {
+		if ( $$specs{cross_type_id} and $$specs{cross_bands_per_package}) {
 			my $CrossMaterial = new openprint::Material($$specs{cross_type_id});
 			$text .= ' ' . $CrossMaterial->description() . ' ';
 		} 
 
 		$text .= $$specs{rdbCardboardBacking} eq 'Y' ? ' with cardboard backing.' : '';
 	} # end if
-$openprint::log->debug("Bundling:: summary");
 	return $text;
 } # end sub summary
 

@@ -11,6 +11,9 @@ require openprint::Equipment;
 require openprint::EquipmentSpecification;
 require openprint::Fold;
 require openprint::FoldSpecification;
+require openprint::Location;
+require openprint::ServiceType;
+
 require openprint::logs;
 require openprint;
 
@@ -114,6 +117,8 @@ sub edit {
         if ( ! ( $variable{error} = $Equipment->save( \%param ) ) ) {
           (new openprint::Log())->save({ Object=>$Equipment, action=>($param{ddmEquipment}?'Edited Equipment':'Saved Equipment'), note=>join('<br/>', @changes) });
         }
+      } else {
+        (new openprint::Log())->save({ Object=>$Equipment, action=>'Edited Equipment', note=>'No changes' });
       }
       my %prices = misc::make_hash_from_array('service_id', openprint::ServicePrice->find(
             equipment_id=>$Equipment->id(),
@@ -144,6 +149,7 @@ sub edit {
           } # end if
         } # end foreach price
         (new openprint::Log())->save({Object=>$service, action=>'Edit Service', note=>join('<br/>', @service_changes) }) if @service_changes;
+        (new openprint::Log())->save({Object=>$Equipment, action=>'Save', note=>join('<br/>', @service_changes) }) if @service_changes;
       } # end foreach service
       $variable{information} .= 'No changes made!<br/>' if !@changes;
       if (!$variable{errors}) {
@@ -191,15 +197,22 @@ sub edit {
         my $speeds = scalar @Speeds;
 
         foreach my $Speed ( @Speeds ) {
-          push @data, $Speed->min_weight(), $Speed->max_weight(), $Speed->weight_units(), $Speed->runspeed(), $Speed->interpolate();
+          push @data, $Speed->min(), $Speed->max(), $Speed->units(), $Speed->runspeed(), $Speed->interpolate();
         } # end foreach	Speed
         foreach ( 1 .. ($max_speeds - $speeds ) ) {
           push @data, '','','','','';
         }
       } # end foreach Fold
 
-      misc::export_csv( $r, $log, \%variable, 'fold_definitionss'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
+      misc::export_csv( $r, $log, \%variable, 'fold_definitions'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
       (new openprint::Log())->save({ action=>'Export Fold Definitions' });
+    } elsif ( $param{btnFunction} eq 'Export Service Prices' ) {
+      my @header = ( 'Service ID', 'Equipment ID','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
+      my @data = map {
+        $_->Service()->name(), $_->Equipment()->strid(), $_->min(), $_->max(), $_->units(), $_->cost(), $_->markup(), $_->price(), $_->discountable()
+      } openprint::ServicePrice->find( equipment_id=>$Equipment->id(), order=>join(',',@openprint::ServicePrice::fields{'min','max'}));
+      misc::export_csv( $r, $log, \%variable, $Equipment->strid() . 'ServicePrices.csv', \@header, \@data );
+
     } elsif ( $param{btnFunction} eq 'Import Folds' ) {
       my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
       # if ! $Equipment->id();
@@ -207,10 +220,8 @@ sub edit {
       my $error = '';
       if ( ! $param{fileFolds} ) {
         $variable{error} .= 'No file given to upload.<br>';
-        $log->error("No file given");
         return;
       } # end if
-      $log->error("file given");
 
       my $ac = sql::start_transaction( $dbh );
 
@@ -291,6 +302,71 @@ sub edit {
       } # end while IO
       sql::end_transaction( $dbh, $ac );
       $variable{error} = $error;
+	} elsif ( $param{btnFunction} eq 'Import Service Prices' ) {
+		$variable{error} .= 'You must select equipment before importing.<br/>' if ! $Equipment->id();
+		$variable{error} .= 'You must select a file to import.<br/>' if ! $param{fileServicePrices};
+    return if $variable{error};
+
+		my $error = '';
+		my $ac = sql::start_transaction( $dbh );
+
+		# An import replaces the current pricelist, so delete verything in the current one.
+		sql::execute( $log, $dbh, 'DELETE FROM Service_Prices WHERE equipment_id=?', $Equipment->id() );
+
+		# get the upload.
+		my $upload = $r->upload( 'fileServicePrices' );
+		my $io = $upload->io();
+		$_ = <$io>;
+		my $csv = Text::CSV_XS->new();
+		my %services = map { $_->name(), $_ } openprint::Service->find();
+		my %equipment= map { $_->strid(), $_ } openprint::Equipment->find();
+
+		while ( <$io> ) {
+			my $status = $csv->parse($_);
+			my ( $name, $equip_ids, $min,$max,$units, $cost, $markup, $price, $discountable ) = $csv->fields();
+			$name = openprint::Service->transform( name => $name );
+			next if $name eq '';
+
+			my $service = $services{$name};
+			if (!$service) {
+        $service = $services{$name} = new openprint::Service();
+        $service->save({name=>$name, description=>$name});
+			} # end if
+
+			foreach my $equip_id ( split(',', $equip_ids ) ) {
+				$equip_id = openprint::Equipment->transform( strid => $equip_id );
+				if ( ! $equipment{$equip_id} ) {
+					$error .= "No Equipment found for $equip_id<br>";
+					next;
+				} # end if
+        if ($equip_id ne $Equipment->strid()) {
+					$error .= "Doesnt match selected equipment: $equip_id<br>";
+					next;
+				} # end if
+
+        foreach my $Pricelist (openprint::Pricelist->find()) {
+          my $Price = new openprint::ServicePrice();
+          $_ = $Price->save({
+              pricelist_id	=>	$Pricelist->id(),
+              service_id		=>	$service->id(),
+              equipment_id	=>	$equip_id ? $equipment{$equip_id}->id() : undef,
+              min				=>	$min,
+              max				=>	$max,
+              units			=>	$units,
+              cost			=>	$cost,
+              price			=>	$price,
+              discountable	=>	$discountable,
+            });
+          if ( $_ ) {
+            $error .= $_ . " for $services{$name}\n";
+          } else {
+            $variable{information} .= "Added Price for service $name on $equip_id $min - $max $units $cost $markup $price<br/>";
+          }
+        }
+			} # end foreach equipment_id
+		} # end while IO
+		sql::end_transaction( $openprint::dbh, $ac );
+		$variable{error} .= $error;
     } # end if
   } # end if btnFunction
 
@@ -460,8 +536,18 @@ sub list {
 sub _list {
     ssi::save_params( '/administrator/equipment/list.html', (
                 ( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
-				'deleted', 'equipment_name', 'servicetype_id', 'category_id',
+				'deleted', 'equipment_name', 'servicetype_id', 'category_id', 'useinestimating',
                 ) );
+}
+
+sub _service_prices {
+  $variable{Equipment} = new openprint::Equipment($param{equipment_id});
+  if ($param{hide} eq '1') {
+    $openprint::session{'/administrator/equipment/edit.html?show_service_prices'} = 0;
+    $variable{PageContent} = '';
+  } else  {
+    $openprint::session{'/administrator/equipment/edit.html?show_service_prices'} = 1;
+  }
 }
 
 1;

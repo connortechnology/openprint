@@ -1,5 +1,5 @@
 #!/usr/bin/perl 
-use lib '/var/www/testing/perl';
+use lib '/var/www/openprint/perl';
 use strict;
 use warnings;
 use Digest::MD5;
@@ -110,12 +110,21 @@ foreach my $session ( @$session_ids ) {
 $log->debug("Deleted $deleted_session_count sessions");
 
 if ( 0 and openprint::Order->find_one() ) {
-# Clean out unfinished Orders
-	my @Orders = openprint::Order->find(status=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
-	$log->debug('Cleaning out '.@Orders.' incomplete orders');
-	foreach my $Order ( @Orders ) {
-		$Order->delete();
-	} # end foreach
+  # Clean out unfinished Orders
+  my @Orders = openprint::Order->find(status=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
+  $log->debug('Cleaning out '.@Orders.' incomplete orders');
+  foreach my $Order ( @Orders ) {
+    $Order->delete();
+  } # end foreach
+  openprint::Object::init_cache();
+} # end if
+
+if ( 1 and openprint::Project->find_one() ) {
+  # Clean out Delete and uncalcluated projects
+  my @projects = openprint::Project->find(status=>['Deleted','uncalculated'],'updated_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365*2 ) ) );
+  $log->debug('Cleaning out '.@projects.' incomplete projects');
+  foreach ( @projects ) { $_->destroy(); }
+  openprint::Object::init_cache();
 } # end if
 
 if ( openprint::Order->find_one() ) {
@@ -132,6 +141,7 @@ if ( openprint::Order->find_one() ) {
 			$Order->close();
 		}
 	} # end foreach
+  openprint::Object::init_cache();
 } # end if
 
 if ( openprint::Quote->find_one() ) {
@@ -143,6 +153,7 @@ if ( openprint::Quote->find_one() ) {
 	foreach my $Quote ( @Quotes ) {
 		$Quote->delete();
 	} # end foreach
+  openprint::Object::init_cache();
 }
 
 if ( 0 ) {
@@ -214,38 +225,41 @@ foreach my $Paper ( openprint::Paper->find( 'project_type_id exists' => 1 ) ) {
     $Paper->save();
     last if $dbh->errstr();
   } # end if
+  openprint::Object::init_cache();
 } # end foreach my Paper
 
 if ( 1 ) {
-my $log_count = 0;
-# Delete all logs more than 2 years
-foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d 00:00:00',
-				Date::Calc::Add_Delta_Days( Date::Calc::Today(), -2*365 ) ) )
-		) {
-	$Log->delete();
-	$log_count += 1;
-} # end foreach Log
-$log->debug("Deleted $log_count log entries");
+  my $log_count = 0;
+  my $log_retention = $config{log_retention} // -2*365;
+  # Delete all logs more than 2 years
+  foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), $log_retention ) ) )
+  ) {
+    $Log->delete();
+    $log_count += 1;
+  } # end foreach Log
+  openprint::Object::init_cache();
+  $log->debug("Deleted $log_count log entries");
 
-$log_count = 0;
-# Delete all WAP connections logs more than 7days
-foreach my $Log (
-		openprint::Log->find(
-			'date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -7)),
-			action	=>	'Update',
-			'note like'	=> 'Connection to %', )
-		) {
-	$Log->delete();
-	$log_count += 1;
-} # end foreach Log
-$log->debug("Deleted $log_count log entries for connection updates");
+  $log_count = 0;
+  # Delete all WAP connections logs more than 7days
+  foreach my $Log (
+    openprint::Log->find(
+      'date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -7)),
+      action	=>	'Update',
+      'note like'	=> 'Connection to %', )
+  ) {
+    $Log->delete();
+    $log_count += 1;
+  } # end foreach Log
+  $log->debug("Deleted $log_count log entries for connection updates");
+  openprint::Object::init_cache();
 }
 
 #if ( $config{AssetPath} ) {
 	foreach my $Asset ( openprint::Asset->find('md5 is null'=>1) ) {
 		my $data = misc::load_file( $log, $Asset->on_disk_path() );
 		if ( $data ) {
-			$_ = $Asset->save({'md5'=>Digest::MD5::md5_base64( $data ) });
+			$_ = $Asset->save({md5=>Digest::MD5::md5_base64( $data ) });
 			die $_ if $_;
 		} # end if
 	} # end foreach Asset
@@ -284,7 +298,7 @@ foreach my $Skid ( openprint::Skid->find(
 } # end foreach Skid
 $log->debug("Deleted $deleted_skids skids");
 
-if ( 1 ) {
+if ( 0 ) {
 	# Resolve any unresolved IP's
 	my @Hosts = openprint::Host->find(
 			'hostname is null'=>1, 
