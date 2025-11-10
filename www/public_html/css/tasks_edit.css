@@ -1,0 +1,44 @@
+
+.content ul {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.Type,
+.Action,
+.rb_id,
+.AssignedTo,
+.Company,
+.Department {
+  width: 25%;
+}
+
+.presalechecklist,
+.ticketsalescalllog,
+.notes, .notes textarea ,
+.title, .title input {
+  width: 100%;
+}
+
+.SalesFollowUpLogEntry,
+.QuickCallNote {
+  width: 50%;
+}
+
+fieldset p, fieldset li {
+  padding-left: 150px;
+}
+fieldset label:not(.radio):not(.radio-inline) {
+  width: 150px;
+  margin-left: -150px;
+  
+  }
+
+  .created_on,
+  .updated_on {
+    display: none;
+  }
+
+  .rb_id input {
+    width: 80px;
+  }

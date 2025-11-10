@@ -1,0 +1,160 @@
+<form method="post">
+  <fieldset>
+    <legend>Contact Information</legend>
+    <div>
+      <ul>
+        <li class="firstname">
+          <label for="firstname">First Name <abbr title="required" aria-label="required">*</abbr></label>
+          <input id="firstname" type="text" name="firstname">
+        </li>
+        <li class="lastname">
+          <label for="lastname">Last Name <abbr title="required" aria-label="required">*</abbr></label>
+          <input id="lastname" type="text" name="lastname">
+        </li>
+        <li class="email">
+          <label for="email">Email</label>
+          <input type="email" name="email" id="email">
+        </li>
+        <li class="phone">
+          <label for="phonenumber">Phone Number <abbr title="required" aria-label="required">*</abbr></label>
+          <input id="phonenumber" type="tel" name="phonenumber">
+          <select name="phonetype" id="phonetype">
+            <option value="Cell">Cell</option>
+            <option value="Home">Home</option>
+            <option value="Work">Work</option>
+          </select>
+        </li>
+      </ul>
+    </div>
+    <?eval($$variable{Location} = new openprint::Location();)?>
+    <?include(/location/_location_fields.html)?>
+    <ul>
+      <li>
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="5" cols="33" placeholder="The notes go in here"></textarea>
+      </li>
+    </ul>
+    <button type="submit">Add</button>
+  </fieldset>
+  <fieldset>
+    <legend>Add Host Tool</legend>
+    <div>
+      <p>
+      <h3 style="display inline-block;">host_id (auto-generated)</h3>
+      <label for="hostname">Host Name <abbr title="required" aria-label="required">*</abbr></label>
+      <input id="hostname" type="text" name="hostname">
+      <label for="ipaddress">IP Address <abbr title="required" aria-label="required">*</abbr></label>
+      <input id="ipaddress" type="text" name="ipaddress">
+      <label for="equipmentclass">Equipment Class <abbr title="required" aria-label="required">*</abbr></label>
+      <input id="equipmentclass" type="text" name="equipmentclass">
+      <label for="make">Make <abbr title="required" aria-label="required">*</abbr></label>
+      <select name="make" id="make">
+        <option value="select">Select Make</option>
+      </select>
+      <label for="model">Model <abbr title="required" aria-label="required">*</abbr></label>
+      <select name="model" id="model">
+        <option value="select">Select Model</option>
+      </select>
+      </p>
+    </div>
+    <div>
+      <p>
+      <label for="equiprole">Equip Role <abbr title="required" aria-label="required">*</abbr></label>
+      <input id="equiprole" type="text" name="equiprole">
+      <label for="netmode">Net Mode <abbr title="required" aria-label="required">*</abbr></label>
+      <input id="netmode" type="text" name="netmode">
+      <label for="monif">Mon IF <abbr title="required" aria-label="required">*</abbr></label>
+      <select name="monif" id="monif">
+        <option value="select">Select</option>
+        <option value="mgmt_ip_vlan">MGMT IP VLAN</option>
+      </select>
+      <label for="icon">Icon <abbr title="required" aria-label="required">*</abbr></label>
+      <input id="icon" type="text" name="icon">
+      <label for="poept">POE PT <abbr title="required" aria-label="required">*</abbr></label>
+      <input id="poept" type="text" name="poept">
+      </p>
+    </div>
+    <fieldset>
+      <legend>AP Only Fields</legend>
+      <div><p>
+        <label for="antennamake">Antenna Make</label>
+        <input type="text" name="antenna_make" id="antenna_make">
+        <label for="antennamode">Antenna Model</label>
+        <input type="text" name="antennamode" id="antennamode">
+        <label for="cardbearing">Card Bearing</label>
+        <input type="text" name="cardbearing" id="cardbearing">
+        <label for="bearingdegree">Bearing Degree</label>
+        <input type="text" name="bearingdegree" id="bearingdegree">
+        </p>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Check Command</legend>
+      <div>
+        <p>
+        <label for="cmd">What Command?</label>
+        <input type="text" name="cmd" id="cmd">
+        <label for="cmdwarning">What Warning?</label>
+        <input type="text" name="cmdwarning" id="cmdwarning">
+        <label for="warning">Warning %?</label>
+        <input type="text" name="warning" id="warning">
+        <label for="cmdcritical">What Critical?</label>
+        <input type="text" name="cmdcritical" id="cmdcritical">
+        <label for="critical">Critical %?</label>
+        <input type="text" name="critical" id="critical">
+        </p>
+      </div>
+    </fieldset>
+    <div>
+      <p>
+      <label for="hostnotes">Host Notes:</label>
+      <textarea id="hostnotes" name="hostnotes" rows="5" cols="33">The host notes go in here....</textarea>
+      </p>
+    </div>
+    <button type="submit">Add</button>
+  </fieldset>
+  <fieldset>
+    <legend>Relay Tool</legend>
+    <div>
+      <p>
+      <label for="gateway">Gateway</label>
+      <input type="text" id="gateway" name="gateway">
+      <label for="relaysite">Relay or Site</label>
+      <input type="text" name="relaysite" id="relaysite">
+      <label for="parentnode">Parent Node</label>
+      <input type="text" id="parentnode" name="parentnode">
+      <label for="sitelocal">Site Local</label>
+      <input type="text" id="sitelocal" name="sitelocal">
+      <label for="gwrtr">Gateway Router</label><input type="text" id="gwrtr" name="gwrtr">
+      </p>
+    </div>
+    <div>
+      <p>
+      <label for="hostnotes">Host Notes:</label>
+      <textarea id="hostnotes" name="hostnotes" rows="5" cols="33">The host notes go in here....</textarea>
+      </p>
+      <button type="submit">Add</button>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>Questions</legend>
+    <label for="question1">Need a public IP?</label>
+    <input type="checkbox">
+    <label for="question2">Have your own router / LAN?</label>
+    <input type="checkbox">
+    <label for="question3">Does anyone manages you LAN?</label>
+    <input type="checkbox">
+    <label for="question4">Are you happy with your wifi?</label>
+    <input type="checkbox">
+  </fieldset>
+  <p class="buttons">
+  <? echo (
+      return join("\n",
+        button( 'Back', { href=>'/main/order/information.html?order_id='.$variable{Order}->id(), class=>'Back' } ),
+        ( $session{user_type} eq 'A' ? button( 'Close', { onclick=>q`f1.btnFunction.value='Close';f1.submit();`, text=>'Close', class=>'Close' } ) : () ),
+        button( 'Complete', { onclick=>'f1.submit();', text=>'Complete Order', class=>'Complete' } ),
+      );
+    ) ?>
+
+  </p>
+</form>

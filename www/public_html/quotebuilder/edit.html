@@ -1,0 +1,1472 @@
+
+<section>
+  <div class="border-grey bg-white p-3 tab-content">
+    <!--ENTER LEAD FORM-->
+    <form id="quotebuilder-form">
+      <fieldset class="mt-3" id="customer_information">
+        <legend>Customer Information:</legend>
+        <div class="row g-2">
+          <div class="col">
+            <!--Name-->
+            <div class="form-floating mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="floatingFirstName"
+                placeholder="Sam"
+              />
+              <label for="floatingFirstName"
+                >First Name<abbr title="required" aria-label="required"
+                  >*</abbr
+                ></label
+              >
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-floating mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="floatingLastName"
+                placeholder="Smith"
+              />
+              <label for="floatingLastName"
+                >Last Name<abbr title="required" aria-label="required"
+                  >*</abbr
+                ></label
+              >
+            </div>
+          </div>
+        </div>
+        
+        <!--Service Address (defaults as billing unless otherwise noted)-->
+        <div class="form-floating mb-3">
+          <input
+            type="text"
+            class="form-control"
+            id="floatingAddress"
+            placeholder="Service Address"
+          />
+          <label for="floatingAddress"
+            >Service Address<abbr title="required" aria-label="required"
+              >*</abbr
+            ></label
+          >
+        </div>
+        <div class="row g-3">
+          <div class="col">
+            <div class="form-floating mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="floatingCity"
+                placeholder="City"
+              />
+              <label for="floatingCity">City</label>
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-floating mb-3">
+              <label
+                for="inputState"
+                class="form-label"
+                style="padding-top: 10px"
+                >State</label
+              >
+              <select id="inputState" class="form-select">
+                <option selected>CA</option>
+                <option>...</option>
+              </select>
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-floating mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="floatingZip"
+                placeholder="Zip"
+              />
+              <label for="floatingZip">Zip</label>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p>
+            <label for="same_as_billing"
+              ><strong class="pe-2">Same as billing?</strong></label
+            ><input
+              type="checkbox"
+              name="same_as_billing"
+              checked
+              onchange="showBillingFields(this)"
+            />
+          </p>
+        </div>
+        <div id="billing" style="display: none">
+          <p>
+            <label for="billing_address"
+              >Address:
+              <abbr title="required" aria-label="required">*</abbr></label
+            >
+            <input
+              class="form-control"
+              id="billing_address"
+              type="text"
+              name="billing_address"
+            />
+          </p>
+          <p>
+            <label for="city"
+              >City:
+              <abbr title="required" aria-label="required">*</abbr></label
+            >
+            <input
+              class="form-control"
+              id="city"
+              type="text"
+              name="city"
+            />
+            <label for="state"
+              >State:
+              <abbr title="required" aria-label="required">*</abbr></label>
+            <input
+              class="form-control"
+              id="state"
+              type="text"
+              name="state"
+            />
+            <label for="zip"
+              >Zip:
+              <abbr title="required" aria-label="required">*</abbr></label
+            >
+            <input class="form-control" id="zip" type="text" name="zip" />
+          </p>
+        </div>
+
+        <!--Phone Number (more than one allowed)-->
+        <div class="form-floating mb-3">
+          <div class="input-group mb-3">
+            <select
+              class="form-select"
+              style="max-width: 100px"
+              id="inputGroupCallType"
+            >
+              <option value="1" selected>Home</option>
+              <option value="2">Cell</option>
+              <option value="3">Work</option>
+            </select>
+            <input
+              type="text"
+              class="form-control"
+              id="inputPhoneNumber"
+              aria-label="Text input with dropdown button"
+            />
+            <button class="btn btn-outline-secondary" type="button">
+              Add
+            </button>
+          </div>
+
+          <div id="showPhoneNumbers">
+            <h2>Added Phone Numbers</h2>
+            <table class="table table-striped">
+              <tr>
+                <th scope="col">Type</th>
+                <th scope="col">Number</th>
+              </tr>
+              <tr>
+                <td>Cell</td>
+                <td>707-555-1212</td>
+              </tr>
+              <tr>
+                <td>Home</td>
+                <td>707-666-1212</td>
+              </tr>
+              <tr>
+                <td>Work</td>
+                <td>707-777-1212</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <!--Email-->
+        <div class="form-floating mb-3">
+          <input
+            type="email"
+            class="form-control"
+            id="floatingEmail"
+            placeholder="Email Address"
+          />
+          <label for="floatingEmail"
+            >Email Address<abbr title="required" aria-label="required"
+              >*</abbr
+            ></label
+          >
+        </div>
+        <!--Notes-->
+        <div class="mb-3">
+          <div class="form-floating mb-3">
+            <textarea
+              class="form-control"
+              placeholder="Leave a note here"
+              id="floatingTextarea2"
+              style="height: 100px"
+            ></textarea>
+            <label for="floatingTextarea2">Notes</label>
+          </div>
+          <div class="form-floating">
+            <textarea
+              class="form-control"
+              placeholder="Neighbor/Website/Previous Service"
+              id="hearAboutUsTextarea"
+              style="height: 100px"
+            ></textarea>
+            <label for="hearAboutUsTextarea"
+              >How did you hear about us?</label
+            >
+          </div>
+        </div>
+      </fieldset>
+      <!--Customer Availability Scheduling-->
+      <fieldset class="mt-3" id="customer_availability">
+        <!--best times customer can be reached-->
+        <legend>Customer Availability:</legend>
+        <div class="row">
+          <div class="col">
+            <table class="table table-bordered ">
+              <tr>
+                <th>MON</th>
+                <th>TUE</th>
+                <th>WED</th>
+                <th>THU</th>
+                <th>FRI</th>
+                <th>SAT</th>
+              </tr>
+              <tr>
+                <td class="p-2">    
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                      <input class="form-check-input mt-0" type="checkbox" value="" aria-label="Checkbox for Morning availability input"> <span class="ps-1"> 09:00am-12:00pm</span>
+                    </div> 
+                  </div>       
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                      <input class="form-check-input mt-0" type="checkbox" value="" aria-label="Checkbox for Afternoon availability input"> <span class="ps-1"> 01:00pm-04:00pm</span>
+                    </div> 
+                  </div>                
+                </td>
+                <td>                      
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                      <input class="form-check-input mt-0" type="checkbox" value="" aria-label="Checkbox for Morning availability input"> <span class="ps-1"> 09:00am-12:00pm</span>
+                    </div> 
+                  </div>       
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                      <input class="form-check-input mt-0" type="checkbox" value="" aria-label="Checkbox for Afternoon availability input"> <span class="ps-1"> 01:00pm-04:00pm</span>
+                    </div> 
+                  </div>        
+
+                </td>
+                <td>                      
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                      <input class="form-check-input mt-0" type="checkbox" value="" aria-label="Checkbox for Morning availability input"> <span class="ps-1"> 09:00am-12:00pm</span>
+                    </div> 
+                  </div>       
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                      <input class="form-check-input mt-0" type="checkbox" value="" aria-label="Checkbox for Afternoon availability input"> <span class="ps-1"> 01:00pm-04:00pm</span>
+                    </div> 
+                  </div>        
+                </td>
+                <td>                      
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                      <input class="form-check-input mt-0" type="checkbox" value="" aria-label="Checkbox for Morning availability input"> <span class="ps-1"> 09:00am-12:00pm</span>
+                    </div> 
+                  </div>       
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                      <input class="form-check-input mt-0" type="checkbox" value="" aria-label="Checkbox for Afternoon availability input"> <span class="ps-1"> 01:00pm-04:00pm</span>
+                    </div> 
+                  </div>        
+
+                </td>
+                <td>                      
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                      <input class="form-check-input mt-0" type="checkbox" value="" aria-label="Checkbox for Morning availability input"> <span class="ps-1"> 09:00am-12:00pm</span>
+                    </div> 
+                  </div>       
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                      <input class="form-check-input mt-0" type="checkbox" value="" aria-label="Checkbox for Afternoon availability input"> <span class="ps-1"> 01:00pm-04:00pm</span>
+                    </div> 
+                  </div>        
+                </td>
+                <td>                      
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                      <input class="form-check-input mt-0" type="checkbox" value="" aria-label="Checkbox for Morning availability input"> <span class="ps-1"> 09:00am-12:00pm</span>
+                    </div> 
+                  </div>       
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                      <input class="form-check-input mt-0" type="checkbox" value="" aria-label="Checkbox for Afternoon availability input"> <span class="ps-1"> 01:00pm-04:00pm</span>
+                    </div> 
+                  </div>        
+                </td>
+              </tr>
+            </table>
+          
+
+          </div>
+          
+        </div>
+
+      </fieldset>
+      <!--Service Type-->
+      <fieldset class="mt-3" id="service_type">
+        <div class="row align-items-start">
+          <legend>Service Type:</legend>
+          <div class="col">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="flexCheckChecked"
+                checked
+              />
+              <label class="form-check-label" for="flexCheckChecked">
+                Internet
+              </label>
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="flexCheck"
+              />
+              <label class="form-check-label" for="flexCheck">
+                VOIP
+              </label>
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="flexCheck"
+              />
+              <label class="form-check-label" for="flexCheck">
+                Cameras
+              </label>
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-check pb-3">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="flexCheck"
+              />
+              <label class="form-check-label" for="flexCheck">
+                Custom
+              </label>
+            </div>
+          </div>
+        </div>
+                      <!--SUB TOTAL -->
+
+          <div class="row g-1">
+            <div class="col-4 p-3 fw-bold">Service Plan</div>
+            <div class="col p-2">
+              <select class="form-select" aria-label="Plan Selection">
+                <option selected>Plan Selection</option>
+                <option value="1">One</option>
+                <option value="2">Two</option>
+                <option value="3">Three</option>
+              </select>
+            </div>
+            <div class="col-5 pt-3">$000.00</div>
+          </div>
+
+          <div class="row g-1">
+            <div class="col-4 p-3 fw-bold">Installation</div>
+            <div class="col p-2 input-group">
+              <span class="input-group-text">$</span>
+              <input
+                type="text"
+                class="form-control"
+                aria-label="Install Amount"
+                placeholder="299.99"
+              />
+            </div>
+            <div class="col-5 pt-3">$000.00</div>
+          </div>
+
+       <!-- REMOVING ADDTIONAL LABOR AFTER ADDING ADDITIONAL EQUIP SECTION
+            <div class="row g-1">
+            <div class="col-4 p-3 fw-bold">Additional Labor</div>
+            <div class="col p-2 input-group">
+              <span class="input-group-text">$</span>
+              <input
+                type="text"
+                class="form-control"
+                aria-label="Install Amount"
+                placeholder="299.99"
+              />
+            </div>
+            <div class="col-5 pt-3">$000.00</div>
+          </div>
+          -->
+
+          <div class="row g-1">
+            <div class="col-4 p-3 fw-bold border-top">Subtotal:</div>
+            <div class="col p-2 input-group border-top"></div>
+            <div class="col-5 pt-3 border-top">$000.00</div>
+          </div>
+
+      </fieldset>
+
+      <!-- VSS-Relay Probability-->
+      <fieldset class="mt-3" id="VSS">
+        <div class="form-floating mb-3">
+          <!--List Potential Builds for new customer-->
+          <div>
+            <legend>Virtual Site Survey:</legend>
+            <table class="table table-striped">
+              <tr>
+                <th></th>
+                <th scope="col">Gateway</th>
+                <th scope="col">Relay</th>
+                <th scope="col">Parent None</th>
+                <th>Likely</th>
+                <th>Edit</th>
+              </tr>
+              <tr>
+                <td class="" width="10px">  
+                  <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1">
+                  <label class="form-check-label" for="flexRadioDefault1"></label>
+                </td>
+                <td>Gateway One</td>
+                <td>Relay One</td>
+                <td>Parent Node One</td>
+                <td>100%</td>
+                <td>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    class="bi bi-pencil"
+                    viewBox="0 0 16 16"
+                  >
+                    <path
+                      d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"
+                    />
+                  </svg>
+                </td>
+              </tr>
+              <tr>
+                <td class="" width="10px">  
+                  <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1">
+                  <label class="form-check-label" for="flexRadioDefault1"></label>
+                </td>
+                <td>Gateway Two</td>
+                <td>Relay Two</td>
+                <td>Parent Node Two</td>
+                <td>50%</td>
+                <td>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    class="bi bi-pencil"
+                    viewBox="0 0 16 16"
+                  >
+                    <path
+                      d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"
+                    />
+                  </svg>
+                </td>
+              </tr>
+              <tr>
+                <td class="" width="10px">  
+                  <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1">
+                  <label class="form-check-label" for="flexRadioDefault1"></label>
+                </td>
+                <td>Gateway Three</td>
+                <td>Relay Three</td>
+                <td>Parent Node Three</td>
+                <td>50%</td>
+                <td>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    class="bi bi-pencil"
+                    viewBox="0 0 16 16"
+                  >
+                    <path
+                      d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"
+                    />
+                  </svg>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="input-group mb-3">
+            <input
+              type="text"
+              class="form-control form-control-lg"
+              placeholder="Gateway"
+            />
+            <button type="submit" class="input-group-text btn-success">
+              <i class="bi bi-search me-2"></i>
+            </button>
+
+            <input
+              type="text"
+              class="form-control form-control-lg"
+              placeholder="Relay"
+            />
+            <button type="submit" class="input-group-text btn-success">
+              <i class="bi bi-search me-2"></i>
+            </button>
+
+            <input
+              type="text"
+              class="form-control form-control-lg"
+              placeholder="Parent"
+            />
+
+            <button type="submit" class="input-group-text btn-success">
+              <i class="bi bi-search me-2"></i>
+            </button>
+            <input
+            type="text"
+            class="form-control form-control-lg"
+            placeholder="Likely"
+          />
+
+            <button class="btn btn-outline-secondary" type="button">
+              Add
+            </button>
+          </div>
+        </div>
+      </fieldset>
+      <!--Add host tool - CPE Config-->
+      <fieldset class="mt-3" id="CPE">
+        <legend>Add Host Tool:</legend>
+        <div class="row">
+          <!--ROW ONE-->
+          <!--rbid field-->
+          <div class="col-3 g-1">
+            <div class="form-floating m-0 p-0 ">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="floatingRBID"
+                      placeholder="RBID"
+                    />
+                    <label for="floatingRBID">RBID</label>          
+            </div>  
+          </div>
+
+                            <!--ip address field-->
+                            <div class="col-3 g-1">
+                              <div class="form-floating m-0 p-0 ">
+                                      <input
+                                        type="text"
+                                        class="form-control"
+                                        id="floatingIP"
+                                        placeholder="IP Address"
+                                      />
+                                      <label for="floatingIP">IP Address</label>          
+                              </div>  
+                            </div>
+
+          <!--Host Id-->
+          <div class="col-3 g-1">
+              <div class="form-floating m-0 p-0 ">   
+                <input
+                type="text"
+                class="form-control"
+                id="floatingHostId"
+                placeholder="Host ID"
+              />
+              <label for="floatingHostId">Host ID</label> 
+              </div>
+            </div>
+
+          <!--Host Name-->
+          <div class="col-3 g-1">
+            <div class="form-floating m-0 p-0 ">   
+              <input
+              type="text"
+              class="form-control"
+              id="floatingHostName"
+              placeholder="Host Name"
+            />
+            <label for="floatingHostName">Host Name</label> 
+            </div>
+          </div>
+
+
+
+          
+
+        </div>
+
+        <div class="row">
+          <!--ROW TWO-->
+
+                            <!--Equipment Class-->
+                            <div class="col-3 g-1">
+                              <div class="form-floating m-0 p-0 ">   
+                                <select class="form-select" id="floatingSelect" aria-label="Select equipment class">
+                                  <option selected>CPE</option>
+                                  <option value="1">One</option>
+                                  <option value="2">Two</option>
+                                  <option value="3">Three</option>
+                                </select>
+                                <label for="floatingSelect">Equipment Class</label>
+                              </div>
+                            </div>
+
+          <!--Gateway-->
+          <div class="col-3 g-1">
+            <div class="form-floating m-0 p-0 ">   
+              <select class="form-select" id="floatingSelectGateway" aria-label="Select equipment class">
+                <option selected>Gateway</option>
+                <option value="1">One</option>
+                <option value="2">Two</option>
+                <option value="3">Three</option>
+              </select>
+              <label for="floatingSelectGateway">Gateway</label>
+            </div>
+          </div>
+
+
+                      <!--Relay-->
+                      <div class="col-3 g-1">
+                        <div class="form-floating m-0 p-0 ">   
+                          <select class="form-select" id="floatingSelectRelay" aria-label="Select equipment class">
+                            <option selected>Relay</option>
+                            <option value="1">One</option>
+                            <option value="2">Two</option>
+                            <option value="3">Three</option>
+                          </select>
+                          <label for="floatingSelectRelay">Relay</label>
+                        </div>
+                      </div>
+
+          <!--Parent Node-->
+          <div class="col-3 g-1">
+            <div class="form-floating m-0 p-0 ">   
+              <select class="form-select" id="floatingSelectParent" aria-label="Select equipment class">
+                <option selected>Parent</option>
+                <option value="1">One</option>
+                <option value="2">Two</option>
+                <option value="3">Three</option>
+              </select>
+              <label for="floatingSelectParent">Parent</label>
+            </div>
+          </div>
+
+          
+
+        </div>
+
+        <div class="row">
+          <!--ROW THREE-->
+
+
+          <!--Model-->
+          <div class="col-3 g-1">
+            <div class="form-floating m-0 p-0 ">   
+              <select class="form-select" id="floatingSelectModel" aria-label="Select Model">
+                <option selected>Model</option>
+                <option value="1">One</option>
+                <option value="2">Two</option>
+                <option value="3">Three</option>
+              </select>
+              <label for="floatingSelectModel">Model</label>
+            </div>
+          </div>
+
+          <!--Make-->
+          <div class="col-3 g-1">
+            <div class="form-floating m-0 p-0 ">   
+              <select class="form-select" id="floatingSelectMake" aria-label="Select Make">
+                <option selected>Make</option>
+                <option value="1">One</option>
+                <option value="2">Two</option>
+                <option value="3">Three</option>
+              </select>
+              <label for="floatingSelectModel">Make</label>
+            </div>
+          </div>
+
+          <!--Net Mode-->
+          <div class="col-3 g-1">
+            <div class="form-floating m-0 p-0 ">   
+              <input
+              type="text"
+              class="form-control"
+              id="floatingNetMode"
+              placeholder="Net Mode"
+            />
+            <label for="floatingNetMode">Net Mode</label> 
+            </div>
+          </div>
+
+                            <!--Equip Role-->
+                            <div class="col-3 g-1">
+                              <div class="form-floating m-0 p-0 ">   
+                                <select class="form-select" id="floatingSelectEquipRole" aria-label="Select Equipment Role">
+                                  <option selected>Select</option>
+                                  <option value="2">AP</option>
+                                  <option value="1">ST</option>
+                                </select>
+                                <label for="floatingEquipRole">Equipment Role</label>
+                              </div>
+                            </div>
+
+          
+
+        </div>
+        <div class="row">
+          <!--ROW FOUR-->
+            <!--Monitoring interface-->
+            <div class="col-3 g-1">
+              <div class="form-floating m-0 p-0 ">   
+                <select class="form-select" id="floatingSelectInterface" aria-label="Select Monitoring Interface">
+                  <option selected>ATH0</option>
+                  <option value="1">ETH</option>
+                </select>
+                <label for="floatingSelectInterface">Monitoring Interface</label>
+              </div>
+            </div>
+
+                                              <!--PoE_PT-->
+                                              <div class="col-3 g-1">
+                                                <div class="form-floating m-0 p-0 ">   
+                                                  <select class="form-select" id="floatingSelectPoE_PT" aria-label="Select PoE_PT">
+                                                    <option selected>Tx</option>
+                                                    <option value="2">Rx</option>
+
+                                                  </select>
+                                                  <label for="floatingPoE_PT">PoE_PT</label>
+                                                </div>
+                                              </div>
+            <!--ICONS-->
+            <div class="col-3 g-1">
+              <div class="form-floating m-0 p-0 ">   
+                <select class="form-select" id="floatingSelectIcon" aria-label="Select Icon">
+                  <option selected>one.png</option>
+                  <option value="1">two.png</option>
+                </select>
+                <label for="floatingSelectIcon">Icon</label>
+              </div>
+            </div> 
+
+                                              <!--HTM-->
+                                              <div class="col-3 g-1">
+                                                <div class="form-floating m-0 p-0 ">   
+                                                  <select class="form-select" id="floatingSelectHTM" aria-label="Select HTM">
+                                                    <option selected>HTM</option>
+                                                    <option value="2">HTM</option>
+
+                                                  </select>
+                                                  <label for="floatingHTM">HTM</label>
+                                                </div>
+                                              </div>                  
+
+
+          </div>
+
+
+      </fieldset>
+      <!-- Customer questions (add sort value/functionality later) -->
+      <fieldset class="mt-3" id="needed_info">
+        
+        <div class="row">
+          <div class="col">
+            <legend>Customer LAN/Network Discovery and Qualification:</legend>
+            <table class="table table-striped">
+              <tr>
+                <th width="10px">#</th>
+                <th scope="col">Questions & Answers</th>
+                <th scope="col">Action</th>
+              </tr>
+              <tr>
+                <td>1.</td>
+               <!-- Removed Yes/No radio buttons
+                 <td class="">  
+                  <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" selected>
+                  <label class="form-check-label" for="flexRadioDefault1"></label>
+
+                  <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2">
+                  <label class="form-check-label" for="flexRadioDefault2"></label>
+                  
+                </td>
+                -->
+                <td>Do you have your own router/network? <br>
+                  <textarea name="question-notes"  id="question-notes" cols="75" rows="10" style="display: none"></textarea>
+                </td>
+                <td>                    
+                  <button class="btn btn-outline-secondary" id="question-notes-btn" type="button">
+                    Answers
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>2.</td>
+                <td>Are you happy with your current network?
+                  <textarea name="question-notes"  id="question-notes" cols="75" rows="10" style="display: none"></textarea>
+                </td>
+                <td>                    
+                  <button class="btn btn-outline-secondary" id="question-notes-btn" type="button">
+                    Answers
+                  </button>
+                </td>
+              </tr>
+
+              <tr>
+                <td>2.</td>
+                <td>Are you happy with your current network?
+                  <textarea name="question-notes"  id="question-notes" cols="75" rows="10" style="display: none"></textarea>
+                </td>
+                <td>                    
+                  <button class="btn btn-outline-secondary" id="question-notes-btn" type="button">
+                    Answers
+                  </button>
+                </td>
+              </tr>
+             
+            </table>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <div class="form-floating mb-3 input-group">
+              <input
+                type="text"
+                class="form-control"
+                id="floatingQuestion"
+                placeholder="Question"
+              />
+              <label for="floatingQuestion">Question?</label>
+              <button class="btn btn-outline-secondary" type="button">
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+      <!--Additional Contacts-->
+      <fieldset class="mt-3" id="additional_contacts">
+        <div class="row">
+          <legend>Additional Contacts:</legend>
+        <!--ROW ONE-->
+        <!--Contact's Type field-->
+          <div class="col-3 g-1">
+            
+            <div class="form-floating m-0 p-0 ">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="floatingType"
+                      placeholder="Type"
+                    />
+                    <label for="floatingType">Type</label>          
+            </div>  
+          </div>
+
+                            <!--Contact's First Name field-->
+                            <div class="col-3 g-1">
+                              <div class="form-floating m-0 p-0 ">
+                                      <input
+                                        type="text"
+                                        class="form-control"
+                                        id="floatingContactFirstName"
+                                        placeholder="First Name"
+                                      />
+                                      <label for="floatingContactFirstName">First Name</label>          
+                              </div>  
+                            </div>
+
+          <!-- Contact's Last Name-->
+          <div class="col-3 g-1">
+              <div class="form-floating m-0 p-0 ">   
+                <input
+                type="text"
+                class="form-control"
+                id="floatingContactLastName"
+                placeholder="Last Name"
+              />
+              <label for="floatingContactLastName">Last Name</label> 
+              </div>
+            </div>
+
+          <!--Phone Number-->
+          <div class="col-3 g-1">
+            <div class="form-floating m-0 p-0 input-group">   
+              <input
+              type="text"
+              class="form-control"
+              id="floatingPhoneNumber"
+              placeholder="Phone Number"
+            />
+            <label for="floatingPhoneNumber">Phone Number</label> 
+            <button class="btn btn-outline-secondary" type="button">
+              Add
+            </button>
+          </div>
+          </div>
+
+
+
+          
+
+
+        </div>
+
+      </fieldset>
+
+
+      <!--Additional Equipment-->
+      <fieldset class="mt-3" id="additional_equipment">
+        <legend>Additional Equipment & Services:</legend>
+        <!--Equipment Added Table-->
+        <div class="row">
+          <div class="col">
+            <table class="table table-light table-bordered">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col" style="min-width:150px;">Equipment/Service</th>
+                  <th scope="col" style="width: 20px;">Euclid</th>
+                  <th scope="col">Location</th>
+                  <th scope="col">Hours</th>
+                  <th scope="col">Cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">1</th>
+                  <td>Unifi 8 port POE SW</td>
+                  <td><i class="bi bi-hdd-network"></i></td>
+                  <td>Guesthouse</td>
+                  <td>1-2</td>
+                  <td>XXX.XX</td>
+                </tr>
+                <tr class="border-0">
+                  <th scope="row"></th>
+                  <td colspan="4">Notes...</td>
+                </tr>
+                <tr>
+                  <th scope="row">2</th>
+                  <td>Unifi 8 port POE SW</td>
+                  <td><a class="euclid" href=""><i class="bi bi-hdd-network-fill" ></i></a></td>
+                  <td>Guesthouse</td>
+                  <td>1-2</td>
+                  <td>XXX.XX</td>
+                </tr>
+                <!--HIDDEN EUCLID FIELDS-->
+                <tr class="euclid-fields" style="display: none;">
+                  <td colspan="6">
+                    <fieldset class="mt-3" id="CPE">
+                      <div class="row">
+                        <!--ROW ONE-->
+                        <!--rbid field-->
+                        <div class="col-3 g-1">
+                          <div class="form-floating m-0 p-0 ">
+                                  <input
+                                    type="text"
+                                    class="form-control"
+                                    id="floatingRBID"
+                                    placeholder="RBID"
+                                  />
+                                  <label for="floatingRBID">RBID</label>          
+                          </div>  
+                        </div>
+      
+                                          <!--ip address field-->
+                                          <div class="col-3 g-1">
+                                            <div class="form-floating m-0 p-0 ">
+                                                    <input
+                                                      type="text"
+                                                      class="form-control"
+                                                      id="floatingIP"
+                                                      placeholder="IP Address"
+                                                    />
+                                                    <label for="floatingIP">IP Address</label>          
+                                            </div>  
+                                          </div>
+      
+                        <!--Host Id-->
+                        <div class="col-3 g-1">
+                            <div class="form-floating m-0 p-0 ">   
+                              <input
+                              type="text"
+                              class="form-control"
+                              id="floatingHostId"
+                              placeholder="Host ID"
+                            />
+                            <label for="floatingHostId">Host ID</label> 
+                            </div>
+                          </div>
+      
+                        <!--Host Name-->
+                        <div class="col-3 g-1">
+                          <div class="form-floating m-0 p-0 ">   
+                            <input
+                            type="text"
+                            class="form-control"
+                            id="floatingHostName"
+                            placeholder="Host Name"
+                          />
+                          <label for="floatingHostName">Host Name</label> 
+                          </div>
+                        </div>
+      
+      
+      
+                        
+      
+                      </div>
+      
+                      <div class="row">
+                        <!--ROW TWO-->
+      
+                                          <!--Equipment Class-->
+                                          <div class="col-3 g-1">
+                                            <div class="form-floating m-0 p-0 ">   
+                                              <select class="form-select" id="floatingSelect" aria-label="Select equipment class">
+                                                <option selected>CPE</option>
+                                                <option value="1">One</option>
+                                                <option value="2">Two</option>
+                                                <option value="3">Three</option>
+                                              </select>
+                                              <label for="floatingSelect">Equipment Class</label>
+                                            </div>
+                                          </div>
+      
+                        <!--Gateway-->
+                        <div class="col-3 g-1">
+                          <div class="form-floating m-0 p-0 ">   
+                            <select class="form-select" id="floatingSelectGateway" aria-label="Select equipment class">
+                              <option selected>Gateway</option>
+                              <option value="1">One</option>
+                              <option value="2">Two</option>
+                              <option value="3">Three</option>
+                            </select>
+                            <label for="floatingSelectGateway">Gateway</label>
+                          </div>
+                        </div>
+      
+      
+                                    <!--Relay-->
+                                    <div class="col-3 g-1">
+                                      <div class="form-floating m-0 p-0 ">   
+                                        <select class="form-select" id="floatingSelectRelay" aria-label="Select equipment class">
+                                          <option selected>Relay</option>
+                                          <option value="1">One</option>
+                                          <option value="2">Two</option>
+                                          <option value="3">Three</option>
+                                        </select>
+                                        <label for="floatingSelectRelay">Relay</label>
+                                      </div>
+                                    </div>
+      
+                        <!--Parent Node-->
+                        <div class="col-3 g-1">
+                          <div class="form-floating m-0 p-0 ">   
+                            <select class="form-select" id="floatingSelectParent" aria-label="Select equipment class">
+                              <option selected>Parent</option>
+                              <option value="1">One</option>
+                              <option value="2">Two</option>
+                              <option value="3">Three</option>
+                            </select>
+                            <label for="floatingSelectParent">Parent</label>
+                          </div>
+                        </div>
+      
+                        
+      
+                      </div>
+      
+                      <div class="row">
+                        <!--ROW THREE-->
+      
+      
+                        <!--Model-->
+                        <div class="col-3 g-1">
+                          <div class="form-floating m-0 p-0 ">   
+                            <select class="form-select" id="floatingSelectModel" aria-label="Select Model">
+                              <option selected>Model</option>
+                              <option value="1">One</option>
+                              <option value="2">Two</option>
+                              <option value="3">Three</option>
+                            </select>
+                            <label for="floatingSelectModel">Model</label>
+                          </div>
+                        </div>
+      
+                        <!--Make-->
+                        <div class="col-3 g-1">
+                          <div class="form-floating m-0 p-0 ">   
+                            <select class="form-select" id="floatingSelectMake" aria-label="Select Make">
+                              <option selected>Make</option>
+                              <option value="1">One</option>
+                              <option value="2">Two</option>
+                              <option value="3">Three</option>
+                            </select>
+                            <label for="floatingSelectModel">Make</label>
+                          </div>
+                        </div>
+      
+                        <!--Net Mode-->
+                        <div class="col-3 g-1">
+                          <div class="form-floating m-0 p-0 ">   
+                            <input
+                            type="text"
+                            class="form-control"
+                            id="floatingNetMode"
+                            placeholder="Net Mode"
+                          />
+                          <label for="floatingNetMode">Net Mode</label> 
+                          </div>
+                        </div>
+      
+                                          <!--Equip Role-->
+                                          <div class="col-3 g-1">
+                                            <div class="form-floating m-0 p-0 ">   
+                                              <select class="form-select" id="floatingSelectEquipRole" aria-label="Select Equipment Role">
+                                                <option selected>Select</option>
+                                                <option value="2">AP</option>
+                                                <option value="1">ST</option>
+                                              </select>
+                                              <label for="floatingEquipRole">Equipment Role</label>
+                                            </div>
+                                          </div>
+      
+                        
+      
+                      </div>
+                      <div class="row">
+                        <!--ROW FOUR-->
+                          <!--Monitoring interface-->
+                          <div class="col-3 g-1">
+                            <div class="form-floating m-0 p-0 ">   
+                              <select class="form-select" id="floatingSelectInterface" aria-label="Select Monitoring Interface">
+                                <option selected>ATH0</option>
+                                <option value="1">ETH</option>
+                              </select>
+                              <label for="floatingSelectInterface">Monitoring Interface</label>
+                            </div>
+                          </div>
+      
+                                                            <!--PoE_PT-->
+                                                            <div class="col-3 g-1">
+                                                              <div class="form-floating m-0 p-0 ">   
+                                                                <select class="form-select" id="floatingSelectPoE_PT" aria-label="Select PoE_PT">
+                                                                  <option selected>Tx</option>
+                                                                  <option value="2">Rx</option>
+      
+                                                                </select>
+                                                                <label for="floatingPoE_PT">PoE_PT</label>
+                                                              </div>
+                                                            </div>
+                          <!--ICONS-->
+                          <div class="col-3 g-1">
+                            <div class="form-floating m-0 p-0 ">   
+                              <select class="form-select" id="floatingSelectIcon" aria-label="Select Icon">
+                                <option selected>one.png</option>
+                                <option value="1">two.png</option>
+                              </select>
+                              <label for="floatingSelectIcon">Icon</label>
+                            </div>
+                          </div> 
+      
+                                                            <!--HTM-->
+                                                            <div class="col-3 g-1">
+                                                              <div class="form-floating m-0 p-0 ">   
+                                                                <select class="form-select" id="floatingSelectHTM" aria-label="Select HTM">
+                                                                  <option selected>HTM</option>
+                                                                  <option value="2">HTM</option>
+      
+                                                                </select>
+                                                                <label for="floatingHTM">HTM</label>
+                                                              </div>
+                                                            </div>                  
+      
+      
+                        </div>
+      
+      
+                    </fieldset>
+
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">3</th>
+                  <td>Unifi 8 port POE SW</td>
+                  <td><i class="bi bi-hdd-network"></i></td>
+                  <td>Guesthouse</td>
+                  <td>1-2</td>
+                  <td>XXX.XX</td>
+                </tr>
+                <tr>
+                  <th scope="row">4</th>
+                  <td>LAN Troubleshoot</td>
+                  <td><i class="bi bi-hdd-network"></i></td>
+                  <td>Guesthouse/Pool</td>
+                  <td>1-2</td>
+                  <td>XXX.XX</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">5</th>
+                  <td>LAN Addition</td>
+                  <td><i class="bi bi-hdd-network"></i></td>
+                  <td>Pool</td>
+                  <td>3-5</td>
+                  <td>XXX.XX</td>
+                </tr>
+                <tr class="border-0">
+                  <th scope="row"></th>
+                  <td colspan="4">Notes...<br>Pool needs better WiFi.</td>
+                </tr>
+                <tr>
+                  <td colspan="3"> </td>
+                  <th scope="subtotal">Subtotal</td>
+                  <th scope="subtotal">XXX.XX</th>
+                </tr>
+                <tr>
+                  <td></td>
+                  <th scope="overall">Overall Labor</th>
+                  <td></td>
+                  <td>hours</td>
+                  <td>XXX.XX</td>
+                </tr>
+                <tr>
+                  <td colspan="3"> </td>
+                  <th scope="subtotal">Total</td>
+                  <th scope="subtotal">XXX.XX</th>
+                </tr>
+                 <!--Add Equipment FIELDS Section-->
+                <tr>
+                  <td colspan="6">
+                                    <div class="row pt-3">
+                                    <div class="col-auto fw-bold mx-auto">
+
+                                        <div class="input-group mb-0">
+                                          <input type="text" class="form-control" placeholder="Equipment/Service" aria-label="Equipment/Service">
+                                          <input type="text" class="form-control" placeholder="Location" aria-label="Location">
+                                          <span class="input-group-text" style="padding-left:100px">     </span>
+                                          <input type="text" class="form-control" placeholder="Cost" aria-label="Cost">
+                                        </div>
+                                        <div class="form-floating input-group m-0 p-0">
+                                          <input
+                                            type="text"
+                                            class="form-control"
+                                            id="floatingNotes"
+                                            placeholder="Notes"
+                                            style="margin-left: 30px;"
+                                          />
+                                          <label for="floatingQuestion" style="margin-left: 30px;">Notes...</label>
+                      
+                                        </div>
+                                        <div class="input-group mb-3">
+                                          <input type="text" class="form-control" placeholder="Additional Labor" aria-label="Additional Labor" style="margin-left: 30px;">
+                              
+                                          <span class="input-group-text" style="padding-left:300px">     </span>
+                                          <input type="text" class="form-control" placeholder="Hours" aria-label="Hours" style="max-width:100px">
+                                          <input type="text" class="form-control" placeholder="Cost" aria-label="Cost">
+                                        </div>
+
+                                    </div>
+                                    <!--Equipment Added Button-->
+                                    <div class="row">
+                                      <div class="col text-end">
+                                        <button class="btn btn-outline-secondary bg-white" style="margin-right: 100px;" type="button">
+                                          Add to Quote
+                                        </button>
+                                      </div>
+                                    </div>
+
+
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+
+
+        <div class="row">
+<hr>
+          <div class="col input-group form-check-inline">
+            <div class="col-auto fw-bold">Monitoring $10/mo:</div>
+            <div class="form-check form-check-inline ps-5 mt-1">
+              
+              <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1" />
+              <label class="form-check-label" for="inlineRadio1">Yes</label>
+            </div>
+            
+            <div class="form-check form-check-inline mt-1">
+              <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option2" />
+              <label class="form-check-label" for="inlineRadio2">No</label>
+            </div>
+          </div>
+        </div>     
+      </fieldset>
+      <!--Documents-->
+      <fieldset class="mt-3" id="documents">
+        <legend>Documents:</legend>
+        <div class="row">
+          <div class="col-auto">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="flexCheck"
+              />
+              <label class="form-check-label" for="flexCheck">
+                Subscriber Agreement <i class="bi bi-file-pdf"></i>
+              </label>
+            </div>
+          </div>
+
+          <div class="col-auto">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="flexCheck"
+              />
+              <label class="form-check-label" for="flexCheck">
+                Acceptable Use Policy <i class="bi bi-file-pdf"></i>
+              </label>
+            </div>
+          </div>
+
+          <div class="col-auto">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="flexCheck"
+              />
+              <label class="form-check-label" for="flexCheck">
+                CPE Install Agreement <i class="bi bi-file-pdf"></i>
+              </label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="flexCheck"
+              />
+              <label class="form-check-label" for="flexCheck">
+                LAN Agreement <i class="bi bi-file-pdf"></i>
+              </label>
+            </div>
+          </div>
+      </div>
+      </fieldset>
+
+    </form>
+    
+  </div>
+</section>
+
+</main>
+
+
+<aside class="col-3 position-fixed top-0 end-0 overflow-hidden mh-100 bg-light " style="width: 280px;">
+<div class="row">
+  <h1 class="title col-auto ">Summary</h1>
+  <div class="col-auto dropdown p-3">
+    <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+      <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle">
+    </a>
+    <ul class="dropdown-menu text-small" aria-labelledby="dropdownUser1" style="">
+      <li><a class="dropdown-item" href="#">New project...</a></li>
+      <li><a class="dropdown-item" href="#">Settings</a></li>
+      <li><a class="dropdown-item" href="#">Profile</a></li>
+      <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item" href="#">Sign out</a></li>
+    </ul>
+  </div>
+</div>
+<div class="row">
+  <nav>
+    <ul>
+      <li><a href="#customer_information">Customer Information</a></li>
+      <li><a href="#customer_availability">Customer Availability</a></li>
+      <li><a href="#service_type">Service Type</a></li>
+      <li><a href="#VSS">VSS</a></li>
+      <li><a href="#CPE">CPE</a></li>
+      <li><a href="#needed_info">Needed Info</a></li>
+      <li><a href="#additional_contacts">Additional Contacts</a></li>
+      <li><a href="#additional_equipment">Additional Equipment</a></li>
+      <li><a href="#documents">Documents</a></li>
+    </ul>
+  </nav>
+</div>
+<div class="body">
+  <div class="row border-bottom">
+      <div class="col">Service Plan</div>
+      <div class="col">$80.00/mo</div>
+ </div>
+ <div class="row">
+    <div class="col">Installation</div>
+    <div class="col">$299.00</div>
+</div>
+<div class="row">
+    <div class="col">Additional Equipment</div>
+    <div class="col">$1000.00</div>
+</div>
+<div class="row border-bottom">
+    <div class="col">Additional Labor</div>
+    <div class="col">$1000.00</div>
+</div>
+<div class="row fw-bold p-3">
+    <div class="col" class="fw-bold">Total</div>
+    <div class="col" class="fw-bold">$2379.00</div>
+</div>
+<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#quote">
+  Build Quote
+</button>
+</div>
+</aside>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="js/sales.js"></script>
+<script src="edit.js"></script>
