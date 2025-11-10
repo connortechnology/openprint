@@ -4,7 +4,7 @@
 	<input type="hidden" id="task_id" name="task_id" value="<? echo ( $$variable{Task}->id() ) ?>" />
 	<input type="hidden" id="action" name="action" />
 	<fieldset><legend>Task <? echo ( $$variable{Task}->id() ) ?></legend>
-		<div class="content leftColumn">
+		<div class="content">
 			<ul>
         <li class="Department"><label>Department</label>
 <? echo (
@@ -40,7 +40,7 @@
 ) ?>
       </li>
 
-        <li>
+        <li class="Company">
           <label>Company</label>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
@@ -50,37 +50,78 @@
           ($$variable{Task}->company_id() ? $$variable{Task}->company_id() : $session{company_id}),
           { encode=>1} ) )?>
 				</select>
+        <input type="text" name="company_name" placeholder="new company"/>
 <? else ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 <?echo( $$variable{Task}->company_id() ? $$variable{Task}->Company()->link_to() : $openprint::Company->link_to())?>
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
         </li>
-				<li class="name"><label>Name</label>
-          <input type="text" name="name" value="<? echo ( $$variable{Task}->title() ) ?>" />
+      </ul>
+        <li class="contact">
+          <label>Contact</label>
+          <select name="user_id" on_change="contact_on_change">
+            <option value="">Select a User</option>
+            <?echo( make_drop_down( openprint::User->dropdown($$variable{Task}->contact_id() ); ) ?>
+          </select>
+          <?echo(button('newuser', on_click=>'toggle_new_user');)?>
+        </li>
+
+				<li class="title"><label>Title</label>
+          <input type="text" name="title" value="<? echo ( $$variable{Task}->title() ) ?>" />
 				</li>
         <?if($$variable{Task}->id())?>
-				<li><label>Created On</label><? echo ( format_datetime( $$variable{Task}->created_on() ) ) ?></li>
-				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Task}->updated_on() ) ) ?></li>
+				<li class="created_on"><label>Created On</label><? echo ( format_datetime( $$variable{Task}->created_on() ) ) ?></li>
+				<li class="updated_on"><label>Updated On</label><? echo ( format_datetime( $$variable{Task}->updated_on() ) ) ?></li>
         <?endif($$variable{Task}->id())?>
 			</ul>
-      <div>
-        <ul>
-          <li class="notes">
-            <label>Notes</label>
-            <textarea name="notes" id="notes"><?echo($$variable{Task}->notes())?></textarea>
-          </li>
-        </ul>
-      </div>
-				<p class="buttons">
-					<? echo ( 
-						my $html;
-						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
-						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
-						if ( $$variable{Task}->id() ) {
-							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{Task}->id();
-						} # end if
-						return $html;
-					) ?>
-				</p>
+      <ul>
+        <li class="presalechecklist">
+        <label>Pre-Sale Checklist</label>
+
+        <?echo( checkboxes('presale_checklist', ['vss'=>'Virtual Site Survey', 'quote'=>'Quote or proposal sent to client']); )?>
+        </li>
+        <li class="ticketsalescalllog"><label>Ticket Sales Call Log</label>
+        </li>
+        <li class="SalesFollowUpLogEntry"><label>Sales Follow-up Log Entry</label>
+        </li>
+        <li class="QuickCallNote"><label>Quick call note</label>
+          <textarea name="quickcallnote"></textarea>
+        </li>
+      </ul>
+
+
+      <ul>
+        <li class="notes">
+          <label>Notes</label>
+          <textarea name="notes" id="notes"><?echo($$variable{Task}->notes())?></textarea>
+        </li>
+      </ul>
+      <ul>
+        <li class="postinstall">
+        <label> Post-Install/ Support Checklist</label>
+        <?echo(checkboxes('postinstall', [
+                                 'Add Support Notes/Change Log to Freeside',
+                                 'Add hosts to Nagios',
+                                 'Add hosts to MRTG',
+                                 'Add Freeside Entry',
+                                 'Copy RB Utility install notes to Freeside',
+                                 'Post Install/Support Visit Billing Audit',
+                                 'Billed to Customer']);?>
+         </li>
+         <li><label>Deadline</label>
+           <?echo(date_select('deadline', $$variable{Task}->deadline());)?>
+         </li>
+      </ul>
+      <p class="buttons">
+        <? echo ( 
+          my $html;
+          $html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+          $html .= button( 'Reset', { onclick=>'f1.reset();' } );
+          if ( $$variable{Task}->id() ) {
+            $html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{Task}->id();
+          } # end if
+          return $html;
+        ) ?>
+      </p>
 		</div>
 	</fieldset>
   <? echo ( $$variable{Task}->id() ? include_logs( $$variable{Task}) : ''; ) ?>
