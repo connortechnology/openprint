@@ -1051,13 +1051,13 @@ $openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"
 				} # end if
 
 				if ( $perforating ) {
-					if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ) {
+          #if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ) {
 						$$specs{alert} .= "Perforating while folding inline may cause tearing.<br/>";
-					} else {
-						$Breakdown .= 'not perforating on this piece of equipment.<br/>';
-            $results{Breakdown} .= $Breakdown;
-						next;
-					} # end if
+            #} else {
+            #$Breakdown .= 'not perforating on this piece of equipment.<br/>';
+            #$results{Breakdown} .= $Breakdown;
+            #next;
+            #} # end if
 				} # end if
 			} # end if
 		} # end if
