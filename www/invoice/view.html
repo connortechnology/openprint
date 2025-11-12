@@ -127,14 +127,14 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 				} # end foreach Timetrack
 				return $html;
 			) ?>
-<?if(!$$variable{Invoice}{subtotal_override})?>
+<?if(1 or !$$variable{Invoice}{subtotal_override})?>
 			<tr class="totals">
 				<td colspan="3">Service subtotal</td>
 				<td class="Interval"><?echo(misc::seconds2hms($$variable{elapsed_total});)?></td>
 				<td class="Rate">&nbsp;</td>
         <td class="Price"><? echo ( $$variable{Invoice}->Currency()->format( $$variable{service_total} ); ) ?></td>
 			</tr>
-<?endif(!$$variable{Invoice}{subtotal_override})?>
+<?endif(1 or !$$variable{Invoice}{subtotal_override})?>
 		</table>
 	</fieldset>
 </div>
