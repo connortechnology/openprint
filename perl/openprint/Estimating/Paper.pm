@@ -65,7 +65,7 @@ sub variables {
 			push @v, "price-$stock_index-$qty_index";
 		} # end foreach qty_index
 	} # end foreach stock_index
-#$openprint::log->debug( "Variables: @v");
+$openprint::log->debug( "Variables: @v");
 	return @v;
 } # end sub variables
 
@@ -145,16 +145,16 @@ sub calc {
 	my %papers;
 
 	my @Stocks = get_stocks( $Project, $service_index, $specs );
-	if ( ! @Stocks ) {
+	if (!@Stocks) {
 		$$specs{alert} .= 'Stocks not found.<br/>';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
-	my %indexes  = map { $$_{key}, $_ } @Stocks;
+	my %indexes = map { $$_{key}, $_ } @Stocks;
 	$$specs{Status} = 'calculated';
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $form = $$sig_specs{SignatureIndex};
+		my $form = $$sig_specs{SignatureIndex} || $$sig_specs{form} || 1;
 
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -165,7 +165,7 @@ sub calc {
 				next;
 			} # end if
 			my $PressSheet = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-#$openprint::log->debug("Sheet for sig $ss_id $form $qty_index" . $PressSheet->to_string() ) if DEBUG;
+$openprint::log->debug("Sheet for sig $ss_id $form $qty_index" . $PressSheet->to_string() ) if DEBUG;
 			# This paper is in the printing format, not the supplied
 			# Convert to supplied Stock
 			my $SuppliedStock = $PressSheet->Supplied();
@@ -190,9 +190,9 @@ if ( 0 ) {
 			my $stock_index = $$Stock_Entry{index};
 
 			if ( $$specs{"overrideqty-form$form-$qty_index"} ne 'Y' ) {
-				if ( $PressSheet->type() eq 'Sheet' ) {
+				if ( $PressSheet->type() eq 'Sheet' or $PressSheet->type() eq 'Envelope') {
 					my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
-$log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
+$log->debug("StockQuantity from sig $form : $sheets".$PressSheet->units()) if DEBUG;
 					if ( ! ( $PressSheet->area() and $PressSheet->start_area() ) ) {
 						Carp::cluck('No sheet area PressSheet: ' . $PressSheet->area() . ' start: ' . $PressSheet->start_area() );
 					} elsif ( $PressSheet->factor() > 1 ) {
@@ -201,6 +201,7 @@ $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 $log->debug("converted StockQuantity: $sheets") if DEBUG;
 					} # end if
 					$$specs{"qty-form$form-$qty_index"} = Math::Round::nearest( 0.1, ( $sheets * $PressSheet->start_sheet_weight() ) );
+          $log->debug("start sheet weight".$PressSheet->start_sheet_weight());
 					$$specs{"sheets-form$form-$qty_index"} = $sheets;
 				} else {
 					$$specs{"qty-form$form-$qty_index"} = $$sig_specs{'StockQuantity'.$qty_index};
@@ -208,7 +209,7 @@ $log->debug("converted StockQuantity: $sheets") if DEBUG;
 				} # end if
 			} else {
 				$log->debug("StockQuantity from sig $form : overriden to ".$$specs{"qty-form$form-$qty_index"} ) if DEBUG;
-				if ( $$PressSheet{type} eq 'Sheet' ) {
+				if ($$PressSheet{type} eq 'Sheet' or $$PressSheet{type} eq 'Envelope') {
           my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
 $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
           if ( ! ( $PressSheet->area() and $PressSheet->start_area() ) ) {
@@ -232,7 +233,7 @@ $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 
 			} # end if
 
-			if ( $SuppliedStock->type() eq 'Sheet' ) {
+			if ( $SuppliedStock->type() eq 'Sheet' or $SuppliedStock->type() eq 'Envelope') {
 				$totals{$stock_index}{"qty_$qty_index"} += $$specs{"sheets-form$form-$qty_index"};
 			} else {
 				$totals{$stock_index}{"qty_$qty_index"} += $$specs{"qty-form$form-$qty_index"};
@@ -257,16 +258,16 @@ $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 
 		my $Stock = $$Stock_Entry{Stock};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			$$specs{"hdnBreakdown$qty_index"} .= $Stock->to_string() . '<br/>';
+			$$specs{"hdnBreakdown$qty_index"} .= $Stock->to_string() . ':<br/>';
 		}
 		if ( $Stock->full_packages() ) {
 			my $qty_per_package = $Stock->sheets_per_package();
 			if ( $qty_per_package ) {
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					next if ! $$total{"qty_$qty_index"};
-					$$specs{"hdnBreakdown$qty_index"} .= " requires full packages $qty_per_package sheets per package<br/>";
+					$$specs{"hdnBreakdown$qty_index"} .= " requires full packages $qty_per_package ".$Stock->units($qty_per_package).' per package<br/>';
 					$$total{"qty_$qty_index"} = $qty_per_package * ceil( $$total{"qty_$qty_index"} / $qty_per_package );
-				} # end foreah qty_index
+				} # end foreach qty_index
 			} # end if sheets_per_package
 		} # end if full packages
 		if ( $$Stock{minimum_order} ) {
@@ -287,8 +288,13 @@ $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 					$$specs{Status} = 'uncalculated';
 				} # end if
 			} # end foreach
-		} # end if
-	} # end foreach
+    } # end if
+    if ($Stock->type() eq 'Envelope') {
+      foreach my $qty_index ( $Project->quantity_indexes() ) {
+        $$specs{"hdnBreakdown$qty_index"} .= 'weight per envelope '.$Stock->sheet_weight().'lbs<br/>';
+      }
+    }
+	} # end foreach Stock
 
 	if ( DEBUG ) {
 		foreach my $Stock_Entry ( @Stocks ) {
@@ -311,10 +317,12 @@ $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 		my $total = $totals{$stock_index};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			# Normalize and output qtys
-			if ( $$Stock{type} eq 'Sheet' ) {
+			if ($$Stock{type} eq 'Sheet' or $$Stock{type} eq 'Envelope') {
 				$$specs{"qty-$stock_index-$qty_index"} = Math::Round::nearest(0.1, ( $$total{"qty_$qty_index"} * $Stock->sheet_weight() ));
 				$$specs{"sheets-$stock_index-$qty_index"} = $$total{"qty_$qty_index"};
+        $openprint::log->debug("ROLL? " . $$Stock{type} . " qty-$stock_index-$qty_index");
 			} else {
+        $openprint::log->debug("ROLL? " . $$Stock{type});
 				$$specs{"qty-$stock_index-$qty_index"} = $$total{"qty_$qty_index"};
 				$$specs{"sheets-$stock_index-$qty_index"} = ceil( $$total{"qty_$qty_index"} / $Stock->start_sheet_weight() ) if $Stock->start_sheet_weight();
 			} # end if
@@ -324,13 +332,13 @@ $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 					
 					my $price;
 					if ( $$total{"qty_$qty_index"} ) {
-						if ( $Stock->type() eq 'Sheet' ) {
-							$price = $Stock->get_price( sheets=>$$total{"qty_$qty_index"},service=>'Material' );
+						if ( $Stock->type() eq 'Sheet' or $Stock->type() eq 'Envelope') {
+							$price = $Stock->get_price( sheets=>$$total{"qty_$qty_index"}, service=>'Material' );
 						} else {
-							$price = $Stock->get_price( weight=>$$total{"qty_$qty_index"},service=>'Material' );
+							$price = $Stock->get_price( weight=>$$total{"qty_$qty_index"}, service=>'Material' );
 						} # end if
 						if ( ! $$price{'100lb Price'} ) {
-							$$specs{alert} .= $Stock->to_string() . ' has no price for ' .$$total{"qty_$qty_index"}.( $Stock->type() eq 'Sheet' ? ' sheets' : ' lbs' ) . '<br/>';
+							$$specs{alert} .= $Stock->to_string() . ' has no price for ' .$$total{"qty_$qty_index"}.' '.$Stock->units().'<br/>';
 						} # en dif
 					} # end if qty
 					$$specs{"cost-$stock_index-$qty_index"} = sprintf('%.2f', $$price{'100lb Price'} );
@@ -449,8 +457,8 @@ sub se_quantity_summary {
 
 #$openprint::log->warn("Stock " . $Paper->to_string() . " QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
 	if ( $$specs{"qty-$stock_id-$qty_index"} ) {
-		if ( $$Paper{type} eq 'Sheet' ) {
-			$html .= $$specs{"sheets-$stock_id-$qty_index"}.' sheets ';
+		if ( $$Paper{type} eq 'Sheet' or $$Paper{type} eq 'Envelope') {
+			$html .= $$specs{"sheets-$stock_id-$qty_index"}.' '.$Paper->units().' ';
 		} # end if
 		if ( $$specs{"qty-$stock_id-$qty_index"} < 10 ) {
       $html .= Number::Format::format_number( Math::Round::nearest(.1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
@@ -488,11 +496,11 @@ sub se_price_summary {
 	my ( $SE, $specs, $qty_index ) = @_;
 
 	if ( $$specs{"qty-$$SE{index}-$qty_index"} ) {
-	$$SE{"Price$qty_index"} = $$SE{Stock}->get_price( weight=>$$specs{"qty-$$SE{index}-$qty_index"}, service=>'Material' ) if ! $$SE{"Price$qty_index"};
-	my $Price = $$SE{"Price$qty_index"};
-	return '@ $'.$$specs{"cost-$$SE{index}-$qty_index"}.$$Price{units}. ' = $' . $$specs{"price-$$SE{index}-$qty_index"};
-	} 
-	return '';	
+    $$SE{"Price$qty_index"} = $$SE{Stock}->get_price( weight=>$$specs{"qty-$$SE{index}-$qty_index"}, service=>'Material' ) if ! $$SE{"Price$qty_index"};
+    my $Price = $$SE{"Price$qty_index"};
+    return '@ $'.$$specs{"cost-$$SE{index}-$qty_index"}.$$Price{units}. ' = $' . $$specs{"price-$$SE{index}-$qty_index"};
+  } 
+  return '';	
 } # end sub se_price_summary
 
 # The order of stocks is important... thing is, it can change if the brand changes for example.
@@ -540,7 +548,7 @@ sub get_stocks_and_quantities {
 sub load_stock_entry {
 	my ( $SE, $specs, $qty_index ) = @_;
 	if ( $$specs{"qty-$$SE{index}-$qty_index"} ) {
-		if ( $$SE{Stock}->type() eq 'Sheet' ) {
+		if ( $$SE{Stock}->type() eq 'Sheet' or $$SE{Stock}->type() eq 'Envelope' ) {
 			$$SE{quantity} = $$specs{"sheets-$$SE{index}-$qty_index"};
 		} else {
 			$$SE{quantity} = $$specs{"qty-$$SE{index}-$qty_index"};

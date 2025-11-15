@@ -1133,43 +1133,47 @@ sub companies {
 } # end sub companies
 
 sub _companies {
-	ssi::save_params( '/administrator/managerial/companies.html', (
-				'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted','supplier',
-				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
-				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
-				( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),
-				( map { 'updated_on_end_' . $_ } ( 'year','month','day' ) ),
-				( map { 'last_project_on_start_' . $_ } ( 'year','month','day' ) ),
-				( map { 'last_project_on_end_' . $_ } ( 'year','month','day' ) ),
-				) );
-	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
-  if ($param{action} eq 'delete') {
-    foreach my $Company ( openprint::Company->find( id=> (ref $param{company_id} eq 'ARRAY') ? $param{company_id} : $param{company_id}) ) {
-      $Company->delete();
-    }
-  } elsif ($param{action} eq 'undelete' ) {
-    my @company_ids = (ref $param{company_id} eq 'ARRAY') ? @{$param{company_id}} : ($param{company_id});
-    while (@company_ids) {
-      foreach my $Company ( openprint::Company->find( id=> [ splice(@company_ids, 0, 100) ], deleted=>1) ) {
-        if (!$Company->deleted()) {
-          $variable{error} .= $Company->name() . ' not undeleted because not deleted.<br/>';
-          next;
-        }
-        $Company->undelete();
-      } # end foreach Company
-    } # end while company_ids
-  } elsif ($param{action} eq 'destroy' ) {
-    my @company_ids = (ref $param{company_id} eq 'ARRAY' ? @{$param{company_id}} : ($param{company_id}));
-    while (@company_ids) {
-      foreach my $Company ( openprint::Company->find( id=> [ splice(@company_ids, 0, 100) ], deleted=>1) ) {
-        if (!$Company->deleted()) {
-          $variable{error} .= $Company->name() . ' not destroyed because not deleted.<br/>';
-          next;
-        }
-        $Company->destroy();
-      } # end foreach Company
-    } # end while company_ids
-  } # end if action
+  if ($param{action}) {
+    if ($param{action} eq 'delete') {
+      my @ids = map { $_ = openprint::Company->transform(id=>$_); $_ ? $_ : () } ((ref $param{company_id} eq 'ARRAY') ? @{$param{company_id}} : ($param{company_id}) );
+      foreach my $Company (openprint::Company->find(id=>\@ids)) {
+        $Company->delete();
+      }
+    } elsif ($param{action} eq 'undelete' ) {
+      my @company_ids = (ref $param{company_id} eq 'ARRAY') ? @{$param{company_id}} : ($param{company_id});
+      while (@company_ids) {
+        foreach my $Company ( openprint::Company->find( id=> [ splice(@company_ids, 0, 100) ], deleted=>1) ) {
+          if (!$Company->deleted()) {
+            $variable{error} .= $Company->name() . ' not undeleted because not deleted.<br/>';
+            next;
+          }
+          $Company->undelete();
+        } # end foreach Company
+      } # end while company_ids
+    } elsif ($param{action} eq 'destroy' ) {
+      my @company_ids = (ref $param{company_id} eq 'ARRAY' ? @{$param{company_id}} : ($param{company_id}));
+      while (@company_ids) {
+        foreach my $Company ( openprint::Company->find( id=> [ splice(@company_ids, 0, 100) ], deleted=>1) ) {
+          if (!$Company->deleted()) {
+            $variable{error} .= $Company->name() . ' not destroyed because not deleted.<br/>';
+            next;
+          }
+          $Company->destroy();
+        } # end foreach Company
+      } # end while company_ids
+    } # end if action
+  } else {
+    ssi::save_params( '/administrator/managerial/companies.html', (
+        'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted','supplier',
+        ( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+        ( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
+        ( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),
+        ( map { 'updated_on_end_' . $_ } ( 'year','month','day' ) ),
+        ( map { 'last_project_on_start_' . $_ } ( 'year','month','day' ) ),
+        ( map { 'last_project_on_end_' . $_ } ( 'year','month','day' ) ),
+      ) );
+    $session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+  }
 } # end sub _companies
 
 sub folds {

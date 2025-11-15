@@ -17,7 +17,7 @@ require openprint::Equipment_Shift;
 require openprint::User;
 require openprint::ScheduledJob;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'shifts';
 $serial = 'shifts_id_seq';
@@ -53,7 +53,11 @@ my $parser = 'DateTime::Format::Pg';
 
 sub starttime_dt {
 	if ( $_[0]{starttime} ) {
-		return $parser->parse_datetime( $_[0]{starttime} );
+		$_[0]{starttime_dt} = $parser->parse_datetime($_[0]{starttime});
+    $_[0]{starttime_dt}->set_time_zone($openprint::TZ);
+
+    $openprint::log->debug("starttime_dt $_[0]{starttime} " . $_[0]{starttime_dt}) if $debug;
+    return $_[0]{starttime_dt};
 	} else {
 		$openprint::log->error('tried to get a dt for '.$_[0]{starttime});
 		return;
@@ -63,7 +67,7 @@ sub starttime_seconds {
 	if (@_ == 2) {
 		$_[0]{starttime} = $parser->format_datetime( DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ ) );
 	} # end if
-	return $parser->parse_datetime($_[0]{starttime})->epoch();
+	return $_[0]->starttime_dt()->epoch();
 } # endsub
 
 sub startdate_seconds {
@@ -77,11 +81,11 @@ sub endtime_dt {
 }
 sub endtime_seconds {
 	if ( @_ == 2 ) {
-		$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', $_[1] );
+		$_[0]{endtime} = $parser->format_datetime( DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ ) );
 		$_[0]{endtime_seconds} = $_[1];
 	} # end if
 	if ( ! $_[0]{endtime_seconds} ) {
-		$_[0]{endtime_seconds} = Date::Parse::str2time( $_[0]{endtime} );
+		$_[0]{endtime_seconds} = $_[0]->endtime_dt()->epoch();
 $log->debug("Parsing endtime_seconds to $_[0]{endtime_seconds} from $_[0]{endtime}");
 	}
 	return $_[0]{endtime_seconds};
@@ -240,7 +244,7 @@ sub ul_id {
 sub get_from_ul_id {
 	my ( $id ) = @_;
 
-	$id =~ /^ul(\d*)-(\d\d\d\d-\d\d-\d\d)?-?(\w*)?$/;
+	$id =~ /^ul(\d*)\-(\d\d\d\d\-\d\d\-\d\d)?\-?(.*)?$/;
 	my ( $equipment_id, $date, $shift_name ) = ( $1, $2, $3 );
 
 	my $Shift;
@@ -277,13 +281,9 @@ sub get_ul {
 
 	# Why if name?
 	if ( $Shift->starttime() ) {
-		my ( $s, $min, $h, $day, $month, $year );
-		if ( $Shift->starttime() ) {
-			( $s, $min, $h, $day, $month, $year ) = Date::Parse::strptime( $Shift->starttime );
-			$year += 1900;
-			$month += 1;
-		} # endif
-		if ( Date::Calc::check_date( $year, $month, $day ) ) {
+    my $starttime_dt = $Shift->starttime_dt();
+    my $endtime_dt = $Shift->endtime_dt();
+    $log->debug("ul_id: ".$starttime_dt) if $debug;
 			my @Operators = $Shift->Operators();
 
 			if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{user_id} ) ) {
@@ -295,28 +295,28 @@ sub get_ul {
   <span class="%s">%s</span>
 </div>`, 
 						$$Shift{id}, 
-						Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day) ), 
-						$day, 
-						Date::Calc::Month_to_Text($month), $Shift->name(), 
-						Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
-						Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
+            $starttime_dt->day_abbr,
+						$starttime_dt->day, 
+            $starttime_dt->month_abbr,
+						$Shift->name(), 
+            $starttime_dt->strftime('%H:%M'),
+            $endtime_dt->strftime('%H:%M'),
 						$total_impressions, (@Operators ? 'operator' : 'assign' ), 
 						( @Operators ? join(', ', map { $_->name() } @Operators ) : 'assign'),
 						);
 			} else {
 				$html .= sprintf(
 						'<div class="When"><span class="Shift_time">%s %d %.3s %s %s to %s</span><span class="operator">%s</span></div>', 
-						Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
-						Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
-						Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
+            $starttime_dt->day_abbr,
+            $starttime_dt->day,
+            $starttime_dt->month_abbr,
+        
+						$Shift->name(), 
+            $starttime_dt->strftime('%H:%M'),
+            $endtime_dt->strftime('%H:%M'),
 						( @Operators ? join(', ', map { $_->name() } @Operators ) : 'assign'),
 						);
 			} # end if
-		} else {
-			$openprint::log->debug("Not a valid date in Shift->get_ul() ($year,$month,$day) from $$Shift{starttime}");
-		} # end if valid date
-	#} else {
-		#$openprint::log->debug("Shift does not have a name");
 	} # end if Shift->name
 # See if we are the last shift with jobs.
 	my $content = $Shift->get_lis($filters);
@@ -419,7 +419,7 @@ sub get_Shifts {
 			$log->error("Unable to find ES $$LastShift{shift_id} in Equipment_Shifts");
 			$ES_index = 0;
 		} else {
-$log->debug("Found ES for last shift: " . $Equipment_Shifts[$ES_index]->to_string() . " at index $ES_index" );
+      $log->debug("Found ES for last shift: " . $Equipment_Shifts[$ES_index]->to_string() . " at index $ES_index" );
 			$ES_index += 1;
 			$ES_index = 0 if $ES_index == @Equipment_Shifts;
 		}
@@ -479,7 +479,7 @@ $openprint::log->error("Unable to emanantise for $previous_seconds " . Date::For
 	# Just add them all in the specified range
 		my $ES = $Equipment_Shifts[0];
 		while ( $start_dt < $end_dt ) {
-$openprint::log->debug("Eman for " . $start_dt->epoch());
+$openprint::log->error("Eman for ".$start_dt." " . $start_dt->epoch());
 			my $Shift = $ES->emanantise( $start_dt->epoch() );
 			if ( ! $Shift ) {
 				$log->error("failed to emanantise");
@@ -493,14 +493,19 @@ $openprint::log->debug("Eman for " . $start_dt->epoch());
 				last;
 			} else {
 				push @Shifts, $Shift;
-				$log->debug("Starttime : " . $parser->format_datetime($start_dt). ' ' . $parser->format_datetime( DateTime->from_epoch( 'epoch'=>$Shift->starttime_seconds(), 'time_zone'=>$start_dt->time_zone() ) ));
+				$log->debug("Starttime : " . $parser->format_datetime($start_dt). ' ' . $parser->format_datetime( DateTime->from_epoch( epoch=>$Shift->starttime_seconds(), time_zone=>$start_dt->time_zone() ) ));
 			} # end fi
-			$start_dt = DateTime->from_epoch( 'epoch'=>$Shift->starttime_seconds() + 1, 'time_zone'=>$start_dt->time_zone() );
+      my $new_dt = DateTime->from_epoch( epoch=>$Shift->endtime_seconds() + 1, time_zone=>$start_dt->time_zone() );
+      if ($new_dt->epoch() <= $start_dt->epoch()) {
+        $log->error("Non increasing dt.");
+        return @Shifts;
+      }
+			$start_dt = $new_dt;
 			$ES = $ES->Next();
 		} # end while
 	} # end if
 	return @Shifts;
-} # end sbu get_Shifts
+} # end sub get_Shifts
 
 sub docket {
 	if ( ! $_[0]{docket} ) {

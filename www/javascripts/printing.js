@@ -92,7 +92,7 @@ function SpecialColour_onchange( element, side, index, signature ) {
 		} // end for each option in type_element
 	} // end if
 
-	if (  -1 != type.indexOf('Overall') ) {
+	if ( -1 != type.indexOf('Overall') ) {
 		$('ColourCoatingCoverage'+index+side+signature).hide();
 	} else {
 		$('ColourCoatingCoverage'+index+side+signature).show();
@@ -152,8 +152,10 @@ function validate_data(formName) {
     form.elements['txtSpecificStockHeight'] &&
     form.txtSpecificStockWidth.value &&
     form.txtSpecificStockHeight.value ) {
-		if ( (parseFloat(form.txtWidth.value) <= parseFloat(form.txtSpecificStockWidth.value) && parseFloat(form.txtHeight.value) <= parseFloat(form.txtSpecificStockHeight.value) )  ||
-				(parseFloat(form.txtWidth.value) <= parseFloat(form.txtSpecificStockHeight.value) && parseFloat(form.txtHeight.value) <= parseFloat(form.txtSpecificStockWidth.value)) ) { 
+
+		if (form.txtWidth && form.txtHeight && (
+      (parseFloat(form.txtWidth.value) <= parseFloat(form.txtSpecificStockWidth.value) && parseFloat(form.txtHeight.value) <= parseFloat(form.txtSpecificStockHeight.value) )  ||
+				(parseFloat(form.txtWidth.value) <= parseFloat(form.txtSpecificStockHeight.value) && parseFloat(form.txtHeight.value) <= parseFloat(form.txtSpecificStockWidth.value)))) { 
 			// we have good sheet size
 		} else {
 			text += "The sheet size you have entered is too small for the dimesions of your project, please enter a larger sheet size.";	

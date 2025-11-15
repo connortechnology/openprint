@@ -679,5 +679,20 @@ sub is_early {
   return ($early_payment_time > $today);
 }
 
+sub destroy {
+  my $self = shift;
+  my $rc = '';
+	my $ac = sql::start_transaction( $openprint::dbh );
+  foreach ($self->Taxes()) {
+    $rc .= $_->destroy();
+    last if $rc;
+  }
+  sql::execute(undef, undef, 'DELETE FROM Order_Invoices WHERE invoice_id=?', $$self{id});
+  sql::update(undef,undef, 'companies', ['last_invoice_id=?', $$self{id}], last_invoice_id=>undef);
+	$rc .= $self->SUPER::destroy( );
+	sql::end_transaction( $openprint::dbh, $ac );
+  return $rc;
+}
+
 1;
 __END__

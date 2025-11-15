@@ -1,5 +1,21 @@
 <fieldset id="Log"><legend>Last 10 Calls</legend>
-    <table class="List Sortable">
+    <table id="SalesLogTable" class="List Sortable table-striped"
+      data-pagination="true"
+    data-search="true"
+    data-show-pagination-switch="true"
+    data-cookie="true"
+    data-cookie-same-site="Strict"
+    data-cookie-id-table="SalesLogTable"
+    data-cookie-expire="2y"
+    data-show-columns="true"
+    data-show-export="true"
+    data-columns-hidden="[]"
+    data-uncheckAll="true"
+    data-click-to-select="true"
+    data-check-on-init="true"
+    data-mobile-responsive="true"
+    data-min-width="562"
+    >
 		<thead>
         <tr>
             <th class="DateTime">When</th>
@@ -7,7 +23,7 @@
             <th class="User">User</th>
             <th class="Notes">Notes</th>
         </tr>
-        </thead>
+    </thead>
 		<tbody id="sales_log_body">
 <? echo (
     require openprint::Sales_Log;
@@ -27,6 +43,6 @@
     } # end foreach Log
     return $html;
 ) ?>
-            </tbody>
-    </table>
+    </tbody>
+  </table>
 </fieldset>

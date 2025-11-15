@@ -1,34 +1,15 @@
-<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
-<script type="text/javascript">
-function calc( formName ) {
-        if ( gettingNewPrice ) {
-            if ( timeout ) {
-                clearTimeout( timeout );
-            } // end if
-            if ( ! force ) {
-                setTimeout( "calc('"+formName+"');", 1000 );
-                return;
-            } // end if
-        } // end if
-        timeout = null;
-        gettingNewPrice = true;
+<script src="<?hash_link('/javascripts/service.js')?>"></script>
+<script>
+results_callback = function cbPickUpResults(results) {
+  const form = getFormObj('f1');
 
-		remove_div('AlertDiv');
-		var form = getFormObj( formName );
+  cbFillResults(results);
 
-		var h = $H(form.serialize(true));
-		h.set('ServiceType', 'CustomerPickUp');
-		h.set('callback','cbFillUPSResults');
-		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-	} // end if
-} // end calc()
-function cbFillUPSResults( results ) {
-	cbFillResults( results );
-	var form = getFormObj( 'f1' );
-	if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons.  Would you like to add cartons to your project?' ) ) {
-		addService( 'f1', 'PlainCartons' );
-	} // end if
-}
+  if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons.  Would you like to add cartons to your project?' ) ) {
+    addService( 'f1', 'PlainCartons' );
+  } // end if
+} // end function cbFoldingResults
+
 function validate_data(formName) {
 	var form = getFormObj( formName );
 	var text = '';

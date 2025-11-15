@@ -162,7 +162,7 @@ sub get_colours {
   foreach my $k ( keys %$specs ) {
 #$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
     if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
-      next if ! $$specs{"chkColourCoating$index$side"};
+      next if ! ($$specs{"chkColourCoating$index$side"} and $$specs{"ColourCoatingType$index$side"});
       if ( $$specs{"ColourCoatingType$index$side"} =~ /Aqueous/i ) {
         push @colours, $$specs{"ColourCoatingType$index$side"};
       } # end if
@@ -257,7 +257,6 @@ sub calc {
 				next;
 			} # end if
 			my $form = $$sig_specs{SignatureIndex};
-			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature $form: ".($$sig_specs{txtServiceDescription}? $$sig_specs{txtServiceDescription}:'').'</legend>';
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index, $Project );
 			if ( ! $$Imposition{imposition} ) {
@@ -267,6 +266,10 @@ sub calc {
 				next;
 			}
 			my %results = signature_calc( $Project, $specs, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
+      if ($results{not_needed}) {
+        next;
+      }
+			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature $form: ".($$sig_specs{txtServiceDescription}? $$sig_specs{txtServiceDescription}:'').'</legend>';
 # if signature_needs($Project, $sig_specs);
       #$openprint::log->error(Data::Dumper::Dumper(\%results));
 			if ( $results{Equipment} ) {
@@ -353,9 +356,11 @@ sub signature_calc {
 	}
 
 	my $form = $$sig_specs{SignatureIndex};
-	my %bestPrice;
-	$bestPrice{Status} = 'uncalculated';
-  $bestPrice{breakdown} = '';
+  my %bestPrice = (
+    Status => 'uncalculated',
+    breakdown => '',
+    washups => 0,
+  );
 
 	my @front_aq;
 	my %front_aq;
@@ -387,8 +392,9 @@ sub signature_calc {
 
 	if ( ! ( @front_aq or @back_aq ) ) {
 		my ( $caller, undef, $line ) = caller;
-		$openprint::log->warn("Doing AQ when not needed @front_aq @back_aq from $caller:$line");
+		$openprint::log->debug("Doing AQ when not needed @front_aq @back_aq from $caller:$line") if DEBUG;
 		$bestPrice{Status} = 'calculated';	
+    $bestPrice{not_needed} = 1;
 		return %bestPrice;
 	} # end if
 
@@ -722,8 +728,10 @@ sub signature_calc {
             } elsif ($$ImpressionPrice{units} eq 'per m') {
               $$ImpressionPrice{Total} = Math::Round::nearest(0.01, $$ImpressionPrice{Price} * $run_qty/1000 );
               $Price{Impression} += $$ImpressionPrice{Total};
+              $$ImpressionPrice{quantity} = $run_qty / 1000;
               push @{$Price{ImpressionPrices}}, $ImpressionPrice;
             } else {
+
               $openprint::log->error("Unknown units $$ImpressionPrice{units} on $impression_service on $$Equipment{strid} for quantity $impressions price");
             }
           } # end if have impression service
@@ -757,7 +765,7 @@ sub signature_calc {
 	if ( defined $bestPrice{Total} ) {
 		$bestPrice{Status} = 'calculated';
 	} # end if
-	$bestPrice{breakdown} = breakdown(\%bestPrice);
+	$bestPrice{breakdown} = %bestPrice ? breakdown(\%bestPrice) : '';
 
 	return %bestPrice;
 } # end sub signature_calc

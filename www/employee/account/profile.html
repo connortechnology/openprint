@@ -14,7 +14,7 @@
   or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
   ), $param{company_id} ? $param{company_id} : $session{company_id}); ) ?>
           </select>
-          <? echo ( button( 'Go1', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
+          <? echo ( button( 'Go1', { onclick=>"this.form.action='/account/company_profile.html';this.form.btnFunction.value='Go';this.form.submit();", text=>'Go' } ); ) ?>
         </li>
         <li>
           <label>User</label>

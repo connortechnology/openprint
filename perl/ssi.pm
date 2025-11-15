@@ -12,6 +12,7 @@ require sets;
 require sql;
 require openprint;
 require File::Slurp;
+require URI;
 require URI::Encode;
 require URI::Escape;
 require Number::Format;
@@ -287,7 +288,7 @@ sub make_drop_down {
 					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])) : $$options{prepend}[$n] ),
 					( $selected{ $$options{prepend}[$n] } ? ' selected="selected"' : '' ),
 					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) : $$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ),
-					);
+					)."\n";
 		} # end for
 	} # end if
 
@@ -312,7 +313,7 @@ sub make_drop_down {
       $label = HTML::Entities::encode_entities(Encode::encode('utf-8', $label));
     }
 		
-		$html .= join('','<option value="', $value, '"', ( $selected{ $value } ? ' selected="selected"' : '' ), '>', $label, '</option>');
+		$html .= join('','<option value="', $value, '"', ( $selected{ $value } ? ' selected="selected"' : '' ), '>', $label, '</option>', "\n");
 	} # end for
 
 	if ( $$options{append} ) {
@@ -617,8 +618,7 @@ sub button {
     ";
     delete $$options{onclick};
   } # end if
-
-	return $html;
+  return $html;
 } # end sub button
 
 sub writeButton {
@@ -737,7 +737,7 @@ sub date_select {
 	$class .= 'C' if $$options{with_clear};
 	$class .= 'T' if $$options{with_today};
 
-	my $html = '<span class="'.$class.'" id="'.$prefix.'_date">
+	my $html = '<div class="'.$class.'" id="'.$prefix.'_date">
 ';
 	foreach my $o ( split(',', $$options{order}) ) {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
@@ -779,7 +779,7 @@ sub date_select {
 				} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>
-</span>';
+</div>';
 	return $html;
 } # end sub date_select
 
@@ -1183,20 +1183,35 @@ sub reset_session($) {
 	#$variable{ExternalRedirect} = $_[0];
 } # end sub reset_session
 
+sub exists_path {
+  my $path = shift;
+  $log->debug("Trying $path");
+  if ( -e $path ) {
+    return $path;
+	} elsif ( -e $config{SkinPath}.$path ) {
+		return $config{SkinPath}.$path;
+	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
+		return $ENV{DOCUMENT_ROOT}.$path;
+	}
+  return undef;
+}
 
 # If there is any problem, return the original path, so that the original file can be sent.
 sub hash_link {
 	my ( $path ) = @_;
 
 	my $src;
-  if ( -e $path ) {
-    $src = $path;
-	} elsif ( -e $config{SkinPath}.$path ) {
-		$src = $config{SkinPath}.$path;
-	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
-		$src = $ENV{DOCUMENT_ROOT}.$path;
-	} else {
-		return $path;
+
+  if (!($src = exists_path($path))) {
+    if (-1 == index('/', $path)) {
+      my $uri = URI->new($r->uri());
+      my @parts = $uri->path_segments;
+      $log->debug("parts: @parts");
+      pop @parts; # we always have a filename
+      if (!($src = exists_path(join('/', @parts, $path)))) {
+		    return $path;
+      }
+    }
 	} # end if
 
 	require JSON;

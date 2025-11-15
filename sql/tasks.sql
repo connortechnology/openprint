@@ -16,6 +16,7 @@ CREATE TABLE tasks (
     notes text,
     rb_id integer,
     owner_id integer,
+    contact_id integer,
     deadline date,
     type_id integer,
     ntf_2 character varying(255),

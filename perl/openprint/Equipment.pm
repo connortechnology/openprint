@@ -170,12 +170,14 @@ sub Fold {
 
 	if ( ( ! $$params{type} ) and $$params{pages} ) {
 		$$params{type} = $$params{pages}.'PageFold';
-    $openprint::log->debug("Form type auto set to $$params{type}");
+    $openprint::log->debug("Form type auto set to $$params{type}") if DEBUG_FOLDING;
 	}
 
   if (!($$self{Folds}{$$params{type}} and @{$$self{Folds}{$$params{type}}})) {
-    $openprint::log->debug("No folds for type $$params{type} on $$self{strid}");
+    $openprint::log->debug("No folds for type $$params{type} on $$self{strid}") if DEBUG_FOLDING;
+    return undef;
   }
+
 	foreach my $Fold ( $$params{type} ? @{$$self{Folds}{$$params{type}}} : map { @{$$self{Folds}{$_}} } keys %{$$self{Folds}} ) {
 
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
@@ -599,10 +601,15 @@ sub categories {
 sub Operators {
 	if ( ! $_[0]{Operators} ) {
 		my @user_ids = map { $$_{user_id} } openprint::Equipment_Operator->find( equipment_id=>$_[0]{id} );
-		@{$_[0]{Operators}} = @user_ids ? openprint::User->find( id=>\@user_ids, order=>'lower(firstname),lower(lastname)' ) : ();
+		@{$_[0]{Operators}} = @user_ids ? openprint::User->find( id=>\@user_ids ) : ();
 	} # end if
 	return @{$_[0]{Operators}};
 } # end sub Operators
+
+sub operator_ids {
+  my $self = shift;
+  return map { $_->id() } $self->Operators();
+}
 
 sub link_to {
   my $self = shift;
@@ -613,6 +620,10 @@ sub link_to {
 sub button_to {
   my $self = shift;
   return ssi::button('EquipmentButton'.$$self{id}, {href=>'/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ ? shift : $$self{strid})}) if $$self{id};
+}
+
+sub init_cache {
+  %Specification_cache = ();
 }
 
 1;

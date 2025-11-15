@@ -369,7 +369,7 @@ sub send {
 		$results .= $Email->send(
 				FROM    => $from,
 				TO      => @_,
-				SUBJECT => "$openprint::config{SiteTitle}:Quote $$self{id}",
+				SUBJECT => "$openprint::config{SiteTitle} Quote $$self{id}",
 				);
 		$Email->attachments(undef);
   } else {
@@ -388,7 +388,6 @@ sub send {
         my $hs = $HTML::Strip->new();
         $results .= $Email->send(
             FROM    => $from,
-            BCC		=>	'iconnor@connortechnology.com',
             TO      => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
             SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $hs->parse($self->reference())),
             );
@@ -563,7 +562,7 @@ sub can_view {
 		return 1;
 	} else {
 		my $Company = $_[0]->Company();
-		if ( $$Company{salesrep_id} and sets::isin( $$Company{salesrep_id}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+		if ( !$$Company{salesrep_id} or sets::isin( $$Company{salesrep_id}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
 			return 1;
 		} # end if
 		if ( openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Estimating'], $$User{id} ) ) {

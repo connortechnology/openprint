@@ -17,7 +17,7 @@ function tinymce_on( id ) {
 } // end function tinymce_on
 
 function job_popup( job_id ) {
-	popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:575, height:525,closeCallback: job_popup_close} );
+	popup_window( '_job_popup.html', 'schedule_id='+job_id, {width:575, height:525,closeCallback: job_popup_close} );
 } // end function job_popup
 
 function job_popup_close() {

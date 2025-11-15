@@ -6,7 +6,7 @@
 			<li><label>Category</label>
 				<select name="SearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 					<option value=""> All </option>
-					<? echo ( make_drop_down( openprint::ServiceType_Category->dropdown( order=>'sorting,name'), $param{SearchCategory} ); ) ?>
+					<? echo ( make_drop_down( openprint::ServiceType_Category->dropdown(), $param{SearchCategory} ); ) ?>
 				</select>
 			</li>
 			<li>
@@ -15,7 +15,7 @@
 					<option value="">Select a Service Type</option>
 					<? echo ( make_drop_down( [ map { $_->id(), $_->name() . ': ' . $_->description() } openprint::ServiceType->find(
 						( $param{SearchCategory} ? ( category_id=>$param{SearchCategory} ) : () ), 
-						  order=>'lower(name)') ], $$variable{ServiceType}->id() ); ) ?>
+						  ) ], $$variable{ServiceType}->id() ); ) ?>
 				</select>
 			</li>
 		</ul>
@@ -32,7 +32,8 @@
 		</p>
 	</fieldset>
   <fieldset><legend>Edit ServiceType <?echo($$variable{ServiceType}->id())?></legend>
-		<ul>
+    <div class="content">
+      <ul class="column">
 		<li> 
 			<label>Name</label>
 			<input type="text" name="name" value="<? echo ( $$variable{ServiceType}->name() ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}" />
@@ -46,7 +47,7 @@
 			<input style="display:none;" type="text" id="new_category" name="new_category"/>	
 			<select id="category_id" name="category_id">
 				<option value=""> None </option>
-				<? echo ( make_drop_down( openprint::ServiceType_Category->dropdown( order=>'sorting,name'), $$variable{ServiceType}->category_id() ); ) ?>
+				<? echo ( make_drop_down( openprint::ServiceType_Category->dropdown(), $$variable{ServiceType}->category_id()); ) ?>
 			</select>
 		</li>
 <? if ( $openprint::User->email() =~ /iconnor/ ) ?>
@@ -74,27 +75,32 @@ VariableData
 			<input type="url" name="url" value="<? echo ( $$variable{ServiceType}->url() ) ?>" /> 
 		</li>
 <? endif ( $openprint::User->email() =~ /iconnor/ ) ?>
-		<li>
-			<label>Visible in Project Create</label>
-			<? echo ( radio( 'create_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->create_visible() ); ) ?>
-		</li>
-		<li>
-			<label>Visible in Project View</label>
-			<? echo ( radio( 'view_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->view_visible() ); ) ?>
-		</li>
-		<li>
-			<label>Visible in Project Summary</label>
-			<? echo ( radio( 'summary_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->summary_visible() ); ) ?>
-		</li>
-		<li>
-			<label>Allow removal from Project</label>
-			<? echo ( radio( 'allow_delete', [ '1','Yes','0','No' ], $$variable{ServiceType}->allow_delete() ); ) ?>
-		</li>
-		<li> 
-			<label>Sort</label>
-			<? echo ( input( type=>'integer', name=>'sorting', value=>$$variable{ServiceType}->sorting() ); ) ?>
-		</li>
-		</ul>
+      </ul>
+      <ul class="column">
+        <li>
+          <label>Visible in Project Create</label>
+          <? echo ( radio( 'create_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->create_visible() ); ) ?>
+        </li>
+        <li>
+          <label>Visible in Project View</label>
+          <? echo ( radio( 'view_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->view_visible() ); ) ?>
+        </li>
+        <li>
+          <label>Visible in Project Summary</label>
+          <? echo ( radio( 'summary_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->summary_visible() ); ) ?>
+        </li>
+        <li>
+          <label>Allow removal from Project</label>
+          <? echo ( radio( 'allow_delete', [ '1','Yes','0','No' ], $$variable{ServiceType}->allow_delete() ); ) ?>
+        </li>
+<? if ( $openprint::User->email() =~ /iconnor/ ) ?>
+        <li> 
+          <label>Sort</label>
+          <? echo ( input( type=>'integer', name=>'sorting', value=>$$variable{ServiceType}->sorting() ); ) ?>
+        </li>
+<? endif ( $openprint::User->email() =~ /iconnor/ ) ?>
+      </ul>
+    </div>
 	</fieldset>
 	<fieldset><legend>Defaults</legend>
 		<div id="Defaults">
@@ -102,7 +108,9 @@ VariableData
 		</div>
 	</fieldset>
 <fieldset><legend>Service Prices</legend>
+  <div id="ServicePrices">
 		<?include('_service_prices.html')?>
+  </div>
 </fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>

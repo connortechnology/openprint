@@ -544,9 +544,9 @@ sub load_Impositions {
 		#$imp->pages( $pages );
 		$imp->quantity( $$specs{"ImpQty-$form-$qty_index-$imp_index"} );
     #$imp->display("impressions: ".$$imp{impressions} . ' gross sheets '.$$imp{gross_sheets});
-    $imp->impressions($$imp{impressions} * ($$Imposition{imposition}/$$imp{imposition}));
-    $imp->gross_sheets($$imp{gross_sheets} * ($$Imposition{imposition}/$$imp{imposition}));
-    $imp->net_sheets($$imp{net_sheets} * ($$Imposition{imposition}/$$imp{imposition}));
+    $$imp{impressions} = $$imp{impressions} * ($$Imposition{imposition}/$$imp{imposition});
+    $$imp{gross_sheets} = $$imp{gross_sheets} * ($$Imposition{imposition}/$$imp{imposition});
+    $$imp{net_sheets} = $$imp{net_sheets} * ($$Imposition{imposition}/$$imp{imposition});
 		push @impos, $imp;
 	} # end foreach imp_index
 	my $quantity = $$specs{"txtQuantity$qty_index"};

@@ -33,11 +33,13 @@
 		if ( ( $session{company_id} == $$variable{Order}->company_id() ) and ( $openprint::User->company_id() == $session{company_id} ) ) {
 			my $html;
 			$html .= $config{OrderViewDisclaimer};
+      if ($config{require_terms}) {
 			$html .= '
 			<div class="AcceptTerms">
 				<input type="checkbox" id="accept_terms" name="accept_terms" value="1" />
 				By checking the box and clicking Complete Order you agree to accept the listed terms and conditions.
 			</div>';
+      }
 			return $html;
 		} # end if
 		return '';

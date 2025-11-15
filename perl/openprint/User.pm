@@ -14,7 +14,7 @@ use vars qw( $log $dbh %config $debug %fields %find_fields %transforms %defaults
 $table = 'users';
 $serial = 'users_id_seq';
 
-$debug = 0;
+$debug = 1;
 
 $default_sort	=	'lower(firstname),lower(lastname),id';
 
@@ -73,6 +73,8 @@ $default_sort	=	'lower(firstname),lower(lastname),id';
 	wage				=>	[ 's/[^\d\.]//g' ],
 	email				=>	[ 'tr/[A-Z]/[a-z]/', 's/^\s+//', 's/\s+$//' ],
 	password			=>	[ 's/^\s+//', 's/\s+$//' ],
+	firstname			=>	[ 's/^\s+//', 's/\s+$//' ],
+	lastname			=>	[ 's/^\s+//', 's/\s+$//' ],
 	purchasing_limit	=>	[ 's/[^\d\.\-]//g' ],
 	purchasing_total_limit	=>	[ 's/[^\d\.\-]//g' ],
 	created_on		=>	[ 's/.*//g' ],
@@ -120,7 +122,7 @@ sub save {
 # Notify someone
 		my %info;
 		$info{User} = $self;
-		@info{'UserFirstName','UserLastName','UserType'} = @$params{'firstname','lastname','type'};
+		@info{'UserFirstName','UserLastName','UserType'} = @$self{'firstname','lastname','type'};
 
 		$info{ReplacementText} = ssi::include( '/email_content/usertype_system_notification.html', \%info );
 		my $email_template = ssi::include( '/email_template.html', \%info );
@@ -133,24 +135,15 @@ sub save {
 				);
 	} # end if
 
-	if ( $params and (defined $$params{web_active} and defined $$self{web_active} ) and ( $$self{web_active} ne $$params{web_active} ) and ( $$params{web_active} eq 'Y' ) ) {
-		my %info;
-		$info{User} = $self;
-		$_ = $$params{web_active} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
-		$info{ReplacementText} = ssi::include( '/email_content/'.$_, \%info );
-		my $email_template = ssi::include( '/email_template.html', \%info  );
-
-		new openprint::Email()->send(
-				FROM    => $openprint::config{AdministratorEmail},
-				TO      => sprintf( '"%s %s" <%s>', @$params{'firstame','lastname','email'} ),
-				SUBJECT => 'User account status has changed!',
-				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
-				);
-	} # end if
+  my $old = $self->clone();
 
 	my $error = $self->SUPER::save( $params );
 	return $error if $error;
 	(new openprint::Log())->save({action=>'Save User', Object=>$self, note=>join('<br/>', @changes ) } );
+
+	if (($$old{web_active} ne $$self{web_active}) and ($$self{web_active} eq 'Y')) {
+    $self->notify_activation_change();
+	} # end if
 
 	if ( exists $$params{assistant_ids} ) {
 		$self->assistant_ids( $$params{assistant_ids} );
@@ -160,6 +153,22 @@ sub save {
 	} # end if
 	return;
 } # end sub save
+
+sub notify_activation_change {
+  my $self = shift;
+  my %info;
+  $info{User} = $self;
+  $_ = $$self{web_active} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
+  $info{ReplacementText} = ssi::include( '/email_content/'.$_, \%info );
+  my $email_template = ssi::include( '/email_template.html', \%info  );
+
+  new openprint::Email()->send(
+    FROM    => $openprint::config{AdministratorEmail},
+    TO      => sprintf( '"%s %s" <%s>', @$self{'firstame','lastname','email'} ),
+    SUBJECT => 'User account status has changed!',
+    ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
+  );
+}
 
 sub destroy {
 	my $self = shift;

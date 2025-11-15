@@ -204,7 +204,6 @@ sub continue_project {
 	my ( $service_index, $redirect ) = choose_service($log, $dbh, $$Project{id}, $incoming_service_index);
 
 	if ( ! $service_index ) {
-			$log->debug('No service_index for '.$Project->to_string());
 		my $type = $Project->Type()->type();
 		if ( !$type ) {
 			$log->debug('No type for '.$Project->to_string());
@@ -222,7 +221,7 @@ sub continue_project {
 						( $service_index, $redirect ) = choose_service( $log, $dbh, $$Project{id} );
 						last;
 					} else {
-						$log->debug("Multpage status says we ok for qty $qty_index");
+						$log->debug($type." status says we ok for qty $qty_index");
 					} # end if
 				} # end foreach
 			} else {
@@ -639,7 +638,9 @@ sub reuse_project {
 	my ( $project_index ) = @_;
 
 	my $Project = new openprint::Project($project_index);
-	if ( ! $Project->id() ) {
+	if (!$Project->id()) {
+    $openprint::log->error("Source project $project_index could not be found.");
+
 		$variable{error} .= "Source project $project_index could not be found.";
 		return;
 	} # end if

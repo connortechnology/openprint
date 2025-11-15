@@ -60,6 +60,7 @@ sub cleanup {
 		untie %session;
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
+		openprint::Equipment::init_cache();
 		$openprint::Service::cached = 0;
 		$openprint::Material::cached = 0;
 		openprint::Object::init_cache();

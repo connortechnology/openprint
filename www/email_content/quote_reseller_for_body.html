@@ -1,7 +1,8 @@
-Dear <?ForSalutation?> <?ForFirstName?> <?ForLastName?>,
+Dear <?echo($$variable{Quote}->for_name() ? $$variable{Quote}->for_name() : $$variable{Quote}->for_companyname() )?>,<br/>
 
 <p>
-Your quote<?echo( $$variable{Quote}->reference() ? ' labelled ' . $$variable{Quote}->reference() : '')?> is attached. Please save it for future reference
+Your quote<?echo( $$variable{Quote}->reference() ? ' labelled ' . $$variable{Quote}->reference() : '')?> is attached.<br/>
+Please save it for future reference
 <? echo (
   my $Company = $$variable{Quote}->For_Company();
   if ( $Company->salesrep_id() ) {
@@ -9,7 +10,7 @@ Your quote<?echo( $$variable{Quote}->reference() ? ' labelled ' . $$variable{Quo
       return sprintf('and do not hesitate to contact me if you have any questions.<br/><br/>Yours Sincerely,<br/>%s %s<br/>%s<br/><a href="mailto:%s">%s</a><br/>%s%s<br/>', $CSR->firstname(), $CSR->lastname(),  $CSR->Company()->name(), $CSR->email(), $CSR->email(), $CSR->phone(), $CSR->extension() ? 'x'.$CSR->extension() : '' );
   } else {
   $log->debug("Company? ".$Company->to_string());
-      return qq`.  Please contact our <a href="$openprint::config{ExternalSiteURL}/support/help_desk.html">helpdesk</a> if you have any questions.`;
+  return qq`.<br/><br/>Please contact our <a href="$openprint::config{ExternalSiteURL}/support/help_desk.html">helpdesk</a> if you have any questions.`;
   } # end if
 ) ?>
 </p>

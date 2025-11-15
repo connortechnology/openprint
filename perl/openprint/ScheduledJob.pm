@@ -44,6 +44,8 @@ $serial = 'schedule_id_seq';
 	operator_id		=>	undef,
 	stock_verified	=>	'stock_verified',
 	stock			=>	'stock',
+  stock_ordered   => 'stock_ordered',
+  stock_arrived   =>  'stock_arrived',
 	servicetype_id	=>	'servicetype_id',
 	tentative		=>	'tentative',
 );
@@ -63,6 +65,8 @@ $serial = 'schedule_id_seq';
 	speed			=>	undef,
 	created_on		=>	q`'NOW()'`,
 	stock_verified	=>	0,
+  stock_ordered   =>  0,
+  stock_arrived   =>  0,
 	tentative		=>	0,
 );
 
@@ -91,6 +95,25 @@ sub starttime {
 	return $_[0]{starttime};
 } # end sub starttime
 
+sub starttime_dt {
+  my $self = shift;
+  $$self{starttime_dt} = $parser->parse_datetime( $$self{starttime} );
+  return $$self{starttime_dt};
+}
+sub endtime_dt {
+  my $self = shift;
+
+  my $endtime_dt = $parser->parse_datetime( $$self{starttime} );
+  $endtime_dt->add(seconds=> $self->runtime_seconds());
+  return $endtime_dt;
+}
+
+sub duedate_dt {
+  my $self = shift;
+  my $duedate_dt = $parser->parse_datetime($self->Project()->due_date());
+  return $duedate_dt;
+}
+
 sub starttime_seconds {
 	my $starttime_dt;
 
@@ -100,12 +123,11 @@ sub starttime_seconds {
 			$log->error( 'ScheduledJob: startime_seconds < NOW() ' . $parser->format_datetime( $starttime_dt ) );
 		} # end if
 		$starttime_dt = DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ );
-$openprint::log->debug("Setting starttime_seconds to $_[1] => $starttime_dt");
+$openprint::log->debug("Setting starttime_seconds to $_[1] => $starttime_dt $openprint::TZ");
 		$_[0]->starttime( $parser->format_datetime( $starttime_dt ) );
 $openprint::log->debug("Got $starttime_dt = $_[0]{starttime}");
 		
 	} elsif ( $_[0]{starttime} ) {
-		
 		$starttime_dt = $parser->parse_datetime( $_[0]{starttime} );
 	} # end if
 	return $starttime_dt->epoch() if $starttime_dt;
@@ -221,37 +243,37 @@ sub stock {
 		$$self{stock} = $stock;
 	} # end if
 	if ( ( ! $$self{stock} ) and $$self{project_id} and ( $self->ServiceType()->name() eq 'Signature' ) ) {
-		$$self{stock} = '<p>Stock: ';
+		$$self{stock} = '<span class="stock">Stock: ';
 		my $Equipment = $self->Equipment();
-		my $Project = new openprint::Project( $$self{project_id} );
+		my $Project = $self->Project();
 		my $Stock;
-		my $PA = openprint::PaperAllocation->find_one( docket=>$Project->docket() );
+		my $PA = openprint::PaperAllocation->find_one( docket=>$Project->docket() ) if $Project->docket();
 		if ( $PA ) {
 			$Stock = $PA->Paper();
 		} elsif ( $$self{service_id}[0] ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{service_id}[0] );
 			$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() ) if ! $Stock;
 		} # end if
-		if ( $Equipment->smartscheduling() ) {
-			if ( $Stock ) {
-				$$self{stock} .= join(' ', ( $Stock->brand(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->type() eq 'Roll' ? $Stock->width.'&quot; Roll' : $Stock->width().'x'.$Stock->height() ) );
-				$$self{stock} .= ' FSC:' . $$Stock{fsc_code} if $$Stock{fsc_code};
-			} else {
-				$$self{stock} .= ' not allocated.';
-			} # end if
-			if ( ( ! $PA ) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content->find(docket=>$Project->docket()) ) ) {
-				$$self{stock} .= ' Ordered on PO: ' . join(',', map { sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
-			} else {
-				$$self{stock} .= ' not ordered.';
-			} # end if
-		} elsif ( $Stock ) {
-			if ( $Stock->type() eq 'Roll' ) {
-				$$self{stock} .= $Stock->width().'&quot; Roll';
-			} else {
-				$$self{stock} .= $Stock->width() . 'x' . $Stock->height();
-			} # end if
-		} # end if
-		$$self{stock} .= '</p>';
+
+    if ( $Stock ) {
+      $$self{stock} .= join(' ', ( $Stock->brand(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->type() eq 'Roll' ? $Stock->width.'&quot; Roll' : $Stock->width().'x'.$Stock->height() ) );
+      $$self{stock} .= ' FSC:' . $$Stock{fsc_code} if $$Stock{fsc_code};
+    }
+    if (!$PA) {
+      $$self{stock} .= ' not allocated.';
+    } # end if
+
+    if ((!$PA) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content->find(docket=>$Project->docket()) ) ) {
+      $$self{stock} .= ' ordered on PO: ' . join(',', map { sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
+    } elsif ($$self{stock_ordered}) {
+      $$self{stock} .= ' ordered';
+    } else {
+      $$self{stock} .= ' not ordered.';
+    } # end if
+
+    $$self{stock_arrived} .= ' has arrived';
+
+		$$self{stock} .= '</span>';
 	} # end if
 	return $$self{stock};
 } # end sub stock
@@ -345,7 +367,10 @@ sub get_li {
 		if ( $printing_service_type_ids{$$self{servicetype_id}} ) {
 			$html .= '<span class="Presses">'.join(' + ', sort( map { new openprint::Equipment($_)->strid() } @equipment ) ).'</span>' if @equipment > 1;
 		} # end if
-		$html .= qq`<span class="DueDate" id="JumpToDate$$self{id}">`;
+    my $late = DateTime->compare($self->duedate_dt(), $self->endtime_dt());
+
+    $openprint::log->debug("Due Date ".$self->duedate_dt()." >? ". $self->endtime_dt(). " ? ".$late);
+		$html .= '<span class="DueDate'.(($late == -1) ? ' late':'').'" id="JumpToDate'.$$self{id}.'" title="due date">';
 		if ( ! $Project->due_date() ) {
 			$html .= 'no duedate</span>';
 		} else {
@@ -385,16 +410,17 @@ sub get_li {
 			} # end if
 		} # end if
 		if ( $Equipment->smartscheduling() or $$self{locked} ) {
-			$html .= sprintf( q`<span class="StartTime" onclick="job_popup('%1$d');">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{id},
-					Date::Format::time2str('%H:%M', Date::Parse::str2time($$self{starttime})),
+			$html .= sprintf( q`<span class="StartTime" onclick="job_popup('%1$d');">Start: %2$s <img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{id},
+        ($self->starttime() ? $self->starttime_dt()->strftime('%H:%M') : ''),
 					$$self{locked} ? 'locked' : 'unlocked',
 					);
 		} # end if
 
 		$html .= sprintf( q`<span class="RunTime" onclick="job_popup('%1$d');">Total Hr: %2$.2d:%3$.2d</span>`, $$self{id}, split(':',$self->runtime()) );
-			if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
-				$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
-			} # end if
+
+    if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
+      $html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
+    } # end if
 
 		if ( $$self{project_id} ) {
 			$html .= '<span class="Services">';
@@ -407,7 +433,7 @@ sub get_li {
 		$html .= '<span class="Buttons">';
 		if ( $$self{project_id} ) {
 			$html .= ssi::button( 'Approve'.$$self{id}, {onclick=>"approve_job('$ul_id',$$self{id});", text=>'A', title=>'Approve' } ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
-			if ( ! $$self{locked} ) {
+			if ( $$self{starttime} and ! $$self{locked} ) {
 				$html .= ssi::button( 'Up'.$$self{id}, { onclick=>"up_job($$self{id});", text=>'&uarr;', title=>'Move Up' } );
 				$html .= ssi::button( 'Down'.$$self{id}, { onclick=>"down_job($$self{id});", text=>'&darr;', title=>'Move Down' } );
 			} # end if
@@ -445,9 +471,7 @@ sub get_li {
 			$html .= sprintf( '<span class="Forms">%d %s</span>', $self->forms(), $self->forms() > 1 ? ' forms' : ' form' );
 			$html .= sprintf( '<span class="Impressions">%d imps</span>', $self->impressions() );
 		} # en dif
-		$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$self{id},
-				Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{starttime} ) ),
-				);
+		$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$self{id}, $self->starttime_dt()->strftime('%H:%M'));
 		$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{id}, split(':',$self->runtime()) );
 		$html .= '<span class="Buttons">';
 		if ( $$self{project_id} ) {
@@ -700,7 +724,7 @@ if ( 0 ) {
 
 sub start {
 	my ( $self ) = @_;
-	my $e = $self->save({starttime_seconds=>time,locked=>1});
+	my $e = $self->save({starttime_seconds=>time, locked=>1});
 	if ( ! $e ) {
 		if ( $$self{project_id} ) {
 			foreach my $sig_id ( @{$$self{service_id}} ) {
@@ -716,7 +740,7 @@ sub stop {
 	my $new_runtime = $self->runtime_seconds() - ( time - $self->starttime_seconds() );
 	$new_runtime = 300 if $new_runtime < 0; # default to 5minutes
 $log->debug("Stopping job: new runtime: $new_runtime starttime $$self{starttime} seconds: " . $self->starttime_seconds() . " now: " . time . " elapsed: " . ( time - $self->starttime_seconds() ) );
-	my $e = $self->save({runtime_seconds=>$new_runtime,locked=>0});
+	my $e = $self->save({runtime_seconds=>$new_runtime, locked=>0});
 	if ( ! $e ) {
 		if ( $$self{project_id} ) {
 			foreach my $sig_id ( @{$$self{service_id}} ) {
@@ -766,6 +790,7 @@ sub bump {
 
 	my $error;
 	if ( $Equipment->smartscheduling() ) {
+    $openprint::log->debug("Doing smart scheduling");
 # When SmartScheduling, all jobs can move. so determine the appropriate shift, sort the jobs
 		if ( ! $NewShift ) {
 			if ( $$self{starttime} ) {

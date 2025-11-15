@@ -27,12 +27,17 @@ my %variables = (
 	'txtPackageQuantity3' => ['save','output'],
 	'txtPrice1'=>['save'], 'txtPrice2'=>['save'], 'txtPrice3'=>['save'],
 	'txtQuantity1'=>['save','output'], 'txtQuantity2'=>['save','output'], 'txtQuantity3'=>['save','output'],
-	'chkOverridePackageQuantity'=>['save'],
+	'chkOverridePackageQuantity1'=>['save'],
+	'chkOverridePackageQuantity2'=>['save'],
+	'chkOverridePackageQuantity3'=>['save'],
 	'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],
 	'txtPackageWeight'=>['save','output'],
 	'txtPackageWeight1'=>['save','output'],
 	'txtPackageWeight2'=>['save','output'],
 	'txtPackageWeight3'=>['save','output'],
+  'chkOverridePackageWeight1'=>['save'],
+  'chkOverridePackageWeight2'=>['save'],
+  'chkOverridePackageWeight3'=>['save'],
 	alert	=> ['save','output' ],
 );
 
@@ -59,9 +64,12 @@ sub has_overrides {
   my @v;
   if ( $qty_index ) {
   } else {
-    push @v, map { $$specs{$_} ? $_ : () } (
-      'chkOverridePackageQuantity',
-    );
+    foreach my $qty_index ($Project->quantity_indexes()) {
+      push @v, map { $$specs{$_.$qty_index} ? $_ : () } ( 
+        'chkOverridePackageQuantity',
+        'chkOverridePackageWeight',
+      );
+    }
   } # end if
 
   return @v;
@@ -129,7 +137,9 @@ sub calc {
       $status = 'uncalculated';
     } # end if
 
-    $$specs{'txtPackageQuantity'.$qty_index} = ceil($$specs{'txtQuantity'.$qty_index}/$$carton_specs{"txtItemsPerPackage$qty_index"});
+    if ( !$$specs{"chkOverridePackageWeight$qty_index"} or $$specs{"chkOverridePackageWeight$qty_index"} ne 'Y' ) {
+      $$specs{'txtPackageQuantity'.$qty_index} = ceil($$specs{'txtQuantity'.$qty_index}/$$carton_specs{"txtItemsPerPackage$qty_index"});
+    }
     $$specs{"txtTotalWeight$qty_index"} = Math::Round::nearest( 0.01, (int( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{"txtItemsPerPackage$qty_index"} ) * $$specs{"txtPackageWeight$qty_index"}) + (($$specs{'txtQuantity'.$qty_index} % $$carton_specs{"txtItemsPerPackage$qty_index"} ) * $$carton_specs{txtFinishedWeight}) );
   } # end foreach
 

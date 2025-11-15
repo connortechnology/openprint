@@ -3,7 +3,7 @@
   my %filters = (
     columns => "*, $openprint::Company::find_fields{last_project_on} AS last_project_on, $openprint::Company::find_fields{last_quoted_on} AS last_quoted_on",
 		order	=>	'lower(name)',
-		( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
+		( $session{$uri.'?company_name'} ? ( 'name ilike' => (index($session{$uri.'?company_name'}, '%') != -1 ? $session{$uri.'?company_name'} : '%'.$session{$uri.'?company_name'}.'%') ) : () ),
 		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
 		( $session{$uri.'?supplier'} ne '' ? ( supplier => $session{$uri.'?supplier'} ) : () ),
 		( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
@@ -37,7 +37,7 @@
 <? if ( @{$$variable{Companies}} ) ?>
 	<table class="List">
 		<tr> 
-      <th class="checkbox"><input type="checkbox" onclick="select_all(this.form, 'company_id', this.checked);"/></th>
+      <th class="checkbox"><input type="checkbox" name="company_id" value="0" on_click_this="select_all_this"/></th>
 
 			<th class="Account">Account #</th>
 			<th class="Company">Name</th>
@@ -59,15 +59,16 @@
 	<td class="Account">%3$s</td>
 	<td class="Company">%4$s</td>
 	<td class="User CSR">%5$s</td>
-	<td class="Date">%6$s</td>
-	<td class="Date">%7$s</td>
-	<td class="Date">%8$s</td>
-	<td class="Date">%9$s</td>
+	<td class="Date CreatedOn" title="%6$s">%7$s</td>
+	<td class="Date UpdatedOn">%8$s</td>
+	<td class="Date LastProject">%9$s</td>
+	<td class="Date LastQuote">%10$s</td>
 </tr>
     `, $rowclass, $Company->id(),
       $Company->admin_link_to( $$Company{accountnumber} ),
       $Company->admin_link_to( $$Company{name}.($Company->deleted()?' (deleted)':'') ), 
       $Company->CSR()->name(),
+      format_datetime($$Company{created_on}),
       format_date($$Company{created_on}),
       format_date($$Company{updated_on}),
       format_date($Company->last_project_on()),
@@ -75,6 +76,9 @@
     );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
   } # end foreach
+  $html .= '<tr class="totals">
+      <td class="checkbox"><input type="checkbox" name="company_id" value="0" on_click_this="select_all_this"/></td>
+    <td colspan="7">'.scalar @{$$variable{Companies}} .' companies listed</td></tr>';
   $html .= '</table>
 <p class="button">
 '. join("\n",

@@ -184,7 +184,7 @@ return join("\n",
 	foreach my $option ( @options ) {
 		my @sorted = ('openprint::Stock'.$option)->sort( map { $results{$option}{$_} } keys %{$results{$option}} );
 		my $lc_option = $options{$option};
-    #next if @sorted <= 1;
+    next if @sorted <= 1;
 		$html .= sprintf(q`	
 		<li> 
 			<label>%3$s</label>
@@ -276,7 +276,7 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{$r->uri().'?OrLarger'}, { oncl
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'Show', { onclick=>q`calc('f1');` } ),
-				button( 'Reset', { on_click=>'reset', text=>'Reset' } ),
+				button( 'Clear', { on_click_this=>'clearElementForm', text=>'Clear' } ),
 				button( 'applychanges', { onclick=>'popup_window(f1);', text=>'Make Changes' } ),
 				button( 'New', { href=>'stock.html', text=>'Add A New Stock' } ),
 				button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",text=>'Delete Checked Stocks' } ),

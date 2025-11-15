@@ -62,12 +62,12 @@
 <? endif ( 0 and openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
 					<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 				<? if ( $$variable{Project}->docket() ) ?>
-					<? if ( $$variable{Project}->shippingtype() ) ?>
+					<? if ( $$variable{Project}->shipping_type() ) ?>
 					<li> 
 						<label>Shipping Type</label>
-						<span class="shippingTypeValue"><? echo ( $$variable{Project}->shippingtype() ) ?></span>
+						<span class="shippingTypeValue"><? echo ( $$variable{Project}->shipping_type() ) ?></span>
 					</li>
-					<? endif ( $$variable{Project}->shippingtype() ) ?>
+					<? endif ( $$variable{Project}->shipping_type() ) ?>
 					<? if ( $$variable{Project}->due_date() ) ?>
 					<li>
 							<label>Due Date</label>

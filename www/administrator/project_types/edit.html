@@ -3,7 +3,7 @@
 	<fieldset class="filters"><legend>Search Information</legend>
 		<div class="content">
 			<ul>
-<? if ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown(order=>'lower(name)') and @{$$variable{Categories}} ) ?>
+        <? if ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown() and (@{$$variable{Categories}} > 2) ) ?>
 				<li>
 					<label>Category</label>
 					<select name="search_category_id" id="search_category_id" onchange="this.form.btnFunction.value='';this.form.submit();">
@@ -11,13 +11,13 @@
 						<? echo ( make_drop_down( $$variable{Categories}, $param{search_category_id} ) ) ?>
 					</select>
 				</li>
-<? endif ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown(order=>'lower(name)') and @{$$variable{Categories}} ) ?>
+        <? endif ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown() and (@{$$variable{Categories}} > 2) ) ?>
 				<li>
 					<label>Project Type</label>
 					<select id="ddmProjectType" name="ddmProjectType" onchange="this.form.btnFunction.value='';f1.submit();">
 						<option value="">select one</option>
 						<? echo ( 
-								make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)',
+								make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find(
 								( $param{search_category_id} ? ( category_id => $param{search_category_id} ) : () ),
 								) ], $$variable{ProjectType}->id() );
 								) ?>
@@ -31,9 +31,9 @@
 					button( 'Next1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Next';fmCheck(f1);", text=>'&gt;&gt;' } ),
 					button( 'New1', { onclick=>"f1.action='edit.html';addCheck(f1);", text=>'New' } ),
 					button( 'Delete1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
-					button( 'Save1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+					button( 'Save1', { onclick=>"f2.action='edit.html';f2.btnFunction.value='Save';fmChange=3;fmCheck(f2);", text=>'Save' } ),
 					button( 'Copy1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Copy';fmChange=3;fmCheck(f1);", text=>'Copy' } ),
-					button( 'Reset1', { onclick=>"f1.action='edit.html';f1.reset();", text=>'Reset' } ),
+					button( 'Reset1', { onclick=>"f2.action='edit.html';f2.reset();", text=>'Reset' } ),
 	); ) ?>
 		</p>
 		<p class="buttons">
@@ -45,6 +45,11 @@
 ); ) ?>
 		</p>
 	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" action="edit.html">
+	<input type="hidden" name="btnFunction"/>
+  <input type="hidden" name="ddmProjectType" value="<?echo($$variable{ProjectType}->id())?>" />
+
 	<fieldset class="leftColumn">
     <legend><? echo ( $$variable{ProjectType}->id() ? $$variable{ProjectType}->description() : 'New Project Type' ) ?></legend>
 		<ul>
@@ -104,7 +109,7 @@
 		<ul> 
 <? echo (
 		return checkboxes('required_services', 
-			[ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ],
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find() ],
 			[ $$variable{ProjectType}->required_services() ],
 			{ container=>['<li>','</li>'] }
 			);
@@ -117,7 +122,7 @@
 		<ul> 
 <? echo (
 		return checkboxes('blocked_services', 
-			[ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ],
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find() ],
 			[ $$variable{ProjectType}->blocked_services() ],
 			{ container=>['<li>','</li>'] }
 			);
@@ -196,5 +201,3 @@
 <? endif ( $$variable{ProjectType}->id() ) ?>
 <script src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script src="<?hash_link(/administrator/project_types/edit.js)?>"></script>
-<script>
-</script>

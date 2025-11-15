@@ -28,6 +28,8 @@ require openprint::Banner;
 require openprint::Survey;
 require openprint::account;
 require openprint::Sales_Log;
+require DateTime;
+require Date::Calc;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -446,7 +448,7 @@ sub _sales_log {
 } # end sub _sales_log
 
 sub _sales_log_line {
-	 if ( $param{action} eq 'add' ) {
+	if ( $param{action} eq 'add' ) {
 
 		if ( Date::Calc::check_date( @param{ map { 'called_on_'.$_ } ( 'year','month','day' ) } ) ) {
 			my $called_on_datetime = DateTime->new( time_zone => $openprint::TZ,
