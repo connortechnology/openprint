@@ -230,7 +230,7 @@ sub Taxes {
             tax_id      =>  $$Tax{id},
           rate        =>  $$Tax{rate},
         });
-      $openprint::log->debug("New aTax: " . $T->to_string()) if $debug;
+      $openprint::log->debug("New Tax: " . $T->to_string()) if $debug;
       # Should not save.  Saving will be done in the save function This is okay, because in the html, we id our field by the tax_id
       #$T->save({ 'expense_id'=>  $$self{id}}) if $$self{id};
       push @{$$self{Taxes}}, $T;
@@ -327,40 +327,47 @@ sub tax_charged {
         $$T{charge} = $yesno;
         $T->amount(undef);
         $openprint::log->debug("Setting tax charged to $yesno for T: " . $T->to_string()) if $debug;
+      } else {
+      $openprint::log->debug("Not setting tax for $name/$tax_name cuz ".@_);
       }
       return $T->charge();
+    } else {
+      $openprint::log->debug("Not setting tax for $name cuz name is $tax_name");
     }
   } # end foreach Tax
   $openprint::log->error("Tax not found for $name in " . $self->to_string());
 }
 
 sub business_use_amount {
-	if ( @_ > 1 ) {
-		$_[0]{business_use_amount} = $_[1];
+  my $self = shift;
+  $$self{business_use_amount} = shift if @_;
+	if ( ! defined $$self{business_use_amount} ) {
+		$$self{business_use_amount} = ($$self{business_use} and $self->amount()) ? Math::Round::nearest( 0.01, $$self{amount} * ( $$self{business_use} / 100 ) ) : '0.00';
 	} # end if
-	if ( ! defined $_[0]{business_use_amount} ) {
-		$_[0]{business_use_amount} = $_[0]->amount() ? Math::Round::nearest( 0.01, $_[0]{amount} * ( $_[0]{business_use} / 100 ) ) : '0.00';
-	} # end if
-	return $_[0]{business_use_amount};
+  $openprint::log->debug("Business use amount: $$self{business_use_amount}");
+	return $$self{business_use_amount};
 } # end sub business_use_amount
 
 sub to_string {
   my $self = shift;
   my $type = ref($self);
   #return $type . ': '. join(' ' , map { $$self{$_} ? $_.' => '.(ref $$self{$_} eq 'ARRAY' ? join(',', @{$$self{$_}}) : $$self{$_} ) : () } keys %fields ).
-  return 'Expense: ' . $self->Company()->name() . ' ' . $self->account(). ' to ' . $self->recipient(). ' '.$$self{category_id}.':'.$self->category().' '.$self->Currency()->format($self->total()).
- ($$self{business_use} ? ' ' . $$self{business_use}. '% business = ' . $self->business_use_amount() : '').
+  return 'Expense: ' . $self->Company()->name() . ' ' . $self->account(). ' to ' . ($self->recipient()//'').
+  ($$self{category_id}?' category:'.$$self{category_id}.':'.$self->category():'none').
+  ' '.$self->Currency()->format($self->total()).
+ ($$self{business_use} ? ' ' . $$self{business_use}. '% business = $' . $self->business_use_amount() : '').
   "\nTaxes:".join("\n", map { $_->to_string() } $self->Taxes());
 }
 
 sub amount {
   my $self = shift;
+  $$self{amount} = shift if @_;
   if ( !defined $$self{amount} ) {
     if ( defined $$self{total} ) {
-      $openprint::log->debug('Getting amount from total');
       my $amount = $$self{total};
       foreach my $Tax ( $self->Taxes() ) {
         $amount -= $Tax->amount();
+        $openprint::log->debug('Getting amount from total: '. $$self{total} . ' tax '.$Tax->name().':'.$Tax->amount());
       }
       $$self{amount} = $amount;
     }
