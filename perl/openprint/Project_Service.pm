@@ -243,30 +243,31 @@ sub overrides {
 } # end sub overrides
 
 sub summary {
+  my $self = shift;
 	my ( $qty_index ) = @_;
 
-	my $Project = $_[0]->Project();
+	my $Project = $self->Project();
 	my $services = $Project->services();
-	my $ServiceType = $_[0]->ServiceType( $_[0]{service_id} );
+	my $ServiceType = $self->ServiceType( $$self{service_id} );
 	return '' if ! $ServiceType->summary_visible();
 
-	my $specs = $_[0]->specs;
+	my $specs = $self->specs;
 	if ( $$specs{ServiceType} eq 'Signature' or ( $$specs{ServiceType} eq '' and ! $$specs{txtTotalPageQuantity}  ) ) {
 		require openprint::Estimating::Printing;
-		return openprint::Estimating::Printing::summary($Project, $_[0]{service_id}, $specs, $qty_index );
+		return openprint::Estimating::Printing::summary($Project, $$self{service_id}, $specs, $qty_index );
 	} elsif ( sets::isin( $$specs{ServiceType}, ['ShrinkWrap','KraftWrap','Bundling','Banding','CrossBanding'] ) ) {
 		require openprint::Estimating::Packaging;
-		return openprint::Estimating::Packaging::summary($Project, $_[0]{service_id}, $specs, $qty_index );
+		return openprint::Estimating::Packaging::summary($Project, $$self{service_id}, $specs, $qty_index );
 	} elsif ( sets::isin( $$specs{ServiceType}, ['SaddleStitching','LoopStitching'] ) ) {
 		require openprint::Estimating::Stitching;
-		return openprint::Estimating::Stitching::summary($Project, $_[0]{service_id}, $specs, $qty_index );
+		return openprint::Estimating::Stitching::summary($Project, $$self{service_id}, $specs, $qty_index );
 	} else {
 		my $ServiceTypeType = $ServiceType->type();
 		return if ! $ServiceTypeType;
 
 		eval('require openprint::Estimating::'.$ServiceTypeType.';' );
 		$openprint::log->error("ERror requiring openprint::Estimating::$ServiceTypeType ::summary: $@)") if $@;
-		my $summary = eval('openprint::Estimating::'.$ServiceTypeType.'::summary( $Project, $_[0]{service_id}, $specs, $qty_index );' );
+		my $summary = eval('openprint::Estimating::'.$ServiceTypeType.'::summary( $Project, $$self{service_id}, $specs, $qty_index );' );
 		$openprint::log->error("ERror evalling openprint::Estimating:: $ServiceTypeType ::summary: $@)") if $@;
 		return $summary;
 	} # end if
