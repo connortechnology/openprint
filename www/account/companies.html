@@ -3,7 +3,7 @@
 </div>
 <script nonce="<?echo($config{CSP_NONCE})?>">
 function load_page() {
-	new Ajax.Updater( 'Results', '_companies.html', { parameters: $('f1').serialize() } );
+LoadContent('Results', '_companies.html', $j('#f1').serialize());
 } 
 </script>
 <form id="f1" name="f1" method="post" action="companies.html">
@@ -14,16 +14,17 @@ function load_page() {
 			<label>Name contains</label>
 			<? echo ( input( type=>'text', name=>'company_name', oninput=>q`if(this.value.length>3){load_page();};`, onkeydown=>"load_page();" ); ) ?>
 		</li>
-<? if ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
-		<li>
-			<label>Sales Rep</label>
-			<select name="salesrep_id" size="1" onchange="load_page();"> 
-				<option value="">All</option>
-				<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$config{owner_id}, type=>['E','A'], ( $session{user_type}eq'A'?(): (id=>[$session{user_id},$openprint::User->csr_ids()])), 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
-			</select>
-			<? echo ( checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ); ) ?>
-		</li>
-<? endif ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
+<? echo (
+  return if !($session{user_type} eq 'A' or $openprint::User->csr_ids());
+  my $dropdown = openprint::User->dropdown( company_id=>$config{owner_id}, type=>['E','A'], ( $session{user_type}eq'A'?(): (id=>[$session{user_id},$openprint::User->csr_ids()])), 'usergroup any'=>'Sales' );
+  return if @{$dropdown} <= 2;
+  return join("\n",
+       '<li><label>Sales Rep</label>',
+       ssi::select( $dropdown, $session{$r->uri().'?salesrep_id'}, { name=>'salesrep_id', on_change=>'load_page', prepend=>[''=>'All']}),
+			 checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { on_click=>'load_page' } ),
+       '</li>',
+     );
+) ?>
 		<li> 
 			<label>Created Date</label>
 			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
@@ -56,7 +57,6 @@ function load_page() {
     my $html = '';
     
     foreach my $Field ( openprint::Company_Profile_Field->find( searchable=>1, order=>'sort,name' ) ) {
-$log->debug("Profile field: " . $Field->to_string() );
         $html .= '<li><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
         my $value = $session{'/account/companies.html?field-'.$Field->id()};
 
@@ -98,7 +98,7 @@ $log->debug( "Value: $v, text: $t");
 		<br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join("\n",
-				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
+				button( 'ShowResults', { on_click=>'load_page', text=>'Show Results' } ),
 				#button( 'DownloadCSV', { onclick=>"f1.action='projects.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
 				button( 'Reset', { onclick=>"f1.reset();", text=>'Reset' } ),
 ); ) ?>

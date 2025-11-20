@@ -37,7 +37,7 @@
 <? if ( @{$$variable{Companies}} ) ?>
 	<table class="List">
 		<tr> 
-      <th class="checkbox"><input type="checkbox" onclick="select_all(this.form, 'company_id', this.checked);"/></th>
+      <th class="checkbox"><input type="checkbox" name="company_id" value="0" on_click_this="select_all_this"/></th>
 
 			<th class="Account">Account #</th>
 			<th class="Company">Name</th>
@@ -76,7 +76,9 @@
     );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
   } # end foreach
-  $html .= '<tr class="totals"><td class="checkbox"></td><td colspan="7">'.scalar @{$$variable{Companies}} .' companies listed</td></tr>';
+  $html .= '<tr class="totals">
+      <td class="checkbox"><input type="checkbox" name="company_id" value="0" on_click_this="select_all_this"/></td>
+    <td colspan="7">'.scalar @{$$variable{Companies}} .' companies listed</td></tr>';
   $html .= '</table>
 <p class="button">
 '. join("\n",

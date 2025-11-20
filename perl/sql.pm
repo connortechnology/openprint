@@ -32,6 +32,31 @@ sub open_sql {
 	return $new_dbh;
 } # end sub open_sql
 
+sub fetchone_hashref {
+  my ($dbh, $sql, @values) = @_;
+
+  my $log = $openprint::log;
+	if (!$dbh) {
+		$log->error( "No dbh $sql" ) if $log;
+		return;
+	} # end if
+
+	my $sth;
+	if (!($sth = $dbh->prepare_cached($sql))) {
+		$log->error( "Error Preparing SQL: ($sql): " . $dbh->errstr ) if $log;
+		return;
+	} # end if
+
+	if (!$sth->execute(@values) ) {
+		$log->error("SQL execution failed: ($sql):" . $dbh->errstr) if $log;
+		return;
+	} # end if
+
+  my $result = $sth->fetchrow_hashref();
+  $sth->finish();
+  return $result;
+}
+
 sub execute_array {
 	my ( $l, $d, $sql, @values ) = @_;
 	my @return_array = ();
