@@ -562,7 +562,7 @@ sub can_view {
 		return 1;
 	} else {
 		my $Company = $_[0]->Company();
-		if ( $$Company{salesrep_id} and sets::isin( $$Company{salesrep_id}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+		if ( !$$Company{salesrep_id} or sets::isin( $$Company{salesrep_id}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
 			return 1;
 		} # end if
 		if ( openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Estimating'], $$User{id} ) ) {

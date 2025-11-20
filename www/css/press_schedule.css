@@ -138,6 +138,9 @@ width: 196px;
 	font-weight: bold;
 	margin: 2px 5px;
 }
+.late {
+  color: red;
+}
 .Presses {
 	font-size: medium;
 	font-weight: bold;
@@ -261,6 +264,8 @@ right: 0;
 	clear:both;
 	padding:0;
 	margin: 5px 0 5px 0;
+  display: flex;
+  justify-content: space-between;
 }
 .filters ul {
 	list-style:none;

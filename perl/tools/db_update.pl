@@ -1151,65 +1151,74 @@ if ( ! sets::isin( 'order_log', \@tables ) ) {
     die $dbh->errstr() if $dbh->errstr();
 }
 
-if ( sets::isin( 'projecttype_categories', \@tables ) ) {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
-	if ( $data and ! exists $$data{sort} ) {
-		$dbh->do('ALTER TABLE projecttype_categories ADD sort integer');
-	} # end if
-} else {
-	$dbh->do( misc::load_file( $log, q{../../sql/ProjectType_Categories.sql}) );
+if (!sets::isin( 'projecttype_categories', \@tables ) ) {
+  if (sets::isin('project_type_group', \@tables)) {
+    $dbh->do('ALTER TABLE project_type_group RENAME to projecttype_categories');
+  } else {
+    $dbh->do( misc::load_file( $log, q{../../sql/ProjectType_Categories.sql}) );
+  }
+}
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
+if ( $data and ! exists $$data{sort} ) {
+  $dbh->do('ALTER TABLE projecttype_categories ADD sort integer');
 } # end if
 
 if ( sets::isin( 'tbl_projecttypes', \@tables ) and !sets::isin( 'project_types', \@tables )) {
   $dbh->do('ALTER TABLE tbl_projecttypes RENAME to project_types');
   push @tables, 'project_types';
 }
-if ( sets::isin( 'project_types', \@tables ) ) {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_types'", 'column_name');
-	if ( exists $$data{lngindex} ) {
-		$dbh->do('ALTER TABLE Project_Types rename column lngindex to id');
-		$dbh->do('ALTER TABLE Project_Types rename column strid to name');
-		$dbh->do('ALTER TABLE Project_Types rename column strname to description');
-		$dbh->do('ALTER TABLE Project_Types rename column strdetailedurl to url');
-		$dbh->do('ALTER TABLE Project_Types rename column lngsort to sorting');
-		$dbh->do('CREATE SEQUENCE Project_Types_id_seq');
-		$dbh->do(q`SELECT setval('project_types_id_seq', (SELECT MAX(id) FROM PRoject_Types))` );
-		$dbh->do(q`DROP SEQUENCE IF EXISTS ProjectTypeIndex` );
-	} # end if
-  if (exists $$data{strurl} and !exists $$data{url}) {
-    $dbh->do('ALTER TABLE Project_Types RENAME strurl to url');
-  }
-	if ( exists $$data{strbasicurl} ) {
-		$dbh->do('ALTER TABLE Project_Types drop strbasicurl');
-	}
-	if ( exists $$data{strtemplateurl} ) {
-		$dbh->do('ALTER TABLE Project_Types drop strtemplateurl');
-	}
-	if ( ! exists $$data{deleted} ) {
-		$log->debug("Add deleted to Project_Types");
-		$dbh->do('ALTER TABLE Project_Types add deleted boolean not null default false') or die $dbh->errstr();
-	}
-	if ( ! exists $$data{please_call} ) {
-		$dbh->do('ALTER TABLE Project_Types add please_call boolean not null default false');
-	} # endif
-	if ( ! exists $$data{category_id} ) {
-		$dbh->do('ALTER TABLE Project_Types add category_id integer');
-		$dbh->do('ALTER TABLE Project_Types add FOREIGN KEY (category_id) REFERENCES projecttype_categories (id)');
-	} # endif
-	if ( ! exists $$data{type} ) {
-		$dbh->do('ALTER TABLE project_types add type text');
-		$dbh->do(q`UPDATE project_types SET type='SinglePage'`);
-		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='MultiPage'`);
-		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='MultiPagePublication'`);
-		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Magazines'`);
-		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Newsletters'`);
-		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Calendars'`);
-		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE ysnmultipage=true`);
-		die $dbh->errstr() if $dbh->errstr();
-	} # end if
-} else {
+if (!sets::isin( 'project_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Project_Types.sql}) );
+}
+
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_types'", 'column_name');
+if ( exists $$data{lngindex} ) {
+  $dbh->do('ALTER TABLE Project_Types rename column lngindex to id');
+  $dbh->do('ALTER TABLE Project_Types rename column strid to name');
+  $dbh->do('ALTER TABLE Project_Types rename column strname to description');
+  $dbh->do('ALTER TABLE Project_Types rename column strdetailedurl to url');
+  $dbh->do('ALTER TABLE Project_Types rename column lngsort to sorting');
+  $dbh->do('CREATE SEQUENCE Project_Types_id_seq');
+  $dbh->do(q`SELECT setval('project_types_id_seq', (SELECT MAX(id) FROM PRoject_Types))` );
+  $dbh->do(q`DROP SEQUENCE IF EXISTS ProjectTypeIndex` );
 } # end if
+if (exists $$data{strurl} and !exists $$data{url}) {
+  $dbh->do('ALTER TABLE Project_Types RENAME strurl to url');
+}
+if ( exists $$data{strbasicurl} ) {
+  $dbh->do('ALTER TABLE Project_Types drop strbasicurl');
+}
+if ( exists $$data{strtemplateurl} ) {
+  $dbh->do('ALTER TABLE Project_Types drop strtemplateurl');
+}
+if ( ! exists $$data{deleted} ) {
+  $log->debug("Add deleted to Project_Types");
+  $dbh->do('ALTER TABLE Project_Types add deleted boolean not null default false') or die $dbh->errstr();
+}
+if ( ! exists $$data{please_call} ) {
+  $dbh->do('ALTER TABLE Project_Types add please_call boolean not null default false');
+} # endif
+if ( ! exists $$data{category_id} ) {
+  if (exists $$data{lnggroup_id}) {
+    $dbh->do('ALTER TABLE Project_Types RENAME COLUMN lnggroupid TO category_id');
+  } else {
+    $dbh->do('ALTER TABLE Project_Types add category_id integer');
+  }
+  $dbh->do('ALTER TABLE Project_Types add FOREIGN KEY (category_id) REFERENCES projecttype_categories (id)');
+} # endif
+if ( ! exists $$data{type} ) {
+  $dbh->do('ALTER TABLE project_types add type text');
+  $dbh->do(q`UPDATE project_types SET type='SinglePage'`);
+  $dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='MultiPage'`);
+  $dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='MultiPagePublication'`);
+  $dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Magazines'`);
+  $dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Newsletters'`);
+  $dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Calendars'`);
+  $dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE ysnmultipage=true`);
+  die $dbh->errstr() if $dbh->errstr();
+} # end if
+
 if ( ! sets::isin( 'project_statuses', \@tables ) ) {
 	$log->debug("Adding Project_Statuses");
 	$dbh->do( misc::load_file( $log, q{../../sql/Project_Statuses.sql}) );

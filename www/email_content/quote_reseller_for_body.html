@@ -1,8 +1,8 @@
-Dear <?ForSalutation?> <?ForFirstName?> <?ForLastName?>,
+Dear <?echo($$variable{Quote}->for_name() ? $$variable{Quote}->for_name() : $$variable{Quote}->for_companyname() )?>,<br/>
 
 <p>
 Your quote<?echo( $$variable{Quote}->reference() ? ' labelled ' . $$variable{Quote}->reference() : '')?> is attached.<br/>
-lease save it for future reference
+Please save it for future reference
 <? echo (
   my $Company = $$variable{Quote}->For_Company();
   if ( $Company->salesrep_id() ) {

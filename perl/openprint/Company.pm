@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -284,7 +284,7 @@ sub dropdown {
 
 		my %new_sql = ( and => [
 			or => {
-			salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
+			'salesrep_id is null or in'=> [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
 			id => $$openprint::User{company_id},
 			},
 			%sql,	
@@ -441,6 +441,7 @@ sub find_filtered {
 sub can_view {
 	my $self = shift;
 	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $openprint::session{user_type} eq 'E' and !$$self{salesrep_id};
 	return 1 if $$self{salesrep_id} == $openprint::session{user_id};
 	return 1 if $$self{id} == $$openprint::User{company_id};
 	return 1 if $$self{salesrep_id} and sets::isin( $$self{salesrep_id}, $openprint::User->csr_ids() );

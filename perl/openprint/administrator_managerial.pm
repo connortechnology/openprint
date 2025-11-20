@@ -1135,7 +1135,8 @@ sub companies {
 sub _companies {
   if ($param{action}) {
     if ($param{action} eq 'delete') {
-      foreach my $Company ( openprint::Company->find( id=> (ref $param{company_id} eq 'ARRAY') ? $param{company_id} : $param{company_id}) ) {
+      my @ids = map { $_ = openprint::Company->transform(id=>$_); $_ ? $_ : () } ((ref $param{company_id} eq 'ARRAY') ? @{$param{company_id}} : ($param{company_id}) );
+      foreach my $Company (openprint::Company->find(id=>\@ids)) {
         $Company->delete();
       }
     } elsif ($param{action} eq 'undelete' ) {

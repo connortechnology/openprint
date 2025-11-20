@@ -153,7 +153,7 @@ sub session_init {
 	$Company = new openprint::Company( $session{company_id} );
 	$Owner = new openprint::Company( $config{owner_id} );
 	$Currency = new openprint::Currency( $session{Currency_id} );
-	$log->debug("Company: $$Company{name} $$User{email} $session{user_type}") if $$User{id};
+	$log->debug("Company: $$Company{name} $$User{email} $session{user_type} session: $cookie") if $$User{id};
 
 	if ( $config{Pricelist} ) {
 		if ( ! $session{Pricelist_id} ) {
@@ -185,7 +185,8 @@ sub session_init {
   if ($ip) {
     my $safe_ip = openprint::Host_Interface->transform(ip=>$ip);
     # FIXME :ipv6
-    if ($safe_ip and ($safe_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+    if ($safe_ip eq $ip) {
+      #and ($safe_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
       openprint::Host_Interface->lock();
       my @Interfaces = openprint::Host_Interface->find(ip=>$safe_ip);
       if ( !@Interfaces ) {

@@ -8,6 +8,7 @@ our @EXPORT = qw( load_file send_email_with_attached_files send_email_with_attac
 use Text::CSV_XS ();
 use Date::Calc qw(Add_Delta_Days);
 use Date::Format qw( time2str );
+use File::Basename qw(fileparse);
 
 #use Mail::Sendmail ();
 
@@ -628,6 +629,19 @@ sub json_to_html {
 		$html .= '<span>'.$input.'</span>';
 	}
 	return $html;
+}
+
+sub get_session_uri {
+  my $uri = shift;
+
+  my ($filename, $path, $suffix) = File::Basename::fileparse($uri);
+  my @path = map { $_ eq 'openprint' ? () : $_ } split('/', $path);
+  if (substr($filename,0,1) eq '_') {
+    $filename = substr($filename,1);
+  }
+  $uri = join('/',@path, $filename.$suffix);
+  $openprint::log->debug("get_session_uri $uri");
+  return $uri;
 }
 
 1;
