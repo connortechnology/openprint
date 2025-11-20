@@ -148,12 +148,15 @@ sub calc {
 
 sub summary {
   my ( $Project, $service_id, $specs, $qty_index ) = @_;
-  my $services = $Project->services();
+
   if ( $qty_index ) {
+    my $services = $Project->services();
     if ( $$services{BulkSkids} ) {
-      return sprintf( qq{%d items on %d skid%s\nweighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
+      return sprintf( qq{%d items on %d skid%s\nweighing %.2flbs}, 
+        @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
     } elsif ( $$services{PlainCartons} ) {
-      return sprintf( qq{%d items in %d carton%s\nweighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
+      return sprintf( qq{%d items in %d carton%s\nweighing %.2flbs},
+        @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
     } # end if
   } # end if
   return '';
