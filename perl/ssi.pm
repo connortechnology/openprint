@@ -1185,7 +1185,7 @@ sub reset_session($) {
 
 sub exists_path {
   my $path = shift;
-  $log->debug("Trying $path");
+  #$log->debug("Trying $path");
   if ( -e $path ) {
     return $path;
 	} elsif ( -e $config{SkinPath}.$path ) {
