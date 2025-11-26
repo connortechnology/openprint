@@ -202,7 +202,7 @@ sub signature_calc {
 	my $folding_specs = $$calc_hash{FoldingSpecs};
 	my $ServiceType = $Project->ServiceType($service_index);
 	if ( !$$ServiceType{id} ) {
-		$results{alert} .= 'Unable to determine stitching type! Has service been removed from project?<br/>';
+		$results{alert} .= "Unable to determine stitching type for service $service_index! Has service been removed from project?<br/>";
 		$results{Status} = 'uncalculated';
 		return \%results;
 	} else {

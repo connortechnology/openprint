@@ -94,13 +94,13 @@ sub calc {
   $$specs{ProjectIndex} = $$Project{id};
 
   if ( ! $$services{''} ) {
-    push @{$$services{''}}, openprint::print_project::insert_project_type( $r, $log, $dbh, $$Project{id}, $ProjectType->name() );
+    push @{$$services{''}}, $Project->add_project_type( $ProjectType->name() );
   } # end if
 
   my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
   if ( $$project_specs{ProjectType} ne $ProjectType->name() ) {
     openprint::print_project::delete_service( $Project, $$services{''}[0] );
-    $$services{''}[0] = openprint::print_project::insert_project_type( $r, $log, $dbh, $$Project{id}, $ProjectType->name() );
+    $$services{''}[0] = $Project->add_project_type( $ProjectType->name() );
     $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
   } # end if
 
