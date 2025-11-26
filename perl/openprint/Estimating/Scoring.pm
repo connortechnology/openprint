@@ -845,7 +845,7 @@ sub get_price {
 
 	if ( $UseScoringService ) {
 		%servicePrice = $UseScoringService->get_price(undef, $Equipment);
-		if ( $servicePrice{range_units} eq 'scores' ) {
+		if ( $servicePrice{range_units} and ($servicePrice{range_units} eq 'scores')) {
 			%servicePrice = $UseScoringService->get_price($score_qty, $Equipment);
 		} else {
 			%servicePrice = $UseScoringService->get_price($qty, $Equipment);
