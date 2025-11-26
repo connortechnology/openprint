@@ -1714,7 +1714,7 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 					} elsif ( $setupPrice{units} eq 'per hour' ) {
 						my $makeready_time = eval($$Fold{makeready_time});
 						if ( (! $makeready_time) or $? ) {
-              $openprint::log->error('No makeready_time on ' . $Fold->to_string() . ': ' . $? );
+              $openprint::log->debug('No makeready_time on ' . $Fold->to_string() . ': ' . $? );
 						}
 						$totalTime += $makeready_time;
 						$setupPrice{Total} = $setupPrice{Price} * $makeready_time / 60;
