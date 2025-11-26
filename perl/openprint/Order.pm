@@ -637,7 +637,8 @@ sub send_admin_emails {
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%order ) );
 
 	$order{ReplacementText} = ssi::include( '/email_content/sales_order_for_admin.html', \%order );
-	$Email->add_pdf_attachment_from_html("Order$$self{id}",  ssi::variable_substitution( \$email_template, \%order ) );
+  #$Email->add_html_attachment("Order$$self{id}.html", ssi::variable_substitution( \$email_template, \%order ) );
+	$Email->add_pdf_attachment_from_html("Order$$self{id}", ssi::variable_substitution( \$email_template, \%order ) );
 
 	my @project_dockets = ();
 
@@ -653,7 +654,7 @@ sub send_admin_emails {
 			
 		openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
 		if ( $docket_content ) {
-			$Email->add_html_attachment( "ProjectDocket$$Project{id}", ssi::variable_substitution( \$docket_content, \%data ) );
+			$Email->add_html_attachment( "ProjectDocket$$Project{id}.html", ssi::variable_substitution( \$docket_content, \%data ) );
 		} # end if docket_content
 		if ( $summary_content ) {
 			$data{ReplacementText} = ssi::variable_substitution( \$summary_content, \%data );
