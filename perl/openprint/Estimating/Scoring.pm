@@ -355,7 +355,6 @@ sub calc {
 			$status = 'uncalculated' if $Price{Status} eq 'uncalculated';
 		} # end foreach signature
 
-
 		my $unitPrice = 0;
 
 		if ( $qtyTotal ) {
@@ -398,7 +397,7 @@ sub signature_calc {
 			);
 	my $form = $$sig_specs{SignatureIndex};
 
-	my $score_qty = ($$specs{"txtVerticalQty-$form"}?$$specs{"txtVerticalQty-$form"}:0) + ($$specs{"txtHorizontalQty-$form"}?$$specs{"txtHorizontalQty-$form"}:0);
+	my $score_qty = ($$specs{"txtVerticalQty-$form"}//0) + ($$specs{"txtHorizontalQty-$form"}//0);
 	$Results{Breakdown} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
 
