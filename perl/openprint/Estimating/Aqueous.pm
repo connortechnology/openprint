@@ -540,7 +540,7 @@ sub signature_calc {
 						( map { ( (($area * 1.10) > $_) and (($area * .90) < $_) ) ? $_ : () } @{$$mrs{$type_name}} )
 					 ) {
 					$openprint::log->debug("In Makereadies: $$Equipment{id} $area") if DEBUG;
-          $SetupPrice{Total} = 0;
+          $SetupPrice{Price} = $SetupPrice{Total} = 0;
 				} else {
 					$openprint::log->debug("Not In Makereadies: $$Equipment{id} $area") if DEBUG;
 					$Services{$type_name.' MakeReady'} = openprint::Service->find_one(name=>$type_name.' MakeReady') if ! exists $Services{$type_name.' MakeReady'};
@@ -785,8 +785,8 @@ sub breakdown {
 		$breakdown .= sprintf(
 				'%s MakeReady: $%.2f<br/>Blanket Cut: $%.2f<br/>Service: ($%.2f%s*%d)=$%.2f<br/>Material: %s<br/>Total: $%.2f<br/>',
 			$type,
-			$$SetupPrice{Price},
-      ($$BlanketCutPrice{Price} ? $$BlanketCutPrice{Price} : 0),
+			$$SetupPrice{Total},
+      $$BlanketCutPrice{Price} // 0,
 			@$ServicePrice{'Price','units','Quantity','Total'},
 			$$MaterialPrice{Breakdown}, $colour_total );
 	} # end foreach aq type
