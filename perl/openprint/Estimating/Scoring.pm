@@ -878,6 +878,7 @@ sub get_price {
 
 	$Results{Runspeed} = $runspeed;
 
+  $servicePrice{units} //= '';
 	if ($servicePrice{units} eq 'per m') {
 		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $qty / 1000 );
 		$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>',
