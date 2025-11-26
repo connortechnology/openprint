@@ -540,7 +540,7 @@ sub create_edit_process {
 		$recalculate = 1;
 	} # end if
 
-	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited: '.join('<br/>', @changes) );
+	$Project->add_to_log( @session{'company_id','user_id'}, ($param{ProjectIndex} ? 'Edited: ': 'Created: ').join('<br/>', @changes) );
 
 	if ( $ProjectType->type() eq 'MultiPage' ) {
 		my $book_type = $Project->get_book_type();
