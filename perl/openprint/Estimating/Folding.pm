@@ -636,12 +636,12 @@ sub signature_calc {
 		my $capable = $Press->specification('Folding Capable');
 		if ( $capable and ( $capable ne 'N' ) ) {
 			if ( $$services{UVCoating} and openprint::Estimating::UVCoating::signature_needs( $Project, $sig_specs ) ) {
-				if ( $$calc_hash{UVCoatingSpecs}{"ddmEquipment-$form-$qty_index"} != $$Press{id} ) {
+				if ( $$calc_hash{UVCoatingSpecs}{"ddmEquipment-$form-$qty_index"} and ($$calc_hash{UVCoatingSpecs}{"ddmEquipment-$form-$qty_index"} != $$Press{id})) {
 					$add = 0;
 				} # end if
 			} # end if
 			if ( $$services{Aqueous} and openprint::Estimating::Aqueous::signature_needs( $Project, $sig_specs ) ) {
-				if ( $$calc_hash{AqueousSpecs}{"ddmEquipment-$form-$qty_index"} != $$Press{id} ) {
+				if ( $$calc_hash{AqueousSpecs}{"ddmEquipment-$form-$qty_index"} and ($$calc_hash{AqueousSpecs}{"ddmEquipment-$form-$qty_index"} != $$Press{id})) {
 					$add = 0;
 				} # end if
 			} # end if
