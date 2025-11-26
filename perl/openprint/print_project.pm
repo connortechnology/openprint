@@ -26,60 +26,6 @@ require Math::Round;
 
 # Projects are like Orders, in that you can have several in here, but only ONE of them may be unfinished.
 
-sub insert_project_type {
-	my ( $r, $log, $dbh, $project_index, $project_type_id ) = @_;
-
-	my $ProjectType = openprint::ProjectType->find_one(name=>$project_type_id);
-	if ( !$ProjectType ) {
-		$log->error( "Couldn't get project index for $project_type_id" );
-		return;
-	} # end if
-
-	# Make this all one transaction...
-	my $ac = sql::start_transaction( $dbh );
-
-	sql::insert( $log, $dbh, 'tbl_Project_Contents', [
-		'lngProjectIndex',	$project_index,
-		'strStatus',	'uncalculated' ] );
-	$_ = q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?};
-	my ( $service_index ) = sql::execute( $log, $dbh, $_, $project_index );
-	sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-		'lngProjectIndex',	$project_index,
-		'lngServiceIndex',	$service_index,
-		'strName',			'ProjectType',
-		'strValue',		 $ProjectType->name(),
-		] );
-
-	my @defaults = map { $$_{name}, $$_{value} } openprint::ProjectType_Default->find(
-			'projecttype_id is null or ='=> $ProjectType->id(), 
-			'order'=>'projecttype_id NULLS FIRST' );
-
-	if ( $session{user_id} ) {
-		$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id IS NULL AND user_id=?};
-		push @defaults, sql::execute( $log, $dbh, $_, $session{user_id} );
-	} # end if
-	
-	if ( $param{txtConventionalPlates} == 1 ) {
-		push @defaults, 'rdbPlates','Conventional';
-	} else {
-		push @defaults, 'rdbPlates','CTP';
-	} # end if
-
-	push @defaults, 'SignatureIndex', '0';
-	my %defaults = @defaults;
-	foreach my $key ( keys %defaults ) {
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $defaults{$key}, 1 );
-	} # end while
-	my $Project = new openprint::Project( $project_index );
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, "txtQuantity$qty_index", $Project->quantity($qty_index), 1 );
-	} # end foreach
-	sql::end_transaction( $dbh, $ac );
-	delete $$Project{Services};
-	delete $$Project{signatures};
-	return $service_index;
-} # end sub insert_project_type
-
 sub add_service {
 # THis is an external wrapper for insert_service
 	my ( $r, $log, $dbh, $variable, $project_index, @services ) = @_;
