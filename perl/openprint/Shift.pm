@@ -17,7 +17,7 @@ require openprint::Equipment_Shift;
 require openprint::User;
 require openprint::ScheduledJob;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'shifts';
 $serial = 'shifts_id_seq';
@@ -56,7 +56,7 @@ sub starttime_dt {
 		$_[0]{starttime_dt} = $parser->parse_datetime($_[0]{starttime});
     $_[0]{starttime_dt}->set_time_zone($openprint::TZ);
 
-    $openprint::log->debug("starttime_dt $_[0]{starttime} " . $_[0]{starttime_dt});
+    $openprint::log->debug("starttime_dt $_[0]{starttime} " . $_[0]{starttime_dt}) if $debug;
     return $_[0]{starttime_dt};
 	} else {
 		$openprint::log->error('tried to get a dt for '.$_[0]{starttime});
@@ -244,7 +244,7 @@ sub ul_id {
 sub get_from_ul_id {
 	my ( $id ) = @_;
 
-	$id =~ /^ul(\d*)-(\d\d\d\d-\d\d-\d\d)?-?(\w*)?$/;
+	$id =~ /^ul(\d*)\-(\d\d\d\d\-\d\d\-\d\d)?\-?(.*)?$/;
 	my ( $equipment_id, $date, $shift_name ) = ( $1, $2, $3 );
 
 	my $Shift;
@@ -283,7 +283,7 @@ sub get_ul {
 	if ( $Shift->starttime() ) {
     my $starttime_dt = $Shift->starttime_dt();
     my $endtime_dt = $Shift->endtime_dt();
-    $log->debug("ul_id: ".$starttime_dt);
+    $log->debug("ul_id: ".$starttime_dt) if $debug;
 			my @Operators = $Shift->Operators();
 
 			if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{user_id} ) ) {

@@ -19,7 +19,7 @@
   if ( $session{user_id} and ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $session{user_id} ) ) {
     if ( (!$sql{salesrep_id}) or ( ! sets::isin( $sql{salesrep_id}, [ $session{user_id}, $openprint::User->csr_ids() ] ) ) ) {
       $sql{or} = { 
-				salesrep_id => [ $session{user_id}, $openprint::User->csr_ids() ],
+				'salesrep_id is null or in' => [ 0, $session{user_id}, $openprint::User->csr_ids() ],
 				id => [$session{company_id}, ( $openprint::User->company_id() != $session{company_id} ? $openprint::User->company_id() : () ) ],
 			};
     }           
@@ -47,10 +47,9 @@
   }
 	my $time = time;
 	my @Companies = openprint::Company->find( %sql );
-	$log->debug("Loading took: " . ( time - $time ) . ' secs');
+	#$log->debug("Loading took: " . ( time - $time ) . ' secs');
 	$time = time;
 	$_ = make_drop_down( [ '', 'select', map { $_->can_view() ? ( $_->id(), $_->name() ) : () } @Companies ], @Companies == 1 ? $Companies[0]{id} : $param{selected_id} );
-	$log->debug("makingdrop down took: " . ( time - $time ) . ' secs');
-	$time = time;
+	#$log->debug("makingdrop down took: " . ( time - $time ) . ' secs');
 	return $_;
 ) ?>

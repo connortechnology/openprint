@@ -416,7 +416,7 @@ table .Date {
 	padding-right: 5px;
 }
 .DateTime {
-	width: 215px;
+	width: 115px;
 	text-align: left;
 }
 td.Elapsed, th.Elapsed {
@@ -424,7 +424,7 @@ td.Elapsed, th.Elapsed {
 	text-align: left;
 }
 table .Docket {
-	width: 50px;
+	width: 65px;
 	text-align: center;
 }
 table .Stock {
@@ -602,7 +602,6 @@ input.changed:focus {
 input[type="text"].filter, 
 .Service input[type="text"].filter,
 fieldset p input.filter {
-  line-height: 1.7;
 	width: 40px;
 }
 
@@ -719,7 +718,7 @@ td select {
 }
 select#ddmCustomer, select#company_id,
 select#supplier_id {
-  width: calc(100% - 46px);
+  max-width: calc(100% - 46px);
 }
 a.Today, a.Clear {
 	margin-right: 2px;

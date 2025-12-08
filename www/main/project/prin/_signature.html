@@ -23,7 +23,12 @@
 				write_override( 'OverrideGroupPageQuantity'.$$variable{Signature}, $$variable{'OverrideGroupPageQuantity'.$$variable{Signature}}, '', q`calc('f1');` ),
 			); ) ?>
 		</li>
-    <input type="hidden" name="txtSpreadSize<?Signature?>" value="<?echo($$variable{'txtSpreadSize'.$$variable{Signature}})?>"/>
+    <li class="spread_size"><label>Spread Size</label>
+      <?echo(join("\n",
+        ssi::input(name=>'txtSpreadSize'.$$variable{Signature}, type=>'cardinal', value=>$$variable{'txtSpreadSize'.$$variable{Signature}}, size=>2, oninput=>'calc(this.form.name);' ),
+				write_override( 'OverrideSpreadSize'.$$variable{Signature}, $$variable{'OverrideSpreadSize'.$$variable{Signature}}, '', q`calc('f1');` ),
+			); ) ?>
+    </li>
 		<li class="Description">
 			<label>Description</label>
 			<input type="text" name="txtServiceDescription<?Signature?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ) ?>" />

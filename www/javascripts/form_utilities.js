@@ -567,7 +567,8 @@ function clearElementForm(element) {
 }
 
 function clearForm(form) {
-	form = $(form);
+  if ((typeof form)=='string') form = document.forms[form];
+
 	for ( let i=0, len = form.elements.length; i < len; i += 1 ) {
 		const e = form.elements[i];
 		if ( ! e.type )
@@ -763,15 +764,24 @@ function checkForgotPasswordData ( emailInput ) {
 }
 
 function toggleMenu( element, a, b ) {
-	if ( ! element )
-		return;
-
-	if ( element.className == a ) {
-		element.className = b;
-	} else {
-		element.className = a;
-	} // end if
+	if (!element) return;
+  console.log(element, typeof element);
+  if ((typeof element) === 'string') {
+    console.log(typeof element, (typeof element === 'string'));
+    element = $j('#'+element);
+  }
+  if (element instanceof jQuery) {
+    element.toggleClass(a);
+    element.toggleClass(b);
+  } else {
+    if ( element.className == a ) {
+      element.className = b;
+    } else {
+      element.className = a;
+    } // end if
+  }
 }
+
 // Assume element is a link, toggle the class of the parent.
 function toggle_menu(element) {
   if (element.parent.className == 'on') {

@@ -22,44 +22,48 @@ sub session_init {
   if ($dbh) {
     $dbh->do('SET timezone = ?', {}, $openprint::config{Timezone}) or die $dbh->errstr();
   }
+  my $current_ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
 
 	my $cookies;
 	my $cookie;
 	if ( $r ) {
 		$cookies = Apache2::Cookie->fetch($r);
 		if ( $$cookies{_session_id} ) {
-			$cookie = $$cookies{_session_id};
-			$cookie = $cookie->value if $cookie;
-      $log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
-		} else {
-			if ( $r->param('_session_id') ) {
-				$log->error('Since when is session_id in the params');
-				$cookie = $r->param('_session_id');
-			} # end if
+			$cookie = $$cookies{_session_id}->value;
+      $log->debug("Have session $cookie from cookies") if Debug;
+      $cookie =~ s/[^A-Za-z0-9]//g; # sanitize
 		} # end if
-    $cookie =~ s/[^A-Za-z0-9]//g if $cookie; # sanitize
 
 		if ( $dbh ) {
 			# If we have no cookie, then... shouldn't try to load it...
-			if ( (!$cookie) or (! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }`) ) {
-				$log->debug("Error fetching Session: $cookie: $@") if $@;
-				if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 };` ) {
-					$log->error('Error creating Session'. $@);
-				} # end if
-				if ( $r->param('_session_id') ) {
-          my $current_ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
-					if ( $current_ip and ($session{ip} ne $current_ip) ) {
+      if ( $cookie ) {
+        eval {
+          tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 };
+        };
+        if (!$@) {
+          # No errors, do validation
+          # Validate ip on existing session
+					if ( $current_ip and $session{ip} and ($session{ip} ne $current_ip) ) {
 						$log->error('Change of session ip');
 						untie %session;
 						%session = ();
-					} # end if
-				} # end if
-				# Store this, will be useful
+          }
+        } else { 
+          $log->debug("Error fetching Session: $cookie: $@") if $@;
+        }
+      }
+      if (!%session) {
+        eval { tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 }; };
+        if ($@) {
+          $log->error('Error creating Session'. $@. ' Trying a second time');
+          eval {
+            tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8 };
+          };
+        }
 			} # end if
 
-
-			if ( (!$cookie) or ( $cookie ne $session{_session_id} ) ) {
-$log->debug('Generating new cookie '.$session{_session_id}) if Debug;
+			if ( (!$cookie) or ($session{_session_id} and ($cookie ne $session{_session_id}))) {
+        $log->debug('Generated new cookie '.$session{_session_id}.' because '.($cookie?' != '.$cookie : ' no cookie')) if Debug;
 				my $Cookie = Apache2::Cookie->new($r,
 						-name	=> '_session_id',
 						-value => $session{_session_id},
@@ -77,7 +81,7 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 		} # end if
 	} # end if $r
 
-  $session{ip} = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
+  $session{ip} = $current_ip;
   $session{lastupdated} = time;
   $session{HTTP_USER_AGENT} = $ENV{HTTP_USER_AGENT};
 
@@ -149,7 +153,7 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 	$Company = new openprint::Company( $session{company_id} );
 	$Owner = new openprint::Company( $config{owner_id} );
 	$Currency = new openprint::Currency( $session{Currency_id} );
-	$log->debug("Company: $$Company{name} $$User{email} $session{user_type}") if $$User{id};
+	$log->debug("Company: $$Company{name} $$User{email} $session{user_type} session: $cookie") if $$User{id};
 
 	if ( $config{Pricelist} ) {
 		if ( ! $session{Pricelist_id} ) {
@@ -181,7 +185,8 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
   if ($ip) {
     my $safe_ip = openprint::Host_Interface->transform(ip=>$ip);
     # FIXME :ipv6
-    if ($safe_ip and ($safe_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+    if ($safe_ip eq $ip) {
+      #and ($safe_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
       openprint::Host_Interface->lock();
       my @Interfaces = openprint::Host_Interface->find(ip=>$safe_ip);
       if ( !@Interfaces ) {

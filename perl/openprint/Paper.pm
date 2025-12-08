@@ -35,8 +35,9 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
 use constant DEBUG_PRICING => 0;
+use constant DEBUG => 0;
 
-$debug = 1;
+$debug = 0;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -717,7 +718,7 @@ sub mweight {
 			my $wpsi = $$self{gsm}/703064.5;
 			if ( $$self{type} eq 'Roll' and $$self{basis_width} and $$self{basis_height} ) {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{basis_width} * $$self{basis_height} * 1000 );
-$openprint::log->debug("Setting mweight to $$self{mweight} from wpsi $wpsi and basis size");
+$openprint::log->debug("Setting mweight to $$self{mweight} from wpsi $wpsi and basis size") if DEBUG;
 				# MWeight is in relation to the basis size
       } elsif ( $$self{width} and $$self{height} ) {
         if ($self->is_envelope()) {
@@ -1059,7 +1060,7 @@ sub Recommendations {
   if ( @_ ) {
     @{$$self{Recommendations}} = @_;
   } elsif ( ! exists $$self{Recommendations} ) {
-    $openprint::log->debug('No Recommendations');
+    $openprint::log->debug('No Recommendations') if DEBUG;
     if ( $$self{id} ) {
       $$self{Recommendations} = [ openprint::PaperRecommendation->find(paper_id=>$$self{id}) ];
     } else {
@@ -1125,15 +1126,15 @@ sub get_price {
 				$openprint::log->warn("Unable to find price for Stock id:$$self{id} $params{service} equip: $params{equipment_id} : $qty $lookup_qty");
 				foreach my $Price ( @Prices ) {
 					if ( $$Price{pricelist_id} != $list_id ) {
-						$openprint::log->debug("Wrong pricelist: " . $Price->to_string() );
+						$openprint::log->debug("Wrong pricelist: " . $Price->to_string() ) if DEBUG;
 						next;
 					} 
 					if ( $params{equipment_id} and $$Price{equipment_id} and ( $params{equipment_id} != $$Price{equipment_id} ) ) {
-						$openprint::log->debug("Wrong equipment: " . $Price->to_string() );
+						$openprint::log->debug("Wrong equipment: " . $Price->to_string() ) if DEBUG;
 						next;
 					}
 					if ( $$Price{service} ne $params{service} ) {
-						$openprint::log->debug("Wrong service: " . $Price->to_string() );
+						$openprint::log->debug("Wrong service: " . $Price->to_string() ) if DEBUG;
 						next;
 					} 
 #$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->min(), $Price->max(), $Price->price() ) );
@@ -1144,14 +1145,13 @@ sub get_price {
 						$price = $Price->clone();
 						last;
 					} else {
-						$openprint::log->debug("Wrong qty: $lookup_qty" . $Price->to_string() );
+						$openprint::log->debug("Wrong qty: $lookup_qty" . $Price->to_string() ) if DEBUG;
 					} # end if
 				} # end foreach Price
 				
 			} # end if
 			return;
 		} # end if ! price
-
 
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$$price{currency_id} = $Pricelist->currency_id();
@@ -1280,7 +1280,11 @@ sub gsm {
 		}
 	} 
 	if ( ! $$self{gsm} ) {
-		if ( $self->wpsi(undef) ) {
+    if ($$self{mweight} and $self->type() ne 'Roll') {
+      my $wpsi = $$self{mweight} / ($$self{width}*$$self{height}*1000);
+      $$self{gsm} = Math::Round::nearest( 0.01, $wpsi * 703064.5 );
+      $openprint::log->warn('calculate gsm for ' . $$self{id} . ' ' . $self->to_string() ) if $$self{brand};
+    } elsif ( $self->wpsi(undef) ) {
 			$$self{gsm} = Math::Round::nearest( 0.01, $$self{wpsi} * 703064.5 );
 			$openprint::log->warn('calculate gsm for ' . $$self{id} . ' ' . $self->to_string() ) if $$self{brand};
 		} else { 
@@ -1303,19 +1307,19 @@ sub wpsi {
 		if ( $$self{mweight} and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
       $$self{wpsi} *= 2 if $self->is_envelope();
-#$log->debug("Setting wpsi to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height})");
+$log->debug("Setting wpsi $$self{wpsi} to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height}) = item weight ".$self->sheet_weight()) if DEBUG;
     } elsif ( $self->basis_mweight() ) {
       $$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
       if ($self->is_envelope()) {
         $$self{wpsi} *= 2;
-        $log->debug("Setting wpsi to $$self{wpsi} from envelope 2 * basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height}");
+        $log->debug("Setting wpsi to $$self{wpsi} from envelope 2 * basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height} = envelope weight ".$self->sheet_weight()) if DEBUG;
       } else {
-        $log->debug("Setting wpsi to $$self{wpsi} from basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height}");
+        $log->debug("Setting wpsi to $$self{wpsi} from basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height} = sheet weight ".$self->sheet_weight()) if DEBUG;
       }
 
     } elsif ($$self{gsm} and $$self{gsm} ne 'unknown') {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
-#$log->debug("Setting wpsi from gsm to $$self{gsm} / 703064.5 = $$self{wpsi}");
+$log->debug("Setting wpsi from gsm to $$self{gsm} / 703064.5 = $$self{wpsi}") if DEBUG;
 		#} else {
 #$log->debug("Nothing to set wpsi from");
 		} # end if
@@ -1604,7 +1608,7 @@ $log->debug("Didn't find specific paper $params{width} x $params{height} $$specs
 			( ( $$Paper{height} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{width} != $$specs{'StockHeight'.$qty_index} ) )
 		   ) {
          #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
-$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
+$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}") if DEBUG;
 			$$Paper{Supplied} = $Supplied;
 			if ( ! $Supplied->start_width() ) {
         $openprint::log->debug("No start width?");
@@ -1720,7 +1724,7 @@ sub basis_mweight {
       #$openprint::log->debug("calcing basis_mweight from weght: $$self{basis_mweight} = $$self{weight} =~ 2*$1");
     } elsif ($$self{mweight} and $self->type() eq 'Sheet' and $$self{width} and $$self{height}) {
       $$self{basis_mweight} = Math::Round::nearest(1, 1000*($self->basis_width() * $self->basis_height()) * (($$self{mweight} / 1000)/($$self{width}*$$self{height})));
-      $openprint::log->debug("calcing basis_mweight from mweight: $$self{basis_mweight} = ($$self{basis_width} * $$self{basis_height}) * (($$self{mweight} / 1000)/($$self{width}*$$self{height}))"); 
+      $openprint::log->debug("calcing basis_mweight from mweight: $$self{basis_mweight} = ($$self{basis_width} * $$self{basis_height}) * (($$self{mweight} / 1000)/($$self{width}*$$self{height}))") if DEBUG;
 		} else {
 			#$$self{basis_mweight} = 'Unknown';
 			$openprint::log->error('Unable to calculated basis_mweight'.$$self{id});
@@ -1783,7 +1787,13 @@ sub start_sheet_weight {
 } # end sub start_sheet_weight
 
 sub units {
-	return ($_[0]{type} eq 'Roll' ? 'lb' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
+  if ($_[0]{type} eq 'Roll') {
+    return 'lb'.($_[1] == 1 ? '' : 's');
+  }
+  if ($_[0]{type} eq 'Envelope') {
+    return 'envelope'.( $_[1] == 1 ? '' : 's');
+  }
+  return 'sheet'.( $_[1] == 1 ? '' : 's');
 } # end sub units
 
 sub types {
@@ -1925,7 +1935,7 @@ sub printing_types {
 			push @types, $$sig_specs{"PrintingType$q_index"};
 		}
 	} # end foreach
-$openprint::log->debug( "Types @types for " . $self->to_string() );
+$openprint::log->debug( "Types @types for " . $self->to_string() ) if DEBUG;
 	return sets::union( @types );
 }
 
@@ -1939,7 +1949,7 @@ sub check {
   }
   $Copy = $Paper->clone();
   if ( abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) > 1 ) {
-$openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) );
+$openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) ) if DEBUG;
     push @results, "may have invalid mweight current:$$Paper{mweight} != calculated:$$Copy{mweight}";
 	}
   $Copy = $Paper->clone();
@@ -1953,7 +1963,7 @@ $openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil
 				($Paper->basis_height() != 26)
 				) 
 		 ) {
-$openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
+$openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height()) if DEBUG;
 		push @results, 'may have wrong basis size '.$Paper->basis_width() . 'x' . $Paper->basis_height().'. Should probably be 20x26' .
 ssi::button('fix'.$$Paper{id}, { onclick=>q`set_basis_dimensions('20','26');`, text=>'Fix' } );
 ;
@@ -1965,7 +1975,7 @@ ssi::button('fix'.$$Paper{id}, { onclick=>q`set_basis_dimensions('20','26');`, t
 				($Paper->basis_height() != 22)
 				) 
 		 ) {
-$openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
+$openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height()) if DEBUG;
 		push @results, 'may have wrong basis size '.$Paper->basis_width() . 'x' . $Paper->basis_height().'. Should probably be 17x22';
 	}
   if ( $Paper->is_envelope() 
@@ -1975,7 +1985,7 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
 				($Paper->basis_height() != 22)
 				) 
   ) {
-$openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
+$openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height()) if DEBUG;
 		push @results, 'may have wrong basis size '.$Paper->basis_width() . 'x' . $Paper->basis_height().'. Should probably be 17x22';
   }
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {

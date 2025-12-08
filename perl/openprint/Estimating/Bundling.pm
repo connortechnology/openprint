@@ -54,7 +54,10 @@ my @no_outputs = (
 );
 
 sub no_outputs {
-	return @no_outputs;
+  my ($pid, $sid, $old_specs, $new_specs) = @_;
+  my @no = @no_outputs;
+  push @no, map { $$new_specs{'OverridePrice'.$_} and $$new_specs{'OverridePrice'.$_} eq 'Y' ? 'txtPrice'.$_ : () } (1..3);
+	return @no;
 }
 
 sub calc {
@@ -403,7 +406,6 @@ sub summary {
 
 		$text .= $$specs{rdbCardboardBacking} eq 'Y' ? ' with cardboard backing.' : '';
 	} # end if
-$openprint::log->debug("Bundling:: summary");
 	return $text;
 } # end sub summary
 

@@ -3,20 +3,22 @@
 	@{$$variable{pending_approved_drops}} = ();
 	if ( $session{$$variable{referer}.'?pending_approved'} ) {
   	$html .= q`<h3 onclick="LoadContent('PendingApproved', '/employee/production/_pending_approved.html', $j('#f1').serialize());">Pending Approved (click to hide):</h3>`;
-		my $Shift = new openprint::Shift();
-		$Shift->name('Approved');
+    eval {
+      my $Shift = new openprint::Shift();
+      $Shift->name('Approved');
 
-		my $ac = sql::start_transaction($dbh);
+      my $ac = sql::start_transaction($dbh);
 
-		foreach my $E ( @{$$variable{Equipment}} ) {
-			$html .= '<div class="PressColumn">'."\n";
-			$Shift->equipment_id( $E->id() );
-			push @{$$variable{pending_approved_drops}}, $Shift->ul_id();
-			$html .= $Shift->get_ul( { Status=>['Approved','Shipped','Picked Up'] } );
-			$html .= "</div>\n";
-		} # end foreach Equipment
+      foreach my $E ( @{$$variable{Equipment}} ) {
+        $html .= '<div class="PressColumn">'."\n";
+        $Shift->equipment_id( $E->id() );
+        push @{$$variable{pending_approved_drops}}, $Shift->ul_id();
+        $html .= $Shift->get_ul( { Status=>['Approved','Shipped','Picked Up'] } );
+        $html .= "</div>\n";
+      } # end foreach Equipment
 
-		sql::end_transaction( $dbh, $ac );
+      sql::end_transaction( $dbh, $ac );
+    };
 	} else {
 		$html .= q`<h3 onclick="LoadContent('PendingApproved', '/employee/production/_pending_approved.html', $j('#f1').serialize());">Pending Approved (click to show):</h3>`;
 	} # end if

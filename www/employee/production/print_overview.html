@@ -125,6 +125,7 @@ var drops = new Array();
 				<ul>
 					<li class="multipress">Has forms on other presses</li>
 					<li class="inprepress">In Prepress</li>
+					<li class="plated">Plated</li>
 					<li class="complete">Is complete</li>
 					<li class="regular">Regular</li>
 					<li class="rush">Rush</li>
@@ -135,20 +136,30 @@ var drops = new Array();
 			</ul>
 		</div>
     </div>
-		<p class="buttons">
+		<div class="buttons">
+    <div class="left">
 			<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ); ) ?>
 			<? echo ( button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ); ) ?>
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 			<? echo ( button( 'AddDocket', { onclick=>"popup_window('_add_docket.html', '', { width: 600, height: 500 } );", text=>'Add Docket' } ); ) ?>
 			<? echo ( button( 'AddMaintenance', { onclick=>"popup_window('_add_maintenance.html', '', { width: 600, height: 400 } );", text=>'Add Maintenance' } ); ) ?>
-			<? echo (
-				if ( @{$$variable{Equipment}} == 1 ) {
-					return button( 'ReFlow', { href=>$r->uri().'?Equipment='.$$variable{Equipment}[0]->id().'&amp;btnFunction=Reflow', text=>'Reflow Jobs' } );
-				} # end if
-				return;
-			) ?>
 <? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
-		</p>
+    </div>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
+    <div class="right">
+			<? echo (
+        my $html = '';
+        $html .= button( 'ReFlow', { onclick=>"this.form.btnFunction.value='Reflow';this.form.submit();", text=>'Reflow Jobs' } );
+        $html .= checkboxes('flow_by', [
+        due_date      =>'Due Date',
+        inks_required =>'Inks Required',
+        sheet_width   =>'Sheet/Roll Width'
+        ], $session{$r->uri().'?flow_by'});
+				return $html;
+			) ?>
+    </div>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
+		</div>
 	</fieldset>
 	<div class="unprintable">
 		Please click on the <b>Docket #</b> to view details.<br/>
@@ -393,7 +404,8 @@ $log->debug("LastShift $$LastShift{endtime} < $et");
 				$LastShift = $NewShift;
 			} # end while
 			foreach my $Shift ( @Shifts ) {	
-				push @{$$variable{drops}}, $Shift->ul_id() if ($Shift->operator_ids() and @{$Shift->operator_ids()}) or ! $E->smartscheduling();
+				push @{$$variable{drops}}, $Shift->ul_id();
+        #if ($Shift->operator_ids() and @{$Shift->operator_ids()}) or ! $E->smartscheduling();
 				$html .= $Shift->get_ul( );
 			} # end foreach Shift
 

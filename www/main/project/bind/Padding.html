@@ -2,6 +2,32 @@
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 		<ul>
+      <?echo(
+        my @services = openprint::Service->find('name ilike'=>'Padding%');
+        my @dimensions;
+        foreach my $service (@services) {
+          if ($service->name() =~ /([\d\.]+x[\d\.]+)$/) {
+            push @dimensions, $1;
+          } else {
+            $log->debug("$$service{name} didn't match");
+          }
+        }
+        @dimensions = map { my ($x, $y) = split('x', $_); $_ => "$x\" x $y\""; } sort {
+          my ($ax, $ay) = split('x', $a);
+          my ($bx, $by) = split('x', $b);
+          return $ax <=> $bx if $ax != $bx;
+          return $ay <=> $by;
+          } @dimensions;
+        if (@dimensions) {
+          return join("\n",
+          '<li><label>Pad Dimensions</label>',
+            ssi::select(\@dimensions, $$variable{dimensions}, {name=>'dimensions', onchange=>'calc(this.form.name)', prepend=>[''=>'select']}),
+            #write_override('dimensions_override', $$variable{dimensions_override}, '', 'calc(\'f1\');'),
+          '</li>',
+            );
+        }
+        return;
+      ) ?>
 		<li><label>Sheets per pad</label>
 			<? echo ( input( type=>'cardinal', name=>'PageQuantity', value=>$$variable{PageQuantity}, oninput=>'calc(this.form.name);' ); ) ?>
 		</li>

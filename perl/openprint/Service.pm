@@ -24,7 +24,7 @@ $log->debug("Have a price definition for $service");
 }
 
 
-$debug = 1;
+$debug = 0;
 $cached = 1;
 
 $table = 'services';

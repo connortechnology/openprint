@@ -10,7 +10,7 @@ use vars qw( $log $dbh $timing );
 use openprint ();
 *dbh = \$openprint::dbh;
 *log = \$openprint::log;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 $timing = 1;
 
 # This uses it's own dbh so as not to quash the global dbh.  This is so that we can easily open secondary db connections while maintaining the global one.
@@ -31,6 +31,31 @@ sub open_sql {
 
 	return $new_dbh;
 } # end sub open_sql
+
+sub fetchone_hashref {
+  my ($dbh, $sql, @values) = @_;
+
+  my $log = $openprint::log;
+	if (!$dbh) {
+		$log->error( "No dbh $sql" ) if $log;
+		return;
+	} # end if
+
+	my $sth;
+	if (!($sth = $dbh->prepare_cached($sql))) {
+		$log->error( "Error Preparing SQL: ($sql): " . $dbh->errstr ) if $log;
+		return;
+	} # end if
+
+	if (!$sth->execute(@values) ) {
+		$log->error("SQL execution failed: ($sql):" . $dbh->errstr) if $log;
+		return;
+	} # end if
+
+  my $result = $sth->fetchrow_hashref();
+  $sth->finish();
+  return $result;
+}
 
 sub execute_array {
 	my ( $l, $d, $sql, @values ) = @_;

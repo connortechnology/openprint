@@ -1,11 +1,12 @@
 	function add_new() {
     const form = $j('#add'); 
-    $j.ajax('/marketing/_sales_log_line.html', form.serialize())
+    console.log(form.serialize());
+    $j.ajax('_sales_log_line.html', { method: 'POST', data: form.serialize()})
 				.done( function(data){
           console.log(data);
           $j('#sales_log_body').prepend(data);
 					//$('sales_log_body').insert({ top: response.responseText} );
-					SortableTable.load();
+          $j('#SalesLogTable').bootstrapTable({ });
 				}
         ).fail(function() {
           alert( "error" );
@@ -26,7 +27,10 @@
 		
 	}
 	function load_results() {
-		$j('#Results').load('_sales_log.html', $j('#f1').serialize() );
+		$j('#Results').load('_sales_log.html', $j('#f1').serialize(), function(data) {
+      //$j('#Folds').html(data)
+      $j('#SalesLogTable').bootstrapTable({ });
+    });
 	}
 	function check_form( form ) {
 /*
@@ -41,3 +45,7 @@
 		}
 */
 	}
+
+addEventListener('DOMContentLoaded', (event) => {
+  $j('#SalesLogTable').bootstrapTable({ });
+});

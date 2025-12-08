@@ -94,7 +94,10 @@ sub apply {
         $Expense->$key($action{$key});
       }
     }
-    $openprint::log->debug("Applied action $$self{id} $key $action{$key}, result: ".(defined($$Expense{$key})?$$Expense{$key}:'undef')."\n".$Expense->to_string());
+      $Expense->amount(undef) if ! $$Expense{amount_locked};
+      $Expense->business_use_amount(undef);
+      $Expense->total(undef) if ! $$Expense{total_locked};
+    $openprint::log->debug("Applied action $$self{id} $$self{name} $key $action{$key}, result: ".(defined($$Expense{$key})?$$Expense{$key}:'undef')."\n".$Expense->to_string());
   } # end foreach key
 } # end sub apply
 

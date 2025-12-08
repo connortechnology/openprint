@@ -203,7 +203,9 @@ sub calc {
 		local *calc_signature = sub {
 			my ($sig_specs, $item_qty, $item_width, $item_height, $item_calliper, $item_weight, $imposition, $item_name) = @_;
 			my $results = {
+        package_qty => 0,
 				breakdown => '',
+        alert => '',
 				material_price => 0,
 			};
 			my $best_price = undef;
@@ -344,11 +346,6 @@ sub calc {
 
 				my $Stock = openprint::Paper::load_from_signature($Project, $sig_specs, $qty_index);
 				my $item_name;
-				my $item_qty = $$sig_specs{"hdnImpressionQuantity$qty_index"};
-        if (!$item_qty) {
-					$$specs{alert} .= 'Unable to load impression count!<br/>';
-          next;
-        }
 				my $imposition = new openprint::Imposition();
 				$imposition->load($sig_specs, $qty_index, $Project);
 				my ($item_width, $item_height, $item_calliper, $item_weight ) = (
@@ -359,7 +356,12 @@ sub calc {
 				if (!$item_weight) {
 					$$specs{alert} .= 'Unable to load sheet weight<br/>';
 				}
-        $item_qty /= 2 if $imposition->sides() == 2 and $$imposition{runstyle} ne 'Web';
+				my $item_qty = $$imposition{net_sheets} || $$sig_specs{"hdnImpressionQuantity$qty_index"};
+        if (!$item_qty) {
+					$$specs{alert} .= 'Unable to load impression count!<br/>';
+          next;
+        }
+        #$item_qty /= 2 if $imposition->sides() == 2 and $$imposition{runstyle} ne 'Web';
 				$item_name = 'Flat Sheet';
 				my $results = calc_signature($sig_specs, $item_qty, $item_width, $item_height, $item_calliper, $item_weight, $imposition, $item_name);
 				$package_qty += $$results{package_qty};
@@ -368,7 +370,7 @@ sub calc {
 				$package_weight = $$results{package_weight};
 				$total_weight += $$results{total_weight} if $$results{total_weight};
 				$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>Form '.$$sig_specs{SignatureIndex}.'</legend>'.
-					sprintf('%d sheets size %dx%d @ %.3flbs<br/>', $item_qty, $item_width, $item_height, $item_weight).
+					sprintf('%d sheets size %sx%s @ %.3flbs<br/>', $item_qty, $item_width, $item_height, $item_weight).
 					$$results{breakdown}.'</fieldset>';
 				$status = 'uncalculated' if !$$results{package_qty};
 				$$specs{'txtItemsPerPackage'.$qty_index} = $$results{items_per_package};#if $$specs{'txtItemsPerPackage'.$qty_index} > $$results{items_per_package};

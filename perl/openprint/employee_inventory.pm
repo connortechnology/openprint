@@ -2780,10 +2780,6 @@ sub packingslips {
 } # end sub packingslips
 
 sub _packingslips {
-  ssi::save_params( '/employee/inventory/packingslips.html', ( 'company_id','docket','type_id','deleted',
-      'created_on_start_year','created_on_start_month','created_on_start_day',
-      'created_on_end_year','created_on_end_month','created_on_end_day',
-    ) );
 
   if ( $param{btnFunction} ) {
     if ( $param{btnFunction} eq 'delete' ) {
@@ -2820,6 +2816,11 @@ sub _packingslips {
         } # end foreach id
       } # end if
     } # end if
+  } else {
+    ssi::save_params( '/employee/inventory/packingslips.html', ( 'company_id','docket','type_id','deleted',
+    'created_on_start_year','created_on_start_month','created_on_start_day',
+    'created_on_end_year','created_on_end_month','created_on_end_day',
+    ) );
   }
 } # end sub _packingslips
 

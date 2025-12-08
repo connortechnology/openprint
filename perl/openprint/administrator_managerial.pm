@@ -1135,7 +1135,8 @@ sub companies {
 sub _companies {
   if ($param{action}) {
     if ($param{action} eq 'delete') {
-      foreach my $Company ( openprint::Company->find( id=> (ref $param{company_id} eq 'ARRAY') ? $param{company_id} : $param{company_id}) ) {
+      my @ids = map { $_ = openprint::Company->transform(id=>$_); $_ ? $_ : () } ((ref $param{company_id} eq 'ARRAY') ? @{$param{company_id}} : ($param{company_id}) );
+      foreach my $Company (openprint::Company->find(id=>\@ids)) {
         $Company->delete();
       }
     } elsif ($param{action} eq 'undelete' ) {
@@ -1210,6 +1211,7 @@ sub _user_logs {
 
 sub users {
 	$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
+	$session{$r->uri().'?deleted'} = '0' if ! exists $session{$r->uri().'?deleted'};
 	_users();
 
 	if ( $param{btnFunction} ) {

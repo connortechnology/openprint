@@ -10,7 +10,7 @@ var breakdownWin = new Array();
 function show_breakdown( index ) {
 	if ( gettingNewPrice )
 		return;
-    if (breakdownWin[index] == null) {
+  if (breakdownWin[index] == null) {
 		breakdownWin[index] = new Window({
 			maximizable: false,
 			resizable: false,
@@ -268,6 +268,8 @@ function cbFillResults( results ) {
 
 			} // end if
 		} else {
+      // Even if a form element has been updated, there may be an element with id that needs updating as well.
+      // Doesn't work. Has to be either/or
       const div = $(key);
       if (div) {
         if ( typeof(value)== "object" ) {
@@ -277,16 +279,16 @@ function cbFillResults( results ) {
           if (value.removeClassName ) {
             div.removeClassName( value.removeClassName );
           }
-        } else {
-          //console.log('filling: ' + key + ' with: ' + value );
-          //div.hide();
+        } else if (div.type === undefined ) {
+          console.log('filling: ' + key + ' with: ' + value, 'type', div.type );
           div.innerHTML = value;
-          //d//iv.show();
+        } else {
+          console.log('not filling: ' + key + ' with: ' + value, 'type', div.type );
         }
       } else {
         //console.log("didnt find " + key );
       } // end if
-    } // end if
+    }
 	} // end for each 
 	gettingNewPrice = false;
 	block_calc = false;

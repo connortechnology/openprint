@@ -170,12 +170,14 @@ sub Fold {
 
 	if ( ( ! $$params{type} ) and $$params{pages} ) {
 		$$params{type} = $$params{pages}.'PageFold';
-    $openprint::log->debug("Form type auto set to $$params{type}");
+    $openprint::log->debug("Form type auto set to $$params{type}") if DEBUG_FOLDING;
 	}
 
   if (!($$self{Folds}{$$params{type}} and @{$$self{Folds}{$$params{type}}})) {
-    $openprint::log->debug("No folds for type $$params{type} on $$self{strid}");
+    $openprint::log->debug("No folds for type $$params{type} on $$self{strid}") if DEBUG_FOLDING;
+    return undef;
   }
+
 	foreach my $Fold ( $$params{type} ? @{$$self{Folds}{$$params{type}}} : map { @{$$self{Folds}{$_}} } keys %{$$self{Folds}} ) {
 
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {

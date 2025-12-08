@@ -601,7 +601,7 @@ $openprint::log->debug("Service : " . $Service->service_type() . ' ' . $Service-
 			%statuses = map { $_ => $_ } values %service_statuses;
 		} # end if
 		if ( $self->Type()->type() eq 'MultiPage' ) {
-require openprint::Estimating::MultiPage;
+      require openprint::Estimating::MultiPage;
 			foreach my $qty_index ( $self->quantity_indexes() ) {
 				if ( openprint::Estimating::MultiPage::status( $$self{id}, undef, $qty_index ) ) {
 					$new_status = 'uncalculated';
@@ -1824,7 +1824,7 @@ sub change_ProjectType {
 
 	if ( $$Project{id} ) {
 		if ( ! $$services{''} ) {
-			my $printing_service_index = openprint::print_project::insert_project_type( $openprint::r, $openprint::log, $openprint::dbh, $$Project{id}, $ProjectType->name() );
+			my $printing_service_index = $Project->add_project_type( $ProjectType->name() );
 			push @{$$services{''}}, $printing_service_index;
 		} # end if
 		my %oldRequiredServiceTypes = map { $$_{name} => $_ } $OldProjectType->required_ServiceTypes();
@@ -1981,6 +1981,10 @@ sub can_view {
 		$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
 		return 1;
 	}
+	if ( $openprint::session{user_type} eq 'E' ) {
+		$openprint::log->debug("can_view 1 cuz employee") if $debug;
+		return 1 
+	}
 
 	if ( sets::isin( $_[0]{user_id}, [ $$openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
 		$log->debug("$$openprint::User{firstname} Either created it or is an assistant") if $debug;
@@ -1999,23 +2003,31 @@ sub can_edit {
 		$openprint::log->debug("can_view 1 cuz no id") if $debug;
 		return 1;
 	}
-
-  if ( $_[0]{user_id} == $openprint::session{user_id} ) {
-		$openprint::log->debug("can_view 1 cuz i am the creator") if $debug;
-		return 1;
-	}
-  #if ( $openprint::session{company_id} == $_[0]{company_id} ) {
-  #$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
-  #return 1;
-  #}
-	if ( $openprint::session{user_type} eq 'A' ) {
-		$openprint::log->debug("can_edit 1 cuz admin") if $debug;
-		return 1 
-	}
-	if ( sets::isin( $_[0]{user_id}, [ $openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
-		$log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
-		return 1;
-	} # end if
+  if ($openprint::session{user_id}) {
+    if ($_[0]{user_id} == $openprint::session{user_id}) {
+      $openprint::log->debug("can_view 1 cuz i am the creator") if $debug;
+      return 1;
+    }
+    #if ( $openprint::session{company_id} == $_[0]{company_id} ) {
+    #$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
+    #return 1;
+    #}
+    if ($openprint::session{user_type} eq 'A') {
+      $openprint::log->debug("can_edit 1 cuz admin") if $debug;
+      return 1 
+    }
+    if ($openprint::session{user_type} eq 'E') {
+      $openprint::log->debug("can_edit 1 cuz admin") if $debug;
+      return 1 
+    }
+    if ( sets::isin( $_[0]{user_id}, [ $openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
+      $log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
+      return 1;
+    } # end if
+    if ( openprint::usergroup::is_user_in( ['Accounting', 'Estimating'], $openprint::session{user_id} ) ) {
+      return 1;
+    }
+	} # end if user_id
   
   return 0;
 } # end sub can_edit
@@ -2183,6 +2195,49 @@ sub get_print_container {
   ;
 
   return $sid[0];
+}
+
+sub add_project_type {
+  my ( $self, $project_type_name ) = @_;
+
+  my $ProjectType = openprint::ProjectType->find_one(name=>$project_type_name);
+  if ( !$ProjectType ) {
+    $log->error( "Couldn't get project index for $project_type_name" );
+    return;
+  } # end if
+
+  $self->lock();
+  sql::insert( $log, $dbh, 'tbl_Project_Contents', [ 'lngProjectIndex', $$self{id}, 'strStatus',  'uncalculated' ] );
+  $_ = q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?};
+  my ( $service_index ) = sql::execute( $log, $dbh, $_, $$self{id} );
+  sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
+    'lngProjectIndex',  $$self{id},
+    'lngServiceIndex',  $service_index,
+    'strName',      'ProjectType',
+    'strValue',    $ProjectType->name(),
+    ] );
+
+  my @defaults = map { $$_{name}, $$_{value} } openprint::ProjectType_Default->find(
+      'projecttype_id is null or ='=> $ProjectType->id(),
+      order=>'projecttype_id NULLS FIRST' );
+
+  if ( $openprint::session{user_id} ) {
+    $_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id IS NULL AND user_id=?};
+    push @defaults, sql::execute( $log, $dbh, $_, $openprint::session{user_id} );
+  } # end if
+
+  push @defaults, 'SignatureIndex', '0';
+  my %defaults = @defaults;
+  foreach my $key ( keys %defaults ) {
+    openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, $key, $defaults{$key}, 1 );
+  } # end while
+  foreach my $qty_index ( $self->quantity_indexes() ) {
+    openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, "txtQuantity$qty_index", $self->quantity($qty_index), 1 );
+  } # end foreach
+  $self->unlock();
+  delete $$self{Services};
+  delete $$self{signatures};
+  return $service_index;
 }
 
 1;

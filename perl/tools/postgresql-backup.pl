@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use warnings;
 use Getopt::Long;
-use lib '/var/www/testing/perl';
+use lib '/var/www/openprint/perl';
 use strict;
 require Date::Calc;
 require DBI;
@@ -89,13 +89,15 @@ foreach my $db ( @dbs ) {
 				'pg_dump -b -Fc',
 				( ( $$opts{host} and $$opts{host} ne 'local' ) ? ( '-h', $$opts{host} ) : () ),
 				( $$opts{port} ? ( '-p', $$opts{port} ): () ),
-				$db, '|', 'bzip2', '>', "$path/$db/$year-$mon-$mday.sql.new.bz2",
+				$db,
+        '>', "$path/$db/$year-$mon-$mday.sql.new",
+        # '|', 'bzip2',
 				);
 		#print "running $command\n";
 		system($command);
 		die "Can't dump $db" if $?;
-		if ( ! rename( "$path/$db/$year-$mon-$mday.sql.new.bz2", "$path/$db/$year-$mon-$mday.sql.bz2" ) ) {
-			print "ERror renaming $path/$db/$year-$mon-$mday.sql.new.bz2 to $path/$db/$year-$mon-$mday.sql.bz2 : $!\n";
+		if ( ! rename( "$path/$db/$year-$mon-$mday.sql.new", "$path/$db/$year-$mon-$mday.sql" ) ) {
+			print "ERror renaming $path/$db/$year-$mon-$mday.sql.new to $path/$db/$year-$mon-$mday.sql : $!\n";
 			next;
 		} # end if
 		print "Done backing up $db\n" if $$opts{debug};
@@ -107,7 +109,7 @@ foreach my $db ( @dbs ) {
 			closedir DIRHANDLE;
 			foreach my $file ( @files ) {
 				next if $file =~ /^\./;
-				if ( $file =~ /^(\d\d\d\d)-(\d+)-(\d+).sql.bz2$/ ) {
+				if ( $file =~ /^(\d\d\d\d)-(\d+)-(\d+).sql(.bz2)?$/ ) {
 					if ( Date::Calc::check_date( $1, $2, $3 ) ) {
 						my $age = Date::Calc::Delta_Days( $1, $2, $3, $year, $mon, $mday );
 						if ( $age > $$opts{days} ) {

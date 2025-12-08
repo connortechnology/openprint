@@ -157,7 +157,7 @@ sub signature_needs {
 
   # If it's not needing folding, then it doesn't need to be scored
 	if ( ! openprint::Estimating::Folding::signature_needs( $Project, $sig_specs ) ) {
-    $openprint::log->debug("NeedFolding is not true form $form $$sig_specs{txtWidth}x$$sig_specs{txtHeight} : $$sig_specs{txtFinalWidth}x$$sig_specs{txtFinalHeight}");
+    $openprint::log->debug("NeedFolding is not true form $form $$sig_specs{txtWidth}x$$sig_specs{txtHeight} : $$sig_specs{txtFinalWidth}x$$sig_specs{txtFinalHeight}") if DEBUG;
 		return 0;
 	} # end if
   my $book_type = $Project->get_book_type();
@@ -175,7 +175,7 @@ sub signature_needs {
 			$openprint::log->error('Loading paper in Scoring::signature_needs');
 			$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
 		}
-    $openprint::log->debug( "Score Required for form $form!: ".($$Paper{id} ? $$Paper{id} : 'Custom').' '.$Paper->score_required() );
+    $openprint::log->debug( "Score Required for form $form!: ".($$Paper{id} ? $$Paper{id} : 'Custom').' '.$Paper->score_required() ) if DEBUG;
 		if ( $Paper->score_required() ) {
 			return 1;
 		} # end if
@@ -355,7 +355,6 @@ sub calc {
 			$status = 'uncalculated' if $Price{Status} eq 'uncalculated';
 		} # end foreach signature
 
-
 		my $unitPrice = 0;
 
 		if ( $qtyTotal ) {
@@ -398,7 +397,7 @@ sub signature_calc {
 			);
 	my $form = $$sig_specs{SignatureIndex};
 
-	my $score_qty = ($$specs{"txtVerticalQty-$form"}?$$specs{"txtVerticalQty-$form"}:0) + ($$specs{"txtHorizontalQty-$form"}?$$specs{"txtHorizontalQty-$form"}:0);
+	my $score_qty = ($$specs{"txtVerticalQty-$form"}//0) + ($$specs{"txtHorizontalQty-$form"}//0);
 	$Results{Breakdown} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
 
@@ -543,7 +542,7 @@ sub signature_calc {
 	} # end if overrideImpositions
 
 	if ((defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
-		$openprint::log->debug('Overriding impositions');
+		$openprint::log->debug('Overriding impositions') if DEBUG;
     # Look in sets of impositions for a cut that matches
     my $matched = 0;
     foreach my $set (@All_Impositions) {
@@ -582,7 +581,7 @@ sub signature_calc {
       if ( $overriden_count != $SignatureImposition->quantity() * $SignatureImposition->imposition() ) {
         $Results{alert} .= "Overriden imposition count ($overriden_count) does not match printed imposition count (".$SignatureImposition->quantity() * $SignatureImposition->imposition().") for form $form quantity $qty_index (".$$specs{"txtQuantity$qty_index"}.").<br/>";
       } else {
-        $openprint::log->debug(" override count: $overriden_count $$SignatureImposition{quantity} * $$SignatureImposition{imposition}");
+        $openprint::log->debug(" override count: $overriden_count $$SignatureImposition{quantity} * $$SignatureImposition{imposition}") if DEBUG;
       } # end if
     }
   } # end if overriden Imposition
@@ -845,7 +844,7 @@ sub get_price {
 
 	if ( $UseScoringService ) {
 		%servicePrice = $UseScoringService->get_price(undef, $Equipment);
-		if ( $servicePrice{range_units} eq 'scores' ) {
+		if ( $servicePrice{range_units} and ($servicePrice{range_units} eq 'scores')) {
 			%servicePrice = $UseScoringService->get_price($score_qty, $Equipment);
 		} else {
 			%servicePrice = $UseScoringService->get_price($qty, $Equipment);
@@ -878,6 +877,7 @@ sub get_price {
 
 	$Results{Runspeed} = $runspeed;
 
+  $servicePrice{units} //= '';
 	if ($servicePrice{units} eq 'per m') {
 		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $qty / 1000 );
 		$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>',
@@ -1068,7 +1068,7 @@ sub get_scores {
 					} # end if
 				} # end if
 			} elsif ( ! $$specs{"chkOverrideQty-$form"} ) {
-				$openprint::log->debug("Not setting scores");
+				$openprint::log->debug("Not setting scores") if DEBUG;
 				$$specs{"txtVerticalQty-$form"} = 0;
 				$$specs{"txtHorizontalQty-$form"} = 0;
 			} # end if

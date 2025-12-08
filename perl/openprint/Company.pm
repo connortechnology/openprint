@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -280,11 +280,11 @@ sub dropdown {
 
 	my %sql = @_;
 
-	if ( $openprint::session{user_id} and ( $openprint::session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ) {
+	if ( $openprint::session{user_id} and ( $openprint::session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory','Sales'], $openprint::session{user_id} ) ) {
 
 		my %new_sql = ( and => [
 			or => {
-			salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
+			'salesrep_id is null or in'=> [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
 			id => $$openprint::User{company_id},
 			},
 			%sql,	
@@ -441,6 +441,7 @@ sub find_filtered {
 sub can_view {
 	my $self = shift;
 	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $openprint::session{user_type} eq 'E' and !$$self{salesrep_id};
 	return 1 if $$self{salesrep_id} == $openprint::session{user_id};
 	return 1 if $$self{id} == $$openprint::User{company_id};
 	return 1 if $$self{salesrep_id} and sets::isin( $$self{salesrep_id}, $openprint::User->csr_ids() );
@@ -585,11 +586,14 @@ sub Country {
 sub can_become {
 	my $C = shift;
 	my $User = shift;
+  return 0 if $$User{type} eq 'C';
 	$User = $openprint::User if ! $User;
 	if ( 
 			( $$User{type} eq 'A' )
 			or
 			( $$User{id} == $$C{salesrep_id} )
+        or
+      (!$$C{salesrep_id})
 			or
 			sets::isin( $$User{id}, $C->CSR()->assistant_ids() )
 			or

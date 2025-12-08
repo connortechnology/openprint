@@ -163,5 +163,9 @@ $openprint::Owner = new openprint::Company(102);
     }
   }
 }
+
+$dbh->do("DELETE FROM projecttemplate WHERE type='KnotchBound'");
+$dbh->do("UPDATE projecttemplate SET type='PerfectBound', name='PerfectBound' WHERE type='PerfectBinding'");
+$dbh->do("update service_types set name='Signature', url='prin/Signature.html', create_visible='N' where id=68");
 1;
 __END__
