@@ -277,7 +277,7 @@ input[type="number"].calliper_pt {
 }
 input[type="number"].calliper_mm,
 input[type="number"].calliper {
-  width: 65px;
+  width: 70px;
 }
 fieldset .breakdown label:not(.radio):not(.radio-inline):after {
   content: '';
