@@ -12,11 +12,13 @@ $serial= 'manufacturers_id_seq';
 %fields = (
 		id		=>  'id',
 		name	=>  'name',
+    approved  =>  'approved',
 );
 %transforms = (
 		name	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
+  approved => '1',
 );
 
 1;
