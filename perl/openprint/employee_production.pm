@@ -204,7 +204,7 @@ sub print_overview {
         $Project->status( 'Approved' );
         $Project->design( 'ElectronicFile' );
         $Project->save();
-        openprint::print_project::insert_project_type( $r, $log, $dbh, $Project->id(), 'Custom' );
+        $Project->add_project_type('Custom');
         my $project_id = $Project->id();
         my @services;
         foreach my $signature_count ( 1 .. $param{forms} ) {

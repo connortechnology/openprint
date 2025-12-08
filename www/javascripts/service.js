@@ -10,7 +10,7 @@ var breakdownWin = new Array();
 function show_breakdown( index ) {
 	if ( gettingNewPrice )
 		return;
-    if (breakdownWin[index] == null) {
+  if (breakdownWin[index] == null) {
 		breakdownWin[index] = new Window({
 			maximizable: false,
 			resizable: false,

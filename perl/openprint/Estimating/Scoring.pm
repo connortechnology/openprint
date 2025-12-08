@@ -355,7 +355,6 @@ sub calc {
 			$status = 'uncalculated' if $Price{Status} eq 'uncalculated';
 		} # end foreach signature
 
-
 		my $unitPrice = 0;
 
 		if ( $qtyTotal ) {
@@ -398,7 +397,7 @@ sub signature_calc {
 			);
 	my $form = $$sig_specs{SignatureIndex};
 
-	my $score_qty = ($$specs{"txtVerticalQty-$form"}?$$specs{"txtVerticalQty-$form"}:0) + ($$specs{"txtHorizontalQty-$form"}?$$specs{"txtHorizontalQty-$form"}:0);
+	my $score_qty = ($$specs{"txtVerticalQty-$form"}//0) + ($$specs{"txtHorizontalQty-$form"}//0);
 	$Results{Breakdown} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
 
@@ -845,7 +844,7 @@ sub get_price {
 
 	if ( $UseScoringService ) {
 		%servicePrice = $UseScoringService->get_price(undef, $Equipment);
-		if ( $servicePrice{range_units} eq 'scores' ) {
+		if ( $servicePrice{range_units} and ($servicePrice{range_units} eq 'scores')) {
 			%servicePrice = $UseScoringService->get_price($score_qty, $Equipment);
 		} else {
 			%servicePrice = $UseScoringService->get_price($qty, $Equipment);
@@ -878,6 +877,7 @@ sub get_price {
 
 	$Results{Runspeed} = $runspeed;
 
+  $servicePrice{units} //= '';
 	if ($servicePrice{units} eq 'per m') {
 		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $qty / 1000 );
 		$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>',

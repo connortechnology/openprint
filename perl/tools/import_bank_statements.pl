@@ -427,7 +427,9 @@ LINE: while ( my $line = <FH> ) {
 
       $log->info('No rules matched') if !$matched;
 
-      #$Expense->Taxes(undef);
+      #$Expense->Taxes(undef); # Need to redo taxes or else business_use_amount won't calc right
+      #But deleting the tax entries removes the charged setting.
+
       $Expense->amount(undef) if ! $$Expense{amount_locked};
       $Expense->business_use_amount(undef);
       $Expense->total(undef) if ! $$Expense{total_locked};
@@ -469,7 +471,7 @@ LINE: while ( my $line = <FH> ) {
       } elsif ( $matched ) {
         ## Look for it without the description, but with a transaction id
         delete $expense_find{'description ilike'};
-        delete $expense_find{transaction_id};
+        #delete $expense_find{transaction_id};
         delete $expense_find{'recipient lc'};
         @Expenses = openprint::Expense->find(\%expense_find);
         if ( @Expenses ) {
@@ -492,7 +494,7 @@ LINE: while ( my $line = <FH> ) {
           }
         }
       } 
-      $log->info("No expenses found to match $date, $desc, $debit, $credit, (".(defined $balance ? $balance : 'undef').', rules? ' . @Rules . "\n" . $Expense->to_string());
+      $log->info("No expenses found to match $date, $desc, $debit, $credit, balance(".(defined $balance ? $balance : 'undef').")\n".$Expense->to_string());
 
       print 'Add record for? [Y|n|r]';
       $response = <STDIN>;

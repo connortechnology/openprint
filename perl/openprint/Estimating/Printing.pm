@@ -6590,7 +6590,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			} # end if
 		} elsif ( $real_colour =~ /^(\w+) Spot Colour$/ ) {
 			$colour = $1;
-      $log->debug("Have $colour spot colour");
+      $log->debug("Have $colour spot colour") if DEBUG_INKS;
 		} elsif ( $real_colour =~ /PMS/i ) {
 			$colour = $real_colour;
 			#$colour =~ s/\D//g; # Just the PMS #

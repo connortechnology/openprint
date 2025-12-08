@@ -92,7 +92,7 @@ $openprint::log->debug("Module is: $module");
 	if ( $openprint::param{Additional} eq 'Y' or $openprint::param{additional_service} eq 'Y' ) {
 		$Project->add_service( $service_type );
 	} # end if
-	$Project->add_to_log(@openprint::session{'company_id','user_id'}, $service_type. ' service saved: '.join('<br/>', @changes));
+	$Project->add_to_log(@openprint::session{'company_id','user_id'}, ' Save Service: '.$service_type.join('<br/>', ' changes:', @changes)) if @changes;
 
 	$log->debug('***** END  OF  save_service ************');
 } # end sub save_service
@@ -639,9 +639,7 @@ sub internal_calc {
 				$specs{$_} and $$specs{$_} and ( $specs{$_} ne $$specs{$_} )
 				) ? $_ : () } @variables;
 		$Project->add_to_log( @openprint::session{'company_id','user_id'},
-				'Save Service ' . $Service->name() . (
-          @changes ? ' no changes.' : join('<br/>', 'changes:', map { $_.': '.$$specs{$_}.'=>'.$specs{$_} } @changes ))
-      );
+				'Save Service ' . $Service->name() . join('<br/>', ' changes:', map { $_.': '.$$specs{$_}.'=>'.$specs{$_} } @changes)) if @changes;
 
 		foreach my $key ( @variables ) {
 			$log->debug("Internal Calc:: looking at $key new $specs{$key} : old ". $$specs{$key}) if Debug;

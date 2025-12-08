@@ -1824,7 +1824,7 @@ sub change_ProjectType {
 
 	if ( $$Project{id} ) {
 		if ( ! $$services{''} ) {
-			my $printing_service_index = openprint::print_project::insert_project_type( $openprint::r, $openprint::log, $openprint::dbh, $$Project{id}, $ProjectType->name() );
+			my $printing_service_index = $Project->add_project_type( $ProjectType->name() );
 			push @{$$services{''}}, $printing_service_index;
 		} # end if
 		my %oldRequiredServiceTypes = map { $$_{name} => $_ } $OldProjectType->required_ServiceTypes();
@@ -2195,6 +2195,49 @@ sub get_print_container {
   ;
 
   return $sid[0];
+}
+
+sub add_project_type {
+  my ( $self, $project_type_name ) = @_;
+
+  my $ProjectType = openprint::ProjectType->find_one(name=>$project_type_name);
+  if ( !$ProjectType ) {
+    $log->error( "Couldn't get project index for $project_type_name" );
+    return;
+  } # end if
+
+  $self->lock();
+  sql::insert( $log, $dbh, 'tbl_Project_Contents', [ 'lngProjectIndex', $$self{id}, 'strStatus',  'uncalculated' ] );
+  $_ = q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?};
+  my ( $service_index ) = sql::execute( $log, $dbh, $_, $$self{id} );
+  sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
+    'lngProjectIndex',  $$self{id},
+    'lngServiceIndex',  $service_index,
+    'strName',      'ProjectType',
+    'strValue',    $ProjectType->name(),
+    ] );
+
+  my @defaults = map { $$_{name}, $$_{value} } openprint::ProjectType_Default->find(
+      'projecttype_id is null or ='=> $ProjectType->id(),
+      order=>'projecttype_id NULLS FIRST' );
+
+  if ( $openprint::session{user_id} ) {
+    $_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id IS NULL AND user_id=?};
+    push @defaults, sql::execute( $log, $dbh, $_, $openprint::session{user_id} );
+  } # end if
+
+  push @defaults, 'SignatureIndex', '0';
+  my %defaults = @defaults;
+  foreach my $key ( keys %defaults ) {
+    openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, $key, $defaults{$key}, 1 );
+  } # end while
+  foreach my $qty_index ( $self->quantity_indexes() ) {
+    openprint::service::insert_service_spec( $log, $dbh, $$self{id}, $service_index, "txtQuantity$qty_index", $self->quantity($qty_index), 1 );
+  } # end foreach
+  $self->unlock();
+  delete $$self{Services};
+  delete $$self{signatures};
+  return $service_index;
 }
 
 1;

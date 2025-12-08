@@ -34,7 +34,7 @@ use openprint::Imposition;
 require openprint::Estimating::Perforating;
 require openprint::Estimating::Collating;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my %ServicePrices = (
@@ -636,12 +636,12 @@ sub signature_calc {
 		my $capable = $Press->specification('Folding Capable');
 		if ( $capable and ( $capable ne 'N' ) ) {
 			if ( $$services{UVCoating} and openprint::Estimating::UVCoating::signature_needs( $Project, $sig_specs ) ) {
-				if ( $$calc_hash{UVCoatingSpecs}{"ddmEquipment-$form-$qty_index"} != $$Press{id} ) {
+				if ( $$calc_hash{UVCoatingSpecs}{"ddmEquipment-$form-$qty_index"} and ($$calc_hash{UVCoatingSpecs}{"ddmEquipment-$form-$qty_index"} != $$Press{id})) {
 					$add = 0;
 				} # end if
 			} # end if
 			if ( $$services{Aqueous} and openprint::Estimating::Aqueous::signature_needs( $Project, $sig_specs ) ) {
-				if ( $$calc_hash{AqueousSpecs}{"ddmEquipment-$form-$qty_index"} != $$Press{id} ) {
+				if ( $$calc_hash{AqueousSpecs}{"ddmEquipment-$form-$qty_index"} and ($$calc_hash{AqueousSpecs}{"ddmEquipment-$form-$qty_index"} != $$Press{id})) {
 					$add = 0;
 				} # end if
 			} # end if
@@ -1523,6 +1523,7 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
                     #$} # end if
                     #$} # end if
                   } else {
+                    $$Fold{angles} //= 0;
                     $openprint::log->warn("No fold match width_folds: $width_folds, height_folds: $height_folds Fold:$$Fold{name} folds: $$Fold{folds} angles:$$Fold{angles}") if DEBUG;
                   } # end if
                 } # end if has an orientation
@@ -1714,7 +1715,7 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 					} elsif ( $setupPrice{units} eq 'per hour' ) {
 						my $makeready_time = eval($$Fold{makeready_time});
 						if ( (! $makeready_time) or $? ) {
-              $openprint::log->error('No makeready_time on ' . $Fold->to_string() . ': ' . $? );
+              $openprint::log->debug('No makeready_time on ' . $Fold->to_string() . ': ' . $? );
 						}
 						$totalTime += $makeready_time;
 						$setupPrice{Total} = $setupPrice{Price} * $makeready_time / 60;
@@ -1954,11 +1955,17 @@ $openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $$
 
 			if ( $scoring_signature_needs ) {
 				$$calc_hash{FoldingSpecs} = \%fold_specs;
+        my $scoring_specs = $$calc_hash{ScoringSpecs};
+
+        if ( (!defined $$scoring_specs{"chkOverrideQty-$form"}) or ( $$scoring_specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
+          openprint::Estimating::Scoring::get_scores( $Project, $scoring_specs, $sig_specs, $Paper );
+      } # end if
 				my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $qty_index, $SignatureImposition, $calc_hash, \@Used_Impositions );
 				if ( $scoring_results{Status} eq 'uncalculated' ) {
 					$Breakdown .= "<tr><td>Scoring uncalculated $scoring_results{alert}</td><td class=\"Price\">\$1000000</a>";
 					$comparison_cost += 1000000;
 				} else {
+          $openprint::log->debug(Data::Dumper::Dumper(\%scoring_results));
 #$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
 					$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}<br/>";
           #$Breakdown .= $scoring_results{Breakdown};

@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 package openprint::Expense_Tax;
 our @ISA = qw(openprint::Object);
 
@@ -8,7 +9,7 @@ require openprint::Expense;
 require openprint::Tax;
 require Math::Round;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'expense_taxes';
 $serial = 'expense_taxes_id_seq';

@@ -82,7 +82,7 @@ height: 100%;
 }
 .Order div.Header #OrderInformation {
 	width: 49%;
-	float: right;
+	float: left;
 }
 .Order div.Header fieldset#OrderedBy {
 float: right;

@@ -310,6 +310,7 @@ sub load {
 	$$self{image_height} = $$self{object_height} if ! $$self{image_height};
   $$self{colour_bar_size} = $$self{Press}->specification('Colour Bar Size');
   $$self{colour_bar_orientation} = $$self{Press}->specification('Colour Bar Orientation');
+  $$self{grip} = $$self{Press}->specification('Grip') // 0;
 
 	$$self{imposition} = $$specs{'txtImposition'.$qty_index};
 	$$self{version_qty} = $$specs{'Versions'.$qty_index};
@@ -990,6 +991,7 @@ sub add_sheet {
       );
 
   my $grip = $$self{grip};
+  #my $grip = $$self{grip} // 0;
   if ($grip) {
     $grip /= 2 if ($$self{runstyle} eq 'Work & Tumble' or $$self{runstyle} eq 'Perfecting');
     $canvas->rect(class=>'grip', id=>'grip', x=>0, y=>0, width=>$$self{sheet_width}, height=>$grip,

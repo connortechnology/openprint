@@ -17,7 +17,7 @@ use constant ERROR	=>	3;
 
 sub new {
 	my $self = {};
-    bless( $self, shift );
+  bless( $self, shift );
 	my $opts = shift;
 	if ( ref $opts eq 'HASH' ) {
 		$$self{level} = $levels{$$opts{level}};

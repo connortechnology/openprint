@@ -34,16 +34,12 @@ function load_page() {
 			<input type="text" oninput="filter_companies( $('company_id'), {name:this.value} );" class="filter" />
 			<select name="company_id" id="company_id" onchange="load_page();">
 				<option value="">All</option>
-				<? echo ( 
-                my $companies = openprint::Company->dropdown(limit=>1000);
-if ( @{$companies} < 1000 ) {
-return make_drop_down($companies, $session{$r->uri().'?company_id'});
-}
-my $html = '';
-if ($session{$r->uri().'?company_id'}) {
-$html .= '<option value="'.$session{$r->uri().'?company_id'}.'" selected="selected">'.(new openprint::Company($session{$r->uri().'?company_id'}))->name().'</option>';
-}
-return $html.'<option value="">Use the filter to populate this dropdown</option>';
+<? echo ( 
+  my $companies = openprint::Company->dropdown(limit=>1000);
+  if ( @{$companies} > 1000 ) {
+    $companies = openprint::Company->dropdown(id=>[ $session{$r->uri().'?company_id'}, $openprint::Company->id(), $openprint::User->Company()->id(), $openprint::Owner->id()]);
+  }
+  return make_drop_down($companies, $session{$r->uri().'?company_id'});
 ) ?>
 			</select>
 		</li>
