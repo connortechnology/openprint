@@ -84,7 +84,6 @@ function Fatal(message) {
 }
 
 function Error(message) {
-  console.error(message, this);
   logReport("ERR", message);
 }
 
