@@ -17,19 +17,19 @@
 	my ( $early_year, $early_month, $early_day ) = Date::Calc::Add_Delta_Days( $invoice_year, $invoice_month, $invoice_day, $$Credit{early_payment_days} );
 	my ( $due_year, $due_month, $due_day ) = Date::Calc::Add_Delta_Days( $invoice_year, $invoice_month, $invoice_day, $$Credit{terms} );
 	
-	my $json = qq`
-ddm_select_by_value( \$('early_payment_date_year'), $early_year );
-ddm_select_by_value( \$('early_payment_date_month'), $early_month );
-ddm_select_by_value( \$('early_payment_date_day'), $early_day );
-ddm_select_by_value( \$('due_on_year'), $due_year );
-ddm_select_by_value( \$('due_on_month'), $due_month );
-ddm_select_by_value( \$('due_on_day'), $due_day );
-\$('early_payment_amount').value = '$$Credit{early_payment_amount}';
-ddm_select_by_value( \$('early_payment_units'), '$$Credit{early_payment_units}' );
-\$('monthly_interest').value = '$$Credit{late_payment_amount}';
+	my $js = qq`
+ddm_select_by_value( document.getElementById('early_payment_date_year'), $early_year );
+ddm_select_by_value( document.getElementById('early_payment_date_month'), $early_month );
+ddm_select_by_value( document.getElementById('early_payment_date_day'), $early_day );
+ddm_select_by_value( document.getElementById('due_on_year'), $due_year );
+ddm_select_by_value( document.getElementById('due_on_month'), $due_month );
+ddm_select_by_value( document.getElementById('due_on_day'), $due_day );
+document.getElementById('early_payment_amount').value = '$$Credit{early_payment_amount}';
+ddm_select_by_value( document.getElementById('early_payment_units'), '$$Credit{early_payment_units}' );
+\document.getElementById('monthly_interest').value = '$$Credit{late_payment_amount}';
 `;
 
-$json .= q`ddm_select_by_value($('currency_id'), `.$Invoicee->currency_id().q`);
+$js .= q`ddm_select_by_value(document.getElementById('currency_id'), `.$Invoicee->currency_id().q`);
 ` if $Invoicee->currency_id();
-return $json;
+return $js;
 ) ?>

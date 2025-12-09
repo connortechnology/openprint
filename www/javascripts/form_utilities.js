@@ -1,4 +1,5 @@
 //"use strict";
+const utility_debug = 0;
 
 function isin( array, value ) {
 	if (array) {
@@ -1459,6 +1460,13 @@ function LoadContent( divID, url, parameters, message ) {
     openprint_load_content_ajax = null;
   }
 
+  console.log(parameters, typeof(parameters));
+  if (parameters instanceof HTMLFormElement) {
+    parameters = $j(parameters).serialize();
+  } else if ((typeof parameters === 'string') && (parameters[0] == '#')) {
+    parameters = $j(parameters).serialize();
+  }
+
 	const div = $j('#'+divID);
 	if (div.length) {
     div.html(message ? message : 'Please wait...');
@@ -1815,13 +1823,17 @@ function getSelectedLocation(text, li) {
 
 var filter_ajax = null;
 function filter_companies( e, p ) {
-    if ( filter_ajax ) { filter_ajax.transport.abort(); }
-        
-    filter_ajax = new Ajax.Updater( e, '/includes/_company_ddm.html', { parameters: p, onSuccess:function(){filter_ajax = null;} } );
+  if ( filter_ajax ) filter_ajax.abort();
+  filter_ajax = $j.ajax({
+    type: 'GET',
+    url:'/includes/_company_ddm.html',
+    data: p, 
+    success:function(html){filter_ajax = null; $j(e).html(html);}
+  });
 }
 function stop_filter_companies() {
-    if ( filter_ajax ) { 
-		filter_ajax.transport.abort();
+  if ( filter_ajax ) { 
+		filter_ajax.abort();
 		filter_ajax = null;
 	}
 } 
@@ -1838,7 +1850,7 @@ function load_logs_form() {
 }
 
 function update_event_bindings() {
-  console.log('update_event_bindings()');
+  if (utility_debug) console.log('update_event_bindings()');
   document.querySelectorAll("select[data-on-change], input[data-on-change]").forEach(function attachOnChangeThis(el) {
     const fnName = el.getAttribute("data-on-change");
     if ( !window[fnName] ) {
@@ -1897,6 +1909,16 @@ function update_event_bindings() {
     el.oninput = window[fnName].bind(el, el);
   });
 
+  document.querySelectorAll("input[on_input]").forEach(function(el) {
+    const fnName = el.getAttribute("on_input");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    } else {
+      //console.log("Setting oninput for "+el.name+" to "+fnName);
+    }
+    el.oninput = window[fnName].bind(el, el);
+  });
   document.querySelectorAll("input[on_input_this]").forEach(function(el) {
     const fnName = el.getAttribute("on_input_this");
     if ( !window[fnName] ) {
@@ -1941,7 +1963,7 @@ function update_event_bindings() {
       console.error('Nothing found to bind to ' + fnName);
       return;
     }
-    console.log("Setting up on_click_this for " + el.name + " to " + fnName);
+    if (utility_debug) console.log("Setting up on_click_this for " + el.name + " to " + fnName);
     el.onclick = window[fnName].bind(el, el);
   });
 
@@ -1979,9 +2001,7 @@ function update_event_bindings() {
       window[fnName](ev);
     };
   });
-console.log('done');
 }
-
 
 function fix_prototype_bootstrap() {
   /*

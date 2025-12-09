@@ -11,46 +11,52 @@ return join(',', map { $_->id() } @Taxes ); ) ?> ];
 function update_taxes( ) {
 	var parameters = {
 		expense_id: '<? echo ( $$variable{Expense}->id() ) ?>', 
-		invoiced_on_year: $('invoiced_on_year').value, 
-		invoiced_on_month: $('invoiced_on_month').value,
-		invoiced_on_day: $('invoiced_on_day').value
+		invoiced_on_year: document.getElementById('invoiced_on_year').value, 
+		invoiced_on_month: document.getElementById('invoiced_on_month').value,
+		invoiced_on_day: document.getElementById('invoiced_on_day').value
 	};
 	for ( var i = 0; i < tax_ids.length; i+= 1 ) {
-		var charge = $('tax_charge-'+tax_ids[i]);
+		var charge = document.getElementById('tax_charge-'+tax_ids[i]);
 		if ( charge && charge.checked ) {
 			parameters['tax_charge-'+tax_ids[i]] = 1;
 		} // end if
 	} // end for
-	new Ajax.Updater('Taxes','_expense_taxes.html', { parameters: parameters, evalScripts: true } );
+  $j.load('#Taxes', '_expense_taxes.html', parameters);
+
+	//new Ajax.Updater('Taxes','_expense_taxes.html', { parameters: parameters, evalScripts: true } );
 }
 
-function calc_amount_from_total( form ) {
+function calc_amount_from_total() {
+  const form = document.getElementById('f1');
 	var tax_rate = 1;
 	for ( var i = 0; i < tax_ids.length; i+= 1 ) {
 		if ( !form.elements['tax_charge-'+tax_ids[i]].checked ) {
 			continue;
 		} // end if
-		tax_rate += $('tax_rate-'+tax_ids[i]).innerHTML/100;
+		tax_rate += document.getElementById('tax_rate-'+tax_ids[i]).innerHTML/100;
 	} // end for
 	var amount;
 	if ( ! form.elements['amount_locked'].value ) {
 		amount = parseFloat( form.total.value ) / tax_rate;
-		$('amount').value = do_decimals( amount, 2 );
+		document.getElementById('amount').value = do_decimals( amount, 2 );
 	} else {
 		amount = parseFloat( form.amount.value );
 	} // end if
   for ( var i = 0; i < tax_ids.length; i+= 1 ) {
-    if ( form.elements['tax_charge-'+tax_ids[i]].checked ) {
-      tax = amount * $('tax_rate-'+tax_ids[i]).innerHTML/100;
-    } else {
-      tax = 0;
+    const tax_charge = form.elements['tax_charge-'+tax_ids[i]];
+    const tax_amount = form.elements['tax_amount-'+tax_ids[i]];
+    let tax = 0;
+    if (tax_charge.checked) {
+      const tax_rate = $j('#tax_rate-'+tax_ids[i]).html()/100;
+      tax = amount * tax_rate;
     } // end if
-    $('tax_amount-'+tax_ids[i]).value = do_decimals( tax, 2 );
+    tax_amount.value = do_decimals( tax, 2 );
 	} // end for
+  form.elements['business_use_amount'].value = do_decimals( amount * form.elements['business_use'].value/100, 2 );
 }
 
-
-function update_total( form ) {
+function update_total( ) {
+  const form = document.getElementById('f1');
 	if ( form.elements['total_locked'].value ) {
 		return calc_amount_from_total( form );
 	} // end if
@@ -61,22 +67,24 @@ function update_total( form ) {
 	} else {
 		total = parseFloat( form.amount.value );
 	} // end if
-    for ( var i = 0; i < tax_ids.length; i+= 1 ) {
-        var tax = 0;
-        
-        if ( form.elements['tax_charge-'+tax_ids[i]].checked ) {
-            tax = total * $('tax_rate-'+tax_ids[i]).innerHTML/100;
-        } else {
-            tax = 0;
-        } // end if
-        $('tax_amount-'+tax_ids[i]).value = do_decimals( tax, 2 );
-        total += parseFloat( tax );
-    } // end for
 
-    $('total').value = do_decimals( total, 2 );
+  for ( var i = 0; i < tax_ids.length; i+= 1 ) {
+    var tax = 0;
+
+    if ( form.elements['tax_charge-'+tax_ids[i]].checked ) {
+      tax = total * document.getElementById('tax_rate-'+tax_ids[i]).innerHTML/100;
+    } else {
+      tax = 0;
+    } // end if
+    form.elements['tax_amount-'+tax_ids[i]].value = do_decimals( tax, 2 );
+    total += parseFloat( tax );
+  } // end for
+
+  form.elements['total'].value = do_decimals( total, 2 );
 } // end function update_total
+
 function select_category( recipient_id ) {
-	new Ajax.Request( '_select_category.json', { parameters: { recipient_id: recipient_id } } );
+	new Ajax.Request('_select_category.json', { parameters: { recipient_id: recipient_id } } );
 }
 </script>
 <?include(/includes/error_reporting.html)?>
@@ -88,25 +96,25 @@ function select_category( recipient_id ) {
 			<ul>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
       <li><label>Company</label>
-        <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+        <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value(this.form.elements['owner_id'])});" class="filter" />
         <select id="owner_id" name="owner_id" onchange="stop_filter_companies();load_expenses();">
           <option value="">All</option>
           <? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(), offers_credit=>1}), $$variable{Expense}->owner_id(), {encode=>1} ) ) ?>
         </select>
       </li>
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
-				<li><label onclick="toggle_input( $('recipient_id'), $('recipient') );">Recipient</label>
-					<input type="text" name="recipient" id="recipient" style="display:none;" onkeyup="$('recipient_id').selectedIndex=0;" />
-					<select name="recipient_id" id="recipient_id" onchange="$('recipient').value='';select_category(this.value);">
+				<li><label onclick="toggle_input( document.getElementById('recipient_id'), document.getElementById('recipient') );">Recipient</label>
+					<input type="text" name="recipient" id="recipient" style="display:none;" oninput="this.form.elements['recipient_id'].selectedIndex=0;" />
+					<select name="recipient_id" id="recipient_id" onchange="this.form.elements['recipient'].value='';select_category(this.value);">
 						<option value="">select</option>
 						<? echo ( 
 							openprint::Company::get_dropdown( $$variable{Expense}->recipient_id() );
 						) ?>
 					</select>
 				</li>
-				<li><label onclick="toggle_input( $('category_id'), $('category') );">Category</label>
-					<input type="text" id="category" name="category" style="display:none;" onkeyup="$('category_id').selectedIndex=0;" />
-					<select name="category_id" id="category_id" onchange="$('category').value='';">
+				<li><label onclick="toggle_input( document.getElementById('category_id'), document.getElementById('category') );">Category</label>
+					<input type="text" id="category" name="category" style="display:none;" oninput="this.form.elements['category_id'].selectedIndex=0;" />
+					<select name="category_id" id="category_id" onchange="this.form.elements['category'].value='';">
 						<option value="">select</option>
 						<? echo (
 							make_drop_down( openprint::Expense_Category->dropdown( order=>'lower(name)'), $$variable{Expense}->category_id() );
@@ -124,7 +132,7 @@ function select_category( recipient_id ) {
 				</li>
 				<li><label for="amount">Amount (<? echo ( $$variable{Expense}->Currency()->symbol() ) ?>)</label>
 					<? echo ( join("\n",
-						input(type=>'float_calculator', name=>'amount', id=>'amount', value=>$$variable{Expense}->amount(), onkeyup=>'update_total(this.form);', oninput=>'this.onkeyup();' ),
+						input(type=>'float_calculator', name=>'amount', id=>'amount', value=>$$variable{Expense}->amount(), on_input=>'update_total'),
 						write_override( 'amount_locked', $$variable{Expense}->amount_locked() ),
 					); ) ?>
 					<select name="currency_id" id="currency_id">
@@ -139,12 +147,16 @@ function select_category( recipient_id ) {
 				<ul>
 				<li><label for="total">Total (<? echo ( $$variable{Expense}->Currency()->symbol() ) ?>)</label>
 					<? echo ( join("\n",
-						input(type=>'float', name=>'total', id=>'total', value=>$$variable{Expense}->total(), onkeyup=>'calc_amount_from_total(this.form);', oninput=>'this.onkeyup();' ),
+            input(type=>'float', name=>'total', id=>'total', value=>$$variable{Expense}->total(), on_input=>'calc_amount_from_total'),
 						write_override( 'total_locked', $$variable{Expense}->total_locked() ),
 					); ) ?>
 				</li>
 				<li><label for="business_use">Business %</label>
-					<? echo ( input(type=>'cardinal',name=>'business_use',id=>'business_use', value=>$$variable{Expense}->business_use() ); ) ?>
+					<? echo ( join("\n", 
+            input(type=>'cardinal',name=>'business_use', id=>'business_use', value=>$$variable{Expense}->business_use(),on_input=>'calc_amount_from_total', max=>100, min=>0 ),
+            '% = ',
+            input(type=>'float',name=>'business_use_amount',id=>'business_use_amount', value=>$$variable{Expense}->business_use_amount() ),
+          ); ) ?>
 				</li>
 			</ul>
 		</div>
@@ -159,24 +171,24 @@ function select_category( recipient_id ) {
 					<label>Invoiced On</label>
 					<? echo ( 	
 						date_select( 'invoiced_on', $$variable{Expense}->invoiced_on(), {
-							'with_today'=>1,
-							'onchange'=>'update_taxes()',
+							with_today=>1,
+							on_change=>'update_taxes()',
 							} ); ) ?>
-					<? echo ( button( 'invoiced_on_all', { onclick=>q`var form = $('f1');set_date( form, 'invoiced_on', 'due_on' );set_date( form, 'invoiced_on', 'paid_on' );update_taxes();`, 'text'=>'All' } ); ) ?>
+					<? echo ( button( 'invoiced_on_all', { onclick=>q`set_date( this.form, 'invoiced_on', 'due_on' );set_date( this.form, 'invoiced_on', 'paid_on' );update_taxes();`, text=>'All' } ); ) ?>
 				</li>
 				<li>
 					<label>Due On</label>
 					<? echo ( date_select( 'due_on', $$variable{Expense}->due_on(), { with_today=>1 } ); ) ?>
-					<? echo ( button( 'due_on_all', { onclick=>q`var form = $('f1');set_date( form, 'due_on', 'invoiced_on' );set_date( form, 'due_on', 'paid_on' );update_taxes();`, 'text'=>'All' } ); ) ?>
+					<? echo ( button( 'due_on_all', { onclick=>q`set_date( this.form, 'due_on', 'invoiced_on' );set_date( this.form, 'due_on', 'paid_on' );update_taxes();`, text=>'All' } ); ) ?>
 				</li>
 				<li>
 					<label>Paid On</label>
 					<? echo ( date_select( 'paid_on', $$variable{Expense}->paid_on(), { with_today=>1 } ); ) ?>
-					<? echo ( button( 'paid_on_all', { onclick=>q`var form = $('f1');set_date( form, 'paid_on', 'due_on' );set_date( form, 'paid_on', 'invoiced_on' );update_taxes();`, 'text'=>'All' } ); ) ?>
+					<? echo ( button( 'paid_on_all', { onclick=>q`set_date( this.form, 'paid_on', 'due_on' );set_date( this.form, 'paid_on', 'invoiced_on' );update_taxes();`, text=>'All' } ); ) ?>
 				</li>
 				<li>
 					<label for="description">Description</label>
-					<textarea cols="40" id="description" name="description" rows="<? echo ( $$variable{Expense}->description() ? scalar split("\n", $$variable{Expense}->description()) + 2 : 2 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Expense}->description() ) ?></textarea>
+					<textarea cols="40" id="description" name="description" rows="<? echo ( $$variable{Expense}->description() ? scalar split("\n", $$variable{Expense}->description()) + 2 : 2 ) ?>" oninput="textarea_resize(this);"><? echo ( $$variable{Expense}->description() ) ?></textarea>
 				</li>
 				<li>
 					<label>Attention</label>

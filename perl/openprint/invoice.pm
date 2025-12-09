@@ -441,24 +441,27 @@ sub view {
 
 sub _timetracks {
 	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
-	if ( $param{timetrack_id} ) {
-		my $Timetrack = new openprint::Timetrack( $param{timetrack_id} );
-		if ( $param{action} eq 'add' ) {
-			$Timetrack->invoice_id( $variable{Invoice}->id() );
-		} elsif ( $param{action} eq 'remove' ) {
-			$Timetrack->invoice_id( undef );
-		} # en dif
-		$variable{error} .= $Timetrack->save();
-	} # end if
 	if ( $param{invoicee_id} and $param{invoicee_id} != $Invoice->invoicee_id() ) {
 		$Invoice->invoicee_id( $param{invoicee_id} );
 	} # end if
-  my $uri = '/invoice/edit.html';
+  if ($param{action}) {
+    if ( $param{timetrack_id} ) {
+      my $Timetrack = new openprint::Timetrack( $param{timetrack_id} );
+      if ( $param{action} eq 'add' ) {
+        $Timetrack->invoice_id( $variable{Invoice}->id() );
+      } elsif ( $param{action} eq 'remove' ) {
+        $Timetrack->invoice_id( undef );
+      } # en dif
+      $variable{error} .= $Timetrack->save();
+    }
+  } else {
 
-  ssi::save_params($uri, ( 
-      ( map { 'timetrack_start_'.$_ } ( 'year','month','day' ) ),
-      ( map { 'timetrack_end_'.$_ } ( 'year','month','day' ) ),
-    ));
+    my $uri = '/invoice/edit.html';
+    ssi::save_params($uri, ( 
+        ( map { 'timetrack_start_'.$_ } ( 'year','month','day' ) ),
+        ( map { 'timetrack_end_'.$_ } ( 'year','month','day' ) ),
+      ));
+	} # end if
 } # end sub _timetracks
 
 sub _invoiced_products {

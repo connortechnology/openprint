@@ -51,7 +51,9 @@
 		To delete expenses from history check the appropriate expense(s) and click delete.<br/>
 	</div>
 	<table id="ExpensesTable" class="List sortable table-striped"
-    data-pagination="true"
+                            data-toggle="table"
+                            data-show-footer="true"
+    data-pagination="false"
     data-search="true"
     data-show-pagination-switch="true"
     data-cookie="true"
@@ -81,7 +83,8 @@
 				<th class="Percent">Bus %</th>
 				<th class="Price" data-field="Amount" data-sortable="true">Amount</th>
 				<th class="Price" data-sortable="true">Bus Amount</th>
-        <? echo ( join('', map { sprintf('<th class="Price">%s</th><th class="Price">(%s%)</th>', $_->name(), $_->rate() ) } @{$$variable{Taxes}} );) ?>
+        <? echo ( join("\n", map { sprintf('<th class="Price" data-field="%1$s">%1$s</th><th class="Price" data-field="business_use_%1$s">(%2$s%)</th>',
+            $_->name(), $_->rate() ) } @{$$variable{Taxes}} );) ?>
 				<th class="Price">Total</th>
 				<th class="Price">Bus Total</th>
 			</tr>
@@ -104,11 +107,11 @@
             <td class="Date"><a href="/employee/accounting/expense.html?expense_id=%2$d">%7$s</a></td>
             <td class="Date"><a href="/employee/accounting/expense.html?expense_id=%2$d">%8$s</a></td>
             <td class="Percent">%9$s</td>
-            <td class="Price">%10$s</td>
-            <td class="Price">%11$s</td>
+            <td class="Price sum-column">%10$s</td>
+            <td class="Price sum-column">%11$s</td>
             %12$s
-            <td class="Price">%13$s</td>
-            <td class="Price">%14$s</td>
+            <td class="Price sum-column">%13$s</td>
+            <td class="Price sum-column">%14$s</td>
 					</tr>
 					`, $rowclass, $Expense->id(), $Expense->Recipient()->name(), 
 					$Expense->account(),
@@ -120,7 +123,7 @@
           (openprint::Currency::format( $Currency->convert_from($Expense->amount(), { period=>$Expense->paid_on()}) ).
               (($Currency->id() != $openprint::Currency->id()) ? '('.$Expense->amount().$Currency->short().')' : '')),
           openprint::Currency::format( $Currency->convert_from($Expense->business_use_amount(), { period=>$Expense->paid_on()})),
-          join("\n", map { sprintf('<td class="Price">%s</td><td class="Price">%s</td>', 
+          join("\n", map { sprintf('<td class="Price sum-column">%s</td><td class="Price sum-column">%s</td>', 
                 openprint::Currency::format( $Expense->Tax($_)->amount()),
                 openprint::Currency::format( $Expense->Tax($_)->amount() * ( $Expense->business_use()/100 )),
 							) } @{$$variable{Taxes}} ),
@@ -134,10 +137,17 @@
 			return $html;
 		) ?>
     </tbody>
-    <!--
     <tfoot>
 		<tr class="totals">
-			<td colspan="8">Totals (<? echo ( scalar @{$$variable{Expenses}} ) ?> rows)</td>
+      <td class="checkbox"></td>
+			<td>Totals (<? echo ( scalar @{$$variable{Expenses}} ) ?> rows)</td>
+      <td class="Account"></td>
+      <td class="Category"></td>
+      <td class="Memo"></td>
+      <td class="Date"></td>
+      <td class="Date"></td>
+      <td class="Date"></td>
+      <td class="Percent"></td>
       <td class="Price"><? echo ( openprint::Currency::format( $$variable{subtotal} ); ) ?></td>
       <td class="Price"><? echo ( openprint::Currency::format( $$variable{business_subtotal} ); ) ?></td>
       <? echo (
@@ -150,7 +160,6 @@
       <td class="Price"><? echo (openprint::Currency::format( $$variable{bus_total} ); ) ?></td>
 		</tr>
     </tfoot>
-    -->
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
 <? endif ( @{$$variable{Expenses}} == 0 ) ?>

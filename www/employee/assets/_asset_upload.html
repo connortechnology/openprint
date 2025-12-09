@@ -76,7 +76,7 @@
   window.addEventListener('DOMContentLoaded', function(){
 	var uploader = new qq.FineUploader({
 		debug: true,
-		element: $('fine-uploader'),
+		element: document.getElementById('fine-uploader'),
 		request: {
 			endpoint: '/upload.htm',
 			paramsInBody: false,

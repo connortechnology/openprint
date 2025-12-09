@@ -4,8 +4,7 @@
 </div>
 <script>
 	function load_payments( form ) {
-		$('PaymentList').innerHTML = 'Please wait...';
-		new Ajax.Updater('PaymentList', '/payment/_history.html', {parameters:Form.serialize(form)});
+    LoadContent('PaymentList', '/payment/_history.html', $j(form).serialize());
 	} // end function
 </script>	 
 <?include('/includes/error_reporting.html')?>
@@ -15,7 +14,7 @@
 			<ul>
 			<li>
 				<label>Recipient</label>
-				<input type="text" onkeyup="filter_companies('recipient_id', {name:this.value,selected_id:get_ddm_value($('recipient_id'))});" class="filter" />
+				<input type="text" onkeyup="filter_companies('recipient_id', {name:this.value,selected_id:get_ddm_value(this.form.elements['recipient_id'])});" class="filter" />
 				<select name="recipient_id" id="recipient_id" onchange="load_payments(this.form);">
 					<option value="">All</option>
 					<? echo ( make_drop_down( openprint::Company->dropdown(supplier=>'Y'), $session{$r->uri().'?recipient_id'} ); ) ?>
@@ -23,7 +22,7 @@
 			</li>
 			<li>
 				<label>Payor</label>
-				<input type="text" onkeyup="filter_companies('payor_id', {name:this.value,selected_id:get_ddm_value($('payor_id'))});" class="filter" />
+				<input type="text" onkeyup="filter_companies('payor_id', {name:this.value,selected_id:get_ddm_value(this.form.elements['payor_id'])});" class="filter" />
 				<select name="payor_id" id="payor_id" onchange="load_payments(this.form);">
 					<option value="">All</option>
 					<? echo ( make_drop_down( openprint::Company->dropdown( 'is_invoiced'=>1), $session{$r->uri().'?payor_id'} ); ) ?>
@@ -31,18 +30,18 @@
 			</li>
 			<li>
 				<label>Received On</label>
-        <? echo ( date_select_session($r->uri(), 'received_on_start', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
+        <? echo ( date_select_session($r->uri(), 'received_on_start', { onchange=>q`check_time_starting(this.form,'received_on_start','received_on_end');load_payments(this.form);`, with_today=>1, with_clear=>1} ); ) ?>
 					to 
-        <? echo ( date_select_session($r->uri(), 'received_on_end', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
+        <? echo ( date_select_session($r->uri(), 'received_on_end', { onchange=>q`check_time_starting(this.form,'received_on_start','received_on_end');load_payments(this.form);`, with_today=>1, with_clear=>1} ); ) ?>
 			</li>
 			<li>
 				<label>Entered On</label>
-        <? echo ( date_select_session($r->uri(), 'entered_on_start', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
+        <? echo ( date_select_session($r->uri(), 'entered_on_start', { onchange=>q`check_time_starting(this.form,'entered_on_start','entered_on_end');load_payments(this.form);`, with_today=>1, with_clear=>1} ); ) ?>
 					to 
-        <? echo ( date_select_session($r->uri(), 'entered_on_end', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
+        <? echo ( date_select_session($r->uri(), 'entered_on_end', { onchange=>q`check_time_starting(this.form,'entered_on_start','entered_on_end');load_payments(this.form);`, with_today=>1, with_clear=>1} ); ) ?>
 			</li>
 			<li><label>Transaction</label>
-				<? echo ( input(type=>'text', name=>'transaction_id', value=>$session{'/payment/history.html?transaction_id'}, onkeydown=>q`if(event.keyCode == 13){load_payments($('f1'));` ); ) ?>
+				<? echo ( input(type=>'text', name=>'transaction_id', value=>$session{'/payment/history.html?transaction_id'}, onkeydown=>q`if(event.keyCode == 13){load_payments(this.form);` ); ) ?>
 			</li>
 			</ul>
 			<p class="buttons">
