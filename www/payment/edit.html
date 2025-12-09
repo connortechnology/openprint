@@ -8,8 +8,8 @@
 		<div class="leftColumn">
 			<ul>
 			<li><label for="recipient_id">Recipient</label>
-				<input type="text" onkeyup="filter_companies('recipient_id', {name:this.value, offers_credit:'1', selected_id:get_ddm_value($('recipient_id'))});" class="filter" />
-				<select id="recipient_id" name="recipient_id" onchange="load_unpaid();">
+				<input type="text" onkeyup="filter_companies('recipient_id', {name:this.value, offers_credit:'1', selected_id:get_ddm_value(document.getElementById('recipient_id'))});" class="filter" />
+				<select id="recipient_id" name="recipient_id" on_change="load_unpaid">
 					<option value=""> select </option>
 					<? echo ( make_drop_down(
              openprint::Company->dropdown(offers_credit=>'1'),
@@ -18,7 +18,7 @@
 				</select>
 			</li>
 			<li><label for="payor_id">Payor</label>
-				<input type="text" onkeyup="filter_companies('payor_id', {name:this.value,selected_id:get_ddm_value($('payor_id'))});" class="filter" />
+				<input type="text" onkeyup="filter_companies('payor_id', {name:this.value,selected_id:get_ddm_value(document.getElementById('payor_id'))});" class="filter" />
 				<select id="payor_id" name="payor_id">
 					<option value=""> select </option>
 					<? echo ( make_drop_down( openprint::Company->dropdown( or => {'last_invoice_id is null'=>0, id=>$$variable{Payment}->payor_id() ? $$variable{Payment}->payor_id() : $session{company_id} } ), 
