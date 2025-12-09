@@ -16,8 +16,8 @@ name=>'invoicer_id', prepend=>['','select']
 } ); ) ?>
 				</li>
 				<li class="invoicee"><label for="invoicee_id" onclick="$('invoicee_id').toggle();$('invoicee').toggle();">Prepared For</label>
-				<input type="text" onkeyup="filter_companies('invoicee_id', {name:this.value,selected_id:get_ddm_value($('invoicee_id'))});" class="filter" />
-					<select id="invoicee_id" name="invoicee_id" onchange="$('invoicee').value='';invoicee_change(this);">
+				<input type="text" on_input_this="invoicee_filter" class="filter" />
+					<select id="invoicee_id" name="invoicee_id" onchange="document.getElementById('invoicee').value='';invoicee_change(this);">
 						<option value=""> select </option>
 						<? echo ( make_drop_down( openprint::Company->dropdown('last_invoice_id is null'=>0), $$variable{Invoice}->invoicee_id() ? $$variable{Invoice}->invoicee_id() : $session{company_id} ); ) ?>
 					</select>
@@ -119,5 +119,8 @@ name=>'invoicer_id', prepend=>['','select']
 </div></div>
 <script>
 	var invoice_id = '<? echo ( $$variable{Invoice}->id() ) ?>';
+function invoicee_filter(input) {
+  filter_companies('invoicee_id', {name:input.value,selected_id:get_ddm_value(document.getElementById('invoicee_id'))});
+}
 </script>
 <script src="<?hash_link(/invoice/edit.js)?>"></script>

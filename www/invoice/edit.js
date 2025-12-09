@@ -22,49 +22,55 @@ function update_totals( ) {
 } // end function
 
 function update_product( product_id ) {
-	$('product-total-'+product_id).innerHTML = do_decimals( parseFloat($('product-price-'+product_id).value) * parseFloat($('product-quantity-'+product_id).value), 2 );
+  const total = getElementById('product-total-'+product_id);
+  const price = getElementById('product-price-'+product_id);
+  const quantity = getElementById('product-quantity-'+product_id);
+	total.innerHTML = do_decimals( parseFloat(price.value) * parseFloat(quantity.value), 2 );
 } // end function update_product
 
 function add_timetrack(button) {
   const timetrack_id = button.getAttribute('data-id');
-	new Ajax.Updater( 'Timetracks', '_timetracks.html', {
-			parameters: {
-				invoice_id: invoice_id,
-				timetrack_id: timetrack_id,
-				action: 'add'
-			},
-			onComplete: function(transport) {
-        update_event_bindings();
-				update_totals();
-				TableKit.reload();
-			},
-			onFailure: function(transport) {
-				alert('failure to include');
-			}
-	} );
+
+  $j.ajax({
+    url: '_timetracks.html',
+    data: {
+      invoice_id: invoice_id,
+      timetrack_id: timetrack_id,
+      action: 'add'
+    },
+
+    success: function(data) {
+      $j('#Timetracks').html(data);
+      update_event_bindings();
+      update_totals();
+      if (typeof TableKit !== 'undefined') TableKit.reload();
+    }
+  } );
 } // end function add_timetrack( invoice_id)
+
 function del_timetrack( button ) {
   const timetrack_id = button.getAttribute('data-id');
-	new Ajax.Updater( 'Timetracks', '_timetracks.html', {
-			parameters: {
-				invoice_id: invoice_id,
-				timetrack_id: timetrack_id,
-				action: 'remove'
-			},
-			onComplete: function(transport) {
-        update_event_bindings();
-				update_totals();
-				TableKit.reload();
-			},
-			onFailure: function(transport) {
-				alert('failure to remove timetrack');
-			}
-		} );
+  $j.ajax({
+    url: '_timetracks.html',
+    data: {
+      invoice_id: invoice_id,
+      timetrack_id: timetrack_id,
+      action: 'remove'
+    },
+
+    success: function(data) {
+      $j('#Timetracks').html(data);
+      update_event_bindings();
+      update_totals();
+      if (typeof TableKit !== 'undefined') TableKit.reload();
+    }
+  } );
 } // end function del_timetrack(invoice_id)
 
 function reload_timetracks() {
-	new Ajax.Updater( 'Timetracks', '_timetracks.html', {
-			parameters: {
+  $j.ajax({
+      url: '_timetracks.html',
+      data: {
 				invoice_id: invoice_id,
         timetrack_start_year: $j('#timetrack_start_year').val(),
         timetrack_start_month: $j('#timetrack_start_month').val(),
@@ -73,99 +79,123 @@ function reload_timetracks() {
         timetrack_end_month: $j('#timetrack_end_month').val(),
         timetrack_end_day: $j('#timetrack_end_day').val(),
 			},
-			onComplete: function(transport) {
+
+      success: function(data) {
+        $j('#Timetracks').html(data);
         update_event_bindings();
 				update_totals();
-				TableKit.reload();
-			}
-		} );
+				if (typeof TableKit !== 'undefined') TableKit.reload();
+      }
+    });
 } // end function reload_timetracks
 
 function add_order( order_id ) {
-	new Ajax.Updater( 'Orders', '_invoiced_orders.html', {
-			parameters: {
-				invoice_id: invoice_id,
-				order_id: order_id,
-				action: 'add'
-			},
-			onComplete: function(transport) {
-				update_totals();
-				TableKit.reload();
-			},
-			onFailure: function(transport) {
-				alert('failure to include');
-			}
-	} );
+  $j.ajax({
+    url: '_invoiced_orders.html', 
+    data: {
+      invoice_id: invoice_id,
+      order_id: order_id,
+      action: 'add'
+    },
+
+    success: function(data) {
+      $j('#Orders').html(data);
+      update_totals();
+      if (typeof TableKit !== 'undefined') TableKit.reload();
+    }
+  } );
 } // end function add_order( invoice_id)
+
 function del_order( order_id ) {
-	new Ajax.Updater( 'Orders', '_invoiced_orders.html', {
-			parameters: {
-				invoice_id: invoice_id,
-				order_id: order_id,
-				action: 'remove'
-			},
-			onComplete: function(transport) {
-				update_totals();
-				TableKit.reload();
-			},
-			onFailure: function(transport) {
-				alert('failure to remove timetrack');
-			}
-		} );
+  $j.ajax({
+    url: '_invoiced_orders.html',
+    data: {
+      invoice_id: invoice_id,
+      order_id: order_id,
+      action: 'remove'
+      },
+    success: function(data) {
+      $j('#Orders').html(data);
+      update_totals();
+      if (typeof TableKit !== 'undefined') TableKit.reload();
+    }
+  });
+} // end function del_order(invoice_id)
+
+function reload_orders() {
+  $j.ajax({
+    url: '_invoiced_orders.html',
+    data: { invoice_id: invoice_id, },
+    success: function(data) {
+      $j('#Orders').html(data);
+      update_totals();
+      if (typeof TableKit !== 'undefined') TableKit.reload();
+    }
+  });
 } // end function del_order(invoice_id)
 
 function invoicee_change(ddm) {
-	new Ajax.Request( '_invoicee_onchange.json', { parameters: { invoice_id: invoice_id, invoicee_id: ddm.getValue() } } );
-	if ( invoice_id ) {
-		new Ajax.Updater( 'Timetracks', '_timetracks.html', {
-			parameters: {
-					invoice_id: invoice_id,
-					invoicee_id: ddm.getValue() 
-				},
-				onComplete: function(transport) {
-					update_totals();
-					TableKit.reload();
-				},
-				onFailure: function(transport) {
-					alert('failure to include');
-				}
-		} );
-		new Ajax.Updater( 'Orders', '_invoiced_orders.html', {
-			parameters: {
-				invoice_id: invoice_id,
-				invoicee_id: ddm.getValue() 
-			},
-			onComplete: function(transport) {
-				update_totals();
-				TableKit.reload();
-			},
-			onFailure: function(transport) {
-				alert('failure to include');
-			}
-		} );
-	} // end if invoice_id
+  $j.ajax({
+    url: '_invoicee_onchange.js',
+    data: {
+      invoice_id: invoice_id, 
+      invoicee_id: ddm.value
+    },
+    success: function(data) {
+      if ( invoice_id ) {
+        reload_timetracks();
+        reload_orders();
+      } // end if invoice_id
+    }
+  });
 } // end function invoicee_change(ddm)
 
 function add_tax( tax_id ) {
   console.log(tax_id);
   if (tax_id) {
-    new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: {
-      invoice_id: invoice_id,
-      action: 'add',
-      tax_id: tax_id
-      }, evalScripts: true } );
+    $j.ajax({
+      url: '_taxes_edit.html',
+      data: {
+        invoice_id: invoice_id,
+        tax_id: tax_id,
+        action: 'add'
+      },
+      success: function(data) {
+        $j('#Taxes').html(data);
+        update_totals();
+        if (typeof TableKit !== 'undefined') TableKit.reload();
+      }
+    });
   }
 }
+
 function delete_tax( tax_id ) {
-  new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: {
-    invoice_id: invoice_id,
-    action: 'delete',
-    tax_id: tax_id
-    }, evalScripts: true } );
+  $j.ajax({
+    url: '_taxes_edit.html',
+    data: {
+      invoice_id: invoice_id,
+      tax_id: tax_id,
+      action: 'delete'
+    },
+    success: function(data) {
+      $j('#Taxes').html(data);
+      update_totals();
+      if (typeof TableKit !== 'undefined') TableKit.reload();
+    }
+  });
 }
+
 function update_taxes( form ) {
   if ( invoice_id ) {
-    new Ajax.Updater( 'Taxes', '_taxes_edit.html?action=reset&invoice_id='+invoice_id, { parameters: form.serialize() } );
+    $j.ajax({
+      url: '_taxes_edit.html?action=reset&invoice_id='+invoice_id,
+      data: $j(form).serialize(),
+      success: function(data) {
+        $j('#Taxes').html(data);
+        update_totals();
+        if (typeof TableKit !== 'undefined') TableKit.reload();
+      }
+    });
   }
 } // end function update_taxes
 
@@ -175,10 +205,16 @@ function del_interest(button) {
     console.log('No interest id on button');
     console.log(button);
   }
-  new Ajax.Updater('Interests', '_interests.html',
-    { evalScripts: true, parameters: { action: 'delete', 'invoice_id': invoice_id, 'interest_id': interest_id } }
-    );
-  update_event_bindings();
+  $j.ajax({
+    url: '_interests.html',
+    data: { action: 'delete', 'invoice_id': invoice_id, 'interest_id': interest_id },
+    success: function(data) {
+      $j('#Interests').html(data);
+      update_totals();
+      if (typeof TableKit !== 'undefined') TableKit.reload();
+      update_event_bindings();
+    }
+  });
 }
 
 function del_product(button) {
@@ -187,11 +223,29 @@ function del_product(button) {
     console.log('No product id on button');
     console.log(button);
   }
-  new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=remove&amp;product_id='+product_id, { method: 'post', parameters: $('f1').serialize()} );
-  update_event_bindings();
+  $j.ajax({
+    url: '_invoiced_products.html?action=remove&amp;product_id='+product_id,
+    method: 'post',
+    data: $j('#f1').serialize(),
+    success: function(data) {
+      $j('#InvoicedProducts').html(data);
+      update_totals();
+      if (typeof TableKit !== 'undefined') TableKit.reload();
+      update_event_bindings();
+    }
+  });
 }
 
 function add_product(button) {
-  new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=add', { method: 'post', parameters: $('f1').serialize()} );
-  update_event_bindings();
+  $j.ajax({
+    url: '_invoiced_products.html?action=add',
+    method: 'post',
+    data: $j('#f1').serialize(),
+    success: function(data) {
+      $j('#InvoicedProducts').html(data);
+      update_totals();
+      if (typeof TableKit !== 'undefined') TableKit.reload();
+      update_event_bindings();
+    }
+  });
 }
