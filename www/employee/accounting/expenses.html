@@ -44,8 +44,16 @@
     load_page();
   }
 
+  function sum_column(data, value) {
+    console.log('sum_column', data, value);
+    // Calculate total price from 'data' array
+    let total = data.reduce((sum, row) => sum + parseFloat(row.price.replace('$', '')), 0);
+    return `Total: $${total.toFixed(2)}`;
+  }
+
   addEventListener('DOMContentLoaded', (event) => {
-    $j('#ExpensesTable').bootstrapTable({ });
+    $j('#ExpensesTable').bootstrapTable();
+    //{ });
   });
 </script>
 <? include(/includes/error_reporting.html) ?>
@@ -57,27 +65,27 @@
 				<ul>
 					<li>
 						<label>Invoiced On</label>
-            <? echo ( date_select_session($r->uri(), 'invoiced_on_start', { onchange=>q`check_time_starting($('f1'), 'invoiced_on_start','invoiced_on_end');load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+            <? echo ( date_select_session($r->uri(), 'invoiced_on_start', { onchange=>q`check_time_starting(this.form, 'invoiced_on_start','invoiced_on_end');load_expenses(this.form);`, with_today=>1,with_clear=>1 } ); ) ?>
 							to 
-              <? echo ( date_select_session($r->uri(), 'invoiced_on_end', { onchange=>q`load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+              <? echo ( date_select_session($r->uri(), 'invoiced_on_end', { onchange=>q`load_expenses(this.form);`, with_today=>1,with_clear=>1 } ); ) ?>
 					</li>
 					<li>
 						<label>Due On</label>
-            <? echo ( date_select_session($r->uri(), 'due_on_start', { onchange=>q`check_time_starting($('f1'), 'due_on_start','due_on_end');load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+            <? echo ( date_select_session($r->uri(), 'due_on_start', { onchange=>q`check_time_starting(this.form, 'due_on_start','due_on_end');load_expenses(this.form);`, with_today=>1,with_clear=>1 } ); ) ?>
 							to 
-		<? echo ( date_select_session($r->uri(), 'due_on_end', { onchange=>q`load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+		<? echo ( date_select_session($r->uri(), 'due_on_end', { onchange=>q`load_expenses(this.form);`, with_today=>1,with_clear=>1 } ); ) ?>
 					</li>
 					<li>
 						<label>Paid On</label>
-		<? echo ( date_select_session($r->uri(), 'paid_on_start', { onchange=>q`check_time_starting($('f1'), 'paid_on_start','paid_on_end');load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+		<? echo ( date_select_session($r->uri(), 'paid_on_start', { onchange=>q`check_time_starting(this.form, 'paid_on_start','paid_on_end');load_expenses(this.form);`, with_today=>1,with_clear=>1 } ); ) ?>
 							to 
-		<? echo ( date_select_session($r->uri(), 'paid_on_end', { onchange=>q`load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+		<? echo ( date_select_session($r->uri(), 'paid_on_end', { onchange=>q`load_expenses(this.form);`, with_today=>1,with_clear=>1 } ); ) ?>
 					</li>
 					<li>
 						<label>Entered On</label>
-		<? echo ( date_select_session($r->uri(), 'entered_on_start', { onchange=>q`check_time_starting($('f1'), 'entered_on_start','entered_on_end');load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+		<? echo ( date_select_session($r->uri(), 'entered_on_start', { onchange=>q`check_time_starting(this.form, 'entered_on_start','entered_on_end');load_expenses(this.form);`, with_today=>1,with_clear=>1 } ); ) ?>
 							to 
-		<? echo ( date_select_session($r->uri(), 'entered_on_end', { onchange=>q`load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+		<? echo ( date_select_session($r->uri(), 'entered_on_end', { onchange=>q`load_expenses(this.form);`, with_today=>1,with_clear=>1 } ); ) ?>
 					</li>
 					<li>
 						<label>Deleted</label>
@@ -171,7 +179,7 @@
 		<br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join("\n",
-				button( 'ShowResults', { onclick=>"load_expenses(\$('f1'));", text=> 'Show Results' } ),
+				button( 'ShowResults', { onclick=>'load_expenses(this.form);', text=> 'Show Results' } ),
 				button( 'Download', { onclick=>"f1.btnFunction.value='Download';f1.submit();" } ),
 				button( 'Reset', { onclick=>'f1.reset();' } ),
 				button( 'New', { href=>'expense.html', text=>'New Expense' } ),
