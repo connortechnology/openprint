@@ -4,6 +4,13 @@
 </div>
 <script src="<? hash_link(/javascripts/passwordmeter.js) ?>"></script>
 <script>
+  function new_clicked() {
+    const form = document.getElementById('f1');
+    const l=document.getElementById('Log');
+    if(l){l.hide();};
+    keepCompany(form);
+  }
+
 function keepCompany( form ) {
 	var Company = form.ddmCustomer.selectedIndex;
 	var Role = form.ddmUserRole.selectedIndex;
@@ -17,9 +24,9 @@ function add_notification() {
 	popup_window('_user_notification_popup.html');
 }
 function search_email_onkeyup(i) {
-  $('search_email_results').innerHTML='';
+  document.getElementById('search_email_results').innerHTML = '';
   if (this.value.length > 3 ) {
-    new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: i.value}});
+    $j('#search_email_results').load('_search_by_email.html', { search_email: i.value});
   }
 }
 </script>
@@ -91,7 +98,7 @@ Please select a company or user to obtain login information.<br/>
 					$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
 					$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
 					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='copy';f1.submit();", text=>'Copy' } );
-					$html .= button( 'New1', { onclick=>"var l=\$('Log');if(l){l.hide();};keepCompany(f1);", text=>'New' } );
+					$html .= button( 'New1', { on_click=>"new_clicked", text=>'New' } );
 					if ( $$variable{User}->deleted() ) {
 						$html .= button( 'UnDelete1', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
 						$html .= button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
@@ -406,7 +413,7 @@ Please select a company or user to obtain login information.<br/>
 			<? echo ( my $html = '';
 				$html .= button( 'Prev2', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
 				$html .= button( 'Next2', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
-				$html .= button( 'New2', { onclick=>"\$('Log').hide();keepCompany(f1);", text=>'New' } );
+				$html .= button( 'New2', { on_click=>'new_clicked', text=>'New' } );
 				if ( $$variable{User}->deleted() ) {
 					$html .= button( 'Undelete2', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
 					$html .= button( 'Destroy2', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
