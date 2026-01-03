@@ -13,7 +13,7 @@ function FoldType_onchange( select ) {
 } // end function
 
 function calc( formName, force ) {
-	var form = $(formName);
+	var form = document.getElementById(formName) || document.forms[formName];
 	if ( ! form ) return;
 
 	if ( form.txtPrice1 ) {
@@ -32,11 +32,11 @@ function calc( formName, force ) {
 		} // end if
 	} // end if
 
-	var div = $('AlertDiv');
+	var div = document.getElementById('AlertDiv');
 	if ( ! div ) {
 		//alert('No alert div.');
 	} else {
-		div.hide();
+		div.style.display = 'none';
 	} // end if
 
 	if ( gettingNewPrice && ! force ) {
@@ -46,10 +46,27 @@ function calc( formName, force ) {
 	} // end if
 	timeout = null;
 	gettingNewPrice = true;
-	var h = $H(Form.serialize(form,true));
-	h.set( 'ServiceType', 'Project' );
-	h.set( 'callback', 'cbCalc' );
-	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+	const formData = new FormData(form);
+	const h = {};
+	for (const [key, value] of formData.entries()) {
+		h[key] = value;
+	}
+	h.ServiceType = 'Project';
+	h.callback = 'cbCalc';
+	
+	const params = new URLSearchParams(h).toString();
+	fetch('/main/project/_calc.json', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded'
+		},
+		body: params
+	})
+	.then(response => response.json())
+	.then(data => {
+		if (window.cbCalc) window.cbCalc(data);
+	});
+	
 	remove_div('Buttons');
 	add_div('Processing');
 }
@@ -86,7 +103,8 @@ function cbCalc( results ) {
 function Dimensions_onchange( select, signature ) {
 	var value = get_ddm_value( select );
 	if ( value == 'Custom' ) {
-		$('CustomDimensions').show();
+		const elem = document.getElementById('CustomDimensions');
+		if (elem) elem.style.display = '';
 	} else {
 	//remove_div('CustomDimensions');
 	} // end if
