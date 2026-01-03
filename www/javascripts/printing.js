@@ -5,13 +5,19 @@ var FoldingQuestionFlag = true;
 var CuttingQuestionFlag = true;
 
 function versions_onkeyup( e ) {
-	new Ajax.Updater( 'Version_Descriptions', '_version_descriptions.html', { parameters: Form.serialize(e.form, true) } );
+	const formData = new FormData(e.form);
+	const params = new URLSearchParams(formData).toString();
+	fetch('_version_descriptions.html?' + params)
+		.then(response => response.text())
+		.then(html => {
+			document.getElementById('Version_Descriptions').innerHTML = html;
+		});
 }
 
 function filter_colours( side, signature ) {
 	// For each of the colours
 	for ( var index = 1; index < 10; index += 1 ) {
-		var type_element = $('ColourCoatingType'+index+side+signature);
+		var type_element = document.getElementById('ColourCoatingType'+index+side+signature);
 		if ( ! type_element ) continue;
 		var type = type_element.value;
 		if ( ! type ) continue;
@@ -20,7 +26,7 @@ function filter_colours( side, signature ) {
 
 		// clear my selected type out of the other dropdowns
 		for ( var j = index+1; j <= 10; j += 1 ) {
-			var t = $('ColourCoatingType'+j+side+signature);
+			var t = document.getElementById('ColourCoatingType'+j+side+signature);
 			if ( ! t ) continue;
 
 			var option_index = get_option_index( t, type );
@@ -36,7 +42,7 @@ function SpecialColour_onchange( element, side, index, signature ) {
   const form = element.form;
 	const spec = 'ColourCoating'+index+side+signature;
 
-	const type_element = $('ColourCoatingType'+index+side+signature);
+	const type_element = document.getElementById('ColourCoatingType'+index+side+signature);
   if ( ! type_element ) {
     alert( 'ColourCoatingType'+index+side+signature + ' not found!');
     return;
@@ -45,22 +51,23 @@ function SpecialColour_onchange( element, side, index, signature ) {
 	if ( type ) {
 		form.elements['chk'+spec].checked=true;
 
-		if ( ! $('ColourCoating'+(1+parseInt(index))+side+signature) ) {
+		if ( ! document.getElementById('ColourCoating'+(1+parseInt(index))+side+signature) ) {
 			// Add another colour
-			new Ajax.Request('/includes/main/proj/_additional_colour_coating.html', { 
-				method: 'get', 
-				parameters: { 
-          project_id: form.elements['ProjectIndex'].value,
-					Side: side, 
-					index : 1+parseInt(index),
-					Signature : signature 
-				},
-				onSuccess: function(response){
-					new Insertion.After($(spec), response.responseText);
-					filter_colours(side,signature);
-					
+			const params = new URLSearchParams({
+				project_id: form.elements['ProjectIndex'].value,
+				Side: side, 
+				index : 1+parseInt(index),
+				Signature : signature 
+			});
+			fetch('/includes/main/proj/_additional_colour_coating.html?' + params.toString())
+				.then(response => response.text())
+				.then(html => {
+					const specElement = document.getElementById(spec);
+					if (specElement) {
+						specElement.insertAdjacentHTML('afterend', html);
 					}
-			} );
+					filter_colours(side,signature);
+				});
 		} else {
 			if ( type != 'PMS' ) {
 				// Remove the selected type from the dropdodwns of the other special colours
@@ -93,18 +100,26 @@ function SpecialColour_onchange( element, side, index, signature ) {
 	} // end if
 
 	if ( -1 != type.indexOf('Overall') ) {
-		$('ColourCoatingCoverage'+index+side+signature).hide();
+		const elem = document.getElementById('ColourCoatingCoverage'+index+side+signature);
+		if (elem) elem.style.display = 'none';
 	} else {
-		$('ColourCoatingCoverage'+index+side+signature).show();
+		const elem = document.getElementById('ColourCoatingCoverage'+index+side+signature);
+		if (elem) elem.style.display = '';
 	} // end if
 	if ( -1 != type.indexOf('PMS') ) {
-		$('ColourCoatingColour'+index+side+signature).show();
-		$('ColourCoatingPrice'+index+side+signature).show();
-		$('ColourCoatingMileage'+index+side+signature).show();
+		let elem = document.getElementById('ColourCoatingColour'+index+side+signature);
+		if (elem) elem.style.display = '';
+		elem = document.getElementById('ColourCoatingPrice'+index+side+signature);
+		if (elem) elem.style.display = '';
+		elem = document.getElementById('ColourCoatingMileage'+index+side+signature);
+		if (elem) elem.style.display = '';
 	} else {
-		$('ColourCoatingColour'+index+side+signature).hide();
-		$('ColourCoatingPrice'+index+side+signature).hide();
-		$('ColourCoatingMileage'+index+side+signature).hide();
+		let elem = document.getElementById('ColourCoatingColour'+index+side+signature);
+		if (elem) elem.style.display = 'none';
+		elem = document.getElementById('ColourCoatingPrice'+index+side+signature);
+		if (elem) elem.style.display = 'none';
+		elem = document.getElementById('ColourCoatingMileage'+index+side+signature);
+		if (elem) elem.style.display = 'none';
 	} // end if
 	calc(element.form.name);
 } // end function
@@ -185,15 +200,17 @@ function validate_data(formName) {
 } // end function validate_data
 
 function get_impositions( form, qty_index ) {
-	form = $(form);
-	var h = $H(Form.serialize(form, true));
-	h.each(function(pair) {
-		if ( pair.value == '' ) 
-			h.unset(pair.key);
-		if ( pair.key == 'btnFunction' ) 
-			h.unset(pair.key);
-	});
-	h.set('qty_index', qty_index);
+	if (typeof form === 'string') {
+		form = document.getElementById(form);
+	}
+	const formData = new FormData(form);
+	const h = {};
+	for (const [key, value] of formData.entries()) {
+		if (value !== '' && key !== 'btnFunction') {
+			h[key] = value;
+		}
+	}
+	h.qty_index = qty_index;
 	popup_window( '/main/project/prin/_impositions.html', h, { width: 800 } );
 } 
 
@@ -210,7 +227,7 @@ function calc_print( formName, force, options ) {
 		} else {
 			// This prevents concurrent price getting
 			if (options) {
-				timeout = setTimeout("calc_print('f1', 0, " + Object.toJSON( options ) + ");", 1000 );	
+				timeout = setTimeout("calc_print('f1', 0, " + JSON.stringify( options ) + ");", 1000 );	
 			} else {
 				timeout = setTimeout("calc_print('f1' );", 1000 );	
 			} // end if
@@ -220,15 +237,15 @@ function calc_print( formName, force, options ) {
 	gettingNewPrice = true;
 
 	clear_price_data(form);
-	const AlertDiv = $('AlertDiv');
+	const AlertDiv = document.getElementById('AlertDiv');
 	if (AlertDiv) {
 		AlertDiv.innerHTML = '';
-		AlertDiv.hide();
+		AlertDiv.style.display = 'none';
 	} // end if
-	const div = $('InformationDiv');
+	const div = document.getElementById('InformationDiv');
 	if (div) {
 		div.innerHTML = 'Calculating....';
-		div.show();
+		div.style.display = '';
 	} // end if
 
   const data = $j(form).serializeArray();
@@ -559,7 +576,7 @@ function Stock_onchange( element, id ) {
 } // end function Stock_onchange
 
 function cbStockFillResults( results ) {
-	const form = $(results.form);
+	const form = document.getElementById(results.form) || document.forms[results.form];
 	if ( ! form ) {
 		alert('No form for ' + results.form );
 		gettingNewPrice = false;
@@ -707,24 +724,24 @@ function selectCoverTemplate(el) {
   const matches = el.name.match(/rdbTemplateType(\d)/);
   let form = '';
   if (matches.length > 1) form = matches[1];
-  const div=$('PresentationFolderQuestions'+form);
+  const div=document.getElementById('PresentationFolderQuestions'+form);
   if (div){
     if (el.value.match(/Panel/)) {
-      div.show();
+      div.style.display = '';
     } else {
-      div.hide();
+      div.style.display = 'none';
     };
   }
   if (el.value.startsWith('2Panel1Pocket')) {
-    $('rdbPanels2'+form).checked = true;
-    $('chkPocketCenter'+form).checked=false;
+    document.getElementById('rdbPanels2'+form).checked = true;
+    document.getElementById('chkPocketCenter'+form).checked=false;
   } else if (el.value.startsWith('2Panel2Pocket')) {
-    $('rdbPanels2'+form).checked=true;
-    $('chkPocketCenter'+form).checked=false;
-    $('chkPocketLeft'+form).checked=true;
-    $('chkPocketRight'+form).checked=true;
+    document.getElementById('rdbPanels2'+form).checked=true;
+    document.getElementById('chkPocketCenter'+form).checked=false;
+    document.getElementById('chkPocketLeft'+form).checked=true;
+    document.getElementById('chkPocketRight'+form).checked=true;
   } else if (el.value.startsWith('3Panel2Pocket')) {
-    $('rdbPanels3'+form).checked=true;
+    document.getElementById('rdbPanels3'+form).checked=true;
   }
 
   selectProjectTemplate(el.form.id);

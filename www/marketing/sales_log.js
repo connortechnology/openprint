@@ -17,14 +17,16 @@
 			alert("Bad ddm");
 			return;
 		}
-		new Ajax.Updater( user_ddm, '/includes/_users.html', { 
-				parameters: { company_id: company_id },
-				onSuccess: function() {
-					load_results();
+		const params = new URLSearchParams({ company_id: company_id }).toString();
+		fetch('/includes/_users.html?' + params)
+			.then(response => response.text())
+			.then(html => {
+				const elem = typeof user_ddm === 'string' ? document.getElementById(user_ddm) : user_ddm;
+				if (elem) {
+					elem.innerHTML = html;
 				}
-			}
-		);
-		
+				load_results();
+			});
 	}
 	function load_results() {
 		$j('#Results').load('_sales_log.html', $j('#f1').serialize(), function(data) {

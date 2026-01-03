@@ -3,20 +3,20 @@ var filters = new Array( 'Owner', 'Group', 'Manufacturer', 'Brand','Finish','Col
 
 function filter_onChange( element, id, selected ) {
 	var form = element.form;
-	var h = new Hash();
-	h.set('form', form.id);
-	h.set('id', id );
-	h.set('selected', element.name);
+	var h = {};
+	h.form = form.id;
+	h.id = id;
+	h.selected = element.name;
 	for ( var index = 0, len = filters.length; index < len; ++index ) {
 		var filter = form.elements[filters[index]+id];
 		if ( filter ) {
-			h.set(filters[index], get_value( filter ) );
+			h[filters[index]] = get_value( filter );
 			if ( filter.type == 'select-one' ) {
 			filter.disabled = true;
 			} // end if
 			filter = form.elements[filters[index]+'_exclude'+id];
 			if ( filter ) {
-				h.set(filter.name, get_value( filter ) );
+				h[filter.name] = get_value( filter );
 			} // end if
 		} // end if filter exists
 		filter = form.elements[filters[index].toLowerCase()+'_id'+id];
@@ -24,40 +24,41 @@ function filter_onChange( element, id, selected ) {
 			var v = get_value( filter );
 			if ( ! v ) continue;
 			
-			h.set(filter.name, v );
+			h[filter.name] = v;
 			if ( filter.type == 'select-one' ) {
 				filter.disabled = true;
 			} // end if
 			filter = form.elements[filters[index].toLowerCase()+'_id_exclude'+id];
 			if ( filter ) {
 				var v = get_value( filter );
-				if ( v ) h.set(filter.name, v );
+				if ( v ) h[filter.name] = v;
 			} // end if
 		} // end if filter exists
 	} // end for 
-	new Ajax.Request( '/employee/inventory/_stock.json', { parameters: h, evalScripts: true } );
+	
+	const params = new URLSearchParams(h).toString();
+	fetch('/employee/inventory/_stock.json?' + params)
+		.then(response => response.json())
+		.then(data => {
+			if (window.cbStockFillResults) window.cbStockFillResults(data);
+		});
 } // end function Name_onChange()
 
 function cbStockFillResults( results ) {
   console.log('cbStockFillResults');
-	const form = $(results.get('form'));
+	const form = document.getElementById(results.form) || document.forms[results.form];
 	if (!form) {
-		alert('No form for ' + results.get('form') );
+		alert('No form for ' + results.form );
 		return;
 	} // end if
-	results.unset('form');
 
-	let id = '';
-	if ( id = results.get('id') ) {
-		results.unset('id');
-	} else {
-		id = '';
-	}
+	let id = results.id || '';
 
-	const keys = results.keys();
+	const keys = Object.keys(results);
 	for ( let index = 0, len = keys.length; index < len; ++index ) {
 		const key = keys[index];
-		const value = results.get(key);
+		if (key === 'form' || key === 'id') continue;
+		const value = results[key];
 
 		let ddm = null;
 		if ( ! ddm ) { ddm = form.elements[key+'_id'+id]; } // end if
@@ -160,11 +161,11 @@ function calc_from_weight(form, id='') {
 }
 
 function set_basis_dimensions(width, height) {
-var basis_width = $('basis_width');
+var basis_width = document.getElementById('basis_width');
 if ( basis_width )
 	basis_width.value = width;
-var basis_height=$('basis_height');
+var basis_height=document.getElementById('basis_height');
 if ( basis_height )
 	basis_height.value = height;
-basis_weight_to_gsm($('f1'));
+basis_weight_to_gsm(document.getElementById('f1') || document.forms.f1);
 }

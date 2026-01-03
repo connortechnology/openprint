@@ -14,26 +14,32 @@ function check_inputs( form ) {
 } //  end function check_inputs
 
 function del_allocation( host_id ) {
-  new Ajax.Updater( 'Hosts', '_hosts.html',
-    {
-      parameters: {
-        site_id: $('site_id').value,
-        host_id: host_id,
-        action: 'delete'
-      }
+  const params = new URLSearchParams({
+    site_id: document.getElementById('site_id').value,
+    host_id: host_id,
+    action: 'delete'
+  }).toString();
+  fetch('_hosts.html?' + params)
+    .then(response => response.text())
+    .then(html => {
+      const elem = document.getElementById('Hosts');
+      if (elem) elem.innerHTML = html;
     });
 } // end function del_allocation
 
 function add_allocation(host_id) {
-  new Ajax.Updater('Hosts', '_hosts.html',
-    {
-      parameters: {
-        action: 'allocate',
-        host_id: host_id,
-        site_id: $('site_id').value
-      }
+  const params = new URLSearchParams({
+    action: 'allocate',
+    host_id: host_id,
+    site_id: document.getElementById('site_id').value
+  }).toString();
+  fetch('_hosts.html?' + params)
+    .then(response => response.text())
+    .then(html => {
+      const elem = document.getElementById('Hosts');
+      if (elem) elem.innerHTML = html;
     });
-  popupWin.close();
+  if (window.popupWin) popupWin.close();
 }
 
 function initPage() {

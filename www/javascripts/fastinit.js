@@ -42,7 +42,7 @@ var FastInit = {
 			func();
 		})
 	},
-	actions : $A([]),
+	actions : [],
 	addOnLoad : function() {
 		for(var x = 0; x < arguments.length; x++) {
 			var func = arguments[x];
@@ -66,13 +66,13 @@ if (document.addEventListener) {
 	FastInit.legacy = false;
 }
 
-Event.observe(window, 'load', FastInit.onload);
+window.addEventListener('load', FastInit.onload);
 
 
 /*@cc_on @*/
 /*@if (@_win32)
 document.write('<script id="__ie_onload" defer src="javascript:void(0)"><\/script>');
-var script = $('__ie_onload');
+var script = document.getElementById('__ie_onload');
 script.onreadystatechange = function() {
     if (this.readyState == 'complete') {
         FastInit.onload();
