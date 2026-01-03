@@ -720,24 +720,24 @@ function summary(summaryPage) {
 }
 
 function checkLoginData( usernameInput, passwordInput ) {
-	var div = $j ? $j('#missingLoginMessage') : $('missingLoginMessage');
+	var div = document.getElementById('missingLoginMessage');
 	if( usernameInput && ! usernameInput.value ) {
 		// Display login name error.
-		if ( div ) div.show();
+		if ( div ) div.style.display = 'block';
 		usernameInput.focus();
 		return false;
 	} else if ( div ) {
-		div.hide();
+		div.style.display = 'none';
 	}
 
-	div = $j ? $j('#missingPasswordMessage') : $('missingPasswordMessage')
+	div = document.getElementById('missingPasswordMessage');
 	if( passwordInput && ! passwordInput.value ) {
 		// Display login password error.
-		if ( div ) div.show();
+		if ( div ) div.style.display = 'block';
 		passwordInput.focus();
 		return false;
 	} else if ( div ) {
-		div.hide();
+		div.style.display = 'none';
 	}
 	usernameInput.form.btnFunction.value='Login';
 	usernameInput.form.submit();
@@ -747,7 +747,7 @@ function checkLoginData( usernameInput, passwordInput ) {
 function checkForgotPasswordData ( emailInput ) {
 	var pass = true;
 
-	var div = $( 'missingLoginMessage' );
+	var div = document.getElementById( 'missingLoginMessage' );
 	if ( ! emailInput.value ) {
 		// Display email error.
 		div.style.display = 'block';
@@ -881,17 +881,21 @@ function country_onchange_this(country_ddm) {
 
 function Country_onchange( country_ddm, state ) {
 	const country = get_ddm_value( country_ddm );
-	const state_label = $(country_ddm.name + '_state');
-	const postal_label = $(country_ddm.name + '_postal');
+	const state_label = document.getElementById(country_ddm.name + '_state');
+	const postal_label = document.getElementById(country_ddm.name + '_postal');
 	const onchange = state.getAttribute('onchange');
 	if ( country == 'US' ) {
-		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
-		new Ajax.Updater( state.id, '/includes/_states.html' );
+		document.getElementById(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+		fetch('/includes/_states.html')
+			.then(response => response.text())
+			.then(html => { document.getElementById(state.id).outerHTML = html; });
 		if ( state_label ) state_label.innerHTML='State';
 		if ( postal_label ) postal_label.innerHTML='ZIP Code';
 	} else if ( country == 'CA' ) {
-		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
-		new Ajax.Updater( state.id, '/includes/_provinces.html' );
+		document.getElementById(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+		fetch('/includes/_provinces.html')
+			.then(response => response.text())
+			.then(html => { document.getElementById(state.id).outerHTML = html; });
 		if ( state_label ) state_label.innerHTML='Province';
 		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} else {
@@ -918,14 +922,16 @@ function Location_onchange( parent_element, type, options ) {
 	if ( options.state_element ) parameters.state_element = options.state_element;
 	if ( options.city_element ) parameters.city_element = options.city_element;
 
-	new Ajax.Request( '/location/_ddm.json', { 
-		parameters: parameters, onSuccess: options.onSuccess,
-		}
-		);
+	const urlParams = new URLSearchParams(parameters);
+	fetch('/location/_ddm.json?' + urlParams.toString())
+		.then(response => response.json())
+		.then(data => {
+			if (options.onSuccess) options.onSuccess({responseJSON: data});
+		});
 	//} // end if
 	if ( type == 'country' ) {
-		var state_label = $(parent_element.name + '_state');
-		var postal_label = $(parent_element.name + '_postal');
+		var state_label = document.getElementById(parent_element.name + '_state');
+		var postal_label = document.getElementById(parent_element.name + '_postal');
 		var country = get_ddm_text( parent_element );
 		if ( country == 'United States' ) {
 			if ( state_label ) state_label.innerHTML='State';
